@@ -14,10 +14,7 @@ package kintsugi3d.builder.resources.ibr;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.io.ViewSetReader;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -45,7 +42,6 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -192,28 +188,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
-            boolean needsUndistort, UUID uuidOverride) throws Exception
+        public Builder<ContextType> loadLooseFiles(File cameraFile, ViewSetLoadOverrides overrides) throws Exception
         {
-            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort, uuidOverride);
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, overrides);
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
-            boolean needsUndistort) throws Exception
-        {
-            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
-        }
-
-        // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
-            File fullResImageDirectory, boolean needsUndistort, UUID uuidOverride) throws Exception
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, ViewSetLoadOverrides overrides) throws Exception
         {
             // Load view set
-            this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
-            if (uuidOverride != null)
+            this.viewSet = reader.readFromFile(cameraFile, overrides);
+            if (overrides.uuid != null)
             {
-                this.viewSet.setUuid(uuidOverride);
+                this.viewSet.setUuid(overrides.uuid);
             }
 
             updateViewSetFromLoadOptions();
@@ -221,22 +208,15 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
-            File fullResImageDirectory, boolean needsUndistort) throws Exception
-        {
-            return this.loadLooseFiles(reader, cameraFile, geometryFile, fullResImageDirectory, needsUndistort, null);
-        }
-
 
         /**
-         * Alternate version of loadAgisoftFromZIP that uses a MetashapeModel as its parameter.
+         *
          * @param model
          * @param supportingFilesDirectory
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadAgisoftFromZIP(MetashapeModel model, File supportingFilesDirectory)
+        public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model, File supportingFilesDirectory)
             throws IOException, XMLStreamException
         {
             this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), supportingFilesDirectory);
@@ -835,6 +815,45 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
     }
 
+    private static void resizeImageWithMask(File fullResImageFile, File mask, ViewSet viewSet, int i) throws IOException {
+        log.info("Resizing image {} with mask {}: No distortion parameters", fullResImageFile, mask);
+        //TODO: add checks to verify mask and img are the same size?
+        ImageHelper imgResizer = new ImageHelper(fullResImageFile);
+        ImageHelper maskResizer = new ImageHelper(mask);
+
+        int w = viewSet.getPreviewWidth();
+        int h = viewSet.getPreviewHeight();
+        BufferedImage resizedImg = imgResizer.scaleToResolution(w, h);
+        BufferedImage resizedMask = maskResizer.scaleToResolution(w, h);
+
+        ImageHelper maskedImg = new ImageHelper(applyGrayscaleMaskToAlpha(resizedImg, resizedMask));
+        maskedImg.saveAtResolution(viewSet.getPreviewImageFile(i), w, h);
+    }
+
+    //    https://stackoverflow.com/questions/221830/set-bufferedimage-alpha-mask-in-java
+    public static BufferedImage applyGrayscaleMaskToAlpha(BufferedImage image, BufferedImage mask)
+    {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        BufferedImage result = new BufferedImage(width, height, image.getType());
+
+        int[] imagePixels = image.getRGB(0, 0, width, height, null, 0, width);
+        int[] maskPixels = mask.getRGB(0, 0, width, height, null, 0, width);
+
+        int[] resultPixels = result.getRGB(0, 0, width, height, null, 0, width);
+
+        for (int i = 0; i < imagePixels.length; i++)
+        {
+            int color = imagePixels[i] & 0x00ffffff; // Mask preexisting alpha
+            int alpha = maskPixels[i] << 24; // Shift blue to alpha
+            resultPixels[i] = color | alpha;
+        }
+
+        result.setRGB(0, 0, width, height, resultPixels, 0, width);
+        return result;
+    }
+
     private static void logFinished(File fileFinished)
     {
         log.info("Finished {}", fileFinished);
@@ -963,7 +982,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             {
                                 // Fallback to simply resizing without undistorting
                                 File fullResImageFile = viewSet.findFullResImageFile(i);
-                                resizeImage(fullResImageFile, viewSet, i);
+                                File mask = viewSet.getMask(i);
+//                                resizeImage(fullResImageFile, viewSet, i);
+                                resizeImageWithMask(fullResImageFile, mask, viewSet, i);
                             }
 
                             markFinished(viewSet, finishedCount);
@@ -1068,7 +1089,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             // Fallback to simply resizing without undistorting
                             // Does not require graphics context, so threading is simple.
                             File fullResImageFile = viewSet.findFullResImageFile(i);
-                            resizeImage(fullResImageFile, viewSet, i);
+//                            resizeImage(fullResImageFile, viewSet, i);
+                            File mask = viewSet.getMask(i);
+                            resizeImageWithMask(fullResImageFile, mask, viewSet, i);
                             markFinished(viewSet, finishedCount);
                             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
                                 MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
@@ -1118,13 +1141,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                 try (ImageUndistorter<?> undistort = new ImageUndistorter<>(getContext()))
                 {
-                    undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), true, distortion, getViewSet().getPreviewImageFile(poseIndex));
-//                    undistort.undistortFile(
-//                            getViewSet().findFullResImageFile(poseIndex),
-//                            true,
-//                            distortion,
-//                            getViewSet().getPreviewImageFile(poseIndex),
-//                            getViewSet().getMask(poseIndex));
+                    undistort.undistortFile(
+                            getViewSet().findFullResImageFile(poseIndex),
+                            getViewSet().getMask(poseIndex),
+                            true,
+                            distortion,
+                            getViewSet().getPreviewImageFile(poseIndex));
                 }
 
                 return true;

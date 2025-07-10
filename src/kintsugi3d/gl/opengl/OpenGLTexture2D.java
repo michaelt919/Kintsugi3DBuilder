@@ -92,8 +92,9 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             int width = colorImg.getWidth();
             int height = colorImg.getHeight();
             ByteBuffer buffer = bufferedImageToNativeBuffer(
-                isICCTransformationRequested() ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
-                /* masks shouldn't be using ICC */ maskImg, flipVertical);
+                isICCTransformationRequested() ?
+                        new ImageHelper(colorImg).convertICCToSRGB() :
+                        new ImageHelper(colorImg).forceSRGB(), /* masks shouldn't be using ICC */ maskImg, flipVertical);
 
             if (this.isInternalFormatCompressed())
             {

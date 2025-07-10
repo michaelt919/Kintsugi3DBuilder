@@ -102,8 +102,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws IOException
+    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides) throws IOException
     {
         List<Camera> cameras = new CsvToBeanBuilder<Camera>(new InputStreamReader(stream, StandardCharsets.UTF_8))
             .withType(Camera.class).build().parse();
@@ -112,9 +111,9 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         Map<Projection, List<String>> cameraMap = new HashMap<>(1);
         for (Camera cam : cameras)
         {
-            DistortionProjection distortionProjection = cam.getDistortionProjection(fullResImageDirectory);
+            DistortionProjection distortionProjection = cam.getDistortionProjection(overrides.fullResImageDirectory);
 
-            if (needsUndistort)
+            if (overrides.needsUndistort)
             {
                 cameraMap.computeIfAbsent(distortionProjection, k -> new ArrayList<>(1)).add(cam.name);
             }
@@ -127,7 +126,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         }
 
         // Start building the view set
-        Builder builder = ViewSet.getBuilder(root, cameras.size());
+        Builder builder = ViewSet.getBuilder(overrides.projectRoot, cameras.size());
 
         // Invert the mapping so that we can retrieve the distortion by camera
         Map<String, Integer> cameraMapInverted = new HashMap<>(cameras.size());
@@ -160,8 +159,8 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         builder.addLight(Vector3.ZERO, Vector3.ZERO);
 
         ViewSet result = builder.finish();
-        result.setGeometryFile(geometryFile);
-        result.setFullResImageDirectory(fullResImageDirectory);
+        result.setGeometryFile(overrides.geometryFile);
+        result.setFullResImageDirectory(overrides.fullResImageDirectory);
         return result;
     }
 }

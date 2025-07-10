@@ -12,6 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.ViewSetLoadOverrides;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.EncodableColorImage;
 
@@ -208,23 +209,20 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
-        boolean needsUndistort, String primaryViewName, double rotation)
+    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
-            rotation, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, overrides, loadOptionsModel);
     }
 
-    public void hotSwapLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
-        boolean needsUndistort, String primaryViewName, double rotation)
+    public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
-            rotation, loadOptionsModel, getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null);
+        overrides.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
+        this.handler.loadFromLooseFiles(id, xmlFile, overrides, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(MetashapeModel model)
+    public void loadFromMetashapeModel(MetashapeModel model)
     {
-        this.handler.loadAgisoftFromZIP(model, loadOptionsModel);
+        this.handler.loadFromMetashapeModel(model, loadOptionsModel);
     }
     public void requestFragmentShader(File shaderFile)
     {

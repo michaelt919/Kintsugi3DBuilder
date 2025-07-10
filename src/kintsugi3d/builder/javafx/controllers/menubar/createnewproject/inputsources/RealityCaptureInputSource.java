@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.io.ViewSetLoadOverrides;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -36,8 +37,13 @@ public class RealityCaptureInputSource extends InputSource{
     @Override
     public void initTreeView() {
         try {
+            ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+            overrides.geometryFile = meshFile;
+            overrides.masksDirectory = masksDir;
+            overrides.fullResImageDirectory = photosDir;
+            overrides.needsUndistort = true;
             primaryViewSelectionModel = new GenericPrimaryViewSelectionModel(cameraFile.getName(),
-                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
+                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, overrides));
 
             addTreeElems(primaryViewSelectionModel);
             searchableTreeView.bind();
@@ -48,10 +54,15 @@ public class RealityCaptureInputSource extends InputSource{
 
     @Override
     public void loadProject(String primaryView, double rotate) {
+        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+        overrides.geometryFile = meshFile;
+        overrides.masksDirectory = masksDir;
+        overrides.fullResImageDirectory = photosDir;
+        overrides.needsUndistort = needsUndistort;
+        overrides.primaryViewName = primaryView;
+        overrides.primaryViewRotation = rotate;
         new Thread(() ->
-                //TODO: mask input here
-            MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
+            MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile,overrides))
             .start();
     }
 

@@ -133,6 +133,7 @@ public class SpecularFitProcess
                     }
                     else
                     {
+                        //TODO: apply mask here
                         return new BufferedImageColorList(image);
                     }
                 }

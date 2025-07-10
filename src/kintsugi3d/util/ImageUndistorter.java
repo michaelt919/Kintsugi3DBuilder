@@ -87,10 +87,11 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public void undistortFile(File inputImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
+    public void undistortFile(File inputImage, File maskImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
     {
         BufferedImage imageIn = ImageIO.read(inputImage);
-        BufferedImage imageOut = undistort(imageIn, null, mipmapsEnabled, distortion);
+        BufferedImage maskIn = maskImage != null ? ImageIO.read(maskImage) : null;
+        BufferedImage imageOut = undistort(imageIn, maskIn, mipmapsEnabled, distortion);
         ImageIO.write(imageOut, "PNG", outputImage);
     }
 

@@ -24,34 +24,24 @@ public interface ViewSetReader
      * Loads a view set from an input stream.
      * The root directory will be set as specified.
      * @param stream The file to load
-     * @param root
-     * @param geometryFile
-     * @param fullResImageDirectory
-     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
-     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws Exception;
+    ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides) throws Exception;
 
     /**
      * Loads a view set from an input file.
      * By default, the view set's root directory will be set to the parent directory of the specified file.
      * @param cameraFile The file to load
-     * @param geometryFile
-     * @param fullResImageDirectory
-     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
-     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    default ViewSet readFromFile(File cameraFile, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws Exception
+    default ViewSet readFromFile(File cameraFile, ViewSetLoadOverrides overrides) throws Exception
     {
         try (InputStream stream = new FileInputStream(cameraFile))
         {
-            return readFromStream(stream, cameraFile.getParentFile(), geometryFile, fullResImageDirectory, needsUndistort);
+            overrides.projectRoot = cameraFile.getParentFile();
+            return readFromStream(stream, overrides);
         }
     }
 }

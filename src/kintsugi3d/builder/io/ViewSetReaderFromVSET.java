@@ -54,15 +54,14 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * The root directory and the supporting files directory will be set as specified.
      * The supporting files directory may be overridden by a directory specified in the file.
      * @param stream The file to load
-     * @param root
-     * @param supportingFilesDirectory
-     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
-     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, boolean needsUndistort)
+    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides)
     {
+        File root = overrides.projectRoot;
+        File supportingFilesDirectory = overrides.supportingFilesDirectory;
+        boolean needsUndistort = overrides.needsUndistort;
         Date timestamp = new Date();
 
         Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
@@ -332,12 +331,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         return result;
     }
 
-    @Override
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory, boolean needsUndistort)
-    {
-        return readFromStream(stream, root, root, needsUndistort);
-    }
-
     /**
      * Loads a view set from an input file.
      * By default, the view set's root directory as well as the supporting files directory will be set to the specified root.
@@ -350,7 +343,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     public ViewSet readFromStream(InputStream stream, File root)
     {
         // Use root directory as supporting files directory
-        return readFromStream(stream, root, root, true);
+        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+        overrides.projectRoot = root;
+        overrides.supportingFilesDirectory = root;
+        overrides.needsUndistort = true;
+        return readFromStream(stream, overrides);
     }
 
     /**
@@ -366,7 +363,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory, true);
+            ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+            overrides.projectRoot = file;
+            overrides.supportingFilesDirectory = supportingFilesDirectory;
+            overrides.needsUndistort = true;
+            return readFromStream(stream, overrides);
         }
     }
 

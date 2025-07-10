@@ -21,6 +21,7 @@ import java.util.function.DoubleUnaryOperator;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.ViewSetLoadOverrides;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -347,7 +348,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(MetashapeModel model, ReadonlyLoadOptionsModel loadOptions) {
+    public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptions) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -368,7 +369,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(model, supportingFilesDirectory)
+                    .loadFromMetashapeModel(model, supportingFilesDirectory)
                     .setOrientationView(orientationView, rotation);
 
             loadInstance(parentChunk.getFramePath(), builder);
@@ -383,8 +384,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
-        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride)
+    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides, ReadonlyLoadOptionsModel loadOptions)
     {
         if(this.progressMonitor.isConflictingProcess()){
             return;
@@ -397,8 +397,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
-                .loadLooseFiles(xmlFile, meshFile, imageDirectory, needsUndistort, uuidOverride)
-                .setOrientationView(primaryViewName, rotation);
+                .loadLooseFiles(xmlFile, overrides)
+                .setOrientationView(overrides.primaryViewName, overrides.primaryViewRotation);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);

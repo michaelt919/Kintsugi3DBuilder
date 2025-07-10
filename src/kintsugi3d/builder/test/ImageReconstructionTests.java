@@ -26,6 +26,7 @@ import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.io.ViewSetLoadOverrides;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.internal.LoadOptionsModelImpl;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
@@ -145,8 +146,9 @@ class ImageReconstructionTests
     void setUp() throws Exception
     {
         progressMonitor = new ProgressMonitorImpl();
-
-        potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null);
+        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+        overrides.needsUndistort = true;
+        potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), overrides);
         potatoViewSetTonemapped = potatoViewSet.copy();
 
         // Using tonemapping from the Guan Yu dataset
@@ -997,16 +999,17 @@ class ImageReconstructionTests
         ClassLoader classLoader = getClass().getClassLoader();
         LoadOptionsModel loadOptions = new LoadOptionsModelImpl();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
+
+        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+        overrides.geometryFile = new File(classLoader.getResource("test/" + geometry).toURI());
+        overrides.fullResImageDirectory = new File(classLoader.getResource("test/" + imageDirectory).toURI());
+        overrides.needsUndistort = true;
+
         try (IBRResourcesImageSpace<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
-            .setLoadOptions(loadOptions)
-            .setProgressMonitor(progressMonitor)
-            .loadLooseFiles(
-                new File(classLoader.getResource("test/" + cameras).toURI()),
-                new File(classLoader.getResource("test/" + geometry).toURI()),
-                new File(classLoader.getResource("test/" + imageDirectory).toURI()),
-                true)
-            .create())
-        {
+                .setLoadOptions(loadOptions)
+                .setProgressMonitor(progressMonitor)
+                .loadLooseFiles(new File(classLoader.getResource("test/" + cameras).toURI()), overrides)
+                .create()) {
             resources.calibrateLightIntensities(false);
             testFit(resources, validation, testName);
         }

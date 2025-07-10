@@ -133,7 +133,7 @@ public class MetashapeProjectInputSource extends InputSource{
     public void loadProject(String orientationView, double rotate) {
         model.getLoadPreferences().orientationViewName = orientationView;
         model.getLoadPreferences().orientationViewRotateDegrees = rotate;
-        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(model)).start();
+        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromMetashapeModel(model)).start();
     }
 
     public MetashapeProjectInputSource setMetashapeModel(MetashapeModel model){

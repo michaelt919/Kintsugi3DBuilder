@@ -142,17 +142,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * The root directory will be set as specified.
      * The supporting files directory will default to the root directory.
      * @param stream The file to load
-     * @param root
      * @return
      * @throws XMLStreamException
      */
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides) throws XMLStreamException
     {
-        // Use root directory as supporting files directory
-        ViewSet viewSet = readFromStream(stream, root, root, needsUndistort,
-            null, null, -1, false);
+        File geometryFile = overrides.geometryFile;
+        File fullResImageDirectory = overrides.fullResImageDirectory;
+
+        ViewSet viewSet = readFromStream(stream, overrides, null, null, -1, false);
         viewSet.setGeometryFile(geometryFile);
         viewSet.setFullResImageDirectory(fullResImageDirectory);
         return viewSet;
@@ -163,18 +162,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * The root directory and the supporting files directory will be set as specified.
      * The supporting files directory may be overridden by a directory specified in the file.
      * * @param stream
-     * @param root
-     * @param supportingFilesDirectory
-     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
-     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
      * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
      * @param ignoreGlobalTransforms Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, boolean needsUndistort,
-        String modelID, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
+    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides, String modelID, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
@@ -662,7 +656,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
         }
 
-        Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, cameraSet.size());
+        Builder builder = ViewSet.getBuilder(overrides.projectRoot, overrides.supportingFilesDirectory, cameraSet.size());
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 
@@ -696,7 +690,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 sensors[i].skew
             );
 
-            if (needsUndistort)
+            if (overrides.needsUndistort)
             {
                 builder.addCameraProjection(distortionProj);
             }
@@ -784,11 +778,20 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 {
                     // Found the desired file inside the zip
                     InputStream fileStream = new BufferedInputStream(zis);
-                    // Create and store ViewSet
+
+                    ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+                    overrides.projectRoot = rootDirectory;
+                    overrides.supportingFilesDirectory = supportingFilesDirectory;
+                    overrides.needsUndistort = true;
+
                     // TODO: USING A HARD CODED VERSION VALUE (200)
+                    // Create and store ViewSet
                     ViewSet viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
-                        .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, true,
-                            String.valueOf(metashapeChunk.getCurrModelID()), cameraPathsMap, 200, true);
+                            .readFromStream(fileStream, overrides,
+                                    String.valueOf(metashapeChunk.getCurrModelID()),
+                                    cameraPathsMap,
+                                    200,
+                                    true);
 
                     // 3) load geometry from ZipInputStream from model's ZIP
                     String modelPath = metashapeChunk.getCurrentModelPath();
@@ -816,6 +819,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     }
 
                     // mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
+                    //TODO: move somewhere else so we can put it in the progress bar
                     File masksDir = metashapeChunk.getMasksDirectory();
                     if (masksDir != null){
                         addMasks(viewSet, metashapeChunk);

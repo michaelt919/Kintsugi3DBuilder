@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.io.ViewSetLoadOverrides;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
@@ -23,7 +24,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LooseFilesInputSource extends InputSource{
+public class LooseFilesInputSource extends InputSource {
     private File cameraFile;
     private File meshFile;
     private File photosDir;
@@ -39,29 +40,28 @@ public class LooseFilesInputSource extends InputSource{
         return list;
     }
 
-    public LooseFilesInputSource setCameraFile(File camFile){
+    public LooseFilesInputSource setCameraFile(File camFile) {
         this.cameraFile = camFile;
         return this;
     }
 
-    public LooseFilesInputSource setMeshFile(File meshFile){
+    public LooseFilesInputSource setMeshFile(File meshFile) {
         this.meshFile = meshFile;
         return this;
     }
 
-    public LooseFilesInputSource setPhotosDir(File photosDir, boolean needsUndistort){
+    public LooseFilesInputSource setPhotosDir(File photosDir, boolean needsUndistort) {
         this.photosDir = photosDir;
         this.needsUndistort = needsUndistort;
         return this;
     }
 
-    public LooseFilesInputSource setMasksDir(File masksDir){
+    public LooseFilesInputSource setMasksDir(File masksDir) {
         this.masksDir = masksDir;
         return this;
     }
 
-    public LooseFilesInputSource setHotSwap(boolean hotSwap)
-    {
+    public LooseFilesInputSource setHotSwap(boolean hotSwap) {
         this.hotSwap = hotSwap;
         return this;
     }
@@ -72,14 +72,18 @@ public class LooseFilesInputSource extends InputSource{
             if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
             {
                 primaryViewSelectionModel = new AgisoftPrimaryViewSelectionModel(cameraFile, photosDir);
-            }
-            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
+            } else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
             {
+                ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+                overrides.projectRoot = cameraFile.getParentFile();
+                overrides.geometryFile = meshFile;
+                overrides.masksDirectory = masksDir;
+                overrides.fullResImageDirectory = photosDir;
+                overrides.needsUndistort = needsUndistort;
+
                 primaryViewSelectionModel = new GenericPrimaryViewSelectionModel(cameraFile.getName(),
-                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
-            }
-            else
-            {
+                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, overrides));
+            } else {
                 ProjectIO.handleException("Error initializing primary view selection.",
                         new IllegalArgumentException(MessageFormat.format("File extension not recognized for {0}", cameraFile.getName())));
                 return;
@@ -94,29 +98,30 @@ public class LooseFilesInputSource extends InputSource{
     }
 
     @Override
-    public void loadProject(String primaryView, double rotate)
-    {
-        if (hotSwap)
-        {
+    public void loadProject(String primaryView, double rotate) {
+        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
+        overrides.projectRoot = cameraFile.getParentFile();
+        overrides.geometryFile = meshFile;
+        overrides.masksDirectory = masksDir;
+        overrides.fullResImageDirectory = photosDir;
+        overrides.needsUndistort = needsUndistort;
+        overrides.primaryViewName = primaryView;
+        overrides.primaryViewRotation = rotate;
+
+        if (hotSwap) {
             new Thread(() ->
-                    //TODO: mask input here
-                MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(
-                    cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
-                .start();
-        }
-        else
-        {
+                    MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(cameraFile.getPath(), cameraFile, overrides))
+                    .start();
+        } else {
             new Thread(() ->
-                    //TODO: mask input here
-                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                    cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
-                .start();
+                    MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile, overrides))
+                    .start();
         }
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof LooseFilesInputSource)){
+        if (!(obj instanceof LooseFilesInputSource)) {
             return false;
         }
 
@@ -135,7 +140,7 @@ public class LooseFilesInputSource extends InputSource{
 
     @Override
     public File getInitialMasksDirectory() {
-       return masksDir != null ? masksDir : cameraFile.getParentFile();
+        return masksDir != null ? masksDir : cameraFile.getParentFile();
     }
 
     @Override
@@ -145,6 +150,6 @@ public class LooseFilesInputSource extends InputSource{
 
     @Override
     public void setMasksDirectory(File file) {
-       masksDir = file;
+        masksDir = file;
     }
 }
