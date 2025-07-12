@@ -13,6 +13,9 @@ package kintsugi3d.builder.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
@@ -22,12 +25,21 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -167,6 +179,86 @@ public final class ViewSet implements ReadonlyViewSet
     private int previewHeight = 0;
 
     private final SettingsModel viewSetSettings = new SimpleSettingsModel();
+
+    public void loadMasks(ProgressMonitor monitor) {
+        if (masksDirectory == null){
+            return;
+        }
+
+        File masksSrcDir = masksDirectory;
+
+        //TODO: where to put this if user doesn't save?
+        File masksDestinationDir = new File(supportingFilesDirectory, "masks");
+
+        masksDestinationDir.mkdirs();
+
+        //TODO: use ImageFinder?
+
+        if (masksSrcDir.toString().endsWith(".zip")){
+            //get masks folder, then subfolder is viewset uuid
+            // (follow convention set by preview and fit image folders)
+            log.info("Unzipping masks folder...");
+            try{
+                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, monitor);
+                File[] childFiles = masksDestinationDir.listFiles();
+                if (childFiles != null && childFiles.length > 0){
+                    File docFile = Arrays.stream(childFiles)
+                            .filter(file -> file.getName().equals("doc.xml"))
+                            .findFirst()
+                            .orElse(null);
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    try {
+                        DocumentBuilder builder = factory.newDocumentBuilder();
+                        Document docXml = builder.parse(docFile);
+                        NodeList maskList = docXml.getElementsByTagName("mask");
+
+                        for (int i = 0; i < maskList.getLength(); ++i){
+                            Element maskElem = (Element) maskList.item(i);
+                            int cameraId = Integer.parseInt(maskElem.getAttribute("camera_id"));
+                            String path = maskElem.getAttribute("path");
+                            addMask(cameraId, new File(masksDestinationDir, path));
+                        }
+                    } catch (ParserConfigurationException | SAXException e) {
+                        log.error("Failed to unzip masks.", e);
+                    }
+                }
+            } catch (IOException e) {
+                log.error("Failed to unzip masks.", e);
+            }
+        }
+        else{
+            File[] maskFiles = masksSrcDir.listFiles();
+            if (maskFiles == null || maskFiles.length == 0){
+                log.error("No masks found in mask directory {}", masksSrcDir);
+                return;
+            }
+
+            for (int i = 0; i < maskFiles.length; ++i){
+                File srcFile = maskFiles[i];
+                String fileName = srcFile.getName();
+                int idx = findIndexOfView(fileName);
+
+                //search for {fileName}_mask if needed
+//                if (camId == null){
+                //TODO:
+//                }
+
+                //give up if not found
+                //we could do a .contains() search, but that might be too slow because N^2
+                if (idx == -1){
+                    continue;
+                }
+                try{
+                    File maskFile = new File(masksDestinationDir, fileName);
+                    Files.copy(srcFile.toPath(), maskFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    addMask(idx, maskFile);
+                } catch (IOException e) {
+                    log.error("Failed to copy mask {} to {}", srcFile.getName(), masksDestinationDir.getPath());
+                }
+            }
+        }
+        setMasksDirectory(masksDestinationDir);
+    }
 
     public static final class Builder
     {

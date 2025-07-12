@@ -154,6 +154,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         ViewSet viewSet = readFromStream(stream, overrides, null, null, -1, false);
         viewSet.setGeometryFile(geometryFile);
         viewSet.setFullResImageDirectory(fullResImageDirectory);
+        viewSet.setMasksDirectory(overrides.masksDirectory);
         return viewSet;
     }
 
@@ -819,11 +820,10 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     }
 
                     // mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
-                    //TODO: move somewhere else so we can put it in the progress bar
+
+                    //send masksDirectory to viewset and have it process them once the progress bars are ready for it
                     File masksDir = metashapeChunk.getMasksDirectory();
-                    if (masksDir != null){
-                        addMasks(viewSet, metashapeChunk);
-                    }
+                    viewSet.setMasksDirectory(masksDir);
 
                     return viewSet;
                 }
@@ -831,88 +831,5 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
             throw new FileNotFoundException(MessageFormat.format("Could not find file {0} in zip {1}", targetFileName, zipFile));
         }
-    }
-
-    private static void addMasks(ViewSet viewSet, MetashapeChunk metashapeChunk) {
-        File masksSrcDir = metashapeChunk.getMasksDirectory();
-
-        //TODO: move masks directory to .files folder
-        File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
-        masksDestinationDir.mkdirs();
-
-        //TODO: use ImageFinder?
-
-        if (masksSrcDir.toString().endsWith(".zip")){
-            //get masks folder, then subfolder is viewset uuid
-            // (follow convention set by preview and fit image folders)
-            log.info("Unzipping masks folder...");
-            try{
-                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir);
-                File[] childFiles = masksDestinationDir.listFiles();
-                if (childFiles != null && childFiles.length > 0){
-                    File docFile = Arrays.stream(childFiles)
-                            .filter(file -> file.getName().equals("doc.xml"))
-                            .findFirst()
-                            .orElse(null);
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    try {
-                        DocumentBuilder builder = factory.newDocumentBuilder();
-                        Document docXml = builder.parse(docFile);
-                        NodeList maskList = docXml.getElementsByTagName("mask");
-                        for (int i = 0; i < maskList.getLength(); ++i){
-                            Element maskElem = (Element) maskList.item(i);
-                            int cameraId = Integer.parseInt(maskElem.getAttribute("camera_id"));
-                            String path = maskElem.getAttribute("path");
-                            viewSet.addMask(cameraId, new File(masksDestinationDir, path));
-                        }
-                    } catch (ParserConfigurationException | SAXException e) {
-                        log.error("Failed to unzip masks.", e);
-                    }
-                }
-            } catch (IOException e) {
-                log.error("Failed to unzip masks.", e);
-            }
-        }
-        else{
-            Map<String, Integer> imgFileNames = IntStream.range(0, viewSet.getCameraPoseCount())
-                    .boxed()
-                    .collect(Collectors.toMap(
-                            i -> viewSet.getFullResImageFile(i).getName(),
-                            i -> i
-                    ));
-
-            File[] maskFiles = masksSrcDir.listFiles();
-            if (maskFiles == null || maskFiles.length == 0){
-                log.error("No masks found in mask directory {}", masksSrcDir);
-                return;
-            }
-
-            for (File srcFile : maskFiles){
-                String fileName = srcFile.getName();
-
-                Integer camId;
-                //try searching for {fileName}
-                camId = imgFileNames.get(fileName);
-
-                //search for {fileName}_mask if needed
-//                if (camId == null){
-                //TODO:
-//                }
-
-                //give up if not found
-                //we could do a .contains() search, but that might be too slow because N^2
-                if (camId == null){
-                    continue;
-                }
-                try{
-                    File maskFile = new File(masksDestinationDir, fileName);
-                    Files.copy(srcFile.toPath(), maskFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    viewSet.addMask(camId, maskFile);
-                } catch (IOException e) {
-                   log.error("Failed to copy mask {} to {}", srcFile.getName(), masksDestinationDir.getPath());
-                }
-            }
-        }
-        viewSet.setMasksDirectory(masksDestinationDir);
     }
 }

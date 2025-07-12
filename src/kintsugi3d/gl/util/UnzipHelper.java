@@ -13,6 +13,7 @@ package kintsugi3d.gl.util;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
+import kintsugi3d.builder.core.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.imaging.ImageReadException;
@@ -229,21 +230,33 @@ public class UnzipHelper {
     }
 
     //   Adapted from https://www.baeldung.com/java-compress-and-uncompress
-    public static void unzipToDirectory(File zippedDir, File destinationDir) throws IOException {
+    public static void unzipToDirectory(File zippedDir, File destinationDir, ProgressMonitor monitor) throws IOException {
         byte[] buffer = new byte[1024];
+
+        ZipFile zf = new ZipFile(zippedDir);
         ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedDir));
         ZipEntry zipEntry = zis.getNextEntry();
+
+        int numEntries = zf.size();
+        if (monitor != null){
+            monitor.setMaxProgress(numEntries);
+        }
+        int idx = 0;
         while (zipEntry != null){
             //ignore directories for now
-           if (!zipEntry.isDirectory()){
-               FileOutputStream fos = new FileOutputStream(new File(destinationDir, zipEntry.getName()));
-               int len;
-               while ((len = zis.read(buffer)) > 0){
-                   fos.write(buffer, 0, len);
-               }
-               fos.close();
-           }
+            if (!zipEntry.isDirectory()) {
+                if (monitor  != null){
+                    monitor.setProgress(idx, zipEntry.getName());
+                }
+                FileOutputStream fos = new FileOutputStream(new File(destinationDir, zipEntry.getName()));
+                int len;
+                while ((len = zis.read(buffer)) > 0) {
+                    fos.write(buffer, 0, len);
+                }
+                fos.close();
+            }
             zipEntry = zis.getNextEntry();
+            idx++;
         }
         zis.closeEntry();
         zis.close();

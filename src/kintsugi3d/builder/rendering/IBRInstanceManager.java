@@ -179,6 +179,13 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         if(progressMonitor != null)
         {
             progressMonitor.setStageCount(2);
+            progressMonitor.setStage(0, "Preparing masks...");
+
+            //TODO: unbind overall progress bar from local progress bar so it doesn't look way too filled?
+            loadedViewSet.loadMasks(progressMonitor);
+
+            //still stage 0 because loading masks takes a few seconds at most
+            //if we incremented the stage here, overall progress bar would be filled significantly more than makes sense
             progressMonitor.setStage(0, "Generating preview-resolution images...");
         }
 
