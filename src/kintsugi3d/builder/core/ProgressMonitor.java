@@ -102,4 +102,8 @@ public interface ProgressMonitor
      * @return true if a process is in progress.
      */
     boolean isConflictingProcess();
+
+    void bind();
+
+    void unbind(double progressOverride);
 }

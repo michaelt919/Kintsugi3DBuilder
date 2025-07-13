@@ -147,6 +147,20 @@ public class IOModel
 
             return processing;
         }
+
+        @Override
+        public void bind() {
+           for (ProgressMonitor monitor : subMonitors){
+               monitor.bind();
+           }
+        }
+
+        @Override
+        public void unbind(double progressOverride) {
+            for (ProgressMonitor monitor : subMonitors){
+                monitor.unbind(progressOverride);
+            }
+        }
     }
 
     private IOHandler handler;

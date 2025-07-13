@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
@@ -187,8 +188,9 @@ public final class ViewSet implements ReadonlyViewSet
 
         File masksSrcDir = masksDirectory;
 
-        //TODO: where to put this if user doesn't save?
-        File masksDestinationDir = new File(supportingFilesDirectory, "masks");
+        File masksDestinationDir = supportingFilesDirectory != null ?
+                new File(supportingFilesDirectory, "masks") :
+                new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
 
         masksDestinationDir.mkdirs();
 

@@ -70,4 +70,12 @@ public class DefaultProgressMonitor implements ProgressMonitor
     public boolean isConflictingProcess() {
         return false;
     }
+
+    @Override
+    public void bind() {
+    }
+
+    @Override
+    public void unbind(double progressOverride) {
+    }
 }
