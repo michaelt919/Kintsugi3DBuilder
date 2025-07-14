@@ -100,40 +100,6 @@ public class MetashapeDocument {
             return chunk.get().getLabel();
         }
         return "";
-//        //open project.zip
-//        //get path from appropriate chunk id
-//        //open chunk.zip
-//        //TODO: do better logging here
-//        NodeList chunks = projectZipXML.getElementsByTagName("chunk");
-//        if (chunks == null || chunks.getLength() == 0){return "";}
-//
-//        String chunkPath = "";
-//        for (int i = 0; i < chunks.getLength(); ++i){
-//            Element elem = (Element) chunks.item(i);
-//            String chunkElemID = elem.getAttribute("id");
-//            if (Integer.parseInt(chunkElemID) == id){
-//                chunkPath = elem.getAttribute("path");
-//                break;
-//            }
-//        }
-//
-//        if (chunkPath.isBlank()){return "";}
-//
-//        chunkPath = new File(new File(getPSXPathBase() + ".files"), chunkPath).getPath();
-//        try {
-//            Document chunkXML = UnzipHelper.unzipToDocument(chunkPath);
-//            NodeList chunkWrapper = chunkXML.getElementsByTagName("chunk");
-//            if (chunkWrapper!= null && chunkWrapper.getLength() >0){
-//                Element chunkElem = (Element) chunkWrapper.item(0);
-//                return chunkElem.getAttribute("label");
-//            }
-//            else{
-//                return "";
-//            }
-//        } catch (IOException e) {
-//            log.error("Could not open chunk zip document", e);
-//            return "";
-//        }
     }
 
     String getPSXPathBase() {

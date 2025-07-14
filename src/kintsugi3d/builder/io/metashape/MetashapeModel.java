@@ -48,26 +48,23 @@ public class MetashapeModel {
     }
 
     private static String findModelPath(MetashapeChunk chunk, Optional<Integer> modelID) {
-        String path = "";
-
-        //TODO: clean this up
         try{
-            NodeList elems = ((Element) chunk.getFrameXML().getElementsByTagName("frame").item(0))
+            NodeList elems = ((Element) chunk.getFrameXML()
+                    .getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
 
             //this if statement triggers if chunk has one model and that model has no id
             if (elems.getLength() == 1 &&
                     ((Element) elems.item(0)).getAttribute("id").isEmpty()) {
-                path = ((Element) elems.item(0)).getAttribute("path");
+                return ((Element) elems.item(0)).getAttribute("path");
             }
-            else {
-                for (int i = 0; i < elems.getLength(); i++) {
-                    Element element = (Element) elems.item(i);
 
-                    if (Objects.equals(element.getAttribute("id"), String.valueOf(modelID.get()))) {
-                        path = element.getAttribute("path");
-                        break;
-                    }
+            //now we check to see if id's match
+            for (int i = 0; i < elems.getLength(); i++) {
+                Element element = (Element) elems.item(i);
+
+                if (Objects.equals(element.getAttribute("id"), String.valueOf(modelID.get()))) {
+                    return element.getAttribute("path");
                 }
             }
 
@@ -75,7 +72,7 @@ public class MetashapeModel {
         catch(NullPointerException e){
             //ignore, no path was found
         }
-        return path;
+        return "";
     }
 
     public static class LoadPreferences {
