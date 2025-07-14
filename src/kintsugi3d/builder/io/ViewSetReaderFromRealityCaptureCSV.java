@@ -161,6 +161,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         ViewSet result = builder.finish();
         result.setGeometryFile(overrides.geometryFile);
         result.setFullResImageDirectory(overrides.fullResImageDirectory);
+        result.setMasksDirectory(overrides.masksDirectory);
         return result;
     }
 }

@@ -115,9 +115,4 @@ public class RealityCaptureInputSource extends InputSource{
         this.needsUndistort = needsUndistort;
         return this;
     }
-
-    public RealityCaptureInputSource setMasksDir(File masksDir) {
-        this.masksDir = masksDir;
-        return this;
-    }
 }

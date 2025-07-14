@@ -245,7 +245,7 @@ public class UnzipHelper {
         while (zipEntry != null){
             //ignore directories for now
             if (!zipEntry.isDirectory()) {
-                if (monitor  != null){
+                if (monitor != null) {
                     monitor.setProgress(idx, zipEntry.getName());
                 }
                 FileOutputStream fos = new FileOutputStream(new File(destinationDir, zipEntry.getName()));

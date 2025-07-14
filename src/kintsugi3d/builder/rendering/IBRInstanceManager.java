@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-import javafx.scene.control.ProgressBar;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -180,14 +179,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         if(progressMonitor != null)
         {
             progressMonitor.setStageCount(2);
-            progressMonitor.setStage(0, "Preparing masks...");
-
-            progressMonitor.unbind(ProgressBar.INDETERMINATE_PROGRESS);
-            loadedViewSet.loadMasks(progressMonitor);
-            progressMonitor.bind();
-
-            //still stage 0 because loading masks takes a few seconds at most
-            //if we incremented the stage here, overall progress bar would be filled significantly more than makes sense
             progressMonitor.setStage(0, "Generating preview-resolution images...");
         }
 

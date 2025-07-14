@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+import javafx.scene.control.ProgressBar;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.state.SettingsModel;
@@ -182,6 +183,10 @@ public final class ViewSet implements ReadonlyViewSet
     private final SettingsModel viewSetSettings = new SimpleSettingsModel();
 
     public void loadMasks(ProgressMonitor monitor) {
+        if (monitor != null){
+            monitor.setStage(0, "Preparing masks...");
+            monitor.unbind(ProgressBar.INDETERMINATE_PROGRESS);
+        }
         if (masksDirectory == null){
             return;
         }
@@ -235,8 +240,7 @@ public final class ViewSet implements ReadonlyViewSet
                 return;
             }
 
-            for (int i = 0; i < maskFiles.length; ++i){
-                File srcFile = maskFiles[i];
+            for (File srcFile : maskFiles) {
                 String fileName = srcFile.getName();
                 int idx = findIndexOfView(fileName);
 
@@ -247,10 +251,10 @@ public final class ViewSet implements ReadonlyViewSet
 
                 //give up if not found
                 //we could do a .contains() search, but that might be too slow because N^2
-                if (idx == -1){
+                if (idx == -1) {
                     continue;
                 }
-                try{
+                try {
                     File maskFile = new File(masksDestinationDir, fileName);
                     Files.copy(srcFile.toPath(), maskFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     addMask(idx, maskFile);
@@ -260,6 +264,9 @@ public final class ViewSet implements ReadonlyViewSet
             }
         }
         setMasksDirectory(masksDestinationDir);
+        if (monitor != null){
+            monitor.bind();
+        }
     }
 
     public static final class Builder
