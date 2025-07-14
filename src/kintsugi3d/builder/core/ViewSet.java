@@ -199,8 +199,6 @@ public final class ViewSet implements ReadonlyViewSet
 
         masksDestinationDir.mkdirs();
 
-        //TODO: use ImageFinder?
-
         if (masksSrcDir.toString().endsWith(".zip")){
             //get masks folder, then subfolder is viewset uuid
             // (follow convention set by preview and fit image folders)
@@ -242,15 +240,19 @@ public final class ViewSet implements ReadonlyViewSet
 
             for (File srcFile : maskFiles) {
                 String fileName = srcFile.getName();
+
+                //search for {fileName}
                 int idx = findIndexOfView(fileName);
 
                 //search for {fileName}_mask if needed
-//                if (camId == null){
-                //TODO:
-//                }
+                if (idx == -1){
+                    String tempName = fileName.replace("_mask", "");
+                    idx = findIndexOfView(tempName);
+                }
 
                 //give up if not found
-                //we could do a .contains() search, but that might be too slow because N^2
+                //we could do a .contains() search, but that might be too slow
+                //or we might add support for "give us your mask extension" and then go from there
                 if (idx == -1) {
                     continue;
                 }
