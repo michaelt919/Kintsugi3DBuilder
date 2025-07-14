@@ -23,7 +23,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
@@ -93,6 +92,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         InputSource sharedSource = hostScrollerController.getInfo(ShareInfo.Info.INPUT_SOURCE);
 
         if (!sharedSource.equals(source)) { //check if sources are equal so we don't have to unzip images multiple times
+            //sometimes this saves processing time, other times it leads to buggy behavior :/
+            //really the only use case is saving time if a user flips back and forth between primary view selection and the previous page
             source = sharedSource;
 
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
@@ -104,7 +105,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             } catch (MissingImagesException mie) {
                 if (source instanceof MetashapeProjectInputSource) {
                     MetashapeProjectInputSource metaSource = (MetashapeProjectInputSource) source;
-                    Platform.runLater(() -> metaSource.showMissingImgsAlert(mie));
+                    Platform.runLater(() -> metaSource.showMissingImgsAlert(mie, hostScrollerController));
                 }
             }
         }

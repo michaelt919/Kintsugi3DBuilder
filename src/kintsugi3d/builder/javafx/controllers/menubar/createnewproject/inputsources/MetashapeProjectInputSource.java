@@ -24,6 +24,7 @@ import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +142,7 @@ public class MetashapeProjectInputSource extends InputSource{
         return this;
     }
 
-    public void showMissingImgsAlert(MissingImagesException mie) {
+    public void showMissingImgsAlert(MissingImagesException mie, FXMLPageScrollerController hostScrollerController) {
         int numMissingImgs = mie.getNumMissingImgs();
         File prevTriedDirectory = mie.getImgDirectory();
 
@@ -154,8 +155,7 @@ public class MetashapeProjectInputSource extends InputSource{
                 cancel, newDirectory, skipMissingCams/*, openDirectory*/);
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            //TODO: get this later
-            //getHostScrollerController().prevPage();
+            hostScrollerController.prevPage();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
@@ -172,7 +172,7 @@ public class MetashapeProjectInputSource extends InputSource{
             }
             catch(MissingImagesException mie2)
             {
-                Platform.runLater(() -> showMissingImgsAlert(mie2));
+                Platform.runLater(() -> showMissingImgsAlert(mie2, hostScrollerController));
             }
         });
 

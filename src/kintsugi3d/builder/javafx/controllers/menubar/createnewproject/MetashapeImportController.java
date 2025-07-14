@@ -153,7 +153,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             fileNameTxtField.setText(file.getName());
             updateChoiceBoxes(file);
-            updateLoadedIndicators();
         }
     }
 
