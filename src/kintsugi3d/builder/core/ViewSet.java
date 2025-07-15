@@ -716,6 +716,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.lightIntensityList.addAll(this.lightIntensityList);
         result.lightIndexList.addAll(this.lightIndexList);
         result.imageFiles.addAll(this.imageFiles);
+        result.maskFiles.putAll(this.maskFiles);
         result.viewErrorMetrics.addAll(this.viewErrorMetrics);
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
@@ -729,6 +730,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
+        result.masksDirectory = this.masksDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;

@@ -70,9 +70,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-
         hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/MasksImport.fxml"));
-
     }
 
     @Override
@@ -163,12 +161,13 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     private void updateModelSelectionChoiceBox() {
+        modelSelectionChoiceBox.getItems().clear();
+        modelSelectionChoiceBox.setDisable(true);
+
         if (chunkSelectionChoiceBox.getItems().isEmpty()) {
             return;
         }
 
-        modelSelectionChoiceBox.setDisable(true);
-        modelSelectionChoiceBox.getItems().clear();
         for (MetashapeModel model : metashapeDocument.getSelectedChunk().getModels()) {
             String modelID = model.getId().isPresent() ? String.valueOf(model.getId().get()) : NO_MODEL_ID_MSG;
             String modelName = !model.getLabel().isBlank() ? model.getLabel() : NO_MODEL_NAME_MSG;

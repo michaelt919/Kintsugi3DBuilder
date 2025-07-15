@@ -133,8 +133,9 @@ public class SpecularFitProcess
                     }
                     else
                     {
-                        //TODO: apply mask here
-                        return new BufferedImageColorList(image);
+                        return mask != null ?
+                                new BufferedImageColorList(IBRResourcesImageSpace.applyGrayscaleMaskToAlpha(image, mask)) :
+                                new BufferedImageColorList(image);
                     }
                 }
                 catch (IOException e)
