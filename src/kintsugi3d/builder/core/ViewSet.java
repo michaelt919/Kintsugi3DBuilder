@@ -980,7 +980,12 @@ public final class ViewSet implements ReadonlyViewSet
         if (maskFiles.isEmpty()){
             return null;
         }
-        return new File(getMasksDirectory(), maskFiles.get(poseIndex).getName());
+        File maskFile = maskFiles.get(poseIndex);
+        if (maskFile == null){
+            //not all images have masks, so this file may still not exist
+            return null;
+        }
+        return new File(getMasksDirectory(), maskFile.getName());
     }
 
     public int getPreviewWidth()
