@@ -46,36 +46,6 @@ public class UnzipHelper {
     private UnzipHelper() {
     }
 
-    public static String unzipToString(File zipFile) throws IOException {
-        //unzip the zip file and return the contents as a string
-        return directoryStreamToString(new FileInputStream(zipFile));
-    }
-
-    private static String directoryStreamToString(InputStream stream) throws IOException {
-        //intended to only unzip one file
-        //Note: if this function unzips a file with multiple text files, it will simply concatenate them
-        ZipInputStream zis= new ZipInputStream(stream);
-        try{
-            byte[] buffer = new byte[1024];
-            StringBuilder s = new StringBuilder();
-            int read = 0;
-            while ((zis.getNextEntry())!= null) {
-                while ((read = zis.read(buffer, 0, 1024)) >= 0) {
-                    s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
-                }
-            }
-            return s.toString();
-        }
-        catch(Exception e){
-            log.error("Error unzipping file:", e);
-        }
-        finally{
-            zis.closeEntry();
-            zis.close();
-        }
-        return "";
-    }
-
     //this function unzips a specific file within a zip directory
     private static String fileStreamToString(InputStream stream) throws IOException {
         try (stream) {
@@ -172,7 +142,39 @@ public class UnzipHelper {
     }
 
     public static Document unzipToDocument(File zipFile) throws IOException {
-        return UnzipHelper.convertStringToDocument(UnzipHelper.unzipToString(zipFile));
+        //unzip the zip file, find the .xml portion, and return it as a document
+        String result = "";
+        ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFile));
+        try{
+            log.info("Unzipping {}", zipFile);
+            byte[] buffer = new byte[1024];
+            StringBuilder s = new StringBuilder();
+            int read = 0;
+            try (ZipFile file = new ZipFile(zipFile)) {
+                Enumeration<? extends ZipEntry> entries = file.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    // Check if entry is a directory
+                    if (!entry.getName().endsWith(".xml")) {
+                        continue;
+                    }
+                    try (InputStream inputStream = file.getInputStream(entry)) {
+                        while ((read = inputStream.read(buffer, 0, 1024)) >=0){
+                            s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
+                        }
+                    }
+                }
+            }
+            result = s.toString();
+        }
+        catch(Exception e){
+            log.error("Error unzipping file:", e);
+        }
+        finally{
+            zis.closeEntry();
+            zis.close();
+        }
+        return UnzipHelper.convertStringToDocument(result);
     }
 
     public static Map<Integer, Image> unzipImagesToMap(File imgsDir) {
