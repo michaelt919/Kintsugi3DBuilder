@@ -364,7 +364,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         try (InputStream stream = new FileInputStream(file))
         {
             ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
-            overrides.projectRoot = file;
+            overrides.projectRoot = file.getParentFile();
             overrides.supportingFilesDirectory = supportingFilesDirectory;
             overrides.needsUndistort = true;
             return readFromStream(stream, overrides);
