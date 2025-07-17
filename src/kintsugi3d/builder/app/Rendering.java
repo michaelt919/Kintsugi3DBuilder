@@ -422,16 +422,6 @@ public final class Rendering
             public boolean isConflictingProcess() {
                 return ioModel.getProgressMonitor().isConflictingProcess();
             }
-
-            @Override
-            public void bind() {
-               ioModel.getProgressMonitor().bind();
-            }
-
-            @Override
-            public void unbind(double progressOverride) {
-                ioModel.getProgressMonitor().unbind(progressOverride);
-            }
         });
 
         app.addRefreshable(new Refreshable()

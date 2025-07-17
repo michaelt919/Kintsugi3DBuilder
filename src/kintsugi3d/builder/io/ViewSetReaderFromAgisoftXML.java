@@ -801,6 +801,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                     // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
                     File psxFile = new File(metashapeChunk.getParentDocument().getPsxFilePath());
+
+                    //TODO: how is this working? This is not the directory of full res photos. Does this work because of relative paths in frame.xml or something?
                     File fullResImageDirectory = new File(psxFile.getParent()); // The directory of full res photos
                     // Print error to log if unable to find fullResImageDirectory
                     if (!fullResImageDirectory.exists())
@@ -816,7 +818,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     else
                     {
                         // Set the fullResImage Directory to be the root directory
-                        viewSet.setFullResImageDirectory(chunkDirectory.getParentFile().getParentFile());
+                        viewSet.setFullResImageDirectory(fullResImageDirectory);
                     }
 
                     // mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml

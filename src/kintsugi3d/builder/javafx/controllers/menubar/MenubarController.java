@@ -240,7 +240,6 @@ public class MenubarController
         }
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
-            private static final String FINISHING_UP = "Finishing up...";
             private double maximum = 0.0;
             private double localProgress = 0.0;
 
@@ -249,7 +248,6 @@ public class MenubarController
             private IntegerProperty currentStageProperty = new SimpleIntegerProperty(0);
 
             private String revertText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
-            private boolean isBound; //when not bound, overall progress does not increment at all
 
             @Override
             public void allowUserCancellation() throws UserCancellationException
@@ -323,8 +321,6 @@ public class MenubarController
 
                 }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
                         localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
-
-                isBound = true;
             }
 
             @Override
@@ -349,17 +345,20 @@ public class MenubarController
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
                 //index current stage from 0 in this instance
-                if (isBound){
-                    overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
-                    Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
-                }
+                overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
+                Platform.runLater(() -> overallProgressBar.setProgress(overallProgress));
 
                 log.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
                 Platform.runLater(()-> overallTextLabel.setText(message));
 
                 if(currentStage > stageCountProperty.getValue()){
-                    Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
+                    if (message.equals(ProgressMonitor.PREPARING_PROJECT)){
+                        Platform.runLater(()->localTextLabel.setText(ProgressMonitor.ALMOST_READY));
+                    }
+                    else{
+                        Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
+                    }
                 }
                 else{
                     ProgressBarsController.getInstance().beginNewStage();
@@ -380,11 +379,9 @@ public class MenubarController
                 Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress));
 
                 //index current stage from 0 in this instance
-                if (isBound) {
-                    double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
-                    this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
-                    Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
-                }
+                double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
+                this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
+                Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
 
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
 
@@ -460,17 +457,6 @@ public class MenubarController
                 });
 
                 return true;
-            }
-
-            @Override
-            public void bind(){
-                isBound = true;
-            }
-
-            @Override
-            public void unbind(double progressOverride){
-                isBound = false;
-                Platform.runLater(()-> overallProgressBar.setProgress(progressOverride));
             }
         });
 
@@ -561,7 +547,7 @@ public class MenubarController
                 Menu menu = (Menu) item;
                 getRadioMenuItemsHelper(radioMenuItems, menu.getItems());
             }
-        };
+        }
     }
 
     private void hideAllProgress() {

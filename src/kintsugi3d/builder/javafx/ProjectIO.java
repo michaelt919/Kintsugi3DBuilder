@@ -18,10 +18,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
@@ -186,7 +183,11 @@ public final class ProjectIO
         // Force user to save the project before proceeding, so that they have a place to save the results
         saveProjectAs(parentWindow, () -> {
             setViewsetDirectories(viewSet);
-            viewSet.loadMasks(MultithreadModels.getInstance().getIOModel().getProgressMonitor());
+            ProgressMonitor monitor = MultithreadModels.getInstance().getIOModel().getProgressMonitor();
+            if (monitor != null){
+                monitor.setStage(0, ProgressMonitor.PREPARING_PROJECT);
+            }
+            viewSet.loadMasks();
         });
     }
 

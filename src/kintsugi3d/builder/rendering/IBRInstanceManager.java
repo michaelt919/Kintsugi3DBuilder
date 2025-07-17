@@ -317,20 +317,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 }
                 return progressMonitor.isConflictingProcess();
             }
-
-            @Override
-            public void bind() {
-                if (progressMonitor != null){
-                    progressMonitor.bind();
-                }
-            }
-
-            @Override
-            public void unbind(double progressOverride) {
-                if (progressMonitor != null){
-                    progressMonitor.unbind(progressOverride);
-                }
-            }
         });
         newInstance = newItem;
     }

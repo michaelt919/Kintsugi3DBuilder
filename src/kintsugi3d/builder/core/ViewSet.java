@@ -182,11 +182,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final SettingsModel viewSetSettings = new SimpleSettingsModel();
 
-    public void loadMasks(ProgressMonitor monitor) {
-        if (monitor != null){
-            monitor.setStage(0, "Preparing masks...");
-            monitor.unbind(ProgressBar.INDETERMINATE_PROGRESS);
-        }
+    public void loadMasks() {
         if (masksDirectory == null){
             return;
         }
@@ -204,7 +200,7 @@ public final class ViewSet implements ReadonlyViewSet
             // (follow convention set by preview and fit image folders)
             log.info("Unzipping masks folder...");
             try{
-                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, monitor);
+                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, null);
                 File[] childFiles = masksDestinationDir.listFiles();
                 if (childFiles != null && childFiles.length > 0){
                     File docFile = Arrays.stream(childFiles)
@@ -266,9 +262,6 @@ public final class ViewSet implements ReadonlyViewSet
             }
         }
         setMasksDirectory(masksDestinationDir);
-        if (monitor != null){
-            monitor.bind();
-        }
     }
 
     public static final class Builder
