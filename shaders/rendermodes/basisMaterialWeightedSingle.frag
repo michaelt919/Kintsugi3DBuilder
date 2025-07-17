@@ -56,7 +56,7 @@ vec4 modulate(Material m)
         }
     }
 
-    return vec4(vec3(thisWeight / maxWeight), 1.0);
+    return vec4(vec3(smoothstep(0.0, maxWeight, thisWeight)), 1.0);
 }
 
 vec3 specular(LightingParameters l, Material m)
