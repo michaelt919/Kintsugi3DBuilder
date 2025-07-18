@@ -256,7 +256,7 @@ public class MenubarController
                 {
                     cancelRequested.set(false); // reset cancel flag
 
-                    WelcomeWindowController.getInstance().showIfNoModelLoaded();
+                    WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
                     dismissMiniProgressBar();
 
                     //need to end stopwatches here because they might need to be reused for another process
@@ -1285,7 +1285,7 @@ public class MenubarController
 
     public void dismissMiniProgressBar() {
         Platform.runLater(()->miniProgressPane.setVisible(false));
-        WelcomeWindowController.getInstance().showIfNoModelLoaded();
+        WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
     }
 
     public void file_hotSwap(ActionEvent actionEvent)

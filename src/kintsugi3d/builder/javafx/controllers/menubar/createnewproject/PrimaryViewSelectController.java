@@ -28,7 +28,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -43,7 +43,7 @@ import java.util.Map;
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
  */
 //TODO: Rename to OrientationViewSelectController for clarity?
-public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePage, ImageThreadable {
+public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePageController, ImageThreadable {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
