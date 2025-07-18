@@ -14,6 +14,7 @@ package kintsugi3d.builder.export.specular;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.BreakIterator;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -50,6 +51,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private TextField basisCountTextField;
     @FXML private TextField mfdResolutionTextField;
     @FXML private TextField convergenceToleranceTextField;
+    @FXML private TextField specularMinWidthTextField;
     @FXML private TextField specularSmoothnessTextField;
     @FXML private TextField metallicityTextField;
     @FXML private CheckBox translucencyCheckBox;
@@ -129,6 +131,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
             settings.setConvergenceTolerance(convergenceTolerance);
+            double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
+            settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidth);
             double specularSmoothness = Double.parseDouble(specularSmoothnessTextField.getText());
             settings.getSpecularBasisSettings().setSpecularSmoothness(specularSmoothness);
             double metallicity = Double.parseDouble(metallicityTextField.getText());

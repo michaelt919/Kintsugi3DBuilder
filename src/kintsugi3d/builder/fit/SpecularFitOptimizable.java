@@ -311,6 +311,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             new GeneralizedSmoothStepBasis(
                 specularBasisSettings.getBasisResolution(),
                 specularBasisSettings.getMetallicity(),
+                (int) Math.round(specularBasisSettings.getSpecularMinWidth() * specularBasisSettings.getBasisResolution()),
                 (int) Math.round(specularBasisSettings.getSpecularSmoothness() * specularBasisSettings.getBasisResolution()),
                 x -> 3 * x * x - 2 * x * x * x)
 //                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())

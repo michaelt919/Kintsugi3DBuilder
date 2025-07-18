@@ -30,7 +30,7 @@ import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 final class ReflectanceMatrixBuilder
 {
     // Set to true to validate the MatrixBuilder implementation (should generally be turned off for much better efficiency).
-    private static final boolean VALIDATE = false;
+    private static final boolean VALIDATE = true;
 
     /**
      * Reflectance information for all the data.
@@ -136,7 +136,7 @@ final class ReflectanceMatrixBuilder
                     if (mExact < specularBasisSettings.getBasisResolution())
                     {
                         // Iterate over the available step functions in the basis.
-                        for (int s = 0; s < specularBasisSettings.getBasisResolution(); s++)
+                        for (int s = 0; s < matrixBuilder.getBasisLibrary().getFunctionCount(); s++)
                         {
                             // Evaluate each step function twice, to the left and right of the current sample.
                             double fFloor = matrixBuilder.getBasisLibrary().evaluate(s, mFloor);

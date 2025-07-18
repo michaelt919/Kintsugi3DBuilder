@@ -15,6 +15,7 @@ public class SpecularBasisSettings
 {
     private int basisCount = 8;
     private int basisResolution = 90;
+    private double specularMinWidth = 0.05;
     private double specularSmoothness = 1.0;
     private double metallicity = 0.0;
 
@@ -67,7 +68,25 @@ public class SpecularBasisSettings
     }
 
     /**
-     * Gets the required smoothness for the specular lobe (the width of the smoothstep function used to optimize it).
+     * The minimum width of the specular lobe when optimizing (the minimum width of the smoothstep function used).
+     * @return
+     */
+    public double getSpecularMinWidth()
+    {
+        return specularMinWidth;
+    }
+
+    /**
+     * Sets the minimum width of the specular lobe when optimizing (the minimum width of the smoothstep function used).
+     * @param specularMinWidth
+     */
+    public void setSpecularMinWidth(double specularMinWidth)
+    {
+        this.specularMinWidth = specularMinWidth;
+    }
+
+    /**
+     * Gets the required smoothness for the specular lobe (the maximum width of the smoothstep function used to optimize it).
      * @return
      */
     public double getSpecularSmoothness()
@@ -76,7 +95,7 @@ public class SpecularBasisSettings
     }
 
     /**
-     * Sets the required smoothness for the specular lobe (the width of the smoothstep function used to optimize it).
+     * Sets the required smoothness for the specular lobe (the maximum width of the smoothstep function used to optimize it).
      * @param specularSmoothness
      */
     public void setSpecularSmoothness(double specularSmoothness)

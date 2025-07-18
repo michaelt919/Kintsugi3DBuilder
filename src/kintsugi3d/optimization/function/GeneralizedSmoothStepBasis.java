@@ -24,7 +24,8 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
 {
     private final int resolution;
     private final double metallicity;
-    private final int transitionRange;
+    private final int minSmoothstepWidth;
+    private final int maxSmoothstepWidth;
     private final DoubleUnaryOperator smoothstep;
 
     /**
@@ -43,15 +44,22 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
      *                   An exception will be thrown if this number is less than 1.
      * @param metallicity The assumed "metallicity" of the function being optimized.
      *                    This value will be clamped between 0 and 1.
-     * @param transitionRange The distance between the start and end of each smoothstep function in the library.
+     * @param minSmoothstepWidth The minimum distance between the start and end of each smoothstep function.
+     *                           This is used to determine the width of functions ending closest to the starting point.
+     *                           Functions that would be narrower will be omitted from the basis; thus, the size of the
+     *                           optimization domain (the number of functions in the library) is resolution - minSmoothstepWidth + 1.
+     *                           A min width of 1 will include all possible functions in the optimization domain.
+     *                           The min width will be clamped to 1 if set lower than 1.
+     * @param maxSmoothstepWidth The typical distance between the start and end of each smoothstep function in the library.
      *                        Each smoothstep function will end (with a value of 0.0) at a different location
      *                        (spaced evenly across the domain) and will start (with a value of 1.0) at
-     *                        endpoint - transitionRange.  If that difference comes out to be negative, the starting
+     *                        endpoint - maxSmoothstepWidth.  If that difference comes out to be negative, the starting
      *                        point will be clamped to zero.  The effect of this is that some basis functions with a
-     *                        smaller transition range will be included in the library.  This is helpful when optimizing
-     *                        a BRDF, for instance, which may have a steeper gradient close to the specular peak.
-     *                        A transition range of 1 would correspond to a hard step function.
-     *                        The transition range will be clamped to 1 if set lower than 1.
+     *                        smaller width be included in the library, up to minSmoothstepWidth.
+     *                        This is helpful when optimizing a BRDF, for instance, which may have a steeper gradient
+     *                        close to the specular peak.
+     *                        A max width of 1 would correspond to a hard step function.
+     *                        The max width will be clamped to minSmoothstepWidth if set lower than minSmoothstepWidth.
      * @param smoothstep The actual smoothstep function to be used.  This function should have accept a domain between
      *                   0.0 and 1.0 and map the values to a range that is also between 0.0 and 1.0, where an input of
      *                   0.0 evaluates to a result of 0.0, and an input of 1.0 evaluates to a result of 1.0.
@@ -60,8 +68,8 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
      *                   assumed to evaluate to 1.0 for an input parameter of 0 and decresse down to 1.0 as that
      *                   parameter increases.
      */
-    public GeneralizedSmoothStepBasis(int resolution, double metallicity,
-                                      int transitionRange, DoubleUnaryOperator smoothstep)
+    public GeneralizedSmoothStepBasis(int resolution, double metallicity, int minSmoothstepWidth,
+                                      int maxSmoothstepWidth, DoubleUnaryOperator smoothstep)
     {
         if (resolution < 1)
         {
@@ -70,41 +78,44 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
 
         this.resolution = resolution;
         this.metallicity = Math.max(0.0, Math.min(1.0, metallicity));
-        this.transitionRange = Math.max(1, transitionRange);
+        this.minSmoothstepWidth = Math.max(1, minSmoothstepWidth);
+        this.maxSmoothstepWidth = Math.max(minSmoothstepWidth, maxSmoothstepWidth);
         this.smoothstep = smoothstep;
     }
 
     @Override
     public double evaluate(int functionIndex, int value)
     {
-        // The function at index i always reaches 0.0 when value = i + 1.
-        // If i + 1 < transitionRange, then the smoothstep starts right away at m=0.
-        // Otherwise, the smoothstep starts at m = (i + 1) - transitionRange.
-        if (value < functionIndex + 1) // <=> functionIndex + 1 - value > 0
+        // The function at index i always reaches 0.0 when value = i + minSmoothstepWidth.
+        // If i + minSmoothstepWidth < maxSmoothstepWidth, then the smoothstep starts right away at m=0.
+        // Otherwise, the smoothstep starts at m = i + minSmoothstepWidth - maxSmoothstepWidth.
+        if (value < functionIndex + minSmoothstepWidth) // <=> functionIndex + minSmoothstepWidth - value > 0
         {
+            // Assuming minSmoothstepWidth is 1:
             // functionIndex = 0: range of 1; [0, 1)
             // functionIndex = 1: range of 2; [0, 2)
             // etc.
-            // functionIndex = transitionRange: use transitionRange; [0, transitionRange)
-            // functionIndex = transitionRange + 1: [1, transitionRange + 1)
+            // functionIndex = maxSmoothstepWidth: use maxSmoothstepWidth; [0, maxSmoothstepWidth)
+            // functionIndex = maxSmoothstepWidth + 1: [1, maxSmoothstepWidth + 1)
             // etc.
-            int effectiveTransitionRange = Math.min(transitionRange, functionIndex + 1);
+            int effectiveWidth = Math.min(maxSmoothstepWidth, functionIndex + minSmoothstepWidth);
 
-            // Value is within transition range, use smoothstep function.
-            if (functionIndex + 1 - value < effectiveTransitionRange)
-            // <=> value > functionIndex + 1 - effectiveTransitionRange [left bound of the transitionRange]
+            int domainIndex = minSmoothstepWidth + functionIndex - value;
+            if (domainIndex < effectiveWidth)
+            // <=> value > functionIndex + minSmoothstepWidth - effectiveWidth [left bound of the range]
             {
-                return smoothstep.applyAsDouble((double) (functionIndex + 1 - value) / (double) effectiveTransitionRange);
+                // Value is within range, use smoothstep function.
+                return smoothstep.applyAsDouble((double) domainIndex / (double) effectiveWidth);
             }
             else
             {
-                // Value is beyond transition range to the left
+                // Value is beyond range to the left
                 return 1.0;
             }
         }
         else
         {
-            // Value is beyond transition range to the right
+            // Value is beyond range to the right
             return 0.0;
         }
     }
@@ -112,7 +123,7 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
     @Override
     public int getFunctionCount()
     {
-        return resolution;
+        return resolution - minSmoothstepWidth + 1;
     }
 
     @Override
@@ -136,10 +147,10 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
     public void contributeToFittingSystem(int valueCurrent, int valueNext, int instanceCount,
                                           MatrixBuilderSums sums, MatrixSystem fittingSystem)
     {
-        // For a particular valueCurrent, if i = valueCurrent-1 is the index of the last basis function that evaluates
-        // to 0.0 at valueCurrent, then i = valueCurrent-1 + transitionRange is the index of the first basis function
-        // that evaluates to 1.0 at valueCurrent.
-        int transitionEnd = Math.min(valueCurrent - 1 + transitionRange, resolution);
+        // For a particular valueCurrent, valueCurrent-minSmoothstepWidth is the last basis function that evaluates to 0.0 @ valueCurrent,
+        // so valueCurrent - minSmoothstepWidth + maxSmoothstepWidth is the first basis function that evaluates to 1.0 @ valueCurrent.
+        int domainEnd = Math.min(valueCurrent - minSmoothstepWidth + maxSmoothstepWidth, getFunctionCount());
+        int domainStart = Math.max(0, valueCurrent - minSmoothstepWidth);
 
         // Add the running total to elements of the ATA matrix and the ATy vector corresponding to the next value
         // as well as any values skipped over.
@@ -148,11 +159,11 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
         // the value changes for others.
         for (int b1 = 0; b1 < instanceCount; b1++)
         {
-            // Contribute to weights for library functions in the range [valueCurrent - 1, transitionEnd].
+            // Contribute to weights for library functions in the range [valueCurrent - 1, domainEnd].
             // This range is inclusive on both ends due to linear interpolation.
-            // i.e., the library function at i=transitionEnd will be interpolating from 1 to a value less than 1 for
+            // i.e., the library function at i=domainEnd will be interpolating from 1 to a value less than 1 for
             // parameter values between valueCurrent and valueCurrent+1.
-            for (int k = valueCurrent; k <= transitionEnd && k < resolution; k++)
+            for (int k = domainStart; k <= domainEnd && k < getFunctionCount(); k++)
             {
                 int i = instanceCount * (k + 1) + b1;
 
@@ -189,9 +200,9 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
 
                     // Bottom right partition of the matrix: row and column both correspond to non-constant:
 
-                    // Matrix coefficients where both row and column correspond to transition range:
-                    // Need a nested loop to consider every combination of library functions in the range.
-                    for (int k2 = valueCurrent; k2 <= transitionEnd && k2 < resolution; k2++)
+                    // Matrix coefficients where both row and column are in the domain:
+                    // Need a nested loop to consider every combination of library functions in the domain.
+                    for (int k2 = domainStart; k2 <= domainEnd && k2 < getFunctionCount(); k2++)
                     {
                         int j = instanceCount * (k2 + 1) + b2;
 
@@ -208,9 +219,10 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
                                         sums.getWeightedAnalyticSquared(b1, b2))));
                     }
 
-                    // Matrix coefficients where row is in the transition range but column isn't, and vice-versa.
-                    // Need to consider every library function that comes after transitionEnd.
-                    for (int k2 = transitionEnd + 1; k2 < resolution; k2++) {
+                    // Matrix coefficients where row is in the domain but column isn't, and vice-versa.
+                    // Need to consider every library function that comes after domainEnd.
+                    for (int k2 = domainEnd + 1; k2 < getFunctionCount(); k2++)
+                    {
                         int j = instanceCount * (k2 + 1) + b2;
 
                         double coeff = lerpHelper(fLower, fUpper,
@@ -224,13 +236,13 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
                 }
             }
 
-            // Contribute to weights for library functions from current transitionEnd+1 through next transitionEnd+1.
+            // Contribute to weights for library functions from current domainEnd+1 through next domainEnd+1.
             // These will all evaluate to 1.0 for the current value of m so we just need the total of their weights.
             // Since the non-blend-weighted sums continue to accumulate, contributions to later library functions
             // will be deferred until the sums are complete for those functions.
             // This loop usually would only run once, but could run multiple times if we skipped a few values.
-            int nextTransitionEnd = Math.min(valueNext - 1 + transitionRange, resolution);
-            for (int m1 = transitionEnd + 1; m1 <= nextTransitionEnd && m1 < resolution; m1++) // TODO work out why m1 < resolution is necessary
+            int nextDomainEnd = Math.min(valueNext - minSmoothstepWidth + maxSmoothstepWidth, resolution);
+            for (int m1 = domainEnd + 1; m1 <= nextDomainEnd && m1 < getFunctionCount(); m1++) // TODO work out why m1 < functionCount is necessary
             {
                 int i = instanceCount * (m1 + 1) + b1;
 
@@ -262,7 +274,7 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
                     // Visit every element of the microfacet distribution that comes after m1.
                     // This is because the form of ATA is such that the values in the matrix are determined by the lower
                     // of the two values.
-                    for (int m2 = m1 + 1; m2 < resolution; m2++)
+                    for (int m2 = m1 + 1; m2 < getFunctionCount(); m2++)
                     {
                         j = instanceCount * (m2 + 1) + b2;
 
@@ -294,23 +306,23 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
             // Update the running total for future elements where the current basis function will be maxed out.
             sums[m] = sums[m + 1] + nonConstantSolution.applyAsDouble(m);
 
-            // For a particular value of m, if m-1 is the last basis function that evaluates to 0.0,
-            // then m-1 + transitionRange is the first basis function that evaluates to 1.0.
-            int transitionEnd = Math.min(m - 1 + transitionRange, resolution);
+            // For a particular value of m, m-minSmoothstepWidth is the last basis function that evaluates to 0.0,
+            // so m-minSmoothstepWidth + maxSmoothstepWidth is the first basis function that evaluates to 1.0.
+            int domainEnd = Math.min(m - minSmoothstepWidth + maxSmoothstepWidth, getFunctionCount());
 
-            // Accounts for library functions from transitionEnd through the domain max.
+            // Accounts for library functions from domainEnd through the domain max.
             // These will all evaluate to 1.0 for the current value of m so we just need the total of their weights.
-            double currentTotal = sums[transitionEnd];
+            double currentTotal = sums[domainEnd];
 
-            // Accounts for library functions in the range [m, transitionEnd).
-            for (int i = transitionEnd - 1; i >= m; i--)
+            // Accounts for library functions in the range [m, domainEnd).
+            for (int i = domainEnd - 1; i >= m - minSmoothstepWidth + 1; i--)
             {
                 // Evaluate library function i for input parameter m and add to weighted total.
                 currentTotal += nonConstantSolution.applyAsDouble(i) * evaluate(i, m);
             }
 
             // Library functions 0 through m-1 should not be able to affect the element at index m since they will evaluate to 0.
-            // Total now accounts for the whole rang eof library functions.
+            // Total now accounts for the whole range of library functions.
             functionConsumer.accept(currentTotal, m);
         }
     }
