@@ -30,7 +30,7 @@ import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 final class ReflectanceMatrixBuilder
 {
     // Set to true to validate the MatrixBuilder implementation (should generally be turned off for much better efficiency).
-    private static final boolean VALIDATE = true;
+    private static final boolean VALIDATE = false;
 
     /**
      * Reflectance information for all the data.
@@ -91,6 +91,14 @@ final class ReflectanceMatrixBuilder
         if (VALIDATE)
         {
             validate();
+        }
+    }
+
+    private static void assertBool(boolean condition, String message)
+    {
+        if (!condition)
+        {
+            throw new RuntimeException(message);
         }
     }
 
@@ -171,13 +179,13 @@ final class ReflectanceMatrixBuilder
 
         for (int i = 0; i < mATA.numRows(); i++)
         {
-            assert Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001 : "Red " + i;
-            assert Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001 : "Green  " + i;
-            assert Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001 : "Blue  " + i;
+            assertBool(Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001, "Red " + i);
+            assertBool(Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001, "Green  " + i);
+            assertBool(Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001, "Blue  " + i);
 
             for (int j = 0; j < mATA.numCols(); j++)
             {
-                assert Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001 : "Matrix " + i + " " + j;
+                assertBool(Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001, "Matrix " + i + " " + j);
             }
         }
     }
