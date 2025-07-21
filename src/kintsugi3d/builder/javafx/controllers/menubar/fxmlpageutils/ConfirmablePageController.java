@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
-public interface ConfirmablePage
+public interface ConfirmablePageController
 {
     boolean canConfirm();
     void confirmButtonPress();
