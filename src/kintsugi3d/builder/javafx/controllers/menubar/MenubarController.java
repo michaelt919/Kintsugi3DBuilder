@@ -109,65 +109,108 @@ public class MenubarController
     private Label overallTextLabel;
 
     //minimized progress bar
-    @FXML private AnchorPane miniProgressPane; //entire bottom bar
-    @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
-    @FXML private Label miniProgressLabel;
+    @FXML
+    private AnchorPane miniProgressPane; //entire bottom bar
+    @FXML
+    private HBox miniProgBarBoundingHBox; //only label and progress bar
+    @FXML
+    private Label miniProgressLabel;
 
-    @FXML private StackPane swapControlsStackPane; //contains either the progress bar or the dismiss button
-    @FXML private ProgressBar miniProgressBar;
-    @FXML private Button dismissButton;
+    @FXML
+    private StackPane swapControlsStackPane; //contains either the progress bar or the dismiss button
+    @FXML
+    private ProgressBar miniProgressBar;
+    @FXML
+    private Button dismissButton;
 
     //toggle groups
-    @FXML private ToggleGroup renderGroup;
+    @FXML
+    private ToggleGroup renderGroup;
 
-    @FXML private Menu aboutMenu;
+    @FXML
+    private Menu aboutMenu;
 
-    @FXML private MenuBar mainMenubar;
+    @FXML
+    private MenuBar mainMenubar;
 
     //menu items
-    @FXML private CheckMenuItem is3DGridCheckMenuItem;
-    @FXML public CheckMenuItem isCameraVisualCheckMenuItem;
-    @FXML private CheckMenuItem compassCheckMenuItem;
-    @FXML private CheckMenuItem multiSamplingCheckMenuItem;
-    @FXML private CheckMenuItem relightingCheckMenuItem;
-    @FXML private CheckMenuItem sceneWindowCheckMenuItem;
-    @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
-    @FXML private CheckMenuItem visibleLightsCheckMenuItem;
-    @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
-    @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
-    @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
+    @FXML
+    private CheckMenuItem is3DGridCheckMenuItem;
+    @FXML
+    public CheckMenuItem isCameraVisualCheckMenuItem;
+    @FXML
+    private CheckMenuItem compassCheckMenuItem;
+    @FXML
+    private CheckMenuItem multiSamplingCheckMenuItem;
+    @FXML
+    private CheckMenuItem relightingCheckMenuItem;
+    @FXML
+    private CheckMenuItem sceneWindowCheckMenuItem;
+    @FXML
+    private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
+    @FXML
+    private CheckMenuItem visibleLightsCheckMenuItem;
+    @FXML
+    private CheckMenuItem visibleLightWidgetsCheckMenuItem;
+    @FXML
+    private CheckMenuItem visibleCameraPoseCheckMenuItem;
+    @FXML
+    private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
 
-    @FXML private Menu exportMenu;
-    @FXML private Menu recentProjectsMenu;
-    @FXML private Menu cleanRecentProjectsMenu;
-    @FXML private Menu shadingMenu;
-    @FXML private Menu heatmapMenu;
-    @FXML private Menu superimposeMenu;
-    @FXML private Menu paletteMaterialMenu;
+    @FXML
+    private Menu exportMenu;
+    @FXML
+    private Menu recentProjectsMenu;
+    @FXML
+    private Menu cleanRecentProjectsMenu;
+    @FXML
+    private Menu shadingMenu;
+    @FXML
+    private Menu heatmapMenu;
+    @FXML
+    private Menu superimposeMenu;
+    @FXML
+    private Menu paletteMaterialMenu;
+    @FXML
+    private Menu paletteMaterialWeightedMenu;
 
-    @FXML private CustomMenuItem removeAllRefsCustMenuItem;
-    @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
+    @FXML
+    private CustomMenuItem removeAllRefsCustMenuItem;
+    @FXML
+    private CustomMenuItem removeSomeRefsCustMenuItem;
 
     //pull this in so we can explicitly set shader to image-based upon load
     //without this, user could select a shader, load a project,
-        //and the loaded project's appearance might not match the selected shader
-    @FXML private RadioMenuItem imageBased;
+    //and the loaded project's appearance might not match the selected shader
+    @FXML
+    private RadioMenuItem imageBased;
 
     //shaders which should only be enabled after processing textures
-    @FXML private RadioMenuItem materialMetallicity;
-    @FXML private RadioMenuItem materialReflectivity;
-    @FXML private RadioMenuItem materialBasis;
-    @FXML private RadioMenuItem imgBasedWithTextures;
-    @FXML private RadioMenuItem weightmapCombination;
+    @FXML
+    private RadioMenuItem materialMetallicity;
+    @FXML
+    private RadioMenuItem materialReflectivity;
+    @FXML
+    private RadioMenuItem materialBasis;
+    @FXML
+    private RadioMenuItem imgBasedWithTextures;
+    @FXML
+    private RadioMenuItem weightmapCombination;
+
+    private final List<Menu> shaderMenuFlyouts = new ArrayList<>(4);
 
     private final List<MenuItem> toggleableShaders = new ArrayList<>();
 
-    @FXML private VBox cameraViewList;
-    @FXML private CameraViewListController cameraViewListController;
-    @FXML private FramebufferView framebufferView;
+    @FXML
+    private VBox cameraViewList;
+    @FXML
+    private CameraViewListController cameraViewListController;
+    @FXML
+    private FramebufferView framebufferView;
 
-    @FXML private Label shaderName;
+    @FXML
+    private Label shaderName;
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -185,7 +228,6 @@ public class MenubarController
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
-
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
 
@@ -205,7 +247,7 @@ public class MenubarController
         this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
 
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
-                event-> this.miniProgressPane.setVisible(true));
+            event -> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
         this.internalModels = injectedInternalModels;
@@ -214,12 +256,14 @@ public class MenubarController
         // Keep track of whether cancellation was requested.
         AtomicBoolean cancelRequested = new AtomicBoolean(false);
 
-        cancelButton.setOnAction(event -> {
+        cancelButton.setOnAction(event ->
+        {
             cancelRequested.set(true);
-            Platform.runLater(()->cancelButton.setText("Cancelling..."));
+            Platform.runLater(() -> cancelButton.setText("Cancelling..."));
         });
 
-        doneButton.setOnAction(event ->{
+        doneButton.setOnAction(event ->
+        {
             hideAllProgress();
         });
 
@@ -227,15 +271,20 @@ public class MenubarController
         doneButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty());
 
         //send menubar accelerators to welcome window
-        for (Menu menu : mainMenubar.getMenus()){
-            for (MenuItem item : menu.getItems()){
-                KeyCombination keyCodeCombo =  item.getAccelerator();
+        for (Menu menu : mainMenubar.getMenus())
+        {
+            for (MenuItem item : menu.getItems())
+            {
+                KeyCombination keyCodeCombo = item.getAccelerator();
                 EventHandler<ActionEvent> action = item.getOnAction();
 
-                if (keyCodeCombo == null || action == null){continue;}
+                if (keyCodeCombo == null || action == null)
+                {
+                    continue;
+                }
 
                 WelcomeWindowController.getInstance().addAccelerator(keyCodeCombo, () ->
-                        Platform.runLater(() -> action.handle(new ActionEvent())));
+                    Platform.runLater(() -> action.handle(new ActionEvent())));
             }
         }
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
@@ -300,40 +349,44 @@ public class MenubarController
 
                 miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
 
-                miniProgressLabel.textProperty().bind(Bindings.createStringBinding(()-> {
-                    String currProcessTxt = overallTextLabel.textProperty().getValue();
+                miniProgressLabel.textProperty().bind(Bindings.createStringBinding(() ->
+                    {
+                        String currProcessTxt = overallTextLabel.textProperty().getValue();
 
-                    //Display "Finishing up..." or something similar
-                    if (currentStageProperty.getValue() > stageCountProperty.getValue() &&
-                    ProgressBarsController.getInstance().isProcessing()){
-                        return localTextLabel.getText();
-                    }
+                        //Display "Finishing up..." or something similar
+                        if (currentStageProperty.getValue() > stageCountProperty.getValue() &&
+                            ProgressBarsController.getInstance().isProcessing())
+                        {
+                            return localTextLabel.getText();
+                        }
 
-                    //Display "Loading..." or some end message (ex. "Finished loading images")
-                    // or just remove redundant "Stage 1/1"
-                    if (!ProgressBarsController.getInstance().isProcessing() ||
-                        stageCountProperty.getValue() <= 1){
-                        return currProcessTxt;
-                    }
+                        //Display "Loading..." or some end message (ex. "Finished loading images")
+                        // or just remove redundant "Stage 1/1"
+                        if (!ProgressBarsController.getInstance().isProcessing() ||
+                            stageCountProperty.getValue() <= 1)
+                        {
+                            return currProcessTxt;
+                        }
 
-                    return String.format("%s (Stage %s/%s)",
+                        return String.format("%s (Stage %s/%s)",
                             currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
 
 
-                }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
-                        localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
+                    }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
+                    localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
             }
 
             @Override
-            public void setProcessName(String processName) {
+            public void setProcessName(String processName)
+            {
                 Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
-                Platform.runLater(()->progressStage.setTitle(processName));
+                Platform.runLater(() -> progressStage.setTitle(processName));
             }
 
             @Override
             public void setStageCount(int count)
             {
-                Platform.runLater(()->stageCountProperty.setValue(count));
+                Platform.runLater(() -> stageCountProperty.setValue(count));
             }
 
             @Override
@@ -341,22 +394,24 @@ public class MenubarController
             {
                 this.localProgress = 0.0;
                 int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
-                Platform.runLater(()-> this.currentStageProperty.setValue(currentStage));
+                Platform.runLater(() -> this.currentStageProperty.setValue(currentStage));
 
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
                 //index current stage from 0 in this instance
                 overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
-                Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
+                Platform.runLater(() -> overallProgressBar.setProgress(overallProgress));
 
                 log.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
-                Platform.runLater(()-> overallTextLabel.setText(message));
+                Platform.runLater(() -> overallTextLabel.setText(message));
 
-                if(currentStage > stageCountProperty.getValue()){
-                    Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
+                if (currentStage > stageCountProperty.getValue())
+                {
+                    Platform.runLater(() -> localTextLabel.setText(FINISHING_UP));
                 }
-                else{
+                else
+                {
                     ProgressBarsController.getInstance().beginNewStage();
                 }
             }
@@ -385,9 +440,9 @@ public class MenubarController
                 //useful for simple exports like orbit animation
                 boolean removeStageNums = stageCountProperty.getValue() <= 1 || currentStageProperty.getValue() == 0;
                 revertText = removeStageNums ? message :
-                        String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+                    String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
 
-                Platform.runLater(()-> localTextLabel.setText(revertText));
+                Platform.runLater(() -> localTextLabel.setText(revertText));
 
                 ProgressBarsController.getInstance().clickStopwatches(progress, maximum);
             }
@@ -399,23 +454,26 @@ public class MenubarController
                 ProgressBarsController.getInstance().endStopwatches();
                 setReadyToDismissMiniProgBar();
 
-                if(overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
-                    Platform.runLater(()->overallProgressBar.setProgress(1.0));
+                if (overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
+                {
+                    Platform.runLater(() -> overallProgressBar.setProgress(1.0));
                 }
 
-                if(localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
-                    Platform.runLater(()->localProgressBar.setProgress(1.0));
+                if (localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
+                {
+                    Platform.runLater(() -> localProgressBar.setProgress(1.0));
                 }
 
                 //only revert text for processes which are not lightweight
-                if(localTextLabel.getText().equals(FINISHING_UP)){
-                    Platform.runLater(()->localTextLabel.setText(revertText));
+                if (localTextLabel.getText().equals(FINISHING_UP))
+                {
+                    Platform.runLater(() -> localTextLabel.setText(revertText));
                 }
 
                 //todo: would be nice if this was bound to a hasHandler property
                 shaderName.setVisible(MultithreadModels.getInstance().getIOModel().hasValidHandler());
 
-                Platform.runLater(()->cancelButton.setText("Cancel"));
+                Platform.runLater(() -> cancelButton.setText("Cancel"));
                 updateShaderList();
             }
 
@@ -426,8 +484,10 @@ public class MenubarController
             }
 
             @Override
-            public boolean isConflictingProcess(){
-                if (!ProgressBarsController.getInstance().isProcessing()){
+            public boolean isConflictingProcess()
+            {
+                if (!ProgressBarsController.getInstance().isProcessing())
+                {
                     return false;
                 }
 
@@ -436,7 +496,7 @@ public class MenubarController
                     ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
                     //ButtonType stopProcess = new ButtonType("Start New Process", ButtonBar.ButtonData.YES);
                     Alert alert = new Alert(AlertType.NONE, "Cannot run multiple tasks at the same time.\n" +
-                            "Either wait for the current task to complete or cancel it." /*+
+                        "Either wait for the current task to complete or cancel it." /*+
                             "Press OK to finish the current process."*/, ok/*, stopProcess*/);
                     alert.setHeaderText("Conflicting Tasks");
 
@@ -473,24 +533,30 @@ public class MenubarController
 
         RecentProjects.updateAllControlStructures();
 
+        // Shader menu flyouts
+        shaderMenuFlyouts.add(heatmapMenu);
+        shaderMenuFlyouts.add(superimposeMenu);
+        shaderMenuFlyouts.add(paletteMaterialMenu);
+        shaderMenuFlyouts.add(paletteMaterialWeightedMenu);
+
+        // Shader menu
         toggleableShaders.add(materialMetallicity);
         toggleableShaders.add(materialReflectivity);
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
         toggleableShaders.add(weightmapCombination);
-
-        toggleableShaders.add(heatmapMenu);
-        toggleableShaders.add(superimposeMenu);
+        toggleableShaders.addAll(shaderMenuFlyouts);
 
         updateShaderList();
 
-        shaderName.textProperty().bind(Bindings.createStringBinding(()->
-                ((RadioMenuItem)renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
+        shaderName.textProperty().bind(Bindings.createStringBinding(() ->
+            ((RadioMenuItem) renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
 
         KeyCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
-        instance.window.getScene().getAccelerators().put(ctrlUp, () -> {
+        instance.window.getScene().getAccelerators().put(ctrlUp, () ->
+        {
             List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
-                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+                .filter(item -> !item.isDisable()).collect(Collectors.toList());
             int numAvailableShaders = availableShaders.size();
 
             RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
@@ -498,16 +564,18 @@ public class MenubarController
 
             //there's probably a better way to do this but whatever
             idx = (idx - 1);
-            if (idx < 0){
+            if (idx < 0)
+            {
                 idx = numAvailableShaders - 1;
             }
             availableShaders.get(idx).setSelected(true);
         });
 
         KeyCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
-        instance.window.getScene().getAccelerators().put(ctrlDown, () -> {
+        instance.window.getScene().getAccelerators().put(ctrlDown, () ->
+        {
             List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
-                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+                .filter(item -> !item.isDisable()).collect(Collectors.toList());
             int numAvailableShaders = availableShaders.size();
 
             RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
@@ -521,94 +589,100 @@ public class MenubarController
 
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
-                "Will not modify your file system.");
+            "Will not modify your file system.");
         Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
     }
 
-    private List<RadioMenuItem> getRadioMenuItems(Menu menu){
-       List<RadioMenuItem> list = new ArrayList<>();
-       getRadioMenuItemsHelper(list, menu.getItems());
-       return list;
+    private List<RadioMenuItem> getRadioMenuItems(Menu menu)
+    {
+        List<RadioMenuItem> list = new ArrayList<>();
+        getRadioMenuItemsHelper(list, menu.getItems());
+        return list;
     }
 
-    private void getRadioMenuItemsHelper(List<RadioMenuItem> radioMenuItems, List<MenuItem> menuItems){
-        for (MenuItem item : menuItems){
-            if (item instanceof RadioMenuItem) {
+    private void getRadioMenuItemsHelper(List<RadioMenuItem> radioMenuItems, List<MenuItem> menuItems)
+    {
+        for (MenuItem item : menuItems)
+        {
+            if (item instanceof RadioMenuItem)
+            {
                 radioMenuItems.add((RadioMenuItem) item);
             }
-            if (item instanceof Menu) {
+            if (item instanceof Menu)
+            {
                 Menu menu = (Menu) item;
                 getRadioMenuItemsHelper(radioMenuItems, menu.getItems());
             }
-        };
+        }
+        ;
     }
 
-    private void hideAllProgress() {
+    private void hideAllProgress()
+    {
         ProgressBarsController.getInstance().hideStage();
         dismissMiniProgressBar();
     }
 
-    private void setReadyToDismissMiniProgBar() {
+    private void setReadyToDismissMiniProgBar()
+    {
         setLighterMiniBar();
         miniProgressBar.setVisible(false);
         dismissButton.setVisible(true);
 
-        if(!ProgressBarsController.getInstance().getStage().isShowing()){
+        if (!ProgressBarsController.getInstance().getStage().isShowing())
+        {
             miniProgressPane.setVisible(true);
         }
     }
 
     // Populate menu based on a given input number
-    public void updateShaderList() {
-        heatmapMenu.getItems().clear();
-        superimposeMenu.getItems().clear();
-        paletteMaterialMenu.getItems().clear();
+    public void updateShaderList()
+    {
+        for (Menu flyout : shaderMenuFlyouts)
+        {
+            flyout.getItems().clear();
+        }
 
         int basisCount = 0;
         try
         {
             ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
             MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
-            basisCount = basis.getMaterialCount();
+            if (basis != null)
+            {
+                basisCount = basis.getMaterialCount();
+            }
         }
         catch (IOException | NullPointerException e)
         {
             log.error("Error attempting to load previous solution basis count:", e);
         }
 
-        Map<String, Optional<Object>> comboDefines = new HashMap<>();
+        Map<String, Optional<Object>> comboDefines = new HashMap<>(2);
         comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
         comboDefines.put("WEIGHTMAP_COUNT", Optional.of(basisCount));
         weightmapCombination.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
 
-        for (int i = 0; i < basisCount; ++i) {
-            RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
-            RadioMenuItem b = new RadioMenuItem("Weight map " + i);
-            RadioMenuItem paletteMaterial = new RadioMenuItem("Palette material " + i);
-
-            Map<String, Optional<Object>> defines = new HashMap<>();
+        for (int i = 0; i < basisCount; ++i)
+        {
+            Map<String, Optional<Object>> defines = new HashMap<>(1);
             defines.put("WEIGHTMAP_INDEX", Optional.of(i));
 
-            heatmap.setToggleGroup(renderGroup);
-            heatmap.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapSingle.frag", defines));
-
-            b.setToggleGroup(renderGroup);
-            b.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapOverlay.frag", defines));
-
-            paletteMaterial.setToggleGroup(renderGroup);
-            paletteMaterial.setUserData(new RenderingShaderUserData("rendermodes/basisMaterialSingle.frag", defines));
-
-            heatmapMenu.getItems().add(i, heatmap);
-            superimposeMenu.getItems().add(i, b);
-            paletteMaterialMenu.getItems().add(i, paletteMaterial);
-            // when attempting to redefine 'heatmap' and use for superimposeMenu, K3D would crash
+            for (Menu flyout : shaderMenuFlyouts)
+            {
+                RadioMenuItem item = new RadioMenuItem(String.format("Palette material %d", i));
+                item.setToggleGroup(renderGroup);
+                item.setUserData(new RenderingShaderUserData((String) flyout.getUserData(), defines));
+                flyout.getItems().add(i, item);
+            }
         }
     }
 
-    private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
+    private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile)
+    {
         boolean foundExportClass = false;
         try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
         {
@@ -673,7 +747,7 @@ public class MenubarController
             requestUI.bind(internalModels.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
         }
-        catch (IOException|RuntimeException e)
+        catch (IOException | RuntimeException e)
         {
             log.error("Error opening glTF export window", e);
         }
@@ -746,7 +820,6 @@ public class MenubarController
     }
 
 
-
     @FXML
     private void file_openProject()
     {
@@ -772,13 +845,17 @@ public class MenubarController
     }
 
     @FXML
-    private void exportSpecularFit() {
-        try {
+    private void exportSpecularFit()
+    {
+        try
+        {
             IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             handleException("An error occurred handling request", e);
         }
     }
@@ -797,7 +874,7 @@ public class MenubarController
             LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menubar/LoadOptions.fxml");
             loadOptionsController.bind(internalModels.getLoadOptionsModel());
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             handleException("An error occurred opening load options", e);
         }
@@ -858,7 +935,7 @@ public class MenubarController
             AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/PhotoProjectionSettings.fxml");
             advPhotoViewController.bind(internalModels.getSettingsModel());
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             handleException("An error occurred opening IBR settings", e);
         }
@@ -945,7 +1022,7 @@ public class MenubarController
                 stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
                     e -> objectOrientationController.unbind(boundObjectPose));
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 handleException("An error occurred opening color checker window", e);
             }
@@ -1050,7 +1127,7 @@ public class MenubarController
             scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
             scrollerController.init();
         }
-        catch (IOException|RuntimeException e)
+        catch (IOException | RuntimeException e)
         {
             handleException("An error occurred opening color checker window", e);
         }
@@ -1106,7 +1183,7 @@ public class MenubarController
         {
             makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemorySettings.fxml");
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             handleException("An error occurred opening jvm settings window", e);
         }
@@ -1132,7 +1209,8 @@ public class MenubarController
         }
     }
 
-    public void showProgressBars(){
+    public void showProgressBars()
+    {
         ProjectIO.getInstance().openProgressBars();
         miniProgressPane.setVisible(false);
     }
@@ -1141,12 +1219,14 @@ public class MenubarController
     //used so the user can click on the About menu and immediately see the about modal
     //instead of clicking on a single menu item
     //NOT IN USE as of July 9, 2024
-    public void hideAndShowAboutModal() {
+    public void hideAndShowAboutModal()
+    {
         aboutMenu.hide();
         openAboutModal();
     }
 
-    public void openSystemSettingsModal() {
+    public void openSystemSettingsModal()
+    {
         ProjectIO.getInstance().openSystemSettingsModal(internalModels, window);
     }
 
@@ -1166,63 +1246,79 @@ public class MenubarController
         }
     }
 
-    public void file_removeInvalidReferences() {
+    public void file_removeInvalidReferences()
+    {
         RecentProjects.removeInvalidReferences();
     }
 
-    public void file_removeAllReferences() {
+    public void file_removeAllReferences()
+    {
         RecentProjects.removeAllReferences();
     }
 
-    public Menu getRecentProjectsMenu() {
+    public Menu getRecentProjectsMenu()
+    {
         return recentProjectsMenu;
     }
 
-    public Menu getCleanRecentProjectsMenu() {
+    public Menu getCleanRecentProjectsMenu()
+    {
         return cleanRecentProjectsMenu;
     }
 
     //come up with a clearer name for this
     //set the disable of shaders which only work after processing textures
     //TODO: bind these to some property instead of manually changing values
-    public void setToggleableShaderDisable(boolean b) {
+    public void setToggleableShaderDisable(boolean b)
+    {
         toggleableShaders.forEach(menuItem -> menuItem.setDisable(b));
     }
 
-    public Window getWindow(){return window;} //useful for creating alerts in back-end classes
+    public Window getWindow()
+    {
+        return window;
+    } //useful for creating alerts in back-end classes
 
-    public void showWelcomeWindow() {
+    public void showWelcomeWindow()
+    {
         WelcomeWindowController.getInstance().show();
     }
 
-    public void handleMiniProgressBar(MouseEvent event) {
+    public void handleMiniProgressBar(MouseEvent event)
+    {
         double relX = event.getX() - swapControlsStackPane.getLayoutX();
         double relY = event.getY() - swapControlsStackPane.getLayoutY();
 
-        if(!ProgressBarsController.getInstance().isProcessing() &&
-            swapControlsStackPane.contains(relX, relY)){
+        if (!ProgressBarsController.getInstance().isProcessing() &&
+            swapControlsStackPane.contains(relX, relY))
+        {
             dismissMiniProgressBar();
         }
-        else {
+        else
+        {
             showProgressBars();
         }
     }
 
-    private void resetMiniProgressBar() {
+    private void resetMiniProgressBar()
+    {
         miniProgressBar.setVisible(true);
         dismissButton.setVisible(false);
         setDarkestMiniBar();
     }
 
-    public void mouseEnterMiniBar(MouseEvent event){
+    public void mouseEnterMiniBar(MouseEvent event)
+    {
         double relX;
         double relY;
 
-        if(!event.getSource().equals(swapControlsStackPane)){
+        if (!event.getSource().equals(swapControlsStackPane))
+        {
             relX = event.getX() - swapControlsStackPane.getLayoutX();
             relY = event.getY() - swapControlsStackPane.getLayoutY();
         }
-        else{
+        else
+        {
             relX = event.getX();
             relY = event.getY();
         }
@@ -1230,40 +1326,49 @@ public class MenubarController
         setLightestMiniBar();
 
         //don't highlight individual elements if still processing
-        if(ProgressBarsController.getInstance().isProcessing()){
+        if (ProgressBarsController.getInstance().isProcessing())
+        {
             return;
         }
 
-        if(!swapControlsStackPane.contains(relX, relY)){
+        if (!swapControlsStackPane.contains(relX, relY))
+        {
             //highlight label if it's hovered over
             miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
             swapControlsStackPane.setStyle("-fx-background-color: #ADADAD;");
 
         }
-        else{
+        else
+        {
             //highlight dismiss button area if it's hovered over
             miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
             swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
         }
     }
 
-    public void mouseExitMiniBar() {
-        if(ProgressBarsController.getInstance().isProcessing()){
+    public void mouseExitMiniBar()
+    {
+        if (ProgressBarsController.getInstance().isProcessing())
+        {
             setDarkestMiniBar();
         }
-        else{
+        else
+        {
             setLighterMiniBar();
         }
     }
 
-    private void setLighterMiniBar() {
+    private void setLighterMiniBar()
+    {
         miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
         miniProgressLabel.setStyle("-fx-text-fill: #202020;");
         swapControlsStackPane.setStyle("fx-fill: #ADADAD");
 
         miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
     }
-    private void setLightestMiniBar(){
+
+    private void setLightestMiniBar()
+    {
         miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
         miniProgressLabel.setStyle("-fx-text-fill: #202020;");
         swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
@@ -1271,7 +1376,8 @@ public class MenubarController
         miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
     }
 
-    public void setDarkestMiniBar() {
+    public void setDarkestMiniBar()
+    {
         miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
         miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
         swapControlsStackPane.setStyle("fx-fill: none");
@@ -1279,8 +1385,9 @@ public class MenubarController
         miniProgressBar.lookup(".track").setStyle("-fx-background-color: #CECECE");
     }
 
-    public void dismissMiniProgressBar() {
-        Platform.runLater(()->miniProgressPane.setVisible(false));
+    public void dismissMiniProgressBar()
+    {
+        Platform.runLater(() -> miniProgressPane.setVisible(false));
         WelcomeWindowController.getInstance().showIfNoModelLoaded();
     }
 
@@ -1289,15 +1396,18 @@ public class MenubarController
         ProjectIO.getInstance().hotSwap(window);
     }
 
-    public void selectMaterialBasisShader(){
-        Platform.runLater(()-> materialBasis.setSelected(true));
+    public void selectMaterialBasisShader()
+    {
+        Platform.runLater(() -> materialBasis.setSelected(true));
     }
 
-    public void selectImageBasedShader(){
-        Platform.runLater(()->imageBased.setSelected(true));
+    public void selectImageBasedShader()
+    {
+        Platform.runLater(() -> imageBased.setSelected(true));
     }
 
-    public void setShaderNameVisibility(boolean b) {
+    public void setShaderNameVisibility(boolean b)
+    {
         shaderName.setVisible(b);
     }
 }

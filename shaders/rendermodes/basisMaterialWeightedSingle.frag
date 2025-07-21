@@ -40,6 +40,25 @@ vec3 global(ViewingParameters v, Material m)
     return vec3(0.0);
 }
 
+#define MODULATE_ENABLED 1
+vec4 modulate(Material m)
+{
+    float thisWeight = texture(weightMaps, vec3(fTexCoord, WEIGHTMAP_INDEX)).r;
+
+    float maxWeight = thisWeight;
+
+    for (int i = 0; i < 8; i++)
+    {
+        if (i != WEIGHTMAP_INDEX)
+        {
+            float weight = texture(weightMaps, vec3(fTexCoord, i)).r;
+            maxWeight = max(weight, maxWeight);
+        }
+    }
+
+    return vec4(vec3(smoothstep(0.0, maxWeight, thisWeight)), 1.0);
+}
+
 vec3 specular(LightingParameters l, Material m)
 {
     float w = getMFDLookupCoord(l.nDotH);
