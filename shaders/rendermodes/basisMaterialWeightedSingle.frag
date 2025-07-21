@@ -47,7 +47,7 @@ vec4 modulate(Material m)
 
     float maxWeight = thisWeight;
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < BASIS_COUNT; i++)
     {
         if (i != WEIGHTMAP_INDEX)
         {
