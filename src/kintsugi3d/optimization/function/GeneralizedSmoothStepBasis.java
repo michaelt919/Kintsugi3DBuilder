@@ -82,7 +82,7 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
     @Override
     protected int getFirstFunctionIndexForDomainValue(int value)
     {
-        return Math.max(0, value - minSmoothstepWidth);
+        return Math.max(0, value - minSmoothstepWidth + 1);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
     {
         // For a particular value, value-minSmoothstepWidth is the last basis function that evaluates to 0.0 @ value,
         // so value - minSmoothstepWidth + maxSmoothstepWidth is the first basis function that evaluates to 1.0 @ value.
-        return Math.min(value - minSmoothstepWidth + maxSmoothstepWidth, getFunctionCount());
+        return Math.min(value - minSmoothstepWidth + maxSmoothstepWidth, getFunctionCount() - 1);
     }
 
     @Override

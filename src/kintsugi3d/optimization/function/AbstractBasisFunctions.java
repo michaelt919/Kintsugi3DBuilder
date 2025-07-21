@@ -26,18 +26,21 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
     }
 
     /**
-     * Gets the index of the first function for which the specified value is in its explicit domain.
-     * It is assumed that all functions with lower indices will implicitly map to 0.0 for the specified value.
+     * Gets the index of the first function for which the specified value is in its explicit domain, evaluating to a non-zero result.
+     * It is assumed that all functions with lower indices will implicitly evaluate to 0.0 for the specified value.
      * @param value The value to consider for domain inclusion.
      * @return The index of the first function for which the specified value is in its explicit domain.
      */
     protected abstract int getFirstFunctionIndexForDomainValue(int value);
 
     /**
-     * Gets the index of the last function for which the specified value is in its explicit domain.
-     * It is assumed that all functions with higher indices will implicitly map to 1.0 for the specified value.
+     * Gets the index of the last function for which all values greater than specified value are within its explicit domain,
+     * evaluating to a result less than 1.0.
+     * The specified value itself is either within the explicit domain itself (also evaluating to a result less than 1.0)
+     * or it may lie on the left boundary of the domain and evaluate to 1.0.
+     * It is assumed that all functions a higher index will evaluate to 1.0 for the specified value.
      * @param value The value to consider for domain inclusion.
-     * @return The index of the last function for which the specified value is in its explicit domain.
+     * @return The index of the first function for which the specified value is beyond its explicit domain.
      */
     protected abstract int getLastFunctionIndexForDomainValue(int value);
 
@@ -67,7 +70,7 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
         for (int b1 = 0; b1 < instanceCount; b1++)
         {
             // Contribute to weights for library functions in the range [kFirst, kLast].
-            // This range is inclusive on both ends due to linear interpolation.
+            // This range is inclusive due to linear interpolation.
             // i.e., the library function at i=kLast will be interpolating from 1 to a value less than 1 for
             // parameter values between valueCurrent and valueCurrent+1.
             for (int k = kFirst; k <= kLast && k < getFunctionCount(); k++)
@@ -79,13 +82,13 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
                 double fUpper = evaluate(k, valueCurrent + 1);
 
                 // Update ATy vector for blended terms.
-                fittingSystem.addToRHS(i, 0, AbstractBasisFunctions.lerpHelper(fLower, fUpper,
+                fittingSystem.addToRHS(i, 0, lerpHelper(fLower, fUpper,
                         sums.getWeightedAnalyticTimesObservedBlended(0, b1),
                         sums.getWeightedAnalyticTimesObserved(0, b1)));
-                fittingSystem.addToRHS(i, 1, AbstractBasisFunctions.lerpHelper(fLower, fUpper,
+                fittingSystem.addToRHS(i, 1, lerpHelper(fLower, fUpper,
                         sums.getWeightedAnalyticTimesObservedBlended(1, b1),
                         sums.getWeightedAnalyticTimesObserved(1, b1)));
-                fittingSystem.addToRHS(i, 2, AbstractBasisFunctions.lerpHelper(fLower, fUpper,
+                fittingSystem.addToRHS(i, 2, lerpHelper(fLower, fUpper,
                         sums.getWeightedAnalyticTimesObservedBlended(2, b1),
                         sums.getWeightedAnalyticTimesObserved(2, b1)));
 
@@ -94,7 +97,7 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
                 {
                     // Top right and bottom left partitions of the matrix:
                     // row corresponds to constant coefficients and column corresponds to non-constant, or vice-versa.
-                    double constNonConstCrossCoeff = AbstractBasisFunctions.lerpHelper(fLower, fUpper,
+                    double constNonConstCrossCoeff = lerpHelper(fLower, fUpper,
                             metallicity * sums.getWeightedAnalyticSquaredBlended(b1, b2)
                                 + (1 - metallicity) * sums.getWeightedAnalyticBlended(b1, b2),
                             metallicity * sums.getWeightedAnalyticSquared(b1, b2)
@@ -149,7 +152,7 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
             // will be deferred until the sums are complete for those functions.
             // This loop usually would only run once, but could run multiple times if we skipped a few values.
             int nextKLast = getLastFunctionIndexForDomainValue(valueNext);
-            for (int m1 = kLast + 1; m1 <= nextKLast && m1 < getFunctionCount(); m1++) // TODO work out why m1 < functionCount is necessary
+            for (int m1 = kLast + 1; m1 <= nextKLast && m1 < getFunctionCount(); m1++) // TODO m1 < functionCount might no longer be necessary?
             {
                 int i = instanceCount * (m1 + 1) + b1;
 
@@ -216,23 +219,23 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
             sums[k] = sums[k + 1] + nonConstantSolution.applyAsDouble(k);
         }
 
-        for (int value = getOptimizedDomainSize() - 1; value >= 0; value--)
+        for (int value = 0; value < getOptimizedDomainSize(); value++)
         {
             int kFirst = getFirstFunctionIndexForDomainValue(value);
             int kLast = getLastFunctionIndexForDomainValue(value);
 
             // Accounts for library functions from kLast through the domain max.
             // These will all evaluate to 1.0 for the current value so we just need the total of their weights.
-            double currentTotal = sums[kLast];
+            double currentTotal = sums[kLast + 1];
 
-            // Accounts for library functions in the range [kFirst + 1, kLast).
-            for (int k = kLast - 1; k >= kFirst + 1; k--)
+            // Accounts for library functions in the range [kFirst, kLast).
+            for (int k = kFirst; k <= kLast; k++)
             {
                 // Evaluate library function k for current value and add to weighted total.
                 currentTotal += nonConstantSolution.applyAsDouble(k) * evaluate(k, value);
             }
 
-            // Library functions 0 through value-1 should not be able to affect the element at index value since they will evaluate to 0.
+            // Library functions <= kFirst should not be able to affect the element at index value since they will evaluate to 0.
             // Total now accounts for the whole range of library functions.
             functionConsumer.accept(currentTotal, value);
         }
