@@ -153,14 +153,22 @@
                             </RadioMenuItem>
 <!--                            Individual weight map visualizations (without existing texture colors)-->
                             <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
+                                <userData>rendermodes/weightmaps/weightmapSingle.frag</userData>
                                 <items>
                                 </items>
                             </Menu>
                             <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">
+                                <userData>rendermodes/weightmaps/weightmapOverlay.frag</userData>
                                 <items>
                                 </items>
                             </Menu>
                             <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
+                                <userData>rendermodes/basisMaterialSingle.frag</userData>
+                                <items>
+                                </items>
+                            </Menu>
+                            <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material x weights">
+                                <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                                 <items>
                                 </items>
                             </Menu>

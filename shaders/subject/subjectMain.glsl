@@ -88,6 +88,7 @@ uniform float lightSpotSizeVirtual[VIRTUAL_LIGHT_COUNT];
 uniform float lightSpotTaperVirtual[VIRTUAL_LIGHT_COUNT];
 #endif // SPOTLIGHTS_ENABLED
 
+vec3 emissive(Material m);
 vec3 global(ViewingParameters v, Material m);
 vec3 diffuse(LightingParameters l, Material m);
 
@@ -96,6 +97,14 @@ SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m);
 vec3 specular(LightingParameters l, Material m, SPECULAR_PRECOMPUTATION p);
 #else
 vec3 specular(LightingParameters l, Material m);
+#endif
+
+#ifndef MODULATE_ENABLED
+#define MODULATE_ENABLED 0
+#endif
+
+#if MODULATE_ENABLED
+vec4 modulate(Material m);
 #endif
 
 void main()
@@ -121,7 +130,7 @@ void main()
 
     Material m = getMaterial();
 
-    vec3 radiance = emissive();
+    vec3 radiance = emissive(m);
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
     radiance += global(v, m);
@@ -189,7 +198,16 @@ void main()
 
 #endif // VIRTUAL_LIGHT_COUNT > 0
 
-    fragColor = tonemap(radiance, 1.0);
+    float alpha;
+#if MODULATE_ENABLED
+    vec4 modulation = modulate(m);
+    radiance *= modulation.rgb;
+    alpha = modulation.a;
+#else
+    alpha = 1.0;
+#endif
+
+    fragColor = tonemap(radiance, alpha);
 
     fragObjectID = objectID;
 }
