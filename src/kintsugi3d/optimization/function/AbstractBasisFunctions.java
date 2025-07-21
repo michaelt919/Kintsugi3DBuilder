@@ -117,11 +117,11 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
                         double f2Upper = evaluate(k2, valueCurrent + 1);
 
                         fittingSystem.addToLHS(i, j,
-                            AbstractBasisFunctions.lerpHelper(fLower, fUpper,
-                                AbstractBasisFunctions.lerpHelper(f2Lower, f2Upper,
+                            lerpHelper(fLower, fUpper,
+                                lerpHelper(f2Lower, f2Upper,
                                     sums.getWeightedAnalyticSquaredBlendedSquared(b1, b2),
                                     sums.getWeightedAnalyticSquaredBlended(b1, b2)),
-                                AbstractBasisFunctions.lerpHelper(f2Lower, f2Upper,
+                                lerpHelper(f2Lower, f2Upper,
                                         sums.getWeightedAnalyticSquaredBlended(b1, b2),
                                         sums.getWeightedAnalyticSquared(b1, b2))));
                     }
@@ -132,7 +132,7 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
                     {
                         int j = instanceCount * (k2 + 1) + b2;
 
-                        double coeff = AbstractBasisFunctions.lerpHelper(fLower, fUpper,
+                        double coeff = lerpHelper(fLower, fUpper,
                                 sums.getWeightedAnalyticSquaredBlended(b1, b2),
                                 sums.getWeightedAnalyticSquared(b1, b2));
 
@@ -198,40 +198,43 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
     @Override
     public void evaluateSolution(double constantTerm, IntToDoubleFunction nonConstantSolution, ObjIntConsumer<Double> functionConsumer)
     {
-        int resolution = getOptimizedDomainSize();
+        int functionCount = getFunctionCount();
 
         // Keep an array that stores the sum after adding the weight for each additional library function.
         // This is used to efficiently incorporate basis functions that are already at their max value for a particular element.
-        // sums[i] = sum of library function weights in the range [i, resolution) + constant term.
-        double[] sums = new double[resolution + 1];
+        // sums[i] = sum of library function weights in the range [i, functionCount) + constant term.
+        double[] sums = new double[functionCount + 1];
 
         // Constant term
-        sums[resolution] = constantTerm * metallicity;
-        functionConsumer.accept(sums[resolution], resolution);
+        sums[functionCount] = constantTerm * metallicity;
+        functionConsumer.accept(sums[functionCount], functionCount);
 
-        // Loop from end down to 0.
-        for (int m = resolution - 1; m >= 0; m--)
+        // Loop over functions from end down to 0.
+        for (int k = functionCount - 1; k >= 0; k--)
         {
             // Update the running total for future elements where the current basis function will be maxed out.
-            sums[m] = sums[m + 1] + nonConstantSolution.applyAsDouble(m);
+            sums[k] = sums[k + 1] + nonConstantSolution.applyAsDouble(k);
+        }
 
-            int kFirst = getFirstFunctionIndexForDomainValue(m);
-            int kLast = getLastFunctionIndexForDomainValue(m);
+        for (int value = getOptimizedDomainSize() - 1; value >= 0; value--)
+        {
+            int kFirst = getFirstFunctionIndexForDomainValue(value);
+            int kLast = getLastFunctionIndexForDomainValue(value);
 
             // Accounts for library functions from kLast through the domain max.
-            // These will all evaluate to 1.0 for the current value of m so we just need the total of their weights.
+            // These will all evaluate to 1.0 for the current value so we just need the total of their weights.
             double currentTotal = sums[kLast];
 
             // Accounts for library functions in the range [kFirst + 1, kLast).
-            for (int i = kLast - 1; i >= kFirst + 1; i--)
+            for (int k = kLast - 1; k >= kFirst + 1; k--)
             {
-                // Evaluate library function i for input parameter m and add to weighted total.
-                currentTotal += nonConstantSolution.applyAsDouble(i) * evaluate(i, m);
+                // Evaluate library function k for current value and add to weighted total.
+                currentTotal += nonConstantSolution.applyAsDouble(k) * evaluate(k, value);
             }
 
-            // Library functions 0 through m-1 should not be able to affect the element at index m since they will evaluate to 0.
+            // Library functions 0 through value-1 should not be able to affect the element at index value since they will evaluate to 0.
             // Total now accounts for the whole range of library functions.
-            functionConsumer.accept(currentTotal, m);
+            functionConsumer.accept(currentTotal, value);
         }
     }
 }
