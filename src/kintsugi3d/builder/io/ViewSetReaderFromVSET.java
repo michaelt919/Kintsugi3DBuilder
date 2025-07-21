@@ -252,7 +252,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         scanner.nextLine();
                         break;
                     }
-
                     case "v":
                     {
                         int poseId = scanner.nextInt();
@@ -267,6 +266,18 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             .setCurrentImageFile(new File(imgFilename))
                             .commitCurrentCameraPose();
                         break;
+                    }
+                    case "x": //Jacob
+                    {
+                        int camIndex = scanner.nextInt();
+                        String camRes = scanner.next();
+                        String camSize = scanner.next();
+
+                        builder.addCameraMetadata(camIndex,camRes,camSize);
+
+                        scanner.nextLine();
+                        break;
+
                     }
                     default:
                         // Skip unrecognized line

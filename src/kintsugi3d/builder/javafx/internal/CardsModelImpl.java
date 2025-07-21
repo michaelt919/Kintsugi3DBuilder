@@ -1,9 +1,8 @@
 package kintsugi3d.builder.javafx.internal;
 
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -17,9 +16,15 @@ public class CardsModelImpl implements CardsModel {
     private String label;
     private CardSelectionModel selectedCardsModel;
     private CardSelectionModel expandedCardsModel;
-    private Property<ObservableList<ProjectDataCard>> cardsList;
+    private ObservableList<ProjectDataCard> cardsList;
 
     public CardsModelImpl(String label) {
+//        Platform.runLater(()->{
+//            this.label = label;
+//            cardsList = new SimpleListProperty<>();
+//            selectedCardsModel = new CardSelectionModel(cardsList);
+//            expandedCardsModel = new CardSelectionModel(cardsList);
+//        });
         this.label = label;
         List<ProjectDataCard> dummyCards = new ArrayList<>();
         dummyCards.add(new ProjectDataCard("Card One", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
@@ -33,9 +38,8 @@ public class CardsModelImpl implements CardsModel {
         dummyCards.add(new ProjectDataCard("Card Three", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
             put("File Name", "file_three"); put("Resolution", "720x200"); put("Size", "1500 KB"); put("Purpose", "This is a description pertaining to the THIRD card."); put("Labels", "");
         }}));
-        cardsList = new SimpleListProperty<>();
 
-        cardsList.setValue(FXCollections.observableList(dummyCards));
+        cardsList = FXCollections.observableList(dummyCards);
 
         selectedCardsModel = new CardSelectionModel(cardsList);
         expandedCardsModel = new CardSelectionModel(cardsList);
@@ -43,91 +47,91 @@ public class CardsModelImpl implements CardsModel {
 
     @Override
     public ObservableList<ProjectDataCard> getSelectedCards() {
-        return selectedCardsModel.getSelectedItems();
+        return FXCollections.unmodifiableObservableList(selectedCardsModel.getSelectedItems());
     }
 
     @Override
-    public ObservableSet<String> getSelectedCardIds() {
-        return selectedCardsModel.getSelectedIds();
+    public ObservableSet<UUID> getSelectedCardIds() {
+        return FXCollections.unmodifiableObservableSet(selectedCardsModel.getSelectedIds());
     }
 
     @Override
-    public ObservableSet<String> getExpandedCardIds() {
-        return expandedCardsModel.getSelectedIds();
+    public ObservableSet<UUID> getExpandedCardIds() {
+        return FXCollections.unmodifiableObservableSet(expandedCardsModel.getSelectedIds());
     }
 
     @Override
     public ObservableList<ProjectDataCard> getExpandedCards() {
-        return expandedCardsModel.getSelectedItems();
+        return FXCollections.unmodifiableObservableList(expandedCardsModel.getSelectedItems());
     }
 
     @Override
-    public void setSelectedCards(List<ProjectDataCard> cards) {
-        selectedCardsModel.select(cards);
+    public void setSelectedCards(List<ProjectDataCard> cards)  {
+         Platform.runLater(()->selectedCardsModel.select(cards));
     }
 
     @Override
     public void setExpandedCards(List<ProjectDataCard> cards) {
-        expandedCardsModel.select(cards);
+        Platform.runLater(()->expandedCardsModel.select(cards));
     }
 
     @Override
-    public String getLastSelectedCardId() {
+    public UUID getLastSelectedCardId() {
         return selectedCardsModel.getLastSelectedValue();
     }
 
     @Override
-    public String getLastExpandedCardId() {
+    public UUID getLastExpandedCardId() {
         return expandedCardsModel.getLastSelectedValue();
     }
 
     @Override
-    public StringProperty getLastSelectedCardProperty() {
+    public ObjectProperty<UUID> getLastSelectedCardProperty() {
         return selectedCardsModel.getLastSelectedProperty();
     }
 
     @Override
-    public StringProperty getLastExpandedCardProperty() {
+    public ObjectProperty<UUID> getLastExpandedCardProperty() {
         return expandedCardsModel.getLastSelectedProperty();
     }
 
     @Override
-    public boolean isSelected(String cardId) {
+    public boolean isSelected(UUID cardId) {
         return selectedCardsModel.isSelected(cardId);
     }
 
     @Override
-    public boolean isExpanded(String cardId) {
+    public boolean isExpanded(UUID cardId) {
         return expandedCardsModel.isSelected(cardId);
     }
 
     @Override
-    public BooleanBinding isSelectedProperty(String cardId) {
+    public BooleanBinding isSelectedProperty(UUID cardId) {
         return selectedCardsModel.isSelectedProperty(cardId);
     }
 
     @Override
-    public BooleanBinding isExpandedProperty(String cardId) {
+    public BooleanBinding isExpandedProperty(UUID cardId) {
         return expandedCardsModel.isSelectedProperty(cardId);
     }
 
     @Override
-    public void expandCard(String id) {
-        expandedCardsModel.select(id);
+    public void expandCard(UUID id) {
+        Platform.runLater(()->expandedCardsModel.select(id));
     }
 
     @Override
-    public void collapseCard(String cardId) {
-        expandedCardsModel.clearSelection(cardId);
+    public void collapseCard(UUID cardId) {
+        Platform.runLater(()->expandedCardsModel.clearSelection(cardId));
     }
 
     @Override
-    public void selectCard(String cardId) {
+    public void selectCard(UUID cardId) {
         selectedCardsModel.select(cardId);
     }
 
     @Override
-    public void deselectCard(String cardId) {
+    public void deselectCard(UUID cardId) {
         selectedCardsModel.clearSelection(cardId);
     }
 
@@ -137,32 +141,33 @@ public class CardsModelImpl implements CardsModel {
     }
 
     @Override
-    public Property<ObservableList<ProjectDataCard>> getCardListProperty() {
+    public ObservableList<ProjectDataCard> getObservableCardsList() {
         return cardsList;
     }
 
     @Override
-    public ObservableList<ProjectDataCard> getObservableCardsList() {
-        return cardsList.getValue();
-    }
-
-    @Override
     public void setObservableCardsList(ObservableList<ProjectDataCard> items) {
-        cardsList.setValue(items);
+        Platform.runLater(()->{
+            cardsList = items;
+        });
     }
 
     @Override
     public void setCardsList(List<ProjectDataCard> cards) {
-        cardsList.getValue().clear();
-        for (ProjectDataCard card: cards) {
-            cardsList.getValue().add(card);
-        }
-        selectedCardsModel = new CardSelectionModel(cardsList);
-        expandedCardsModel = new CardSelectionModel(cardsList);
+        Platform.runLater(()->{
+            cardsList.clear();
+            cardsList.addAll(cards);
+
+            selectedCardsModel = new CardSelectionModel(cardsList);
+            expandedCardsModel = new CardSelectionModel(cardsList);
+        });
     }
 
     @Override
-    public void deleteCard(String id) {
-        cardsList.getValue().removeIf(card -> card.getCardId().equals(id));
+    public void deleteCard(UUID id) {
+        cardsList.removeIf(card -> card.getCardId().equals(id));
+        selectedCardsModel.clearSelection(id);
+        expandedCardsModel.clearSelection(id);
+        //Platform.runLater(()->cardsList.removeIf(card -> card.getCardId().equals(id)));
     }
 }

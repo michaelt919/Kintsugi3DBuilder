@@ -7,34 +7,34 @@ import javafx.collections.ObservableSet;
 import kintsugi3d.builder.resources.ProjectDataCard;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface CardsModel {
     ObservableList<ProjectDataCard> getSelectedCards();
     ObservableList<ProjectDataCard> getExpandedCards();
-    ObservableSet<String> getSelectedCardIds();
-    ObservableSet<String> getExpandedCardIds();
+    ObservableSet<UUID> getSelectedCardIds();
+    ObservableSet<UUID> getExpandedCardIds();
     void setSelectedCards(List<ProjectDataCard> cards);
     void setExpandedCards(List<ProjectDataCard> cards);
 
-    String getLastSelectedCardId();
-    String getLastExpandedCardId();
-    StringProperty getLastSelectedCardProperty();
-    StringProperty getLastExpandedCardProperty();
+    UUID getLastSelectedCardId();
+    UUID getLastExpandedCardId();
+    ObjectProperty<UUID> getLastSelectedCardProperty();
+    ObjectProperty<UUID> getLastExpandedCardProperty();
 
-    boolean isSelected(String cardId);
-    boolean isExpanded(String cardId);
-    BooleanBinding isSelectedProperty(String cardId);
-    BooleanBinding isExpandedProperty(String cardId);
+    boolean isSelected(UUID cardId);
+    boolean isExpanded(UUID cardId);
+    BooleanBinding isSelectedProperty(UUID cardId);
+    BooleanBinding isExpandedProperty(UUID cardId);
 
-    void expandCard(String cardId);
-    void collapseCard(String cardId);
-    void selectCard(String cardId);
-    void deselectCard(String cardId);
+    void expandCard(UUID cardId);
+    void collapseCard(UUID cardId);
+    void selectCard(UUID cardId);
+    void deselectCard(UUID cardId);
 
     String getModelLabel();
-    Property<ObservableList<ProjectDataCard>> getCardListProperty();
     ObservableList<ProjectDataCard> getObservableCardsList();
     void setObservableCardsList(ObservableList<ProjectDataCard> items);
     void setCardsList(List<ProjectDataCard> cardList);
-    void deleteCard(String id);
+    void deleteCard(UUID id);
 }

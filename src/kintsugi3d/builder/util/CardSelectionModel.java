@@ -10,41 +10,39 @@ import kintsugi3d.builder.resources.ProjectDataCard;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.UUID;
 
 public class CardSelectionModel {
-    private ObservableSet<String> selectedCards = FXCollections.observableSet(new LinkedHashSet<>());
-    private final Property<ObservableList<ProjectDataCard>> allCards;
-    private StringProperty lastSelected = new SimpleStringProperty();
+    private ObservableSet<UUID> selectedCards = FXCollections.observableSet(new LinkedHashSet<>());
+    private final ObservableList<ProjectDataCard> allCards;
+    private ObjectProperty<UUID> lastSelected;
 
-    public CardSelectionModel(Property<ObservableList<ProjectDataCard>> listProperty) {
-        allCards = listProperty;
+    public CardSelectionModel(ObservableList<ProjectDataCard> list) {
+        allCards = list;
+        lastSelected = null;
     }
 
-    public void rebindCardList(Property<ObservableList<ProjectDataCard>> listProperty) {
-        allCards.bind(listProperty);
-    }
-
-    public ObservableSet<String> getSelectedIds() {
+    public ObservableSet<UUID> getSelectedIds() {
         return selectedCards;
     }
 
     public ObservableList<ProjectDataCard> getSelectedItems() {
-        return FXCollections.observableList(allCards.getValue().filtered(card-> selectedCards.contains(card.getCardId())));
+        return FXCollections.observableList(allCards.filtered(card-> selectedCards.contains(card.getCardId())));
     }
 
     public void selectAll() {
-        for (ProjectDataCard card : allCards.getValue()) {
+        for (ProjectDataCard card : allCards) {
             selectedCards.add(card.getCardId());
         }
     }
 
-    public void clearAndSelect(String id) {
+    public void clearAndSelect(UUID id) {
         selectedCards.clear();
         selectedCards.add(id);
         lastSelected.setValue(id);
     }
 
-    public void select(String id) {
+    public void select(UUID id) {
         selectedCards.add(id);
         lastSelected.setValue(id);
     }
@@ -55,7 +53,7 @@ public class CardSelectionModel {
         }
     }
 
-    public void clearSelection(String id) {
+    public void clearSelection(UUID id) {
         selectedCards.remove(id);
         lastSelected.setValue(null);
     }
@@ -65,11 +63,11 @@ public class CardSelectionModel {
         lastSelected.setValue(null);
     }
 
-    public boolean isSelected(String id) {
+    public boolean isSelected(UUID id) {
         return selectedCards.contains(id);
     }
 
-    public BooleanBinding isSelectedProperty(String id) {
+    public BooleanBinding isSelectedProperty(UUID id) {
         return Bindings.createBooleanBinding(
                 () -> selectedCards.contains(id),
                 selectedCards
@@ -80,11 +78,11 @@ public class CardSelectionModel {
         return selectedCards.isEmpty();
     }
 
-    public String getLastSelectedValue() {
+    public UUID getLastSelectedValue() {
         return lastSelected.getValue();
     }
 
-    public StringProperty getLastSelectedProperty() {
+    public ObjectProperty<UUID> getLastSelectedProperty() {
         return lastSelected;
     }
 }

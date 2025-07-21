@@ -20,11 +20,16 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
+import kintsugi3d.util.ImageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,6 +93,8 @@ public final class ViewSet implements ReadonlyViewSet
      * The file paths are relative to the fullResImageDirectory
      */
     private final List<File> imageFiles;
+
+    private List<LinkedHashMap<String,String>> cameraMetadata;
 
     private final List<ViewRMSE> viewErrorMetrics;
 
@@ -306,6 +313,15 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder addCameraMetadata(int index, String res, String size) { //Jacob
+            result.cameraMetadata.set(index,new LinkedHashMap<>() {{
+                put("Resolution", res);
+                put("Size", size);
+            }});
+            return this;
+        }
+
+
         public ViewSet finish()
         {
             if (needsClipPlanes)
@@ -391,6 +407,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.lightIndexList = new ArrayList<>(initialCapacity);
         this.imageFiles = new ArrayList<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
+        this.cameraMetadata = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
         this.cameraProjectionList = new ArrayList<>(1);
@@ -405,6 +422,41 @@ public final class ViewSet implements ReadonlyViewSet
     public List<File> getImageFiles()
     {
         return Collections.unmodifiableList(imageFiles);
+    }
+
+    public List<LinkedHashMap<String, String>> getCameraMetadata() {
+        return Collections.unmodifiableList(cameraMetadata);
+    }
+
+    public void generateCameraMetadata() {
+        cameraMetadata.clear();
+        for(File file2: imageFiles) {
+            try {
+                File processed = new File(fullResImageDirectory,"Processed"); //TODO should not be manual here
+                File finalFile = new File(processed, file2.getName());
+                String res = "";
+                try (ImageInputStream iis = ImageIO.createImageInputStream(finalFile)) {
+                    final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+                    if (readers.hasNext()) {
+                        ImageReader reader = readers.next();
+                        try {
+                            reader.setInput(iis);
+                            res = reader.getWidth(0) + "x" + reader.getHeight(0);
+                        } finally {
+                            reader.dispose();
+                        }
+                    }
+                };
+                String size  = "";
+                String finalRes = res;
+                cameraMetadata.add(new LinkedHashMap<>() {{
+                    put("Resolution", finalRes);
+                    put("Size", (finalFile.length() / (1024 * 1024)) + " MB");
+                }});
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override

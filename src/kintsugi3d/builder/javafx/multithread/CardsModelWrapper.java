@@ -1,6 +1,8 @@
 package kintsugi3d.builder.javafx.multithread;
 
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
@@ -10,6 +12,7 @@ import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
 import java.util.List;
+import java.util.UUID;
 
 public class CardsModelWrapper implements CardsModel {
 
@@ -36,12 +39,12 @@ public class CardsModelWrapper implements CardsModel {
     }
 
     @Override
-    public ObservableSet<String> getSelectedCardIds() {
+    public ObservableSet<UUID> getSelectedCardIds() {
         return baseModel.getSelectedCardIds();
     }
 
     @Override
-    public ObservableSet<String> getExpandedCardIds() {
+    public ObservableSet<UUID> getExpandedCardIds() {
         return baseModel.getExpandedCardIds();
     }
 
@@ -56,73 +59,68 @@ public class CardsModelWrapper implements CardsModel {
     }
 
     @Override
-    public String getLastSelectedCardId() {
+    public UUID getLastSelectedCardId() {
         return baseModel.getLastSelectedCardId();
     }
 
     @Override
-    public String getLastExpandedCardId() {
+    public UUID getLastExpandedCardId() {
         return baseModel.getLastExpandedCardId();
     }
 
     @Override
-    public StringProperty getLastSelectedCardProperty() {
+    public ObjectProperty<UUID> getLastSelectedCardProperty() {
         return baseModel.getLastSelectedCardProperty();
     }
 
     @Override
-    public StringProperty getLastExpandedCardProperty() {
+    public ObjectProperty<UUID> getLastExpandedCardProperty() {
         return baseModel.getLastExpandedCardProperty();
     }
 
     @Override
-    public boolean isSelected(String cardId) {
+    public boolean isSelected(UUID cardId) {
         return baseModel.isSelected(cardId);
     }
 
     @Override
-    public boolean isExpanded(String cardId) {
+    public boolean isExpanded(UUID cardId) {
         return baseModel.isExpanded(cardId);
     }
 
     @Override
-    public BooleanBinding isSelectedProperty(String cardId) {
+    public BooleanBinding isSelectedProperty(UUID cardId) {
         return baseModel.isSelectedProperty(cardId);
     }
 
     @Override
-    public BooleanBinding isExpandedProperty(String cardId) {
+    public BooleanBinding isExpandedProperty(UUID cardId) {
         return baseModel.isExpandedProperty(cardId);
     }
 
     @Override
-    public void expandCard(String cardId) {
+    public void expandCard(UUID cardId) {
         baseModel.expandCard(cardId);
     }
 
     @Override
-    public void collapseCard(String cardId) {
+    public void collapseCard(UUID cardId) {
         baseModel.collapseCard(cardId);
     }
 
     @Override
-    public void selectCard(String cardId) {
+    public void selectCard(UUID cardId) {
         baseModel.selectCard(cardId);
     }
 
     @Override
-    public void deselectCard(String cardId) {
+    public void deselectCard(UUID cardId) {
         baseModel.deselectCard(cardId);
     }
 
     @Override
     public String getModelLabel() {
         return baseModel.getModelLabel();
-    }
-
-    @Override
-    public Property<ObservableList<ProjectDataCard>> getCardListProperty() {
-        return baseModel.getCardListProperty();
     }
 
     @Override
@@ -141,7 +139,7 @@ public class CardsModelWrapper implements CardsModel {
     }
 
     @Override
-    public void deleteCard(String id) {
+    public void deleteCard(UUID id) {
         baseModel.deleteCard(id);
     }
 }

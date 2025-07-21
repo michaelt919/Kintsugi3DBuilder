@@ -1,24 +1,28 @@
 package kintsugi3d.builder.resources;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ProjectDataCard {
-    private String cardId;
-    private String headerName;
-    private LinkedHashMap<String,String> textFields;
+    private UUID cardId;
+    private String title;
     private String imagePath;
+    private LinkedHashMap<String,String> textFields;
+    private List<LinkedHashMap<String, Runnable>> actionGroups;
 
-    public ProjectDataCard(String headerName, String imagePath, Map<String, String> textFields) {
-        this.headerName = headerName;
+    public ProjectDataCard(String title, String imagePath, Map<String, String> textFields) {
+        this.cardId = UUID.randomUUID();
+        this.title = title;
         this.imagePath = imagePath;
         this.textFields = new LinkedHashMap<>(textFields);
-        this.cardId = UUID.randomUUID().toString();
+        this.actionGroups = new ArrayList<>() {{
+            add(new LinkedHashMap<>());
+            add(new LinkedHashMap<>());
+        }};
     }
 
-    public String getCardId() { return cardId; }
-    public String getHeaderName() { return headerName; }
+    public UUID getCardId() { return cardId; }
+    public String getTitle() { return title; }
+    public String getImagePath() { return imagePath; }
     public String getValue(String key) {
         if (!textFields.containsKey(key)) {
             throw new IllegalArgumentException("Key does not exist.");
@@ -26,6 +30,7 @@ public class ProjectDataCard {
             return textFields.get(key);
     }
     public LinkedHashMap<String, String> getTextContent() { return textFields; }
-    public String getImagePath() { return imagePath; }
-
+    public void addButton(int buttonGroup, String label, Runnable runnable) {
+        this.actionGroups.get(buttonGroup).put(label,runnable);
+    }
 }

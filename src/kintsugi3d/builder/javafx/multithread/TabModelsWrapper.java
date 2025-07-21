@@ -29,21 +29,21 @@ public class TabModelsWrapper extends TabModelsBase {
         return new ArrayList<>(modelsList.getValue().values());
     }
 
-    @Override
-    public void addCardsModel(CardsModel model) {
-        modelsList.getValue().put(model.getModelLabel(), model);
-    }
+//    @Override
+//    public void addCardsModel(CardsModel model) {
+//        modelsList.getValue().put(model.getModelLabel(), model);
+//    }
+//
+//    @Override
+//    public void replaceCardsModel(String label, CardsModel model) {
+//        modelsList.getValue().replace(label,model);
+//    }
 
-    @Override
-    public void replaceCardsModel(String label, CardsModel model) {
-        modelsList.getValue().replace(label,model);
-    }
-
-    @Override
-    public void setAllCardsModels(List<CardsModel> tabCardsModels) {
-        modelsList.getValue().clear();
-        tabCardsModels.forEach(model -> modelsList.getValue().put(model.getModelLabel(),model));
-    }
+//    @Override
+//    public void setAllCardsModels(List<CardsModel> tabCardsModels) {
+//        modelsList.getValue().clear();
+//        tabCardsModels.forEach(model -> modelsList.getValue().put(model.getModelLabel(),model));
+//    }
 
     @Override
     public LinkedHashMap<String, CardsModel> getCardsModelsMap() {

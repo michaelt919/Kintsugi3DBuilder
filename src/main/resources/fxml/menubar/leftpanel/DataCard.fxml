@@ -14,7 +14,7 @@
 <?import javafx.scene.text.TextFlow?>
 
 <VBox id="data_card" fx:id="data_card" alignment="TOP_CENTER" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
-
+<VBox id="border_box" fx:id="border_box">
     <HBox fx:id="card_top_bar" alignment="CENTER_LEFT" onMouseClicked="#headerClicked" prefHeight="13.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css">
         <ImageView fx:id="card_icon" fitHeight="24.0" fitWidth="24.0">
             <Image url="@../../../../../../Kintsugi3D-icon.png" />
@@ -34,7 +34,7 @@
         </padding>
     </HBox>
 
-    <VBox fx:id="card_body" prefHeight="275">
+    <VBox fx:id="card_body" prefHeight="275" onMouseClicked="#bodyClicked">
     <HBox spacing="5.0">
         <VBox fx:id="text_content" HBox.hgrow="ALWAYS">
             <Text text="File Name:">
@@ -200,4 +200,11 @@
         <Insets left="5.0" right="5.0" />
     </padding>
 </VBox>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
+</VBox>
+   <padding>
+      <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+   </padding>
 </VBox>

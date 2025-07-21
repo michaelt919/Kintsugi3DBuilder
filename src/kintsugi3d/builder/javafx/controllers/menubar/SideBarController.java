@@ -35,9 +35,6 @@ public class SideBarController {
             newTab.managedProperty().bind(newButton.selectedProperty());
         });
 
-        tabModels.getItems().addListener((MapChangeListener<String, CardsModel>) change -> {
-            //unnecessary?
-        });
 
         buttons.get(0).setSelected(true);
     }

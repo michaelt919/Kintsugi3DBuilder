@@ -1,9 +1,12 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -12,10 +15,13 @@ import javafx.scene.text.TextFlow;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
+import java.util.UUID;
+
 public class CardController {
 
     @FXML VBox data_card;
     @FXML VBox card_body;
+    @FXML VBox border_box;
 
     @FXML Text card_title;
     @FXML VBox text_content;
@@ -23,10 +29,11 @@ public class CardController {
     @FXML ImageView card_icon;
     @FXML ImageView main_image;
 
-    private String cardId;
-
+    private UUID cardId;
     private CardsModel cameraCardsModel;
     private ProjectDataCard dataCard;
+    private BooleanBinding expanded;
+    private BooleanBinding selected;
 
 
     public void init(CardsModel cameraCardsModel, ProjectDataCard dataCard) {
@@ -34,12 +41,29 @@ public class CardController {
         this.dataCard = dataCard;
         this.cardId = dataCard.getCardId();
 
-        card_title.setText(dataCard.getHeaderName());
-        //card_icon.setImage(new Image(dataCard.getImagePath()));
-        //main_image.setImage(new Image(dataCard.getImagePath()));
+        card_title.setText(dataCard.getTitle());
+        try {
+            Image preview = new Image(dataCard.getImagePath());
+            card_icon.setImage(preview);
+            main_image.setImage(preview);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
 
-        card_body.visibleProperty().bind(cameraCardsModel.isExpandedProperty(cardId));
-        card_body.managedProperty().bind(cameraCardsModel.isExpandedProperty(cardId));
+        expanded = cameraCardsModel.isExpandedProperty(cardId);
+        selected = cameraCardsModel.isSelectedProperty(cardId);
+
+        card_body.visibleProperty().bind(expanded);
+        card_body.managedProperty().bind(expanded);
+        selected.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                border_box.setStyle("-fx-border-color: black; -fx-border-width: 2px;");
+                data_card.setStyle("-fx-padding: 2px;");
+            } else {
+                border_box.setStyle("");
+                data_card.setStyle("-fx-padding: 4px");
+            }
+        });
 
         text_content.getChildren().clear();
         dataCard.getTextContent().forEach((key, value) -> {
@@ -62,7 +86,7 @@ public class CardController {
         data_card.setManaged(visibility);
     }
 
-    public void setCardId(String uuid) {
+    public void setCardId(UUID uuid) {
         this.cardId = uuid;
     }
 
@@ -80,7 +104,30 @@ public class CardController {
 
     @FXML
     public void headerClicked(MouseEvent e) {
-        cameraCardsModel.expandCard(cardId);
+        if (e.getButton() == MouseButton.PRIMARY) {
+            if (cameraCardsModel.isSelected(cardId)){
+                cameraCardsModel.deselectCard(cardId);
+            }else {
+                cameraCardsModel.selectCard(cardId);
+            }
+        } else if (e.getButton() == MouseButton.SECONDARY) {
+            if (cameraCardsModel.isExpanded(cardId)) {
+                cameraCardsModel.collapseCard(cardId);
+            } else {
+                cameraCardsModel.expandCard(cardId);
+            }
+        }
+    }
+
+    @FXML
+    public void bodyClicked(MouseEvent e) {
+        if (e.getButton() == MouseButton.SECONDARY) {
+            if (cameraCardsModel.isExpanded(cardId)) {
+                cameraCardsModel.collapseCard(cardId);
+            } else {
+                cameraCardsModel.expandCard(cardId);
+            }
+        }
     }
 
     @FXML

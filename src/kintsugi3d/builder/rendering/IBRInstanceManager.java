@@ -14,6 +14,8 @@ package kintsugi3d.builder.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -172,7 +174,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-
+        File previewImagePath = loadedViewSet.getPreviewImageFilePath();
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
         List<ProjectDataCard> cameraCards = new ArrayList<>();
@@ -180,7 +182,16 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         imgFiles.forEach(file->imgFileNames.add(file.getName()));
         MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
 
-        imgFiles.forEach(file-> cameraCards.add(ProjectDataCardFactory.createProjectDataCard(file)));
+        if (loadedViewSet.getCameraMetadata().size() != loadedViewSet.getImageFiles().size()) {
+            loadedViewSet.generateCameraMetadata();
+        };
+
+        for (int i = 0; i < loadedViewSet.getCameraMetadata().size(); i++) {
+            String cameraFile = loadedViewSet.getPreviewImageFilePath().list()[i];
+            File fullCameraPath = new File(loadedViewSet.getPreviewImageFilePath(),cameraFile);
+            cameraCards.add(ProjectDataCardFactory.createCameraCard(imgFiles.get(i).getName(), fullCameraPath.getAbsolutePath(), loadedViewSet.getCameraMetadata().get(i)));
+        }
+
         MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setCardsList(cameraCards);
 
         // Invoke callbacks now that view set is loaded

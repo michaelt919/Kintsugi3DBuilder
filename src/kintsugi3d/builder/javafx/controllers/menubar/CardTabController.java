@@ -1,6 +1,10 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TextField;
@@ -26,25 +30,11 @@ public class CardTabController {
     public void init(CardsModel cardsModel)
     {
         this.cardsModel = cardsModel;
-        List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
-        for (ProjectDataCard card : cards) {
+        for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
             card_vbox.getChildren().add(createDataCard(card));
         }
 
-        cardsModel.getObservableCardsList().addListener((ListChangeListener<ProjectDataCard>) change -> {
-            change.next();
-            if (change.wasRemoved()) {
-                card_vbox.getChildren().remove(change.getFrom());
-                dataCards.remove(change.getFrom());
-                cardControllers.remove(change.getFrom());
-            } else {
-                card_vbox.getChildren().clear();
-                List<ProjectDataCard> cards1 = cardsModel.getObservableCardsList();
-                for (ProjectDataCard card : cards1) {
-                    card_vbox.getChildren().add(createDataCard(card));
-                }
-            }
-        });
+        createListener();
     }
 
     private VBox createDataCard(ProjectDataCard card) {
@@ -78,13 +68,37 @@ public class CardTabController {
         card_tab.setManaged(visibility);
     }
 
+    //Does not recreate the listener!!!
     public void refreshCardList() {
         card_vbox.getChildren().clear();
         dataCards.clear();
         cardControllers.clear();
-        List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
-        for (ProjectDataCard card : cards) {
+        for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
             card_vbox.getChildren().add(createDataCard(card));
         }
+    }
+
+    private void createListener() {
+        cardsModel.getObservableCardsList().addListener((ListChangeListener<ProjectDataCard>) change -> {
+            while(change.next()) {
+                if (change.wasRemoved()) {
+                    for (int i = 0; i < change.getRemovedSize(); i++) {
+                        card_vbox.getChildren().remove(change.getFrom());
+                        dataCards.remove(change.getFrom());
+                        cardControllers.remove(change.getFrom());
+                    }
+                }
+                if (change.wasAdded()) {
+                    for (int i = change.getFrom(); i < change.getTo(); i++) {
+                        card_vbox.getChildren().add(i, createDataCard(cardsModel.getObservableCardsList().get(i)));
+                    }
+                }
+                if(change.wasReplaced()) {
+                    for (int i = change.getFrom(); i < change.getTo(); i++) {
+                        card_vbox.getChildren().set(i, createDataCard(cardsModel.getObservableCardsList().get(i)));
+                    }
+                }
+            }
+        });
     }
 }
