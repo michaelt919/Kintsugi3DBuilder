@@ -82,6 +82,18 @@
                         <Insets bottom="4.0" top="4.0" />
                      </padding>
                   </HBox>
+                   <HBox>
+                       <children>
+                           <Label text="Specular complexity:">
+                               <HBox.margin>
+                                   <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                               </HBox.margin></Label>
+                           <TextField fx:id="specularComplexityTextField" prefHeight="25.0" prefWidth="56.0" text="90" />
+                       </children>
+                       <padding>
+                           <Insets bottom="4.0" top="4.0" />
+                       </padding>
+                   </HBox>
                   <HBox>
                      <children>
                       <Label text="Metallicity:">

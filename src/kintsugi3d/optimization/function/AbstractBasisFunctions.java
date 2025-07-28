@@ -235,6 +235,13 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
                 currentTotal += nonConstantSolution.applyAsDouble(k) * evaluate(k, value);
             }
 
+// SHOULD BE EQUIVALENT TO:
+//            double currentTotal = 0.0;
+//            for (int k = 0; k < functionCount; k++)
+//            {
+//                currentTotal += nonConstantSolution.applyAsDouble(k) * evaluate(k, value);
+//            }
+
             // Library functions <= kFirst should not be able to affect the element at index value since they will evaluate to 0.
             // Total now accounts for the whole range of library functions.
             functionConsumer.accept(currentTotal, value);

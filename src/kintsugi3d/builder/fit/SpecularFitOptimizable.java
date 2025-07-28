@@ -313,6 +313,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 specularBasisSettings.getMetallicity(),
                 (int) Math.round(specularBasisSettings.getSpecularMinWidth() * specularBasisSettings.getBasisResolution()),
                 (int) Math.round(specularBasisSettings.getSpecularSmoothness() * specularBasisSettings.getBasisResolution()),
+                specularBasisSettings.getBasisComplexity(),
                 x -> 3 * x * x - 2 * x * x * x)
 //                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
         );

@@ -50,6 +50,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
     @FXML private TextField basisCountTextField;
     @FXML private TextField mfdResolutionTextField;
+    @FXML private TextField specularComplexityTextField;
     @FXML private TextField convergenceToleranceTextField;
     @FXML private TextField specularMinWidthTextField;
     @FXML private TextField specularSmoothnessTextField;
@@ -131,6 +132,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
             settings.setConvergenceTolerance(convergenceTolerance);
+            int specularComplexity = Integer.parseInt(specularComplexityTextField.getText());
+            settings.getSpecularBasisSettings().setBasisComplexity(specularComplexity);
             double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
             settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidth);
             double specularSmoothness = Double.parseDouble(specularSmoothnessTextField.getText());

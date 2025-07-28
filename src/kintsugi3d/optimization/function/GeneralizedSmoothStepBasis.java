@@ -19,6 +19,7 @@ import java.util.function.DoubleUnaryOperator;
 public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
 {
     private final int resolution;
+    private final int functionCount;
     private final int minSmoothstepWidth;
     private final int maxSmoothstepWidth;
     private final DoubleUnaryOperator smoothstep;
@@ -64,7 +65,7 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
      *                   parameter increases.
      */
     public GeneralizedSmoothStepBasis(int resolution, double metallicity, int minSmoothstepWidth,
-                                      int maxSmoothstepWidth, DoubleUnaryOperator smoothstep)
+                                      int maxSmoothstepWidth, int functionCount, DoubleUnaryOperator smoothstep)
     {
         super(metallicity);
 
@@ -76,13 +77,15 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
         this.resolution = resolution;
         this.minSmoothstepWidth = Math.max(1, minSmoothstepWidth);
         this.maxSmoothstepWidth = Math.max(minSmoothstepWidth, maxSmoothstepWidth);
+        this.functionCount = functionCount;
         this.smoothstep = smoothstep;
     }
 
     @Override
     protected int getFirstFunctionIndexForDomainValue(int value)
     {
-        return Math.max(0, value - minSmoothstepWidth + 1);
+        return (int)Math.ceil(Math.max(0, value - minSmoothstepWidth + 1) // index with no remapping
+            * (double)(functionCount - 1) / (double)(resolution - minSmoothstepWidth)); // remap and apply ceil to get the first index >=
     }
 
     @Override
@@ -90,16 +93,23 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
     {
         // For a particular value, value-minSmoothstepWidth is the last basis function that evaluates to 0.0 @ value,
         // so value - minSmoothstepWidth + maxSmoothstepWidth is the first basis function that evaluates to 1.0 @ value.
-        return Math.min(value - minSmoothstepWidth + maxSmoothstepWidth, getFunctionCount() - 1);
+        return Math.min((int)Math.floor((value - minSmoothstepWidth + maxSmoothstepWidth) // index with no remapping
+                * (double)(functionCount - 1) / (double)(resolution - minSmoothstepWidth)),
+            getFunctionCount() - 1); // remap and apply floor to get the last index <=
     }
 
     @Override
     public double evaluate(int functionIndex, int value)
     {
+        // at functionIndex = 0, should be the same with or without remapping
+        // at functionIndex = functionCount - 1, should be as if at resolution - minSmoothstepWidth without remapping
+        double remappedFunctionIndex = (double)functionIndex
+            * (double)(resolution - minSmoothstepWidth) / (double)(functionCount - 1);
+
         // The function at index i always reaches 0.0 when value = i + minSmoothstepWidth.
         // If i + minSmoothstepWidth < maxSmoothstepWidth, then the smoothstep starts right away at m=0.
         // Otherwise, the smoothstep starts at m = i + minSmoothstepWidth - maxSmoothstepWidth.
-        if (value < functionIndex + minSmoothstepWidth) // <=> functionIndex + minSmoothstepWidth - value > 0
+        if (value < remappedFunctionIndex + minSmoothstepWidth) // <=> functionIndex + minSmoothstepWidth - value > 0
         {
             // Assuming minSmoothstepWidth is 1:
             // functionIndex = 0: range of 1; [0, 1)
@@ -108,14 +118,14 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
             // functionIndex = maxSmoothstepWidth: use maxSmoothstepWidth; [0, maxSmoothstepWidth)
             // functionIndex = maxSmoothstepWidth + 1: [1, maxSmoothstepWidth + 1)
             // etc.
-            int effectiveWidth = Math.min(maxSmoothstepWidth, functionIndex + minSmoothstepWidth);
+            double effectiveWidth = Math.min(maxSmoothstepWidth, remappedFunctionIndex + minSmoothstepWidth);
 
-            int domainIndex = minSmoothstepWidth + functionIndex - value;
+            double domainIndex = minSmoothstepWidth + remappedFunctionIndex - value;
             if (domainIndex < effectiveWidth)
             // <=> value > functionIndex + minSmoothstepWidth - effectiveWidth [left bound of the range]
             {
                 // Value is within range, use smoothstep function.
-                return smoothstep.applyAsDouble((double) domainIndex / (double) effectiveWidth);
+                return smoothstep.applyAsDouble(domainIndex / effectiveWidth);
             }
             else
             {
@@ -133,7 +143,7 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
     @Override
     public int getFunctionCount()
     {
-        return resolution - minSmoothstepWidth + 1;
+        return functionCount;
     }
 
     @Override

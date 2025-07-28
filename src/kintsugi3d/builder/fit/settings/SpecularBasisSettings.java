@@ -15,6 +15,7 @@ public class SpecularBasisSettings
 {
     private int basisCount = 8;
     private int basisResolution = 90;
+    private int basisComplexity = 90;
     private double specularMinWidth = 0.05;
     private double specularSmoothness = 1.0;
     private double metallicity = 0.0;
@@ -106,6 +107,16 @@ public class SpecularBasisSettings
         }
 
         this.specularSmoothness = specularSmoothness;
+    }
+
+    public int getBasisComplexity()
+    {
+        return basisComplexity;
+    }
+
+    public void setBasisComplexity(int basisComplexity)
+    {
+        this.basisComplexity = basisComplexity;
     }
 
     /**
