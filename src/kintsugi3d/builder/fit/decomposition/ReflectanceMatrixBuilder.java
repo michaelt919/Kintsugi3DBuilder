@@ -106,7 +106,7 @@ final class ReflectanceMatrixBuilder
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
         SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(),
-                specularBasisSettings.getBasisCount() * (specularBasisSettings.getBasisResolution() + 1), DMatrixRMaj.class);
+                specularBasisSettings.getBasisCount() * (specularBasisSettings.getBasisComplexity() + 1), DMatrixRMaj.class);
         SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);

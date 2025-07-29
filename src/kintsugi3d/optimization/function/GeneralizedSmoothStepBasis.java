@@ -76,7 +76,7 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
 
         this.resolution = resolution;
         this.minSmoothstepWidth = Math.max(1, minSmoothstepWidth);
-        this.maxSmoothstepWidth = Math.max(minSmoothstepWidth, maxSmoothstepWidth);
+        this.maxSmoothstepWidth = Math.max(this.minSmoothstepWidth, maxSmoothstepWidth);
         this.functionCount = functionCount;
         this.smoothstep = smoothstep;
     }
@@ -84,18 +84,34 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
     @Override
     protected int getFirstFunctionIndexForDomainValue(int value)
     {
-        return (int)Math.ceil(Math.max(0, value - minSmoothstepWidth + 1) // index with no remapping
-            * (double)(functionCount - 1) / (double)(resolution - minSmoothstepWidth)); // remap and apply ceil to get the first index >=
+//        return 0;
+        // ^^ would be a more conservative implementation if there are issues
+        // but the more aggressive implementation below seems to work
+
+        return Math.max((int)Math.floor((value - minSmoothstepWidth) // index preceding first with no remapping
+            * (double)(functionCount - 1) / (double)(resolution - minSmoothstepWidth)) // remap and apply floor to get the last index preceding the first
+                + 1, 0); // add 1 and clamp to 0 to get the first
     }
 
     @Override
     protected int getLastFunctionIndexForDomainValue(int value)
     {
-        // For a particular value, value-minSmoothstepWidth is the last basis function that evaluates to 0.0 @ value,
-        // so value - minSmoothstepWidth + maxSmoothstepWidth is the first basis function that evaluates to 1.0 @ value.
-        return Math.min((int)Math.floor((value - minSmoothstepWidth + maxSmoothstepWidth) // index with no remapping
-                * (double)(functionCount - 1) / (double)(resolution - minSmoothstepWidth)),
-            getFunctionCount() - 1); // remap and apply floor to get the last index <=
+        return functionCount - 1;
+
+        // Could optimize this more (see commented out code below that isn't quite but is probably close)
+        // but probably not worth it since probably almost no users are setting "specular smoothness" to anything less than 1.0
+        // and any that do are probably not doing it to look for a performance boost.
+
+        // In short, functionCount - 1 is more conservative than necessary but shouldn't cause any problems;
+        // (if smoothness < 1, i.e. maxSmoothstepWidth < resolution) it will just do a lot of unecessary evaluate()
+        // calls that will all come out to 1.0.
+
+        // BROKEN CODE follows:
+//        // For a particular value, value-minSmoothstepWidth is the last basis function that evaluates to 0.0 @ value,
+//        // so value - minSmoothstepWidth + maxSmoothstepWidth is the first basis function that evaluates to 1.0 @ value.
+//        return Math.min((int)Math.floor((value + 1 - minSmoothstepWidth + maxSmoothstepWidth) // index after last with no remapping
+//                * (double)(functionCount - 1) / (double)(resolution - minSmoothstepWidth)) // remap and apply floor to get the last index <=
+//                - 1, functionCount - 1); // subtract 1 and clamp to get the last
     }
 
     @Override

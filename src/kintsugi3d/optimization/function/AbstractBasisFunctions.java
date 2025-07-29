@@ -210,7 +210,7 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
 
         // Constant term
         sums[functionCount] = constantTerm * metallicity;
-        functionConsumer.accept(sums[functionCount], functionCount);
+        functionConsumer.accept(sums[functionCount], getOptimizedDomainSize());
 
         // Loop over functions from end down to 0.
         for (int k = functionCount - 1; k >= 0; k--)
