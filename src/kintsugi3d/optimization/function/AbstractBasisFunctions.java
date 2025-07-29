@@ -8,11 +8,13 @@ import java.util.function.ObjIntConsumer;
 /**
  * Helper abstract class for setting up basis functions.
  * Implementations of contributeToFittingSystem() and evaluateSolution() are provided;
- * subclasses must provide evaluate(), getFirstFunctionIndexForDomainValue(), and getLastFunctionIndexForDomainValue()
- * An important assumption is that all functions are generally increasing from 0.0 to 1.0 across the explicit domain;
- * that is, a given function is 0.0 up to some inflection point,
+ * subclasses must provide evaluate(), getFirstFunctionIndexForDomainValue(), and getLastFunctionIndexForDomainValue().
+ * The latter two methods can be used to improve performance assuming that the basis functions are ordered in such a way
+ * that any particular value is only in the explicit domain for a continuous subset of functions.
+ * An important assumption is that all functions are generally decreasing from 1.0 to 0.0 across the explicit domain;
+ * that is, a given function is 1.0 up to some inflection point,
  * then enters the explicitly defined domain up to another inflection point,
- * and finally is 1.0 beyond that second inflection point.
+ * and finally is 0.0 beyond that second inflection point.
  * evalute() must be implemented correctly to meet these criteria or the implementations of contributeToFittingSystem()
  * and evaluateSolution() will not work correctly.
  */
@@ -26,21 +28,18 @@ public abstract class AbstractBasisFunctions implements BasisFunctions
     }
 
     /**
-     * Gets the index of the first function for which the specified value is in its explicit domain, evaluating to a non-zero result.
-     * It is assumed that all functions with lower indices will implicitly evaluate to 0.0 for the specified value.
+     * Gets the index of the first function for which the specified value is within its explicit domain.
+     * All functions with lower indices must evaluate to 0.0 for the specified value.
      * @param value The value to consider for domain inclusion.
      * @return The index of the first function for which the specified value is in its explicit domain.
      */
     protected abstract int getFirstFunctionIndexForDomainValue(int value);
 
     /**
-     * Gets the index of the last function for which all values greater than specified value are within its explicit domain,
-     * evaluating to a result less than 1.0.
-     * The specified value itself is either within the explicit domain itself (also evaluating to a result less than 1.0)
-     * or it may lie on the left boundary of the domain and evaluate to 1.0.
-     * It is assumed that all functions a higher index will evaluate to 1.0 for the specified value.
+     * Gets the index of the last function for which the specified value is within its explicit domain.
+     * This function and all functions with higher indices must evaluate to 1.0 for the specified value.
      * @param value The value to consider for domain inclusion.
-     * @return The index of the first function for which the specified value is beyond its explicit domain.
+     * @return The index of the last function for which the specified value is in its explicit domain.
      */
     protected abstract int getLastFunctionIndexForDomainValue(int value);
 

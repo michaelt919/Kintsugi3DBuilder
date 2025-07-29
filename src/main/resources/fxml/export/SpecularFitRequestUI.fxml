@@ -88,7 +88,7 @@
                                <HBox.margin>
                                    <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                                </HBox.margin></Label>
-                           <TextField fx:id="specularComplexityTextField" prefHeight="25.0" prefWidth="56.0" text="90" />
+                           <TextField fx:id="specularComplexityTextField" prefHeight="25.0" prefWidth="56.0" text="1.0" />
                        </children>
                        <padding>
                            <Insets bottom="4.0" top="4.0" />
@@ -115,7 +115,7 @@
                            <padding>
                               <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                            </padding></Label>
-                        <TextField fx:id="specularMinWidthTextField" prefHeight="25.0" prefWidth="56.0" text="0.05" />
+                        <TextField fx:id="specularMinWidthTextField" prefHeight="25.0" prefWidth="56.0" text="0.2" />
                      </children>
                      <padding>
                         <Insets bottom="4.0" top="4.0" />

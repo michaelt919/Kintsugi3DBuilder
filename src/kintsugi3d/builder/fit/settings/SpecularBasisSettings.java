@@ -15,9 +15,9 @@ public class SpecularBasisSettings
 {
     private int basisCount = 8;
     private int basisResolution = 90;
-    private int basisComplexity = 90;
-    private double specularMinWidth = 0.05;
-    private double specularSmoothness = 1.0;
+    private int basisComplexity = 73;
+    private int specularMinWidth = 18;
+    private int specularMaxWidth = 90;
     private double metallicity = 0.0;
 
     private boolean smithMaskingShadowingEnabled = true;
@@ -70,50 +70,62 @@ public class SpecularBasisSettings
 
     /**
      * The minimum width of the specular lobe when optimizing (the minimum width of the smoothstep function used).
+     * This setting is measured in discrete (integer) units and should be less than the basis resolution and the max width.
      * @return
      */
-    public double getSpecularMinWidth()
+    public int getSpecularMinWidth()
     {
         return specularMinWidth;
     }
 
     /**
      * Sets the minimum width of the specular lobe when optimizing (the minimum width of the smoothstep function used).
+     * This setting is measured in discrete (integer) units and should be less than the basis resolution and the max width.
      * @param specularMinWidth
      */
-    public void setSpecularMinWidth(double specularMinWidth)
+    public void setSpecularMinWidth(int specularMinWidth)
     {
         this.specularMinWidth = specularMinWidth;
     }
 
     /**
      * Gets the required smoothness for the specular lobe (the maximum width of the smoothstep function used to optimize it).
+     * This setting is measured in discrete (integer) units and should be less than the basis resolution.
      * @return
      */
-    public double getSpecularSmoothness()
+    public int getSpecularMaxWidth()
     {
-        return specularSmoothness;
+        return specularMaxWidth;
     }
 
     /**
      * Sets the required smoothness for the specular lobe (the maximum width of the smoothstep function used to optimize it).
-     * @param specularSmoothness
+     * This setting is measured in discrete (integer) units and should be less than the basis resolution.
+     * @param specularMaxWidth
      */
-    public void setSpecularSmoothness(double specularSmoothness)
+    public void setSpecularMaxWidth(int specularMaxWidth)
     {
-        if (specularSmoothness < 0)
+        if (specularMaxWidth < 0)
         {
-            throw new IllegalArgumentException("Specular smoothness must not be less than zero.");
+            throw new IllegalArgumentException("Specular max width must not be less than zero.");
         }
 
-        this.specularSmoothness = specularSmoothness;
+        this.specularMaxWidth = specularMaxWidth;
     }
 
+    /**
+     * Gets the number of representative functions that are used to optimize each basis function.
+     * @return
+     */
     public int getBasisComplexity()
     {
         return basisComplexity;
     }
 
+    /**
+     * Sets the number of representative functions that are used to optimize each basis function.
+     * @param basisComplexity
+     */
     public void setBasisComplexity(int basisComplexity)
     {
         this.basisComplexity = basisComplexity;

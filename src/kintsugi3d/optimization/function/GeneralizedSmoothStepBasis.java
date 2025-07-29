@@ -56,6 +56,11 @@ public class GeneralizedSmoothStepBasis extends AbstractBasisFunctions
      *                        close to the specular peak.
      *                        A max width of 1 would correspond to a hard step function.
      *                        The max width will be clamped to minSmoothstepWidth if set lower than minSmoothstepWidth.
+     * @param functionCount The number of functions in the library.
+     *                      The left boundary of the explicit domain for these functions will be evenly spaced
+     *                      between minSmoothstepWidth and the resolution,
+     *                      while the right boundary will be based on the left boundary and maxSmoothstepWidth
+     *                      (but never beyond the resolution of the function).
      * @param smoothstep The actual smoothstep function to be used.  This function should have accept a domain between
      *                   0.0 and 1.0 and map the values to a range that is also between 0.0 and 1.0, where an input of
      *                   0.0 evaluates to a result of 0.0, and an input of 1.0 evaluates to a result of 1.0.

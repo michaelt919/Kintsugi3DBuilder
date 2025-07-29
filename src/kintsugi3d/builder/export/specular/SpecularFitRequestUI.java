@@ -123,8 +123,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             int basisCount = Integer.parseInt(basisCountTextField.getText());
             settings.getSpecularBasisSettings().setBasisCount(basisCount);
-            int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
-            settings.getSpecularBasisSettings().setBasisResolution(microfacetDistributionResolution);
+            int basisResolution = Integer.parseInt(mfdResolutionTextField.getText());
+            settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
 
             settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
             settings.getExportSettings().setOpenViewerOnceComplete(openViewerOnComplete.isSelected());
@@ -132,14 +132,21 @@ public class SpecularFitRequestUI implements IBRRequestUI
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
             settings.setConvergenceTolerance(convergenceTolerance);
-            int specularComplexity = Integer.parseInt(specularComplexityTextField.getText());
-            settings.getSpecularBasisSettings().setBasisComplexity(specularComplexity);
+
             double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
-            settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidth);
-            double specularSmoothness = Double.parseDouble(specularSmoothnessTextField.getText());
-            settings.getSpecularBasisSettings().setSpecularSmoothness(specularSmoothness);
+            int specularMinWidthDiscrete = (int)Math.round(specularMinWidth * basisResolution);
+            settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
+
+            double specularMaxWidth = Double.parseDouble(specularSmoothnessTextField.getText());
+            settings.getSpecularBasisSettings().setSpecularMaxWidth((int)Math.round(specularMaxWidth * basisResolution));
+
+            double specularComplexity = Double.parseDouble(specularComplexityTextField.getText());
+            settings.getSpecularBasisSettings().setBasisComplexity(
+                (int)Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
+
             double metallicity = Double.parseDouble(metallicityTextField.getText());
             settings.getSpecularBasisSettings().setMetallicity(metallicity);
+
             settings.setShouldIncludeConstantTerm(translucencyCheckBox.isSelected());
 
             // Normal estimation settings
