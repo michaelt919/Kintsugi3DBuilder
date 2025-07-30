@@ -57,14 +57,17 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides)
+    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories)
     {
-        File root = overrides.projectRoot;
-        File supportingFilesDirectory = overrides.supportingFilesDirectory;
-        boolean needsUndistort = overrides.needsUndistort;
+        File root = directories.projectRoot;
+        File supportingFilesDirectory = directories.supportingFilesDirectory;
+        boolean needsUndistort = directories.fullResImagesNeedUndistort;
         Date timestamp = new Date();
 
         Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
+
+        // Set default full res image directory in case it's not specified in the VSET file (could also be null).
+        builder.setFullResImageDirectory(directories.fullResImageDirectory);
 
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
@@ -305,8 +308,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             }
         }
 
-        ViewSet result = builder.finish();
-        result.getViewSetSettings().copyFrom(settings);
+        builder.applySettings(settings);
 
         // Tonemapping
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];
@@ -318,17 +320,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             encodedLuminanceValues[i] = encodedLuminanceList.get(i);
         }
 
-        result.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
-
-        if (result.getSupportingFilesFilePath() != null)
-        {
-            // Make sure the supporting files directory exists
-            result.getSupportingFilesFilePath().mkdirs();
-        }
+        builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
         log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
-        return result;
+        return builder;
     }
 
     /**
@@ -340,14 +336,14 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    public ViewSet readFromStream(InputStream stream, File root)
+    public ViewSet.Builder readFromStream(InputStream stream, File root)
     {
         // Use root directory as supporting files directory
-        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
-        overrides.projectRoot = root;
-        overrides.supportingFilesDirectory = root;
-        overrides.needsUndistort = true;
-        return readFromStream(stream, overrides);
+        ViewSetDirectories directories = new ViewSetDirectories();
+        directories.projectRoot = root;
+        directories.supportingFilesDirectory = root;
+        directories.fullResImagesNeedUndistort = true;
+        return readFromStream(stream, directories);
     }
 
     /**
@@ -359,15 +355,15 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    public ViewSet readFromFile(File file, File supportingFilesDirectory) throws IOException
+    public ViewSet.Builder readFromFile(File file, File supportingFilesDirectory) throws IOException
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
-            overrides.projectRoot = file.getParentFile();
-            overrides.supportingFilesDirectory = supportingFilesDirectory;
-            overrides.needsUndistort = true;
-            return readFromStream(stream, overrides);
+            ViewSetDirectories directories = new ViewSetDirectories();
+            directories.projectRoot = file.getParentFile();
+            directories.supportingFilesDirectory = supportingFilesDirectory;
+            directories.fullResImagesNeedUndistort = true;
+            return readFromStream(stream, directories);
         }
     }
 
@@ -379,7 +375,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet readFromFile(File file) throws IOException
+    public ViewSet.Builder readFromFile(File file) throws IOException
     {
         try (InputStream stream = new FileInputStream(file))
         {

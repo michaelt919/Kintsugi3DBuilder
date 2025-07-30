@@ -12,7 +12,8 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.io.ViewSetLoadOverrides;
+import kintsugi3d.builder.io.ViewSetDirectories;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -37,13 +38,15 @@ public class RealityCaptureInputSource extends InputSource{
     @Override
     public void initTreeView() {
         try {
-            ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
-            overrides.geometryFile = meshFile;
-            overrides.masksDirectory = masksDir;
-            overrides.fullResImageDirectory = photosDir;
-            overrides.needsUndistort = true;
+            ViewSetDirectories directories = new ViewSetDirectories();
+            directories.projectRoot = cameraFile.getParentFile();
+            directories.fullResImageDirectory = photosDir;
+            directories.fullResImagesNeedUndistort = true;
             primaryViewSelectionModel = new GenericPrimaryViewSelectionModel(cameraFile.getName(),
-                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, overrides));
+                ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, directories)
+                    .setGeometryFile(meshFile)
+                    .setMasksDirectory(masksDir)
+                    .finish());
 
             addTreeElems(primaryViewSelectionModel);
             searchableTreeView.bind();
@@ -54,15 +57,16 @@ public class RealityCaptureInputSource extends InputSource{
 
     @Override
     public void loadProject(String primaryView, double rotate) {
-        ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
-        overrides.geometryFile = meshFile;
-        overrides.masksDirectory = masksDir;
-        overrides.fullResImageDirectory = photosDir;
-        overrides.needsUndistort = needsUndistort;
-        overrides.primaryViewName = primaryView;
-        overrides.primaryViewRotation = rotate;
+        ViewSetLoadOptions loadOptions = new ViewSetLoadOptions();
+        loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
+        loadOptions.geometryFile = meshFile;
+        loadOptions.masksDirectory = masksDir;
+        loadOptions.mainDirectories.fullResImageDirectory = photosDir;
+        loadOptions.mainDirectories.fullResImagesNeedUndistort = needsUndistort;
+        loadOptions.orientationViewName = primaryView;
+        loadOptions.orientationViewRotation = rotate;
         new Thread(() ->
-            MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile,overrides))
+            MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile,loadOptions))
             .start();
     }
 

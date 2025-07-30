@@ -11,37 +11,24 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
-import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -146,16 +133,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @throws XMLStreamException
      */
     @Override
-    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides) throws XMLStreamException
+    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
     {
-        File geometryFile = overrides.geometryFile;
-        File fullResImageDirectory = overrides.fullResImageDirectory;
+        if (directories.supportingFilesDirectory == null)
+        {
+            directories.supportingFilesDirectory = directories.projectRoot;
+        }
 
-        ViewSet viewSet = readFromStream(stream, overrides, null, null, -1, false);
-        viewSet.setGeometryFile(geometryFile);
-        viewSet.setFullResImageDirectory(fullResImageDirectory);
-        viewSet.setMasksDirectory(overrides.masksDirectory);
-        return viewSet;
+        return readFromStream(stream, directories, null, null, -1, false);
     }
 
     /**
@@ -169,7 +154,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, ViewSetLoadOverrides overrides, String modelID, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
+    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
@@ -657,7 +642,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
         }
 
-        Builder builder = ViewSet.getBuilder(overrides.projectRoot, overrides.supportingFilesDirectory, cameraSet.size());
+        Builder builder = ViewSet.getBuilder(directories.projectRoot, directories.supportingFilesDirectory, cameraSet.size());
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 
@@ -691,7 +676,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 sensors[i].skew
             );
 
-            if (overrides.needsUndistort)
+            if (directories.fullResImagesNeedUndistort)
             {
                 builder.addCameraProjection(distortionProj);
             }
@@ -741,10 +726,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             builder.addLight(Vector3.ZERO, new Vector3(1.0f));
         }
 
-        return builder.finish();
+        // Set full res image directory according to input argument
+        builder.setFullResImageDirectory(directories.fullResImageDirectory);
+
+        return builder;
     }
 
-    public static ViewSet loadViewsetFromChunk(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
+    public static ViewSet.Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
         throws IOException, XMLStreamException
     {
         // Get reference to the chunk directory
@@ -780,15 +768,15 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // Found the desired file inside the zip
                     InputStream fileStream = new BufferedInputStream(zis);
 
-                    ViewSetLoadOverrides overrides = new ViewSetLoadOverrides();
-                    overrides.projectRoot = rootDirectory;
-                    overrides.supportingFilesDirectory = supportingFilesDirectory;
-                    overrides.needsUndistort = true;
+                    ViewSetDirectories directories = new ViewSetDirectories();
+                    directories.projectRoot = rootDirectory;
+                    directories.supportingFilesDirectory = supportingFilesDirectory;
+                    directories.fullResImagesNeedUndistort = true;
 
                     // TODO: USING A HARD CODED VERSION VALUE (200)
                     // Create and store ViewSet
-                    ViewSet viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
-                            .readFromStream(fileStream, overrides,
+                    ViewSet.Builder viewSetBuilder = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
+                            .readFromStream(fileStream, directories,
                                     String.valueOf(metashapeChunk.getCurrModelID()),
                                     cameraPathsMap,
                                     200,
@@ -796,7 +784,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                     // 3) load geometry from ZipInputStream from model's ZIP
                     String modelPath = metashapeChunk.getCurrentModelPath();
-                    viewSet.setGeometryFile(new File(chunkDirectory, "0/" + modelPath));
+                    viewSetBuilder.setGeometryFile(new File(chunkDirectory, "0/" + modelPath));
                     if (modelPath.isEmpty()){throw new FileNotFoundException("Could not find model path");}
 
                     // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
@@ -811,21 +799,21 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     File override = metashapeChunk.getSelectedModel().getLoadPreferences().fullResOverride;
                     if (override != null)
                     {
-                        viewSet.setFullResImageDirectory(override);
+                        viewSetBuilder.setFullResImageDirectory(override);
                     }
                     else
                     {
                         // Set the fullResImage Directory to be the root directory
-                        viewSet.setFullResImageDirectory(chunkDirectory.getParentFile().getParentFile());
+                        viewSetBuilder.setFullResImageDirectory(chunkDirectory.getParentFile().getParentFile());
                     }
 
                     // mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
 
                     //send masksDirectory to viewset and have it process them once the progress bars are ready for it
                     File masksDir = metashapeChunk.getMasksDirectory();
-                    viewSet.setMasksDirectory(masksDir);
+                    viewSetBuilder.setMasksDirectory(masksDir);
 
-                    return viewSet;
+                    return viewSetBuilder;
                 }
             }
 

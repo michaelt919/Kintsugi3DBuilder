@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.ViewSetLoadOverrides;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.EncodableColorImage;
 
@@ -165,7 +165,7 @@ public class IOModel
 
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
-    private ReadonlyLoadOptionsModel loadOptionsModel;
+    private ReadonlyLoadOptionsModel imageLoadOptionsModel;
 
     public ProgressMonitor getProgressMonitor()
     {
@@ -183,9 +183,9 @@ public class IOModel
         this.progressMonitor.addSubMonitor(monitor);
     }
 
-    public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)
+    public void setImageLoadOptionsModel(ReadonlyLoadOptionsModel imageLoadOptionsModel)
     {
-        this.loadOptionsModel = loadOptionsModel;
+        this.imageLoadOptionsModel = imageLoadOptionsModel;
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
@@ -215,28 +215,28 @@ public class IOModel
      */
     public void loadFromVSETFile(String id, File vsetFile)
     {
-        this.handler.loadFromVSETFile(id, vsetFile, vsetFile.getParentFile(), loadOptionsModel);
+        this.handler.loadFromVSETFile(id, vsetFile, vsetFile.getParentFile(), imageLoadOptionsModel);
     }
 
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory)
     {
-        this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
+        this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, imageLoadOptionsModel);
     }
 
-    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides)
+    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, overrides, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
     }
 
-    public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides)
+    public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        overrides.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-        this.handler.loadFromLooseFiles(id, xmlFile, overrides, loadOptionsModel);
+        viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
+        this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
     }
 
     public void loadFromMetashapeModel(MetashapeModel model)
     {
-        this.handler.loadFromMetashapeModel(model, loadOptionsModel);
+        this.handler.loadFromMetashapeModel(model, imageLoadOptionsModel);
     }
     public void requestFragmentShader(File shaderFile)
     {

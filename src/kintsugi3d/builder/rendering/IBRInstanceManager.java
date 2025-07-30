@@ -21,7 +21,7 @@ import java.util.function.DoubleUnaryOperator;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.ViewSetLoadOverrides;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -349,7 +349,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             Builder<ContextType> contextTypeBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
-                .setLoadOptions(loadOptions)
+                .setImageLoadOptions(loadOptions)
                 .loadVSETFile(vsetFile, supportingFilesDirectory);
 
             loadInstance(id, contextTypeBuilder);
@@ -385,7 +385,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
-                    .setLoadOptions(loadOptions)
+                    .setImageLoadOptions(loadOptions)
                     .loadFromMetashapeModel(model, supportingFilesDirectory)
                     .setOrientationView(orientationView, rotation);
 
@@ -401,7 +401,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides, ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
     {
         if(this.progressMonitor.isConflictingProcess()){
             return;
@@ -413,9 +413,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
-                .setLoadOptions(loadOptions)
-                .loadLooseFiles(xmlFile, overrides)
-                .setOrientationView(overrides.primaryViewName, overrides.primaryViewRotation);
+                .setImageLoadOptions(imageLoadOptions)
+                .loadLooseFiles(xmlFile, viewSetLoadOptions);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);

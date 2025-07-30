@@ -21,6 +21,7 @@ import java.util.*;
 import javafx.scene.control.ProgressBar;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -45,6 +46,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * A class representing a collection of photographs, or views.
+ *
  * @author Michael Tetzlaff
  */
 public final class ViewSet implements ReadonlyViewSet
@@ -182,70 +184,86 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final SettingsModel viewSetSettings = new SimpleSettingsModel();
 
-    public void loadMasks(ProgressMonitor monitor) {
-        if (monitor != null){
+    public void loadMasks(ProgressMonitor monitor)
+    {
+        if (monitor != null)
+        {
             monitor.setStage(0, "Preparing masks...");
             monitor.unbind(ProgressBar.INDETERMINATE_PROGRESS);
         }
-        if (masksDirectory == null){
+        if (masksDirectory == null)
+        {
             return;
         }
 
         File masksSrcDir = masksDirectory;
 
         File masksDestinationDir = supportingFilesDirectory != null ?
-                new File(supportingFilesDirectory, "masks") :
-                new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
+            new File(supportingFilesDirectory, "masks") :
+            new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
 
         masksDestinationDir.mkdirs();
 
-        if (masksSrcDir.toString().endsWith(".zip")){
+        if (masksSrcDir.toString().endsWith(".zip"))
+        {
             //get masks folder, then subfolder is viewset uuid
             // (follow convention set by preview and fit image folders)
             log.info("Unzipping masks folder...");
-            try{
+            try
+            {
                 UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, monitor);
                 File[] childFiles = masksDestinationDir.listFiles();
-                if (childFiles != null && childFiles.length > 0){
+                if (childFiles != null && childFiles.length > 0)
+                {
                     File docFile = Arrays.stream(childFiles)
-                            .filter(file -> file.getName().equals("doc.xml"))
-                            .findFirst()
-                            .orElse(null);
+                        .filter(file -> file.getName().equals("doc.xml"))
+                        .findFirst()
+                        .orElse(null);
                     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    try {
+                    try
+                    {
                         DocumentBuilder builder = factory.newDocumentBuilder();
                         Document docXml = builder.parse(docFile);
                         NodeList maskList = docXml.getElementsByTagName("mask");
 
-                        for (int i = 0; i < maskList.getLength(); ++i){
+                        for (int i = 0; i < maskList.getLength(); ++i)
+                        {
                             Element maskElem = (Element) maskList.item(i);
                             int cameraId = Integer.parseInt(maskElem.getAttribute("camera_id"));
                             String path = maskElem.getAttribute("path");
                             addMask(cameraId, new File(masksDestinationDir, path));
                         }
-                    } catch (ParserConfigurationException | SAXException e) {
+                    }
+                    catch (ParserConfigurationException | SAXException e)
+                    {
                         log.error("Failed to unzip masks.", e);
                     }
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 log.error("Failed to unzip masks.", e);
             }
         }
-        else{
+        else
+        {
             File[] maskFiles = masksSrcDir.listFiles();
-            if (maskFiles == null || maskFiles.length == 0){
+            if (maskFiles == null || maskFiles.length == 0)
+            {
                 log.error("No masks found in mask directory {}", masksSrcDir);
                 return;
             }
 
-            for (File srcFile : maskFiles) {
+            for (File srcFile : maskFiles)
+            {
                 String fileName = srcFile.getName();
 
                 //search for {fileName}
                 int idx = findIndexOfView(fileName);
 
                 //search for {fileName}_mask if needed
-                if (idx == -1){
+                if (idx == -1)
+                {
                     String tempName = fileName.replace("_mask", "");
                     idx = findIndexOfView(tempName);
                 }
@@ -253,20 +271,25 @@ public final class ViewSet implements ReadonlyViewSet
                 //give up if not found
                 //we could do a .contains() search, but that might be too slow
                 //or we might add support for "give us your mask extension" and then go from there
-                if (idx == -1) {
+                if (idx == -1)
+                {
                     continue;
                 }
-                try {
+                try
+                {
                     File maskFile = new File(masksDestinationDir, fileName);
                     Files.copy(srcFile.toPath(), maskFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     addMask(idx, maskFile);
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     log.error("Failed to copy mask {} to {}", srcFile.getName(), masksDestinationDir.getPath());
                 }
             }
         }
         setMasksDirectory(masksDestinationDir);
-        if (monitor != null){
+        if (monitor != null)
+        {
             monitor.bind();
         }
     }
@@ -283,6 +306,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         /**
          * Uses root directory as supporting files directory by default
+         *
          * @param rootDirectory
          * @param initialCapacity
          */
@@ -370,8 +394,26 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+        {
+            result.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+            return this;
+        }
+
         /**
-         * Sets the name of the geometry file associated with this view set.
+         * Sets the geometry file associated with this view set.
+         *
+         * @param geometryFile The geometry file.
+         */
+        public Builder setGeometryFile(File geometryFile)
+        {
+            result.geometryFile = geometryFile;
+            return this;
+        }
+
+        /**
+         * Sets the name of the geometry file associated with this view set relative to the root directory.
+         *
          * @param geometryFileName The name of the geometry file.
          */
         public Builder setGeometryFileName(String geometryFileName)
@@ -380,6 +422,22 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        /**
+         * Sets the full res image directory associated with this view set.
+         *
+         * @param fullResImageDirectory The full res image directory.
+         */
+        public Builder setFullResImageDirectory(File fullResImageDirectory)
+        {
+            result.setFullResImageDirectory(fullResImageDirectory);
+            return this;
+        }
+
+        /**
+         * Sets the name of the full res image directory associated with this view set relative to the root directory.
+         *
+         * @param relativePath The path to the full res images.
+         */
         public Builder setRelativeFullResImagePathName(String relativePath)
         {
             result.setRelativeFullResImagePathName(relativePath);
@@ -388,6 +446,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         /**
          * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
+         *
          * @param relativePath The file path of the supporting files directory.
          */
         public Builder setRelativeSupportingFilesPathName(String relativePath)
@@ -408,18 +467,34 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder setOrientationViewRotation(float rotation){
+        public Builder setOrientationViewName(String viewName)
+        {
+            result.setOrientationView(viewName);
+            return this;
+        }
+
+        public Builder setOrientationViewRotation(double rotation)
+        {
             result.setOrientationViewRotationDegrees(rotation);
             return this;
         }
 
-        public Builder setMasksDirectory(File file){
+        public Builder setMasksDirectory(File file)
+        {
             result.setMasksDirectory(file);
             return this;
         }
 
-        public void addMask(int camId, String imgFilename) {
+        public Builder addMask(int camId, String imgFilename)
+        {
             result.addMask(camId, new File(imgFilename));
+            return this;
+        }
+
+        public Builder applySettings(ReadonlySettingsModel settings)
+        {
+            result.getViewSetSettings().copyFrom(settings);
+            return this;
         }
 
         public ViewSet finish()
@@ -444,12 +519,19 @@ public final class ViewSet implements ReadonlyViewSet
                 setGeometryFileName("manifold.obj"); // Used by some really old datasets
             }
 
+            if (result.getSupportingFilesFilePath() != null)
+            {
+                // Make sure the supporting files directory exists
+                result.getSupportingFilesFilePath().mkdirs();
+            }
+
             return result;
         }
 
         /**
          * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
          * Assumes that the object must lie between all of the cameras in the file.
+         *
          * @param cameraPoseInvList The list of camera poses.
          * @return A far plane estimate.
          */
@@ -474,10 +556,10 @@ public final class ViewSet implements ReadonlyViewSet
             }
 
             // Corner-to-corner
-            float dX = maxX-minX;
-            float dY = maxY-minY;
-            float dZ = maxZ-minZ;
-            return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
+            float dX = maxX - minX;
+            float dY = maxY - minY;
+            float dZ = maxZ - minZ;
+            return (float) Math.sqrt(dX * dX + dY * dY + dZ * dZ);
 
             // Longest Side approach
 //        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
@@ -497,6 +579,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Creates a new view set object.
+     *
      * @param initialCapacity The capacity to use for initializing array-based lists that scale with the number of views
      */
     public ViewSet(int initialCapacity)
@@ -517,6 +600,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Relative paths from full res image directory
+     *
      * @return List of relative paths from full res image directory
      */
     public List<File> getImageFiles()
@@ -683,8 +767,8 @@ public final class ViewSet implements ReadonlyViewSet
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
             result.setTonemapping(
-                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -721,8 +805,8 @@ public final class ViewSet implements ReadonlyViewSet
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
             result.setTonemapping(
-                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -790,6 +874,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the root directory for this view set, while leaving other file paths unmodified.
+     *
      * @param rootDirectory The root directory.
      */
     public void setRootDirectory(File rootDirectory)
@@ -804,7 +889,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return geometryFile == null ? null : geometryFile.toString();
         }
@@ -818,6 +904,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute path of the geometry file associated with this view set.
+     *
      * @param geometryFile The geometry file.
      */
     public void setGeometryFile(File geometryFile)
@@ -840,7 +927,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(supportingFilesFilePath.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return supportingFilesFilePath == null ? null : supportingFilesFilePath.toString();
         }
@@ -848,6 +936,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute file path of the supporting files (i.e. texture fit results) associated with this view set.
+     *
      * @param supportingFilesDirectory The file path of the supporting files directory.
      */
     public void setSupportingFilesDirectory(File supportingFilesDirectory)
@@ -872,6 +961,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute image file directory associated with this view set.
+     *
      * @param absoluteImageDirectory The image file path.
      */
     public void setFullResImageDirectory(File absoluteImageDirectory)
@@ -888,7 +978,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(fullResImageFilePath.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return fullResImageFilePath == null ? null : fullResImageFilePath.toString();
         }
@@ -896,6 +987,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the image file path associated with this view set from a path relative to the root directory.
+     *
      * @param relativeImagePath The image file path.
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
@@ -926,7 +1018,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(previewImageFilePath.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return previewImageFilePath == null ? null : previewImageFilePath.toString();
         }
@@ -934,6 +1027,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the image file path associated with this view set.
+     *
      * @param relativeImagePath The image file path.
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
@@ -974,8 +1068,10 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getMask(int poseIndex) {
-        if (maskFiles.isEmpty()){
+    public File getMask(int poseIndex)
+    {
+        if (maskFiles.isEmpty())
+        {
             return null;
         }
         return new File(getMasksDirectory(), maskFiles.get(poseIndex).getName());
@@ -1027,7 +1123,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return poseIndex;
         }
-        else{
+        else
+        {
             //comb through manually because imageFiles could contain parent files
             //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
 
@@ -1035,11 +1132,13 @@ public final class ViewSet implements ReadonlyViewSet
             //sometimes the camera label is photo314.jpg, other times just photo314
 
             //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-            for (int i = 0; i < imageFiles.size(); ++i){
+            for (int i = 0; i < imageFiles.size(); ++i)
+            {
                 String shortenedImgName = removeExt(getImageFileName(i));
                 String shortenedViewName = removeExt(viewName);
 
-                if (shortenedImgName.equals(shortenedViewName)){
+                if (shortenedImgName.equals(shortenedViewName))
+                {
                     return i;
                 }
             }
@@ -1059,6 +1158,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Set the index of the view to use as a reference pose to reorient the model
+     *
      * @param newOrientationViewIndex view index
      */
     public void setOrientationViewIndex(int newOrientationViewIndex)
@@ -1079,7 +1179,8 @@ public final class ViewSet implements ReadonlyViewSet
         }
     }
 
-    public static String removeExt(String fileName) {
+    public static String removeExt(String fileName)
+    {
         int dotIndex = fileName.lastIndexOf('.');
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
@@ -1164,7 +1265,7 @@ public final class ViewSet implements ReadonlyViewSet
     public boolean hasCustomLuminanceEncoding()
     {
         return linearLuminanceValues != null && encodedLuminanceValues != null
-                && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
     }
 
     @Override
@@ -1246,18 +1347,21 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public boolean hasMasks() {
+    public boolean hasMasks()
+    {
         return masksDirectory != null;
     }
 
     @Override
-    public File getMasksDirectory() {
+    public File getMasksDirectory()
+    {
         return masksDirectory;
     }
 
     @Override
-    public Map<Integer, File> getMasksMap() {
-       return Collections.unmodifiableMap(maskFiles);
+    public Map<Integer, File> getMasksMap()
+    {
+        return Collections.unmodifiableMap(maskFiles);
     }
 
     public void setUuid(UUID uuid)
@@ -1276,11 +1380,13 @@ public final class ViewSet implements ReadonlyViewSet
         return viewSetSettings;
     }
 
-    public void setMasksDirectory(File dir){
+    public void setMasksDirectory(File dir)
+    {
         masksDirectory = dir;
     }
 
-    public void addMask(int camId, File mask){
+    public void addMask(int camId, File mask)
+    {
         maskFiles.put(camId, mask);
     }
 }
