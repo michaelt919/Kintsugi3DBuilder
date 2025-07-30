@@ -145,6 +145,10 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                 {
                     action.accept(colorBuffers);
                 }
+                catch (RuntimeException e)
+                {
+                    log.error("An error occurred while processing a stream of rendering data: ", e);
+                }
                 finally
                 {
                     synchronized (threadsRunningLock)

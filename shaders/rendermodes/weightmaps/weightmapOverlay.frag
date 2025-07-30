@@ -50,7 +50,7 @@ vec3 global(ViewingParameters v, Material m)
     return getEnvironmentDiffuse(v.normalDir) * m.occlusion * min(vec3(1.0), m.diffuseColor + m.specularColor);
 }
 
-vec3 emissive()
+vec3 emissive(Material m)
 {
     vec2 texCoords = getTexCoords();
     vec4 weightmapTex = texture(weightMaps, vec3(texCoords, WEIGHTMAP_INDEX));

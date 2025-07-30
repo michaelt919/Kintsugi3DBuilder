@@ -153,39 +153,47 @@
                             </RadioMenuItem>
 <!--                            Individual weight map visualizations (without existing texture colors)-->
                             <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
+                                <userData>rendermodes/weightmaps/weightmapSingle.frag</userData>
                                 <items>
                                 </items>
                             </Menu>
                             <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">
+                                <userData>rendermodes/weightmaps/weightmapOverlay.frag</userData>
                                 <items>
                                 </items>
                             </Menu>
                             <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
+                                <userData>rendermodes/basisMaterialSingle.frag</userData>
+                                <items>
+                                </items>
+                            </Menu>
+                            <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material x weights">
+                                <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                                 <items>
                                 </items>
                             </Menu>
                             <Menu mnemonicParsing="false" text="Texture Visualizations">
                                 <items>
                                     <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/maps/normalMap.frag</userData>
+                                        <userData>rendermodes/maps/normalMap.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Albedo map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/maps/albedoMap.frag</userData>
+                                        <userData>rendermodes/maps/albedoMap.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/maps/roughnessMap.frag</userData>
+                                        <userData>rendermodes/maps/roughnessMap.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/maps/metallicMap.frag</userData>
+                                        <userData>rendermodes/maps/metallicMap.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Diffuse color map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/diffuseColor.frag</userData>
+                                        <userData>rendermodes/diffuseColor.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/specularColor.frag</userData>
+                                        <userData>rendermodes/specularColor.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
-                                        <userData>renderModes/maps/errorMap.frag</userData>
+                                        <userData>rendermodes/maps/errorMap.frag</userData>
                                     </RadioMenuItem>
 
                                 </items>
