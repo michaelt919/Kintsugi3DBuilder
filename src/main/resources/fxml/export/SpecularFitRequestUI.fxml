@@ -50,6 +50,18 @@
                <Insets bottom="4.0" top="4.0" />
             </padding>
          </HBox>
+          <HBox>
+              <children>
+                  <Label text="Min specular width:">
+                      <padding>
+                          <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                      </padding></Label>
+                  <TextField fx:id="specularMinWidthTextField" prefHeight="25.0" prefWidth="56.0" text="0.2" />
+              </children>
+              <padding>
+                  <Insets bottom="4.0" top="4.0" />
+              </padding>
+          </HBox>
          <CheckBox fx:id="translucencyCheckBox" mnemonicParsing="false" text="Fit translucency">
             <padding>
                <Insets bottom="8.0" left="4.0" right="4.0" top="8.0" />
@@ -104,18 +116,6 @@
                               <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                            </padding></Label>
                       <TextField fx:id="metallicityTextField" prefHeight="25.0" prefWidth="56.0" text="0.0" />
-                     </children>
-                     <padding>
-                        <Insets bottom="4.0" top="4.0" />
-                     </padding>
-                  </HBox>
-                  <HBox>
-                     <children>
-                        <Label text="Min specular width:">
-                           <padding>
-                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
-                           </padding></Label>
-                        <TextField fx:id="specularMinWidthTextField" prefHeight="25.0" prefWidth="56.0" text="0.2" />
                      </children>
                      <padding>
                         <Insets bottom="4.0" top="4.0" />
