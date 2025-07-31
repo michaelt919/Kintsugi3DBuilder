@@ -212,10 +212,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model, File supportingFilesDirectory)
+        public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
             throws IOException, XMLStreamException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), supportingFilesDirectory).finish();
+            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk()).finish();
             updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;

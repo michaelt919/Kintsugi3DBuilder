@@ -424,10 +424,11 @@ public final class ProjectIO
                     MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
                 }
 
-                ioModel.saveGlTF(filesDirectory);
+                // Don't really need an internal copy of the glTF file
+//                ioModel.saveGlTF(filesDirectory);
 
                 // Save textures and basis funtions (will be deferred to graphics thread).
-                ioModel.saveMaterialFiles(filesDirectory, () ->
+                ioModel.saveAllMaterialFiles(filesDirectory, () ->
                 {
                     // Display message when all textures have been saved on graphics thread.
                     //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY

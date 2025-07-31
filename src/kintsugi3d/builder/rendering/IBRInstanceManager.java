@@ -367,9 +367,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptions) {
 
-        // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
-        //  Restructuring required from Tetzlaff.
-
         if(this.progressMonitor.isConflictingProcess()){
             return;
         }
@@ -377,7 +374,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
 
-        File supportingFilesDirectory = null;
         try {
             MetashapeChunk parentChunk = model.getChunk();
             String orientationView = model.getLoadPreferences().orientationViewName;
@@ -386,7 +382,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setImageLoadOptions(loadOptions)
-                    .loadFromMetashapeModel(model, supportingFilesDirectory)
+                    .loadFromMetashapeModel(model)
                     .setOrientationView(orientationView, rotation);
 
             loadInstance(parentChunk.getFramePath(), builder);
@@ -566,7 +562,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
         if (ibrInstance == null || ibrInstance.getIBRResources() == null
             || ibrInstance.getIBRResources().getSpecularMaterialResources() == null)
@@ -584,6 +580,34 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Rendering.runLater(() ->
             {
                 material.saveAll(materialDirectory);
+
+                if (finishedCallback != null)
+                {
+                    finishedCallback.run();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    {
+        if (ibrInstance == null || ibrInstance.getIBRResources() == null
+            || ibrInstance.getIBRResources().getSpecularMaterialResources() == null)
+        {
+            if (finishedCallback != null)
+            {
+                finishedCallback.run();
+            }
+        }
+        else
+        {
+            SpecularMaterialResources<ContextType> material
+                = ibrInstance.getIBRResources().getSpecularMaterialResources();
+
+            Rendering.runLater(() ->
+            {
+                material.saveEssential(materialDirectory);
 
                 if (finishedCallback != null)
                 {

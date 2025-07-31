@@ -263,9 +263,14 @@ public class IOModel
         this.handler.saveToVSETFile(vsetFile);
     }
 
-    public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
-        this.handler.saveMaterialFiles(materialDirectory, finishedCallback);
+        this.handler.saveAllMaterialFiles(materialDirectory, finishedCallback);
+    }
+
+    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    {
+        this.handler.saveEssentialMaterialFiles(materialDirectory, finishedCallback);
     }
 
     public void saveGlTF(File outputDirectory, ExportSettings settings)

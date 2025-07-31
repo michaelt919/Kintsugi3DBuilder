@@ -758,7 +758,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         return builder;
     }
 
-    public static ViewSet.Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
+    public static ViewSet.Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk)
         throws IOException, XMLStreamException
     {
         // Get reference to the chunk directory
@@ -812,7 +812,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                     ViewSetDirectories directories = new ViewSetDirectories();
                     directories.projectRoot = rootDirectory;
-                    directories.supportingFilesDirectory = supportingFilesDirectory;
+                    directories.supportingFilesDirectory = null;
                     directories.fullResImagesNeedUndistort = true;
 
                     // TODO: USING A HARD CODED VERSION VALUE (200)

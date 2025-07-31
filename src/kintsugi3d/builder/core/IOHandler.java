@@ -44,7 +44,8 @@ public interface IOHandler
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
-    void saveMaterialFiles(File materialDirectory, Runnable finishedCallback);
+    void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
+    void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback);
 
     void saveGlTF(File outputDirectory, ExportSettings settings);
 
