@@ -117,7 +117,7 @@ public final class ImageFinder
                 {
                     for (String suffix : suffixes)
                     {
-                        altFileName = String.join(".", requestedFile.getName(), suffix, extension);
+                        altFileName = String.join(".", String.format("%s%s", requestedFile.getName(), suffix), extension);
                         imageFileGuess = new File(parentFile, altFileName);
 
                         logFileGuess(imageFileGuess);
@@ -155,7 +155,7 @@ public final class ImageFinder
                     {
                         for (String suffix : suffixes)
                         {
-                            filenameParts[filenameParts.length - 2] = originalEnding + suffix;
+                            filenameParts[filenameParts.length - 2] = String.format("%s%s", originalEnding, suffix);
                             altFileName = String.join(".", filenameParts);
 
                             imageFileGuess = new File(parentFile, altFileName);
