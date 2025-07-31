@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
-import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
@@ -23,7 +23,6 @@ import kintsugi3d.builder.javafx.ProjectIO;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 public class LooseFilesInputSource extends InputSource
@@ -36,17 +35,15 @@ public class LooseFilesInputSource extends InputSource
     private boolean hotSwap;
 
     @Override
-    public List<FileChooser.ExtensionFilter> getExtensionFilters()
+    public List<ExtensionFilter> getExtensionFilters()
     {
-        List<FileChooser.ExtensionFilter> list = new ArrayList<>();
-        list.add(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        list.add(new FileChooser.ExtensionFilter("Reality Capture CSV file", "*.csv"));
-        return list;
+        return List.of(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"),
+            new ExtensionFilter("Reality Capture CSV file", "*.csv"));
     }
 
-    public LooseFilesInputSource setCameraFile(File camFile)
+    public LooseFilesInputSource setCameraFile(File cameraFile)
     {
-        this.cameraFile = camFile;
+        this.cameraFile = cameraFile;
         return this;
     }
 
@@ -88,12 +85,12 @@ public class LooseFilesInputSource extends InputSource
             {
                 ViewSetDirectories directories = new ViewSetDirectories();
                 directories.projectRoot = cameraFile.getParentFile();
+                directories.fullResImageDirectory = photosDir;
                 directories.fullResImagesNeedUndistort = needsUndistort;
 
                 ViewSet viewSet = ViewSetReaderFromRealityCaptureCSV.getInstance()
                     .readFromFile(cameraFile, directories)
                     .setGeometryFile(meshFile)
-                    .setFullResImageDirectory(photosDir)
                     .setMasksDirectory(masksDir)
                     .finish();
 
@@ -108,7 +105,6 @@ public class LooseFilesInputSource extends InputSource
 
             addTreeElems(primaryViewSelectionModel);
             searchableTreeView.bind();
-
         }
         catch (Exception e)
         {
