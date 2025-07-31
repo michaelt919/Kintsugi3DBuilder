@@ -89,6 +89,11 @@ public final class ImageFinder
         log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
     }
 
+    private static void logFound()
+    {
+        log.info("Found!!");
+    }
+
     public File findImageFile(File requestedFile, String... suffixes) throws FileNotFoundException
     {
         if (requestedFile.exists())
@@ -179,11 +184,6 @@ public final class ImageFinder
     public File findImageFile(File requestedFile) throws FileNotFoundException
     {
         return findImageFile(requestedFile, null);
-    }
-
-    private static void logFound()
-    {
-        log.info("Found!!");
     }
 
     public File tryFindImageFile(File requestedFile, String... suffixes)
