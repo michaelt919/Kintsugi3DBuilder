@@ -430,7 +430,7 @@ public final class ProjectIO
                 }
 
                 // Don't really need an internal copy of the glTF file
-//                ioModel.saveGlTF(filesDirectory);
+                ioModel.saveGlTF(filesDirectory);
 
                 // Save textures and basis funtions (will be deferred to graphics thread).
                 ioModel.saveAllMaterialFiles(filesDirectory, () ->
