@@ -102,19 +102,21 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws IOException
+    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws IOException
     {
         List<Camera> cameras = new CsvToBeanBuilder<Camera>(new InputStreamReader(stream, StandardCharsets.UTF_8))
             .withType(Camera.class).build().parse();
+
+        // Start building the view set
+        Builder builder = ViewSet.getBuilder(directories.projectRoot, cameras.size());
 
         // Try to figure out what the camera groups were
         Map<Projection, List<String>> cameraMap = new HashMap<>(1);
         for (Camera cam : cameras)
         {
-            DistortionProjection distortionProjection = cam.getDistortionProjection(fullResImageDirectory);
+            DistortionProjection distortionProjection = cam.getDistortionProjection(directories.fullResImageDirectory);
 
-            if (needsUndistort)
+            if (directories.fullResImagesNeedUndistort)
             {
                 cameraMap.computeIfAbsent(distortionProjection, k -> new ArrayList<>(1)).add(cam.name);
             }
@@ -125,9 +127,6 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
                     k -> new ArrayList<>(1)).add(cam.name);
             }
         }
-
-        // Start building the view set
-        Builder builder = ViewSet.getBuilder(root, cameras.size());
 
         // Invert the mapping so that we can retrieve the distortion by camera
         Map<String, Integer> cameraMapInverted = new HashMap<>(cameras.size());
@@ -159,9 +158,9 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
         builder.addLight(Vector3.ZERO, Vector3.ZERO);
 
-        ViewSet result = builder.finish();
-        result.setGeometryFile(geometryFile);
-        result.setFullResImageDirectory(fullResImageDirectory);
-        return result;
+        // Set full res image directory according to input argument
+        builder.setFullResImageDirectory(directories.fullResImageDirectory);
+
+        return builder;
     }
 }

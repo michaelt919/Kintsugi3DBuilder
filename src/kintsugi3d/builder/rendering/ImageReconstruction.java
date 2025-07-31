@@ -179,6 +179,15 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 }
 
                 @Override
+                public DoubleVector3 getIncidentRadiance(int pixelIndex)
+                {
+                    return new DoubleVector3(
+                        incidentRadianceBuffer.get(4 * pixelIndex),
+                        incidentRadianceBuffer.get(4 * pixelIndex + 1),
+                        incidentRadianceBuffer.get(4 * pixelIndex + 2));
+                }
+
+                @Override
                 public Framebuffer<ContextType> getReconstructionFramebuffer()
                 {
                     return reconstructionFramebuffer;
@@ -231,8 +240,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                             .mapToObj(p ->
                             {
                                 DoubleVector3 groundTruthEncoded = currentGroundTruth.get(p).getXYZ().asDoublePrecision();
-                                DoubleVector3 incidentRadiance =
-                                    new DoubleVector3(incidentRadianceBuffer.get(4 * p), incidentRadianceBuffer.get(4 * p + 1), incidentRadianceBuffer.get(4 * p + 2));
+                                DoubleVector3 incidentRadiance = getIncidentRadiance(p);
                                 DoubleVector3 reconstructedLinear =
                                     new DoubleVector3(reconstructionBuffer.get(4 * p), reconstructionBuffer.get(4 * p + 1), reconstructionBuffer.get(4 * p + 2));
 

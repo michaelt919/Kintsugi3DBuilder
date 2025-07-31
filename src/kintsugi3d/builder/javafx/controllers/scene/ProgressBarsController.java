@@ -129,8 +129,11 @@ public class ProgressBarsController {
     }
 
     public void startStopwatches(){
-        overallStopwatch.start();
-        localStopwatch.start();
+        Platform.runLater(()->
+        {
+            overallStopwatch.start();
+            localStopwatch.start();
+        });
 
         new Thread(() -> {
             while (isProcessing()) {
@@ -186,9 +189,12 @@ public class ProgressBarsController {
     }
 
     public void clickStopwatches(double progress, double maximum){
-        overallStopwatch.click();
-        localStopwatch.click();
-        updateLocalRemainingTime(progress, maximum);
+        Platform.runLater(() ->
+        {
+            overallStopwatch.click();
+            localStopwatch.click();
+            updateLocalRemainingTime(progress, maximum);
+        });
     }
 
     private void updateLocalRemainingTime(double progress, double maximum) {
@@ -231,11 +237,11 @@ public class ProgressBarsController {
 
 
     public void endStopwatches() {
-        overallStopwatch.stop();
-        localStopwatch.stop();
-
-        //remove parenthesis from elapsed times
         Platform.runLater(()->{
+            overallStopwatch.stop();
+            localStopwatch.stop();
+
+            //remove parenthesis from elapsed times
             totalElapsedTimeLabel.setText(totalElapsedTimeLabel.getText().replace("(", "")
                     .replace(")", ""));
 
@@ -269,8 +275,11 @@ public class ProgressBarsController {
     }
 
     public void beginNewStage() {
-        localStopwatch = new Stopwatch();
-        localStopwatch.start();
+        Platform.runLater(() ->
+        {
+            localStopwatch = new Stopwatch();
+            localStopwatch.start();
+        });
     }
 
     public ReadOnlyBooleanProperty getProcessingProperty() {

@@ -161,8 +161,9 @@ public class WelcomeWindowController
         ProjectIO.getInstance().openAboutModal(parentWindow);
     }
 
-    public void showIfNoModelLoaded() {
-        if(!MultithreadModels.getInstance().getIOModel().hasValidHandler()){
+    public void showIfNoModelLoadedAndNotProcessing() {
+        if (!MultithreadModels.getInstance().getIOModel().hasValidHandler() &&
+                !ProgressBarsController.getInstance().isProcessing()) {
             show();
         }
     }

@@ -336,16 +336,27 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
      */
     default void saveAll(File outputDirectory)
     {
+        saveEssential(outputDirectory);
+        saveOcclusionMap(outputDirectory);
+        saveUnpackedWeightMaps(outputDirectory);
+    }
+
+    /**
+     * Saves essential resources to the specified output directory
+     * Skips standalone occlusion map and unpacked weight maps.
+     * Includes standalone roughness map for more convenient Blender / Sketchfab access.
+     * @param outputDirectory
+     */
+    default void saveEssential(File outputDirectory)
+    {
         saveDiffuseMap(outputDirectory);
         saveNormalMap(outputDirectory);
         saveConstantMap(outputDirectory);
-        saveOcclusionMap(outputDirectory);
         saveAlbedoMap(outputDirectory);
         saveORMMap(outputDirectory);
         saveSpecularReflectivityMap(outputDirectory);
         saveSpecularRoughnessMap(outputDirectory);
         savePackedWeightMaps(outputDirectory);
-        saveUnpackedWeightMaps(outputDirectory);
         saveBasisFunctions(outputDirectory);
         saveMetadataMaps(outputDirectory);
     }

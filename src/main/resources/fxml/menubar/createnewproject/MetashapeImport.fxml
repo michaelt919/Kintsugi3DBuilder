@@ -25,7 +25,7 @@
                   <Font name="Monospaced Bold" size="28.0" />
                </font>
             </Text>
-            <Button fx:id="metashapeFileSelectButton" mnemonicParsing="false" onAction="#psxFileSelect" text="Load">
+            <Button mnemonicParsing="false" onAction="#psxFileSelect" text="Load">
                <font>
                   <Font size="18.0" />
                </font>

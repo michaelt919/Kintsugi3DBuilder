@@ -1,0 +1,19 @@
+newmtl Solid
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+d 1.0
+Ns 0.0
+illum 0
+
+newmtl Mia_001239_Rodin_200kAverage
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+d 1.0
+Ns 0.0
+illum 0
+map_Kd Mia_001239_Rodin_200kAverage.jpg
+map_Bump Mia_001239_Rodin_200kAverage_normal.jpg
+map_ao Mia_001239_Rodin_200kAverage_occlusion.jpg
+

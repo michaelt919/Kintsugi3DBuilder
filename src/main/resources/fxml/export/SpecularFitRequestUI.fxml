@@ -11,42 +11,208 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefWidth="555.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.specular.SpecularFitRequestUI">
-   <Button fx:id="runButton" layoutX="14.0" layoutY="274.0" mnemonicParsing="false" text="Run" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" />
-   <Label layoutX="14.0" layoutY="18.0" text="Width:" />
-   <TextField fx:id="widthTextField" layoutX="54.0" layoutY="14.0" prefWidth="56.0" text="2048" />
-   <Label layoutX="116.0" layoutY="18.0" text="Height:" />
-   <TextField fx:id="heightTextField" layoutX="161.0" layoutY="14.0" prefHeight="25.0" prefWidth="56.0" text="2048" />
-   <Button layoutX="61.0" layoutY="274.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="56.0" />
-   <Label layoutX="223.0" layoutY="18.0" text="Specular count:" />
-   <TextField fx:id="basisCountTextField" layoutX="310.0" layoutY="14.0" prefHeight="25.0" prefWidth="56.0" text="8" />
-   <CheckBox fx:id="openViewerOnComplete" layoutX="14.0" layoutY="48.0" mnemonicParsing="false" text="Open Viewer once complete" />
-   <CheckBox fx:id="translucencyCheckBox" layoutX="386.0" layoutY="18.0" mnemonicParsing="false" text="Fit translucency" AnchorPane.topAnchor="18.0" />
+<VBox minWidth="440.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.specular.SpecularFitRequestUI">
+   <VBox>
+      <children>
+         <HBox>
+            <children>
+               <Label text="Width:">
+                  <padding>
+                     <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                  </padding>
+               </Label>
+               <TextField fx:id="widthTextField" prefHeight="25.0" prefWidth="56.0" text="2048" />
+               <Label text="Height:">
+                  <padding>
+                     <Insets bottom="4.0" left="16.0" right="4.0" top="4.0" />
+                  </padding>
+               </Label>
+               <TextField fx:id="heightTextField" prefHeight="25.0" prefWidth="56.0" text="2048" />
+            </children>
+            <padding>
+               <Insets bottom="4.0" top="4.0" />
+            </padding>
+         </HBox>
+         <HBox>
+            <children>
+               <Label text="Specular count:">
+                  <padding>
+                     <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                  </padding>
+               </Label>
+               <TextField fx:id="basisCountTextField" prefHeight="25.0" prefWidth="56.0" text="8" />
+            </children>
+            <padding>
+               <Insets bottom="4.0" top="4.0" />
+            </padding>
+         </HBox>
+          <HBox>
+              <children>
+                  <Label text="Min specular width:">
+                      <padding>
+                          <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                      </padding></Label>
+                  <TextField fx:id="specularMinWidthTextField" prefHeight="25.0" prefWidth="56.0" text="0.2" />
+              </children>
+              <padding>
+                  <Insets bottom="4.0" top="4.0" />
+              </padding>
+          </HBox>
+         <CheckBox fx:id="translucencyCheckBox" mnemonicParsing="false" text="Fit translucency">
+            <padding>
+               <Insets bottom="8.0" left="4.0" right="4.0" top="8.0" />
+            </padding>
+         </CheckBox>
+         <CheckBox fx:id="openViewerOnComplete" mnemonicParsing="false" text="Open Viewer once complete">
+            <padding>
+               <Insets bottom="8.0" left="4.0" right="4.0" top="8.0" />
+            </padding>
+         </CheckBox>
+      </children>
+      <VBox.margin>
+         <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+      </VBox.margin>
+   </VBox>
    <Accordion fx:id="advancedAccordion" layoutY="389.0" AnchorPane.bottomAnchor="48.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0">
      <panes>
        <TitledPane animated="false" expanded="false" text="Advanced">
-          <AnchorPane styleClass="anchor-pane">
-             <Label layoutX="14.0" layoutY="17.0" text="Specular resolution:" />
-             <TextField fx:id="mfdResolutionTextField" layoutX="123.0" layoutY="13.0" prefHeight="25.0" prefWidth="56.0" text="90" />
-             <Label layoutX="14.0" layoutY="52.0" text="Convergence tolerance:" />
-             <Label layoutX="234.0" layoutY="52.0" text="Specular smoothness:" />
-             <Label layoutX="185.0" layoutY="17.0" text="Metallicity:" />
-             <TextField fx:id="convergenceToleranceTextField" layoutX="147.0" layoutY="48.0" prefHeight="25.0" prefWidth="76.0" text="0.00001" />
-             <TextField fx:id="specularSmoothnessTextField" layoutX="355.0" layoutY="48.0" prefHeight="25.0" prefWidth="56.0" text="1.0" />
-             <TextField fx:id="metallicityTextField" layoutX="248.0" layoutY="13.0" prefHeight="25.0" prefWidth="56.0" text="0.0" />
-             <Label layoutX="151.0" layoutY="83.0" text="Min. normal damping:" />
-             <Label layoutX="341.0" layoutY="83.0" text="Normal smooth iterations:" />
-             <CheckBox fx:id="normalRefinementCheckBox" layoutX="14.0" layoutY="83.0" mnemonicParsing="false" selected="true" text="Normal refinement" />
-             <TextField fx:id="minNormalDampingTextField" layoutX="272.0" layoutY="79.0" prefHeight="25.0" prefWidth="56.0" text="1.0" />
-             <TextField fx:id="normalSmoothingIterationsTextField" layoutX="485.0" layoutY="79.0" prefHeight="25.0" prefWidth="56.0" text="0" />
-             <CheckBox fx:id="smithCheckBox" layoutX="14.0" layoutY="114.0" mnemonicParsing="false" selected="true" text="Smith masking/shadowing" />
-             <TextField fx:id="unsuccessfulLMIterationsTextField" layoutX="486.0" layoutY="110.0" prefHeight="25.0" prefWidth="56.0" text="8" />
-             <Label layoutX="190.0" layoutY="114.0" text="Unsuccessful Levenberg-Marquardt iterations allowed:" />
-          </AnchorPane>
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <HBox>
+                     <children>
+                      <Label text="Specular resolution:">
+                           <HBox.margin>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </HBox.margin></Label>
+                      <TextField fx:id="mfdResolutionTextField" prefHeight="25.0" prefWidth="56.0" text="90" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+                   <HBox>
+                       <children>
+                           <Label text="Specular complexity:">
+                               <HBox.margin>
+                                   <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                               </HBox.margin></Label>
+                           <TextField fx:id="specularComplexityTextField" prefHeight="25.0" prefWidth="56.0" text="1.0" />
+                       </children>
+                       <padding>
+                           <Insets bottom="4.0" top="4.0" />
+                       </padding>
+                   </HBox>
+                  <HBox>
+                     <children>
+                      <Label text="Metallicity:">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                           <padding>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </padding></Label>
+                      <TextField fx:id="metallicityTextField" prefHeight="25.0" prefWidth="56.0" text="0.0" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+                  <HBox>
+                     <children>
+                      <Label text="Specular smoothness:">
+                           <padding>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </padding></Label>
+                      <TextField fx:id="specularSmoothnessTextField" prefHeight="25.0" prefWidth="56.0" text="1.0" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+                <CheckBox fx:id="smithCheckBox" mnemonicParsing="false" selected="true" text="Smith masking/shadowing">
+                     <padding>
+                        <Insets bottom="8.0" left="4.0" right="4.0" top="8.0" />
+                     </padding></CheckBox>
+                  <HBox>
+                     <children>
+                      <Label text="Convergence tolerance:">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                           <padding>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </padding></Label>
+                      <TextField fx:id="convergenceToleranceTextField" prefHeight="25.0" prefWidth="76.0" text="0.00001" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+                <CheckBox fx:id="normalRefinementCheckBox" mnemonicParsing="false" selected="true" text="Normal refinement">
+                     <padding>
+                        <Insets bottom="8.0" left="4.0" right="4.0" top="8.0" />
+                     </padding></CheckBox>
+                  <HBox>
+                     <children>
+                      <Label text="Min. normal damping:">
+                           <padding>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </padding></Label>
+                      <TextField fx:id="minNormalDampingTextField" prefHeight="25.0" prefWidth="56.0" text="1.0" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+                  <HBox>
+                     <children>
+                      <Label text="Normal smooth iterations:">
+                           <padding>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </padding></Label>
+                      <TextField fx:id="normalSmoothingIterationsTextField" prefHeight="25.0" prefWidth="56.0" text="0" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+                  <HBox>
+                     <children>
+                      <Label text="Unsuccessful Levenberg-Marquardt iterations allowed:">
+                           <padding>
+                              <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                           </padding></Label>
+                      <TextField fx:id="unsuccessfulLMIterationsTextField" prefHeight="25.0" prefWidth="56.0" text="8" />
+                     </children>
+                     <padding>
+                        <Insets bottom="4.0" top="4.0" />
+                     </padding>
+                  </HBox>
+               </children>
+            </VBox>
+            <padding>
+               <Insets bottom="4.0" />
+            </padding>
        </TitledPane>
      </panes>
    </Accordion>
-</AnchorPane>
+   <HBox>
+      <children>
+         <Button fx:id="runButton" mnemonicParsing="false" text="Run">
+            <HBox.margin>
+               <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+            </HBox.margin></Button>
+         <Button mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel">
+            <HBox.margin>
+               <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+            </HBox.margin></Button>
+      </children>
+      <padding>
+         <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+      </padding>
+   </HBox>
+</VBox>

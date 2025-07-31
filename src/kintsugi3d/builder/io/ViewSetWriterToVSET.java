@@ -12,15 +12,23 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
+    private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
     private static final ViewSetWriter INSTANCE = new ViewSetWriterToVSET();
 
     public static ViewSetWriter getInstance()
@@ -35,7 +43,6 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
     @Override
     public void writeToStream(ReadonlyViewSet viewSet, OutputStream outputStream)
     {
-
         PrintStream out = new PrintStream(outputStream, false, StandardCharsets.UTF_8);
         out.println("# Created by Kintsugi 3D Builder");
 
@@ -84,12 +91,58 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println();
         out.println("# Reference orientation view index");
         out.println("O " + correctedOrientationViewIndex);
-        out.println();
 
         out.println();
         out.println("# Reference View Pose Rotation (degrees)");
         out.println("r " + viewSet.getOrientationViewRotationDegrees());
-        out.println();
+
+        boolean firstSetting = true;
+        for (ReadonlySettingsModel.Setting setting : viewSet.getViewSetSettings())
+        {
+            if (firstSetting) // print only for the first setting; do not print at all if no settings
+            {
+                out.println();
+                out.println("# Additional settings");
+                firstSetting = false;
+            }
+
+            Class<?> type = setting.getType();
+            if (type.equals(Boolean.class))
+            {
+                out.print("zb ");
+            }
+            else if (type.equals(Integer.class) || type.equals(Short.class))
+            {
+                out.print("zi ");
+                // no support at present for 64-bit integers, could add if needed
+            }
+            else if (type.equals(Float.class) || type.equals(Double.class))
+            {
+                out.print("zf ");
+                // doubles will be reduced to single-precision floats when the file is read
+            }
+            else
+            {
+                log.warn("Unrecognized type in view set settings model when writing to file: " + type.toString());
+            }
+
+            out.print(setting.getName());
+            out.print(' ');
+            out.println(setting.getValue());
+        }
+
+        if (viewSet.hasMasks()){
+            out.println();
+            out.println("# Masks directory");
+            out.println("M " + viewSet.getMasksDirectory().getAbsolutePath());
+
+            out.println();
+            Map<Integer, File> masksMap = viewSet.getMasksMap();
+            out.println("# " + masksMap.size() + " masks");
+            for (var entry : masksMap.entrySet()) {
+                out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
+            }
+        }
 
         out.println();
         out.println("# " + viewSet.getCameraProjectionCount() + (viewSet.getCameraProjectionCount() == 1 ? " Sensor" : " Sensors"));

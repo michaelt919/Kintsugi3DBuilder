@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import kintsugi3d.gl.vecmath.IntVector4;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
 
@@ -188,7 +191,7 @@ public interface ColorTextureReader
     }
 
     /**
-     * Saves the the pixels from the texture to a file.
+     * Saves the pixels from the texture to a file.
      * The entire framebuffer will be read.
      * @param fileFormat The format of the file to be written.
      * @param file The file to be written.
@@ -197,7 +200,30 @@ public interface ColorTextureReader
     void saveToFile(String fileFormat, File file) throws IOException;
 
     /**
-     * Saves the the pixels from the texture to a file.
+     * Saves the pixels from the texture to a file and applies tonemapping.
+     * The entire framebuffer will be read.
+     * @param fileFormat The format of the file to be written.
+     * @param file The file to be written.
+     * @param tonemapper The tonemapping function to be applied (operates in unnormalized [0, 255] space)
+     *                   Values will be automatically clamped to [0, 255] after applying tonemapping.
+     * @throws IOException Thrown if any file I/O problems occur when writing the file.
+     */
+    void saveToFile(String fileFormat, File file, Function<IntVector4, IntVector4> tonemapper) throws IOException;
+
+    /**
+     * Saves the pixels from the texture to a file and applies tonemapping.
+     * The entire framebuffer will be read.
+     * @param fileFormat The format of the file to be written.
+     * @param file The file to be written.
+     * @param tonemapper The tonemapping function to be applied (operates in unnormalized [0, 255] space)
+     *                   Values will be automatically clamped to [0, 255] after applying tonemapping.
+     *                   The second parameter of the tonemapping function is the index of the pixel.
+     * @throws IOException Thrown if any file I/O problems occur when writing the file.
+     */
+    void saveToFile(String fileFormat, File file, BiFunction<IntVector4, Integer, IntVector4> tonemapper) throws IOException;
+
+    /**
+     * Saves the pixels from the texture to a file.
      * Only a rectangular subset of the pixels will be read.
      * @param x The column at which to begin reading.
      * @param y The row at which to begin reading.
@@ -208,4 +234,35 @@ public interface ColorTextureReader
      * @throws IOException Thrown if any file I/O problems occur when writing the file.
      */
     void saveToFile(int x, int y, int width, int height, String fileFormat, File file) throws IOException;
+
+    /**
+     * Saves the the pixels from the texture to a file and applies tonemapping.
+     * Only a rectangular subset of the pixels will be read.
+     * @param x The column at which to begin reading.
+     * @param y The row at which to begin reading.
+     * @param width The number of columns to read.
+     * @param height The number of rows to read.
+     * @param fileFormat The format of the file to be written.
+     * @param file The file to be written.
+     * @param tonemapper The tonemapping function to be applied (operates in unnormalized [0, 255] space).
+     *                   Values will be automatically clamped to [0, 255] after applying tonemapping.
+     * @throws IOException Thrown if any file I/O problems occur when writing the file.
+     */
+    void saveToFile(int x, int y, int width, int height, String fileFormat, File file, Function<IntVector4, IntVector4> tonemapper) throws IOException;
+
+    /**
+     * Saves the pixels from the texture to a file and applies tonemapping.
+     * Only a rectangular subset of the pixels will be read.
+     * @param x The column at which to begin reading.
+     * @param y The row at which to begin reading.
+     * @param width The number of columns to read.
+     * @param height The number of rows to read.
+     * @param fileFormat The format of the file to be written.
+     * @param file The file to be written.
+     * @param tonemapper The tonemapping function to be applied (operates in unnormalized [0, 255] space).
+     *                   Values will be automatically clamped to [0, 255] after applying tonemapping.
+     *                   The second parameter of the tonemapping function is the index of the pixel.
+     * @throws IOException Thrown if any file I/O problems occur when writing the file.
+     */
+    void saveToFile(int x, int y, int width, int height, String fileFormat, File file, BiFunction<IntVector4, Integer, IntVector4> tonemapper) throws IOException;
 }

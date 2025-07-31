@@ -14,11 +14,11 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 import javafx.scene.control.TreeItem;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 
+import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,16 +31,10 @@ public class CurrentProjectInputSource extends InputSource
     }
 
     @Override
-    ViewSetReader getCameraFileReader()
-    {
-        return null;
-    }
-
-    @Override
     public void initTreeView()
     {
         ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
-        primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance("Current Project", currentViewSet);
+        primaryViewSelectionModel = new GenericPrimaryViewSelectionModel("Current Project", currentViewSet);
 
         addTreeElems(primaryViewSelectionModel);
         searchableTreeView.bind();
@@ -74,6 +68,29 @@ public class CurrentProjectInputSource extends InputSource
 
         searchableTreeView.getTreeView().getSelectionModel().select(selectionItem);
         controller.setImageRotation(currentViewSet.getOrientationViewRotationDegrees());
+    }
+
+    @Override
+    public File getMasksDirectory() {
+        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        return currentViewSet.getMasksDirectory();
+    }
+
+    @Override
+    public File getInitialMasksDirectory() {
+       return getMasksDirectory();
+    }
+
+    @Override
+    public boolean doEnableProjectMasksButton() {
+        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        return currentViewSet.hasMasks();
+    }
+
+    @Override
+    public void setMasksDirectory(File file) {
+        //implement this later if we need to
+       throw new UnsupportedOperationException("Cannot change masks directory of an existing project.");
     }
 
     @Override

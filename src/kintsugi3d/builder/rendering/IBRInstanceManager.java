@@ -21,10 +21,12 @@ import java.util.function.DoubleUnaryOperator;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -34,20 +36,14 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -283,15 +279,21 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             @Override
             public void complete()
             {
-                double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
-                Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
-
-                newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
+                newItem.getIBRResources().calibrateLightIntensities(false);
                 newItem.reloadShaders();
 
                 MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
 
-                MenubarController.getInstance().selectImageBasedShader();
+                if (hasSpecularMaterials())
+                {
+                    // Prior specular fit exists; start with material (basis) shader
+                    MenubarController.getInstance().selectMaterialBasisShader();
+                }
+                else
+                {
+                    // No prior fit; start with image-based shader
+                    MenubarController.getInstance().selectImageBasedShader();
+                }
 
                 if (progressMonitor != null)
                 {
@@ -319,6 +321,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
             @Override
             public boolean isConflictingProcess() {
+                if (progressMonitor == null){
+                    return false;
+                }
                 return progressMonitor.isConflictingProcess();
             }
         });
@@ -339,7 +344,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             Builder<ContextType> contextTypeBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
-                .setLoadOptions(loadOptions)
+                .setImageLoadOptions(loadOptions)
                 .loadVSETFile(vsetFile, supportingFilesDirectory);
 
             loadInstance(id, contextTypeBuilder);
@@ -355,10 +360,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
-
-        // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
-        //  Restructuring required from Tetzlaff.
+    public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptions) {
 
         if(this.progressMonitor.isConflictingProcess()){
             return;
@@ -367,18 +369,18 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
 
-        File supportingFilesDirectory = null;
         try {
-            String orientationView = metashapeObjectChunk.getLoadPreferences().orientationViewName;
-            double rotation = metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees;
+            MetashapeChunk parentChunk = model.getChunk();
+            String orientationView = model.getLoadPreferences().orientationViewName;
+            double rotation = model.getLoadPreferences().orientationViewRotateDegrees;
 
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
-                    .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .setImageLoadOptions(loadOptions)
+                    .loadFromMetashapeModel(model)
                     .setOrientationView(orientationView, rotation);
 
-            loadInstance(metashapeObjectChunk.getFramePath(), builder);
+            loadInstance(parentChunk.getFramePath(), builder);
         }
         catch(UserCancellationException e)
         {
@@ -390,8 +392,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
-        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride)
+    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
     {
         if(this.progressMonitor.isConflictingProcess()){
             return;
@@ -403,9 +404,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
-                .setLoadOptions(loadOptions)
-                .loadLooseFiles(xmlFile, meshFile, imageDirectory, needsUndistort, uuidOverride)
-                .setOrientationView(primaryViewName, rotation);
+                .setImageLoadOptions(imageLoadOptions)
+                .loadLooseFiles(xmlFile, viewSetLoadOptions);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);
@@ -557,7 +557,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
         if (ibrInstance == null || ibrInstance.getIBRResources() == null
             || ibrInstance.getIBRResources().getSpecularMaterialResources() == null)
@@ -575,6 +575,34 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Rendering.runLater(() ->
             {
                 material.saveAll(materialDirectory);
+
+                if (finishedCallback != null)
+                {
+                    finishedCallback.run();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    {
+        if (ibrInstance == null || ibrInstance.getIBRResources() == null
+            || ibrInstance.getIBRResources().getSpecularMaterialResources() == null)
+        {
+            if (finishedCallback != null)
+            {
+                finishedCallback.run();
+            }
+        }
+        else
+        {
+            SpecularMaterialResources<ContextType> material
+                = ibrInstance.getIBRResources().getSpecularMaterialResources();
+
+            Rendering.runLater(() ->
+            {
+                material.saveEssential(materialDirectory);
 
                 if (finishedCallback != null)
                 {

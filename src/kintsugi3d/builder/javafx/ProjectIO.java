@@ -18,10 +18,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
@@ -184,7 +181,18 @@ public final class ProjectIO
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
-        saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
+        saveProjectAs(parentWindow, () ->
+        {
+            setViewsetDirectories(viewSet);
+
+            ProgressMonitor monitor = MultithreadModels.getInstance().getIOModel().getProgressMonitor();
+            if (monitor != null)
+            {
+                monitor.setStage(0, ProgressMonitor.PREPARING_PROJECT);
+            }
+
+            viewSet.copyMasks();
+        });
     }
 
     public static File getDefaultSupportingFilesDirectory(File projectFile)
@@ -421,10 +429,11 @@ public final class ProjectIO
                     MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
                 }
 
-                ioModel.saveGlTF(filesDirectory);
+                // Don't really need an internal copy of the glTF file
+//                ioModel.saveGlTF(filesDirectory);
 
                 // Save textures and basis funtions (will be deferred to graphics thread).
-                ioModel.saveMaterialFiles(filesDirectory, () ->
+                ioModel.saveAllMaterialFiles(filesDirectory, () ->
                 {
                     // Display message when all textures have been saved on graphics thread.
                     //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
@@ -574,7 +583,7 @@ public final class ProjectIO
             SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(internalModels, window);
             WelcomeWindowController.getInstance().hide();
-            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
+            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
         }
         catch (IOException e)
         {

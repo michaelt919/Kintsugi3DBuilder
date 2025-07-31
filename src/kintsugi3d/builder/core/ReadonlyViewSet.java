@@ -14,9 +14,12 @@ package kintsugi3d.builder.core;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -129,6 +132,13 @@ public interface ReadonlyViewSet
      * @return The image file.
      */
     File getPreviewImageFile(int poseIndex);
+
+    /**
+     * Gets the mask of a particular view, if it exists
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getMask(int poseIndex);
 
     /**
      * Gets the view index to be used for color calibration and tonemapping operations
@@ -251,4 +261,16 @@ public interface ReadonlyViewSet
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
     UUID getUUID();
+
+    boolean hasMasks();
+
+    File getMasksDirectory();
+
+    Map<Integer, File> getMasksMap();
+
+    /**
+     * Gets additional settings associated with this view set
+     * @return A model containing the settings for this view set.
+     */
+    ReadonlySettingsModel getViewSetSettings();
 }

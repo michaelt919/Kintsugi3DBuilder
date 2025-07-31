@@ -21,6 +21,35 @@ import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 public interface SettingsModel extends ReadonlySettingsModel
 {
     <T> void set(String name, T value);
-    void copyFrom(SettingsModel other);
+    void copyFrom(ReadonlySettingsModel other);
     void createSetting(String name, Class<?> type, Object initialValue, boolean serialize);
+    default void createBooleanSetting(String name, boolean initialValue)
+    {
+        createBooleanSetting(name, initialValue, false);
+    }
+
+    default void createNumericSetting(String name, Number initialValue)
+    {
+        createNumericSetting(name, initialValue, false);
+    }
+
+    default void createObjectSetting(String name, Object initialValue)
+    {
+        createObjectSetting(name, initialValue, false);
+    }
+
+    default void createBooleanSetting(String name, boolean initialValue, boolean serialize)
+    {
+        createSetting(name, Boolean.class, initialValue, serialize);
+    }
+
+    default void createNumericSetting(String name, Number initialValue, boolean serialize)
+    {
+        createSetting(name, Number.class, initialValue, serialize);
+    }
+
+    default void createObjectSetting(String name, Object initialValue, boolean serialize)
+    {
+        createSetting(name, initialValue.getClass(), initialValue, serialize);
+    }
 }

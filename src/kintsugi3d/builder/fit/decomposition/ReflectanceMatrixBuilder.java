@@ -94,11 +94,19 @@ final class ReflectanceMatrixBuilder
         }
     }
 
+    private static void assertBool(boolean condition, String message)
+    {
+        if (!condition)
+        {
+            throw new RuntimeException(message);
+        }
+    }
+
     private void validate()
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
         SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(),
-                specularBasisSettings.getBasisCount() * (specularBasisSettings.getBasisResolution() + 1), DMatrixRMaj.class);
+                specularBasisSettings.getBasisCount() * (specularBasisSettings.getBasisComplexity() + 1), DMatrixRMaj.class);
         SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);
@@ -136,7 +144,7 @@ final class ReflectanceMatrixBuilder
                     if (mExact < specularBasisSettings.getBasisResolution())
                     {
                         // Iterate over the available step functions in the basis.
-                        for (int s = 0; s < specularBasisSettings.getBasisResolution(); s++)
+                        for (int s = 0; s < matrixBuilder.getBasisLibrary().getFunctionCount(); s++)
                         {
                             // Evaluate each step function twice, to the left and right of the current sample.
                             double fFloor = matrixBuilder.getBasisLibrary().evaluate(s, mFloor);
@@ -171,13 +179,13 @@ final class ReflectanceMatrixBuilder
 
         for (int i = 0; i < mATA.numRows(); i++)
         {
-            assert Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001 : "Red " + i;
-            assert Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001 : "Green  " + i;
-            assert Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001 : "Blue  " + i;
+            assertBool(Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001, "Red " + i);
+            assertBool(Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001, "Green  " + i);
+            assertBool(Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001, "Blue  " + i);
 
             for (int j = 0; j < mATA.numCols(); j++)
             {
-                assert Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001 : "Matrix " + i + " " + j;
+                assertBool(Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001, "Matrix " + i + " " + j);
             }
         }
     }

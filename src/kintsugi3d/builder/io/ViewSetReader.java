@@ -24,34 +24,60 @@ public interface ViewSetReader
      * Loads a view set from an input stream.
      * The root directory will be set as specified.
      * @param stream The file to load
-     * @param root
-     * @param geometryFile
-     * @param fullResImageDirectory
-     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
-     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws Exception;
+    ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws Exception;
 
     /**
      * Loads a view set from an input file.
      * By default, the view set's root directory will be set to the parent directory of the specified file.
      * @param cameraFile The file to load
-     * @param geometryFile
-     * @param fullResImageDirectory
-     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
-     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    default ViewSet readFromFile(File cameraFile, File geometryFile, File fullResImageDirectory,
-        boolean needsUndistort) throws Exception
+    default ViewSet.Builder readFromFile(File cameraFile, ViewSetDirectories directories) throws Exception
     {
         try (InputStream stream = new FileInputStream(cameraFile))
         {
-            return readFromStream(stream, cameraFile.getParentFile(), geometryFile, fullResImageDirectory, needsUndistort);
+            directories.projectRoot = cameraFile.getParentFile();
+            return readFromStream(stream, directories);
         }
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory will be set to the parent directory of the specified file.
+     * @param cameraFile The file to load
+     * @param loadOptions Load options to automatically be applied to the view set builder.
+     * @return The view set
+     * @throws Exception If errors occur while reading the file.
+     */
+    default ViewSet.Builder readFromFile(File cameraFile, ViewSetLoadOptions loadOptions) throws Exception
+    {
+        ViewSet.Builder builder = this.readFromFile(cameraFile, loadOptions.mainDirectories);
+
+        if (loadOptions.geometryFile != null)
+        {
+            builder.setGeometryFile(loadOptions.geometryFile);
+        }
+
+        if (loadOptions.masksDirectory != null)
+        {
+            builder.setMasksDirectory(loadOptions.masksDirectory);
+        }
+
+        if (loadOptions.orientationViewName != null)
+        {
+            builder.setOrientationViewName(loadOptions.orientationViewName)
+                .setOrientationViewRotation(loadOptions.orientationViewRotation);
+        }
+
+        if (loadOptions.uuid != null)
+        {
+            builder.setUUID(loadOptions.uuid);
+        }
+
+        return builder;
     }
 }

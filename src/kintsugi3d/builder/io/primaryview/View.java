@@ -15,11 +15,17 @@ public class View
 {
     public final String name;
     public final String group;
+    public final int id;
+
+    public View(String name, int id, String group) {
+        this.name = name;
+        this.group = group;
+        this.id = id;
+    }
 
     public View(String name, String group)
     {
-        this.name = name;
-        this.group = group;
+        this(name, -1, group);
     }
 
     public View(String name)

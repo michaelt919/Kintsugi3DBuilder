@@ -23,6 +23,7 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.DoubleVector4;
 import kintsugi3d.util.CubicHermiteSpline;
 import kintsugi3d.util.SRGB;
 
@@ -160,6 +161,12 @@ public class SampledLuminanceEncoding
         }
     }
 
+    public DoubleVector4 encode(DoubleVector4 decoded)
+    {
+        // Leave alpha unchanged other than normalization.
+        return encode(decoded.getXYZ()).asVector4(decoded.w * 255.0);
+    }
+
     public DoubleVector3 decode(DoubleVector3 encoded)
     {
         if (encoded.x <= 0.0 && encoded.y <= 0.0 && encoded.z <= 0.0)
@@ -193,6 +200,12 @@ public class SampledLuminanceEncoding
                 return psuedoLinear.times(scale);
             }
         }
+    }
+
+    public DoubleVector4 decode(DoubleVector4 encoded)
+    {
+        // Leave alpha unchanged other than normalization.
+        return decode(encoded.getXYZ()).asVector4(encoded.w / 255.0);
     }
 
     public <ContextType extends Context<ContextType>> Texture1D<ContextType> createLuminanceMap(ContextType context)
