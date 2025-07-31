@@ -284,7 +284,16 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
                 MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
 
-                MenubarController.getInstance().selectImageBasedShader();
+                if (hasSpecularMaterials())
+                {
+                    // Prior specular fit exists; start with material (basis) shader
+                    MenubarController.getInstance().selectMaterialBasisShader();
+                }
+                else
+                {
+                    // No prior fit; start with image-based shader
+                    MenubarController.getInstance().selectImageBasedShader();
+                }
 
                 if (progressMonitor != null)
                 {
