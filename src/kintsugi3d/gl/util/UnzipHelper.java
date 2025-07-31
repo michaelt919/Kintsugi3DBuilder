@@ -23,9 +23,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -39,28 +41,71 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-public class UnzipHelper
+public final class UnzipHelper
 {
     private static final Logger log = LoggerFactory.getLogger(UnzipHelper.class);
-    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     private UnzipHelper()
     {
     }
 
+    private static String unzipToString(File zipFile) throws IOException
+    {
+        //unzip the zip file, find the .xml portion, and return it as a document
+        log.info("Unzipping {}", zipFile);
+        try (ZipFile file = new ZipFile(zipFile))
+        {
+            Enumeration<? extends ZipEntry> entries = file.entries();
+            while (entries.hasMoreElements())
+            {
+                ZipEntry entry = entries.nextElement();
+                // Check if entry is a directory
+                if (entry.getName().endsWith(".xml"))
+                {
+                    try (InputStream inputStream = file.getInputStream(entry))
+                    {
+                        return fileStreamToString(inputStream);
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Unzips the first XML file it finds in a ZIP file
+     * @param zipFile
+     * @return
+     * @throws IOException
+     */
+    public static Document unzipToDocument(File zipFile) throws IOException
+    {
+        return convertStringToDocument(unzipToString(zipFile));
+    }
+
+    /**
+     * Unzips a specific file from a ZIP file
+     * @param zipFile
+     * @param targetFileName
+     * @return
+     * @throws IOException
+     */
     public static String unzipToString(File zipFile, String targetFileName) throws IOException
     {
-        try (FileInputStream fis = new FileInputStream(zipFile);
-            ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis)))
+        try (ZipFile file = new ZipFile(zipFile))
         {
-            ZipEntry entry;
-
-            while ((entry = zis.getNextEntry()) != null)
+            Enumeration<? extends ZipEntry> entries = file.entries();
+            while (entries.hasMoreElements())
             {
+                ZipEntry entry = entries.nextElement();
                 if (entry.getName().equals(targetFileName))
                 {
                     // Found the desired file inside the zip
-                    return fileStreamToString(zis);
+                    try (InputStream inputStream = file.getInputStream(entry))
+                    {
+                        return fileStreamToString(inputStream);
+                    }
                 }
             }
         }
@@ -68,35 +113,16 @@ public class UnzipHelper
         return "";
     }
 
+    /**
+     * Unzips a specific XML file from a ZIP file
+     * @param zipFile
+     * @param targetFileName
+     * @return
+     * @throws IOException
+     */
     public static Document unzipToDocument(File zipFile, String targetFileName) throws IOException
     {
-        return UnzipHelper.convertStringToDocument(UnzipHelper.unzipToString(zipFile, targetFileName));
-    }
-
-    public static String unzipToString(File zipFile) throws IOException
-    {
-        //unzip the zip file and return the contents as a string
-        return directoryStreamToString(new FileInputStream(zipFile));
-    }
-
-    private static String directoryStreamToString(InputStream stream) throws IOException
-    {
-        //intended to only unzip one file
-        //Note: if this function unzips a file with multiple text files, it will simply concatenate them
-        try (ZipInputStream zis = new ZipInputStream(stream))
-        {
-            byte[] buffer = new byte[1024];
-            StringBuilder s = new StringBuilder();
-            int read = 0;
-            while ((zis.getNextEntry()) != null)
-            {
-                while ((read = zis.read(buffer, 0, 1024)) >= 0)
-                {
-                    s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
-                }
-            }
-            return s.toString();
-        }
+        return convertStringToDocument(unzipToString(zipFile, targetFileName));
     }
 
     //this function unzips a specific file within a zip directory
@@ -116,13 +142,12 @@ public class UnzipHelper
     {
         //Taken from https://www.digitalocean.com/community/tutorials/java-convert-string-to-xml-document-and-xml-document-to-string
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder;
         try
         {
-            builder = factory.newDocumentBuilder();
+            DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(xmlStr)));
         }
-        catch (Exception e)
+        catch (RuntimeException | IOException | ParserConfigurationException | SAXException e)
         {
             log.error("Error converting document:", e);
         }
@@ -133,10 +158,9 @@ public class UnzipHelper
     {
         //Taken from https://www.digitalocean.com/community/tutorials/java-convert-string-to-xml-document-and-xml-document-to-string
         TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer;
         try
         {
-            transformer = tf.newTransformer();
+            Transformer transformer = tf.newTransformer();
             StringWriter writer = new StringWriter();
             transformer.transform(new DOMSource(doc), new StreamResult(writer));
             return writer.getBuffer().toString();
@@ -173,7 +197,7 @@ public class UnzipHelper
             log.error("Error unzipping images:", e);
         }
 
-        log.info("Total images extracted: " + images.size());
+        log.info("Total images extracted: {}", images.size());
         return images;
     }
 
@@ -201,50 +225,14 @@ public class UnzipHelper
 
     private static boolean isValidImageType(String path)
     {
-        for (String extension : validExtensions)
+        for (String extension : VALID_EXTENSIONS)
         {
-            if (path.matches("." + extension))
+            if (path.matches('.' + extension))
             {
                 return true;
             }
         }
         return false;
-    }
-
-    public static Document unzipToDocument(File zipFile) throws IOException {
-        //unzip the zip file, find the .xml portion, and return it as a document
-        String result = "";
-        ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFile));
-        try{
-            log.info("Unzipping {}", zipFile);
-            byte[] buffer = new byte[1024];
-            StringBuilder s = new StringBuilder();
-            int read = 0;
-            try (ZipFile file = new ZipFile(zipFile)) {
-                Enumeration<? extends ZipEntry> entries = file.entries();
-                while (entries.hasMoreElements()) {
-                    ZipEntry entry = entries.nextElement();
-                    // Check if entry is a directory
-                    if (!entry.getName().endsWith(".xml")) {
-                        continue;
-                    }
-                    try (InputStream inputStream = file.getInputStream(entry)) {
-                        while ((read = inputStream.read(buffer, 0, 1024)) >=0){
-                            s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
-                        }
-                    }
-                }
-            }
-            result = s.toString();
-        }
-        catch(Exception e){
-            log.error("Error unzipping file:", e);
-        }
-        finally{
-            zis.closeEntry();
-            zis.close();
-        }
-        return UnzipHelper.convertStringToDocument(result);
     }
 
     public static Map<Integer, Image> unzipImagesToMap(File imgsDir)
@@ -263,18 +251,18 @@ public class UnzipHelper
             while ((entry = zipInputStream.getNextEntry()) != null)
             {
                 String entryName = entry.getName();
-                if (!entryName.endsWith(".xml"))
-                {
-                    //this is an image, add it to the temp map
-                    tempMap.put(entryName, readImageData(zipInputStream, entryName));
-                }
-                else
+                if (entryName.endsWith(".xml"))
                 {
                     try (ZipFile zFile = new ZipFile(imgsDir);
-                        InputStream zis = zFile.getInputStream(entry))
+                         InputStream zis = zFile.getInputStream(entry))
                     {
                         docXml = convertStringToDocument(fileStreamToString(zis));
                     }
+                }
+                else
+                {
+                    //this is an image, add it to the temp map
+                    tempMap.put(entryName, readImageData(zipInputStream, entryName));
                 }
                 zipInputStream.closeEntry();
             }
@@ -309,7 +297,7 @@ public class UnzipHelper
             imagesMap.put(cameraId, img);
         }
 
-        log.info("Total images extracted: " + imagesMap.size());
+        log.info("Total images extracted: {}", imagesMap.size());
         return imagesMap;
     }
 
