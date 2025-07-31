@@ -370,12 +370,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     /**
      * Loads a view set from an input file.
      * By default, the view set's root directory and supporting files directory will be set to the parent directory of the specified file.
-     * The supporting files directory may be overridden by a directory specified in the file.
+     * The supporting files directory may be specified by a directory specified in the file, otherwise it will be left null.
      * @param file The file to load
-     * @return The view set
+     * @return A builder for the view set that can be created by calling the builder's finish() method
+     * after any additional options are specified.
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet.Builder readFromFile(File file) throws IOException
+    public Builder readFromFile(File file) throws IOException
     {
         try (InputStream stream = new FileInputStream(file))
         {
