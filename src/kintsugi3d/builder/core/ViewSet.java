@@ -176,118 +176,6 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final SettingsModel viewSetSettings = new SimpleSettingsModel();
 
-    public void validateMasks()
-    {
-        for (int i = 0; i < getCameraPoseCount(); i++)
-        {
-            File maskFile = getMask(i);
-            if (maskFile != null)
-            {
-                File originalMaskFile = maskFile; // remember the original filename for logging
-
-                // Could set maskFile to null if it doesn't actually exist,
-                // or change the file extension if it exists with a different file extension.
-                maskFile = ImageFinder.getInstance().tryFindImageFile(maskFile);
-
-                if (maskFile == null)
-                {
-                    log.warn("Specified mask file not found: {}", originalMaskFile.getPath());
-                }
-            }
-
-            if (maskFile == null)
-            {
-                // Search for the name of the photo in the masks directory
-                // Will check both with and without _mask suffix
-                maskFile = ImageFinder.getInstance().tryFindImageFile(
-                    new File(getMasksDirectory(), getFullResImageFile(i).getName()),
-                    "_mask");
-            }
-
-            if (maskFile == null)
-            {
-                // Remove if no mask file was found
-                maskFiles.remove(i);
-            }
-            else
-            {
-                // Overwrite based on the file that was found
-                maskFiles.put(i, maskFile);
-            }
-        }
-    }
-
-    public void copyMasks(ProgressMonitor monitor)
-    {
-        if (monitor != null)
-        {
-            monitor.setStage(0, "Preparing masks...");
-            monitor.unbind(ProgressBar.INDETERMINATE_PROGRESS);
-        }
-        if (masksDirectory == null)
-        {
-            return;
-        }
-
-        File masksSrcDir = masksDirectory;
-
-        File masksDestinationDir = supportingFilesDirectory != null ?
-            new File(supportingFilesDirectory, "masks") :
-            new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
-
-        masksDestinationDir.mkdirs();
-
-        // Unzip masks if needed
-        if (masksSrcDir.toString().endsWith(".zip"))
-        {
-            log.info("Unzipping masks folder...");
-            try
-            {
-                // Just unzip everything for efficiency; could clean up any unused files (i.e. non-masks) but probably not necessary
-                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, monitor);
-
-                // Use the destination directory as the masks directory for validating (and thereafter)
-                setMasksDirectory(masksDestinationDir);
-
-                // Make sure the masks are there after unzipping (might change the mask filenames stored)
-                validateMasks();
-            }
-            catch (IOException e)
-            {
-                log.error("Failed to unzip masks.", e);
-            }
-        }
-        else
-        {
-            // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
-            validateMasks();
-
-            // Copy the files that were actually found
-            for (int i = 0; i < getCameraPoseCount(); i++)
-            {
-                File maskSrcFile = getMask(i);
-                if (maskSrcFile != null)
-                {
-                    File maskDestFile = new File(masksDestinationDir, maskSrcFile.getName());
-
-                    try
-                    {
-                        Files.copy(maskSrcFile.toPath(), maskDestFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    }
-                    catch (IOException e)
-                    {
-                        log.error("Failed to copy mask {} to {}", maskSrcFile.getName(), masksDestinationDir.getPath());
-                    }
-                }
-            }
-        }
-
-        if (monitor != null)
-        {
-            monitor.bind();
-        }
-    }
-
     public static final class Builder
     {
         private final ViewSet result;
@@ -1394,5 +1282,129 @@ public final class ViewSet implements ReadonlyViewSet
     public void addMask(int camId, File mask)
     {
         maskFiles.put(camId, mask);
+    }
+
+    /**
+     * Checks that all mask files exist.  In doing so, it tries several variations (i.e. mask filename vs. photo filename,
+     * _mask vs. no _mask, various file extensions) and changes the recorded mask filename for each view to an image that was found
+     * (or eliminating the mask if the file is missing).
+     */
+    public void validateMasks()
+    {
+        for (int i = 0; i < getCameraPoseCount(); i++)
+        {
+            File maskFile = getMask(i);
+            if (maskFile != null)
+            {
+                File originalMaskFile = maskFile; // remember the original filename for logging
+
+                // Could set maskFile to null if it doesn't actually exist,
+                // or change the file extension if it exists with a different file extension.
+                maskFile = ImageFinder.getInstance().tryFindImageFile(maskFile);
+
+                if (maskFile == null)
+                {
+                    log.warn("Specified mask file not found: {}", originalMaskFile.getPath());
+                }
+            }
+
+            if (maskFile == null)
+            {
+                // Search for the name of the photo in the masks directory
+                // Will check both with and without _mask suffix
+                maskFile = ImageFinder.getInstance().tryFindImageFile(
+                    new File(getMasksDirectory(), getFullResImageFile(i).getName()),
+                    "_mask");
+            }
+
+            if (maskFile == null)
+            {
+                // Remove if no mask file was found
+                maskFiles.remove(i);
+            }
+            else
+            {
+                // Overwrite based on the file that was found
+                maskFiles.put(i, maskFile);
+            }
+        }
+    }
+
+    /**
+     * Copies masks to an appropriate supporting files directory and changes the masks directory accordingly.
+     * If the masks were previously stored in a ZIP file, they will be unzipped to the new masks directory.
+     * Masks will be validated (see validateMasks()) as a result of this operation, possibly changing the recorded mask file name
+     * based on the mask files that are actually found (or eliminating masks if missing).
+     * @param monitor
+     */
+    public void copyMasks(ProgressMonitor monitor)
+    {
+        if (monitor != null)
+        {
+            monitor.setStage(0, "Preparing masks...");
+            monitor.unbind(ProgressBar.INDETERMINATE_PROGRESS);
+        }
+        if (masksDirectory == null)
+        {
+            return;
+        }
+
+        File masksSrcDir = masksDirectory;
+
+        File masksDestinationDir = supportingFilesDirectory != null ?
+            new File(supportingFilesDirectory, "masks") :
+            new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
+
+        masksDestinationDir.mkdirs();
+
+        // Unzip masks if needed
+        if (masksSrcDir.toString().endsWith(".zip"))
+        {
+            log.info("Unzipping masks folder...");
+            try
+            {
+                // Just unzip everything for efficiency; could clean up any unused files (i.e. non-masks) but probably not necessary
+                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, monitor);
+
+                // Use the destination directory as the masks directory for validating (and thereafter)
+                setMasksDirectory(masksDestinationDir);
+
+                // Make sure the masks are there after unzipping (might change the mask filenames stored)
+                validateMasks();
+            }
+            catch (IOException e)
+            {
+                log.error("Failed to unzip masks.", e);
+            }
+        }
+        else
+        {
+            // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
+            validateMasks();
+
+            // Copy the files that were actually found
+            for (int i = 0; i < getCameraPoseCount(); i++)
+            {
+                File maskSrcFile = getMask(i);
+                if (maskSrcFile != null)
+                {
+                    File maskDestFile = new File(masksDestinationDir, maskSrcFile.getName());
+
+                    try
+                    {
+                        Files.copy(maskSrcFile.toPath(), maskDestFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    catch (IOException e)
+                    {
+                        log.error("Failed to copy mask {} to {}", maskSrcFile.getName(), masksDestinationDir.getPath());
+                    }
+                }
+            }
+        }
+
+        if (monitor != null)
+        {
+            monitor.bind();
+        }
     }
 }
