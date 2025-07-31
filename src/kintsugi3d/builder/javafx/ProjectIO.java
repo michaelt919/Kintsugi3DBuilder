@@ -186,7 +186,7 @@ public final class ProjectIO
         // Force user to save the project before proceeding, so that they have a place to save the results
         saveProjectAs(parentWindow, () -> {
             setViewsetDirectories(viewSet);
-            viewSet.loadMasks(MultithreadModels.getInstance().getIOModel().getProgressMonitor());
+            viewSet.copyMasks(MultithreadModels.getInstance().getIOModel().getProgressMonitor());
         });
     }
 

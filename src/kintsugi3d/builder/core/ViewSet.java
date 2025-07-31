@@ -35,14 +35,6 @@ import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -184,7 +176,48 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final SettingsModel viewSetSettings = new SimpleSettingsModel();
 
-    public void loadMasks(ProgressMonitor monitor)
+    public void validateMasks()
+    {
+        for (int i = 0; i < getCameraPoseCount(); i++)
+        {
+            File maskFile = getMask(i);
+            if (maskFile != null)
+            {
+                File originalMaskFile = maskFile; // remember the original filename for logging
+
+                // Could set maskFile to null if it doesn't actually exist,
+                // or change the file extension if it exists with a different file extension.
+                maskFile = ImageFinder.getInstance().tryFindImageFile(maskFile);
+
+                if (maskFile == null)
+                {
+                    log.warn("Specified mask file not found: {}", originalMaskFile.getPath());
+                }
+            }
+
+            if (maskFile == null)
+            {
+                // Search for the name of the photo in the masks directory
+                // Will check both with and without _mask suffix
+                maskFile = ImageFinder.getInstance().tryFindImageFile(
+                    new File(getMasksDirectory(), getFullResImageFile(i).getName()),
+                    "_mask");
+            }
+
+            if (maskFile == null)
+            {
+                // Remove if no mask file was found
+                maskFiles.remove(i);
+            }
+            else
+            {
+                // Overwrite based on the file that was found
+                maskFiles.put(i, maskFile);
+            }
+        }
+    }
+
+    public void copyMasks(ProgressMonitor monitor)
     {
         if (monitor != null)
         {
@@ -204,41 +237,20 @@ public final class ViewSet implements ReadonlyViewSet
 
         masksDestinationDir.mkdirs();
 
+        // Unzip masks if needed
         if (masksSrcDir.toString().endsWith(".zip"))
         {
-            //get masks folder, then subfolder is viewset uuid
-            // (follow convention set by preview and fit image folders)
             log.info("Unzipping masks folder...");
             try
             {
+                // Just unzip everything for efficiency; could clean up any unused files (i.e. non-masks) but probably not necessary
                 UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, monitor);
-                File[] childFiles = masksDestinationDir.listFiles();
-                if (childFiles != null && childFiles.length > 0)
-                {
-                    File docFile = Arrays.stream(childFiles)
-                        .filter(file -> file.getName().equals("doc.xml"))
-                        .findFirst()
-                        .orElse(null);
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    try
-                    {
-                        DocumentBuilder builder = factory.newDocumentBuilder();
-                        Document docXml = builder.parse(docFile);
-                        NodeList maskList = docXml.getElementsByTagName("mask");
 
-                        for (int i = 0; i < maskList.getLength(); ++i)
-                        {
-                            Element maskElem = (Element) maskList.item(i);
-                            int cameraId = Integer.parseInt(maskElem.getAttribute("camera_id"));
-                            String path = maskElem.getAttribute("path");
-                            addMask(cameraId, new File(masksDestinationDir, path));
-                        }
-                    }
-                    catch (ParserConfigurationException | SAXException e)
-                    {
-                        log.error("Failed to unzip masks.", e);
-                    }
-                }
+                // Use the destination directory as the masks directory for validating (and thereafter)
+                setMasksDirectory(masksDestinationDir);
+
+                // Make sure the masks are there after unzipping (might change the mask filenames stored)
+                validateMasks();
             }
             catch (IOException e)
             {
@@ -247,47 +259,29 @@ public final class ViewSet implements ReadonlyViewSet
         }
         else
         {
-            File[] maskFiles = masksSrcDir.listFiles();
-            if (maskFiles == null || maskFiles.length == 0)
+            // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
+            validateMasks();
+
+            // Copy the files that were actually found
+            for (int i = 0; i < getCameraPoseCount(); i++)
             {
-                log.error("No masks found in mask directory {}", masksSrcDir);
-                return;
-            }
-
-            for (File srcFile : maskFiles)
-            {
-                String fileName = srcFile.getName();
-
-                //search for {fileName}
-                int idx = findIndexOfView(fileName);
-
-                //search for {fileName}_mask if needed
-                if (idx == -1)
+                File maskSrcFile = getMask(i);
+                if (maskSrcFile != null)
                 {
-                    String tempName = fileName.replace("_mask", "");
-                    idx = findIndexOfView(tempName);
-                }
+                    File maskDestFile = new File(masksDestinationDir, maskSrcFile.getName());
 
-                //give up if not found
-                //we could do a .contains() search, but that might be too slow
-                //or we might add support for "give us your mask extension" and then go from there
-                if (idx == -1)
-                {
-                    continue;
-                }
-                try
-                {
-                    File maskFile = new File(masksDestinationDir, fileName);
-                    Files.copy(srcFile.toPath(), maskFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    addMask(idx, maskFile);
-                }
-                catch (IOException e)
-                {
-                    log.error("Failed to copy mask {} to {}", srcFile.getName(), masksDestinationDir.getPath());
+                    try
+                    {
+                        Files.copy(maskSrcFile.toPath(), maskDestFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    catch (IOException e)
+                    {
+                        log.error("Failed to copy mask {} to {}", maskSrcFile.getName(), masksDestinationDir.getPath());
+                    }
                 }
             }
         }
-        setMasksDirectory(masksDestinationDir);
+
         if (monitor != null)
         {
             monitor.bind();
@@ -303,6 +297,7 @@ public final class ViewSet implements ReadonlyViewSet
         private int cameraProjectionIndex = 0;
         private int lightIndex = 0;
         private File imageFile;
+        private File maskFile;
 
         /**
          * Uses root directory as supporting files directory by default
@@ -346,6 +341,12 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setCurrentMaskFile(File maskFile)
+        {
+            this.maskFile = maskFile;
+            return this;
+        }
+
         public Builder commitCurrentCameraPose()
         {
             result.cameraPoseList.add(cameraPose);
@@ -353,6 +354,7 @@ public final class ViewSet implements ReadonlyViewSet
             result.cameraProjectionIndexList.add(cameraProjectionIndex);
             result.lightIndexList.add(lightIndex);
             result.imageFiles.add(imageFile);
+            result.maskFiles.put(result.imageFiles.size() - 1, maskFile); // associate mask file with current image file index
             result.viewErrorMetrics.add(new ViewRMSE());
             return this;
         }
@@ -1070,11 +1072,15 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getMask(int poseIndex)
     {
-        if (maskFiles.isEmpty())
+        File maskFile = maskFiles.get(poseIndex);
+        if (maskFile == null || getMasksDirectory() == null)
         {
             return null;
         }
-        return new File(getMasksDirectory(), maskFiles.get(poseIndex).getName());
+        else
+        {
+            return new File(getMasksDirectory(), maskFile.getName());
+        }
     }
 
     public int getPreviewWidth()

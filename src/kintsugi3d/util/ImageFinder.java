@@ -13,7 +13,9 @@ package kintsugi3d.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -82,7 +84,12 @@ public final class ImageFinder
         }
     }
 
-    public File findImageFile(File requestedFile) throws FileNotFoundException
+    private static void logFileGuess(File imageFileGuess)
+    {
+        log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+    }
+
+    public File findImageFile(File requestedFile, String... suffixes) throws FileNotFoundException
     {
         if (requestedFile.exists())
         {
@@ -92,36 +99,74 @@ public final class ImageFinder
         {
             // Try some alternate file formats/extensions
             // Try appending first (will catch filenames that contain .'s but omit the extension)
+            File parentFile = requestedFile.getParentFile();
+
             for(String extension : IMG_FORMATS)
             {
                 String altFileName = String.join(".", requestedFile.getName(), extension);
-                File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
+                File imageFileGuess = new File(parentFile, altFileName);
 
-                log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+                logFileGuess(imageFileGuess);
                 if (imageFileGuess.exists())
                 {
-                    log.info("Found!!");
+                    logFound();
                     return imageFileGuess;
+                }
+
+                if (suffixes != null)
+                {
+                    for (String suffix : suffixes)
+                    {
+                        altFileName = String.join(".", requestedFile.getName(), suffix, extension);
+                        imageFileGuess = new File(parentFile, altFileName);
+
+                        logFileGuess(imageFileGuess);
+                        if (imageFileGuess.exists())
+                        {
+                            logFound();
+                            return imageFileGuess;
+                        }
+                    }
                 }
             }
 
             // try substituting the part after the last . with various extensions
-            for(String extension : IMG_FORMATS)
+            String[] filenameParts = requestedFile.getName().split("\\.");
+            if (filenameParts.length > 1)
             {
-                String[] filenameParts = requestedFile.getName().split("\\.");
+                String originalEnding = filenameParts[filenameParts.length - 2];
 
-                if (filenameParts.length > 1)
+                for(String extension : IMG_FORMATS)
                 {
                     filenameParts[filenameParts.length - 1] = extension;
+                    filenameParts[filenameParts.length - 2] = originalEnding;
                     String altFileName = String.join(".", filenameParts);
 
-                    File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
+                    File imageFileGuess = new File(parentFile, altFileName);
 
-                    log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+                    logFileGuess(imageFileGuess);
                     if (imageFileGuess.exists())
                     {
-                        log.info("Found!!");
+                        logFound();
                         return imageFileGuess;
+                    }
+
+                    if (suffixes != null)
+                    {
+                        for (String suffix : suffixes)
+                        {
+                            filenameParts[filenameParts.length - 2] = originalEnding + suffix;
+                            altFileName = String.join(".", filenameParts);
+
+                            imageFileGuess = new File(parentFile, altFileName);
+
+                            logFileGuess(imageFileGuess);
+                            if (imageFileGuess.exists())
+                            {
+                                logFound();
+                                return imageFileGuess;
+                            }
+                        }
                     }
                 }
             }
@@ -131,15 +176,30 @@ public final class ImageFinder
         }
     }
 
-    public File tryFindImageFile(File requestedFile)
+    public File findImageFile(File requestedFile) throws FileNotFoundException
+    {
+        return findImageFile(requestedFile, null);
+    }
+
+    private static void logFound()
+    {
+        log.info("Found!!");
+    }
+
+    public File tryFindImageFile(File requestedFile, String... suffixes)
     {
         try
         {
-            return findImageFile(requestedFile);
+            return findImageFile(requestedFile, suffixes);
         }
         catch (FileNotFoundException e)
         {
             return null;
         }
+    }
+
+    public File tryFindImageFile(File requestedFile)
+    {
+        return tryFindImageFile(requestedFile, null);
     }
 }
