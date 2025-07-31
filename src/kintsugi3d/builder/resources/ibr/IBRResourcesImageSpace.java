@@ -96,7 +96,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private ViewSet viewSet;
         private VertexGeometry geometry;
         private File imageDirectoryOverride;
-        private ReadonlyLoadOptionsModel loadOptions;
+        private ReadonlyLoadOptionsModel imageLoadOptions;
         private ProgressMonitor progressMonitor;
         private double[] linearLuminanceValues;
         private byte[] encodedLuminanceValues;
@@ -108,12 +108,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.context = context;
         }
 
-        private void updateViewSetFromLoadOptions()
+        private void updateViewSetFromImageLoadOptions()
         {
-            if (this.loadOptions != null)
+            if (this.imageLoadOptions != null)
             {
-                this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-                String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+                this.viewSet.setPreviewImageResolution(imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
+                String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
 
                 this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
             }
@@ -138,13 +138,13 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> setLoadOptions(ReadonlyLoadOptionsModel loadOptions)
+        public Builder<ContextType> setImageLoadOptions(ReadonlyLoadOptionsModel imageLoadOptions)
         {
-            this.loadOptions = loadOptions;
+            this.imageLoadOptions = imageLoadOptions;
 
             if (this.viewSet != null)
             {
-                updateViewSetFromLoadOptions();
+                updateViewSetFromImageLoadOptions();
             }
 
             return this;
@@ -165,8 +165,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
-            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
-            updateViewSetFromLoadOptions();
+            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory).finish();
+            updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
         }
@@ -188,26 +188,22 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(File cameraFile, ViewSetLoadOverrides overrides) throws Exception
+        public Builder<ContextType> loadLooseFiles(File cameraFile, ViewSetLoadOptions viewSetLoadOptions) throws Exception
         {
-            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, overrides);
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, viewSetLoadOptions);
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, ViewSetLoadOverrides overrides) throws Exception
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, ViewSetLoadOptions viewSetLoadOptions) throws Exception
         {
             // Load view set
-            this.viewSet = reader.readFromFile(cameraFile, overrides);
-            if (overrides.uuid != null)
-            {
-                this.viewSet.setUuid(overrides.uuid);
-            }
+            this.viewSet = reader.readFromFile(cameraFile, viewSetLoadOptions)
+                .finish();
 
-            updateViewSetFromLoadOptions();
+            updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
         }
-
 
         /**
          *
@@ -216,11 +212,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model, File supportingFilesDirectory)
+        public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
             throws IOException, XMLStreamException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), supportingFilesDirectory);
-            updateViewSetFromLoadOptions();
+            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk()).finish();
+            updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
         }
@@ -292,7 +288,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (this.viewSet != null)
             {
                 IBRResourcesImageSpace.generateUndistortedPreviewImages(
-                    this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.progressMonitor);
+                    this.viewSet, this.imageLoadOptions.getMaxLoadingThreads(), this.progressMonitor);
             }
 
             return this;
@@ -326,7 +322,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
             }
 
-            return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, progressMonitor);
+            return new IBRResourcesImageSpace<>(context, viewSet, geometry, imageLoadOptions, progressMonitor);
         }
     }
 

@@ -46,7 +46,7 @@ public class ResampleRequest implements ObservableIBRRequest
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
-        ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile);
+        ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile).finish();
 
         try
         (

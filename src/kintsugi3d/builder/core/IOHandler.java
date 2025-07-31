@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.ViewSetLoadOverrides;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.EncodableColorImage;
 
@@ -32,7 +32,7 @@ public interface IOHandler
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
-    void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOverrides overrides, ReadonlyLoadOptionsModel loadOptions);
+    void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
 
     void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
 
@@ -44,7 +44,8 @@ public interface IOHandler
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
-    void saveMaterialFiles(File materialDirectory, Runnable finishedCallback);
+    void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
+    void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback);
 
     void saveGlTF(File outputDirectory, ExportSettings settings);
 

@@ -54,7 +54,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
         loadOptionsModel = InternalModels.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
         ioModel = new IOModel();
-        ioModel.setLoadOptionsModel(loadOptionsModel);
+        ioModel.setImageLoadOptionsModel(loadOptionsModel);
     }
 
     @Override
