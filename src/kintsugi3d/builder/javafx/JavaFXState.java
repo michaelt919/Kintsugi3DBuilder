@@ -13,11 +13,11 @@ package kintsugi3d.builder.javafx;
 
 import kintsugi3d.builder.javafx.internal.*;
 
-public final class InternalModels
+public final class JavaFXState
 {
-    private static final InternalModels INSTANCE = new InternalModels();
+    private static final JavaFXState INSTANCE = new JavaFXState();
 
-    static InternalModels getInstance()
+    static JavaFXState getInstance()
     {
         return INSTANCE;
     }
@@ -31,7 +31,7 @@ public final class InternalModels
     private final SettingsModelImpl settingsModel;
     private final ObservableProjectModel projectModel;
 
-    private InternalModels()
+    private JavaFXState()
     {
         cameraModel = new CameraModelImpl();
         environmentModel = new EnvironmentModelImpl();

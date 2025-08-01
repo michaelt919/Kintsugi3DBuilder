@@ -18,7 +18,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 
 public class ObjectVisualsController implements SystemSettingsControllerBase{
 
@@ -46,30 +46,30 @@ public class ObjectVisualsController implements SystemSettingsControllerBase{
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
+    public void bindInfo(JavaFXState javaFXState) {
         imageCompressionCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getLoadOptionsModel().compression);
+                javaFXState.getLoadOptionsModel().compression);
 
         setupTxtFieldProperties(previewWidthIntProperty, previewWidthTxtField);
         setupTxtFieldProperties(previewHeightIntProperty, previewHeightTxtField);
         setupTxtFieldProperties(depthWidthIntProperty, depthWidthTxtField);
         setupTxtFieldProperties(depthHeightIntProperty, depthHeightTxtField);
 
-        previewWidthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().previewWidth);
-        previewHeightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().previewHeight);
+        previewWidthIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().previewWidth);
+        previewHeightIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().previewHeight);
 
         depthWidthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
         depthHeightTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
 
         preloadVisibilityEtcCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getLoadOptionsModel().depthImages);
+                javaFXState.getLoadOptionsModel().depthImages);
 
-        depthWidthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
-        depthHeightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
+        depthWidthIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().depthWidth);
+        depthHeightIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().depthHeight);
 
-        mipmapCheckBox.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
+        mipmapCheckBox.selectedProperty().bindBidirectional(javaFXState.getLoadOptionsModel().mipmaps);
         reduceViewportResCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
+                javaFXState.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
     }
 
     //this function is used to hook up the text field's string property to the backend

@@ -94,7 +94,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println("r " + viewSet.getOrientationViewRotationDegrees());
 
         boolean firstSetting = true;
-        for (ReadonlySettingsModel.Setting setting : viewSet.getViewSetSettings())
+        for (ReadonlySettingsModel.Setting setting : viewSet.getProjectSettings())
         {
             if (firstSetting) // print only for the first setting; do not print at all if no settings
             {

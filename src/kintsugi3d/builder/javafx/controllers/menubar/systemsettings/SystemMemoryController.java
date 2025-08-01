@@ -15,7 +15,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.util.Launch4jConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +104,7 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
+    public void bindInfo(JavaFXState javaFXState) {
         //TODO: imp.
     }
 }

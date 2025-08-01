@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.text.BreakIterator;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,54 +21,69 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.IBRRequestQueue;
+import kintsugi3d.builder.core.IBRRequestUI;
+import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequestUI.class);
 
-    @FXML private Accordion advancedAccordion;
-    @FXML private CheckBox smithCheckBox;
-    @FXML private TextField unsuccessfulLMIterationsTextField;
-    @FXML private TextField widthTextField;
-    @FXML private TextField heightTextField;
+    @FXML
+    private Accordion advancedAccordion;
+    @FXML
+    private CheckBox smithCheckBox;
+    @FXML
+    private TextField unsuccessfulLMIterationsTextField;
+    @FXML
+    private TextField widthTextField;
+    @FXML
+    private TextField heightTextField;
 
-    @FXML private TextField basisCountTextField;
-    @FXML private TextField mfdResolutionTextField;
-    @FXML private TextField specularComplexityTextField;
-    @FXML private TextField convergenceToleranceTextField;
-    @FXML private TextField specularMinWidthTextField;
-    @FXML private TextField specularSmoothnessTextField;
-    @FXML private TextField metallicityTextField;
-    @FXML private CheckBox translucencyCheckBox;
-    @FXML private CheckBox normalRefinementCheckBox;
-    @FXML private TextField minNormalDampingTextField;
-    @FXML private TextField normalSmoothingIterationsTextField;
+    @FXML
+    private TextField basisCountTextField;
+    @FXML
+    private TextField mfdResolutionTextField;
+    @FXML
+    private TextField specularComplexityTextField;
+    @FXML
+    private TextField convergenceToleranceTextField;
+    @FXML
+    private TextField specularMinWidthTextField;
+    @FXML
+    private TextField specularSmoothnessTextField;
+    @FXML
+    private TextField metallicityTextField;
+    @FXML
+    private CheckBox translucencyCheckBox;
+    @FXML
+    private CheckBox normalRefinementCheckBox;
+    @FXML
+    private TextField minNormalDampingTextField;
+    @FXML
+    private TextField normalSmoothingIterationsTextField;
 
-    @FXML private CheckBox openViewerOnComplete;
+    @FXML
+    private CheckBox openViewerOnComplete;
 
-    @FXML private Button runButton;
+    @FXML
+    private Button runButton;
 
-    private final DirectoryChooser directoryChooser = new DirectoryChooser();
-    private final FileChooser fileChooser = new FileChooser();
-
-    private Kintsugi3DBuilderState modelAccess;
     private Stage stage;
 
-    private File lastDirectory;
-    private File lastViewSet;
-
-    public static SpecularFitRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
+    public static SpecularFitRequestUI create(Window window) throws IOException
     {
         String fxmlFileName = "fxml/export/SpecularFitRequestUI.fxml";
         URL url = SpecularFitRequestUI.class.getClassLoader().getResource(fxmlFileName);
@@ -82,7 +92,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent parent = fxmlLoader.load();
         SpecularFitRequestUI svdRequestUI = fxmlLoader.getController();
-        svdRequestUI.modelAccess = modelAccess;
 
         svdRequestUI.stage = new Stage();
         svdRequestUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
@@ -112,14 +121,14 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+            {
                 return;
             }
 
-            SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureResolution(
-                    Integer.parseInt(widthTextField.getText()),
-                    Integer.parseInt(heightTextField.getText())),
-                modelAccess.getSettingsModel());
+            SpecularFitRequestParams settings = new SpecularFitRequestParams(
+                Integer.parseInt(widthTextField.getText()),
+                Integer.parseInt(heightTextField.getText()));
 
             int basisCount = Integer.parseInt(basisCountTextField.getText());
             settings.getSpecularBasisSettings().setBasisCount(basisCount);
@@ -134,15 +143,15 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setConvergenceTolerance(convergenceTolerance);
 
             double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
-            int specularMinWidthDiscrete = (int)Math.round(specularMinWidth * basisResolution);
+            int specularMinWidthDiscrete = (int) Math.round(specularMinWidth * basisResolution);
             settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
 
             double specularMaxWidth = Double.parseDouble(specularSmoothnessTextField.getText());
-            settings.getSpecularBasisSettings().setSpecularMaxWidth((int)Math.round(specularMaxWidth * basisResolution));
+            settings.getSpecularBasisSettings().setSpecularMaxWidth((int) Math.round(specularMaxWidth * basisResolution));
 
             double specularComplexity = Double.parseDouble(specularComplexityTextField.getText());
             settings.getSpecularBasisSettings().setBasisComplexity(
-                (int)Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
+                (int) Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
 
             double metallicity = Double.parseDouble(metallicityTextField.getText());
             settings.getSpecularBasisSettings().setMetallicity(metallicity);
@@ -184,8 +193,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
 //            }
 //            else
 //            {
-                // Run as an IBR request that optimizes from scratch.
-                requestQueue.addIBRRequest(request);
+            // Run as an IBR request that optimizes from scratch.
+            requestQueue.addIBRRequest(request);
 //            }
         });
     }

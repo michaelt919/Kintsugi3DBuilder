@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.io;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
@@ -298,7 +292,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         ViewSet result = builder.finish();
-        result.getViewSetSettings().copyFrom(settings);
+        result.getProjectSettings().copyFrom(settings);
 
         // Tonemapping
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];

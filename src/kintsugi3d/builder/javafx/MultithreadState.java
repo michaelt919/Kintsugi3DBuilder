@@ -19,7 +19,7 @@ import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.impl.CanvasModelImpl;
 import kintsugi3d.builder.state.impl.SceneViewportModelImpl;
 
-public final class MultithreadModels implements Kintsugi3DBuilderState
+public final class MultithreadState implements Kintsugi3DBuilderState
 {
     private final ExtendedCameraModel cameraModel;
     private final EnvironmentModel environmentModel;
@@ -34,24 +34,24 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     private final CanvasModel canvasModel;
     private final IOModel ioModel;
 
-    private static final MultithreadModels INSTANCE = new MultithreadModels();
+    private static final MultithreadState INSTANCE = new MultithreadState();
 
-    public static MultithreadModels getInstance()
+    public static MultithreadState getInstance()
     {
         return INSTANCE;
     }
 
-    private MultithreadModels()
+    private MultithreadState()
     {
-        cameraModel = new CameraModelWrapper(InternalModels.getInstance().getCameraModel());
-        objectModel = new ObjectModelWrapper(InternalModels.getInstance().getObjectModel());
-        lightingModel = new LightingModelWrapper(InternalModels.getInstance().getLightingModel());
-        environmentModel = new EnvironmentModelWrapper(InternalModels.getInstance().getEnvironmentModel());
-        cameraViewListModel = new CameraViewListModelWrapper(InternalModels.getInstance().getCameraViewListModel());
-        projectModel = InternalModels.getInstance().getProjectModel();
-        settingsModel = new SettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
+        cameraModel = new CameraModelWrapper(JavaFXState.getInstance().getCameraModel());
+        objectModel = new ObjectModelWrapper(JavaFXState.getInstance().getObjectModel());
+        lightingModel = new LightingModelWrapper(JavaFXState.getInstance().getLightingModel());
+        environmentModel = new EnvironmentModelWrapper(JavaFXState.getInstance().getEnvironmentModel());
+        cameraViewListModel = new CameraViewListModelWrapper(JavaFXState.getInstance().getCameraViewListModel());
+        projectModel = JavaFXState.getInstance().getProjectModel();
+        settingsModel = new SettingsModelWrapper(JavaFXState.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
-        loadOptionsModel = InternalModels.getInstance().getLoadOptionsModel();
+        loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
         ioModel = new IOModel();
         ioModel.setLoadOptionsModel(loadOptionsModel);

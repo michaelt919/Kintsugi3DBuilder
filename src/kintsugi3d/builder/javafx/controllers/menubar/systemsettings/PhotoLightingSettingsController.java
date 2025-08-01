@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import java.util.Collection;
-
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -20,10 +18,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.MenuItem;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightInstanceSetting;
 import kintsugi3d.builder.javafx.internal.LightInstanceModelImpl;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
+
+import java.util.Collection;
 
 public class PhotoLightingSettingsController implements SystemSettingsControllerBase{
     @FXML public CheckBox fresnelEffectCheckBox;
@@ -53,7 +53,7 @@ public class PhotoLightingSettingsController implements SystemSettingsController
 //    @FXML public Label perLight2IntensityLabel;
 //    @FXML public Label perLight3IntensityLabel;
 //    @FXML public Label perLight4IntensityLabel;
-    private InternalModels internalModels;
+    private JavaFXState javaFXState;
     private final Property<LightInstanceSetting> light1 = new SimpleObjectProperty<>();
     private final Property<LightInstanceSetting> light2 = new SimpleObjectProperty<>();
     private final Property<LightInstanceSetting> light3 = new SimpleObjectProperty<>();
@@ -99,23 +99,23 @@ public class PhotoLightingSettingsController implements SystemSettingsController
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
-        this.internalModels = internalModels;
+    public void bindInfo(JavaFXState javaFXState) {
+        this.javaFXState = javaFXState;
 
         fresnelEffectCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("fresnelEnabled"));
+                javaFXState.getSettingsModel().getBooleanProperty("fresnelEnabled"));
         phyMaskingCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("pbrGeometricAttenuationEnabled"));
+                javaFXState.getSettingsModel().getBooleanProperty("pbrGeometricAttenuationEnabled"));
         shadowsCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("shadowsEnabled"));
+                javaFXState.getSettingsModel().getBooleanProperty("shadowsEnabled"));
         relightingCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
+                javaFXState.getSettingsModel().getBooleanProperty("relightingEnabled"));
         visibleLightWidgetsCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
+                javaFXState.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
 
 
         //TODO: BIND PER-LIGHT INTENSITY AND AMBIENT LIGHT STUFF HERE
-        LightInstanceModelImpl light = internalModels.getLightingModel().getLight(0);
+        LightInstanceModelImpl light = javaFXState.getLightingModel().getLight(0);
 
         light1.addListener(changeListener);
         light2.addListener(changeListener);

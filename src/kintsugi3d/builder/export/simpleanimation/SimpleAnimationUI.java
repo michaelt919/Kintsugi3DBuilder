@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.function.Supplier;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,13 +22,17 @@ import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.gl.core.Context;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.simpleanimation.SimpleAnimationRequestBase.Builder;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.RecentProjects;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.function.Supplier;
 
 public class SimpleAnimationUI implements IBRRequestUI
 {
@@ -49,7 +48,7 @@ public class SimpleAnimationUI implements IBRRequestUI
 
     private Stage stage;
 
-    public static SimpleAnimationUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
+    public static SimpleAnimationUI create(Window window) throws IOException
     {
         String fxmlFileName = "fxml/export/SimpleAnimationUI.fxml";
         URL url = SimpleAnimationUI.class.getClassLoader().getResource(fxmlFileName);
@@ -110,7 +109,7 @@ public class SimpleAnimationUI implements IBRRequestUI
             //stage.close();
             if (builderSupplier != null)
             {
-                if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
                     return;
                 }
 

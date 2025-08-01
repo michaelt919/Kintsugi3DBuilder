@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 
 public interface SystemSettingsControllerBase {
     void init();
 
-    void bindInfo(InternalModels internalModels);
+    void bindInfo(JavaFXState javaFXState);
 }

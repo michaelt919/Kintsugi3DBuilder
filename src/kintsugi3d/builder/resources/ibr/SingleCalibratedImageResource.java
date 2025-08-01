@@ -11,18 +11,18 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.util.ImageUndistorter;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * For use i.e. with projtex_single.frag
@@ -111,7 +111,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
             colorTexture = null;
         }
 
-        if (geometryResources.isNull())
+        if (geometryResources.isNull() || colorTexture == null || !loadOptions.areDepthImagesRequested())
         {
             this.depthTexture = null;
             this.shadowTexture = null;
@@ -119,40 +119,31 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
         }
         else
         {
-            if (loadOptions.areDepthImagesRequested())
+            try
+            (
+                // Don't automatically generate any texture attachments for this framebuffer object
+                FramebufferObject<ContextType> depthRenderingFBO =
+                    context.buildFramebufferObject(colorTexture.getWidth(), colorTexture.getHeight())
+                        .createFramebufferObject();
+                DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources)
+            )
             {
-                try
-                (
-                    // Don't automatically generate any texture attachments for this framebuffer object
-                    FramebufferObject<ContextType> depthRenderingFBO =
-                        context.buildFramebufferObject(colorTexture.getWidth(), colorTexture.getHeight())
-                            .createFramebufferObject();
-                    DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources)
-                )
-                {
 
-                    // Build depth texture
-                    this.depthTexture = context.getTextureFactory()
-                        .build2DDepthTexture(colorTexture.getWidth(), colorTexture.getHeight())
-                        .createTexture();
+                // Build depth texture
+                this.depthTexture = context.getTextureFactory()
+                    .build2DDepthTexture(colorTexture.getWidth(), colorTexture.getHeight())
+                    .createTexture();
 
-                    depthRenderingFBO.setDepthAttachment(depthTexture);
-                    depthMapGenerator.generateDepthMap(viewSet, viewIndex, depthRenderingFBO);
+                depthRenderingFBO.setDepthAttachment(depthTexture);
+                depthMapGenerator.generateDepthMap(viewSet, viewIndex, depthRenderingFBO);
 
-                    // Build shadow texture
-                    this.shadowTexture = context.getTextureFactory()
-                        .build2DDepthTexture(colorTexture.getWidth(), colorTexture.getHeight())
-                        .createTexture();
+                // Build shadow texture
+                this.shadowTexture = context.getTextureFactory()
+                    .build2DDepthTexture(colorTexture.getWidth(), colorTexture.getHeight())
+                    .createTexture();
 
-                    depthRenderingFBO.setDepthAttachment(shadowTexture);
-                    this.shadowMatrix = depthMapGenerator.generateShadowMap(viewSet, viewIndex, depthRenderingFBO);
-                }
-            }
-            else
-            {
-                this.depthTexture = null;
-                this.shadowTexture = null;
-                this.shadowMatrix = null;
+                depthRenderingFBO.setDepthAttachment(shadowTexture);
+                this.shadowMatrix = depthMapGenerator.generateShadowMap(viewSet, viewIndex, depthRenderingFBO);
             }
         }
     }
@@ -176,6 +167,15 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
 
     public void setupShaderProgram(Program<ContextType> program)
     {
+        if (viewSet.getProjectSettings().exists("occlusionBias"))
+        {
+            program.setUniform("occlusionBias", viewSet.getProjectSettings().getFloat("occlusionBias"));
+        }
+        else
+        {
+            program.setUniform("occlusionBias", 0.0025f);
+        }
+
         if (this.colorTexture != null)
         {
             program.setTexture("viewImage", colorTexture);
@@ -184,7 +184,6 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
         if (this.depthTexture != null)
         {
             program.setTexture("depthImage", depthTexture);
-            program.setUniform("occlusionBias", 0.002f);
 
             if (this.shadowTexture != null)
             {

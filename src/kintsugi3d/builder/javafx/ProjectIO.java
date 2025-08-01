@@ -18,10 +18,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
@@ -79,7 +76,7 @@ public final class ProjectIO
         // Try to initialize file chooser in advance of when it will be needed.
         Platform.runLater(this::getProjectFileChooserSafe);
 
-        MultithreadModels.getInstance().getIOModel().addProgressMonitor(new DefaultProgressMonitor()
+        Global.state().getIOModel().addProgressMonitor(new DefaultProgressMonitor()
         {
             @Override
             public void cancelComplete(UserCancellationException e)
@@ -177,7 +174,7 @@ public final class ProjectIO
         projectFile = null;
         vsetFile = null;
 
-        MultithreadModels.getInstance().getIOModel().unload();
+        Global.state().getIOModel().unload();
         projectLoaded = true;
     }
 
@@ -201,7 +198,7 @@ public final class ProjectIO
         if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
         {
             // Set the root directory first, then the supporting files directory
-                MultithreadModels.getInstance().getIOModel()
+                Global.state().getIOModel()
                     .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
 
             viewSet.setSupportingFilesDirectory(filesDirectory);
@@ -228,7 +225,7 @@ public final class ProjectIO
                 onLoadStart();
 
                 // "force" the user to save their project (user can still cancel saving)
-                MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+                Global.state().getIOModel().addViewSetLoadCallback(
                     viewSet -> onViewSetCreated(viewSet, parentWindow));
             });
     }
@@ -242,7 +239,7 @@ public final class ProjectIO
             "/fxml/menubar/createnewproject/HotSwap.fxml", null, this::onLoadStart);
 
         // "force" the user to save their project (user can still cancel saving)
-        MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+        Global.state().getIOModel().addViewSetLoadCallback(
             viewSet ->
             {
                 projectFile = oldProjectFile;
@@ -252,7 +249,7 @@ public final class ProjectIO
 
     private static void startLoad(File projectFile, File vsetFile)
     {
-        MultithreadModels.getInstance().getIOModel().unload();
+        Global.state().getIOModel().unload();
 
         RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
@@ -264,7 +261,7 @@ public final class ProjectIO
             {
                 try
                 {
-                    MultithreadModels.getInstance().getIOModel()
+                    Global.state().getIOModel()
                         .loadFromVSETFile(vsetFile.getPath(), vsetFile, getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
@@ -287,7 +284,7 @@ public final class ProjectIO
             {
                 try
                 {
-                    MultithreadModels.getInstance().getIOModel()
+                    Global.state().getIOModel()
                         .loadFromVSETFile(vsetFile.getPath(), vsetFile);
                 }
                 catch (RuntimeException e)
@@ -312,7 +309,7 @@ public final class ProjectIO
     public void openProjectFromFile(File selectedFile)
     {
         //need to check for conflicting process early so crucial info isn't unloaded
-        if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+        if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
             return;
         }
 
@@ -330,7 +327,7 @@ public final class ProjectIO
         {
             try
             {
-                newVsetFile = InternalModels.getInstance().getProjectModel().openProjectFile(projectFile);
+                newVsetFile = JavaFXState.getInstance().getProjectModel().openProjectFile(projectFile);
             }
             catch (Exception e)
             {
@@ -346,7 +343,7 @@ public final class ProjectIO
             startLoad(projectFile, vsetFile);
 
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
-            MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
+            Global.state().getIOModel().setLoadedProjectFile(projectFile);
 
             WelcomeWindowController.getInstance().hide();
 
@@ -398,7 +395,7 @@ public final class ProjectIO
             RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
             try
             {
-                IOModel ioModel = MultithreadModels.getInstance().getIOModel();
+                IOModel ioModel = Global.state().getIOModel();
 
                 File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
@@ -408,7 +405,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
-                    MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(vsetFile);
+                    Global.state().getIOModel().setLoadedProjectFile(vsetFile);
                 }
                 else
                 {
@@ -417,8 +414,8 @@ public final class ProjectIO
                     ioModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     ioModel.saveToVSETFile(vsetFile);
-                    InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
-                    MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
+                    JavaFXState.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
+                    Global.state().getIOModel().setLoadedProjectFile(projectFile);
                 }
 
                 ioModel.saveGlTF(filesDirectory);
@@ -534,7 +531,7 @@ public final class ProjectIO
         projectFile = null;
         vsetFile = null;
 
-        MultithreadModels.getInstance().getIOModel().unload();
+        Global.state().getIOModel().unload();
         projectLoaded = false;
 
         WelcomeWindowController.getInstance().show();
@@ -563,7 +560,7 @@ public final class ProjectIO
         ProgressBarsController.getInstance().showStage();
     }
 
-    public void openSystemSettingsModal(InternalModels internalModels, Window window) {
+    public void openSystemSettingsModal(JavaFXState javaFXState, Window window) {
         if (systemSettingsModalOpen.get())
         {
             return;
@@ -572,7 +569,7 @@ public final class ProjectIO
         try
         {
             SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
-            systemSettingsController.init(internalModels, window);
+            systemSettingsController.init(javaFXState, window);
             WelcomeWindowController.getInstance().hide();
             systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
         }

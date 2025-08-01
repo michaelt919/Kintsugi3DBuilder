@@ -12,18 +12,17 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class LooseFilesInputSource extends InputSource{
     private File cameraFile;
@@ -100,14 +99,14 @@ public class LooseFilesInputSource extends InputSource{
         if (hotSwap)
         {
             new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(
+                Global.state().getIOModel().hotSwapLooseFiles(
                     cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
         }
         else
         {
             new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                Global.state().getIOModel().loadFromLooseFiles(
                     cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
         }

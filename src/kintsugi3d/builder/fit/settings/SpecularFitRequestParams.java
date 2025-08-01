@@ -11,16 +11,14 @@
 
 package kintsugi3d.builder.fit.settings;
 
-import java.io.File;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.ibr.ImageCacheSettings;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
+
+import java.io.File;
 
 public class SpecularFitRequestParams
 {
     private final TextureResolution textureResolution;
-    private final ReadonlySettingsModel ibrSettings;
     private final NormalOptimizationSettings normalOptimizationSettings = new NormalOptimizationSettings();
     private final SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
@@ -39,43 +37,23 @@ public class SpecularFitRequestParams
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
-     * @param textureResolution General settings for texture fitting (resolution, output directory)
+     * @param width The width, in pixels, of the textures to be generated.
+     * @param height The height, in pixels, of the textures to be generated.
      */
-    public SpecularFitRequestParams(TextureResolution textureResolution, ReadonlySettingsModel ibrSettings)
+    public SpecularFitRequestParams(int width, int height)
     {
-        if (textureResolution == null)
-        {
-            throw new IllegalArgumentException("Texture fit settings cannot be null.");
-        }
-        else
-        {
-            this.textureResolution = textureResolution;
+        this.textureResolution = new TextureResolution(width, height);
 
-            imageCacheSettings.setTextureWidth(textureResolution.width);
-            imageCacheSettings.setTextureHeight(textureResolution.height);
-            imageCacheSettings.setTextureSubdiv( // TODO expose this in the interface
-                (int)Math.ceil(Math.max(textureResolution.width, textureResolution.height) / 256.0));
-            imageCacheSettings.setSampledSize(256); // TODO expose this in the interface
-        }
-
-        if (ibrSettings == null)
-        {
-            throw new IllegalArgumentException("IBR settings cannot be null.");
-        }
-        else
-        {
-            this.ibrSettings = ibrSettings;
-        }
+        imageCacheSettings.setTextureWidth(textureResolution.width);
+        imageCacheSettings.setTextureHeight(textureResolution.height);
+        imageCacheSettings.setTextureSubdiv( // TODO expose this in the interface
+            (int)Math.ceil(Math.max(textureResolution.width, textureResolution.height) / 256.0));
+        imageCacheSettings.setSampledSize(256); // TODO expose this in the interface
     }
 
     public TextureResolution getTextureResolution()
     {
         return textureResolution;
-    }
-
-    public ReadonlySettingsModel getIbrSettings()
-    {
-        return ibrSettings;
     }
 
     public SpecularBasisSettings getSpecularBasisSettings()

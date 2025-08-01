@@ -11,14 +11,6 @@
 
 package kintsugi3d.builder.test;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
@@ -51,6 +43,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -147,6 +147,8 @@ class ImageReconstructionTests
         progressMonitor = new ProgressMonitorImpl();
 
         potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null);
+        potatoViewSet.getProjectSettings().set("occlusionEnabled", false);
+
         potatoViewSetTonemapped = potatoViewSet.copy();
 
         // Using tonemapping from the Guan Yu dataset
@@ -199,15 +201,13 @@ class ImageReconstructionTests
             String groundTruthName)
         throws IOException
     {
-        SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
-        DefaultSettings.apply(ibrSettings);
-        ibrSettings.set("shadowsEnabled", false);
-        ibrSettings.set("occlusionEnabled", false);
+        SimpleSettingsModel globalSettings = new SimpleSettingsModel();
+        DefaultSettings.applyGlobalDefaults(globalSettings);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
         specularBasisSettings.setBasisCount(1);
 
-        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
 
         try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
@@ -848,15 +848,13 @@ class ImageReconstructionTests
         Consumer<ColorAppearanceRMSE> validation,
         String testName) throws IOException
     {
-        SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
-        DefaultSettings.apply(ibrSettings);
-        ibrSettings.set("shadowsEnabled", false);
-        ibrSettings.set("occlusionEnabled", false);
+        SimpleSettingsModel globalSettings = new SimpleSettingsModel();
+        DefaultSettings.applyGlobalDefaults(globalSettings);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
         specularBasisSettings.setBasisCount(1);
 
-        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
 
         try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
@@ -950,8 +948,8 @@ class ImageReconstructionTests
             outputDirectory.mkdirs();
 
             SettingsModel settings = new SimpleSettingsModel();
-            DefaultSettings.apply(settings);
-            SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+            DefaultSettings.applyGlobalDefaults(settings);
+            SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
             params.setOutputDirectory(outputDirectory);
 
             // Perform the specular fit
@@ -1039,8 +1037,8 @@ class ImageReconstructionTests
         outputDirectory.mkdirs();
 
         SettingsModel settings = new SimpleSettingsModel();
-        DefaultSettings.apply(settings);
-        SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+        DefaultSettings.applyGlobalDefaults(settings);
+        SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
         params.setOutputDirectory(outputDirectory);
         params.getImageCacheSettings().setCacheParentDirectory(new File (outputDirectory, "cache"));
 

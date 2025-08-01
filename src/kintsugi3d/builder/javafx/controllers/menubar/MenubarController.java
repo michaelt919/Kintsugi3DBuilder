@@ -43,8 +43,7 @@ import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
-import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
@@ -87,7 +86,7 @@ public class MenubarController
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
-    private InternalModels internalModels;
+    private JavaFXState javaFXState;
 
     //Window open flags
     private final Flag advPhotoViewWindowOpen = new Flag(false);
@@ -226,7 +225,7 @@ public class MenubarController
     }
 
     public <ContextType extends Context<ContextType>> void init(
-        Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
+        Stage injectedStage, JavaFXState javaFXState, Runnable injectedUserDocumentationHandler)
     {
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
@@ -236,7 +235,7 @@ public class MenubarController
 
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
-        this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+        this.cameraViewList.visibleProperty().bind(javaFXState.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
 
         this.cancelButton = ProgressBarsController.getInstance().getCancelButton();
         this.doneButton = ProgressBarsController.getInstance().getDoneButton();
@@ -248,9 +247,9 @@ public class MenubarController
 
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
             event -> this.miniProgressPane.setVisible(true));
-        this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
+        this.cameraViewListController.init(javaFXState.getCameraViewListModel());
 
-        this.internalModels = injectedInternalModels;
+        this.javaFXState = javaFXState;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         // Keep track of whether cancellation was requested.
@@ -287,7 +286,7 @@ public class MenubarController
                     Platform.runLater(() -> action.handle(new ActionEvent())));
             }
         }
-        MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
+        Global.state().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
             private static final String FINISHING_UP = "Finishing up...";
             private double maximum = 0.0;
@@ -471,7 +470,7 @@ public class MenubarController
                 }
 
                 //todo: would be nice if this was bound to a hasHandler property
-                shaderName.setVisible(MultithreadModels.getInstance().getIOModel().hasValidHandler());
+                shaderName.setVisible(Global.state().getIOModel().hasValidHandler());
 
                 Platform.runLater(() -> cancelButton.setText("Cancel"));
                 updateShaderList();
@@ -649,7 +648,7 @@ public class MenubarController
         int basisCount = 0;
         try
         {
-            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
             MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
             if (basis != null)
             {
@@ -708,8 +707,8 @@ public class MenubarController
                             {
                                 try
                                 {
-                                    IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedStage, MultithreadModels.getInstance());
-                                    requestUI.bind(internalModels.getSettingsModel());
+                                    IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedStage, Global.state());
+                                    requestUI.bind(javaFXState.getSettingsModel());
                                     requestUI.prompt(Rendering.getRequestQueue());
                                 }
                                 catch (IllegalAccessException | InvocationTargetException | RuntimeException e)
@@ -743,8 +742,8 @@ public class MenubarController
     {
         try
         {
-            IBRRequestUI requestUI = ExportRequestUI.create(window, MultithreadModels.getInstance());
-            requestUI.bind(internalModels.getSettingsModel());
+            IBRRequestUI requestUI = ExportRequestUI.create(window);
+            requestUI.bind(javaFXState.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
         }
         catch (IOException | RuntimeException e)
@@ -779,7 +778,7 @@ public class MenubarController
                 return;
             }
 
-            MultithreadModels.getInstance().getIOModel()
+            Global.state().getIOModel()
                 .requestFragmentShader(new File("shaders", shaderData.getShaderName()), shaderData.getShaderDefines());
         });
     }
@@ -790,25 +789,25 @@ public class MenubarController
 
         //value binding
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
         isCameraVisualCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("isCameraVisualEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("isCameraVisualEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("compassEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("compassEnabled"));
         relightingCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("relightingEnabled"));
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
         sceneWindowCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
+            javaFXState.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("visibleSavedCameraPosesEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("visibleSavedCameraPosesEnabled"));
         multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
+            javaFXState.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
     }
 
     //Menubar->File
@@ -849,8 +848,8 @@ public class MenubarController
     {
         try
         {
-            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window, MultithreadModels.getInstance());
-            requestUI.bind(internalModels.getSettingsModel());
+            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window);
+            requestUI.bind(javaFXState.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
 
         }
@@ -872,7 +871,7 @@ public class MenubarController
         try
         {
             LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menubar/LoadOptions.fxml");
-            loadOptionsController.bind(internalModels.getLoadOptionsModel());
+            loadOptionsController.bind(javaFXState.getLoadOptionsModel());
         }
         catch (Exception e)
         {
@@ -933,7 +932,7 @@ public class MenubarController
         try
         {
             AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/PhotoProjectionSettings.fxml");
-            advPhotoViewController.bind(internalModels.getSettingsModel());
+            advPhotoViewController.bind(javaFXState.getSettingsModel());
         }
         catch (Exception e)
         {
@@ -1015,7 +1014,7 @@ public class MenubarController
                     makeWindow("Object Orientation", objectOrientationWindowOpen, "fxml/scene/object/SettingsObjectScene.fxml",
                         stage -> stageCapture.stage = stage);
 
-                ObjectPoseSetting boundObjectPose = internalModels.getObjectModel().getSelectedObjectPoseProperty().getValue();
+                ObjectPoseSetting boundObjectPose = javaFXState.getObjectModel().getSelectedObjectPoseProperty().getValue();
 
                 objectOrientationController.bind(boundObjectPose);
 
@@ -1052,32 +1051,32 @@ public class MenubarController
                             stageCapture.stage = stage;
                             stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
                             {
-                                MultithreadModels.getInstance().getIOModel().applyLightCalibration();
-                                MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
-                                setShaderNameVisibility(MultithreadModels.getInstance().getIOModel().hasValidHandler());
+                                Global.state().getIOModel().applyLightCalibration();
+                                Global.state().getSettingsModel().set("lightCalibrationMode", false);
+                                setShaderNameVisibility(Global.state().getIOModel().hasValidHandler());
                             });
                         });
 
                 // Must wait until the controllers is created to add this additional window close event handler.
                 stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
-                    e -> lightCalibrationController.unbind(internalModels.getSettingsModel()));
+                    e -> lightCalibrationController.unbind(javaFXState.getSettingsModel()));
 
                 // Bind controller to settings model to synchronize with "currentLightCalibration".
-                lightCalibrationController.bind(internalModels.getSettingsModel());
+                lightCalibrationController.bind(javaFXState.getSettingsModel());
 
-                if (MultithreadModels.getInstance().getIOModel().hasValidHandler())
+                if (Global.state().getIOModel().hasValidHandler())
                 {
                     // Set the "currentLightCalibration" to the existing calibration values in the view set.
-                    ViewSet loadedViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+                    ViewSet loadedViewSet = Global.state().getIOModel().getLoadedViewSet();
 
-                    internalModels.getSettingsModel().set("currentLightCalibration",
+                    javaFXState.getSettingsModel().set("currentLightCalibration",
                         loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
                 }
 
                 cameraViewListController.rebindSearchableListView();
 
                 // Enables light calibration mode when the window is opened.
-                internalModels.getSettingsModel().set("lightCalibrationMode", true);
+                javaFXState.getSettingsModel().set("lightCalibrationMode", true);
 
                 //shader name doesn't change like it should when opening light calibration, so hide it for now
                 //TODO: figure out how to show the correct name instead of hiding the text?
@@ -1141,7 +1140,7 @@ public class MenubarController
             @Override
             public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
             {
-                ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+                ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
 
                 if (currentViewSet == null)
                     return;
@@ -1227,7 +1226,7 @@ public class MenubarController
 
     public void openSystemSettingsModal()
     {
-        ProjectIO.getInstance().openSystemSettingsModal(internalModels, window);
+        ProjectIO.getInstance().openSystemSettingsModal(javaFXState, window);
     }
 
     public void launchViewerApp()

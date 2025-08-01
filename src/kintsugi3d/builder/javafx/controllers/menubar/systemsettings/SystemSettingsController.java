@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import java.io.IOException;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
+
+import java.io.IOException;
 
 public class SystemSettingsController {
 
@@ -41,11 +41,11 @@ public class SystemSettingsController {
         "Visual Settings"//,
 //        "Miscellaneous"
     };
-    private InternalModels internalModels;
+    private JavaFXState javaFXState;
     private Window window;
 
-    public void init(InternalModels internalModels, Window window) {
-        this.internalModels = internalModels;
+    public void init(JavaFXState javaFXState, Window window) {
+        this.javaFXState = javaFXState;
         this.window = window;
         populateFileList();
         //initialize listeners for cell items
@@ -66,7 +66,7 @@ public class SystemSettingsController {
                 controller.init();
 
                 //attach controller info
-                controller.bindInfo(internalModels);
+                controller.bindInfo(javaFXState);
                 if (controller instanceof AutosaveSettingsController){
                     ((AutosaveSettingsController) controller).injectWindow(window);
                 }

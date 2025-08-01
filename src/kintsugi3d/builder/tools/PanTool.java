@@ -12,7 +12,6 @@
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
 import kintsugi3d.builder.state.ExtendedCameraModel;
-import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -33,14 +32,13 @@ final class PanTool implements DragTool
     private CursorPosition mouseStart;
 
     private final ExtendedCameraModel cameraModel;
-    private final SettingsModel settingsModel;
 
     private static class Builder extends ToolBuilderBase<PanTool>
     {
         @Override
         public PanTool create()
         {
-            return new PanTool(getCameraModel(), getSettingsModel());
+            return new PanTool(getCameraModel());
         }
     }
 
@@ -49,10 +47,9 @@ final class PanTool implements DragTool
         return new Builder();
     }
 
-    private PanTool(ExtendedCameraModel cameraModel, SettingsModel settingsModel)
+    private PanTool(ExtendedCameraModel cameraModel)
     {
         this.cameraModel = cameraModel;
-        this.settingsModel = settingsModel;
     }
 
     @Override

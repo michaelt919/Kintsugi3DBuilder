@@ -11,39 +11,38 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.function.Consumer;
+
 class MultiviewRenderRequest extends RenderRequestBase
 {
-    MultiviewRenderRequest(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
+    MultiviewRenderRequest(int width, int height, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
                            File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
     }
 
     static class Builder extends BuilderBase
     {
-        Builder(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(File fragmentShader, File outputDirectory)
         {
-            super(settingsModel, fragmentShader, outputDirectory);
+            super(fragmentShader, outputDirectory);
         }
 
         @Override
         public ObservableIBRRequest create()
         {
-            return new MultiviewRenderRequest(getWidth(), getHeight(), getSettingsModel(), getShaderSetupCallback(),
+            return new MultiviewRenderRequest(getWidth(), getHeight(), getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }

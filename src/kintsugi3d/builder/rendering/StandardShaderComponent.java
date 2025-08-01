@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
@@ -32,6 +25,13 @@ import kintsugi3d.util.SRGB;
 import kintsugi3d.util.ShadingParameterMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public abstract class StandardShaderComponent<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
@@ -164,10 +164,10 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             defineMap.put("RELIGHTING_ENABLED", Optional.of(this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
                 && lightingResources != null && this.sceneModel.getLightingModel() != null));
 
-            boolean occlusionEnabled = this.sceneModel.getSettingsModel().getBoolean("occlusionEnabled")
+            boolean occlusionEnabled = resources.getViewSet().getProjectSettings().getBoolean("occlusionEnabled")
                 && (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                || lightCalibrationMode
-                || this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
+                    || lightCalibrationMode
+                    || this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
 
             defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
             defineMap.put("SHADOW_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.shadowTextures != null
@@ -270,7 +270,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
         program.setUniform("weightExponent", this.sceneModel.getSettingsModel().getFloat("weightExponent"));
         program.setUniform("isotropyFactor", this.sceneModel.getSettingsModel().getFloat("isotropyFactor"));
-        program.setUniform("occlusionBias", this.sceneModel.getSettingsModel().getFloat("occlusionBias"));
 
         if (lightingResources != null)
         {

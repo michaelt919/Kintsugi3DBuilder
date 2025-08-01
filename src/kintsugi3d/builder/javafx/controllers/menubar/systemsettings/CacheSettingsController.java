@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import java.awt.*;
-import java.io.File;
-
-import java.io.IOException;
-import java.util.Locale;
-
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -25,8 +19,13 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
+
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Locale;
 
 public class CacheSettingsController implements SystemSettingsControllerBase
 {
@@ -41,7 +40,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels)
+    public void bindInfo(JavaFXState javaFXState)
     {
         //TODO: imp.
     }

@@ -11,25 +11,24 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.function.Consumer;
 
 class SingleFrameRenderRequest extends RenderRequestBase
 {
     private final String outputImageName;
 
-    SingleFrameRenderRequest(int width, int height, String outputImageName, ReadonlySettingsModel settingsModel,
+    SingleFrameRenderRequest(int width, int height, String outputImageName,
         Consumer<Program<? extends Context<?>>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.outputImageName = outputImageName;
     }
 
@@ -37,16 +36,16 @@ class SingleFrameRenderRequest extends RenderRequestBase
     {
         private final String outputImageName;
 
-        Builder(String outputImageName, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(String outputImageName, File fragmentShader, File outputDirectory)
         {
-            super(settingsModel, fragmentShader, outputDirectory);
+            super(fragmentShader, outputDirectory);
             this.outputImageName = outputImageName;
         }
 
         @Override
         public ObservableIBRRequest create()
         {
-            return new SingleFrameRenderRequest(getWidth(), getHeight(), outputImageName, getSettingsModel(), getShaderSetupCallback(),
+            return new SingleFrameRenderRequest(getWidth(), getHeight(), outputImageName, getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }

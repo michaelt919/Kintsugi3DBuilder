@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 
 public class AccessibilitySettingsController implements SystemSettingsControllerBase{
     @Override
@@ -20,7 +20,7 @@ public class AccessibilitySettingsController implements SystemSettingsController
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
+    public void bindInfo(JavaFXState javaFXState) {
         //TODO: imp.
     }
 }

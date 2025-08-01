@@ -17,8 +17,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
@@ -78,7 +78,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
     @Override
     public void refresh()
     {
-        ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
+        ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
 
         boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && project.getColorCheckerFile().exists();
         previousImageButton.setDisable(!hasPreviousColorCheckerImage);
@@ -95,7 +95,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         File imageFile = null;
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
         {
-            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
             imageFile = viewSet.getFullResImageFile(primaryViewIndex);
         }
@@ -106,7 +106,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
         if (imageFile != null)
         {
-            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
             if (viewSet.hasCustomLuminanceEncoding())
             {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration image? This will clear any previous tone calibration values!");
@@ -120,7 +120,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
             viewSet.clearTonemapping();
 
             log.debug("Setting new color calibration image: {}", imageFile);
-            ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
+            ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
             project.setColorCheckerFile(imageFile);
         }
 
@@ -139,13 +139,13 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         if (! selectImageFileButton.isSelected())
             return;
 
-        ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
+        ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
         File colorCheckerFile = project.getColorCheckerFile();
         if (colorCheckerFile != null && colorCheckerFile.exists()){
             imageFileChooser.setInitialDirectory(colorCheckerFile.getParentFile());
         }
         else{
-            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
 
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());
         }

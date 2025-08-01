@@ -19,10 +19,10 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -141,7 +141,7 @@ public class MetashapeProjectInputSource extends InputSource{
     public void loadProject(String orientationView, double rotate) {
         metashapeObjectChunk.getLoadPreferences().orientationViewName = orientationView;
         metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees = rotate;
-        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(metashapeObjectChunk)).start();
+        new Thread(() -> Global.state().getIOModel().loadAgisoftFromZIP(metashapeObjectChunk)).start();
     }
 
     @Override

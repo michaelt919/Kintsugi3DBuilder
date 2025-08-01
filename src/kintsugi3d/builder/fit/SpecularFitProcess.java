@@ -11,18 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
-import java.text.MessageFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BiConsumer;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
@@ -40,13 +28,24 @@ import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
-import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.ImageUndistorter;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BiConsumer;
 
 import static javax.imageio.ImageIO.read;
 
@@ -68,8 +67,7 @@ public class SpecularFitProcess
 
     private <ContextType extends Context<ContextType>> SpecularFitProgramFactory<ContextType> getProgramFactory()
     {
-        return new SpecularFitProgramFactory<>(
-            settings.getIbrSettings(), settings.getSpecularBasisSettings());
+        return new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
     }
 
     public <ContextType extends Context<ContextType>> void optimizeFitWithCache(
@@ -105,7 +103,7 @@ public class SpecularFitProcess
         throws IOException
     {
         ViewSet viewSet = resources.getViewSet();
-        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getIbrSettings(), settings.getSpecularBasisSettings());
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
         try(ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             viewSet,
             builder -> builder

@@ -670,8 +670,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case
             .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount())
-            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null)
-            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null);
+            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null && getViewSet().getProjectSettings().getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null && getViewSet().getProjectSettings().getBoolean("occlusionEnabled"));
     }
 
     @Override
@@ -697,7 +697,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         else
         {
             program.setTexture("depthImages", this.depthTextures);
-            program.setUniform("occlusionBias", 0.002f);
         }
 
         if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
@@ -708,7 +707,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             program.setUniformBuffer("ShadowMatrices", this.shadowMatrixBuffer);
             program.setTexture("shadowImages", this.shadowTextures);
-            program.setUniform("occlusionBias", 0.002f);
         }
     }
 

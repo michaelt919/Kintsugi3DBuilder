@@ -13,8 +13,8 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.MultithreadModels;
 
 import java.util.Optional;
 
@@ -29,7 +29,7 @@ public class LightCalibrationViewSelectController extends PrimaryViewSelectContr
     @Override
     public boolean nextButtonPressed()
     {
-        ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
 
         int viewIndex = viewSet.findIndexOfView(getSelectedViewName());
         if (viewIndex == viewSet.getPrimaryViewIndex())

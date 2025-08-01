@@ -13,11 +13,11 @@ package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 
 public class MiscellaneousSettingsController implements SystemSettingsControllerBase{
     @FXML public CheckBox sceneWindowCheckBox;
-    private InternalModels internalModels;
+    private JavaFXState javaFXState;
 
     @Override
     public void init() {
@@ -25,10 +25,10 @@ public class MiscellaneousSettingsController implements SystemSettingsController
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
-        this.internalModels = internalModels;
+    public void bindInfo(JavaFXState javaFXState) {
+        this.javaFXState = javaFXState;
 
         sceneWindowCheckBox.selectedProperty().bindBidirectional(
-                internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
+                javaFXState.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
     }
 }

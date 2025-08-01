@@ -21,9 +21,9 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IBRRequestManager;
-import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.RecentProjects;
@@ -47,7 +47,7 @@ public class WelcomeWindowController
     @FXML private Button recent4;
     @FXML private Button recent5;
     public List<Button> recentButtons = new ArrayList<>();
-    private InternalModels internalModels;
+    private JavaFXState javaFXState;
 
     public static WelcomeWindowController getInstance()
     {
@@ -62,14 +62,14 @@ public class WelcomeWindowController
     private Stage window;
 
     public <ContextType extends Context<ContextType>> void init(
-            Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
+            Stage injectedStage, IBRRequestManager<ContextType> requestQueue, JavaFXState javaFXState,
             Runnable injectedUserDocumentationHandler) {
         INSTANCE = this;
 
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
-        this.internalModels = injectedInternalModels;
+        this.javaFXState = javaFXState;
 
         recentButtons.add(recent1);
         recentButtons.add(recent2);
@@ -154,7 +154,7 @@ public class WelcomeWindowController
     }
 
     public void openSystemSettingsModal() {
-        ProjectIO.getInstance().openSystemSettingsModal(internalModels, parentWindow);
+        ProjectIO.getInstance().openSystemSettingsModal(javaFXState, parentWindow);
     }
 
     public void openAboutModal() {
@@ -162,7 +162,7 @@ public class WelcomeWindowController
     }
 
     public void showIfNoModelLoaded() {
-        if(!MultithreadModels.getInstance().getIOModel().hasValidHandler()){
+        if(!Global.state().getIOModel().hasValidHandler()){
             show();
         }
     }

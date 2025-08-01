@@ -11,16 +11,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -35,6 +25,7 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
@@ -45,6 +36,16 @@ import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerial
 import kintsugi3d.builder.state.DefaultSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class MainApplication extends Application
 {
@@ -254,11 +255,11 @@ public class MainApplication extends Application
             welcomeStage.show();
         }
 
-        MultithreadModels.getInstance().getCanvasModel().addCanvasChangedListener(
+        Global.state().getCanvasModel().addCanvasChangedListener(
             canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
 
-        SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
-        DefaultSettings.apply(settingsModel);
+        SettingsModelImpl settingsModel = JavaFXState.getInstance().getSettingsModel();
+        DefaultSettings.applyGlobalDefaults(settingsModel);
 
         // Load user preferences, injecting where needed
         log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
@@ -277,20 +278,20 @@ public class MainApplication extends Application
 
         //distribute to controllers
         sceneController.init(
-            InternalModels.getInstance().getCameraModel(),
-            InternalModels.getInstance().getLightingModel(),
-            InternalModels.getInstance().getEnvironmentModel(),
-            InternalModels.getInstance().getObjectModel(),
-            InternalModels.getInstance().getProjectModel(),
-            MultithreadModels.getInstance().getSceneViewportModel());
+            JavaFXState.getInstance().getCameraModel(),
+            JavaFXState.getInstance().getLightingModel(),
+            JavaFXState.getInstance().getEnvironmentModel(),
+            JavaFXState.getInstance().getObjectModel(),
+            JavaFXState.getInstance().getProjectModel(),
+            Global.state().getSceneViewportModel());
 
         //init progress bars first so other controllers can access the progress bar fxml components
         progressBarsController.init(progressBarsStage);
 
-        welcomeWindowController.init(welcomeStage, Rendering.getRequestQueue(), InternalModels.getInstance(),
+        welcomeWindowController.init(welcomeStage, Rendering.getRequestQueue(), JavaFXState.getInstance(),
                 () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
-        menuBarController.init(primaryStage, InternalModels.getInstance(),
+        menuBarController.init(primaryStage, JavaFXState.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         // Open scene window from the menu

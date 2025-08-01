@@ -13,10 +13,10 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 
 import javafx.scene.control.TreeItem;
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 
 import java.util.List;
@@ -39,7 +39,7 @@ public class CurrentProjectInputSource extends InputSource
     @Override
     public void initTreeView()
     {
-        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
         primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance("Current Project", currentViewSet);
 
         addTreeElems(primaryViewSelectionModel);
@@ -49,7 +49,7 @@ public class CurrentProjectInputSource extends InputSource
     @Override
     public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
     {
-        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
 
         if (currentViewSet == null)
             return;
@@ -79,7 +79,7 @@ public class CurrentProjectInputSource extends InputSource
     @Override
     public void loadProject(String orientationViewName, double rotate)
     {
-        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
 
         if (currentViewSet == null)
             return;

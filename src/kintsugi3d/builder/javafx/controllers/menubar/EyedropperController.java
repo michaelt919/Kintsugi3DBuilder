@@ -11,17 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.DoubleUnaryOperator;
-import javax.imageio.ImageIO;
-
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -45,9 +34,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.util.SRGB;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
@@ -55,6 +43,17 @@ import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePage
 {
@@ -775,9 +774,9 @@ public class EyedropperController extends FXMLPageController implements Initiali
     @Override
     public void refresh()
     {
-        setIOModel(MultithreadModels.getInstance().getIOModel());
+        setIOModel(Global.state().getIOModel());
 
-        ProjectModelBase project = (ProjectModelBase) MultithreadModels.getInstance().getProjectModel();
+        ProjectModelBase project = (ProjectModelBase) Global.state().getProjectModel();
         if (project != null)
         {
             setImage(project.getColorCheckerFile());

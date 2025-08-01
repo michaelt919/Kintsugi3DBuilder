@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.export.resample;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,12 +24,15 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.gl.core.Context;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.RecentProjects;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class ResampleRequestUI implements IBRRequestUI
 {
@@ -48,7 +47,7 @@ public class ResampleRequestUI implements IBRRequestUI
 
     private Stage stage;
 
-    public static ResampleRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
+    public static ResampleRequestUI create(Window window) throws IOException
     {
         String fxmlFileName = "fxml/export/ResampleRequestUI.fxml";
         URL url = ResampleRequestUI.class.getClassLoader().getResource(fxmlFileName);
@@ -127,7 +126,7 @@ public class ResampleRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
                 return;
             }
 

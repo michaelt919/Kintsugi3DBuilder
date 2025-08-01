@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.export.projectExporter;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,33 +25,43 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExportRequestUI implements IBRRequestUI {
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
+public class ExportRequestUI implements IBRRequestUI
+{
     private static final Logger log = LoggerFactory.getLogger(ExportRequestUI.class);
 
     //Initialize all the variables in the FXML file
-    @FXML public Kintsugi3DBuilderState modelAccess;
-    @FXML private Stage stage;
-    @FXML private Button runButton;
-//    @FXML private CheckBox combineWeightsCheckBox;
-    @FXML private CheckBox generateLowResolutionCheckBox;
-//    @FXML private CheckBox glTFEnabledCheckBox;
-    @FXML private CheckBox glTFPackTexturesCheckBox;
-    @FXML private CheckBox openViewerOnceCheckBox;
-    @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
+    @FXML
+    public Kintsugi3DBuilderState modelAccess;
+    @FXML
+    private Stage stage;
+    @FXML
+    private Button runButton;
+    //    @FXML private CheckBox combineWeightsCheckBox;
+    @FXML
+    private CheckBox generateLowResolutionCheckBox;
+    //    @FXML private CheckBox glTFEnabledCheckBox;
+    @FXML
+    private CheckBox glTFPackTexturesCheckBox;
+    @FXML
+    private CheckBox openViewerOnceCheckBox;
+    @FXML
+    private ComboBox<Integer> minimumTextureResolutionComboBox;
     public File currentDirectoryFile;
     public File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
 
 
-    public static ExportRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException {
+    public static ExportRequestUI create(Window window) throws IOException
+    {
         String fxmlFileName = "fxml/export/ExportRequestUI.fxml";
         URL url = ExportRequestUI.class.getClassLoader().getResource(fxmlFileName);
         assert url != null : "Can't find " + fxmlFileName;
@@ -63,11 +69,10 @@ public class ExportRequestUI implements IBRRequestUI {
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent parent = fxmlLoader.load();
         ExportRequestUI exportRequest = fxmlLoader.getController();
-        exportRequest.modelAccess = modelAccess;
 
-        if (modelAccess.getIOModel().getLoadedProjectFile() != null)
+        if (Global.state().getIOModel().getLoadedProjectFile() != null)
         {
-            exportRequest.currentDirectoryFile = modelAccess.getIOModel().getLoadedProjectFile().getParentFile();
+            exportRequest.currentDirectoryFile = Global.state().getIOModel().getLoadedProjectFile().getParentFile();
         }
 
         exportRequest.stage = new Stage();
@@ -104,7 +109,8 @@ public class ExportRequestUI implements IBRRequestUI {
             //Updates settings to equal what widget is displaying
             saveAllVariables(settings);
 
-            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+            {
                 return;
             }
 
@@ -117,19 +123,19 @@ public class ExportRequestUI implements IBRRequestUI {
                     {
                         @Override
                         public <ContextType extends Context<ContextType>> void executeRequest(
-                        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+                            IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
                         {
                             if (settings.isGlTFEnabled())
                             {
-                                    renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
-                            modelAccess.getIOModel().saveMaterialFiles(exportLocationFile.getParentFile(), null);
-                                }
+                                renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
+                                modelAccess.getIOModel().saveMaterialFiles(exportLocationFile.getParentFile(), null);
+                            }
 
                             if (settings.isOpenViewerOnceComplete())
                             {
-                                    Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
-                                }
+                                Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
                             }
+                        }
                     });
                 }
             }
@@ -141,12 +147,14 @@ public class ExportRequestUI implements IBRRequestUI {
     }
 
     @FXML //closes the stage
-    public void cancelButtonAction() {
+    public void cancelButtonAction()
+    {
         stage.close();
     }
 
     //Sets all the settings values on the widget to equal what they are currently
-    public void setAllVariables(ExportSettings settings){
+    public void setAllVariables(ExportSettings settings)
+    {
 //        combineWeightsCheckBox.setSelected(settings.isCombineWeights());
         generateLowResolutionCheckBox.setSelected(settings.isGenerateLowResTextures());
 //        glTFEnabledCheckBox.setSelected(settings.isGlTFEnabled());
@@ -158,7 +166,8 @@ public class ExportRequestUI implements IBRRequestUI {
     }
 
     //sets the settings to what the values are set on the widget
-    public void saveAllVariables(ExportSettings settings){
+    public void saveAllVariables(ExportSettings settings)
+    {
 //        settings.setCombineWeights(combineWeightsCheckBox.isSelected());
         settings.setGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
 //        settings.setGlTFEnabled(glTFEnabledCheckBox.isSelected());

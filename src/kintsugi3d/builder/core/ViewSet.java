@@ -11,11 +11,8 @@
 
 package kintsugi3d.builder.core;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
-
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -28,6 +25,10 @@ import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -159,7 +160,7 @@ public final class ViewSet implements ReadonlyViewSet
     private int previewWidth = 0;
     private int previewHeight = 0;
 
-    private final SettingsModel viewSetSettings = new SimpleSettingsModel();
+    private final SettingsModel projectSettings = new SimpleSettingsModel();
 
     public static final class Builder
     {
@@ -186,6 +187,9 @@ public final class ViewSet implements ReadonlyViewSet
             result = new ViewSet(initialCapacity);
             result.setRootDirectory(rootDirectory);
             result.setSupportingFilesDirectory(supportingFilesDirectory);
+
+            // Initialize settings with defaults.
+            DefaultSettings.applyProjectDefaults(result.projectSettings);
         }
 
         public Builder setCurrentCameraPose(Matrix4 cameraPose)
@@ -1129,8 +1133,8 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public SettingsModel getViewSetSettings()
+    public SettingsModel getProjectSettings()
     {
-        return viewSetSettings;
+        return projectSettings;
     }
 }

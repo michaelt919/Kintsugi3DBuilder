@@ -16,7 +16,7 @@ import javafx.fxml.FXML;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 
 import java.awt.*;
 import java.io.File;
@@ -70,7 +70,7 @@ public class AutosaveSettingsController implements SystemSettingsControllerBase{
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
+    public void bindInfo(JavaFXState javaFXState) {
         //TODO: imp.
     }
 

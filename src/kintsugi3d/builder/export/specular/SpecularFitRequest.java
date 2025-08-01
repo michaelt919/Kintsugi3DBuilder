@@ -11,14 +11,10 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.IBRInstance;
+import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.FinalReconstruction;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -34,6 +30,13 @@ import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
 public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGraphicsRequest
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
@@ -43,16 +46,12 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
     /**
      * Default constructor for CLI args requests
-     * @param modelAccess
      * @param args args[0] is the project name; args[1] is the name of this class; args[2] is the output directory
      * @return the request object
      */
-    public static SpecularFitRequest create(
-            Kintsugi3DBuilderState modelAccess, String... args)
+    public static SpecularFitRequest create(String... args)
     {
-        SpecularFitRequestParams params = new SpecularFitRequestParams(
-            new TextureResolution(2048, 2048),
-            modelAccess.getSettingsModel());
+        SpecularFitRequestParams params = new SpecularFitRequestParams(2048, 2048);
         params.setOutputDirectory(new File(args[2]));
         return new SpecularFitRequest(params);
     }
@@ -125,8 +124,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             if (resources.getViewSet() != null)
             {
                 // Reconstruct images both from basis functions and from fitted roughness
-                SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
-                    settings.getIbrSettings(), settings.getSpecularBasisSettings());
+                SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
                 FinalReconstruction<ContextType> reconstruction =
                     new FinalReconstruction<>(resources, settings.getTextureResolution(), settings.getReconstructionSettings());
 

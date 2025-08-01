@@ -11,11 +11,10 @@
 
 package kintsugi3d.builder.export.screenshot;
 
-import java.io.IOException;
-
 import javafx.stage.Window;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.screenshot.ScreenshotRequest.BuilderImplementation;
+
+import java.io.IOException;
 
 public final class ScreenshotUIFactory
 {
@@ -23,9 +22,9 @@ public final class ScreenshotUIFactory
     {
     }
 
-    public static ScreenshotUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
+    public static ScreenshotUI create(Window window) throws IOException
     {
-        ScreenshotUI ui = ScreenshotUI.create(window, modelAccess);
+        ScreenshotUI ui = ScreenshotUI.create(window);
         ui.setBuilderSupplier(BuilderImplementation::new);
         return ui;
     }

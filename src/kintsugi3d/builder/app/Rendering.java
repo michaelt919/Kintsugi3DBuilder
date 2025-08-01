@@ -11,23 +11,9 @@
 
 package kintsugi3d.builder.app;//Created by alexk on 7/19/2017.
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
-
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.tools.DragToolType;
@@ -51,6 +37,19 @@ import kintsugi3d.util.MouseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class Rendering
 {
@@ -119,7 +118,7 @@ public final class Rendering
                     .create();
 
                 FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
-                MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);
+                Global.state().getCanvasModel().setCanvas(canvas);
                 runProgram(stage, canvas, args);
             }
         }
@@ -178,13 +177,13 @@ public final class Rendering
 
         context.getState().enableDepthTest();
 
-        ExtendedLightingModel lightingModel = MultithreadModels.getInstance().getLightingModel();
-        EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
-        ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
-        ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
-        SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
-        CameraViewListModel cameraViewListModel = MultithreadModels.getInstance().getCameraViewListModel();
-        IOModel ioModel = MultithreadModels.getInstance().getIOModel();
+        ExtendedLightingModel lightingModel = Global.state().getLightingModel();
+        EnvironmentModel environmentModel = Global.state().getEnvironmentModel();
+        ExtendedCameraModel cameraModel = Global.state().getCameraModel();
+        ExtendedObjectModel objectModel = Global.state().getObjectModel();
+        SettingsModel settingsModel = Global.state().getSettingsModel();
+        CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
+        IOModel ioModel = Global.state().getIOModel();
 
         // Bind tools
         ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
@@ -218,7 +217,7 @@ public final class Rendering
 
         IBRInstanceManager<OpenGLContext> instanceManager = new IBRInstanceManager<>(context);
 
-        SceneViewportModel sceneViewportModel = MultithreadModels.getInstance().getSceneViewportModel();
+        SceneViewportModel sceneViewportModel = Global.state().getSceneViewportModel();
 
         sceneViewportModel.setSceneViewport(new SceneViewport()
         {
@@ -501,7 +500,7 @@ public final class Rendering
             if (args[0].endsWith(".vset"))
             {
                 File vsetFile = new File(args[0]);
-                new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
+                new Thread(() -> Global.state().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
             }
             else
             {
@@ -510,8 +509,8 @@ public final class Rendering
                 {
                     try
                     {
-                        File vsetFile = MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
-                        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
+                        File vsetFile = Global.state().getProjectModel().openProjectFile(new File(args[0]));
+                        new Thread(() -> Global.state().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
@@ -532,7 +531,7 @@ public final class Rendering
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {
                     // Add request to the queue
-                    requestQueue.addIBRRequest((ObservableIBRRequest) createMethod.invoke(null, MultithreadModels.getInstance(), args));
+                    requestQueue.addIBRRequest((ObservableIBRRequest) createMethod.invoke(null, Global.state(), args));
 
                     // Quit after the request finishes
                     // Use IBRRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,

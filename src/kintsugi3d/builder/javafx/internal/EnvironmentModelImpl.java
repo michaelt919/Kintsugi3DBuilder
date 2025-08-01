@@ -11,17 +11,12 @@
 
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/28/2017.
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Objects;
-import java.util.Optional;
-
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
-import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
 import kintsugi3d.builder.state.BackgroundMode;
 import kintsugi3d.builder.state.EnvironmentModel;
@@ -30,6 +25,11 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Objects;
+import java.util.Optional;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {
@@ -148,7 +148,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             try
             {
                 log.info("Loading environment map file " + newFile.getName());
-                Optional<EncodableColorImage> environmentMapImage = MultithreadModels.getInstance().getIOModel().loadEnvironmentMap(newFile);
+                Optional<EncodableColorImage> environmentMapImage = Global.state().getIOModel().loadEnvironmentMap(newFile);
                 loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
             }
             catch (FileNotFoundException e)
@@ -186,7 +186,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             try
             {
                 log.info("Loading backplate file " + newFile.getName());
-                MultithreadModels.getInstance().getIOModel().loadBackplate(newFile);
+                Global.state().getIOModel().loadBackplate(newFile);
             }
             catch (FileNotFoundException e)
             {

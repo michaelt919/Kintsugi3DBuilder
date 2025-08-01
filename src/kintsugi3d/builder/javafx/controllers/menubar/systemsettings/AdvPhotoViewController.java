@@ -11,38 +11,46 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;//Created by alexk on 7/31/2017.
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 public class AdvPhotoViewController implements Initializable, SystemSettingsControllerBase
-{//used to be called IBR Options
-    //TODO: LOOK AT FORMATTING OF SLIDERS (text is hard to read)
-    @FXML private TextField buehlerTextField;
-    @FXML private CheckBox buehlerCheckBox;
-    @FXML private CheckBox occlusionCheckBox;
-    @FXML private TextField weightExponentTextField;
-    @FXML private TextField isotropyFactorTextField;
-    @FXML private TextField occlusionBiasTextField;
-    @FXML private Slider weightExponentSlider;
-    @FXML private Slider isotropyFactorSlider;
-    @FXML private Slider occlusionBiasSlider;
-    @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
-    @FXML private GridPane root;
+{
+    //T ODO: LOOK AT FORMATTING OF SLIDERS (text is hard to read)
+    @FXML
+    private TextField buehlerTextField;
+    @FXML
+    private CheckBox buehlerCheckBox;
+    @FXML
+    private CheckBox occlusionCheckBox;
+    @FXML
+    private TextField weightExponentTextField;
+    @FXML
+    private TextField isotropyFactorTextField;
+    @FXML
+    private TextField occlusionBiasTextField;
+    @FXML
+    private Slider weightExponentSlider;
+    @FXML
+    private Slider isotropyFactorSlider;
+    @FXML
+    private Slider occlusionBiasSlider;
+    @FXML
+    private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
 
     private SettingsModelImpl settingsModel;
 
@@ -56,7 +64,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
     {
         buehlerCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("buehlerAlgorithm"));
 
-        occlusionCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("occlusionEnabled"));
         weightModeChoiceBox.valueProperty().bindBidirectional(injectedSettingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
         buehlerTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("buehlerViewCount"),
@@ -70,6 +77,8 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
         isotropyFactorTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("isotropyFactor"),
             new SafeDecimalNumberStringConverter(0.0f));
 
+        // TODO move to a different UI that has access to modify the view set as these are now project based settings
+        occlusionCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("occlusionEnabled"));
         occlusionBiasSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("occlusionBias"));
         occlusionBiasTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("occlusionBias"),
             new SafeDecimalNumberStringConverter(0.0025f));
@@ -101,7 +110,8 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
     }
 
     @Override
-    public void init() {
+    public void init()
+    {
         weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>()
         {
             @Override
@@ -124,7 +134,8 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
-        bind(internalModels.getSettingsModel());
+    public void bindInfo(JavaFXState javaFXState)
+    {
+        bind(javaFXState.getSettingsModel());
     }
 }
