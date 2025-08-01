@@ -11,11 +11,11 @@
 
 package kintsugi3d.gl.types;
 
+import kintsugi3d.gl.nativebuffer.NativeDataType;
+
 import java.nio.ByteBuffer;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import kintsugi3d.gl.nativebuffer.NativeDataType;
 
 /**
  * An interface that abstracts the concept of a data type in the graphics pipeline.

@@ -11,17 +11,16 @@
 
 package kintsugi3d.builder.resources;
 
+import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.SceneModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable

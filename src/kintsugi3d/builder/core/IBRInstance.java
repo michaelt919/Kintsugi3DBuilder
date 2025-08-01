@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.core;
 
-import java.io.File;
-
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.SceneViewport;
@@ -22,6 +20,8 @@ import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Matrix4;
+
+import java.io.File;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.

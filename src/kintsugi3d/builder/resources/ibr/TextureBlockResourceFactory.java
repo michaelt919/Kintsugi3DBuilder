@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.io.IOException;
-
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
@@ -22,6 +20,8 @@ import kintsugi3d.gl.geometry.GeometryTextures;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements Resource
 {

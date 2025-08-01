@@ -16,9 +16,9 @@ import kintsugi3d.gl.core.BlendFunction.Weight;
 import kintsugi3d.gl.core.ContextState;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL30.GL_MAX_ARRAY_TEXTURE_LAYERS;
 import static org.lwjgl.opengl.GL31.*;
 
 public class OpenGLContextState implements ContextState

@@ -11,7 +11,6 @@
 
 package kintsugi3d.util;
 
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 
 import java.awt.image.BufferedImage;

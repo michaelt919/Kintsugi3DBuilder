@@ -11,14 +11,6 @@
 
 package kintsugi3d.builder.core;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-
-import javafx.scene.control.ProgressBar;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.state.DefaultSettings;
@@ -39,6 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
@@ -391,7 +386,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         public Builder applySettings(ReadonlySettingsModel settings)
         {
-            result.getViewSetSettings().copyFrom(settings);
+            result.getProjectSettings().copyFrom(settings);
             return this;
         }
 

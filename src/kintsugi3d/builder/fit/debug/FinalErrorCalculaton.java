@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.fit.debug;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.FloatBuffer;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -26,9 +19,16 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
-import org.lwjgl.*;
+import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.FloatBuffer;
+import java.util.stream.IntStream;
 
 /**
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.

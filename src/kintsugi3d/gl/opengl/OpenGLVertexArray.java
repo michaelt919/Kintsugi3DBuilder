@@ -16,7 +16,8 @@ import kintsugi3d.gl.core.VertexBuffer;
 import kintsugi3d.gl.exceptions.NoSpecifiedVertexBuffersException;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLVertexArray implements Resource

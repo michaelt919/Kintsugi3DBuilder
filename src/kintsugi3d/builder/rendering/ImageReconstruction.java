@@ -11,16 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.FloatBuffer;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
-import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -31,7 +21,17 @@ import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ColorImage;
 import kintsugi3d.util.SRGB;
-import org.lwjgl.*;
+import org.lwjgl.BufferUtils;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.FloatBuffer;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {

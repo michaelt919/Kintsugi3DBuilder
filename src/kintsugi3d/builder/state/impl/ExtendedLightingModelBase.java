@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.state.impl;//Created by alexk on 7/21/2017.
 
+import kintsugi3d.builder.state.*;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
-
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.state.*;
 
 public abstract class ExtendedLightingModelBase<LightInstanceType extends LightInstanceModel> implements ExtendedLightingModel
 {

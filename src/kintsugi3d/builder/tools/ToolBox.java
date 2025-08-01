@@ -11,23 +11,23 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-
+import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.tools.MultiplierTool.Type;
 import kintsugi3d.gl.window.Canvas3D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.window.CursorPosition;
 import kintsugi3d.gl.window.Key;
 import kintsugi3d.gl.window.ModifierKeys;
 import kintsugi3d.gl.window.listeners.*;
-import kintsugi3d.builder.tools.MultiplierTool.Type;
-import kintsugi3d.builder.state.*;
 import kintsugi3d.util.CanvasInputController;
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 
 public final class ToolBox
     implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, CanvasInputController

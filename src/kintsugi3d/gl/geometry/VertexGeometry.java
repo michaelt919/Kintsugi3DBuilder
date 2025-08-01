@@ -11,14 +11,6 @@
 
 package kintsugi3d.gl.geometry;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.Map.Entry;
-
 import javafx.util.Pair;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.material.Material;
@@ -33,6 +25,14 @@ import org.jengineering.sjmply.PLY;
 import org.jengineering.sjmply.PLYElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
 
 import static org.jengineering.sjmply.PLYType.*;
 

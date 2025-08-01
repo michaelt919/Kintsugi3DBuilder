@@ -11,14 +11,14 @@
 
 package kintsugi3d.gl.builders.base;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import kintsugi3d.gl.builders.TextureBuilder;
 import kintsugi3d.gl.builders.framebuffer.*;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class FramebufferObjectBuilderBase<ContextType extends Context<ContextType>> implements FramebufferObjectBuilder<ContextType>
 {

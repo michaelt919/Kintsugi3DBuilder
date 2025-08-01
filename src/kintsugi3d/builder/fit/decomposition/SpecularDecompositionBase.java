@@ -11,17 +11,6 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
@@ -31,6 +20,17 @@ import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.IntStream;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {

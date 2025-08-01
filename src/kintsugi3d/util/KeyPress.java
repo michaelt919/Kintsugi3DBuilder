@@ -11,10 +11,10 @@
 
 package kintsugi3d.util;
 
-import java.util.Objects;
-
 import kintsugi3d.gl.window.Key;
 import kintsugi3d.gl.window.ModifierKeys;
+
+import java.util.Objects;
 
 public class KeyPress
 {

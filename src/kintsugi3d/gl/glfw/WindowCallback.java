@@ -11,13 +11,12 @@
 
 package kintsugi3d.gl.glfw;
 
-import org.lwjgl.glfw.*;
 import kintsugi3d.gl.window.Key;
 import kintsugi3d.gl.window.WindowListenerManagerInstance;
 import kintsugi3d.gl.window.listeners.*;
+import org.lwjgl.glfw.*;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 
 // Other misc. callbacks
 // Keyboard callbacks

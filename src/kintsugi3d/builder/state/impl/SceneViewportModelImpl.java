@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.state.impl;
 
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public class SceneViewportModelImpl implements SceneViewportModel
 {

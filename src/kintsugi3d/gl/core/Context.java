@@ -11,15 +11,15 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 
 /**
  * An interface for any OpenGL-like graphics context.

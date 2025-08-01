@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -27,6 +21,12 @@ import kintsugi3d.optimization.ErrorReport;
 import kintsugi3d.optimization.ShaderBasedOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 /**
  * TODO: sketched out but not fully functional; may not be needed

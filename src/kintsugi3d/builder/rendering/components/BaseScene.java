@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
@@ -31,6 +27,10 @@ import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 public class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
 {

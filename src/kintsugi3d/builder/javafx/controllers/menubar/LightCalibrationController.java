@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -26,6 +23,9 @@ import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.vecmath.Vector2;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class LightCalibrationController implements Initializable
 {

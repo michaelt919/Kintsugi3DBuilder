@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.ExtendedCameraModel;
 import kintsugi3d.builder.state.impl.ExtendedCameraModelBase;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public class CameraModelWrapper extends ExtendedCameraModelBase
 {

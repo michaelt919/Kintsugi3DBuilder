@@ -11,12 +11,13 @@
 
 package kintsugi3d.gl.glfw;
 
-import java.nio.IntBuffer;
-
-import org.lwjgl.*;
-import org.lwjgl.opengl.*;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferSize;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GLCapabilities;
+
+import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 

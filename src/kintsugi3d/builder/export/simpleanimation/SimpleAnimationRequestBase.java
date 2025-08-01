@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
-
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
@@ -22,6 +18,10 @@ import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.MessageFormat;
 
 public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
 {

@@ -11,16 +11,20 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.builders.base.FramebufferObjectBuilderBase;
+import kintsugi3d.gl.core.FramebufferAttachment;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.core.Resource;
+import org.lwjgl.BufferUtils;
+
 import java.nio.IntBuffer;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
-import org.lwjgl.*;
-import kintsugi3d.gl.builders.base.FramebufferObjectBuilderBase;
-import kintsugi3d.gl.core.*;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL11.glDrawBuffer;
+import static org.lwjgl.opengl.GL11.glReadBuffer;
+import static org.lwjgl.opengl.GL20.glDrawBuffers;
 import static org.lwjgl.opengl.GL30.*;
 
 final class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>

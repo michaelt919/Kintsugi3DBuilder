@@ -11,16 +11,18 @@
 
 package kintsugi3d.optimization;
 
-import java.security.SecureRandom;
-import java.util.*;
-import java.util.stream.IntStream;
-
-import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ColorArrayList;
+import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 
 public class KMeansClustering
 {

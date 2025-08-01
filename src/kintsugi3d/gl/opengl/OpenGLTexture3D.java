@@ -11,17 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.gl.builders.base.ColorTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthStencilTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthTextureBuilderBase;
@@ -33,13 +22,24 @@ import kintsugi3d.gl.types.AbstractDataType;
 import kintsugi3d.gl.types.AbstractDataTypeFactory;
 import kintsugi3d.util.ImageHelper;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL14.GL_MIRRORED_REPEAT;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL44.*;
+import static org.lwjgl.opengl.GL32.glTexImage3DMultisample;
+import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;
 
 final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 {

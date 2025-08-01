@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
@@ -23,6 +19,10 @@ import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.state.BackgroundMode;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 public class Environment<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {

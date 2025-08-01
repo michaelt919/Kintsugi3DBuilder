@@ -17,9 +17,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Region;
 import javafx.util.Pair;
-import kintsugi3d.builder.core.ViewSet;
-
-import java.util.function.Consumer;
 
 public abstract class FXMLPageController {
 

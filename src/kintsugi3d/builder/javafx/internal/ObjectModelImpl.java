@@ -12,10 +12,10 @@
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/21/2017.
 
 import javafx.beans.value.ObservableValue;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.state.impl.ExtendedObjectModelBase;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public class ObjectModelImpl extends ExtendedObjectModelBase
 {

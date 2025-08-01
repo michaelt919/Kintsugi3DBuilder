@@ -11,16 +11,6 @@
 
 package kintsugi3d.builder.io;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
-import java.util.*;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvToBeanBuilder;
 import kintsugi3d.builder.core.DistortionProjection;
@@ -28,7 +18,22 @@ import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.gl.vecmath.*;
+import kintsugi3d.gl.vecmath.DoubleMatrix4;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
 {

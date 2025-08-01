@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import java.util.AbstractList;
-import java.util.Collections;
-import java.util.Map;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
@@ -28,6 +24,10 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ShadingParameterMode;
+
+import java.util.AbstractList;
+import java.util.Collections;
+import java.util.Map;
 public class IBRSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
     private UniformBuffer<ContextType> weightBuffer;

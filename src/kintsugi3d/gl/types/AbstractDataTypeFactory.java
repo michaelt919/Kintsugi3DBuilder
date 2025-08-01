@@ -11,12 +11,12 @@
 
 package kintsugi3d.gl.types;
 
+import kintsugi3d.gl.nativebuffer.NativeDataType;
+
 import java.nio.*;
 import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import kintsugi3d.gl.nativebuffer.NativeDataType;
 
 /**
  * A singleton factory object that can create concrete instances of the AbstractDataType interface.

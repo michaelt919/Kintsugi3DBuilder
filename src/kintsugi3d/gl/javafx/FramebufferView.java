@@ -11,10 +11,6 @@
 
 package kintsugi3d.gl.javafx;
 
-import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.util.OptionalInt;
-
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -37,9 +33,13 @@ import javafx.util.converter.CharacterStringConverter;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.window.*;
-import org.lwjgl.*;
+import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.util.OptionalInt;
 
 public final class FramebufferView extends Region
 {

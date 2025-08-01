@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.util.Collections;
-
-import kintsugi3d.builder.fit.ReflectanceData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
 import kintsugi3d.optimization.NonNegativeWeightOptimization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
 
 public class SpecularWeightOptimization
 {

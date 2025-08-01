@@ -11,16 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.gl.builders.base.ColorTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthStencilTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthTextureBuilderBase;
@@ -33,11 +23,24 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.RadianceImageLoader;
 import kintsugi3d.util.RadianceImageLoader.Image;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL12.GL_BGRA;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL30.GL_DEPTH_STENCIL;
+import static org.lwjgl.opengl.GL30.GL_RGBA_INTEGER;
+import static org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE;
+import static org.lwjgl.opengl.GL32.glTexImage2DMultisample;
 
 // mipmaps
 

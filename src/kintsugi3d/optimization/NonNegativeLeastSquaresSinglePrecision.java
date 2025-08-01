@@ -11,12 +11,12 @@
 
 package kintsugi3d.optimization;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.ejml.data.FMatrixRMaj;
 import org.ejml.dense.row.CommonOps_FDRM;
 import org.ejml.simple.SimpleMatrix;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.ejml.dense.row.CommonOps_FDRM.elementMin;
 import static org.ejml.dense.row.CommonOps_FDRM.multTransA;

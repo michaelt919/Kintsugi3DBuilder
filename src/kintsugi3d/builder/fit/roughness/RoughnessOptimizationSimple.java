@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -24,6 +20,9 @@ import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.Texture2D;
+
+import java.io.File;
+import java.io.IOException;
 
 public class RoughnessOptimizationSimple<ContextType extends Context<ContextType>> extends RoughnessOptimizationBase<ContextType>
 {

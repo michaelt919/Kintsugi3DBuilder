@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.resources.specular;
 
-import java.io.File;
-import java.util.Map;
-
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
+
+import java.io.File;
+import java.util.Map;
 
 public interface SpecularMaterialResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularMaterialResources<ContextType>>

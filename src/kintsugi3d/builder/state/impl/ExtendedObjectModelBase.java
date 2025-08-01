@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.state.impl;
 
+import kintsugi3d.builder.state.ExtendedObjectModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.state.ExtendedObjectModel;
 import kintsugi3d.util.OrbitPolarConverter;
 
 public abstract class ExtendedObjectModelBase implements ExtendedObjectModel

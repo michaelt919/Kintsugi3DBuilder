@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import java.util.List;
-
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.CameraViewListModel;
+
+import java.util.List;
 
 public class CameraViewListModelWrapper implements CameraViewListModel
 {

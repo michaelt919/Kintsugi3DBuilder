@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.tools;
 
+import kintsugi3d.builder.state.CameraModel;
+import kintsugi3d.builder.state.ReadonlyCameraModel;
+import kintsugi3d.builder.state.impl.SimpleCameraModel;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -21,9 +24,6 @@ import kintsugi3d.gl.window.ModifierKeys;
 import kintsugi3d.gl.window.listeners.CursorPositionListener;
 import kintsugi3d.gl.window.listeners.KeyPressListener;
 import kintsugi3d.gl.window.listeners.KeyReleaseListener;
-import kintsugi3d.builder.state.CameraModel;
-import kintsugi3d.builder.state.ReadonlyCameraModel;
-import kintsugi3d.builder.state.impl.SimpleCameraModel;
 
 public class FirstPersonController implements KeyPressListener, KeyReleaseListener, CursorPositionListener
 {

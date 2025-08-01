@@ -11,16 +11,16 @@
 
 package kintsugi3d.builder.tools;
 
-import java.util.function.Consumer;
-
-import kintsugi3d.gl.vecmath.DoubleVector2;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.gl.window.*;
 import kintsugi3d.builder.state.ExtendedLightingModel;
 import kintsugi3d.builder.state.LightWidgetModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.gl.vecmath.DoubleVector2;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.window.*;
+
+import java.util.function.Consumer;
 
 final class LightTool implements PickerTool
 {

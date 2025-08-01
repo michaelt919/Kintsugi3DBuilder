@@ -11,15 +11,15 @@
 
 package kintsugi3d.optimization;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
 import org.ejml.data.SingularMatrixException;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 

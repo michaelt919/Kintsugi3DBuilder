@@ -11,7 +11,10 @@
 
 package kintsugi3d.util;
 
-import java.io.FileNotFoundException;
+import kintsugi3d.gl.vecmath.IntVector2;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -19,10 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import kintsugi3d.gl.vecmath.IntVector2;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 
 /**
  * Based on the "potato" shape from "Specular reflections and the estimation of shape from binocular disparity" by Muryy et al., 2013

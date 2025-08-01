@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.object;
 
-import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.ResourceBundle;
-
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -40,6 +35,11 @@ import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.ResourceBundle;
 
 public class SettingsObjectSceneController implements Initializable
 {

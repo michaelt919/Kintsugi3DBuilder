@@ -19,7 +19,6 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 
-import java.util.function.DoubleFunction;
 import java.util.function.DoubleUnaryOperator;
 
 public class RadialTextureGenerator<ContextType extends Context<ContextType>>

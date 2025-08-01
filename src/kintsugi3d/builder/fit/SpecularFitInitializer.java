@@ -11,24 +11,23 @@
 
 package kintsugi3d.builder.fit;
 
+import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.optimization.KMeansClustering;
+import kintsugi3d.util.ColorArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.util.ColorArrayList;
-import kintsugi3d.optimization.KMeansClustering;
 
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {

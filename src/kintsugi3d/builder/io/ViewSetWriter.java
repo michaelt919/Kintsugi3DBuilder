@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.io;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
-
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
 
 @FunctionalInterface
 public interface ViewSetWriter

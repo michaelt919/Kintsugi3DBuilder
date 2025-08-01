@@ -11,10 +11,10 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.util.function.Function;
-
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.glfw.ContextFactory;
+
+import java.util.function.Function;
 
 public class OpenGLContextFactory implements ContextFactory<OpenGLContext>
 {

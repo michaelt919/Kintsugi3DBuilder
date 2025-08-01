@@ -11,11 +11,11 @@
 
 package kintsugi3d.gl.nativebuffer;
 
+import org.lwjgl.BufferUtils;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
-
-import org.lwjgl.*;
 
 class NativeUnsignedIntVectorBuffer implements NativeVectorBuffer
 {

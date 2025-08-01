@@ -11,11 +11,10 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane prefHeight="196.0" prefWidth="260.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.CacheSettingsController">
     <VBox spacing="10.0">
         <children>

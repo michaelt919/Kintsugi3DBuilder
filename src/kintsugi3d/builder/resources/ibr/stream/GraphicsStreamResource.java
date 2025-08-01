@@ -11,14 +11,13 @@
 
 package kintsugi3d.builder.resources.ibr.stream;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.function.*;
-
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ColorList;
+
+import java.io.IOException;
+import java.util.function.*;
 
 /**
  * A class that both functions as a graphics stream for hybrid GPU / CPU processing operations

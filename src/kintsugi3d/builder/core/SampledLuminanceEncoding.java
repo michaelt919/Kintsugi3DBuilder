@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.core;
 
-import java.util.function.DoubleUnaryOperator;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.resources.ibr.LuminanceMapResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
@@ -26,6 +23,9 @@ import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.gl.vecmath.DoubleVector4;
 import kintsugi3d.util.CubicHermiteSpline;
 import kintsugi3d.util.SRGB;
+
+import java.util.function.DoubleUnaryOperator;
+import java.util.stream.IntStream;
 
 public class SampledLuminanceEncoding 
 {

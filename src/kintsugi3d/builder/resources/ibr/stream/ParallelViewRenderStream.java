@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.resources.ibr.stream;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.function.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ParallelViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {

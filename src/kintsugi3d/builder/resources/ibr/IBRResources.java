@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.util.List;
-
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamFactory;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -21,6 +19,8 @@ import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Vector3;
+
+import java.util.List;
 
 public interface IBRResources<ContextType extends Context<ContextType>> extends Resource, ReadonlyIBRResources<ContextType>
 {

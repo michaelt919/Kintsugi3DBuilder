@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.SampledLuminanceEncoding;
+import kintsugi3d.gl.core.*;
 
 public final class LuminanceMapResources<ContextType extends Context<ContextType>> implements Resource
 {

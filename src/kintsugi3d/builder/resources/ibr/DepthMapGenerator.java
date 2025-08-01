@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Encapsulates the process of generating a depth map for occlusion / shadow culling with image-based rendering

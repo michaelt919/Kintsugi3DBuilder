@@ -11,11 +11,11 @@
 
 package kintsugi3d.gl.geometry;
 
+import kintsugi3d.gl.core.*;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import kintsugi3d.gl.core.*;
 
 public class GeometryFramebuffer<ContextType extends Context<ContextType>> implements GeometryTextures<ContextType> {
     private final FramebufferObject<ContextType> fbo;

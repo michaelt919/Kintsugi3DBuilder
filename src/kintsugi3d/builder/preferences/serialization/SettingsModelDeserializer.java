@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.vecmath.Vector2;

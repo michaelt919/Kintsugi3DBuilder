@@ -11,11 +11,10 @@
 
 package kintsugi3d.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import kintsugi3d.gl.core.*;
+
+import java.io.File;
+import java.io.IOException;
 
 public class ShaderHoleFill<ContextType extends Context<ContextType>> implements AutoCloseable
 {

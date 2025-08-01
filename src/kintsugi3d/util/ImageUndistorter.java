@@ -11,15 +11,15 @@
 
 package kintsugi3d.util;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector4;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class ImageUndistorter<ContextType extends Context<ContextType>> implements AutoCloseable
 {

@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.resources.specular;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.WeightImageCreator;
 import kintsugi3d.gl.core.Context;
@@ -22,6 +19,9 @@ import kintsugi3d.gl.core.SamplerType;
 import kintsugi3d.gl.core.Texture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public abstract class SpecularMaterialResourcesBase<ContextType extends Context<ContextType>>
     implements SpecularMaterialResources<ContextType>

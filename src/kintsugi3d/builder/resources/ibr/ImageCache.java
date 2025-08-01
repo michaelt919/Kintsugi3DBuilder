@@ -11,20 +11,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Random;
-import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
@@ -43,6 +29,20 @@ import kintsugi3d.util.BufferedImageBuilder;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ImageCache<ContextType extends Context<ContextType>>
 {

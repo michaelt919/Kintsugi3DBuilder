@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public abstract class RoughnessOptimizationBase<ContextType extends Context<ContextType>>
         implements RoughnessOptimization<ContextType>

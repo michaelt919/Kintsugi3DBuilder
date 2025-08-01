@@ -11,21 +11,14 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
-
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -45,10 +38,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {

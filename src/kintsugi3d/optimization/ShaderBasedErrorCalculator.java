@@ -11,11 +11,11 @@
 
 package kintsugi3d.optimization;
 
+import kintsugi3d.gl.core.*;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
-
-import kintsugi3d.gl.core.*;
 
 public final class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
 {

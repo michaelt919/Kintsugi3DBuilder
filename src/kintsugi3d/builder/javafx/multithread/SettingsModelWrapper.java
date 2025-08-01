@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import javafx.beans.value.WritableValue;
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SettingsModelBase;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class SettingsModelWrapper extends SettingsModelBase
 {

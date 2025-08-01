@@ -11,15 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
-import javafx.stage.FileChooser;
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.io.ViewSetReader;
-import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
-import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.ProjectIO;
-
-import java.io.File;
 import javafx.stage.FileChooser.ExtensionFilter;
+
 import java.util.Collections;
 import java.util.List;
 

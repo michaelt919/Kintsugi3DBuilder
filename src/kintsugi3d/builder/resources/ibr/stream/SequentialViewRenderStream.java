@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.resources.ibr.stream;
 
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
-
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
+
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 public class SequentialViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {

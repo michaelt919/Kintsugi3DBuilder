@@ -11,6 +11,11 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.ColorFormat.DataType;
+import kintsugi3d.util.RadianceImageLoader.Image;
+import org.lwjgl.BufferUtils;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
@@ -18,22 +23,18 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.AbstractMap;
 import java.util.Map;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.lwjgl.*;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.core.ColorFormat.DataType;
-import kintsugi3d.util.RadianceImageLoader.Image;
-
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP;
+import static org.lwjgl.opengl.GL14.GL_MIRRORED_REPEAT;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL44.*;
+import static org.lwjgl.opengl.GL32.glFramebufferTexture;
+import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;
 
 abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment {
     protected final OpenGLContext context;

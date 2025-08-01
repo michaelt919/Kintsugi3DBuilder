@@ -11,10 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
-
 import kintsugi3d.gl.builders.base.ProgramBuilderBase;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.Shader;
@@ -26,9 +22,14 @@ import kintsugi3d.gl.exceptions.UnlinkedProgramException;
 import kintsugi3d.gl.vecmath.*;
 import kintsugi3d.util.ResourceManager;
 
-import static org.lwjgl.opengl.GL11.*;
+import java.io.IOException;
+import java.util.*;
+
+import static org.lwjgl.opengl.GL11.GL_FALSE;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL31.*;
+import static org.lwjgl.opengl.GL31.glGetUniformBlockIndex;
+import static org.lwjgl.opengl.GL31.glUniformBlockBinding;
 
 final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
 {

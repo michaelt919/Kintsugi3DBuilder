@@ -11,13 +11,12 @@
 
 package kintsugi3d.builder.app;
 
+import kintsugi3d.builder.javafx.MainApplication;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.ReadOnlyDirectoryPreferencesModel;
-import org.lwjgl.system.*;
+import kintsugi3d.gl.interactive.InitializationException;
+import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.javafx.MainApplication;
-import kintsugi3d.gl.interactive.InitializationException;
 
 import java.io.File;
 import java.io.FileOutputStream;

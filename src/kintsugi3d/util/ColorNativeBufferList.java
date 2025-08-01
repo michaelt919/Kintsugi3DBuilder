@@ -11,12 +11,12 @@
 
 package kintsugi3d.util;
 
-import java.nio.FloatBuffer;
-import java.util.AbstractList;
-
-import org.lwjgl.*;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
+import java.util.AbstractList;
 
 public class ColorNativeBufferList extends AbstractList<Vector4> implements ColorList
 {

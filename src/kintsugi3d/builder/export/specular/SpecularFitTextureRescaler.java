@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.export.specular;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.util.ImageHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;

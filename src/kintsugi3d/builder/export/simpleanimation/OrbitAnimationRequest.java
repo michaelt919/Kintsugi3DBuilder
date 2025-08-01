@@ -11,10 +11,9 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import java.io.File;
-
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
+
+import java.io.File;
 
 public final class OrbitAnimationRequest extends SimpleAnimationRequestBase
 {

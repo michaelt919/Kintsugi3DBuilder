@@ -185,7 +185,7 @@ public final class ProjectIO
         {
             setViewsetDirectories(viewSet);
 
-            ProgressMonitor monitor = MultithreadModels.getInstance().getIOModel().getProgressMonitor();
+            ProgressMonitor monitor = Global.state().getIOModel().getProgressMonitor();
             if (monitor != null)
             {
                 monitor.setStage(0, ProgressMonitor.PREPARING_PROJECT);

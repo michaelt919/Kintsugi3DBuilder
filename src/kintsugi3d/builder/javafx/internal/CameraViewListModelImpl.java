@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.javafx.internal;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
 import kintsugi3d.builder.state.CameraViewListModel;
+
+import java.util.Collections;
+import java.util.List;
 
 public class CameraViewListModelImpl implements CameraViewListModel
 {

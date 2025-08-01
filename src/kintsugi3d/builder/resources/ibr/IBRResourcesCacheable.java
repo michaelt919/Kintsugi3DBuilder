@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.io.IOException;
-
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
+
+import java.io.IOException;
 
 public interface IBRResourcesCacheable<ContextType extends Context<ContextType>> extends IBRResources<ContextType>
 {

@@ -11,6 +11,9 @@
 
 package kintsugi3d.util;
 
+import kintsugi3d.gl.vecmath.IntVector4;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.RenderedImage;
@@ -18,9 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.gl.vecmath.IntVector4;
 
 public class BufferedImageBuilder
 {

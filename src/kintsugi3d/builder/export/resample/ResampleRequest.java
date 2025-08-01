@@ -11,14 +11,6 @@
 
 package kintsugi3d.builder.export.resample;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
@@ -27,6 +19,11 @@ import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.util.ImageFinder;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.text.MessageFormat;
 
 public class ResampleRequest implements ObservableIBRRequest
 {

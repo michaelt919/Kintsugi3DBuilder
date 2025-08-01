@@ -72,7 +72,7 @@ public class CurrentProjectInputSource extends InputSource
 
     @Override
     public File getMasksDirectory() {
-        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
         return currentViewSet.getMasksDirectory();
     }
 
@@ -83,7 +83,7 @@ public class CurrentProjectInputSource extends InputSource
 
     @Override
     public boolean doEnableProjectMasksButton() {
-        ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
         return currentViewSet.hasMasks();
     }
 

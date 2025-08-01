@@ -11,15 +11,6 @@
 
 package kintsugi3d.builder.resources;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.DynamicResourceManager;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.rendering.components.IBRSubject;
@@ -32,6 +23,15 @@ import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.EnvironmentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {

@@ -11,6 +11,11 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.vecmath.IntVector4;
+import kintsugi3d.util.BufferedImageBuilder;
+import org.lwjgl.BufferUtils;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -19,11 +24,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.gl.vecmath.IntVector4;
-import kintsugi3d.util.BufferedImageBuilder;
-import org.lwjgl.*;
 
 /**
  * Base class for texture readers that contains commonly used implementations for transferring native buffer data to a
