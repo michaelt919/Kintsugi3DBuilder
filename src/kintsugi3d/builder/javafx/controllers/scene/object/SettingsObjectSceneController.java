@@ -26,10 +26,10 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -178,7 +178,7 @@ public class SettingsObjectSceneController implements Initializable
     {
         try
         {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menubar/FXMLPageScroller.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/FXMLPageScroller.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -188,7 +188,7 @@ public class SettingsObjectSceneController implements Initializable
 
             FXMLPageScrollerController scrollerController = loader.getController();
 
-            String viewSelectPath = "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml";
+            String viewSelectPath = "/fxml/modals/createnewproject/PrimaryViewSelect.fxml";
             FXMLLoader selectorLoader = new FXMLLoader(getClass().getResource(viewSelectPath));
             selectorLoader.load();
 

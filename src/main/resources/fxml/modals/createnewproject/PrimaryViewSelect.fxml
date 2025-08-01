@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<AnchorPane fx:id="hostAnchorPane" prefHeight="486.0" prefWidth="830.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController">
+   <children>
+      <VBox>
+         <children>
+            <Label fx:id="hintTextLabel" prefWidth="830.0" alignment="CENTER" styleClass="wireframeSubtitle" textAlignment="CENTER" >Select model orientation view</Label>
+            <HBox spacing="40.0">
+               <children>
+                  <VBox spacing="20.0">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="64.0">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <children>
+                              <TextField fx:id="imgSearchTxtField" prefColumnCount="25" prefHeight="25.0" prefWidth="452.0" promptText="Enter image name" />
+                              <!--                        <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" visible="false" />-->
+                           </children>
+                        </HBox>
+                        <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
+                     </children>
+                  </VBox>
+                  <AnchorPane>
+                     <children>
+                        <Text fx:id="imgViewText" fontSmoothingType="LCD" layoutX="-3.0" layoutY="2.0" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="299.0000000000002" />
+                        <VBox alignment="CENTER" prefHeight="445.3333333333333" prefWidth="299.3333333333333" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <ImageView fx:id="primaryImgView" fitHeight="251.0" fitWidth="299.0" pickOnBounds="true" preserveRatio="true" />
+                           </children>
+                        </VBox>
+                        <VBox fx:id="orientationControlsVBox" alignment="BOTTOM_CENTER" layoutY="378.0" prefHeight="445.3333333333333" prefWidth="299.3333333333333" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                           <children>
+                              <Label styleClass="wireframeBodyStrong" text="Fix Orientation" />
+                              <HBox alignment="CENTER" spacing="80.0">
+                                 <children>
+                                    <Button mnemonicParsing="false" onAction="#rotateLeft" prefHeight="40.0" prefWidth="80.0" text="Left" />
+                                    <Button mnemonicParsing="false" onAction="#rotateRight" prefHeight="40.0" prefWidth="80.0" text="Right" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </AnchorPane>
+               </children>
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

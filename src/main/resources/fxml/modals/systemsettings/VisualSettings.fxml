@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane prefHeight="200.0" prefWidth="343.0" styleClass="anchor-pane" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.ObjectVisualsController">
+    <VBox prefHeight="200.0" prefWidth="294.0" spacing="10.0" stylesheets="@../../kintsugiStyling.css">
+        <padding>
+            <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
+        </padding>
+      <HBox alignment="CENTER_LEFT" spacing="10.0">
+         <padding>
+            <Insets right="5.0" />
+         </padding>
+         <children>
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Label styleClass="label" text="Preview Image Width: " />
+                  <TextField fx:id="previewWidthTxtField" prefWidth="50.0" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Label styleClass="label" text="Height: " />
+                  <TextField fx:id="previewHeightTxtField" prefWidth="50.0" />
+               </children>
+            </HBox>
+         </children>
+      </HBox>
+        <CheckBox fx:id="imageCompressionCheckBox" mnemonicParsing="false" styleClass="checkbox" text="Image Compression" />
+        <CheckBox fx:id="preloadVisibilityEtcCheckBox" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" styleClass="checkbox" text="Preload Visibility and Shadow Testing" />
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <padding>
+                <Insets right="5.0" />
+            </padding>
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="widthLabel" styleClass="label" text="Width: ">
+                </Label>
+                <TextField fx:id="depthWidthTxtField" prefWidth="50.0" />
+            </HBox>
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="heightLabel" styleClass="label" text="Height: ">
+                </Label>
+                <TextField fx:id="depthHeightTxtField" prefWidth="50.0" />
+            </HBox>
+        </HBox>
+        <CheckBox fx:id="mipmapCheckBox" layoutX="17.0" layoutY="45.0" mnemonicParsing="false" styleClass="checkbox" text="Mipmaps" />
+        <CheckBox fx:id="reduceViewportResCheckBox" layoutX="17.0" layoutY="107.0" mnemonicParsing="false" styleClass="checkbox" text="Reduce Viewport Resolution" />
+    </VBox>
+</AnchorPane>

@@ -13,10 +13,10 @@ package kintsugi3d.builder.javafx.util;
 
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePageController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.util.Flag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +81,7 @@ public class PageWindow
                 return;
             }
 
-            String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
+            String hostFXMLPath = "fxml/FXMLPageScroller.fxml";
             FXMLPageScrollerController scrollerController =
                 WindowUtilities.makeWindow(parentWindow, title, windowOpen, hostFXMLPath);
 

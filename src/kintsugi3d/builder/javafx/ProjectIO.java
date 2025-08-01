@@ -19,9 +19,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.modals.AboutController;
+import kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.util.PageWindow;
@@ -229,7 +229,7 @@ public final class ProjectIO
         }
 
         loaderWindow.open(parentWindow,"Load Files",
-            "/fxml/menubar/createnewproject/SelectImportOptions.fxml",
+            "/fxml/modals/createnewproject/SelectImportOptions.fxml",
             WelcomeWindowController.getInstance()::hide,
             () ->
             {
@@ -247,7 +247,7 @@ public final class ProjectIO
         File oldProjectFile = projectFile;
 
         loaderWindow.open(parentWindow,"Load Files",
-            "/fxml/menubar/createnewproject/HotSwap.fxml", null, this::onLoadStart);
+            "/fxml/modals/createnewproject/HotSwap.fxml", null, this::onLoadStart);
 
         // "force" the user to save their project (user can still cancel saving)
         Global.state().getIOModel().addViewSetLoadCallback(
@@ -579,7 +579,7 @@ public final class ProjectIO
 
         try
         {
-            SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/modals/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(javaFXState, window);
             WelcomeWindowController.getInstance().hide();
             systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
@@ -595,7 +595,7 @@ public final class ProjectIO
         {
 
             AboutController aboutController = WindowUtilities.makeWindow(window,
-                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
+                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/modals/About.fxml");
             aboutController.init();
             WelcomeWindowController.getInstance().hide();
         }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.*?>
+<AnchorPane fx:id="anchorPane" prefHeight="450.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.SelectImportOptionsController">
+   <children>
+      <Label alignment="CENTER" prefWidth="600.0" styleClass="wireframeTitle" text="Select Import Option" textAlignment="CENTER" AnchorPane.topAnchor="20.0" />
+      <VBox alignment="CENTER" layoutY="20.0" prefHeight="400.0" prefWidth="600.0" spacing="40.0" AnchorPane.bottomAnchor="-20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <ToggleButton fx:id="metashapeImportButton" styleClass="wireframeSubtitle" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Metashape">
+               </ToggleButton>
+            <ToggleButton fx:id="looseFilesImportButton" styleClass="wireframeSubtitle" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Loose Files">
+               </ToggleButton>
+            <ToggleButton fx:id="realityCaptureImportButton" styleClass="wireframeSubtitle" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Reality Capture">
+
+            </ToggleButton>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

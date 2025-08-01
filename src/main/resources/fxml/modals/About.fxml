@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Text?>
+<AnchorPane prefHeight="400.0" prefWidth="405.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.AboutController">
+   <Label prefHeight="46.0" prefWidth="553.0" text="About Kintsugi 3D Builder">
+      <padding>
+         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+      </padding>
+   </Label>
+   <ScrollPane fx:id="scrollPane" layoutY="38.0" prefHeight="424.0" prefWidth="553.0">
+      <StackPane>
+         <Rectangle fx:id="backgroundRectangle" arcHeight="5.0" arcWidth="5.0" height="353.0" stroke="BLACK" strokeType="INSIDE" width="432.0" />
+         <Text fx:id="aboutText" styleClass="text" text="Could not load info for about section." wrappingWidth="206.0" StackPane.alignment="TOP_LEFT">
+            <StackPane.margin>
+               <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </StackPane.margin></Text>
+      </StackPane>
+   </ScrollPane>
+</AnchorPane>

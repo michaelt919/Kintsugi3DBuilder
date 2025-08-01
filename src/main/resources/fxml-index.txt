@@ -1,6 +1,6 @@
-/fxml/menubar/createnewproject/CustomImport.fxml
-/fxml/menubar/createnewproject/SelectImportOptions.fxml
-/fxml/menubar/createnewproject/MetashapeImport.fxml
-/fxml/menubar/createnewproject/PrimaryViewSelect.fxml
-/fxml/menubar/createnewproject/HotSwap.fxml
-/fxml/menubar/createnewproject/MasksImport.fxml
+/fxml/modals/createnewproject/CustomImport.fxml
+/fxml/modals/createnewproject/SelectImportOptions.fxml
+/fxml/modals/createnewproject/MetashapeImport.fxml
+/fxml/modals/createnewproject/PrimaryViewSelect.fxml
+/fxml/modals/createnewproject/HotSwap.fxml
+/fxml/modals/createnewproject/MasksImport.fxml
