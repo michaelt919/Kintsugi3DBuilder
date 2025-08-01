@@ -181,7 +181,18 @@ public final class ProjectIO
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
-        saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
+        saveProjectAs(parentWindow, () ->
+        {
+            setViewsetDirectories(viewSet);
+
+            ProgressMonitor monitor = MultithreadModels.getInstance().getIOModel().getProgressMonitor();
+            if (monitor != null)
+            {
+                monitor.setStage(0, ProgressMonitor.PREPARING_PROJECT);
+            }
+
+            viewSet.copyMasks();
+        });
     }
 
     public static File getDefaultSupportingFilesDirectory(File projectFile)
@@ -421,7 +432,7 @@ public final class ProjectIO
                 ioModel.saveGlTF(filesDirectory);
 
                 // Save textures and basis funtions (will be deferred to graphics thread).
-                ioModel.saveMaterialFiles(filesDirectory, () ->
+                ioModel.saveAllMaterialFiles(filesDirectory, () ->
                 {
                     // Display message when all textures have been saved on graphics thread.
                     //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
@@ -571,7 +582,7 @@ public final class ProjectIO
             SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(javaFXState, window);
             WelcomeWindowController.getInstance().hide();
-            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
+            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
         }
         catch (IOException e)
         {

@@ -43,7 +43,7 @@ public class AboutController {
             backgroundRectangle.setWidth(scrollPane.getWidth());
             backgroundRectangle.setHeight(aboutText.getLayoutBounds().getHeight() + 20); // +20 to account for margins
 
-            aboutText.getScene().getWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
+            aboutText.getScene().getWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
         }
         catch (IOException e)
         {

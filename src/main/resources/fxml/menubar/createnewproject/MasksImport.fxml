@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane fx:id="anchorPane" prefHeight="442.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.resources.fxml.menubar.createnewproject.MasksImportController">
+   <children>
+       <Label alignment="CENTER" prefWidth="600.0" styleClass="wireframeTitle" text="Select Masks Import Option" textAlignment="CENTER" AnchorPane.topAnchor="20.0" />
+       <VBox alignment="CENTER" layoutY="20.0" prefHeight="400.0" prefWidth="600.0" spacing="40.0" AnchorPane.bottomAnchor="-20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
+           <children>
+               <ToggleButton fx:id="useProjectMasksButton" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Use Project Masks">
+               </ToggleButton>
+               <ToggleButton fx:id="customMasksDirButton" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Choose New Masks Directory">
+               </ToggleButton>
+               <ToggleButton fx:id="noMasksButton" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Do Not Use Masks">
+               </ToggleButton>
+               <Label />
+           </children>
+       </VBox>
+   </children>
+</AnchorPane>

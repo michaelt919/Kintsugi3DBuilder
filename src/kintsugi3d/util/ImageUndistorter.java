@@ -71,10 +71,10 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public BufferedImage undistort(BufferedImage inputImage, boolean mipmapsEnabled, DistortionProjection distortion)
+    public BufferedImage undistort(BufferedImage inputImage, BufferedImage inputMask, boolean mipmapsEnabled, DistortionProjection distortion)
     {
         try(Texture2D<ContextType> inTex = context.getTextureFactory()
-            .build2DColorTextureFromImage(inputImage, true)
+            .build2DColorTextureFromImageWithMask(inputImage, inputMask, true)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(mipmapsEnabled)
             .createTexture();
@@ -87,10 +87,11 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public void undistortFile(File inputImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
+    public void undistortFile(File inputImage, File maskImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
     {
         BufferedImage imageIn = ImageIO.read(inputImage);
-        BufferedImage imageOut = undistort(imageIn, mipmapsEnabled, distortion);
+        BufferedImage maskIn = maskImage != null ? ImageIO.read(maskImage) : null;
+        BufferedImage imageOut = undistort(imageIn, maskIn, mipmapsEnabled, distortion);
         ImageIO.write(imageOut, "PNG", outputImage);
     }
 

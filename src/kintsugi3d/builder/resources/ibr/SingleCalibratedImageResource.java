@@ -86,9 +86,10 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
         // Read the images from a file
         if (loadOptions.areColorImagesRequested() && imageFile != null && viewIndex < viewSet.getCameraPoseCount())
         {
-            var colorTextureBuilder =
-                context.getTextureFactory().build2DColorTextureFromFile(imageFile, true);
-            loadOptions.configureColorTextureBuilder(colorTextureBuilder);
+            File mask = viewSet.getMask(viewIndex);
+            var colorTextureBuilder = mask == null ?
+                context.getTextureFactory().build2DColorTextureFromFile(imageFile, true) :
+                context.getTextureFactory().build2DColorTextureFromFileWithMask(imageFile, mask, true);
 
             int projectionIndex = viewSet.getCameraProjectionIndex(viewIndex);
             if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)

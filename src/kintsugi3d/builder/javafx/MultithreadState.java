@@ -54,7 +54,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
         ioModel = new IOModel();
-        ioModel.setLoadOptionsModel(loadOptionsModel);
+        ioModel.setImageLoadOptionsModel(loadOptionsModel);
     }
 
     @Override

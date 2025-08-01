@@ -12,7 +12,8 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;
@@ -24,10 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
 {
@@ -154,7 +151,7 @@ public class IOModel
 
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
-    private ReadonlyLoadOptionsModel loadOptionsModel;
+    private ReadonlyLoadOptionsModel imageLoadOptionsModel;
 
     public ProgressMonitor getProgressMonitor()
     {
@@ -172,9 +169,9 @@ public class IOModel
         this.progressMonitor.addSubMonitor(monitor);
     }
 
-    public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)
+    public void setImageLoadOptionsModel(ReadonlyLoadOptionsModel imageLoadOptionsModel)
     {
-        this.loadOptionsModel = loadOptionsModel;
+        this.imageLoadOptionsModel = imageLoadOptionsModel;
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
@@ -204,31 +201,28 @@ public class IOModel
      */
     public void loadFromVSETFile(String id, File vsetFile)
     {
-        this.handler.loadFromVSETFile(id, vsetFile, vsetFile.getParentFile(), loadOptionsModel);
+        this.handler.loadFromVSETFile(id, vsetFile, vsetFile.getParentFile(), imageLoadOptionsModel);
     }
 
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory)
     {
-        this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
+        this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, imageLoadOptionsModel);
     }
 
-    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
-        boolean needsUndistort, String primaryViewName, double rotation)
+    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
-            rotation, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
     }
 
-    public void hotSwapLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
-        boolean needsUndistort, String primaryViewName, double rotation)
+    public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
-            rotation, loadOptionsModel, getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null);
+        viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
+        this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)
+    public void loadFromMetashapeModel(MetashapeModel model)
     {
-        this.handler.loadAgisoftFromZIP(metashapeObjectChunk, loadOptionsModel);
+        this.handler.loadFromMetashapeModel(model, imageLoadOptionsModel);
     }
     public void requestFragmentShader(File shaderFile)
     {
@@ -255,9 +249,14 @@ public class IOModel
         this.handler.saveToVSETFile(vsetFile);
     }
 
-    public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
-        this.handler.saveMaterialFiles(materialDirectory, finishedCallback);
+        this.handler.saveAllMaterialFiles(materialDirectory, finishedCallback);
+    }
+
+    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    {
+        this.handler.saveEssentialMaterialFiles(materialDirectory, finishedCallback);
     }
 
     public void saveGlTF(File outputDirectory, ExportSettings settings)

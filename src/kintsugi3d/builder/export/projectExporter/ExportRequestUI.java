@@ -128,7 +128,9 @@ public class ExportRequestUI implements IBRRequestUI
                             if (settings.isGlTFEnabled())
                             {
                                 renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
-                                modelAccess.getIOModel().saveMaterialFiles(exportLocationFile.getParentFile(), null);
+                                modelAccess.getIOModel().saveEssentialMaterialFiles(exportLocationFile.getParentFile(), null);
+                                // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
+                                // and unpacked weight maps for the user export as those are only intended to be used internally.
                             }
 
                             if (settings.isOpenViewerOnceComplete())

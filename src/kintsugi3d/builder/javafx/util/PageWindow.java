@@ -13,7 +13,7 @@ package kintsugi3d.builder.javafx.util;
 
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
@@ -69,7 +69,7 @@ public class PageWindow
 
                 FXMLPageController controller = loader.getController();
 
-                if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
+                if (controller instanceof ConfirmablePageController && ((ConfirmablePageController) controller).canConfirm())
                 {
                     controller.setConfirmCallback(confirmCallback);
                 }

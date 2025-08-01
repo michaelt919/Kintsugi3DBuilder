@@ -37,10 +37,12 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
+import kintsugi3d.util.SRGB;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
-import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +57,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePage
+public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePageController
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 

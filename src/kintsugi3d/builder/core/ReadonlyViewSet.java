@@ -20,6 +20,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ReadonlyViewSet
@@ -130,6 +131,13 @@ public interface ReadonlyViewSet
      * @return The image file.
      */
     File getPreviewImageFile(int poseIndex);
+
+    /**
+     * Gets the mask of a particular view, if it exists
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getMask(int poseIndex);
 
     /**
      * Gets the view index to be used for color calibration and tonemapping operations
@@ -252,6 +260,12 @@ public interface ReadonlyViewSet
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
     UUID getUUID();
+
+    boolean hasMasks();
+
+    File getMasksDirectory();
+
+    Map<Integer, File> getMasksMap();
 
     /**
      * Gets additional settings associated with this view set

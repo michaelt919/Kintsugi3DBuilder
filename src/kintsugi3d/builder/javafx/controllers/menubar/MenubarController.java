@@ -108,108 +108,68 @@ public class MenubarController
     private Label overallTextLabel;
 
     //minimized progress bar
-    @FXML
-    private AnchorPane miniProgressPane; //entire bottom bar
-    @FXML
-    private HBox miniProgBarBoundingHBox; //only label and progress bar
-    @FXML
-    private Label miniProgressLabel;
+    @FXML private AnchorPane miniProgressPane; //entire bottom bar
+    @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
+    @FXML private Label miniProgressLabel;
 
-    @FXML
-    private StackPane swapControlsStackPane; //contains either the progress bar or the dismiss button
-    @FXML
-    private ProgressBar miniProgressBar;
-    @FXML
-    private Button dismissButton;
+    @FXML private StackPane swapControlsStackPane; //contains either the progress bar or the dismiss button
+    @FXML private ProgressBar miniProgressBar;
+    @FXML private Button dismissButton;
 
     //toggle groups
-    @FXML
-    private ToggleGroup renderGroup;
+    @FXML private ToggleGroup renderGroup;
 
-    @FXML
-    private Menu aboutMenu;
+    @FXML private Menu aboutMenu;
 
-    @FXML
-    private MenuBar mainMenubar;
+    @FXML private MenuBar mainMenubar;
 
     //menu items
-    @FXML
-    private CheckMenuItem is3DGridCheckMenuItem;
-    @FXML
-    public CheckMenuItem isCameraVisualCheckMenuItem;
-    @FXML
-    private CheckMenuItem compassCheckMenuItem;
-    @FXML
-    private CheckMenuItem multiSamplingCheckMenuItem;
-    @FXML
-    private CheckMenuItem relightingCheckMenuItem;
-    @FXML
-    private CheckMenuItem sceneWindowCheckMenuItem;
-    @FXML
-    private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
-    @FXML
-    private CheckMenuItem visibleLightsCheckMenuItem;
-    @FXML
-    private CheckMenuItem visibleLightWidgetsCheckMenuItem;
-    @FXML
-    private CheckMenuItem visibleCameraPoseCheckMenuItem;
-    @FXML
-    private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
+    @FXML private CheckMenuItem is3DGridCheckMenuItem;
+    @FXML public CheckMenuItem isCameraVisualCheckMenuItem;
+    @FXML private CheckMenuItem compassCheckMenuItem;
+    @FXML private CheckMenuItem multiSamplingCheckMenuItem;
+    @FXML private CheckMenuItem relightingCheckMenuItem;
+    @FXML private CheckMenuItem sceneWindowCheckMenuItem;
+    @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
+    @FXML private CheckMenuItem visibleLightsCheckMenuItem;
+    @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
+    @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
+    @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
 
-    @FXML
-    private Menu exportMenu;
-    @FXML
-    private Menu recentProjectsMenu;
-    @FXML
-    private Menu cleanRecentProjectsMenu;
-    @FXML
-    private Menu shadingMenu;
-    @FXML
-    private Menu heatmapMenu;
-    @FXML
-    private Menu superimposeMenu;
-    @FXML
-    private Menu paletteMaterialMenu;
-    @FXML
-    private Menu paletteMaterialWeightedMenu;
+    @FXML private Menu exportMenu;
+    @FXML private Menu recentProjectsMenu;
+    @FXML private Menu cleanRecentProjectsMenu;
+    @FXML private Menu shadingMenu;
+    @FXML private Menu heatmapMenu;
+    @FXML private Menu superimposeMenu;
+    @FXML private Menu paletteMaterialMenu;
+    @FXML private Menu paletteMaterialWeightedMenu;
 
-    @FXML
-    private CustomMenuItem removeAllRefsCustMenuItem;
-    @FXML
-    private CustomMenuItem removeSomeRefsCustMenuItem;
+    @FXML private CustomMenuItem removeAllRefsCustMenuItem;
+    @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
 
     //pull this in so we can explicitly set shader to image-based upon load
     //without this, user could select a shader, load a project,
-    //and the loaded project's appearance might not match the selected shader
-    @FXML
-    private RadioMenuItem imageBased;
+        //and the loaded project's appearance might not match the selected shader
+    @FXML private RadioMenuItem imageBased;
 
     //shaders which should only be enabled after processing textures
-    @FXML
-    private RadioMenuItem materialMetallicity;
-    @FXML
-    private RadioMenuItem materialReflectivity;
-    @FXML
-    private RadioMenuItem materialBasis;
-    @FXML
-    private RadioMenuItem imgBasedWithTextures;
-    @FXML
-    private RadioMenuItem weightmapCombination;
+    @FXML private RadioMenuItem materialMetallicity;
+    @FXML private RadioMenuItem materialReflectivity;
+    @FXML private RadioMenuItem materialBasis;
+    @FXML private RadioMenuItem imgBasedWithTextures;
+    @FXML private RadioMenuItem weightmapCombination;
 
     private final List<Menu> shaderMenuFlyouts = new ArrayList<>(4);
 
     private final List<MenuItem> toggleableShaders = new ArrayList<>();
 
-    @FXML
-    private VBox cameraViewList;
-    @FXML
-    private CameraViewListController cameraViewListController;
-    @FXML
-    private FramebufferView framebufferView;
+    @FXML private VBox cameraViewList;
+    @FXML private CameraViewListController cameraViewListController;
+    @FXML private FramebufferView framebufferView;
 
-    @FXML
-    private Label shaderName;
+    @FXML private Label shaderName;
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -288,7 +248,6 @@ public class MenubarController
         }
         Global.state().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
-            private static final String FINISHING_UP = "Finishing up...";
             private double maximum = 0.0;
             private double localProgress = 0.0;
 
@@ -305,7 +264,7 @@ public class MenubarController
                 {
                     cancelRequested.set(false); // reset cancel flag
 
-                    WelcomeWindowController.getInstance().showIfNoModelLoaded();
+                    WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
                     dismissMiniProgressBar();
 
                     //need to end stopwatches here because they might need to be reused for another process
@@ -349,7 +308,7 @@ public class MenubarController
                 miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
 
                 miniProgressLabel.textProperty().bind(Bindings.createStringBinding(() ->
-                    {
+                {
                         String currProcessTxt = overallTextLabel.textProperty().getValue();
 
                         //Display "Finishing up..." or something similar
@@ -371,7 +330,8 @@ public class MenubarController
                             currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
 
 
-                    }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
+                },
+                    overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
                     localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
             }
 
@@ -405,9 +365,16 @@ public class MenubarController
 
                 Platform.runLater(() -> overallTextLabel.setText(message));
 
-                if (currentStage > stageCountProperty.getValue())
+                if(currentStage > stageCountProperty.getValue())
                 {
-                    Platform.runLater(() -> localTextLabel.setText(FINISHING_UP));
+                    if (message.equals(ProgressMonitor.PREPARING_PROJECT))
+                    {
+                        Platform.runLater(()->localTextLabel.setText(ProgressMonitor.ALMOST_READY));
+                    }
+                    else
+                    {
+                        Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
+                    }
                 }
                 else
                 {
@@ -616,7 +583,6 @@ public class MenubarController
                 getRadioMenuItemsHelper(radioMenuItems, menu.getItems());
             }
         }
-        ;
     }
 
     private void hideAllProgress()
@@ -1387,7 +1353,7 @@ public class MenubarController
     public void dismissMiniProgressBar()
     {
         Platform.runLater(() -> miniProgressPane.setVisible(false));
-        WelcomeWindowController.getInstance().showIfNoModelLoaded();
+        WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
     }
 
     public void file_hotSwap(ActionEvent actionEvent)

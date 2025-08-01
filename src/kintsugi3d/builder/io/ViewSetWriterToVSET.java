@@ -19,9 +19,12 @@ import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -126,6 +129,19 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.print(setting.getName());
             out.print(' ');
             out.println(setting.getValue());
+        }
+
+        if (viewSet.hasMasks()){
+            out.println();
+            out.println("# Masks directory");
+            out.println("M " + viewSet.getMasksDirectory().getAbsolutePath());
+
+            out.println();
+            Map<Integer, File> masksMap = viewSet.getMasksMap();
+            out.println("# " + masksMap.size() + " masks");
+            for (var entry : masksMap.entrySet()) {
+                out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
+            }
         }
 
         out.println();

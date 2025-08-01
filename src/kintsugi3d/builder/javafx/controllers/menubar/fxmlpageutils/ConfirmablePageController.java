@@ -9,17 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.util;
+package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
-public class Triplet<T, U, V> {
-
-    public final T first;
-    public final U second;
-    public final V third;
-
-    public Triplet(T first, U second, V third) {
-        this.first = first;
-        this.second = second;
-        this.third = third;
-    }
+public interface ConfirmablePageController
+{
+    boolean canConfirm();
+    void confirmButtonPress();
 }

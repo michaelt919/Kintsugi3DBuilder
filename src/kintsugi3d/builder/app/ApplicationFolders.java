@@ -158,6 +158,15 @@ public class ApplicationFolders
         return getUserCacheDirectory().resolve("fit");
     }
 
+    public static Path getMasksDirectory()
+    {
+        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getMasksDirectory();
+        if (preferred != null)
+            return preferred;
+
+        return getUserCacheDirectory().resolve("masks");
+    }
+
     public static Path getLogFileDirectory()
     {
         Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getLogFileDirectory();

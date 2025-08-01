@@ -121,15 +121,20 @@ public class SpecularFitProcess
                     Projection projection = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(viewIndex));
                     BufferedImage image = read(viewSet.findFullResImageFile(viewIndex));
 
+                    File maskFile = viewSet.getMask(viewIndex);
+                    BufferedImage mask = maskFile == null ? null : read(maskFile);
+
                     if (projection instanceof DistortionProjection)
                     {
                         // undistort if we have a DistortionProjection.
                         return new BufferedImageColorList(new ImageUndistorter<>(resources.getContext())
-                            .undistort(image, false /* no mipmaps for error estimation */, (DistortionProjection)projection));
+                                .undistort(image, mask, false /* no mipmaps for error estimation */, (DistortionProjection) projection));
                     }
                     else
                     {
-                        return new BufferedImageColorList(image);
+                        return mask != null ?
+                                new BufferedImageColorList(IBRResourcesImageSpace.applyGrayscaleMaskToAlpha(image, mask)) :
+                                new BufferedImageColorList(image);
                     }
                 }
                 catch (IOException e)

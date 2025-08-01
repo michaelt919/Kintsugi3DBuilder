@@ -12,7 +12,8 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;
@@ -20,7 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -32,15 +32,9 @@ public interface IOHandler
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
-    void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
-                                String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride);
+    void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
 
-    default void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
-        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions)
-    {
-        loadFromLooseFiles(id, xmlFile, meshFile, imageDirectory, needsUndistort, primaryViewName, rotation, loadOptions, null);
-    }
-    void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
+    void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
 
@@ -50,7 +44,8 @@ public interface IOHandler
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
-    void saveMaterialFiles(File materialDirectory, Runnable finishedCallback);
+    void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
+    void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback);
 
     void saveGlTF(File outputDirectory, ExportSettings settings);
 

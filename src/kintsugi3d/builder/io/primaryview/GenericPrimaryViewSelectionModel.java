@@ -13,26 +13,27 @@ package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
 import kintsugi3d.builder.core.ViewSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
+    private static final Logger log = LoggerFactory.getLogger(GenericPrimaryViewSelectionModel.class);
+
     private final String name;
     private final ViewSet viewSet;
 
-    private GenericPrimaryViewSelectionModel(String name, ViewSet viewSet)
+    public GenericPrimaryViewSelectionModel(String name, ViewSet viewSet)
     {
         this.name = name;
         this.viewSet = viewSet;
-    }
-
-    public static PrimaryViewSelectionModel createInstance(String name, ViewSet viewSet)
-    {
-        return new GenericPrimaryViewSelectionModel(name, viewSet);
     }
 
     @Override
@@ -50,10 +51,10 @@ public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelect
     }
 
     @Override
-    public List<Image> getThumbnails()
+    public Map<Integer, Image> getThumbnails()
     {
         // TODO implement thumbnails for generic case
-        return List.of();
+        return new HashMap<>();
     }
 
     @Override

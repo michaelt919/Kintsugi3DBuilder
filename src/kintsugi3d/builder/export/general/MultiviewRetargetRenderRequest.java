@@ -58,7 +58,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
     public <ContextType extends Context<ContextType>> void executeRequest(
         IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
-        ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile);
+        ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile).finish();
 
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
