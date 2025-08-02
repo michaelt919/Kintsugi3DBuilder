@@ -12,13 +12,13 @@
   -->
 
 <?import javafx.geometry.*?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
-<VBox fx:id="root" spacing="16.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.LoadOptionsController">
+<?import javafx.scene.text.*?>
+<VBox spacing="16.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController">
     <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Visibility/shadow testing">
         <font>
             <Font size="18.0" />
@@ -27,30 +27,38 @@
          <Insets />
       </VBox.margin>
     </CheckBox>
-   <HBox>
-      <children>
-          <Text styleClass="text" text="Visibility bias: ">
-              <font>
-                  <Font size="18.0" />
-              </font>
-            <HBox.margin>
-               <Insets bottom="9.0" top="9.0" />
-            </HBox.margin>
-          </Text>
-          <TextField fx:id="occlusionBiasTextField" prefHeight="39.0" prefWidth="100.0">
-              <font>
-                  <Font size="18.0" />
-              </font>
-          </TextField>
-          <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025">
-            <HBox.margin>
-               <Insets left="9.0" right="9.0" />
-            </HBox.margin></Slider>
-      </children>
-      <VBox.margin>
-         <Insets />
-      </VBox.margin>
-   </HBox>
+    <HBox>
+        <VBox.margin>
+            <Insets />
+        </VBox.margin>
+        <Text styleClass="text" text="Visibility bias: ">
+            <font>
+                <Font size="18.0" />
+            </font>
+          <HBox.margin>
+              <Insets bottom="9.0" top="9.0" />
+          </HBox.margin>
+        </Text>
+        <TextField fx:id="occlusionBiasTextField" prefHeight="39.0" prefWidth="100.0">
+            <font>
+                <Font size="18.0" />
+            </font>
+        </TextField>
+        <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025">
+          <HBox.margin>
+              <Insets left="9.0" right="9.0" />
+          </HBox.margin>
+        </Slider>
+    </HBox>
+    <AnchorPane prefHeight="0.0">
+        <padding>
+            <Insets bottom="4.0" left="4.0" right="4.0" />
+        </padding>
+        <Button mnemonicParsing="false" onAction="#apply" text="Apply" AnchorPane.bottomAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">
+         <font>
+            <Font size="21.0" />
+         </font></Button>
+    </AnchorPane>
     <opaqueInsets>
       <Insets />
    </opaqueInsets>

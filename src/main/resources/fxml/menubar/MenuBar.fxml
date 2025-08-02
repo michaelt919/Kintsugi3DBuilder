@@ -98,6 +98,7 @@
                                     </accelerator>
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
+                                <MenuItem mnemonicParsing="false" onAction="#maskOptions" text="Masking Options..." />
                                 <MenuItem mnemonicParsing="false" onAction="#specularFit" text="Process Textures...">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />

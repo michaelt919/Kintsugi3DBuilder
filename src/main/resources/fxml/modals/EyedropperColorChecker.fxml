@@ -127,7 +127,8 @@
                     </font>
                     <GridPane.margin>
                         <Insets top="8.0" />
-                    </GridPane.margin></Button>
+                    </GridPane.margin>
+                </Button>
                 <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                 <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                 <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />

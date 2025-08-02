@@ -46,10 +46,7 @@ import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
-import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController;
-import kintsugi3d.builder.javafx.controllers.modals.LoadOptionsController;
-import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
+import kintsugi3d.builder.javafx.controllers.modals.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
@@ -96,6 +93,7 @@ public class MenubarController
     private final Flag loadOptionsWindowOpen = new Flag(false);
     private final Flag objectOrientationWindowOpen = new Flag(false);
     private final Flag lightCalibrationWindowOpen = new Flag(false);
+    private final Flag maskOptionsWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
     private final Flag loggerWindowOpen = new Flag(false);
@@ -1101,6 +1099,28 @@ public class MenubarController
         catch (IOException | RuntimeException e)
         {
             handleException("An error occurred opening color checker window", e);
+        }
+    }
+
+    public void maskOptions(ActionEvent actionEvent)
+    {
+        if (!maskOptionsWindowOpen.get())
+        {
+            try
+            {
+                MaskOptionsController maskOptionsController =
+                    makeWindow("Mask Options", maskOptionsWindowOpen, "fxml/modals/MaskOptions.fxml");
+
+                if (Global.state().getIOModel().hasValidHandler())
+                {
+                    maskOptionsController.setProjectSettingsModel(
+                        Global.state().getIOModel().getLoadedViewSet().getProjectSettings());
+                }
+            }
+            catch (Exception e)
+            {
+                handleException("An error occurred opening mask options window", e);
+            }
         }
     }
 

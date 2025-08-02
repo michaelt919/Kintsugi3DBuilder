@@ -71,12 +71,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
         isotropyFactorTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("isotropyFactor"),
             new SafeDecimalNumberStringConverter(0.0f));
 
-//        // TODO move to a different UI that has access to modify the view set as these are now project based settings
-//        occlusionCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("occlusionEnabled"));
-//        occlusionBiasSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("occlusionBias"));
-//        occlusionBiasTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("occlusionBias"),
-//            new SafeDecimalNumberStringConverter(0.0025f));
-
         this.settingsModel = injectedSettingsModel;
 
         //TODO: NEED TO UNBIND PARAMETERS UPON CLOSING
@@ -96,10 +90,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
 
         isotropyFactorSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
         isotropyFactorTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
-
-//        occlusionCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("occlusionEnabled"));
-//        occlusionBiasSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
-//        occlusionBiasTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
     }
 
     @Override
@@ -123,8 +113,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
 
         StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
         StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
-
-//        StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
     }
 
     @Override
