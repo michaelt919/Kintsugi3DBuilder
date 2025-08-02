@@ -131,7 +131,8 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.println(setting.getValue());
         }
 
-        if (viewSet.hasMasks()){
+        if (viewSet.hasMasks())
+        {
             out.println();
             out.println("# Masks directory");
             out.println("M " + viewSet.getMasksDirectory().getAbsolutePath());
@@ -139,8 +140,12 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.println();
             Map<Integer, File> masksMap = viewSet.getMasksMap();
             out.println("# " + masksMap.size() + " masks");
-            for (var entry : masksMap.entrySet()) {
-                out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
+            for (var entry : masksMap.entrySet())
+            {
+                if (entry.getValue() != null)
+                {
+                    out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
+                }
             }
         }
 
@@ -160,7 +165,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             double[] linearLuminanceValues = viewSet.getLinearLuminanceValues();
             byte[] encodedLuminanceValues = viewSet.getEncodedLuminanceValues();
 
-            for(int i = 0; i < linearLuminanceValues.length && i < encodedLuminanceValues.length; i++)
+            for (int i = 0; i < linearLuminanceValues.length && i < encodedLuminanceValues.length; i++)
             {
                 out.printf("e\t%.8f\t\t%3d", linearLuminanceValues[i], 0x00FF & encodedLuminanceValues[i]);
                 out.println();
@@ -195,7 +200,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.println();
         }
 
-        if(viewSet.getLightCount() > 0)
+        if (viewSet.getLightCount() > 0)
         {
             out.println();
             out.println("# " + viewSet.getLightCount() + (viewSet.getLightCount() == 1 ? " Light" : " Lights"));
@@ -222,7 +227,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         {
             if (id != viewSet.getPrimaryViewIndex())
             {
-                out.printf("v\t%d\t%d\t%d\t%s", id,  viewSet.getCameraProjectionIndex(id), viewSet.getLightIndex(id), viewSet.getImageFileName(id));
+                out.printf("v\t%d\t%d\t%d\t%s", id, viewSet.getCameraProjectionIndex(id), viewSet.getLightIndex(id), viewSet.getImageFileName(id));
                 out.println();
             }
         }
