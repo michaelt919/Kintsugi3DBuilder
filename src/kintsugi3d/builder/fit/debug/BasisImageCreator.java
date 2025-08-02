@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.debug;
 
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;

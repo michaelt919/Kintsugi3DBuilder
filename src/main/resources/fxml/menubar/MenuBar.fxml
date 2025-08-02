@@ -98,7 +98,7 @@
                                     </accelerator>
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
-                                <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Process Textures...">
+                                <MenuItem mnemonicParsing="false" onAction="#specularFit" text="Process Textures...">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                     </accelerator>
@@ -226,7 +226,7 @@
                         </Menu>
                         <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
+                                <MenuItem mnemonicParsing="false" onAction="#specularFit" text="Export Specular Fit" visible="false">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                     </accelerator>

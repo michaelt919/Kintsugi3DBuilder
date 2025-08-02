@@ -22,9 +22,9 @@ public final class ScreenshotUIFactory
     {
     }
 
-    public static ScreenshotUI create(Window window) throws IOException
+    public static ScreenshotController create(Window window) throws IOException
     {
-        ScreenshotUI ui = ScreenshotUI.create(window);
+        ScreenshotController ui = ScreenshotController.create(window);
         ui.setBuilderSupplier(BuilderImplementation::new);
         return ui;
     }

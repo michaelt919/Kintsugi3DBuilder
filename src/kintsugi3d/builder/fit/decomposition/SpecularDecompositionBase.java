@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.gl.vecmath.DoubleVector4;
 import kintsugi3d.util.SRGB;

@@ -12,18 +12,18 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.io.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.ibr.*;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.*;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.material.ReadonlyMaterial;
@@ -71,7 +71,7 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void optimizeFitWithCache(
-        IBRResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -99,7 +99,7 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
-        IBRResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
         throws IOException
     {
         ViewSet viewSet = resources.getViewSet();
@@ -133,7 +133,7 @@ public class SpecularFitProcess
                     else
                     {
                         return mask != null ?
-                                new BufferedImageColorList(IBRResourcesImageSpace.applyGrayscaleMaskToAlpha(image, mask)) :
+                                new BufferedImageColorList(GraphicsResourcesImageSpace.applyGrayscaleMaskToAlpha(image, mask)) :
                                 new BufferedImageColorList(image);
                     }
                 }
@@ -160,7 +160,7 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> optimizeFit(
-        IBRResources<ContextType> resources, ProgressMonitor monitor)
+        GraphicsResources<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         SpecularDecompositionFromScratch decomposition =
@@ -169,7 +169,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> optimizeFit(
-        IBRResources<ContextType> resources, SpecularDecompositionFromScratch decomposition, ProgressMonitor monitor)
+        GraphicsResources<ContextType> resources, SpecularDecompositionFromScratch decomposition, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
@@ -236,7 +236,7 @@ public class SpecularFitProcess
 
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
-        try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
+        try (GraphicsResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
                 new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
                 {
                     private double maxProgress = 0.0;
@@ -392,7 +392,7 @@ public class SpecularFitProcess
                         monitor.allowUserCancellation();
                     }
 
-                    try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j,
+                    try (GraphicsResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j,
                             new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
                             {
                                 private double maxProgress = 0.0;
@@ -527,7 +527,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> void optimizeTexSpaceFit(
-        IBRResources<ContextType> resources,
+        GraphicsResources<ContextType> resources,
         TextureResolution resolution,
         OptimizationMethod<ContextType> optimizationMethod,
         SpecularMaterialResources<ContextType> resultsForErrorCalc, ProgressMonitor monitor) throws IOException, UserCancellationException
@@ -580,7 +580,7 @@ public class SpecularFitProcess
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectanceProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/texspace_dynamic.vert"),

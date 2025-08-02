@@ -13,7 +13,7 @@ package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.optimization.KMeansClustering;
@@ -32,10 +32,10 @@ import java.util.stream.IntStream;
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitInitializer.class);
-    private final ReadonlyIBRResources<ContextType> resources;
+    private final ReadonlyGraphicsResources<ContextType> resources;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitInitializer(ReadonlyIBRResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitInitializer(ReadonlyGraphicsResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
     {
         this.resources = resources;
         this.specularBasisSettings = specularBasisSettings;

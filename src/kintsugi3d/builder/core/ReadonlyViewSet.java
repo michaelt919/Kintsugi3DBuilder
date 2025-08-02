@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;

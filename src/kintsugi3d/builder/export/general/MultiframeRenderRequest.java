@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
@@ -45,7 +45,7 @@ class MultiframeRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ObservableIBRRequest create()
+        public ObservableProjectGraphicsRequest create()
         {
             return new MultiframeRenderRequest(getWidth(), getHeight(), frameCount, getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
@@ -53,10 +53,10 @@ class MultiframeRenderRequest extends RenderRequestBase
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
-        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (

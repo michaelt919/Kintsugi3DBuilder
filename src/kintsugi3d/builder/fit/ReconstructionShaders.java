@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 
@@ -26,7 +26,7 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getIncidentRadianceProgramBuilder(
-            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/imgspace.vert"),
@@ -35,7 +35,7 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
-            ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit,
+            ReadonlyGraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit,
             SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
@@ -46,7 +46,7 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
-            ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit,
+            ReadonlyGraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit,
             SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,

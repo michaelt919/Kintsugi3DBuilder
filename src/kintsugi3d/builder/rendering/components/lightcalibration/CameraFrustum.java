@@ -15,8 +15,8 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -28,11 +28,11 @@ import java.util.Map;
 
 public class CameraFrustum<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final IBRResources<ContextType> resources;
+    private final GraphicsResources<ContextType> resources;
 
     private ViewSelection viewSelection;
 
-    public CameraFrustum(IBRResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraFrustum(GraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
     {
         super(resources.getContext());
         this.resources = resources;
@@ -71,9 +71,9 @@ public class CameraFrustum<ContextType extends Context<ContextType>> extends Sha
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof IBRResourcesImageSpace)
+        if (resources instanceof GraphicsResourcesImageSpace)
         {
-            IBRResourcesImageSpace<ContextType> resourcesImgSpace = (IBRResourcesImageSpace<ContextType>)resources;
+            GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>)resources;
 
             FramebufferSize size = framebuffer.getSize();
 

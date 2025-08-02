@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<VBox fx:id="root" spacing="16.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.LoadOptionsController">
+    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Visibility/shadow testing">
+        <font>
+            <Font size="18.0" />
+        </font>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
+    </CheckBox>
+   <HBox>
+      <children>
+          <Text styleClass="text" text="Visibility bias: ">
+              <font>
+                  <Font size="18.0" />
+              </font>
+            <HBox.margin>
+               <Insets bottom="9.0" top="9.0" />
+            </HBox.margin>
+          </Text>
+          <TextField fx:id="occlusionBiasTextField" prefHeight="39.0" prefWidth="100.0">
+              <font>
+                  <Font size="18.0" />
+              </font>
+          </TextField>
+          <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025">
+            <HBox.margin>
+               <Insets left="9.0" right="9.0" />
+            </HBox.margin></Slider>
+      </children>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
+   </HBox>
+    <opaqueInsets>
+      <Insets />
+   </opaqueInsets>
+   <padding>
+      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+   </padding>
+</VBox>

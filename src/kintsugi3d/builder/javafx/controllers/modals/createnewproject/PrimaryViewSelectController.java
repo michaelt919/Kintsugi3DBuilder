@@ -32,7 +32,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
-import kintsugi3d.builder.resources.ibr.MissingImagesException;
+import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

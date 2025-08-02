@@ -14,7 +14,7 @@ package kintsugi3d.builder.fit.normal;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -37,7 +37,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private boolean firstSmooth = true;
 
     public NormalOptimization(
-        ReadonlyIBRResources<ContextType> resources,
+        ReadonlyGraphicsResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
         TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings)
@@ -193,7 +193,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     }
 
     private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/texspace_dynamic.vert"),
@@ -205,7 +205,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/texspace_dynamic.vert"),

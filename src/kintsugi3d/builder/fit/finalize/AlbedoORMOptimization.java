@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.finalize;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;

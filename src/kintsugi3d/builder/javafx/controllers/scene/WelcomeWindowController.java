@@ -22,7 +22,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.IBRRequestManager;
+import kintsugi3d.builder.core.GraphicsRequestManager;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
@@ -62,7 +62,7 @@ public class WelcomeWindowController
     private Stage window;
 
     public <ContextType extends Context<ContextType>> void init(
-            Stage injectedStage, IBRRequestManager<ContextType> requestQueue, JavaFXState javaFXState,
+            Stage injectedStage, GraphicsRequestManager<ContextType> requestQueue, JavaFXState javaFXState,
             Runnable injectedUserDocumentationHandler) {
         INSTANCE = this;
 

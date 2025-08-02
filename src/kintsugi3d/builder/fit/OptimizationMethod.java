@@ -13,7 +13,7 @@ package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
+import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.Context;
 
 @FunctionalInterface

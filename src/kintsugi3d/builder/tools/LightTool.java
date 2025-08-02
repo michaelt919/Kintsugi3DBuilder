@@ -293,7 +293,7 @@ final class LightTool implements PickerTool
     private void updateCenter(DoubleVector2 normalizedPosition)
     {
         SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
-        if ("IBRObject".equals(sceneViewport.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
+        if ("RenderingSubject".equals(sceneViewport.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
         {
             lightingModel.setLightCenter(lightIndex, sceneViewport.get3DPositionAtCoordinates(normalizedPosition.x, normalizedPosition.y));
         }

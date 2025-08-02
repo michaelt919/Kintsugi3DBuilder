@@ -17,7 +17,7 @@ import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResourcesBase;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
 

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.io.metashape;
 
 import javafx.scene.image.Image;
-import kintsugi3d.builder.resources.ibr.MissingImagesException;
+import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.gl.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

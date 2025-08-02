@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.builder.state.SettingsModel;

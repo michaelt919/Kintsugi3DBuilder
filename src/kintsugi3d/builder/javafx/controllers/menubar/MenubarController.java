@@ -39,17 +39,17 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
-import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
 import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController;
 import kintsugi3d.builder.javafx.controllers.modals.LoadOptionsController;
+import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
@@ -614,18 +614,22 @@ public class MenubarController
         }
 
         int basisCount = 0;
-        try
+
+        if (Global.state().getIOModel().hasValidHandler())
         {
-            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
-            MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
-            if (basis != null)
+            try
             {
-                basisCount = basis.getMaterialCount();
+                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
+                if (basis != null)
+                {
+                    basisCount = basis.getMaterialCount();
+                }
             }
-        }
-        catch (IOException | NullPointerException e)
-        {
-            log.error("Error attempting to load previous solution basis count:", e);
+            catch (IOException | NullPointerException e)
+            {
+                log.error("Error attempting to load previous solution basis count:", e);
+            }
         }
 
         Map<String, Optional<Object>> comboDefines = new HashMap<>(2);
@@ -666,8 +670,8 @@ public class MenubarController
                     try
                     {
                         Class<?> requestUIClass = Class.forName(className);
-                        Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, Kintsugi3DBuilderState.class);
-                        if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
+                        Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class);
+                        if (GraphicsRequestController.class.isAssignableFrom(createMethod.getReturnType())
                             && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                         {
                             MenuItem newItem = new MenuItem(menuName);
@@ -675,7 +679,7 @@ public class MenubarController
                             {
                                 try
                                 {
-                                    IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedStage, Global.state());
+                                    GraphicsRequestController requestUI = (GraphicsRequestController) createMethod.invoke(null, injectedStage);
                                     requestUI.bind(javaFXState.getSettingsModel());
                                     requestUI.prompt(Rendering.getRequestQueue());
                                 }
@@ -710,7 +714,7 @@ public class MenubarController
     {
         try
         {
-            IBRRequestUI requestUI = ExportRequestUI.create(window);
+            GraphicsRequestController requestUI = ExportRequestController.create(window);
             requestUI.bind(javaFXState.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
         }
@@ -812,11 +816,11 @@ public class MenubarController
     }
 
     @FXML
-    private void exportSpecularFit()
+    private void specularFit()
     {
         try
         {
-            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window);
+            GraphicsRequestController requestUI = SpecularFitController.create(this.window);
             requestUI.bind(javaFXState.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
 

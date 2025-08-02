@@ -12,8 +12,8 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;

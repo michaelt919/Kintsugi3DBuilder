@@ -14,7 +14,7 @@ package kintsugi3d.builder.fit.decomposition;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.MatrixSystem;
 import kintsugi3d.optimization.function.BasisFunctions;

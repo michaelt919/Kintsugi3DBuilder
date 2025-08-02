@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.settings;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.resources.ibr.ImageCacheSettings;
+import kintsugi3d.builder.resources.project.ImageCacheSettings;
 
 import java.io.File;
 

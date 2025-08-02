@@ -12,9 +12,9 @@
 package kintsugi3d.builder.fit.debug;
 
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
@@ -58,7 +58,7 @@ public final class FinalErrorCalculaton
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        IBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
+        GraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
     {
         if (CALCULATE_NORMAL_RMSE && resources.getSpecularMaterialResources().getNormalMap() != null)
         {
@@ -108,7 +108,7 @@ public final class FinalErrorCalculaton
     }
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
         SpecularMaterialResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
@@ -169,7 +169,7 @@ public final class FinalErrorCalculaton
      * @throws FileNotFoundException
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
-            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
             SpecularMaterialResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws IOException
     {
@@ -259,7 +259,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createFinalErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
@@ -269,7 +269,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createGGXErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),

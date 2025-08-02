@@ -36,19 +36,13 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
     @FXML
     private CheckBox buehlerCheckBox;
     @FXML
-    private CheckBox occlusionCheckBox;
-    @FXML
     private TextField weightExponentTextField;
     @FXML
     private TextField isotropyFactorTextField;
     @FXML
-    private TextField occlusionBiasTextField;
-    @FXML
     private Slider weightExponentSlider;
     @FXML
     private Slider isotropyFactorSlider;
-    @FXML
-    private Slider occlusionBiasSlider;
     @FXML
     private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
 
@@ -95,8 +89,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
         buehlerCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("buehlerAlgorithm"));
         buehlerTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("buehlerViewCount"));
 
-        occlusionCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("occlusionEnabled"));
-
         weightModeChoiceBox.valueProperty().unbindBidirectional(settingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
         weightExponentSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("weightExponent"));
@@ -105,8 +97,9 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
         isotropyFactorSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
         isotropyFactorTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
 
-        occlusionBiasSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
-        occlusionBiasTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
+//        occlusionCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("occlusionEnabled"));
+//        occlusionBiasSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
+//        occlusionBiasTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
     }
 
     @Override
@@ -130,7 +123,8 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
 
         StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
         StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
-        StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
+
+//        StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
     }
 
     @Override

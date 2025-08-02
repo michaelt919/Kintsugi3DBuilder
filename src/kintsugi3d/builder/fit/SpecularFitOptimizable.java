@@ -20,10 +20,10 @@ import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.normal.NormalOptimization;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.optimization.ReadonlyErrorReport;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
@@ -49,7 +49,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private final ContextType context;
 
-    private final ReadonlyIBRResources<ContextType> resources;
+    private final ReadonlyGraphicsResources<ContextType> resources;
     private final TextureResolution textureResolution;
 
     private final SpecularBasisSettings specularBasisSettings;
@@ -63,7 +63,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private final ShaderBasedErrorCalculator<ContextType> errorCalculator;
 
     private SpecularFitOptimizable(
-        ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
+        ReadonlyGraphicsResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
         TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
@@ -103,7 +103,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         try
         {
@@ -119,7 +119,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-        SpecularMaterialResources<ContextType> specularFit, ReadonlyIBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
+        SpecularMaterialResources<ContextType> specularFit, ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
@@ -131,7 +131,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
         SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {
@@ -140,7 +140,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 true, specularBasisSettings, programFactory, textureResolution, normalOptimizationSettings, includeConstantTerm);
     }
 
-    public ReadonlyIBRResources<ContextType> getResources()
+    public ReadonlyGraphicsResources<ContextType> getResources()
     {
         return resources;
     }

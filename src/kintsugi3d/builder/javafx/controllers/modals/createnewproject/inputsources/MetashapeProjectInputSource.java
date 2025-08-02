@@ -25,7 +25,7 @@ import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.resources.ibr.MissingImagesException;
+import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;

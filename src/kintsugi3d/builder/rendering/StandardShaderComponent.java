@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -39,7 +39,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     private final LightingResources<ContextType> lightingResources;
 
 
-    protected final IBRResourcesImageSpace<ContextType> resources;
+    protected final GraphicsResourcesImageSpace<ContextType> resources;
 
     protected final SceneModel sceneModel;
 
@@ -50,7 +50,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     private Map<String, Optional<Object>> fragmentShaderDefines;
 
 
-    protected StandardShaderComponent(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
+    protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)
     {
         super(resources.getContext(), sceneViewportModel, sceneObjectTag);
@@ -60,7 +60,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         this.fragmentShaderFile = fragmentShaderFile;
     }
 
-    protected StandardShaderComponent(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
+    protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources)
     {
         this(resources, sceneViewportModel, sceneObjectTag, sceneModel, lightingResources,

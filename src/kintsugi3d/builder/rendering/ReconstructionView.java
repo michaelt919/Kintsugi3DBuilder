@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Framebuffer;

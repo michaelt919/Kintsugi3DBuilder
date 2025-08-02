@@ -11,16 +11,16 @@
 
 package kintsugi3d.builder.export.screenshot;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
 import java.io.File;
 import java.io.IOException;
 
-public class ScreenshotRequest implements ObservableIBRRequest
+public class ScreenshotRequest implements ObservableProjectGraphicsRequest
 {
     private final int width;
     private final int height;
@@ -94,11 +94,11 @@ public class ScreenshotRequest implements ObservableIBRRequest
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().getContext().buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

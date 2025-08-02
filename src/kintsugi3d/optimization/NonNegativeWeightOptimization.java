@@ -11,7 +11,7 @@
 
 package kintsugi3d.optimization;
 
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.Collections;

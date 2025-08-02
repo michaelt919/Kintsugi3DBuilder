@@ -17,19 +17,19 @@ import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSnap;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
 public class LightCalibrationRoot<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private final IBRResourcesImageSpace<ContextType> resources;
+    private final GraphicsResourcesImageSpace<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;
 
     private ViewSnap<ContextType> viewSnapRoot;
 
-    public LightCalibrationRoot(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationRoot(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
                                 ViewSelection viewSelection, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;

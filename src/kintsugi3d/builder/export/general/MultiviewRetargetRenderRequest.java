@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
 
@@ -47,7 +47,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ObservableIBRRequest create()
+        public ObservableProjectGraphicsRequest create()
         {
             return new MultiviewRetargetRenderRequest(getWidth(), getHeight(), getShaderSetupCallback(),
                 targetViewSet, getVertexShader(), getFragmentShader(), getOutputDirectory());
@@ -56,11 +56,11 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile).finish();
 
-        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (

@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;

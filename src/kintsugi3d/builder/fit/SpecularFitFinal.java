@@ -14,7 +14,7 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;

@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
+public abstract class SimpleAnimationRequestBase implements ObservableProjectGraphicsRequest
 {
     private final int width;
     private final int height;
@@ -36,7 +36,7 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
         Builder setHeight(int height);
         Builder setFrameCount(int frameCount);
         Builder setExportPath(File exportPath);
-        <ContextType extends Context<ContextType>> ObservableIBRRequest create();
+        <ContextType extends Context<ContextType>> ObservableProjectGraphicsRequest create();
     }
 
     protected abstract static class BuilderBase implements Builder
@@ -111,12 +111,12 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().getContext().buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

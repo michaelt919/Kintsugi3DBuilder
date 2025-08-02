@@ -22,9 +22,9 @@ public final class OrbitAnimationUIFactory
     {
     }
 
-    public static SimpleAnimationUI create(Window window) throws IOException
+    public static SimpleAnimationController create(Window window) throws IOException
     {
-        SimpleAnimationUI ui = SimpleAnimationUI.create(window);
+        SimpleAnimationController ui = SimpleAnimationController.create(window);
         ui.setBuilderSupplier(BuilderImplementation::new);
         return ui;
     }

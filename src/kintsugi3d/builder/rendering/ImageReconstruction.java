@@ -12,8 +12,8 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
@@ -54,7 +54,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments,
         Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
         ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-        ReadonlyIBRResources<ContextType> resources)
+        ReadonlyGraphicsResources<ContextType> resources)
         throws IOException
     {
         this(viewSet, buildFramebufferAttachments, buildIncidentRadianceFramebufferAttachments, incidentRadianceProgramBuilder, resources,
@@ -80,7 +80,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments,
             Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-            ReadonlyIBRResources<ContextType> resources,
+            ReadonlyGraphicsResources<ContextType> resources,
             IntFunction<ColorImage> groundTruthLoader)
         throws IOException
     {

@@ -13,8 +13,8 @@ package kintsugi3d.builder.resources;
 
 import kintsugi3d.builder.core.DynamicResourceManager;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.rendering.components.IBRSubject;
-import kintsugi3d.builder.resources.ibr.IBRResources;
+import kintsugi3d.builder.rendering.components.RenderingSubject;
+import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -38,9 +38,9 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private static final Logger log = LoggerFactory.getLogger(DynamicResourceLoader.class);
     private final ProgressMonitor progressMonitor;
     private final ContextType context;
-    private final IBRResources<ContextType> resources;
+    private final GraphicsResources<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
-    private final IBRSubject<ContextType> subject;
+    private final RenderingSubject<ContextType> subject;
 
     private boolean newEnvironmentDataAvailable;
     private EnvironmentMap newEnvironmentData;
@@ -72,8 +72,8 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private EncodableColorImage currentEnvironmentMap;
 
-    public DynamicResourceLoader(ProgressMonitor progressMonitor, IBRResources<ContextType> resources,
-        IBRSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
+    public DynamicResourceLoader(ProgressMonitor progressMonitor, GraphicsResources<ContextType> resources,
+        RenderingSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
     {
         this.progressMonitor = progressMonitor;
         this.context = resources.getContext();

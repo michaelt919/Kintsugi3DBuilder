@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.resources.ibr.LuminanceMapResources;
+import kintsugi3d.builder.resources.project.LuminanceMapResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture1D;

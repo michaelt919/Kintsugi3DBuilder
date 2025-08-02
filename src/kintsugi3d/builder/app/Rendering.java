@@ -14,7 +14,7 @@ package kintsugi3d.builder.app;//Created by alexk on 7/19/2017.
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.rendering.IBRInstanceManager;
+import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.tools.DragToolType;
 import kintsugi3d.builder.tools.KeyPressToolType;
@@ -75,9 +75,9 @@ public final class Rendering
         });
     }
 
-    private static IBRRequestManager<OpenGLContext> requestQueue = null;
+    private static GraphicsRequestManager<OpenGLContext> requestQueue = null;
 
-    public static IBRRequestManager<OpenGLContext> getRequestQueue()
+    public static GraphicsRequestManager<OpenGLContext> getRequestQueue()
     {
         return requestQueue;
     }
@@ -173,7 +173,7 @@ public final class Rendering
         OpenGLContext context = canvas.getContext();
 
         // Start the request queue as soon as we have a graphics context.
-        requestQueue = new IBRRequestManager<>(context);
+        requestQueue = new GraphicsRequestManager<>(context);
 
         context.getState().enableDepthTest();
 
@@ -215,7 +215,7 @@ public final class Rendering
         toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
         toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
-        IBRInstanceManager<OpenGLContext> instanceManager = new IBRInstanceManager<>(context);
+        ProjectInstanceManager<OpenGLContext> instanceManager = new ProjectInstanceManager<>(context);
 
         SceneViewportModel sceneViewportModel = Global.state().getSceneViewportModel();
 
@@ -504,7 +504,7 @@ public final class Rendering
             }
             else
             {
-                // Using Platform.runLater since full IBR projects include stuff that's managed by JavaFX (cameras, lights, etc.)
+                // Using Platform.runLater since full projects include stuff that's managed by JavaFX (cameras, lights, etc.)
                 Platform.runLater(() ->
                 {
                     try
@@ -526,20 +526,20 @@ public final class Rendering
             try
             {
                 Class<?> requestClass = Class.forName(args[1]);
-                Method createMethod = requestClass.getDeclaredMethod("create", Kintsugi3DBuilderState.class, String[].class);
-                if (ObservableIBRRequest.class.isAssignableFrom(createMethod.getReturnType())
+                Method createMethod = requestClass.getDeclaredMethod("create", String[].class);
+                if (ObservableProjectGraphicsRequest.class.isAssignableFrom(createMethod.getReturnType())
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {
                     // Add request to the queue
-                    requestQueue.addIBRRequest((ObservableIBRRequest) createMethod.invoke(null, Global.state(), args));
+                    requestQueue.addGraphicsRequest((ObservableProjectGraphicsRequest) createMethod.invoke(null, (Object[]) args));
 
                     // Quit after the request finishes
-                    // Use IBRRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
+                    // Use ProjectGraphicsRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
                     // once the project has finished loading
-                    requestQueue.addBackgroundIBRRequest(new IBRRequest()
+                    requestQueue.addBackgroundGraphicsRequest(new ProjectGraphicsRequest()
                     {
                         @Override
-                        public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable)
+                        public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> instance)
                         {
                             WindowSynchronization.getInstance().quitWithoutConfirmation();
                         }

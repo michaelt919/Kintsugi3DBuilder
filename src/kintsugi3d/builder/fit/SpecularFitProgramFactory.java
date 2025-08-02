@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -34,7 +34,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         this.specularBasisSettings = specularBasisSettings;
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources,
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
         File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
         ProgramBuilder<ContextType> builder = resources.getShaderProgramBuilder()
@@ -42,7 +42,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
             .addShader(ShaderType.FRAGMENT, fragmentShader);
 
         // Disable occlusion / shadow culling if requested (may do nothing if already operating in texture space)
-        // getIBRShaderProgramBuilder() will enable by default if depth / shadow maps are available
+        // getShaderProgramBuilder() will enable by default if depth / shadow maps are available
         if (!visibilityAndShadowTests)
         {
             builder
@@ -58,13 +58,13 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
                 .define("BASIS_RESOLUTION", specularBasisSettings.getBasisResolution());
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources,
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
         File vertexShader, File fragmentShader)
     {
         return getShaderProgramBuilder(resources, vertexShader, fragmentShader, true);
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources,
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
         File vertexShader, File fragmentShader, boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
         throws IOException
     {
@@ -87,26 +87,26 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         return program;
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources,
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
         File vertexShader, File fragmentShader, Map<String, Object> additionalDefines)
         throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, true, additionalDefines);
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources,
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
         File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources,
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
         File vertexShader, File fragmentShader) throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, true);
     }
 
-    public void setupShaderProgram(ReadonlyIBRResources<ContextType> resources, Program<ContextType> program)
+    public void setupShaderProgram(ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> program)
     {
         resources.setupShaderProgram(program);
     }

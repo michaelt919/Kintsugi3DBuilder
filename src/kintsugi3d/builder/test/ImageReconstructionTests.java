@@ -12,6 +12,7 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -22,14 +23,13 @@ import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.internal.LoadOptionsModelImpl;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesAnalytic;
-import kintsugi3d.builder.resources.ibr.IBRResourcesCacheable;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.GraphicsResourcesAnalytic;
+import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
@@ -200,7 +200,7 @@ class ImageReconstructionTests
 
     void saveGroundTruthSyntheticImages(
             ViewSet viewSet,
-            BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+            BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
             String groundTruthName)
         throws IOException
     {
@@ -212,7 +212,7 @@ class ImageReconstructionTests
 
         SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
 
-        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
+        try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
             Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram))
         {
@@ -248,7 +248,7 @@ class ImageReconstructionTests
         return noiseScale / (float) Math.sqrt(12.0f);
     }
 
-    private BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>>
+    private BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>>
         getProgramCreator(String testShaderName, Consumer<Program<OpenGLContext>> setupShader)
     {
         return
@@ -802,7 +802,7 @@ class ImageReconstructionTests
     }
 
     static ProgramObject<OpenGLContext> createGroundTruthProgram(
-        SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
+        SpecularFitProgramFactory<OpenGLContext> programFactory, GraphicsResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
     {
         try
         {
@@ -821,8 +821,8 @@ class ImageReconstructionTests
 
     void multiTest(
         ViewSet viewSet,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
         BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale,
         String testName)  throws IOException
     {
@@ -846,8 +846,8 @@ class ImageReconstructionTests
 
     private void testSynthetic(
         ViewSet viewSet,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
         Consumer<ColorAppearanceRMSE> validation,
         String testName) throws IOException
     {
@@ -859,7 +859,7 @@ class ImageReconstructionTests
 
         SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
 
-        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
+        try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
             Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram))
         {
@@ -937,7 +937,7 @@ class ImageReconstructionTests
     private void testFitSynthetic(ViewSet viewSet, Function<ProgramBuilder<OpenGLContext>, ProgramBuilder<OpenGLContext>> injectDefines,
         Consumer<SpecularMaterialResources<?>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
     {
-        try (IBRResources<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry)
+        try (GraphicsResources<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry)
         {
             @Override
             public ProgramBuilder<OpenGLContext> getShaderProgramBuilder()
@@ -1004,7 +1004,7 @@ class ImageReconstructionTests
         viewSetLoadOptions.mainDirectories.fullResImageDirectory = new File(classLoader.getResource("test/" + imageDirectory).toURI());
         viewSetLoadOptions.mainDirectories.fullResImagesNeedUndistort = true;
 
-        try (IBRResourcesImageSpace<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
+        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
                 .setImageLoadOptions(imageLoadOptions)
                 .setProgressMonitor(progressMonitor)
                 .loadLooseFiles(new File(classLoader.getResource("test/" + cameras).toURI()), viewSetLoadOptions)
@@ -1019,7 +1019,7 @@ class ImageReconstructionTests
     {
         LoadOptionsModel loadOptions = new LoadOptionsModelImpl();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        try (IBRResourcesImageSpace<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
+        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
             .setImageLoadOptions(loadOptions)
             .setProgressMonitor(progressMonitor)
             .loadVSETFile(viewSetFile, viewSetFile.getParentFile())
@@ -1034,7 +1034,7 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFit(IBRResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
+    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         // TODO not yet tested

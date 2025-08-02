@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.export.resample;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
@@ -25,7 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 
-public class ResampleRequest implements ObservableIBRRequest
+public class ResampleRequest implements ObservableProjectGraphicsRequest
 {
     private final int resampleWidth;
     private final int resampleHeight;
@@ -41,13 +41,13 @@ public class ResampleRequest implements ObservableIBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile).finish();
 
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(resampleWidth, resampleHeight)
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().getContext().buildFramebufferObject(resampleWidth, resampleHeight)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

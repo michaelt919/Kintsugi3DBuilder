@@ -26,7 +26,7 @@ import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.util.PageWindow;
 import kintsugi3d.builder.javafx.util.WindowUtilities;
-import kintsugi3d.builder.resources.ibr.MeshImportException;
+import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
