@@ -49,7 +49,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("weightExponent", 16.0f, true);
         settingsModel.createNumericSetting("isotropyFactor", 0.0f, true);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
-        settingsModel.createNumericSetting("buehlerViewCount", 5, true);
+        settingsModel.createNumericSetting("buehlerViewCount", 8, true);
     }
 
     public static void applyProjectDefaults(SettingsModel settingsModel)
