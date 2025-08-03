@@ -135,6 +135,10 @@ public final class ViewSet implements ReadonlyViewSet
      * The directory where the masks are stored, if any are present (null if no masks)
      */
     private File masksDirectory;
+    /**
+     * The directory where the original model and imported textures (if any) are stored
+     */
+    private File modelDirectory;
 
     /**
      * The mesh file.
@@ -175,6 +179,7 @@ public final class ViewSet implements ReadonlyViewSet
     private int previewHeight = 0;
 
     private final SettingsModel projectSettings = new SimpleSettingsModel();
+    private final Map<String, File> resourceMap = new HashMap<>(32);
 
     public static final class Builder
     {
@@ -387,6 +392,12 @@ public final class ViewSet implements ReadonlyViewSet
         public Builder applySettings(ReadonlySettingsModel settings)
         {
             result.getProjectSettings().copyFrom(settings);
+            return this;
+        }
+
+        public Builder addResourceFiles(Map<String, File> resourceMap)
+        {
+            result.getResourceMap().putAll(resourceMap);
             return this;
         }
 
@@ -650,6 +661,7 @@ public final class ViewSet implements ReadonlyViewSet
             result.cameraProjectionIndexList.add(this.cameraProjectionIndexList.get(i));
             result.lightIndexList.add(this.lightIndexList.get(i));
             result.imageFiles.add(this.imageFiles.get(i));
+            result.maskFiles.put(i, this.maskFiles.get(i));
             result.viewErrorMetrics.add(this.viewErrorMetrics.get(i));
         }
 
@@ -668,6 +680,8 @@ public final class ViewSet implements ReadonlyViewSet
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
+        result.masksDirectory = this.masksDirectory;
+        result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -675,6 +689,9 @@ public final class ViewSet implements ReadonlyViewSet
         result.primaryViewIndex = this.primaryViewIndex;
         result.orientationViewIndex = this.orientationViewIndex;
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
+
+        result.projectSettings.copyFrom(this.projectSettings);
+        result.resourceMap.putAll(this.resourceMap);
 
         return result;
     }
@@ -708,6 +725,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
         result.masksDirectory = this.masksDirectory;
+        result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -715,6 +733,12 @@ public final class ViewSet implements ReadonlyViewSet
         result.primaryViewIndex = this.primaryViewIndex;
         result.orientationViewIndex = this.orientationViewIndex;
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
+
+        result.previewWidth = this.previewWidth;
+        result.previewHeight = this.previewHeight;
+
+        result.projectSettings.copyFrom(this.projectSettings);
+        result.resourceMap.putAll(this.resourceMap);
 
         return result;
     }
@@ -750,6 +774,12 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public UUID getUUID()
+    {
+        return uuid;
+    }
+
+    @Override
     public Matrix4 getCameraPose(int poseIndex)
     {
         return this.cameraPoseList.get(poseIndex);
@@ -775,36 +805,6 @@ public final class ViewSet implements ReadonlyViewSet
     public void setRootDirectory(File rootDirectory)
     {
         this.rootDirectory = rootDirectory;
-    }
-
-    @Override
-    public String getGeometryFileName()
-    {
-        try
-        {
-            return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
-        }
-        catch (IllegalArgumentException |
-               NullPointerException e) //If the root and other directories are located under different drive letters on windows
-        {
-            return geometryFile == null ? null : geometryFile.toString();
-        }
-    }
-
-    @Override
-    public File getGeometryFile()
-    {
-        return geometryFile;
-    }
-
-    /**
-     * Sets the absolute path of the geometry file associated with this view set.
-     *
-     * @param geometryFile The geometry file.
-     */
-    public void setGeometryFile(File geometryFile)
-    {
-        this.geometryFile = geometryFile;
     }
 
     @Override
@@ -962,21 +962,6 @@ public final class ViewSet implements ReadonlyViewSet
             ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
     }
 
-    @Override
-    public File getMask(int poseIndex)
-    {
-        File maskFile = maskFiles.get(poseIndex);
-        if (maskFile == null || getMasksDirectory() == null)
-        {
-            // Not all images have masks, so this file may still not exist
-            return null;
-        }
-        else
-        {
-            return new File(getMasksDirectory(), maskFile.getName());
-        }
-    }
-
     public int getPreviewWidth()
     {
         return previewWidth;
@@ -999,52 +984,9 @@ public final class ViewSet implements ReadonlyViewSet
         return this.primaryViewIndex;
     }
 
-    @Override
-    public int getOrientationViewIndex()
-    {
-        return this.orientationViewIndex;
-    }
-
-    @Override
-    public double getOrientationViewRotationDegrees()
-    {
-        return this.orientationViewRotationDegrees;
-    }
-
     public void setPrimaryViewIndex(int poseIndex)
     {
         this.primaryViewIndex = poseIndex;
-    }
-
-    public int findIndexOfView(String viewName)
-    {
-        int poseIndex = this.imageFiles.indexOf(new File(viewName));
-        if (poseIndex >= 0)
-        {
-            return poseIndex;
-        }
-        else
-        {
-            //comb through manually because imageFiles could contain parent files
-            //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
-
-            //another possibility is an extension mismatch
-            //sometimes the camera label is photo314.jpg, other times just photo314
-
-            //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-            for (int i = 0; i < imageFiles.size(); ++i)
-            {
-                String shortenedImgName = removeExt(getImageFileName(i));
-                String shortenedViewName = removeExt(viewName);
-
-                if (shortenedImgName.equals(shortenedViewName))
-                {
-                    return i;
-                }
-            }
-        }
-
-        return -1;
     }
 
     public void setPrimaryView(String viewName)
@@ -1054,6 +996,12 @@ public final class ViewSet implements ReadonlyViewSet
         {
             this.primaryViewIndex = viewIndex;
         }
+    }
+
+    @Override
+    public int getOrientationViewIndex()
+    {
+        return this.orientationViewIndex;
     }
 
     /**
@@ -1077,6 +1025,49 @@ public final class ViewSet implements ReadonlyViewSet
         {
             this.orientationViewIndex = -1;
         }
+    }
+
+    @Override
+    public double getOrientationViewRotationDegrees()
+    {
+        return this.orientationViewRotationDegrees;
+    }
+
+    public void setOrientationViewRotationDegrees(double rotation)
+    {
+        orientationViewRotationDegrees = rotation;
+    }
+
+    public int findIndexOfView(String viewName)
+    {
+        int poseIndex = this.imageFiles.indexOf(new File(viewName));
+        if (poseIndex >= 0)
+        {
+            return poseIndex;
+        }
+        else
+        {
+            //comb through manually because imageFiles could contain parent files
+            //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
+
+            //another possibility is an extension mismatch
+            //sometimes the camera label is photo314.jpg, other times just photo314
+
+            //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
+            for (int i = 0; i < imageFiles.size(); ++i)
+            {
+                String imgName = getImageFileName(i);
+                String shortenedImgName = removeExt(imgName);
+                String shortenedViewName = removeExt(viewName);
+
+                if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
     }
 
     public static String removeExt(String fileName)
@@ -1241,15 +1232,24 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public UUID getUUID()
-    {
-        return uuid;
-    }
-
-    @Override
     public boolean hasMasks()
     {
         return masksDirectory != null;
+    }
+
+    @Override
+    public File getMask(int poseIndex)
+    {
+        File maskFile = maskFiles.get(poseIndex);
+        if (maskFile == null || getMasksDirectory() == null)
+        {
+            // Not all images have masks, so this file may still not exist
+            return null;
+        }
+        else
+        {
+            return new File(getMasksDirectory(), maskFile.getName());
+        }
     }
 
     @Override
@@ -1262,22 +1262,6 @@ public final class ViewSet implements ReadonlyViewSet
     public Map<Integer, File> getMasksMap()
     {
         return Collections.unmodifiableMap(maskFiles);
-    }
-
-    public void setUuid(UUID uuid)
-    {
-        this.uuid = uuid;
-    }
-
-    public void setOrientationViewRotationDegrees(double rotation)
-    {
-        orientationViewRotationDegrees = rotation;
-    }
-
-    @Override
-    public SettingsModel getProjectSettings()
-    {
-        return projectSettings;
     }
 
     public void setMasksDirectory(File dir)
@@ -1337,6 +1321,28 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     /**
+     * Checks for whether srcFile is null before copying into destDir.
+     * @param srcFile
+     * @param destDir
+     */
+    private static void copyFileSafe(File srcFile, File destDir)
+    {
+        if (srcFile != null)
+        {
+            File destFile = new File(destDir, srcFile.getName());
+
+            try
+            {
+                Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            catch (IOException e)
+            {
+                log.error("Failed to copy {} to {}", srcFile.getName(), destDir.getPath());
+            }
+        }
+    }
+
+    /**
      * Copies masks to an appropriate supporting files directory and changes the masks directory accordingly.
      * If the masks were previously stored in a ZIP file, they will be unzipped to the new masks directory.
      * Masks will be validated (see validateMasks()) as a result of this operation, possibly changing the recorded mask file name
@@ -1353,7 +1359,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         File masksDestinationDir = supportingFilesDirectory != null ?
             new File(supportingFilesDirectory, "masks") :
-            new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
+            new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.masks").toFile(), uuid.toString());
 
         masksDestinationDir.mkdirs();
 
@@ -1386,20 +1392,123 @@ public final class ViewSet implements ReadonlyViewSet
             for (int i = 0; i < getCameraPoseCount(); i++)
             {
                 File maskSrcFile = getMask(i);
-                if (maskSrcFile != null)
-                {
-                    File maskDestFile = new File(masksDestinationDir, maskSrcFile.getName());
+                copyFileSafe(maskSrcFile, masksDestinationDir);
+            }
 
-                    try
-                    {
-                        Files.copy(maskSrcFile.toPath(), maskDestFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    }
-                    catch (IOException e)
-                    {
-                        log.error("Failed to copy mask {} to {}", maskSrcFile.getName(), masksDestinationDir.getPath());
-                    }
-                }
+            // Use the destination directory as the masks directory to use from now on.
+            setMasksDirectory(masksDestinationDir);
+        }
+    }
+
+    @Override
+    public String getGeometryFileName()
+    {
+        File effectiveModelDirectory = this.getModelDirectory();
+
+        if (this.geometryFile != null && effectiveModelDirectory != null && !effectiveModelDirectory.toString().endsWith(".zip"))
+        {
+            try
+            {
+                return effectiveModelDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
+            }
+            catch (IllegalArgumentException | NullPointerException e)
+            {
+                log.warn("Exception relativizing {} within {}", this.geometryFile, effectiveModelDirectory);
             }
         }
+
+        // If directories are located under different drive letters on windows, or geometry file is null, or model directory is a ZIP
+        return geometryFile == null ? null : geometryFile.toString();
+    }
+
+    @Override
+    public File getGeometryFile()
+    {
+        return geometryFile;
+    }
+
+    /**
+     * Sets the absolute path of the geometry file associated with this view set.
+     *
+     * @param geometryFile The geometry file.
+     */
+    public void setGeometryFile(File geometryFile)
+    {
+        this.geometryFile = geometryFile;
+    }
+
+    public File getModelDirectory()
+    {
+        return this.modelDirectory == null ? this.rootDirectory : this.modelDirectory;
+    }
+
+    public void setModelDirectory(File modelDirectory)
+    {
+        this.modelDirectory = modelDirectory;
+    }
+
+    /**
+     * Copies model and textures to an appropriate supporting files directory and changes the model directory accordingly.
+     * If the model and textures were previously stored in a ZIP file, they will be unzipped to the new model directory.
+     */
+    public void copyModel()
+    {
+        if (modelDirectory == null)
+        {
+            return;
+        }
+
+        File modelSrcDir = modelDirectory;
+
+        File modelDestDir = supportingFilesDirectory != null ?
+            new File(supportingFilesDirectory, "model") :
+            new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.model").toFile(), uuid.toString());
+
+        modelDestDir.mkdirs();
+
+        // Unzip model and textures if needed
+        if (modelSrcDir.toString().endsWith(".zip"))
+        {
+            log.info("Unzipping model folder...");
+            try
+            {
+                // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
+                UnzipHelper.unzipToDirectory(modelSrcDir, modelDestDir, null);
+
+                // Use the destination directory as the model directory for validating (and thereafter)
+                setModelDirectory(modelDestDir);
+            }
+            catch (IOException e)
+            {
+                log.error("Failed to unzip model / textures.", e);
+            }
+        }
+        else
+        {
+            copyFileSafe(getGeometryFile(), modelDestDir);
+
+            for (var resource : resourceMap.entrySet())
+            {
+                if (resource.getKey().startsWith("texture."))
+                {
+                    copyFileSafe(resource.getValue(), modelDestDir);
+                }
+            }
+
+            // Use the destination directory as the model directory to use from now on.
+            setModelDirectory(modelDestDir);
+        }
+    }
+
+    @Override
+    public SettingsModel getProjectSettings()
+    {
+        return projectSettings;
+    }
+
+    @Override
+    public Map<String, File> getResourceMap()
+    {
+        return resourceMap;
     }
 }

@@ -131,6 +131,20 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.println(setting.getValue());
         }
 
+        if (viewSet.getResourceMap() != null)
+        {
+            out.println();
+            out.println("# Resource files");
+
+            for (var resource : viewSet.getResourceMap().entrySet())
+            {
+                out.print("zr ");
+                out.print(resource.getKey());
+                out.print(' ');
+                out.println(resource.getValue());
+            }
+        }
+
         if (viewSet.hasMasks())
         {
             out.println();

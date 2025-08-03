@@ -20,8 +20,8 @@ import java.nio.file.Path;
 @JsonDeserialize(as = SimpleDirectoryPreferencesModel.class)
 public interface DirectoryPreferencesModel extends ReadOnlyDirectoryPreferencesModel
 {
-    void setCacheDirectory(Path cacheDirectory);
     void setLogFileDirectory(Path logFileDirectory);
-    void setMasksDirectory(Path masksDirectory);
     void setPreviewImagesDirectory(Path previewImagesDirectory);
+    void setFitCacheDirectory(Path cacheDirectory);
+    void setExtensionDirectory(Path extDirector);
 }

@@ -72,6 +72,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
 
         SettingsModel settings = new SimpleSettingsModel();
+        Map<String, File> resourceMap = new HashMap<>(32);
 
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
@@ -300,6 +301,10 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         settings.createNumericSetting(scanner.next(), Float.parseFloat(scanner.next()));
                         scanner.nextLine(); // Ignore rest of line
                         break;
+                    case "zr":
+                        // resource file
+                        resourceMap.put(scanner.next(), new File(scanner.nextLine().trim()));
+                        break;
                     default:
                         // Skip unrecognized line
                         scanner.nextLine();
@@ -308,6 +313,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         builder.applySettings(settings);
+        builder.addResourceFiles(resourceMap);
 
         // Tonemapping
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];

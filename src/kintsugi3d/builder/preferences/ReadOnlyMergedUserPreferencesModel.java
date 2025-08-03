@@ -65,14 +65,14 @@ public class ReadOnlyMergedUserPreferencesModel implements ReadOnlyUserPreferenc
             }
 
             @Override
-            public Path getCacheDirectory()
+            public Path getFitCacheDirectory()
             {
-                return nullableOverride(baseDirs.getCacheDirectory(), overrideDirs.getCacheDirectory());
+                return nullableOverride(baseDirs.getFitCacheDirectory(), overrideDirs.getFitCacheDirectory());
             }
 
             @Override
-            public Path getMasksDirectory() {
-                return nullableOverride(baseDirs.getMasksDirectory(), overrideDirs.getMasksDirectory());
+            public Path getExtensionDirectory() {
+                return nullableOverride(baseDirs.getExtensionDirectory(), overrideDirs.getExtensionDirectory());
             }
 
             @Override

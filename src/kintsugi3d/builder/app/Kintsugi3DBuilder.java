@@ -68,7 +68,6 @@ public final class Kintsugi3DBuilder
         log.info("Application installation directory: {}", ApplicationFolders.getInstallationDirectory());
         log.info("Preview images root directory: {}", ApplicationFolders.getPreviewImagesRootDirectory());
         log.info("Fit cache root directory: {}", ApplicationFolders.getFitCacheRootDirectory());
-        log.info("Masks directory: {}", ApplicationFolders.getMasksDirectory());
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");

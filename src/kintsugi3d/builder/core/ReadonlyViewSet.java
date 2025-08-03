@@ -41,6 +41,7 @@ public interface ReadonlyViewSet
 
     ViewSet copy();
 
+    UUID getUUID();
     /**
      * Gets the camera pose defining the transformation from object space to camera space for a particular view.
      * @param poseIndex The index of the camera pose to retrieve.
@@ -259,8 +260,6 @@ public interface ReadonlyViewSet
     File findPreviewImageFile(int index) throws FileNotFoundException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
-    UUID getUUID();
-
     boolean hasMasks();
 
     File getMasksDirectory();
@@ -272,4 +271,6 @@ public interface ReadonlyViewSet
      * @return A model containing the settings for this view set.
      */
     ReadonlySettingsModel getProjectSettings();
+
+    Map<String, File> getResourceMap();
 }
