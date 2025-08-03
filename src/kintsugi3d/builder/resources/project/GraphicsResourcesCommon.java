@@ -502,14 +502,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         getLuminanceMapResources().setupShaderProgram(program);
         getSpecularMaterialResources().setupShaderProgram(program);
 
-        if (viewSet.getProjectSettings().exists("occlusionBias"))
-        {
-            program.setUniform("occlusionBias", viewSet.getProjectSettings().getFloat("occlusionBias"));
-        }
-        else
-        {
-            program.setUniform("occlusionBias", 0.0025f);
-        }
+        program.setUniform("occlusionBias", viewSet.getProjectSettings().getFloat("occlusionBias"));
+        program.setUniform("edgeProximityMargin", viewSet.getProjectSettings().getFloat("edgeProximityMargin"));
     }
 
     public void close()

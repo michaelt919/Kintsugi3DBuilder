@@ -54,7 +54,9 @@ public final class DefaultSettings
 
     public static void applyProjectDefaults(SettingsModel settingsModel)
     {
-        settingsModel.createBooleanSetting("occlusionEnabled", true, true);
-        settingsModel.createNumericSetting("occlusionBias", 0.0025f, true);
+        settingsModel.createBooleanSetting("occlusionEnabled", true);
+        settingsModel.createNumericSetting("occlusionBias", 0.0025f);
+        settingsModel.createBooleanSetting("edgeProximityWeightEnabled", true);
+        settingsModel.createNumericSetting("edgeProximityMargin", 0.1f);
     }
 }

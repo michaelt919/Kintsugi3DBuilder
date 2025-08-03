@@ -29,23 +29,36 @@ import java.util.ResourceBundle;
 public class MaskOptionsController implements Initializable
 {
     private static final Logger log = LoggerFactory.getLogger(MaskOptionsController.class);
+
     public CheckBox occlusionCheckBox;
     public TextField occlusionBiasTextField;
     public Slider occlusionBiasSlider;
 
-    private final SettingsModelImpl localSettingsModel = new SettingsModelImpl();
+    public CheckBox edgeProximityWeightCheckBox;
+    public TextField edgeProximityMarginTextField;
+    public Slider edgeProximityMarginSlider;
+
     private SettingsModel projectSettingsModel;
+    private final SettingsModelImpl localSettingsModel = new SettingsModelImpl();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle)
     {
+        // Settings will be staged locally and then applied to the project when the Apply button is clicked.
         DefaultSettings.applyProjectDefaults(localSettingsModel);
 
         occlusionCheckBox.selectedProperty().bindBidirectional(localSettingsModel.getBooleanProperty("occlusionEnabled"));
         occlusionBiasSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("occlusionBias"));
         occlusionBiasTextField.textProperty().bindBidirectional(localSettingsModel.getNumericProperty("occlusionBias"),
             new SafeDecimalNumberStringConverter(0.0025f));
+
+        edgeProximityWeightCheckBox.selectedProperty().bindBidirectional(localSettingsModel.getBooleanProperty("edgeProximityWeightEnabled"));
+        edgeProximityMarginSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityMargin"));
+        edgeProximityMarginTextField.textProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityMargin"),
+            new SafeDecimalNumberStringConverter(0.1f));
+
         StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
+        StaticUtilities.makeClampedNumeric(0, 1.0, edgeProximityMarginTextField);
     }
 
     public void setProjectSettingsModel(SettingsModel projectSettingsModel)

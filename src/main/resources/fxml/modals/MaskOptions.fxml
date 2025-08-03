@@ -12,10 +12,7 @@
   -->
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Slider?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <VBox spacing="16.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController">
@@ -48,6 +45,37 @@
           <HBox.margin>
               <Insets left="9.0" right="9.0" />
           </HBox.margin>
+        </Slider>
+    </HBox>
+    <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Visibility/shadow testing">
+        <font>
+            <Font size="18.0" />
+        </font>
+        <VBox.margin>
+            <Insets />
+        </VBox.margin>
+    </CheckBox>
+    <HBox>
+        <VBox.margin>
+            <Insets />
+        </VBox.margin>
+        <Text styleClass="text" text="Visibility bias: ">
+            <font>
+                <Font size="18.0" />
+            </font>
+            <HBox.margin>
+                <Insets bottom="9.0" top="9.0" />
+            </HBox.margin>
+        </Text>
+        <TextField fx:id="edgeProximityMarginTextField" prefHeight="39.0" prefWidth="100.0">
+            <font>
+                <Font size="18.0" />
+            </font>
+        </TextField>
+        <Slider fx:id="edgeProximityMarginSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.1">
+            <HBox.margin>
+                <Insets left="9.0" right="9.0" />
+            </HBox.margin>
         </Slider>
     </HBox>
     <AnchorPane prefHeight="0.0">

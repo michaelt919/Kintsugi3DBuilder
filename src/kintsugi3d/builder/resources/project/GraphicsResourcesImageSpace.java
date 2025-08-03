@@ -16,6 +16,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -208,7 +209,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         /**
          *
          * @param model
-         * @param supportingFilesDirectory
          * @return
          * @throws IOException
          */
@@ -641,13 +641,15 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
+        SettingsModel projectSettings = getViewSet().getProjectSettings();
         return getSharedResources().getShaderProgramBuilder()
             .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case
             .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount())
-            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null && getViewSet().getProjectSettings().getBoolean("occlusionEnabled"))
-            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null && getViewSet().getProjectSettings().getBoolean("occlusionEnabled"));
+            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null && projectSettings.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null && projectSettings.getBoolean("occlusionEnabled"))
+            .define("EDGE_PROXIMITY_WEIGHT_ENABLED", projectSettings.getBoolean("edgeProximityWeightEnabled"));
     }
 
     @Override

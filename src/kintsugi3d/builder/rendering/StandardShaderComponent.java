@@ -16,6 +16,7 @@ import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -164,7 +165,8 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             defineMap.put("RELIGHTING_ENABLED", Optional.of(this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
                 && lightingResources != null && this.sceneModel.getLightingModel() != null));
 
-            boolean occlusionEnabled = resources.getViewSet().getProjectSettings().getBoolean("occlusionEnabled")
+            SettingsModel projectSettings = resources.getViewSet().getProjectSettings();
+            boolean occlusionEnabled = projectSettings.getBoolean("occlusionEnabled")
                 && (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
                     || lightCalibrationMode
                     || this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
@@ -172,6 +174,8 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
             defineMap.put("SHADOW_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.shadowTextures != null
                 && lightingResources != null));
+
+            defineMap.put("EDGE_PROXIMITY_WEIGHT_ENABLED", Optional.of(projectSettings.getBoolean("edgeProximityWeightEnabled")));
 
             defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED",
                 Optional.of(!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
