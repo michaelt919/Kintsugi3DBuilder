@@ -215,7 +215,6 @@ public class MenubarController
 
         doneButton.setOnAction(event ->{
             hideAllProgress();
-            leftBarController.refreshTabs(); //Jacob
         });
 
         cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());

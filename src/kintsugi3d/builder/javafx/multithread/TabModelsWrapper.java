@@ -4,7 +4,6 @@ import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.TabModels;
 import kintsugi3d.builder.state.impl.TabModelsBase;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

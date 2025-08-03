@@ -7,6 +7,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
@@ -141,5 +142,10 @@ public class CardsModelWrapper implements CardsModel {
     @Override
     public void deleteCard(UUID id) {
         baseModel.deleteCard(id);
+    }
+
+    @Override
+    public void setViewSet(ViewSet loadedViewSet) {
+
     }
 }

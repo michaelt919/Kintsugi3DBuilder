@@ -13,9 +13,9 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
 
-<VBox id="data_card" fx:id="data_card" alignment="TOP_CENTER" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
+<VBox id="data_card" fx:id="data_card" alignment="TOP_CENTER" styleClass="card-background" onMouseClicked="#cardClicked" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
 <VBox id="border_box" fx:id="border_box">
-    <HBox fx:id="card_top_bar" alignment="CENTER_LEFT" onMouseClicked="#headerClicked" prefHeight="13.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css">
+    <HBox fx:id="card_top_bar" alignment="CENTER_LEFT" prefHeight="13.0" stylesheets="@../../kintsugiStyling.css">
         <ImageView fx:id="card_icon" fitHeight="24.0" fitWidth="24.0">
             <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
@@ -34,7 +34,7 @@
         </padding>
     </HBox>
 
-    <VBox fx:id="card_body" prefHeight="275" onMouseClicked="#bodyClicked">
+    <VBox fx:id="card_body" prefHeight="275">
     <HBox spacing="5.0">
         <VBox fx:id="text_content" HBox.hgrow="ALWAYS">
             <Text text="File Name:">
@@ -107,94 +107,100 @@
             <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
     </HBox>
-    <!-- Separator -->
-   <Separator prefWidth="200.0" styleClass="texture-separator">
-      <padding>
-         <Insets left="8.0" right="8.0" top="16.0" />
-      </padding>
-   </Separator>
 
-    <!-- Button Section -->
-    <HBox alignment="TOP_CENTER">
-   <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Replace">
-      <graphic>
-         <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-               <Image url="@../../../../../../Kintsugi3D-icon.png" />
-         </ImageView>
-      </graphic>
-         <font>
-            <Font name="Segoe UI Semibold" size="12.0" />
-         </font>
-         <HBox.margin>
-            <Insets bottom="36.0" top="16.0" />
-         </HBox.margin></Button>
-      <padding>
-         <Insets left="40.0" right="40.0" />
-      </padding>
-   </HBox>
+        <VBox fx:id="button_box">
+        <!-- Separator -->
+       <Separator prefWidth="200.0" styleClass="card-separator">
+          <padding>
+             <Insets left="8.0" right="8.0" top="16.0" />
+          </padding>
+       </Separator>
 
-    <!-- Separator -->
-    <Separator prefWidth="200.0" styleClass="texture-separator">
-        <padding>
-            <Insets left="8.0" right="8.0" />
-        </padding>
-    </Separator>
-
-    <!-- Other Buttons -->
-
-    <HBox alignment="TOP_CENTER">
-        <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Refresh" textFill="WHITE">
-            <graphic>
-                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                </ImageView>
-            </graphic>
-            <font>
+        <!-- Button Section -->
+        <HBox alignment="TOP_CENTER">
+       <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Replace">
+          <graphic>
+             <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                   <Image url="@../../../../../../Kintsugi3D-icon.png" />
+             </ImageView>
+          </graphic>
+             <font>
                 <Font name="Segoe UI Semibold" size="12.0" />
-            </font>
-         <HBox.margin>
-            <Insets bottom="8.0" top="16.0" />
-         </HBox.margin></Button>
-        <padding>
-            <Insets left="40.0" right="40.0" />
-        </padding>
-    </HBox>
+             </font>
+             <HBox.margin>
+                <Insets bottom="36.0" top="16.0" />
+             </HBox.margin></Button>
+          <padding>
+             <Insets left="40.0" right="40.0" />
+          </padding>
+       </HBox>
 
-    <HBox alignment="TOP_CENTER">
-        <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Disable">
-            <graphic>
-                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                </ImageView>
-            </graphic>
-            <font>
-                <Font name="Segoe UI Semibold" size="12.0" />
-            </font>
-         <HBox.margin>
-            <Insets bottom="8.0" />
-         </HBox.margin></Button>
-        <padding>
-            <Insets left="40.0" right="40.0" />
-        </padding>
-    </HBox>
+        <!-- Separator -->
+        <Separator prefWidth="200.0" styleClass="card-separator">
+            <padding>
+                <Insets left="8.0" right="8.0" />
+            </padding>
+        </Separator>
 
-    <HBox alignment="TOP_CENTER">
-        <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#deleteSelf" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
-            <graphic>
-                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                </ImageView>
-            </graphic>
-            <font>
-                <Font name="Segoe UI Semibold" size="12.0" />
-            </font>
-         <HBox.margin>
-            <Insets bottom="36.0" />
-         </HBox.margin></Button>
-        <padding>
-            <Insets left="40.0" right="40.0" />
-        </padding>
-    </HBox>
+        <!-- Other Buttons -->
+
+        <HBox alignment="TOP_CENTER">
+            <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Refresh" textFill="WHITE">
+                <graphic>
+                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                            <Image url="@../../../../../../Kintsugi3D-icon.png" />
+                    </ImageView>
+                </graphic>
+                <font>
+                    <Font name="Segoe UI Semibold" size="12.0" />
+                </font>
+             <HBox.margin>
+                <Insets bottom="8.0" top="16.0" />
+             </HBox.margin></Button>
+            <padding>
+                <Insets left="40.0" right="40.0" />
+            </padding>
+        </HBox>
+
+        <HBox alignment="TOP_CENTER">
+            <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Disable">
+                <graphic>
+                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                            <Image url="@../../../../../../Kintsugi3D-icon.png" />
+                    </ImageView>
+                </graphic>
+                <font>
+                    <Font name="Segoe UI Semibold" size="12.0" />
+                </font>
+             <HBox.margin>
+                <Insets bottom="8.0" />
+             </HBox.margin></Button>
+            <padding>
+                <Insets left="40.0" right="40.0" />
+            </padding>
+        </HBox>
+
+        <HBox alignment="TOP_CENTER">
+            <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#deleteSelf" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
+                <graphic>
+                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                            <Image url="@../../../../../../Kintsugi3D-icon.png" />
+                    </ImageView>
+                </graphic>
+                <font>
+                    <Font name="Segoe UI Semibold" size="12.0" />
+                </font>
+             <HBox.margin>
+                <Insets bottom="36.0" />
+             </HBox.margin></Button>
+            <padding>
+                <Insets left="40.0" right="40.0" />
+            </padding>
+        </HBox>
+            <padding>
+                <Insets bottom="24" />
+            </padding>
+    </VBox>
 
     <padding>
         <Insets left="5.0" right="5.0" />

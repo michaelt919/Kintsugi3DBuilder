@@ -20,7 +20,6 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
-import kintsugi3d.util.ImageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +27,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -94,7 +94,7 @@ public final class ViewSet implements ReadonlyViewSet
      */
     private final List<File> imageFiles;
 
-    private List<LinkedHashMap<String,String>> cameraMetadata;
+    private final List<LinkedHashMap<String,String>> cameraMetadata;
 
     private final List<ViewRMSE> viewErrorMetrics;
 
@@ -127,6 +127,11 @@ public final class ViewSet implements ReadonlyViewSet
      * The directory where the results of the texture / specular fitting are stored
      */
     private File supportingFilesDirectory;
+
+    /**
+     * The directory where thumbnail images are stored
+     */
+    private File thumbnailImageDirectory;
 
     /**
      * The mesh file.
@@ -430,12 +435,11 @@ public final class ViewSet implements ReadonlyViewSet
 
     public void generateCameraMetadata() {
         cameraMetadata.clear();
-        for(File file2: imageFiles) {
+        for(File file: imageFiles) {
             try {
-                File processed = new File(fullResImageDirectory,"Processed"); //TODO should not be manual here
-                File finalFile = new File(processed, file2.getName());
+                File finalFile = new File(fullResImageDirectory,file.getPath());
                 String res = "";
-                try (ImageInputStream iis = ImageIO.createImageInputStream(finalFile)) {
+                try (ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(finalFile))) {
                     final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
                     if (readers.hasNext()) {
                         ImageReader reader = readers.next();
@@ -626,6 +630,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
+        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -664,6 +669,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
+        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -703,6 +709,14 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         return result;
+    }
+
+    public void deleteCamera(int index) { //Jacob
+        cameraPoseList.remove(index);
+        cameraPoseInvList.remove(index); // check
+        lightIndexList.remove(index);
+        imageFiles.remove(index);
+        viewErrorMetrics.remove(index);
     }
 
     @Override
@@ -853,6 +867,16 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public File getThumbnailImageFilePath() {
+        if (this.thumbnailImageDirectory == null) {
+            // If no thumbnail images, default to just using full res images, or root directory as last fallback
+            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+        } else {
+            return this.thumbnailImageDirectory;
+        }
+    }
+
+    @Override
     public String getRelativePreviewImagePathName()
     {
         File previewImageFilePath = this.getPreviewImageFilePath();
@@ -880,6 +904,11 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+    }
+
+    //TODO Jacob look at this
+    public void setRelativeThumbnailImagePathName(String relativeImagePath) {
+        this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
@@ -913,6 +942,14 @@ public final class ViewSet implements ReadonlyViewSet
     {
         // Use PNG for preview images (TODO: make this a configurable setting?)
         return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+    }
+
+    @Override
+    public File getThumbnailImageFile(int poseIndex)
+    {
+        File path = this.getThumbnailImageFilePath();
+        File file = new File(this.getThumbnailImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+        return file;
     }
 
     public int getPreviewWidth()
@@ -1173,6 +1210,12 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+    }
+
+    @Override
+    public File findThumbnailImageFile(int index) throws FileNotFoundException
+    {
+        return ImageFinder.getInstance().findImageFile(getThumbnailImageFile(index));
     }
 
     @Override

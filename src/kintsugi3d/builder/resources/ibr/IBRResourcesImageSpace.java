@@ -320,6 +320,18 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
+        public Builder<ContextType> generateThumbnailImages() throws IOException, UserCancellationException
+        {
+            if (this.viewSet != null)
+            {
+                IBRResourcesImageSpace.generateThumbnailImages(
+                        this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.progressMonitor
+                );
+            }
+
+            return this;
+        }
+
         public IBRResourcesImageSpace<ContextType> create() throws IOException, UserCancellationException
         {
             if (linearLuminanceValues != null && encodedLuminanceValues != null)
@@ -793,6 +805,21 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
     }
 
+    // Overload primarily for manually setting the resolution of thumbnail images.
+    private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
+            BufferedImage distortedImage, ViewSet viewSet, int projectionIndex, ContextType context, int resolution)
+            throws IOException
+    {
+        DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
+        distortion = distortion.scaledTo(resolution, resolution);
+
+        try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
+        {
+            return undistort.undistort(distortedImage, distortion);
+        }
+    }
+
+
     private static void throwUndistortFailed(ProgressMonitor progressMonitor, AtomicInteger failedCount) throws IOException
     {
         IOException e = new IOException("Failed to undistort " + failedCount.get() + " images");
@@ -811,6 +838,14 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         ImageHelper resizer = new ImageHelper(fullResImageFile);
         resizer.saveAtResolution(viewSet.getPreviewImageFile(i),
             viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
+    }
+
+    private static void resizeThumbnailImage(File fullResImageFile, ViewSet viewSet, int i) throws IOException
+    {
+        log.info("Resizing image {} : No distortion parameters", fullResImageFile);
+        ImageHelper resizer = new ImageHelper(fullResImageFile);
+        resizer.saveAtResolution(viewSet.getThumbnailImageFile(i),
+                300, 300);
     }
 
     private static void logFinished(File fileFinished)
@@ -889,6 +924,21 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
             }
         }
+    }
+
+    private static void generateThumbnailImages(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor) throws IOException, UserCancellationException{
+        File supportingFilePath = viewSet.getSupportingFilesFilePath();
+        File thumbnails = new File(supportingFilePath,"thumbnails");
+        File small = new File(thumbnails, "300x300");
+        small.mkdirs();
+
+        viewSet.setRelativeThumbnailImagePathName(small.getPath());
+
+        AtomicInteger finishedCount = new AtomicInteger(0);
+        AtomicInteger failedCount = new AtomicInteger(0);
+        AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
+
+        sequentialThumbnailImgGeneration(viewSet, small, progressMonitor, cancelled, failedCount, finishedCount);
     }
 
     private static void sequentialPreviewImgGeneration(ViewSet viewSet, ProgressMonitor progressMonitor,
@@ -1060,6 +1110,72 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }));
 
         log.info("Finished reading all images; waiting for undistortion to finish on other threads");
+    }
+
+    private static void sequentialThumbnailImgGeneration(ViewSet viewSet, File targetDirectory, ProgressMonitor progressMonitor, AtomicReference<UserCancellationException> cancelled, AtomicInteger failedCount, AtomicInteger finishedCount)
+    {
+        // Do the undistortion on the rendering thread
+        Rendering.runLater(new GraphicsRequest()
+        {
+            @Override
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws UserCancellationException
+            {
+                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                {
+                    //progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i+1, viewSet.getCameraPoseCount()));
+
+                    try
+                    {
+                        progressMonitor.allowUserCancellation();
+                    }
+                    catch (UserCancellationException e)
+                    {
+                        cancelled.set(e); // forward exception to another thread
+                        throw e;
+                    }
+
+                    try
+                    {
+                        // Check if the image is there first
+                        File thumbnailImageFile = viewSet.findThumbnailImageFile(i);
+                        logExists(thumbnailImageFile);
+                        markFinished(viewSet, finishedCount);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        try
+                        {
+                            // Only generate the image if it wasn't found
+                            int projectionIndex = viewSet.getCameraProjectionIndex(i);
+                            if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+                            {
+                                BufferedImage decodedImage = getDecodedImage(viewSet, i);
+                                log.info("Undistorting thumbnail image {}", i);
+                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context, 300);
+                                log.info("Saving thumbnail image {}", i);
+                                ImageIO.write(imageOut, "PNG", viewSet.getThumbnailImageFile(i));
+                                logFinished(viewSet.getThumbnailImageFile(i));
+                            }
+                            else
+                            {
+                                // Fallback to simply resizing without undistorting
+                                File fullResImageFile = viewSet.findFullResImageFile(i);
+                                resizeThumbnailImage(fullResImageFile, viewSet, i);
+                            }
+
+                            markFinished(viewSet, finishedCount);
+                        }
+                        catch (RuntimeException | IOException ex)
+                        {
+                            log.error(ex.getMessage(), ex);
+                            failedCount.getAndAdd(1);
+                        }
+                    }
+                }
+            }
+        });
+
+        log.info("Waiting for undistortion to finish on rendering thread");
     }
 
     /**

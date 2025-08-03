@@ -14,12 +14,9 @@ package kintsugi3d.builder.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -174,7 +171,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-        File previewImagePath = loadedViewSet.getPreviewImageFilePath();
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
         List<ProjectDataCard> cameraCards = new ArrayList<>();
@@ -185,14 +181,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         if (loadedViewSet.getCameraMetadata().size() != loadedViewSet.getImageFiles().size()) {
             loadedViewSet.generateCameraMetadata();
         };
-
-        for (int i = 0; i < loadedViewSet.getCameraMetadata().size(); i++) {
-            String cameraFile = loadedViewSet.getPreviewImageFilePath().list()[i];
-            File fullCameraPath = new File(loadedViewSet.getPreviewImageFilePath(),cameraFile);
-            cameraCards.add(ProjectDataCardFactory.createCameraCard(imgFiles.get(i).getName(), fullCameraPath.getAbsolutePath(), loadedViewSet.getCameraMetadata().get(i)));
-        }
-
-        MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setCardsList(cameraCards);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -212,6 +200,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             log.error("One or more images failed to load", e);
         }
+
+        try {
+            builder.generateThumbnailImages();
+        } catch (IOException e) {
+            log.error("One or more thumbnails failed to load", e);
+        }
+
+        MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet);
 
         // Create the instance (will be initialized on the graphics thread)
         IBRInstance<ContextType> newItem = new IBREngine<>(id, context, builder);

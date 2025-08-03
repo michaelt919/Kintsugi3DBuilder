@@ -33,4 +33,8 @@ public class ProjectDataCard {
     public void addButton(int buttonGroup, String label, Runnable runnable) {
         this.actionGroups.get(buttonGroup).put(label,runnable);
     }
+
+    public List<LinkedHashMap<String,Runnable>> getActions() {
+        return actionGroups;
+    }
 }

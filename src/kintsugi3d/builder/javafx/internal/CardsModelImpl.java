@@ -6,10 +6,14 @@ import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.util.CardSelectionModel;
+import kintsugi3d.builder.util.ProjectDataCardFactory;
 
+import java.io.File;
 import java.util.*;
 
 public class CardsModelImpl implements CardsModel {
@@ -17,14 +21,9 @@ public class CardsModelImpl implements CardsModel {
     private CardSelectionModel selectedCardsModel;
     private CardSelectionModel expandedCardsModel;
     private ObservableList<ProjectDataCard> cardsList;
+    private ViewSet viewSet;
 
     public CardsModelImpl(String label) {
-//        Platform.runLater(()->{
-//            this.label = label;
-//            cardsList = new SimpleListProperty<>();
-//            selectedCardsModel = new CardSelectionModel(cardsList);
-//            expandedCardsModel = new CardSelectionModel(cardsList);
-//        });
         this.label = label;
         List<ProjectDataCard> dummyCards = new ArrayList<>();
         dummyCards.add(new ProjectDataCard("Card One", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
@@ -45,6 +44,22 @@ public class CardsModelImpl implements CardsModel {
         expandedCardsModel = new CardSelectionModel(cardsList);
     }
 
+    public void setViewSet(ViewSet vset) {
+        Platform.runLater(()-> {
+            this.viewSet = vset;
+            CardsModel model = MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras");
+            List<ProjectDataCard> dataCards = new ArrayList<>();
+            for (int i = 0; i < viewSet.getCameraMetadata().size(); i++) {
+                String fileName = Objects.requireNonNull(viewSet.getPreviewImageFilePath().list())[i];
+                File fullCameraPath = new File(viewSet.getPreviewImageFilePath(), fileName);
+
+                dataCards.add(ProjectDataCardFactory.createCameraCard(model, viewSet.getImageFiles().get(i).getName(), fullCameraPath.getAbsolutePath(), viewSet.getCameraMetadata().get(i)));
+            }
+            setCardsList(dataCards);
+
+        });
+    }
+
     @Override
     public ObservableList<ProjectDataCard> getSelectedCards() {
         return FXCollections.unmodifiableObservableList(selectedCardsModel.getSelectedItems());
@@ -57,12 +72,12 @@ public class CardsModelImpl implements CardsModel {
 
     @Override
     public ObservableSet<UUID> getExpandedCardIds() {
-        return FXCollections.unmodifiableObservableSet(expandedCardsModel.getSelectedIds());
+        return expandedCardsModel.getSelectedIds();
     }
 
     @Override
     public ObservableList<ProjectDataCard> getExpandedCards() {
-        return FXCollections.unmodifiableObservableList(expandedCardsModel.getSelectedItems());
+        return expandedCardsModel.getSelectedItems();
     }
 
     @Override
@@ -127,12 +142,12 @@ public class CardsModelImpl implements CardsModel {
 
     @Override
     public void selectCard(UUID cardId) {
-        selectedCardsModel.select(cardId);
+        Platform.runLater(()->selectedCardsModel.select(cardId));
     }
 
     @Override
     public void deselectCard(UUID cardId) {
-        selectedCardsModel.clearSelection(cardId);
+        Platform.runLater(()->selectedCardsModel.clearSelection(cardId));
     }
 
     @Override
@@ -147,9 +162,7 @@ public class CardsModelImpl implements CardsModel {
 
     @Override
     public void setObservableCardsList(ObservableList<ProjectDataCard> items) {
-        Platform.runLater(()->{
-            cardsList = items;
-        });
+        Platform.runLater(()->cardsList = items);
     }
 
     @Override
@@ -157,17 +170,30 @@ public class CardsModelImpl implements CardsModel {
         Platform.runLater(()->{
             cardsList.clear();
             cardsList.addAll(cards);
-
-            selectedCardsModel = new CardSelectionModel(cardsList);
-            expandedCardsModel = new CardSelectionModel(cardsList);
+            selectedCardsModel.setCardsList(cardsList);
+            expandedCardsModel.setCardsList(cardsList);
         });
     }
 
     @Override
     public void deleteCard(UUID id) {
-        cardsList.removeIf(card -> card.getCardId().equals(id));
-        selectedCardsModel.clearSelection(id);
-        expandedCardsModel.clearSelection(id);
-        //Platform.runLater(()->cardsList.removeIf(card -> card.getCardId().equals(id)));
+        Platform.runLater(()-> {
+            if (findIndexByCardUUID(id) != -1 && viewSet != null)
+                viewSet.deleteCamera(findIndexByCardUUID(id));
+
+            cardsList.removeIf(card -> card.getCardId().equals(id));
+            selectedCardsModel.clearSelection(id);
+            expandedCardsModel.clearSelection(id);
+        });
+    }
+
+    private int findIndexByCardUUID(UUID id) {
+        for (int i = 0; i < cardsList.size(); i++) {
+            UUID uuid = cardsList.get(i).getCardId();
+            if (cardsList.get(i).getCardId() == id) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

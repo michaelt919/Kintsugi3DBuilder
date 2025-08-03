@@ -14,12 +14,17 @@ import java.util.UUID;
 
 public class CardSelectionModel {
     private ObservableSet<UUID> selectedCards = FXCollections.observableSet(new LinkedHashSet<>());
-    private final ObservableList<ProjectDataCard> allCards;
+    private ObservableList<ProjectDataCard> allCards;
     private ObjectProperty<UUID> lastSelected;
 
     public CardSelectionModel(ObservableList<ProjectDataCard> list) {
         allCards = list;
-        lastSelected = null;
+        lastSelected = new SimpleObjectProperty<>();
+    }
+
+    public void setCardsList(ObservableList<ProjectDataCard> list) {
+        allCards = list;
+        selectedCards.clear();
     }
 
     public ObservableSet<UUID> getSelectedIds() {
@@ -70,7 +75,7 @@ public class CardSelectionModel {
     public BooleanBinding isSelectedProperty(UUID id) {
         return Bindings.createBooleanBinding(
                 () -> selectedCards.contains(id),
-                selectedCards
+                this.selectedCards
         );
     }
 

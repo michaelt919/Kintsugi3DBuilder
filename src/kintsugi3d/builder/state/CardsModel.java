@@ -4,6 +4,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.ProjectDataCard;
 
 import java.util.List;
@@ -37,4 +38,5 @@ public interface CardsModel {
     void setObservableCardsList(ObservableList<ProjectDataCard> items);
     void setCardsList(List<ProjectDataCard> cardList);
     void deleteCard(UUID id);
+    void setViewSet(ViewSet loadedViewSet);
 }

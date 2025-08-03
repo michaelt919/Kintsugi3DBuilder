@@ -30,7 +30,7 @@ public class TabModelsImpl implements TabModels {
 
     @Override
     public List<CardsModel> getAllCardsModels() {
-        return new ArrayList<CardsModel>(models.values());
+        return new ArrayList<>(models.values());
     }
 
     @Override

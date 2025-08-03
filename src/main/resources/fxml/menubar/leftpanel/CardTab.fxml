@@ -13,7 +13,7 @@
         <padding>
             <Insets left="16.0" right="16.0" top="8.0" />
         </padding>
-        <TextField fx:id="card_searchbar" maxWidth="1.7976931348623157E308" onAction="#searchBarAction" onKeyTyped="#searchBarAction" promptText="Search" style="-fx-border-width: 0 0 1 0; -fx-border-color: #d9d9d9;" stylesheets="@../../kintsugiStyling.css" HBox.hgrow="ALWAYS" />
+        <TextField fx:id="card_searchbar" maxWidth="1.7976931348623157E308" onKeyTyped="#searchBarAction" promptText="Search" style="-fx-border-width: 0 0 1 0; -fx-border-color: #d9d9d9;" stylesheets="@../../kintsugiStyling.css" HBox.hgrow="ALWAYS" />
         <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
             <HBox.margin>
                 <Insets left="12.0" right="8.0" />
@@ -30,7 +30,7 @@
             <Insets />
         </VBox.margin>
     </HBox>
-    <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="510.0" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
+    <ScrollPane fx:id="scrollpane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="510.0" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
         <VBox fx:id="card_vbox" spacing="5.0" style="-fx-background-color: #202020">
 
         </VBox>

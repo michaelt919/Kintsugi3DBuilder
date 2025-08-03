@@ -1,49 +1,40 @@
 package kintsugi3d.builder.util;
 
+import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.resources.ProjectDataCard;
+import kintsugi3d.builder.state.CardsModel;
 
 import java.io.File;
 import java.util.LinkedHashMap;
 
 public class ProjectDataCardFactory {
 
-    public static ProjectDataCard createProjectDataCard(File file) {
-
-        LinkedHashMap<String, String> map = new LinkedHashMap<>() {{
-            put("File Name", file.getName()); put("Resolution", "320x200"); put("Size", String.valueOf(file.length()));
-        }};
-        return new ProjectDataCard(file.getName(), "image-path", map);
-    }
-
-    public static ProjectDataCard createProjectDataCard(LinkedHashMap<String,String> content) {
-        return new ProjectDataCard(content.get("File Name"), "image-path", content);
-    }
-
-    public static ProjectDataCard createProjectDataCard(String title, String imagePath) {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>() {{
-            put("File Name", imagePath); put("Resolution", "320x200"); put("Size", "0");
-        }};
-        return new ProjectDataCard(title, imagePath, map);
-    }
-
-    public static ProjectDataCard createCameraCard(String title) {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>() {{
-            put("File Name", "path"); put("Resolution", "320x200"); put("Size", "0");
-        }};
-        ProjectDataCard card = new ProjectDataCard(title, "path", map);
-        Runnable run = () -> {};
-        card.addButton(0,"Replace", run);
-
-        return card;
-    }
-
-    public static ProjectDataCard createCameraCard(String title, String imagePath, LinkedHashMap<String, String> textContent) {
+    public static ProjectDataCard createCameraCard(CardsModel cardsModel, String title, String imagePath, LinkedHashMap<String, String> textContent) {
         ProjectDataCard card = new ProjectDataCard(title, imagePath, textContent);
-        Runnable run = () -> {};
-        card.addButton(0, "Replace", run);
-        card.addButton(1, "Refresh", run);
-        card.addButton(1, "Disable", run);
-        card.addButton(1, "Delete ", run);
+        addReplaceButton(cardsModel,card,0);
+        addRefreshButton(cardsModel,card,1);
+        addDisableButton(cardsModel, card,1);
+        addDeleteButton(cardsModel, card, 1);
         return card;
+    }
+
+    private static void addDeleteButton(CardsModel cardsModel, ProjectDataCard card, int buttonGroup){
+        Runnable run = () -> {cardsModel.deleteCard(card.getCardId());};
+        card.addButton(buttonGroup,"Delete ", run);
+    }
+
+    private static void addDisableButton(CardsModel cardsModel, ProjectDataCard card, int buttonGroup) {
+        Runnable run = () -> {};
+        card.addButton(buttonGroup,"Disable", run);
+    }
+
+    private static void addRefreshButton(CardsModel cardsModel, ProjectDataCard card, int buttonGroup) {
+        Runnable run = () -> {};
+        card.addButton(buttonGroup,"Refresh", run);
+    }
+
+    private static void addReplaceButton(CardsModel cardsModel, ProjectDataCard card, int buttonGroup) {
+        Runnable run = () -> {};
+        card.addButton(buttonGroup,"Replace", run);
     }
 }

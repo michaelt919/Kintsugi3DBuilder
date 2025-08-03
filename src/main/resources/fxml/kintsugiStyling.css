@@ -432,12 +432,16 @@ dialog-pane{
     -fx-background-color: #262626;
 }
 
-/* Texture Type Component */
-.texture-background {
+/* Card Component */
+.card-background {
     -fx-background-color: #ADADAD
 }
 
-.texture-button {
+.card-background:hover {
+    -fx-background-color: #CECECE
+}
+
+.card-button {
     -fx-background-color: #383838;
     -fx-background-radius: 0;
     -fx-text-fill: #CECECE;
@@ -447,11 +451,11 @@ dialog-pane{
 
 }
 
-.texture-button .text {
+.card-button .text {
     -fx-text-fill: #CECECE;
 }
 
-.texture-separator .line {
+.card-separator .line {
     -fx-background-color: #383838;
     -fx-pref-height: 1;
     -fx-border-color: null ;
