@@ -37,6 +37,8 @@ public class MaskOptionsController implements Initializable
     public CheckBox edgeProximityWeightCheckBox;
     public TextField edgeProximityMarginTextField;
     public Slider edgeProximityMarginSlider;
+    public TextField edgeProximityCutoffTextField;
+    public Slider edgeProximityCutoffSlider;
 
     private SettingsModel projectSettingsModel;
     private final SettingsModelImpl localSettingsModel = new SettingsModelImpl();
@@ -56,9 +58,13 @@ public class MaskOptionsController implements Initializable
         edgeProximityMarginSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityMargin"));
         edgeProximityMarginTextField.textProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityMargin"),
             new SafeDecimalNumberStringConverter(0.1f));
+        edgeProximityCutoffSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityCutoff"));
+        edgeProximityCutoffTextField.textProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityCutoff"),
+            new SafeDecimalNumberStringConverter(0.01f));
 
         StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
         StaticUtilities.makeClampedNumeric(0, 1.0, edgeProximityMarginTextField);
+        StaticUtilities.makeClampedNumeric(0, 1.0, edgeProximityCutoffTextField);
     }
 
     public void setProjectSettingsModel(SettingsModel projectSettingsModel)

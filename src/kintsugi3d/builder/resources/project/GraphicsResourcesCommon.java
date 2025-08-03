@@ -504,6 +504,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         program.setUniform("occlusionBias", viewSet.getProjectSettings().getFloat("occlusionBias"));
         program.setUniform("edgeProximityMargin", viewSet.getProjectSettings().getFloat("edgeProximityMargin"));
+        program.setUniform("edgeProximityCutoff", viewSet.getProjectSettings().getFloat("edgeProximityCutoff"));
     }
 
     public void close()
