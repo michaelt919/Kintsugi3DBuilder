@@ -47,7 +47,7 @@
           </HBox.margin>
         </Slider>
     </HBox>
-    <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Visibility/shadow testing">
+    <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Edge proximity weights">
         <font>
             <Font size="18.0" />
         </font>
@@ -59,7 +59,7 @@
         <VBox.margin>
             <Insets />
         </VBox.margin>
-        <Text styleClass="text" text="Visibility bias: ">
+        <Text styleClass="text" text="Edge proximity margin: ">
             <font>
                 <Font size="18.0" />
             </font>
