@@ -131,7 +131,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.println(setting.getValue());
         }
 
-        if (viewSet.getResourceMap() != null)
+        if (!viewSet.getResourceMap().isEmpty())
         {
             out.println();
             out.println("# Resource files");
