@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox prefWidth="270.0" spacing="8.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.ExportRequestController">
+<VBox prefWidth="270.0" spacing="8.0" styleClass="modal-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.ExportRequestController">
     <CheckBox fx:id="glTFPackTexturesCheckBox" disable="true" layoutX="15.0" layoutY="85.0" mnemonicParsing="false" text="Pack Textures" />
     <CheckBox fx:id="generateLowResolutionCheckBox" disable="true" mnemonicParsing="false" text="Generate Low Resolution" />
    <HBox spacing="8.0">

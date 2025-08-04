@@ -14,7 +14,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane styleClass="anchor-pane" fx:id="root" prefHeight="151.0" prefWidth="200.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemMemoryController">
+<AnchorPane styleClass="modal-root" fx:id="root" prefHeight="151.0" prefWidth="200.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemMemoryController">
    <FlowPane hgap="10.0" prefWidth="200.0" vgap="10.0">
       <padding>
          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

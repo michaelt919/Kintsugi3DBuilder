@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
-<AnchorPane prefHeight="134.0" prefWidth="231.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.AutosaveSettingsController">
+<AnchorPane prefHeight="134.0" prefWidth="231.0" styleClass="modal-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.AutosaveSettingsController">
     <VBox spacing="10.0" GridPane.columnIndex="1">
         <padding>
             <Insets bottom="7.0" left="7.0" right="7.0" top="7.0"/>

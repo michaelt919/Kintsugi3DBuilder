@@ -26,8 +26,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
@@ -95,7 +95,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
     @FXML private ImageView colorPickerImgView;
     private Image selectedFile;
 
-    @FXML private HBox outerHbox;
+    @FXML private VBox outerVbox;
 
     private IOModel ioModel = new IOModel();
     private ProjectModelBase projectModel = null;
@@ -727,7 +727,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
     @Override
     public Region getHostRegion()
     {
-        return outerHbox;
+        return outerVbox;
     }
 
     @Override
@@ -799,7 +799,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
         // Suppress warning about unsaved changes since the changes were just applied automatically.
         confirmExit = true;
 
-        Window window = outerHbox.getScene().getWindow();
+        Window window = outerVbox.getScene().getWindow();
         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 

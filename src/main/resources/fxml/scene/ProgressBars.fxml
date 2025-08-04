@@ -27,9 +27,6 @@
       <VBox>
          <children>
             <Label fx:id="overallTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeTitle" text="Loading..." wrapText="true">
-               <font>
-                  <Font name="Segoe UI" size="28.0" />
-               </font>
                <padding>
                   <Insets right="20.0" />
                </padding>
@@ -37,9 +34,6 @@
             <VBox maxWidth="1.7976931348623157E308">
                <children>
                   <Label alignment="TOP_LEFT" style="-fx-text-fill: #CECECE;" styleClass="wireframeSubtitle" text="Overall Progress">
-                     <font>
-                        <Font size="20.0" />
-                     </font>
                   </Label>
                   <ProgressBar fx:id="overallProgressBar" maxWidth="1.7976931348623157E308" prefHeight="40.0" prefWidth="582.0" progress="0.0">
                      <VBox.margin>
@@ -62,9 +56,6 @@
             <VBox maxWidth="1.7976931348623157E308">
                <children>
                   <Label fx:id="localTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="...">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
                      <VBox.margin>
                         <Insets />
                      </VBox.margin>

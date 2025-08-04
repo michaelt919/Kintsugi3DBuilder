@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 import javafx.fxml.FXML;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
@@ -30,11 +30,11 @@ public class SelectImportOptionsController extends FXMLPageController {
     @FXML private ToggleButton realityCaptureImportButton;
     ToggleGroup buttons = new ToggleGroup();
 
-    @FXML private AnchorPane anchorPane;
+    @FXML private Pane rootPane;
 
     @Override
     public Region getHostRegion() {
-        return anchorPane;
+        return rootPane;
     }
 
     @Override
@@ -52,12 +52,6 @@ public class SelectImportOptionsController extends FXMLPageController {
 
         realityCaptureImportButton.setOnAction(e -> handleButtonSelect(realityCaptureImportButton,
                 "/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource()));
-
-        buttons.selectedToggleProperty().addListener((a, b, c)->{
-            resetFont(metashapeImportButton);
-            resetFont(looseFilesImportButton);
-            resetFont(realityCaptureImportButton);
-        });
     }
 
     @Override
@@ -79,11 +73,5 @@ public class SelectImportOptionsController extends FXMLPageController {
     public void looseFilesSelect() {
         hostPage.setNextPage(hostScrollerController.getPage("/fxml/modals/createnewproject/CustomImport.fxml"));
         hostScrollerController.nextPage();
-    }
-
-    private void resetFont(ToggleButton button){
-        button.getStyleClass().clear();
-        button.getStyleClass().add("toggle-button");
-        button.getStyleClass().add(button.isSelected() ? "wireframeTitle" : "wireframeSubtitle");
     }
 }

@@ -15,96 +15,49 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<VBox spacing="16.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController">
-    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Visibility/shadow testing">
-        <font>
-            <Font size="18.0" />
-        </font>
-      <VBox.margin>
-         <Insets />
-      </VBox.margin>
+
+<VBox spacing="16.0" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController">
+    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Visibility/shadow testing">
     </CheckBox>
-    <HBox>
-        <VBox.margin>
-            <Insets />
-        </VBox.margin>
-        <Text styleClass="text" text="Visibility bias: ">
-            <font>
-                <Font size="18.0" />
-            </font>
-          <HBox.margin>
-              <Insets bottom="9.0" top="9.0" />
-          </HBox.margin>
+    <HBox spacing="16.0">
+        <Text styleClass="wireframeBody, text" text="Visibility bias: ">
+            <HBox.margin>
+                <Insets bottom="12.0" top="12.0" />
+            </HBox.margin>
         </Text>
-        <TextField fx:id="occlusionBiasTextField" prefHeight="39.0" prefWidth="100.0">
-            <font>
-                <Font size="18.0" />
-            </font>
+        <TextField fx:id="occlusionBiasTextField" prefWidth="100.0" styleClass="wireframeBody">
+         <HBox.margin>
+            <Insets bottom="7.0" top="7.0" />
+         </HBox.margin>
         </TextField>
-        <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025">
-          <HBox.margin>
-              <Insets left="9.0" right="9.0" />
-          </HBox.margin>
+        <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025" HBox.hgrow="ALWAYS">
         </Slider>
     </HBox>
-    <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="checkbox" text="Edge proximity weights">
-        <font>
-            <Font size="18.0" />
-        </font>
-        <VBox.margin>
-            <Insets />
-        </VBox.margin>
+    <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Edge proximity weights">
     </CheckBox>
-    <GridPane vgap="16.0">
+    <GridPane hgap="16.0" vgap="16.0">
         <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
         </columnConstraints>
         <rowConstraints>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
-        <Text styleClass="text" text="Edge proximity margin: " GridPane.hgrow="ALWAYS">
-            <font>
-                <Font size="18.0"/>
-            </font>
+        <Text styleClass="wireframeBody, text" text="Edge proximity margin: " GridPane.hgrow="ALWAYS">
         </Text>
-        <TextField fx:id="edgeProximityMarginTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1">
-            <font>
-                <Font size="18.0"/>
-            </font>
+        <TextField fx:id="edgeProximityMarginTextField" prefHeight="39.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1">
         </TextField>
-        <Slider fx:id="edgeProximityMarginSlider" majorTickUnit="0.5" max="1.0" minorTickCount="4" showTickLabels="true"
-                showTickMarks="true" styleClass="slider" value="0.1" GridPane.columnIndex="2"/>
-        <Text styleClass="text" text="Edge proximity cutoff: " GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
-            <font>
-                <Font size="18.0"/>
-            </font>
+        <Slider fx:id="edgeProximityMarginSlider" majorTickUnit="0.5" max="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.1" GridPane.columnIndex="2" />
+        <Text styleClass="wireframeBody, text" text="Edge proximity cutoff: " GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
         </Text>
-        <TextField fx:id="edgeProximityCutoffTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1"
-                   GridPane.rowIndex="1">
-            <font>
-                <Font size="18.0"/>
-            </font>
+        <TextField fx:id="edgeProximityCutoffTextField" prefHeight="39.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.rowIndex="1">
         </TextField>
-        <Slider fx:id="edgeProximityCutoffSlider" majorTickUnit="0.05" max="0.1" minorTickCount="4"
-                showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.01" GridPane.columnIndex="2"
-                GridPane.rowIndex="1"/>
+        <Slider fx:id="edgeProximityCutoffSlider" majorTickUnit="0.05" max="0.1" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.01" GridPane.columnIndex="2" GridPane.rowIndex="1" />
     </GridPane>
-    <AnchorPane prefHeight="0.0">
-        <padding>
-            <Insets bottom="4.0" left="4.0" right="4.0" />
-        </padding>
-        <Button mnemonicParsing="false" onAction="#apply" text="Apply" AnchorPane.bottomAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">
-         <font>
-            <Font size="21.0" />
-         </font></Button>
+    <AnchorPane>
+        <Button mnemonicParsing="false" onAction="#apply" styleClass="wireframeBodyLarge, button" text="Apply" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="38.0">
+        </Button>
     </AnchorPane>
-    <opaqueInsets>
-      <Insets />
-   </opaqueInsets>
-   <padding>
-      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-   </padding>
 </VBox>

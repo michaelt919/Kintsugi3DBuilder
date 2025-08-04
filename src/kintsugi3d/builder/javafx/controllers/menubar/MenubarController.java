@@ -829,26 +829,6 @@ public class MenubarController
         }
     }
 
-    //TODO: REMOVE?
-    @FXML
-    private void file_loadOptions()
-    {
-        if (loadOptionsWindowOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/modals/LoadOptions.fxml");
-            loadOptionsController.bind(javaFXState.getLoadOptionsModel());
-        }
-        catch (Exception e)
-        {
-            handleException("An error occurred opening load options", e);
-        }
-    }
-
     @FXML
     private void file_exit()
     {

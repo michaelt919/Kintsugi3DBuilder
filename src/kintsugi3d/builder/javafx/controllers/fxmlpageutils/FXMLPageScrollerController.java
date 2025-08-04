@@ -16,14 +16,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import javafx.util.Pair;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +36,7 @@ public class FXMLPageScrollerController {
     @FXML private Button prevButton;
     @FXML private Button nextButton;
 
-    @FXML private AnchorPane hostAnchorPane;
+    @FXML private Pane hostPane;
     ArrayList<FXMLPage> pages;
     FXMLPage currentPage;
 
@@ -142,29 +140,12 @@ public class FXMLPageScrollerController {
         FXMLPage newPage = getPage(fileName);
         Parent newContent = newPage.getLoader().getRoot();
 
-        updateSizePreferences();
-
         if (newContent != null) {
-            hostAnchorPane.getChildren().setAll(newContent);
+            hostPane.getChildren().setAll(newContent);
         }
+        outerGridPane.getScene().getWindow().sizeToScene();
         currentPage.getController().refresh();
         updatePrevAndNextButtons();
-    }
-
-    private void updateSizePreferences() {
-        Pair<Double, Double> prefs = currentPage.getController().getSizePreferences();
-
-        hostAnchorPane.setMinSize(prefs.getKey(), prefs.getValue());
-        hostAnchorPane.setPrefSize(prefs.getKey(), prefs.getValue());
-
-        final double EXTRA_HEIGHT = 1.2; // allow some extra breathing room for the prev and next buttons
-        outerGridPane.setMinSize(prefs.getKey(), prefs.getValue() * EXTRA_HEIGHT);
-        outerGridPane.setPrefSize(prefs.getKey(), prefs.getValue() * EXTRA_HEIGHT);
-
-        Stage stage = (Stage) outerGridPane.getScene().getWindow();
-
-        stage.setWidth(prefs.getKey() + stage.getScene().getWidth() - outerGridPane.getWidth());
-        stage.setHeight((prefs.getValue() * EXTRA_HEIGHT) + stage.getScene().getHeight() - outerGridPane.getHeight());
     }
 
 

@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
-<AnchorPane styleClass="anchor-pane" prefHeight="178.0" prefWidth="331.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.PhotoLightingSettingsController">
+<AnchorPane styleClass="modal-root" prefHeight="178.0" prefWidth="331.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.PhotoLightingSettingsController">
     <VBox spacing="10.0">
         <padding>
             <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
@@ -28,7 +28,7 @@
 <!--        <Accordion prefHeight="175.0" prefWidth="412.0" styleClass="accordion">-->
 <!--            <panes>-->
 <!--                <TitledPane maxHeight="-Infinity" styleClass="titled-pane" text="Per-light Intensity (UNFINISHED)">-->
-<!--                    <AnchorPane styleClass="anchor-pane">-->
+<!--                    <AnchorPane styleClass="modal-root">-->
 <!--                        <VBox spacing="10.0">-->
 <!--                            <HBox spacing="20.0">-->
 <!--                                <padding>-->
@@ -117,7 +117,7 @@
 <!--                    </AnchorPane>-->
 <!--                </TitledPane>-->
 <!--                <TitledPane layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" styleClass="titled-pane" text="Ambient Light (UNFINISHED)">-->
-<!--                    <AnchorPane styleClass="anchor-pane">-->
+<!--                    <AnchorPane styleClass="modal-root">-->
 <!--                        <VBox spacing="10.0">-->
 <!--                            <padding>-->
 <!--                                <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />-->

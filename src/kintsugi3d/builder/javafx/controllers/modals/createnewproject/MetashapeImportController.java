@@ -17,7 +17,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -42,7 +42,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
 
     @FXML private Text fileNameTxtField;
-    @FXML private AnchorPane anchorPane;
+    @FXML private Pane rootPane;
     @FXML private Text loadMetashapeObject;
 
     @FXML private ChoiceBox<String> chunkSelectionChoiceBox;
@@ -60,7 +60,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public Region getHostRegion() {
-        return anchorPane;
+        return rootPane;
     }
 
     @Override

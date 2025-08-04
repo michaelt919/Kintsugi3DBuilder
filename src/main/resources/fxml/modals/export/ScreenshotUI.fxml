@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
-<AnchorPane styleClass="anchor-pane" prefHeight="120.0" prefWidth="555.0"
+<AnchorPane styleClass="modal-root" prefHeight="120.0" prefWidth="555.0"
             stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.screenshot.ScreenshotController">
    <Label layoutX="14.0" layoutY="14.0" text="Export file:"/>

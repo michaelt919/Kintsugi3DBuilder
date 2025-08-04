@@ -45,7 +45,7 @@ public abstract class FXMLPageController {
         Region hostNode = getHostRegion();
 
         //add a bit of padding
-        return new Pair<>(hostNode.getPrefWidth() * 1.02, hostNode.getPrefHeight() * 1.02);
+        return new Pair<>(hostNode.getPrefWidth(), hostNode.getPrefHeight());
     }
 
     public boolean isNextButtonValid(){return hostPage.hasNextPage();}

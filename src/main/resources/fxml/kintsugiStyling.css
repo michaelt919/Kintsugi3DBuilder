@@ -96,8 +96,13 @@
     -fx-background-color: #262626;
 }
 
-.anchor-pane{
+.root{
     -fx-background-color: #262626;
+}
+
+.modal-root{
+    -fx-background-color: #262626;
+    -fx-padding: 48 24 52 24; /* top right bottom left */
 }
 
 .accordion .content {
@@ -106,6 +111,7 @@
 
 .button {
     -fx-background-color: #CECECE;
+    -fx-padding: 8 16 8 16; /* top right bottom left */
 }
 
 .button .text{
@@ -126,6 +132,7 @@
 
 .button-selected{
     -fx-background-color: #D4AA00;
+    -fx-padding: 8 16 8 16; /* top right bottom left */
  }
 
 .cachesettingsanchorepane{

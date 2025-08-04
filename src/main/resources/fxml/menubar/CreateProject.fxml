@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.*?>
 <AnchorPane stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea"
             xmlns:fx="http://javafx.com/fxml/1"
-            styleClass="anchor-pane"
+            styleClass="modal-root"
             fx:controller="kintsugi3d.builder.javafx.controllers.scene.CreateProjectController">
     <padding>
         <Insets bottom="10.0"/>

@@ -14,7 +14,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="200.0" prefWidth="343.0" styleClass="anchor-pane" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.ObjectVisualsController">
+<AnchorPane prefHeight="200.0" prefWidth="343.0" styleClass="modal-root" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.ObjectVisualsController">
     <VBox prefHeight="200.0" prefWidth="294.0" spacing="10.0" stylesheets="@../../kintsugiStyling.css">
         <padding>
             <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />

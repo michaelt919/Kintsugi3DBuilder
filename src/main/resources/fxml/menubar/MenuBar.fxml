@@ -225,16 +225,6 @@
                             <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
                             <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
                         </Menu>
-                        <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
-                            <items>
-                                <MenuItem mnemonicParsing="false" onAction="#specularFit" text="Export Specular Fit" visible="false">
-                                    <accelerator>
-                                        <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                                    </accelerator>
-                                </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />
-                            </items>
-                        </Menu>
                     </MenuBar>
                     <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
 <!--                        leaving the checkbox in here causes scenebuilder to not render???-->

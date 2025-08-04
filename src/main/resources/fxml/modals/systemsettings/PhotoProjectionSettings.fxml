@@ -11,52 +11,28 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<GridPane fx:id="root" hgap="15.0" styleClass="grid-pane" stylesheets="@../../kintsugiStyling.css" vgap="15.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController">
-    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" styleClass="checkbox" text="Limit blended views per pixel:" GridPane.columnSpan="3" GridPane.rowIndex="0">
-        <font>
-            <Font size="18.0" />
-        </font>
+
+<GridPane hgap="16.0" styleClass="modal-root" stylesheets="@../../kintsugiStyling.css" vgap="16.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController">
+    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" styleClass="wireframeBody, checkbox" text="Limit blended views per pixel:" GridPane.columnSpan="3" GridPane.rowIndex="0">
     </CheckBox>
-    <TextField fx:id="buehlerTextField" prefHeight="39.0" prefWidth="99.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
-        <font>
-            <Font size="18.0" />
-        </font>
+    <TextField fx:id="buehlerTextField" maxWidth="100.0" prefHeight="0.0" prefWidth="99.0" styleClass="wireframeBody" GridPane.columnIndex="2" GridPane.rowIndex="0">
     </TextField>
-    <Text styleClass="text" text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="1">
-      <font>
-         <Font size="18.0" />
-      </font>
+    <Text styleClass="wireframeBody, text" text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="1">
     </Text>
+    <TextField fx:id="weightExponentTextField" prefHeight="0.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.rowIndex="1">
+    </TextField>
     <Slider fx:id="weightExponentSlider" majorTickUnit="49.0" min="1.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" styleClass="slider" value="16.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-    <Text styleClass="text" text="Isotropy factor: " GridPane.halignment="RIGHT" GridPane.rowIndex="2">
-      <font>
-         <Font size="18.0" />
-      </font>
+    <Text styleClass="wireframeBody, text" text="Isotropy factor: " GridPane.halignment="RIGHT" GridPane.rowIndex="2">
     </Text>
-    <TextField fx:id="isotropyFactorTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-      <font>
-         <Font size="18.0" />
-      </font>
-    </TextField>
-    <TextField fx:id="weightExponentTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-      <font>
-         <Font size="18.0" />
-      </font>
+    <TextField fx:id="isotropyFactorTextField" prefHeight="0.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.rowIndex="2">
     </TextField>
     <Slider fx:id="isotropyFactorSlider" blockIncrement="0.2" majorTickUnit="0.25" max="1.0" showTickLabels="true" showTickMarks="true" styleClass="slider" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-    <ChoiceBox fx:id="weightModeChoiceBox" managed="false" prefHeight="25.0" prefWidth="254.0" styleClass="choicebox" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="3" />
-    <Text managed="false" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Weight mode: " visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
-      <font>
-         <Font size="18.0" />
-      </font>
+    <ChoiceBox fx:id="weightModeChoiceBox" managed="false" prefHeight="25.0" prefWidth="254.0" styleClass="wireframeBody, choicebox" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="3" />
+    <Text managed="false" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Weight mode: " visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
     </Text>
-   <padding>
-      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-   </padding>
    <columnConstraints>
       <ColumnConstraints />
       <ColumnConstraints />
