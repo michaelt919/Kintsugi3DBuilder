@@ -780,7 +780,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         // Mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
         Map<Integer, String> maskPathsMap = null;
         File masksDir = metashapeChunk.getMasksDirectory();
-        if (masksDir.toString().endsWith(".zip") && masksDir.exists())
+        if (masksDir != null && masksDir.toString().endsWith(".zip") && masksDir.exists())
         {
             try
             {
