@@ -12,7 +12,6 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -28,7 +27,7 @@ import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
+    private static final Logger log = LoggerFactory.getLogger(ViewSetWriterToVSET.class);
     private static final ViewSetWriter INSTANCE = new ViewSetWriterToVSET();
 
     public static ViewSetWriter getInstance()
@@ -48,26 +47,26 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.println("# ViewSet UUID");
-        out.println("U " + viewSet.getUUID());
+        out.printf("U %s%n", viewSet.getUUID());
 
         if (viewSet.getGeometryFileName() != null)
         {
             out.println();
             out.println("# Geometry file name (mesh)");
-            out.println("m " + viewSet.getGeometryFileName());
+            out.printf("m %s%n", viewSet.getGeometryFileName());
         }
 
         out.println();
         out.println("# Full resolution image file path");
-        out.println("I " + viewSet.getRelativeFullResImagePathName());
+        out.printf("I %s%n", viewSet.getRelativeFullResImagePathName());
 
         out.println();
         out.println("# Preview resolution image file path");
-        out.println("i " + viewSet.getRelativePreviewImagePathName());
+        out.printf("i %s%n", viewSet.getRelativePreviewImagePathName());
 
         out.println();
         out.println("# Supporting files (texture fit results) file path");
-        out.println("t " + viewSet.getRelativeSupportingFilesPathName());
+        out.printf("t %s%n", viewSet.getRelativeSupportingFilesPathName());
 
         out.println();
         out.println("# Estimated near and far planes");
@@ -90,11 +89,11 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.println("# Reference orientation view index");
-        out.println("O " + correctedOrientationViewIndex);
+        out.printf("O %d%n", correctedOrientationViewIndex);
 
         out.println();
         out.println("# Reference View Pose Rotation (degrees)");
-        out.println("r " + viewSet.getOrientationViewRotationDegrees());
+        out.printf("r %s%n", viewSet.getOrientationViewRotationDegrees());
 
         boolean firstSetting = true;
         for (ReadonlySettingsModel.Setting setting : viewSet.getProjectSettings())
@@ -123,7 +122,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             }
             else
             {
-                log.warn("Unrecognized type in view set settings model when writing to file: " + type.toString());
+                log.warn("Unrecognized type in view set settings model when writing to file: {}", type);
             }
 
             out.print(setting.getName());
@@ -149,11 +148,11 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         {
             out.println();
             out.println("# Masks directory");
-            out.println("M " + viewSet.getMasksDirectory().getAbsolutePath());
+            out.printf("M %s%n", viewSet.getMasksDirectory().getAbsolutePath());
 
             out.println();
             Map<Integer, File> masksMap = viewSet.getMasksMap();
-            out.println("# " + masksMap.size() + " masks");
+            out.printf("# %d masks%n", masksMap.size());
             for (var entry : masksMap.entrySet())
             {
                 if (entry.getValue() != null)
@@ -164,7 +163,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.println("# " + viewSet.getCameraProjectionCount() + (viewSet.getCameraProjectionCount() == 1 ? " Sensor" : " Sensors"));
+        out.printf("# %d%s%n", viewSet.getCameraProjectionCount(), viewSet.getCameraProjectionCount() == 1 ? " Sensor" : " Sensors");
         for (int i = 0; i < viewSet.getCameraProjectionCount(); i++)
         {
             out.println(viewSet.getCameraProjection(i).toVSETString());
@@ -187,7 +186,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.println("# " + viewSet.getCameraPoseCount() + (viewSet.getCameraPoseCount() == 1 ? " Camera" : " Cameras"));
+        out.printf("# %d%s%n", viewSet.getCameraPoseCount(), viewSet.getCameraPoseCount() == 1 ? " Camera" : " Cameras");
         for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
         {
             Matrix4 pose = viewSet.getCameraPose(i);
@@ -217,7 +216,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         if (viewSet.getLightCount() > 0)
         {
             out.println();
-            out.println("# " + viewSet.getLightCount() + (viewSet.getLightCount() == 1 ? " Light" : " Lights"));
+            out.printf("# %d%s%n", viewSet.getLightCount(), viewSet.getLightCount() == 1 ? " Light" : " Lights");
             for (int id = 0; id < viewSet.getLightCount(); id++)
             {
                 Vector3 pos = viewSet.getLightPosition(id);
@@ -228,7 +227,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.println("# " + viewSet.getCameraPoseCount() + (viewSet.getCameraPoseCount() == 1 ? " View" : " Views"));
+        out.printf("# %d%s%n", viewSet.getCameraPoseCount(), viewSet.getCameraPoseCount() == 1 ? " View" : " Views");
 
         // Primary view first (so that next time the view set is loaded it will be index 0)
         out.printf("v\t%d\t%d\t%d\t%s", viewSet.getPrimaryViewIndex(),
