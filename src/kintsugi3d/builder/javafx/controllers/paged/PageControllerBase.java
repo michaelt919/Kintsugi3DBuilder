@@ -13,8 +13,21 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 public abstract class PageControllerBase<PageType extends Page<?>> implements PageController<PageType>
 {
-    protected Runnable confirmCallback;
+    protected PageFrameController pageFrameController;
     private PageType page;
+    protected Runnable confirmCallback;
+
+    @Override
+    public PageFrameController getPageFrameController()
+    {
+        return pageFrameController;
+    }
+
+    @Override
+    public void setPageFrameController(PageFrameController scroller)
+    {
+        this.pageFrameController = scroller;
+    }
 
     @Override
     public PageType getPage()

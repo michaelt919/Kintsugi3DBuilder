@@ -20,9 +20,13 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.DataSourcePage;
+import kintsugi3d.builder.javafx.controllers.paged.PageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 
-public class SelectImportOptionsController extends PageControllerBase
+public class SelectImportOptionsController
+    extends PageControllerBase<DataSourcePage<InputSource, SelectImportOptionsController>>
+    implements PageController<DataSourcePage<InputSource, SelectImportOptionsController>>
 {
 
     @FXML private ToggleButton metashapeImportButton;
@@ -33,45 +37,58 @@ public class SelectImportOptionsController extends PageControllerBase
     @FXML private Pane rootPane;
 
     @Override
-    public Region getRootNode() {
+    public Region getRootNode()
+    {
         return rootPane;
     }
 
     @Override
-    public void init() {
+    public void init()
+    {
         buttons.getToggles().add(metashapeImportButton);
         buttons.getToggles().add(looseFilesImportButton);
         buttons.getToggles().add(realityCaptureImportButton);
 
         //add dummy input sources so we can add info to them later
         metashapeImportButton.setOnAction(e -> handleButtonSelect(metashapeImportButton,
-                "/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource()));
+            "/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource()));
 
-        looseFilesImportButton.setOnAction(e-> handleButtonSelect(looseFilesImportButton,
-                "/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource()));
+        looseFilesImportButton.setOnAction(e -> handleButtonSelect(looseFilesImportButton,
+            "/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource()));
 
         realityCaptureImportButton.setOnAction(e -> handleButtonSelect(realityCaptureImportButton,
-                "/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource()));
+            "/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource()));
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
     }
 
-    public void handleButtonSelect(ToggleButton button, String path, InputSource source) {
-        if (button.isSelected()) {
-            page.setNextPage(frameController.getPage(path));
-            frameController.updatePrevAndNextButtons();
-            frameController.addInfo(ShareInfo.Info.INPUT_SOURCE, source);
-        } else {
-            page.setNextPage(null);
-            frameController.updatePrevAndNextButtons();
+    @Override
+    public void finish()
+    {
+    }
+
+    public void handleButtonSelect(ToggleButton button, String path, InputSource source)
+    {
+        if (button.isSelected())
+        {
+            getPage().setNextPage(getPageFrameController().getPage(path));
+            getPageFrameController().updatePrevAndNextButtons();
+            this.getPage().setData(source);
+        }
+        else
+        {
+            getPage().setNextPage(null);
+            getPageFrameController().updatePrevAndNextButtons();
         }
     }
 
-    //have this so we can navigate to loose files selection from inside an error message somewhere else
-    public void looseFilesSelect() {
-        page.setNextPage(frameController.getPage("/fxml/modals/createnewproject/CustomImport.fxml"));
-        frameController.nextPage();
+    // Have this so we can navigate to loose files selection from inside an error message somewhere else
+    public void looseFilesSelect()
+    {
+        getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/CustomImport.fxml"));
+        getPageFrameController().nextPage();
     }
 }

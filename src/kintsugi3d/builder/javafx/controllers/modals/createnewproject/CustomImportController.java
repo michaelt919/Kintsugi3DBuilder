@@ -60,6 +60,7 @@ public class CustomImportController
 
     /**
      * Overridden by child class to enable hot swap
+     *
      * @return
      */
     protected boolean shouldHotSwap()
@@ -68,7 +69,8 @@ public class CustomImportController
     }
 
     @Override
-    public Region getRootNode() {
+    public Region getRootNode()
+    {
         return root;
     }
 
@@ -87,30 +89,34 @@ public class CustomImportController
 
         photoDirectoryChooser.setTitle("Select photo directory");
 
-        this.getPage().setNextPage(frameController.getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
+        this.getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
-        if(source != null){
+        if (source != null)
+        {
             camFileChooser.getExtensionFilters().clear();
 
             StringBuilder cameraPositionsTextBuilder = new StringBuilder("Camera Positions\n(");
-            for (ExtensionFilter filter : source.getExtensionFilters()){
+            for (ExtensionFilter filter : source.getExtensionFilters())
+            {
                 camFileChooser.getExtensionFilters().add(filter);
                 cameraPositionsTextBuilder.append(filter.getDescription()).append(" or\n");
             }
             int finalIdx = cameraPositionsTextBuilder.length();
-            cameraPositionsTextBuilder.replace(finalIdx - 4, finalIdx,")");
+            cameraPositionsTextBuilder.replace(finalIdx - 4, finalIdx, ")");
             camPositionsTxt.setText(cameraPositionsTextBuilder.toString());
         }
     }
 
     @Override
-    public boolean isNextButtonValid() {
+    public boolean isNextButtonValid()
+    {
         return areAllFilesLoaded();
     }
 
@@ -127,7 +133,7 @@ public class CustomImportController
             loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
 
-        frameController.updatePrevAndNextButtons();
+        getPageFrameController().updatePrevAndNextButtons();
     }
 
 
@@ -145,7 +151,7 @@ public class CustomImportController
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
 
-        frameController.updatePrevAndNextButtons();
+        getPageFrameController().updatePrevAndNextButtons();
     }
 
     @FXML
@@ -162,10 +168,11 @@ public class CustomImportController
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
 
-        frameController.updatePrevAndNextButtons();
+        getPageFrameController().updatePrevAndNextButtons();
     }
 
-    private boolean areAllFilesLoaded() {
+    private boolean areAllFilesLoaded()
+    {
         return (cameraFile != null) && (meshFile != null) && (photoDir != null);
     }
 
@@ -177,7 +184,8 @@ public class CustomImportController
         setInitDirectories(parentDir);
     }
 
-    private void setInitDirectories(File file){
+    private void setInitDirectories(File file)
+    {
         camFileChooser.setInitialDirectory(file);
         objFileChooser.setInitialDirectory(file);
         photoDirectoryChooser.setInitialDirectory(file);

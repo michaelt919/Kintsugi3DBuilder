@@ -19,4 +19,6 @@ public interface Page<ControllerType extends PageController<?>>
     boolean hasNextPage();
 
     boolean hasPrevPage();
+
+    void submit();
 }

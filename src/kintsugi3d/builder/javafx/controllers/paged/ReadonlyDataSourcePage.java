@@ -13,4 +13,13 @@ public interface ReadonlyDataSourcePage<T, ControllerType extends PageController
      * @param page
      */
     void setNextPage(DataReceiverPage<T, ?> page);
+
+    @Override
+    default void submit()
+    {
+        if (this.hasNextPage())
+        {
+            this.getNextPage().receiveData(this.getData());
+        }
+    }
 }

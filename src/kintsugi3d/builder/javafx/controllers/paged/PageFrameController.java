@@ -48,6 +48,7 @@ public class PageFrameController
     {
         for (Page<?> page : pages)
         {
+            page.getController().setPageFrameController(this);
             page.initController();
         }
 
@@ -91,6 +92,24 @@ public class PageFrameController
         }
     }
 
+    public void setPages(ArrayList<Page<?>> pages, String firstPageFXMLPath)
+    {
+        this.pages = pages;
+        currentPage = getPage(firstPageFXMLPath);
+    }
+
+    public Page<?> getPage(String fxmlPath)
+    {
+        for (Page<?> page : pages)
+        {
+            if (page.getFXMLFilePath().equals(fxmlPath))
+            {
+                return page;
+            }
+        }
+        return null;
+    }
+
     public void prevPage()
     {
         if (currentPage.hasPrevPage())
@@ -129,30 +148,16 @@ public class PageFrameController
             return;
         }
 
+        // Finializes data on the page
         currentPage.getController().finish();
+
+        // Passes data to the next page if applicable
+        currentPage.submit();
 
         currentPage = currentPage.getNextPage();
 
         initControllerAndUpdatePanel(nextPath);
         setButtonShortcuts(currentPage.getController());
-    }
-
-    public void setPages(ArrayList<Page<?>> pages, String firstPageFXMLPath)
-    {
-        this.pages = pages;
-        currentPage = getPage(firstPageFXMLPath);
-    }
-
-    public Page<?> getPage(String fxmlPath)
-    {
-        for (Page<?> page : pages)
-        {
-            if (page.getFXMLFilePath().equals(fxmlPath))
-            {
-                return page;
-            }
-        }
-        return null;
     }
 
     private void initControllerAndUpdatePanel(String fileName)
@@ -164,8 +169,11 @@ public class PageFrameController
         {
             hostPane.getChildren().setAll(newContent);
         }
+
         outerGridPane.getScene().getWindow().sizeToScene();
+
         currentPage.getController().refresh();
+
         updatePrevAndNextButtons();
     }
 
@@ -209,6 +217,21 @@ public class PageFrameController
     public Button getPrevButton()
     {
         return prevButton;
+    }
+
+    public Page<?> getCurrentPage()
+    {
+        return currentPage;
+    }
+
+    public void setNextButtonDisable(boolean b)
+    {
+        nextButton.setDisable(b);
+    }
+
+    public void updateNextButtonLabel(String labelText)
+    {
+        nextButton.setText(labelText);
     }
 }
 

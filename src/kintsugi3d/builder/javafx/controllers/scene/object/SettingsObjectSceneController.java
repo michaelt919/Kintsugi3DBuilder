@@ -28,7 +28,6 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
-import kintsugi3d.builder.javafx.controllers.paged.PageBase;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;

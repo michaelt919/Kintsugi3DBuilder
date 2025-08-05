@@ -29,6 +29,8 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.project.MissingImagesException;
@@ -42,7 +44,12 @@ import java.util.Map;
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
  */
 //TODO: Rename to OrientationViewSelectController for clarity?
-public class PrimaryViewSelectController extends PageControllerBase implements ConfirmablePageController, ImageThreadable {
+public class PrimaryViewSelectController
+    extends PageControllerBase<DataPassthroughPage<InputSource, PrimaryViewSelectController>>
+    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, PrimaryViewSelectController>>,
+        ConfirmablePageController<DataPassthroughPage<InputSource, PrimaryViewSelectController>>,
+        ImageThreadable
+{
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
@@ -67,44 +74,51 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
     @FXML
     private Label hintTextLabel;
 
+    private InputSource newSource;
     private InputSource source;
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
 
     @Override
-    public void init() {
+    public void init()
+    {
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
 
         chunkTreeView.getSelectionModel().selectedIndexProperty()
-                .addListener((a, b, c) -> selectImageInTreeView());
+            .addListener((a, b, c) -> selectImageInTreeView());
         this.imgCache = new HashMap<>();
         hintTextLabel.setText(getHintText());
     }
 
-    protected String getHintText() {
+    protected String getHintText()
+    {
         return "Select model orientation view";
     }
 
     @Override
-    public void refresh() {
-        InputSource sharedSource = frameController.getInfo(ShareInfo.Info.INPUT_SOURCE);
-
-        if (!sharedSource.equals(source)) { //check if sources are equal so we don't have to unzip images multiple times
+    public void refresh()
+    {
+        if (!newSource.equals(source))
+        { //check if sources are equal so we don't have to unzip images multiple times
             //sometimes this saves processing time, other times it leads to buggy behavior :/
             //really the only use case is saving time if a user flips back and forth between primary view selection and the previous page
-            source = sharedSource;
+            source = newSource;
 
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
             source.setSearchableTreeView(SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode));
-            try {
+            try
+            {
                 source.verifyInfo();
                 source.initTreeView();
                 source.setOrientationViewDefaultSelections(this);
-            } catch (MissingImagesException mie) {
-                if (source instanceof MetashapeProjectInputSource) {
+            }
+            catch (MissingImagesException mie)
+            {
+                if (source instanceof MetashapeProjectInputSource)
+                {
                     MetashapeProjectInputSource metaSource = (MetashapeProjectInputSource) source;
-                    Platform.runLater(() -> metaSource.showMissingImgsAlert(mie, frameController));
+                    Platform.runLater(() -> metaSource.showMissingImgsAlert(mie, getPageFrameController()));
                 }
             }
         }
@@ -113,40 +127,54 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
     }
 
     @Override
-    public Region getRootNode() {
+    public void finish()
+    {
+    }
+
+    @Override
+    public Region getRootNode()
+    {
         return hostAnchorPane;
     }
 
-    public void selectImageInTreeView() {
+    public void selectImageInTreeView()
+    {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
-        if (selectedItem == null) {
+        if (selectedItem == null)
+        {
             return;
         }
-        if (selectedItem == chunkTreeView.getRoot()) {
+        if (selectedItem == chunkTreeView.getRoot())
+        {
             selectedItem.setExpanded(true);
             return;
         }
 
-        if (!selectedItem.isLeaf()) {
+        if (!selectedItem.isLeaf())
+        {
             selectedItem.setExpanded(!selectedItem.isExpanded());
             return;
         }
 
-        if (selectedItem.getValue() != null) {
+        if (selectedItem.getValue() != null)
+        {
             //if loadImgThread is running, kill it and start a new one
-            if (loadImgThread != null && loadImgThread.isActive()) {
+            if (loadImgThread != null && loadImgThread.isActive())
+            {
                 loadImgThread.stopThread();
             }
 
-            if (selectedItem == InputSource.NONE_ITEM) {
+            if (selectedItem == InputSource.NONE_ITEM)
+            {
                 // Hide orientation controls
                 orientationControlsVBox.setVisible(false);
 
                 // Don't change the button text to "Skip" when working with an existing project
-                if (!(source instanceof CurrentProjectInputSource)) {
+                if (!(source instanceof CurrentProjectInputSource))
+                {
                     // Set confirm button text
-                    frameController.updateNextButtonLabel("Skip");
+                    getPageFrameController().updateNextButtonLabel("Skip");
                 }
 
                 imgViewText.setText("Keep model orientation as imported.");
@@ -154,12 +182,14 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
                 // Remove any image currently in the thumbnail viewer
                 primaryImgView.setImage(null);
                 return;
-            } else {
+            }
+            else
+            {
                 // Show orientation controls
                 orientationControlsVBox.setVisible(showFixOrientation());
 
                 // Set confirm button text
-                frameController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
+                getPageFrameController().updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
             }
 
             String imageName = selectedItem.getValue();
@@ -167,7 +197,8 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
 
             //set thumbnail as main image, then update to full resolution later
             //don't set thumbnail if img is cached, otherwise would cause a flash
-            if (!imgCache.containsKey(imageName)) {
+            if (!imgCache.containsKey(imageName))
+            {
                 setThumbnailAsFullImage(selectedItem);
             }
 
@@ -177,7 +208,8 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
         }
     }
 
-    private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {
+    private void setThumbnailAsFullImage(TreeItem<String> selectedItem)
+    {
         //use thumbnail as main image
         //used if image is not found, or if larger resolution image is being loaded
         ImageView imageView = (ImageView) selectedItem.getGraphic();
@@ -185,29 +217,35 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
     }
 
     @FXML
-    private void rotateRight() {
+    private void rotateRight()
+    {
         //rotate in 90 degree increments
         primaryImgView.setRotate((primaryImgView.getRotate() + 90) % 360);
     }
 
     @FXML
-    private void rotateLeft() {
+    private void rotateLeft()
+    {
         //rotate in 90 degree increments
         primaryImgView.setRotate((primaryImgView.getRotate() - 90) % 360);
     }
 
-    public void setImageRotation(double rotation) {
+    public void setImageRotation(double rotation)
+    {
         primaryImgView.setRotate(rotation % 360);
     }
 
     @Override
-    public boolean canConfirm() {
+    public boolean canConfirm()
+    {
         return true;
     }
 
     @Override
-    public void confirmButtonPress() {
-        if (confirmCallback != null) {
+    public void confirmButtonPress()
+    {
+        if (confirmCallback != null)
+        {
             confirmCallback.run();
         }
 
@@ -220,42 +258,56 @@ public class PrimaryViewSelectController extends PageControllerBase implements C
     }
 
     @Override
-    public boolean isNextButtonValid() {
+    public boolean isNextButtonValid()
+    {
         return true;
     }
 
     @Override
-    public ImageView getImageView() {
+    public ImageView getImageView()
+    {
         return primaryImgView;
     }
 
     @Override
-    public String getImageViewText() {
+    public String getImageViewText()
+    {
         return imgViewText.getText();
     }
 
     @Override
-    public void setImageViewText(String txt) {
+    public void setImageViewText(String txt)
+    {
         imgViewText.setText(txt);
     }
 
     @Override
-    public Map<String, Image> getImageCache() {
+    public Map<String, Image> getImageCache()
+    {
         return imgCache;
     }
 
-    public String getSelectedViewName() {
+    public String getSelectedViewName()
+    {
         TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
 
         String viewName = null;
-        if (selection != InputSource.NONE_ITEM) {
+        if (selection != InputSource.NONE_ITEM)
+        {
             viewName = selection.getValue();
         }
 
         return viewName;
     }
 
-    protected boolean showFixOrientation() {
+    protected boolean showFixOrientation()
+    {
         return true;
+    }
+
+    @Override
+    public void receiveData(InputSource data)
+    {
+
     }
 }

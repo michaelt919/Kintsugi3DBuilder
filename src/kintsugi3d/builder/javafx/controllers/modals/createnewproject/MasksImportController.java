@@ -22,11 +22,16 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 
 import java.io.File;
 
-public class MasksImportController extends PageControllerBase implements ShareInfo{
+public class MasksImportController
+    extends PageControllerBase<DataPassthroughPage<InputSource, MasksImportController>>
+    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, MasksImportController>>
+{
     @FXML private Pane rootPane;
 
     @FXML private ToggleButton useProjectMasksButton;
@@ -40,65 +45,80 @@ public class MasksImportController extends PageControllerBase implements ShareIn
     private File fileChooserMasksDir; //represents the file chosen through file chooser, which may or may not be the final masks selection
 
     @Override
-    public Region getRootNode() {
+    public Region getRootNode()
+    {
         return rootPane;
     }
 
     @Override
-    public void init() {
+    public void init()
+    {
         masksDirectoryChooser = new DirectoryChooser();
         toggleGroup = new ToggleGroup();
         toggleGroup.getToggles().add(useProjectMasksButton);
         toggleGroup.getToggles().add(customMasksDirButton);
         toggleGroup.getToggles().add(noMasksButton);
 
-        useProjectMasksButton.setOnAction(e -> frameController.updatePrevAndNextButtons());
-        customMasksDirButton.setOnAction(e -> {
+        useProjectMasksButton.setOnAction(e -> getPageFrameController().updatePrevAndNextButtons());
+        customMasksDirButton.setOnAction(e ->
+        {
             chooseMasksDir(e);
-            frameController.updatePrevAndNextButtons();
+            getPageFrameController().updatePrevAndNextButtons();
         });
-        noMasksButton.setOnAction(e -> frameController.updatePrevAndNextButtons());
+        noMasksButton.setOnAction(e -> getPageFrameController().updatePrevAndNextButtons());
 
 
-        page.setNextPage(frameController.getPage("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
+        getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
-    public void refresh() {
-        source = getFrameController().getInfo(ShareInfo.Info.INPUT_SOURCE);
+    public void refresh()
+    {
         masksDirectoryChooser.setInitialDirectory(source.getInitialMasksDirectory());
         useProjectMasksButton.setDisable(!source.doEnableProjectMasksButton());
     }
 
     @Override
-    public boolean isNextButtonValid() {
+    public boolean isNextButtonValid()
+    {
         return toggleGroup.getToggles().stream().anyMatch(Toggle::isSelected);
     }
 
     @Override
-    public void finish() {
-        if (useProjectMasksButton.isSelected()){
-            //project should already have this masks directory initialized from earlier page
+    public void finish()
+    {
+        if (customMasksDirButton.isSelected())
+        {
+            source.setMasksDirectory(fileChooserMasksDir);
         }
-        if (customMasksDirButton.isSelected()){
-           source.setMasksDirectory(fileChooserMasksDir);
-        }
-        if (noMasksButton.isSelected()){
+        else if (noMasksButton.isSelected())
+        {
             source.setMasksDirectory(null);
         }
+        // Otherwise, project should already have this masks directory initialized from earlier page
     }
 
     @FXML
-    private void chooseMasksDir(ActionEvent e) {
+    private void chooseMasksDir(ActionEvent e)
+    {
         // Don't show directory chooser when deselecting
         if (!customMasksDirButton.isSelected())
+        {
             return;
+        }
 
         Stage stage = (Stage) ((Node) e.getSource()).getScene().getWindow();
         File file = masksDirectoryChooser.showDialog(stage.getOwner());
-        if (file!= null){
+        if (file != null)
+        {
             masksDirectoryChooser.setInitialDirectory(file);
             fileChooserMasksDir = file;
         }
+    }
+
+    @Override
+    public void receiveData(InputSource source)
+    {
+        this.source = source;
     }
 }

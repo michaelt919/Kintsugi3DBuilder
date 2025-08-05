@@ -8,6 +8,10 @@ public interface PageController<PageType extends Page<?>>
 
     void setPage(PageType page);
 
+    PageFrameController getPageFrameController();
+
+    void setPageFrameController(PageFrameController scroller);
+
     /**
      * Returns the outer AnchorPane, VBox, GridPane, etc. for the controller's fxml
      *
