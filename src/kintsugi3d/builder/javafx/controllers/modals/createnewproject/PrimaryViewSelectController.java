@@ -23,14 +23,13 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ConfirmablePageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
@@ -43,7 +42,7 @@ import java.util.Map;
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
  */
 //TODO: Rename to OrientationViewSelectController for clarity?
-public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePageController, ImageThreadable {
+public class PrimaryViewSelectController extends PageControllerBase implements ConfirmablePageController, ImageThreadable {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
@@ -89,7 +88,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @Override
     public void refresh() {
-        InputSource sharedSource = hostScrollerController.getInfo(ShareInfo.Info.INPUT_SOURCE);
+        InputSource sharedSource = frameController.getInfo(ShareInfo.Info.INPUT_SOURCE);
 
         if (!sharedSource.equals(source)) { //check if sources are equal so we don't have to unzip images multiple times
             //sometimes this saves processing time, other times it leads to buggy behavior :/
@@ -105,7 +104,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             } catch (MissingImagesException mie) {
                 if (source instanceof MetashapeProjectInputSource) {
                     MetashapeProjectInputSource metaSource = (MetashapeProjectInputSource) source;
-                    Platform.runLater(() -> metaSource.showMissingImgsAlert(mie, hostScrollerController));
+                    Platform.runLater(() -> metaSource.showMissingImgsAlert(mie, frameController));
                 }
             }
         }
@@ -114,7 +113,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     }
 
     @Override
-    public Region getHostRegion() {
+    public Region getRootNode() {
         return hostAnchorPane;
     }
 
@@ -147,7 +146,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 // Don't change the button text to "Skip" when working with an existing project
                 if (!(source instanceof CurrentProjectInputSource)) {
                     // Set confirm button text
-                    hostScrollerController.updateNextButtonLabel("Skip");
+                    frameController.updateNextButtonLabel("Skip");
                 }
 
                 imgViewText.setText("Keep model orientation as imported.");
@@ -160,7 +159,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 orientationControlsVBox.setVisible(showFixOrientation());
 
                 // Set confirm button text
-                hostScrollerController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
+                frameController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
             }
 
             String imageName = selectedItem.getValue();

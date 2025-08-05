@@ -36,8 +36,8 @@ import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ConfirmablePageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.SRGB;
@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePageController
+public class EyedropperController extends PageControllerBase implements Initializable, ConfirmablePageController
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
@@ -725,7 +725,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
     }
 
     @Override
-    public Region getHostRegion()
+    public Region getRootNode()
     {
         return outerVbox;
     }

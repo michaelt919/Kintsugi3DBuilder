@@ -23,8 +23,8 @@ import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,7 +142,7 @@ public class MetashapeProjectInputSource extends InputSource{
         return this;
     }
 
-    public void showMissingImgsAlert(MissingImagesException mie, FXMLPageScrollerController hostScrollerController) {
+    public void showMissingImgsAlert(MissingImagesException mie, PageFrameController hostScrollerController) {
         int numMissingImgs = mie.getNumMissingImgs();
         File prevTriedDirectory = mie.getImgDirectory();
 

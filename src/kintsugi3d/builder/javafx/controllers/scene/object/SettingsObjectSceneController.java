@@ -26,10 +26,10 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.Page;
+import kintsugi3d.builder.javafx.controllers.paged.PageBase;
+import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -186,14 +186,14 @@ public class SettingsObjectSceneController implements Initializable
             stage.setTitle("Select Orientation Reference View");
             stage.setScene(new Scene(root));
 
-            FXMLPageScrollerController scrollerController = loader.getController();
+            PageFrameController scrollerController = loader.getController();
 
             String viewSelectPath = "/fxml/modals/createnewproject/PrimaryViewSelect.fxml";
             FXMLLoader selectorLoader = new FXMLLoader(getClass().getResource(viewSelectPath));
             selectorLoader.load();
 
-            ArrayList<FXMLPage> pages = new ArrayList<>();
-            pages.add(new FXMLPage(viewSelectPath, selectorLoader));
+            ArrayList<Page> pages = new ArrayList<>();
+            pages.add(new PageBase(viewSelectPath, selectorLoader));
 
             scrollerController.setPages(pages, viewSelectPath);
             scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new CurrentProjectInputSource());

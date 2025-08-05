@@ -21,13 +21,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 
 import java.io.File;
 
-public class MasksImportController extends FXMLPageController implements ShareInfo{
+public class MasksImportController extends PageControllerBase implements ShareInfo{
     @FXML private Pane rootPane;
 
     @FXML private ToggleButton useProjectMasksButton;
@@ -41,7 +40,7 @@ public class MasksImportController extends FXMLPageController implements ShareIn
     private File fileChooserMasksDir; //represents the file chosen through file chooser, which may or may not be the final masks selection
 
     @Override
-    public Region getHostRegion() {
+    public Region getRootNode() {
         return rootPane;
     }
 
@@ -53,20 +52,20 @@ public class MasksImportController extends FXMLPageController implements ShareIn
         toggleGroup.getToggles().add(customMasksDirButton);
         toggleGroup.getToggles().add(noMasksButton);
 
-        useProjectMasksButton.setOnAction(e -> hostScrollerController.updatePrevAndNextButtons());
+        useProjectMasksButton.setOnAction(e -> frameController.updatePrevAndNextButtons());
         customMasksDirButton.setOnAction(e -> {
             chooseMasksDir(e);
-            hostScrollerController.updatePrevAndNextButtons();
+            frameController.updatePrevAndNextButtons();
         });
-        noMasksButton.setOnAction(e -> hostScrollerController.updatePrevAndNextButtons());
+        noMasksButton.setOnAction(e -> frameController.updatePrevAndNextButtons());
 
 
-        hostPage.setNextPage(hostScrollerController.getPage("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
+        page.setNextPage(frameController.getPage("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
     public void refresh() {
-        source = getHostScrollerController().getInfo(ShareInfo.Info.INPUT_SOURCE);
+        source = getFrameController().getInfo(ShareInfo.Info.INPUT_SOURCE);
         masksDirectoryChooser.setInitialDirectory(source.getInitialMasksDirectory());
         useProjectMasksButton.setDisable(!source.doEnableProjectMasksButton());
     }
@@ -77,7 +76,7 @@ public class MasksImportController extends FXMLPageController implements ShareIn
     }
 
     @Override
-    public void shareInfo() {
+    public void finish() {
         if (useProjectMasksButton.isSelected()){
             //project should already have this masks directory initialized from earlier page
         }

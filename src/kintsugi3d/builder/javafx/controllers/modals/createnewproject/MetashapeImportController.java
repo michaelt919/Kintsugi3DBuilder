@@ -26,10 +26,9 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-public class MetashapeImportController extends FXMLPageController implements ShareInfo {
+public class MetashapeImportController extends PageControllerBase implements ShareInfo {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
 
     @FXML private Text fileNameTxtField;
@@ -59,7 +58,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private FileChooser psxFileChooser;
 
     @Override
-    public Region getHostRegion() {
+    public Region getRootNode() {
         return rootPane;
     }
 
@@ -70,7 +69,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        hostPage.setNextPage(hostScrollerController.getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
+        page.setNextPage(frameController.getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
     }
 
     @Override
@@ -107,14 +106,14 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     @Override
-    public void shareInfo() {
-        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+    public void finish() {
+        InputSource source = frameController.getInfo(Info.INPUT_SOURCE);
         if (source instanceof MetashapeProjectInputSource){
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
             //Note: if we send the same model with different info (new mask directory, etc.) the controller will not notice the difference because
                 //it will still be looking at the same memory location
             //this isn't a problem currently but might be later
-            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+            frameController.addInfo(Info.INPUT_SOURCE,
                     new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
         }
         else{
@@ -219,9 +218,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
                 //manually navigate though pages to get to custom loader
-                hostScrollerController.prevPage();//go to SelectImportOptions.fxml
+                frameController.prevPage();//go to SelectImportOptions.fxml
                 SelectImportOptionsController controller = (SelectImportOptionsController)
-                        hostScrollerController.getCurrentPage().getController();
+                        frameController.getCurrentPage().getController();
                 controller.looseFilesSelect();
                 alertShown = false;
             });
@@ -314,13 +313,13 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             loadMetashapeObject.setText("Loaded");
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
 
-            hostScrollerController.setNextButtonDisable(false);
+            frameController.setNextButtonDisable(false);
         }
         else{
             loadMetashapeObject.setText("Unloaded");
             loadMetashapeObject.setFill(Paint.valueOf("Red"));
 
-            hostScrollerController.setNextButtonDisable(true);
+            frameController.setNextButtonDisable(true);
         }
     }
 }

@@ -9,13 +9,17 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.fxmlpageutils;
+package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
@@ -27,41 +31,48 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class FXMLPageScrollerController {
-    private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
+public class PageFrameController
+{
+    private static final Logger log = LoggerFactory.getLogger(PageFrameController.class);
     @FXML private GridPane outerGridPane;
 
     @FXML private Button prevButton;
     @FXML private Button nextButton;
 
     @FXML private Pane hostPane;
-    ArrayList<FXMLPage> pages;
-    FXMLPage currentPage;
+    ArrayList<Page<?>> pages;
+    Page<?> currentPage;
 
-    private final HashMap<ShareInfo.Info, Object> sharedInfo = new HashMap<>();
-
-    public void init() {
-        for (FXMLPage page : pages){
-            FXMLPageController controller = page.getController();
-
-            controller.setHostScrollerController(this);
-            controller.setHostPage(page);
-            controller.init();
+    public void init()
+    {
+        for (Page<?> page : pages)
+        {
+            page.initController();
         }
 
-        String fileName = currentPage.getFxmlFilePath();
+        String fileName = currentPage.getFXMLFilePath();
         initControllerAndUpdatePanel(fileName);
 
-        currentPage.getController().setButtonShortcuts();
-        Platform.runLater(()-> outerGridPane.getScene().getWindow().requestFocus());
+        setButtonShortcuts(currentPage.getController());
+        Platform.runLater(() -> outerGridPane.getScene().getWindow().requestFocus());
 
         outerGridPane.getScene().getWindow().setOnCloseRequest(this::onCloseRequest);
     }
 
-    private void close(ActionEvent actionEvent) {
-        Window window = currentPage.getController().getHostRegion().getScene().getWindow();
+    public void setButtonShortcuts(PageController<?> pageController)
+    {
+        KeyCombination leftKeyCode = new KeyCodeCombination(KeyCode.A);
+        KeyCombination rightKeyCode = new KeyCodeCombination(KeyCode.D);
+
+        Scene scene = pageController.getRootNode().getScene();
+        scene.getAccelerators().put(leftKeyCode, () -> this.getPrevButton().fire());
+        scene.getAccelerators().put(rightKeyCode, () -> this.getNextButton().fire());
+    }
+
+    private void close(ActionEvent actionEvent)
+    {
+        Window window = currentPage.getController().getRootNode().getScene().getWindow();
         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
@@ -72,27 +83,35 @@ public class FXMLPageScrollerController {
             windowEvent.consume();
         }
 
-        //TODO: not a perfect solution. If we press the X to close the last page of a scrolling modal,
-        //the welcome window doesn't open like it should
-        if (!(currentPage.getController() instanceof ConfirmablePageController)){
+        // TODO: not a perfect solution. If we press the X to close the last page of a scrolling modal,
+        // the welcome window doesn't open like it should
+        if (!(currentPage.getController() instanceof ConfirmablePageController))
+        {
             WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
         }
     }
 
-    public void prevPage() {
-        if (currentPage.hasPrevPage()){
+    public void prevPage()
+    {
+        if (currentPage.hasPrevPage())
+        {
             currentPage = currentPage.getPrevPage();
-            initControllerAndUpdatePanel(currentPage.getFxmlFilePath());
+            initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
         }
     }
 
-    private void prevPage(ActionEvent e){
+    private void prevPage(ActionEvent e)
+    {
         //use this method for setOnAction() lamdas
         prevPage();
     }
 
-    public void nextPage() {
-        if (!currentPage.hasNextPage()){return;}
+    public void nextPage()
+    {
+        if (!currentPage.hasNextPage())
+        {
+            return;
+        }
 
         if (!currentPage.getController().nextButtonPressed())
         {
@@ -100,47 +119,49 @@ public class FXMLPageScrollerController {
         }
 
         String nextPath;
-        try{
-            nextPath = currentPage.getNextPage().getFxmlFilePath();
+        try
+        {
+            nextPath = currentPage.getNextPage().getFXMLFilePath();
         }
-        catch(NullPointerException e){
+        catch (NullPointerException e)
+        {
             log.error("Failed to load next page", e);
             return;
         }
 
-        //send relevant info to shareInfo collection variable
-        if (currentPage.getController() instanceof ShareInfo) {
-            ShareInfo shareableController = (ShareInfo) currentPage.getController();
-            shareableController.shareInfo();
-        }
+        currentPage.getController().finish();
 
-        currentPage.getNextPage().setPrevPage(currentPage);
         currentPage = currentPage.getNextPage();
 
         initControllerAndUpdatePanel(nextPath);
-        currentPage.getController().setButtonShortcuts();
+        setButtonShortcuts(currentPage.getController());
     }
 
-
-    public void setPages(ArrayList<FXMLPage> pages, String firstPageFXMLPath){
+    public void setPages(ArrayList<Page<?>> pages, String firstPageFXMLPath)
+    {
         this.pages = pages;
         currentPage = getPage(firstPageFXMLPath);
     }
 
-    public FXMLPage getPage(String fxmlPath) {
-        for (FXMLPage page: pages){
-            if (page.getFxmlFilePath().equals(fxmlPath)){
+    public Page<?> getPage(String fxmlPath)
+    {
+        for (Page<?> page : pages)
+        {
+            if (page.getFXMLFilePath().equals(fxmlPath))
+            {
                 return page;
             }
         }
         return null;
     }
 
-    private void initControllerAndUpdatePanel(String fileName) {
-        FXMLPage newPage = getPage(fileName);
+    private void initControllerAndUpdatePanel(String fileName)
+    {
+        Page<?> newPage = getPage(fileName);
         Parent newContent = newPage.getLoader().getRoot();
 
-        if (newContent != null) {
+        if (newContent != null)
+        {
             hostPane.getChildren().setAll(newContent);
         }
         outerGridPane.getScene().getWindow().sizeToScene();
@@ -149,53 +170,45 @@ public class FXMLPageScrollerController {
     }
 
 
-    public void updatePrevAndNextButtons() {
-        if(currentPage.hasPrevPage()){
+    public void updatePrevAndNextButtons()
+    {
+        if (currentPage.hasPrevPage())
+        {
             prevButton.setOnAction(this::prevPage);
         }
-        else{
+        else
+        {
             prevButton.setOnAction(this::close);
         }
         nextButton.setDisable(!currentPage.getController().isNextButtonValid());
 
         //change next button to confirm button if applicable
-        FXMLPageController controller = currentPage.getController();
+        PageController<?> controller = currentPage.getController();
 
-        if (controller instanceof ConfirmablePageController && ((ConfirmablePageController) controller).canConfirm())
+        if (controller instanceof ConfirmablePageController && ((ConfirmablePageController<?>) controller).canConfirm())
         {
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
 
-            ConfirmablePageController confirmerController = (ConfirmablePageController) controller;
-            nextButton.setOnAction(event->confirmerController.confirmButtonPress());
+            ConfirmablePageController<?> confirmerController = (ConfirmablePageController<?>) controller;
+            nextButton.setOnAction(event -> confirmerController.confirmButtonPress());
         }
-        else{
+        else
+        {
             nextButton.setText("Next");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.NORMAL, nextButton.getFont().getSize()));
-            nextButton.setOnAction(event->nextPage());
+            nextButton.setOnAction(event -> nextPage());
         }
     }
 
-    public void setNextButtonDisable(boolean b) {
-        nextButton.setDisable(b);
-    }
-
-    public <T> void addInfo(ShareInfo.Info key, T info){
-        sharedInfo.put(key, info);
-    }
-
-    public <T> T getInfo(ShareInfo.Info key){
-        return (T) sharedInfo.get(key);
-    }
-
-    public FXMLPage getCurrentPage(){return currentPage;}
-
-    public Button getNextButton(){return nextButton;}
-    public Button getPrevButton(){return prevButton;}
-
-    public void updateNextButtonLabel(String labelText)
+    public Button getNextButton()
     {
-        nextButton.setText(labelText);
+        return nextButton;
+    }
+
+    public Button getPrevButton()
+    {
+        return prevButton;
     }
 }
 

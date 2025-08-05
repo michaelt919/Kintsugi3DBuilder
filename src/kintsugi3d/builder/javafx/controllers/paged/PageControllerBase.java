@@ -9,17 +9,45 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.fxmlpageutils;
+package kintsugi3d.builder.javafx.controllers.paged;
 
-public interface ShareInfo {
-    //TODO: remove/pull into FXMLPageScrollerController?
-    enum Info{
-        INPUT_SOURCE
+public abstract class PageControllerBase<PageType extends Page<?>> implements PageController<PageType>
+{
+    protected Runnable confirmCallback;
+    private PageType page;
+
+    @Override
+    public PageType getPage()
+    {
+        return this.page;
     }
 
-    /**
-     * Send info to FXML scroller controller upon hitting the "Next" button.
-     * Useful for sending information across pages within a single scroller.
-     */
-    void shareInfo();
+    @Override
+    public void setPage(PageType page)
+    {
+        this.page = page;
+    }
+
+    @Override
+    public boolean isNextButtonValid()
+    {
+        return page.hasNextPage();
+    }
+
+    @Override
+    public boolean nextButtonPressed()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean closeButtonPressed()
+    {
+        return true;
+    }
+
+    public void setConfirmCallback(Runnable callback)
+    {
+        this.confirmCallback = callback;
+    }
 }

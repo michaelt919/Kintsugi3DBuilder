@@ -9,9 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.fxmlpageutils;
+package kintsugi3d.builder.javafx.controllers.paged;
 
-public interface ConfirmablePageController
+public interface ConfirmablePageController<PageType extends Page<ConfirmablePageController<PageType>>> extends PageController<PageType>
 {
     boolean canConfirm();
     void confirmButtonPress();

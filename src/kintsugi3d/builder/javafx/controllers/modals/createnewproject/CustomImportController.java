@@ -21,18 +21,21 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
-public class CustomImportController extends FXMLPageController implements ShareInfo
+public class CustomImportController
+    extends PageControllerBase<DataPassthroughPage<InputSource, CustomImportController>>
+    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, CustomImportController>>
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
 
@@ -53,6 +56,8 @@ public class CustomImportController extends FXMLPageController implements ShareI
     private File meshFile;
     private File photoDir;
 
+    private InputSource source;
+
     /**
      * Overridden by child class to enable hot swap
      * @return
@@ -63,7 +68,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
     @Override
-    public Region getHostRegion() {
+    public Region getRootNode() {
         return root;
     }
 
@@ -82,7 +87,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
         photoDirectoryChooser.setTitle("Select photo directory");
 
-        hostPage.setNextPage(hostScrollerController.getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
+        this.getPage().setNextPage(frameController.getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
     }
 
     @Override
@@ -90,7 +95,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
-        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
         if(source != null){
             camFileChooser.getExtensionFilters().clear();
 
@@ -123,7 +127,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
             loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
 
-        hostScrollerController.updatePrevAndNextButtons();
+        frameController.updatePrevAndNextButtons();
     }
 
 
@@ -141,7 +145,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
 
-        hostScrollerController.updatePrevAndNextButtons();
+        frameController.updatePrevAndNextButtons();
     }
 
     @FXML
@@ -158,7 +162,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
 
-        hostScrollerController.updatePrevAndNextButtons();
+        frameController.updatePrevAndNextButtons();
     }
 
     private boolean areAllFilesLoaded() {
@@ -191,11 +195,11 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
     @Override
-    public void shareInfo()
+    public void finish()
     {
         if (shouldHotSwap())
         {
-            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+            this.getPage().setData(
                 new LooseFilesInputSource().setCameraFile(cameraFile)
                     .setMeshFile(meshFile)
                     .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected())
@@ -204,18 +208,18 @@ public class CustomImportController extends FXMLPageController implements ShareI
         else
         {
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
-            InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
-            if (source instanceof LooseFilesInputSource)
+            if (source instanceof RealityCaptureInputSource)
             {
-                hostScrollerController.addInfo(Info.INPUT_SOURCE,
-                    new LooseFilesInputSource().setCameraFile(cameraFile)
+                this.getPage().setData(
+                    new RealityCaptureInputSource()
+                        .setCameraFile(cameraFile)
                         .setMeshFile(meshFile)
                         .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
             }
-            else if (source instanceof RealityCaptureInputSource)
+            else if (source instanceof LooseFilesInputSource)
             {
-                hostScrollerController.addInfo(Info.INPUT_SOURCE,
-                    new RealityCaptureInputSource()
+                this.getPage().setData(
+                    new LooseFilesInputSource()
                         .setCameraFile(cameraFile)
                         .setMeshFile(meshFile)
                         .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
@@ -225,5 +229,11 @@ public class CustomImportController extends FXMLPageController implements ShareI
                 log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
             }
         }
+    }
+
+    @Override
+    public void receiveData(InputSource source)
+    {
+        this.source = source;
     }
 }

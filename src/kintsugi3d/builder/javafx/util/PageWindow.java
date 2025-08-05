@@ -13,10 +13,7 @@ package kintsugi3d.builder.javafx.util;
 
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ConfirmablePageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.util.Flag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +54,7 @@ public class PageWindow
         {
             scanner.useLocale(Locale.US);
 
-            ArrayList<FXMLPage> pages = new ArrayList<>();
+            ArrayList<Page<?>> pages = new ArrayList<>();
 
             while (scanner.hasNext())
             {
@@ -65,11 +62,11 @@ public class PageWindow
                 FXMLLoader loader = new FXMLLoader(WindowUtilities.class.getResource(fileName));
                 loader.load();
 
-                pages.add(new FXMLPage(fileName, loader));
+                pages.add(new PageBase(fileName, loader));
 
-                FXMLPageController controller = loader.getController();
+                PageControllerBase<?> controller = loader.getController();
 
-                if (controller instanceof ConfirmablePageController && ((ConfirmablePageController) controller).canConfirm())
+                if (controller instanceof ConfirmablePageController && ((ConfirmablePageController<?>) controller).canConfirm())
                 {
                     controller.setConfirmCallback(confirmCallback);
                 }
@@ -82,7 +79,7 @@ public class PageWindow
             }
 
             String hostFXMLPath = "fxml/FXMLPageScroller.fxml";
-            FXMLPageScrollerController scrollerController =
+            PageFrameController scrollerController =
                 WindowUtilities.makeWindow(parentWindow, title, windowOpen, hostFXMLPath);
 
             scrollerController.setPages(pages, firstPageFXMLPath);

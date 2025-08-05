@@ -43,15 +43,18 @@ import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageScrollerController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.modals.*;
+import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
+import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController;
+import kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController;
+import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.paged.Page;
+import kintsugi3d.builder.javafx.controllers.paged.PageBase;
+import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
@@ -1043,11 +1046,11 @@ public class MenubarController
     {
         try
         {
-            ArrayList<FXMLPage> pages = new ArrayList<>();
+            ArrayList<Page> pages = new ArrayList<>();
 
             FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/modals/EyedropperColorChecker.fxml"));
             eyedropLoader.load();
-            FXMLPage eyedropPage = new FXMLPage("/fxml/modals/EyedropperColorChecker.fxml", eyedropLoader);
+            Page eyedropPage = new PageBase("/fxml/modals/EyedropperColorChecker.fxml", eyedropLoader);
 
             FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
 
@@ -1058,19 +1061,19 @@ public class MenubarController
 
             CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
 
-            FXMLPage viewPage = new FXMLPage("/fxml/modals/createnewproject/PrimaryViewSelect.fxml", viewLoader);
+            Page viewPage = new PageBase("/fxml/modals/createnewproject/PrimaryViewSelect.fxml", viewLoader);
             pages.add(viewPage);
 
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();
-            FXMLPage imageSelectorPage = new FXMLPage("/fxml/modals/SelectToneCalibrationImage.fxml", imageSelectorLoader);
+            Page imageSelectorPage = new PageBase("/fxml/modals/SelectToneCalibrationImage.fxml", imageSelectorLoader);
             pages.add(imageSelectorPage);
             viewPage.setNextPage(imageSelectorPage);
 
             pages.add(eyedropPage);
             imageSelectorPage.setNextPage(eyedropPage);
 
-            FXMLPageScrollerController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
+            PageFrameController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
                 "fxml/FXMLPageScroller.fxml");
             scrollerController.setPages(pages, "/fxml/modals/createnewproject/PrimaryViewSelect.fxml");
             scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);

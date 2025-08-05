@@ -19,7 +19,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Optional;
 
-public class SelectToneCalibrationImageController extends FXMLPageController
+public class SelectToneCalibrationImageController extends PageControllerBase
 {
     private static final Logger log = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
 
@@ -51,7 +51,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
 
     @Override
-    public Region getHostRegion()
+    public Region getRootNode()
     {
         return anchorPane;
     }
@@ -71,7 +71,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
         {
             selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
-            hostScrollerController.updatePrevAndNextButtons();
+            frameController.updatePrevAndNextButtons();
         });
     }
 

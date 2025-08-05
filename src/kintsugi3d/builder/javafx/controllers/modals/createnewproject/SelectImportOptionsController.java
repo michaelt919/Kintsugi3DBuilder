@@ -16,14 +16,14 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 
-public class SelectImportOptionsController extends FXMLPageController {
+public class SelectImportOptionsController extends PageControllerBase
+{
 
     @FXML private ToggleButton metashapeImportButton;
     @FXML private ToggleButton looseFilesImportButton;
@@ -33,7 +33,7 @@ public class SelectImportOptionsController extends FXMLPageController {
     @FXML private Pane rootPane;
 
     @Override
-    public Region getHostRegion() {
+    public Region getRootNode() {
         return rootPane;
     }
 
@@ -60,18 +60,18 @@ public class SelectImportOptionsController extends FXMLPageController {
 
     public void handleButtonSelect(ToggleButton button, String path, InputSource source) {
         if (button.isSelected()) {
-            hostPage.setNextPage(hostScrollerController.getPage(path));
-            hostScrollerController.updatePrevAndNextButtons();
-            hostScrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, source);
+            page.setNextPage(frameController.getPage(path));
+            frameController.updatePrevAndNextButtons();
+            frameController.addInfo(ShareInfo.Info.INPUT_SOURCE, source);
         } else {
-            hostPage.setNextPage(null);
-            hostScrollerController.updatePrevAndNextButtons();
+            page.setNextPage(null);
+            frameController.updatePrevAndNextButtons();
         }
     }
 
     //have this so we can navigate to loose files selection from inside an error message somewhere else
     public void looseFilesSelect() {
-        hostPage.setNextPage(hostScrollerController.getPage("/fxml/modals/createnewproject/CustomImport.fxml"));
-        hostScrollerController.nextPage();
+        page.setNextPage(frameController.getPage("/fxml/modals/createnewproject/CustomImport.fxml"));
+        frameController.nextPage();
     }
 }
