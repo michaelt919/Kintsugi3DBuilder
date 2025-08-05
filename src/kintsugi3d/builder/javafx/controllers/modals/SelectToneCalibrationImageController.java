@@ -71,7 +71,7 @@ public class SelectToneCalibrationImageController extends PageControllerBase
         buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
         {
             selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
-            frameController.updatePrevAndNextButtons();
+            getPageFrameController().updatePrevAndNextButtons();
         });
     }
 

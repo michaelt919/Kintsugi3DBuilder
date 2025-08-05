@@ -13,7 +13,10 @@ package kintsugi3d.builder.javafx.util;
 
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.paged.*;
+import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.paged.Page;
+import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.util.Flag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +24,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.function.BiFunction;
 
 public class PageWindow
 {
@@ -36,7 +39,9 @@ public class PageWindow
         return windowOpen.get();
     }
 
-    public void open(Window parentWindow, String title, String firstPageFXMLPath, Runnable initCallback, Runnable confirmCallback)
+    public void open(Window parentWindow, String title,
+        String firstPageFXMLPath, BiFunction<String, FXMLLoader, ? extends Page<?>> firstPageConstructor,
+        Runnable initCallback, Runnable confirmCallback)
     {
         if (windowOpen.get())
         {
@@ -54,36 +59,36 @@ public class PageWindow
         {
             scanner.useLocale(Locale.US);
 
-            ArrayList<Page<?>> pages = new ArrayList<>();
-
-            while (scanner.hasNext())
-            {
-                String fileName = scanner.next();
-                FXMLLoader loader = new FXMLLoader(WindowUtilities.class.getResource(fileName));
-                loader.load();
-
-                pages.add(new PageBase(fileName, loader));
-
-                PageControllerBase<?> controller = loader.getController();
-
-                if (controller instanceof ConfirmablePageController && ((ConfirmablePageController<?>) controller).canConfirm())
-                {
-                    controller.setConfirmCallback(confirmCallback);
-                }
-            }
-
-            if(pages.isEmpty())
-            {
-                log.error("Failed to load fxml pages for \"{}\" process.", title);
-                return;
-            }
-
-            String hostFXMLPath = "fxml/FXMLPageScroller.fxml";
-            PageFrameController scrollerController =
+            String hostFXMLPath = "fxml/PageFrame.fxml";
+            PageFrameController frameController =
                 WindowUtilities.makeWindow(parentWindow, title, windowOpen, hostFXMLPath);
 
-            scrollerController.setPages(pages, firstPageFXMLPath);
-            scrollerController.init();
+            frameController.setPageFactory(fileName ->
+            {
+                FXMLLoader loader = new FXMLLoader(WindowUtilities.class.getResource(fileName)); // TODO use something like Kintsugi3DBuilder.class instead?
+
+                try
+                {
+                    loader.load();
+
+                    PageControllerBase<?> controller = loader.getController();
+
+                    if (controller instanceof ConfirmablePageController && ((ConfirmablePageController<?>) controller).canConfirm())
+                    {
+                        controller.setConfirmCallback(confirmCallback);
+                    }
+                }
+                catch (IOException e)
+                {
+                    log.error("Could not find fxml files for \"{}\" process.", title, e);
+                }
+
+                return loader;
+            });
+
+            Page<?> firstPage = frameController.createPage(firstPageFXMLPath, firstPageConstructor);
+            frameController.setCurrentPage(firstPage);
+            frameController.init();
 
             if (initCallback != null)
             {

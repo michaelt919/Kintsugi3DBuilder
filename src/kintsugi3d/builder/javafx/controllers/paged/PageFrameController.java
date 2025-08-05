@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -30,7 +31,10 @@ import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class PageFrameController
 {
@@ -41,17 +45,12 @@ public class PageFrameController
     @FXML private Button nextButton;
 
     @FXML private Pane hostPane;
-    ArrayList<Page<?>> pages;
+    Function<String, FXMLLoader> pageFactory;
+    Map<String, Page<?>> pageCache = new HashMap<>();
     Page<?> currentPage;
 
     public void init()
     {
-        for (Page<?> page : pages)
-        {
-            page.getController().setPageFrameController(this);
-            page.initController();
-        }
-
         String fileName = currentPage.getFXMLFilePath();
         initControllerAndUpdatePanel(fileName);
 
@@ -92,22 +91,23 @@ public class PageFrameController
         }
     }
 
-    public void setPages(ArrayList<Page<?>> pages, String firstPageFXMLPath)
+    public void setPageFactory(Function<String, FXMLLoader> pageFactory)
     {
-        this.pages = pages;
-        currentPage = getPage(firstPageFXMLPath);
+        this.pageFactory = pageFactory;
+    }
+
+    public <PageType extends Page<?>> PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    {
+        PageType page = pageConstructor.apply(fxmlPath, pageFactory.apply(fxmlPath));
+        page.getController().setPageFrameController(this);
+        page.initController();
+        pageCache.put(fxmlPath, page);
+        return page;
     }
 
     public Page<?> getPage(String fxmlPath)
     {
-        for (Page<?> page : pages)
-        {
-            if (page.getFXMLFilePath().equals(fxmlPath))
-            {
-                return page;
-            }
-        }
-        return null;
+        return pageCache.get(fxmlPath);
     }
 
     public void prevPage()
@@ -219,11 +219,6 @@ public class PageFrameController
         return prevButton;
     }
 
-    public Page<?> getCurrentPage()
-    {
-        return currentPage;
-    }
-
     public void setNextButtonDisable(boolean b)
     {
         nextButton.setDisable(b);
@@ -232,6 +227,16 @@ public class PageFrameController
     public void updateNextButtonLabel(String labelText)
     {
         nextButton.setText(labelText);
+    }
+
+    public Page<?> getCurrentPage()
+    {
+        return currentPage;
+    }
+
+    public void setCurrentPage(Page<?> page)
+    {
+        this.currentPage = page;
     }
 }
 

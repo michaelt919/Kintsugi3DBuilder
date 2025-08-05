@@ -25,6 +25,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 
 import java.io.File;
 
@@ -68,7 +69,9 @@ public class MasksImportController
         noMasksButton.setOnAction(e -> getPageFrameController().updatePrevAndNextButtons());
 
 
-        getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
+        getPage().setNextPage(getPageFrameController().createPage(
+            "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+             SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new));
     }
 
     @Override

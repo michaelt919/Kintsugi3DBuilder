@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
@@ -20,9 +21,9 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataSourcePage;
-import kintsugi3d.builder.javafx.controllers.paged.PageController;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.*;
+
+import java.util.function.BiFunction;
 
 public class SelectImportOptionsController
     extends PageControllerBase<DataSourcePage<InputSource, SelectImportOptionsController>>
@@ -51,13 +52,19 @@ public class SelectImportOptionsController
 
         //add dummy input sources so we can add info to them later
         metashapeImportButton.setOnAction(e -> handleButtonSelect(metashapeImportButton,
-            "/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource()));
+            "/fxml/modals/createnewproject/MetashapeImport.fxml",
+            SimpleDataPassthroughPage<InputSource, MetashapeImportController>::new,
+            new MetashapeProjectInputSource()));
 
         looseFilesImportButton.setOnAction(e -> handleButtonSelect(looseFilesImportButton,
-            "/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource()));
+            "/fxml/modals/createnewproject/CustomImport.fxml",
+            SimpleDataPassthroughPage<InputSource, CustomImportController>::new,
+            new LooseFilesInputSource()));
 
         realityCaptureImportButton.setOnAction(e -> handleButtonSelect(realityCaptureImportButton,
-            "/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource()));
+            "/fxml/modals/createnewproject/CustomImport.fxml",
+            SimpleDataPassthroughPage<InputSource, CustomImportController>::new,
+            new RealityCaptureInputSource()));
     }
 
     @Override
@@ -70,11 +77,13 @@ public class SelectImportOptionsController
     {
     }
 
-    public void handleButtonSelect(ToggleButton button, String path, InputSource source)
+    public void handleButtonSelect(ToggleButton button,
+        String path,  BiFunction<String, FXMLLoader, ? extends DataReceiverPage<InputSource, ?>> pageConstructor,
+        InputSource source)
     {
         if (button.isSelected())
         {
-            getPage().setNextPage(getPageFrameController().getPage(path));
+            getPage().setNextPage(getPageFrameController().createPage(path, pageConstructor));
             getPageFrameController().updatePrevAndNextButtons();
             this.getPage().setData(source);
         }
@@ -88,7 +97,9 @@ public class SelectImportOptionsController
     // Have this so we can navigate to loose files selection from inside an error message somewhere else
     public void looseFilesSelect()
     {
-        getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/CustomImport.fxml"));
+        getPage().setNextPage(getPageFrameController().createPage(
+            "/fxml/modals/createnewproject/CustomImport.fxml",
+            SimpleDataPassthroughPage<InputSource, CustomImportController>::new));
         getPageFrameController().nextPage();
     }
 }

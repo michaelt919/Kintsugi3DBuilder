@@ -31,6 +31,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,9 @@ public class MetashapeImportController
         psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
+        getPage().setNextPage(getPageFrameController().createPage(
+            "/fxml/modals/createnewproject/MasksImport.fxml",
+            SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
     }
 
     @Override

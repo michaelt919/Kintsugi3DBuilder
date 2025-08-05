@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public class SimpleDataSourcePage<T, ControllerType extends PageController<ReadonlyDataSourcePage<T, ControllerType>>>
+public class SimpleDataSourcePage<T, ControllerType extends PageController<DataSourcePage<T, ControllerType>>>
     extends NonEntryPageBase<NonDataSourcePage<?>, DataReceiverPage<T, ?>, ControllerType>
     implements NonDataReceiverPage<ControllerType>, DataSourcePage<T, ControllerType>
 {

@@ -27,6 +27,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,9 @@ public class CustomImportController
 
         photoDirectoryChooser.setTitle("Select photo directory");
 
-        this.getPage().setNextPage(getPageFrameController().getPage("/fxml/modals/createnewproject/MasksImport.fxml"));
+        this.getPage().setNextPage(getPageFrameController().createPage(
+            "/fxml/modals/createnewproject/MasksImport.fxml",
+            SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
     }
 
     @Override

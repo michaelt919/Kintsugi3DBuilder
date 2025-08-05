@@ -10,4 +10,9 @@ public interface NonDataSourcePage<ControllerType extends PageController<?>> ext
      * @param page
      */
     void setNextPage(NonDataReceiverPage<?> page);
+
+    @Override
+    default void submit()
+    {
+    }
 }
