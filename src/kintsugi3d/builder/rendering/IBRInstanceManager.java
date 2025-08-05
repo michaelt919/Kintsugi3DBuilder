@@ -173,7 +173,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         loadedViewSet = builder.getViewSet();
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
-        List<ProjectDataCard> cameraCards = new ArrayList<>();
 
         imgFiles.forEach(file->imgFileNames.add(file.getName()));
         MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);

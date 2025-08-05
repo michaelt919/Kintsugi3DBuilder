@@ -14,6 +14,7 @@ import kintsugi3d.builder.util.CardSelectionModel;
 import kintsugi3d.builder.util.ProjectDataCardFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class CardsModelImpl implements CardsModel {
@@ -50,8 +51,14 @@ public class CardsModelImpl implements CardsModel {
             CardsModel model = MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras");
             List<ProjectDataCard> dataCards = new ArrayList<>();
             for (int i = 0; i < viewSet.getCameraMetadata().size(); i++) {
-                String fileName = Objects.requireNonNull(viewSet.getPreviewImageFilePath().list())[i];
-                File fullCameraPath = new File(viewSet.getPreviewImageFilePath(), fileName);
+                String fileName = Objects.requireNonNull(viewSet.getThumbnailImageFilePath().list())[i];
+                File filepath = viewSet.getThumbnailImageFilePath();
+                try {
+                    File file2 = viewSet.findThumbnailImageFile(i);
+                } catch (FileNotFoundException e) {
+                    //TODO What
+                }
+                File fullCameraPath = new File(viewSet.getThumbnailImageFilePath(), fileName);
 
                 dataCards.add(ProjectDataCardFactory.createCameraCard(model, viewSet.getImageFiles().get(i).getName(), fullCameraPath.getAbsolutePath(), viewSet.getCameraMetadata().get(i)));
             }

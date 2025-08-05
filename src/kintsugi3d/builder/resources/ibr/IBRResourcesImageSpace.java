@@ -806,12 +806,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     // Overload primarily for manually setting the resolution of thumbnail images.
-    private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
-            BufferedImage distortedImage, ViewSet viewSet, int projectionIndex, ContextType context, int resolution)
+    private static <ContextType extends Context<ContextType>> BufferedImage undistortThumbnailImage(
+            BufferedImage distortedImage, ViewSet viewSet, int projectionIndex, ContextType context)
             throws IOException
     {
         DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
-        distortion = distortion.scaledTo(resolution, resolution);
+        distortion = distortion.scaledTo(viewSet.getThumbnailWidth(),viewSet.getThumbnailHeight());
 
         try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
         {
@@ -845,7 +845,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         log.info("Resizing image {} : No distortion parameters", fullResImageFile);
         ImageHelper resizer = new ImageHelper(fullResImageFile);
         resizer.saveAtResolution(viewSet.getThumbnailImageFile(i),
-                300, 300);
+                viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
     }
 
     private static void logFinished(File fileFinished)
@@ -927,18 +927,46 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private static void generateThumbnailImages(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor) throws IOException, UserCancellationException{
+        Date timestamp = new Date();
+
         File supportingFilePath = viewSet.getSupportingFilesFilePath();
         File thumbnails = new File(supportingFilePath,"thumbnails");
-        File small = new File(thumbnails, "300x300");
-        small.mkdirs();
-
-        viewSet.setRelativeThumbnailImagePathName(small.getPath());
+        thumbnails.mkdirs();
 
         AtomicInteger finishedCount = new AtomicInteger(0);
         AtomicInteger failedCount = new AtomicInteger(0);
         AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
 
-        sequentialThumbnailImgGeneration(viewSet, small, progressMonitor, cancelled, failedCount, finishedCount);
+        if (MULTITHREAD_PREVIEW_IMAGE_GENERATION)
+        {
+            multithreadThumbnailImgGeneration(viewSet, maxLoadingThreads, progressMonitor, finishedCount, failedCount);
+        }
+        else // sequential mode
+        {
+            sequentialThumbnailImgGeneration(viewSet, progressMonitor, cancelled, failedCount, finishedCount);
+        }
+
+        // Wait for all threads to finish
+        while (cancelled.get() == null && failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
+        {
+            Thread.onSpinWait();
+        }
+
+        if (cancelled.get() != null)
+        {
+            throw cancelled.get();
+        }
+        else if (failedCount.get() > 0)
+        {
+            throwUndistortFailed(progressMonitor, failedCount);
+        }
+        else
+        {
+            // Generating preview images is now complete.
+            // Go back to indeterminate progress until it starts to actually load for rendering
+            progressMonitor.setMaxProgress(0.0);
+            log.info("Undistorted thumbnail images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        }
     }
 
     private static void sequentialPreviewImgGeneration(ViewSet viewSet, ProgressMonitor progressMonitor,
@@ -1112,7 +1140,109 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         log.info("Finished reading all images; waiting for undistortion to finish on other threads");
     }
 
-    private static void sequentialThumbnailImgGeneration(ViewSet viewSet, File targetDirectory, ProgressMonitor progressMonitor, AtomicReference<UserCancellationException> cancelled, AtomicInteger failedCount, AtomicInteger finishedCount)
+    private static void multithreadThumbnailImgGeneration(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor,
+          AtomicInteger finishedCount, AtomicInteger failedCount)
+    {
+        //progressMonitor.setProgress(0, "Importing and downsizing images (multithread)...");
+
+        // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
+        ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
+
+        customThreadPool.submit(() -> IntStream.range(0, viewSet.getCameraPoseCount())
+                .parallel() // allow images to be processed in parallel; especially important for ICC transformation if present
+                .forEach(i ->
+                {
+                    try
+                    {
+                        // Check if the image is there first
+                        File thumbnailImageFile = viewSet.findThumbnailImageFile(i);
+                        logExists(thumbnailImageFile);
+                        markFinished(viewSet, finishedCount);
+                        progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                MessageFormat.format("Thumbnail Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                        finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        // Only generate the image if it wasn't found
+                        int projectionIndex = viewSet.getCameraProjectionIndex(i);
+                        if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+                        {
+                            try
+                            {
+                                BufferedImage decodedImage = getDecodedImage(viewSet, i);
+
+                                // Do the undistortion on the rendering thread
+                                Rendering.runLater(new GraphicsRequest()
+                                {
+                                    @Override
+                                    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+                                    {
+                                        try
+                                        {
+                                            BufferedImage imageOut = undistortThumbnailImage(decodedImage, viewSet, projectionIndex, context);
+
+                                            // Write to a file on another thread so as not to block the rendering thread
+                                            new Thread(() ->
+                                            {
+                                                try
+                                                {
+                                                    ImageIO.write(imageOut, "PNG", viewSet.getThumbnailImageFile(i));
+                                                    logFinished(viewSet.getThumbnailImageFile(i));
+                                                    markFinished(viewSet, finishedCount);
+                                                    progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                                            MessageFormat.format("Thumbnail Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                                                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                                                }
+                                                catch (IOException|RuntimeException ex)
+                                                {
+                                                    // Failure to save the final file
+                                                    log.error(ex.getMessage(), ex);
+                                                    failedCount.getAndAdd(1);
+                                                }
+
+                                            }).start();
+                                        }
+                                        catch (IOException|RuntimeException ex)
+                                        {
+                                            // Failure to undistort
+                                            log.error(ex.getMessage(), ex);
+                                            failedCount.getAndAdd(1);
+                                        }
+                                    }
+                                });
+                            }
+                            catch (IOException|RuntimeException ex)
+                            {
+                                // Failure to read the original image
+                                log.error(ex.getMessage(), ex);
+                                failedCount.getAndAdd(1);
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+                                // Fallback to simply resizing without undistorting
+                                // Does not require graphics context, so threading is simple.
+                                File fullResImageFile = viewSet.findFullResImageFile(i);
+                                resizeThumbnailImage(fullResImageFile, viewSet, i);
+                                markFinished(viewSet, finishedCount);
+                                progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                        MessageFormat.format("Thumbnail Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                                finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                            }
+                            catch (IOException|RuntimeException ex)
+                            {
+                                log.error(ex.getMessage(), ex);
+                                failedCount.getAndAdd(1);
+                            }
+                        }
+                    }
+                }));
+    }
+
+    private static void sequentialThumbnailImgGeneration(ViewSet viewSet, ProgressMonitor progressMonitor, AtomicReference<UserCancellationException> cancelled, AtomicInteger failedCount, AtomicInteger finishedCount)
     {
         // Do the undistortion on the rendering thread
         Rendering.runLater(new GraphicsRequest()
@@ -1151,7 +1281,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             {
                                 BufferedImage decodedImage = getDecodedImage(viewSet, i);
                                 log.info("Undistorting thumbnail image {}", i);
-                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context, 300);
+                                BufferedImage imageOut = undistortThumbnailImage(decodedImage, viewSet, projectionIndex, context);
                                 log.info("Saving thumbnail image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getThumbnailImageFile(i));
                                 logFinished(viewSet.getThumbnailImageFile(i));

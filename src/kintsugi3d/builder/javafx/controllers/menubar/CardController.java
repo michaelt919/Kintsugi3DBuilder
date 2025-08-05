@@ -1,6 +1,5 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,7 +18,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
-
 import java.util.UUID;
 
 public class CardController {
@@ -47,15 +45,9 @@ public class CardController {
         this.cameraCardsModel = cameraCardsModel;
         this.dataCard = dataCard;
         this.cardId = dataCard.getCardId();
+        this.setCardVisibility(false);
 
         card_title.setText(dataCard.getTitle());
-        try {
-//            Image preview = new Image(dataCard.getImagePath());
-//            card_icon.setImage(preview);
-//            main_image.setImage(preview);
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        }
 
         expanded = cameraCardsModel.isExpandedProperty(cardId);
         selected = cameraCardsModel.isSelectedProperty(cardId);
@@ -95,45 +87,37 @@ public class CardController {
             separator.setPadding(new Insets(16.0, 8.0, 16, 8.0)); // Top, Right, Bottom, Left
             button_box.getChildren().add(separator);
             group.forEach((label, action)-> {
-                // Create the HBox
                 HBox hBox = new HBox();
                 hBox.setAlignment(Pos.TOP_CENTER);
 
-//                // Create the ImageView for the graphic
-//                Image image = new Image("file:./Kintsugi3D-icon.png"); // Assuming the image is in the project root
+//                // Button Icon
+//                Image image = new Image("file:./Kintsugi3D-icon.png");
 //                ImageView imageView = new ImageView(image);
 //                imageView.setFitHeight(16.0);
 //                imageView.setFitWidth(16.0);
 //                imageView.setPickOnBounds(true);
 //                imageView.setPreserveRatio(true);
 
-                // Create the Button
+                // Button
                 Button button = new Button(label);
                 button.setGraphicTextGap(8.0);
                 button.setMnemonicParsing(false);
                 button.setStyle("-fx-text-fill: #CECECE;");
-                button.getStyleClass().add("card-button"); // Assuming this style class is defined in the CSS
-                button.getStylesheets().add("file:./kintsugiStyling.css"); // Load the stylesheet
+                button.getStyleClass().add("card-button");
+                button.getStylesheets().add("file:./kintsugiStyling.css");
                 button.setOnAction(event->action.run());
 
-                // Set the font for the button text
                 button.setFont(new Font("Segoe UI Semibold", 12.0));
-
-                // Set the margin for the button within the HBox
                 HBox.setMargin(button, new Insets(0, 0, 8, 0));
-
-                // Set the padding for the HBox
                 hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
-
-                // Add the button to the HBox
                 hBox.getChildren().add(button);
 
                 button_box.getChildren().add(hBox);
             });
         });
 
-
-        card_body.visibleProperty().addListener((change, oldVal, newVal) -> {
+        // Load the image for each card when it becomes visible.
+        data_card.visibleProperty().addListener((change, oldVal, newVal) -> {
             if (preview == null && newVal == true) {
                 preview = new Image(dataCard.getImagePath());
                 card_icon.setImage(preview);

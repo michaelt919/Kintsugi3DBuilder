@@ -176,6 +176,10 @@ public final class ViewSet implements ReadonlyViewSet
     private int previewWidth = 0;
     private int previewHeight = 0;
 
+    private int thumbnailWidth = 450;
+    private int thumbnailHeight = 300;
+
+
     public static final class Builder
     {
         private final ViewSet result;
@@ -451,7 +455,6 @@ public final class ViewSet implements ReadonlyViewSet
                         }
                     }
                 };
-                String size  = "";
                 String finalRes = res;
                 cameraMetadata.add(new LinkedHashMap<>() {{
                     put("Resolution", finalRes);
@@ -802,6 +805,7 @@ public final class ViewSet implements ReadonlyViewSet
     public void setSupportingFilesDirectory(File supportingFilesDirectory)
     {
         this.supportingFilesDirectory = supportingFilesDirectory;
+        setRelativeThumbnailImagePathName(new File(supportingFilesDirectory, "thumbnails").toString());
     }
 
     @Override
@@ -906,7 +910,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
-    //TODO Jacob look at this
+    //TODO call this using vset loader
     public void setRelativeThumbnailImagePathName(String relativeImagePath) {
         this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
@@ -947,9 +951,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getThumbnailImageFile(int poseIndex)
     {
-        File path = this.getThumbnailImageFilePath();
-        File file = new File(this.getThumbnailImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
-        return file;
+        return new File(this.getThumbnailImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
     }
 
     public int getPreviewWidth()
@@ -961,6 +963,9 @@ public final class ViewSet implements ReadonlyViewSet
     {
         return previewHeight;
     }
+
+    public int getThumbnailWidth() { return thumbnailWidth; }
+    public int getThumbnailHeight() { return thumbnailHeight; }
 
     public void setPreviewImageResolution(int width, int height)
     {
