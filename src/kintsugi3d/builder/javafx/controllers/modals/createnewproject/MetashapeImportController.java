@@ -79,7 +79,7 @@ public class MetashapeImportController
             "/fxml/modals/createnewproject/MasksImport.fxml",
             SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
 
-        getCanConfirmObservable().set(true);
+        setCanConfirm(true);
     }
 
     @Override
@@ -316,7 +316,7 @@ public class MetashapeImportController
         }
 
         boolean allMissingChunks = chunkSelectionChoiceBox.getItems().isEmpty();
-        getCanAdvanceObservable().set(!allMissingChunks);
+        setCanAdvance(!allMissingChunks);
 
         if (allMissingChunks)
         {
@@ -334,7 +334,7 @@ public class MetashapeImportController
         }
         else
         {
-            getCanAdvanceObservable().set(true);
+            setCanAdvance(true);
             if (missingChunks)
             {
                 showMissingItemsAlert("Some chunks are missing models.",

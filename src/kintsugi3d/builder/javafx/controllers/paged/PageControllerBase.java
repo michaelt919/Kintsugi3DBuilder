@@ -63,6 +63,11 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
         return canAdvanceProperty;
     }
 
+    protected void setCanAdvance(boolean canAdvance)
+    {
+        canAdvanceProperty.set(canAdvance);
+    }
+
     @Override
     public final StringProperty getAdvanceLabelOverrideObservable()
     {
@@ -75,6 +80,11 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
         return getAdvanceLabelOverrideObservable().get();
     }
 
+    protected void setAdvanceLabelOverride(String advanceLabelOverride)
+    {
+        advanceLabelOverrideProperty.set(advanceLabelOverride);
+    };
+
     @Override
     public final BooleanProperty getCanConfirmObservable()
     {
@@ -85,6 +95,11 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
     public final boolean canConfirm()
     {
         return canConfirmProperty.get();
+    }
+
+    protected void setCanConfirm(boolean canConfirm)
+    {
+        canConfirmProperty.set(canConfirm);
     }
 
     @Override

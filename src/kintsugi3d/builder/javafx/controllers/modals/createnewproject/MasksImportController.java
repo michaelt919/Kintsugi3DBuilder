@@ -65,7 +65,7 @@ public class MasksImportController
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
              SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new));
 
-        getCanConfirmObservable().set(true);
+        setCanConfirm(true);
     }
 
     @Override

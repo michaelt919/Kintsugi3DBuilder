@@ -91,7 +91,7 @@ public class CustomImportController
             "/fxml/modals/createnewproject/MasksImport.fxml",
             SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
 
-        getCanConfirmObservable().set(true);
+        setCanConfirm(true);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class CustomImportController
 
         if (areAllFilesLoaded())
         {
-            getCanAdvanceObservable().set(true);
+            setCanAdvance(true);
         }
     }
 
@@ -152,7 +152,7 @@ public class CustomImportController
 
         if (areAllFilesLoaded())
         {
-            getCanAdvanceObservable().set(true);
+            setCanAdvance(true);
         }
     }
 
@@ -172,7 +172,7 @@ public class CustomImportController
 
         if (areAllFilesLoaded())
         {
-            getCanAdvanceObservable().set(true);
+            setCanAdvance(true);
         }
     }
 

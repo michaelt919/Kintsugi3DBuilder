@@ -838,8 +838,8 @@ public class EyedropperController extends PageControllerBase<Page<EyedropperCont
 
         updateApplyButton();
 
-        getCanAdvanceObservable().set(true);
-        getCanConfirmObservable().set(true);
+        setCanAdvance(true);
+        setCanConfirm(true);
     }
 
     @Override

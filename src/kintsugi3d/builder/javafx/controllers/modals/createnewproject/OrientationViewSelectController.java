@@ -26,7 +26,7 @@ public class OrientationViewSelectController
     public void init()
     {
         super.init();
-        getCanConfirmObservable().set(true);
+        setCanConfirm(true);
     }
 
     @Override

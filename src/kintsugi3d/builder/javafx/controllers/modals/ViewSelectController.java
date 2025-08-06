@@ -83,7 +83,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         this.imgCache = new HashMap<>();
         hintTextLabel.setText(getHintText());
 
-        getCanAdvanceObservable().set(true);
+        setCanAdvance(true);
     }
 
     @Override
@@ -153,7 +153,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 if (!(source instanceof CurrentProjectInputSource))
                 {
                     // Set confirm button text
-                    getAdvanceLabelOverrideObservable().set("Skip");
+                    setAdvanceLabelOverride("Skip");
                 }
 
                 imgViewText.setText("Keep model orientation as imported.");
@@ -168,7 +168,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 orientationControlsVBox.setVisible(showFixOrientation());
 
                 // Set confirm button text
-                getAdvanceLabelOverrideObservable().set(null);
+                setAdvanceLabelOverride(null);
             }
 
             String imageName = selectedItem.getValue();
