@@ -26,11 +26,10 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
-import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
@@ -41,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -207,7 +205,7 @@ public class SettingsObjectSceneController implements Initializable
 
             DataReceiverPage<InputSource,?> viewSelectPage = frameController.createPage(
                 "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-                SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new);
+                SimpleDataPassthroughPage<InputSource, ViewSelectController>::new);
 
             frameController.setCurrentPage(viewSelectPage);
             viewSelectPage.receiveData(new CurrentProjectInputSource());

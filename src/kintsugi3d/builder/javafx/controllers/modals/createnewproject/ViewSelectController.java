@@ -41,15 +41,14 @@ import java.util.Objects;
 /**
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
  */
-//TODO: Rename to OrientationViewSelectController for clarity?
-public class PrimaryViewSelectController
-    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, PrimaryViewSelectController>>
-    implements ConfirmablePageController<DataPassthroughPage<InputSource, PrimaryViewSelectController>>, ImageThreadable
+public class ViewSelectController
+    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, ViewSelectController>>
+    implements Confirmable, ImageThreadable
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
-    private static final Logger log = LoggerFactory.getLogger(PrimaryViewSelectController.class);
+    private static final Logger log = LoggerFactory.getLogger(ViewSelectController.class);
 
     @FXML
     private AnchorPane hostAnchorPane;
@@ -238,7 +237,7 @@ public class PrimaryViewSelectController
     }
 
     @Override
-    public void confirmButtonPress()
+    public void confirm()
     {
         if (confirmCallback != null)
         {

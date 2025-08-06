@@ -67,7 +67,7 @@ public class MasksImportController
 
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-             SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new));
+             SimpleDataPassthroughPage<InputSource, ViewSelectController>::new));
     }
 
     @Override

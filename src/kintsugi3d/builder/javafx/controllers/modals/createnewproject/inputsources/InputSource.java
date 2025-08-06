@@ -18,7 +18,7 @@ import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
 
 import java.io.File;
 import java.util.List;
@@ -56,7 +56,7 @@ public abstract class InputSource {
         return this.primaryViewSelectionModel;
     }
 
-    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+    public void setOrientationViewDefaultSelections(ViewSelectController controller)
     {
         searchableTreeView.getTreeView().getSelectionModel().select(1);
         controller.setImageRotation(0);

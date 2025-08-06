@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.paged;
 
-public interface ConfirmablePageController<PageType extends Page<?>> extends PageController<PageType>
+public interface Confirmable
 {
     boolean canConfirm();
-    void confirmButtonPress();
+    void confirm();
 }

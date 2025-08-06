@@ -18,7 +18,7 @@ import kintsugi3d.builder.core.ViewSet;
 
 import java.util.Optional;
 
-public class LightCalibrationViewSelectController extends PrimaryViewSelectController
+public class LightCalibrationViewSelectController extends ViewSelectController
 {
     @Override
     public boolean canConfirm()

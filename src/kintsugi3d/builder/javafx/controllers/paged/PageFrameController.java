@@ -45,9 +45,10 @@ public class PageFrameController
     @FXML private Button nextButton;
 
     @FXML private Pane hostPane;
-    Function<FXMLLoader, FXMLLoader> pageFactory;
-    Map<String, Page<?>> pageCache = new HashMap<>();
-    Page<?> currentPage;
+
+    private final Map<String, Page<?>> pageCache = new HashMap<>(8);
+    private Function<FXMLLoader, FXMLLoader> pageFactory;
+    private Page<?> currentPage;
 
     public void init()
     {
@@ -85,7 +86,7 @@ public class PageFrameController
 
         // TODO: not a perfect solution. If we press the X to close the last page of a scrolling modal,
         // the welcome window doesn't open like it should
-        if (!(currentPage.getController() instanceof ConfirmablePageController))
+        if (!(currentPage.getController() instanceof Confirmable))
         {
             WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
         }
@@ -134,37 +135,18 @@ public class PageFrameController
 
     public void nextPage()
     {
-        if (!currentPage.hasNextPage())
+        if (currentPage.hasNextPage() && currentPage.getController().nextButtonPressed())
         {
-            return;
+            // Finalizes data on the page
+            currentPage.getController().finish();
+
+            // Passes data to the next page if applicable
+            currentPage.submit();
+
+            currentPage = currentPage.getNextPage();
+            initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
+            setButtonShortcuts(currentPage.getController());
         }
-
-        if (!currentPage.getController().nextButtonPressed())
-        {
-            return;
-        }
-
-        String nextPath;
-        try
-        {
-            nextPath = currentPage.getNextPage().getFXMLFilePath();
-        }
-        catch (NullPointerException e)
-        {
-            log.error("Failed to load next page", e);
-            return;
-        }
-
-        // Finializes data on the page
-        currentPage.getController().finish();
-
-        // Passes data to the next page if applicable
-        currentPage.submit();
-
-        currentPage = currentPage.getNextPage();
-
-        initControllerAndUpdatePanel(nextPath);
-        setButtonShortcuts(currentPage.getController());
     }
 
     private void initControllerAndUpdatePanel(String fileName)
@@ -184,7 +166,6 @@ public class PageFrameController
         updatePrevAndNextButtons();
     }
 
-
     public void updatePrevAndNextButtons()
     {
         if (currentPage.hasPrevPage())
@@ -200,13 +181,13 @@ public class PageFrameController
         //change next button to confirm button if applicable
         PageController<?> controller = currentPage.getController();
 
-        if (controller instanceof ConfirmablePageController && ((ConfirmablePageController<?>) controller).canConfirm())
+        if (controller instanceof Confirmable && ((Confirmable) controller).canConfirm())
         {
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
 
-            ConfirmablePageController<?> confirmerController = (ConfirmablePageController<?>) controller;
-            nextButton.setOnAction(event -> confirmerController.confirmButtonPress());
+            Confirmable confirmerController = (Confirmable) controller;
+            nextButton.setOnAction(event -> confirmerController.confirm());
         }
         else
         {

@@ -36,7 +36,7 @@ import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.paged.Confirmable;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
@@ -56,9 +56,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController
-    extends PageControllerBase<Page<EyedropperController>>
-    implements Initializable, ConfirmablePageController<Page<EyedropperController>>
+public class EyedropperController extends PageControllerBase<Page<EyedropperController>> implements Initializable, Confirmable
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
@@ -870,7 +868,7 @@ public class EyedropperController
     }
 
     @Override
-    public void confirmButtonPress()
+    public void confirm()
     {
         applyButtonPressed();
 

@@ -16,7 +16,7 @@ import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
 
 import java.io.File;
 import java.util.List;
@@ -41,7 +41,7 @@ public class CurrentProjectInputSource extends InputSource
     }
 
     @Override
-    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+    public void setOrientationViewDefaultSelections(ViewSelectController controller)
     {
         ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
 

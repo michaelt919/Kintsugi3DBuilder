@@ -45,7 +45,7 @@ import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.modals.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController;
@@ -1081,7 +1081,7 @@ public class MenubarController
 
                     return viewLoader;
                 },
-                SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new);
+                SimpleDataPassthroughPage<InputSource, ViewSelectController>::new);
 
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();
@@ -1139,7 +1139,7 @@ public class MenubarController
         {
             // Override this method to set the initial selection to the primary view instead of orientation view
             @Override
-            public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+            public void setOrientationViewDefaultSelections(ViewSelectController controller)
             {
                 ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
 
