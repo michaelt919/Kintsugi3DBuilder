@@ -1047,7 +1047,7 @@ public class MenubarController
         try
         {
             PageFrameController frameController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
-                "fxml/FXMLPageScroller.fxml");
+                "fxml/PageFrame.fxml");
 
             frameController.setPageFactory(loader ->
             {

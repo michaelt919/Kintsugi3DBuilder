@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
@@ -99,7 +100,7 @@ public class PrimaryViewSelectController
     @Override
     public void refresh()
     {
-        if (!newSource.equals(source))
+        if (!Objects.equals(newSource, source))
         { //check if sources are equal so we don't have to unzip images multiple times
             //sometimes this saves processing time, other times it leads to buggy behavior :/
             //really the only use case is saving time if a user flips back and forth between primary view selection and the previous page
@@ -308,6 +309,6 @@ public class PrimaryViewSelectController
     @Override
     public void receiveData(InputSource data)
     {
-
+        this.newSource = data;
     }
 }

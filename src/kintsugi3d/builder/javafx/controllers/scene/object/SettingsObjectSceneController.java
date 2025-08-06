@@ -27,7 +27,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
@@ -38,6 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -178,13 +182,13 @@ public class SettingsObjectSceneController implements Initializable
     {
         try
         {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/FXMLPageScroller.fxml"));
-            Parent root = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PageFrame.fxml"));
+            Parent viewSelectRoot = loader.load();
 
             Stage stage = new Stage();
             stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
             stage.setTitle("Select Orientation Reference View");
-            stage.setScene(new Scene(root));
+            stage.setScene(new Scene(viewSelectRoot));
 
             PageFrameController frameController = loader.getController();
             frameController.setPageFactory(pageLoader ->
@@ -193,7 +197,7 @@ public class SettingsObjectSceneController implements Initializable
                 {
                     pageLoader.load();
                 }
-                catch (Exception e)
+                catch (IOException | RuntimeException e)
                 {
                     log.error("Unable to open orientation view selector.", e);
                 }
@@ -201,17 +205,18 @@ public class SettingsObjectSceneController implements Initializable
                 return pageLoader;
             });
 
-            Page<?> viewSelectPage = frameController.createPage(
+            DataReceiverPage<InputSource,?> viewSelectPage = frameController.createPage(
                 "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
                 SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new);
 
             frameController.setCurrentPage(viewSelectPage);
+            viewSelectPage.receiveData(new CurrentProjectInputSource());
 
             frameController.init();
 
             stage.show();
         }
-        catch (Exception e)
+        catch (IOException | RuntimeException e)
         {
             log.error("Unable to open orientation view selector.", e);
         }
