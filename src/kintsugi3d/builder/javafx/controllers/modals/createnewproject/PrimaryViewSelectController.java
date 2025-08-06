@@ -28,10 +28,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
-import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
@@ -46,10 +43,8 @@ import java.util.Objects;
  */
 //TODO: Rename to OrientationViewSelectController for clarity?
 public class PrimaryViewSelectController
-    extends PageControllerBase<DataPassthroughPage<InputSource, PrimaryViewSelectController>>
-    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, PrimaryViewSelectController>>,
-        ConfirmablePageController<DataPassthroughPage<InputSource, PrimaryViewSelectController>>,
-        ImageThreadable
+    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, PrimaryViewSelectController>>
+    implements ConfirmablePageController<DataPassthroughPage<InputSource, PrimaryViewSelectController>>, ImageThreadable
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?

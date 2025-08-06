@@ -22,16 +22,12 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.*;
 
 import java.io.File;
 
 public class MasksImportController
-    extends PageControllerBase<DataPassthroughPage<InputSource, MasksImportController>>
-    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, MasksImportController>>
+    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, MasksImportController>>
 {
     @FXML private Pane rootPane;
 

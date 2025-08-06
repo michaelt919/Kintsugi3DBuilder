@@ -27,7 +27,6 @@ import java.util.function.BiFunction;
 
 public class SelectImportOptionsController
     extends PageControllerBase<DataSourcePage<InputSource, SelectImportOptionsController>>
-    implements PageController<DataSourcePage<InputSource, SelectImportOptionsController>>
 {
 
     @FXML private ToggleButton metashapeImportButton;

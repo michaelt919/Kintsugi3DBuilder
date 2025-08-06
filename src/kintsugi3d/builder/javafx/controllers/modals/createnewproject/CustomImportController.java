@@ -24,10 +24,7 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 public class CustomImportController
-    extends PageControllerBase<DataPassthroughPage<InputSource, CustomImportController>>
-    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, CustomImportController>>
+    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, CustomImportController>>
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
 

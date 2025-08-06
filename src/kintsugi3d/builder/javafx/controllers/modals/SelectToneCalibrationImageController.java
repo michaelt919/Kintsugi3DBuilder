@@ -22,6 +22,7 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
@@ -31,8 +32,7 @@ import java.io.File;
 import java.util.Optional;
 
 public class SelectToneCalibrationImageController
-    extends PageControllerBase<DataReceiverPage<InputSource, SelectToneCalibrationImageController>>
-    implements DataReceiverPageController<InputSource, DataReceiverPage<InputSource, SelectToneCalibrationImageController>>
+    extends DataReceiverPageControllerBase<InputSource, DataReceiverPage<InputSource, SelectToneCalibrationImageController>>
 {
     private static final Logger log = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
 

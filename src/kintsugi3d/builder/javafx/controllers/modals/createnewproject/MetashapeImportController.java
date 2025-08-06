@@ -28,10 +28,7 @@ import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class MetashapeImportController
-    extends PageControllerBase<DataPassthroughPage<InputSource, MetashapeImportController>>
-    implements DataReceiverPageController<InputSource, DataPassthroughPage<InputSource, MetashapeImportController>>
+    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, MetashapeImportController>>
 {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
 

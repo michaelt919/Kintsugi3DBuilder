@@ -9,17 +9,18 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.javafx.controllers.paged;
 
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
-
-public class HotSwapController extends CustomImportController
+/**
+ * This class just simplifies the generics syntax for setting up an implementation of DataReceiverPageController
+ * that inherits from PageControllerBase.
+ * @param <T>
+ * @param <PageType>
+ */
+@SuppressWarnings("EmptyClass")
+public abstract class DataReceiverPageControllerBase<
+        T, PageType extends DataReceiverPage<T, ? extends DataReceiverPageController<T, PageType>>>
+    extends PageControllerBase<PageType>
+    implements DataReceiverPageController<T, PageType>
 {
-    @Override
-    protected boolean shouldHotSwap()
-    {
-        return true;
-    }
 }
