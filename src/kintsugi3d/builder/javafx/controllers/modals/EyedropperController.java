@@ -37,6 +37,7 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.controllers.paged.ConfirmablePageController;
+import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
@@ -55,7 +56,9 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController extends PageControllerBase implements Initializable, ConfirmablePageController
+public class EyedropperController
+    extends PageControllerBase<Page<EyedropperController>>
+    implements Initializable, ConfirmablePageController<Page<EyedropperController>>
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
@@ -75,7 +78,6 @@ public class EyedropperController extends PageControllerBase implements Initiali
 
     @FXML
     private Button button1, button2, button3, button4, button5, button6;
-    private List<Button> colorSelectButtons;
 
     @FXML
     private Button applyButton;
@@ -126,12 +128,15 @@ public class EyedropperController extends PageControllerBase implements Initiali
         //this does not work yet
         return instance;
     }
+
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+    public void initialize(URL url, ResourceBundle resourceBundle)
+    {
         init();
     }
 
-    private static Rectangle2D resetViewport(ImageView imageView) {
+    private static Rectangle2D resetViewport(ImageView imageView)
+    {
         //reset the viewport to default value (view entire image)
         Rectangle2D defaultViewport = getDefaultViewport(imageView);
 
@@ -140,15 +145,18 @@ public class EyedropperController extends PageControllerBase implements Initiali
         return defaultViewport;
     }
 
-    private static Rectangle2D getDefaultViewport(ImageView imageView){
+    private static Rectangle2D getDefaultViewport(ImageView imageView)
+    {
         Image image = imageView.getImage();
         return new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
     }
 
     @FXML
-    private void handleMousePressed(MouseEvent event) {
+    private void handleMousePressed(MouseEvent event)
+    {
         //TODO: IF USER SELECTS AREA OUTSIDE OF IMAGE, SHIFT SELECTION BOX INSIDE IMAGE
-        if(isSelecting || isCropping) {
+        if (isSelecting || isCropping)
+        {
             selectionRectangle.setVisible(true);
             double x = event.getX();
             double y = event.getY();
@@ -161,8 +169,10 @@ public class EyedropperController extends PageControllerBase implements Initiali
     }
 
     @FXML
-    private void handleMouseDragged(MouseEvent event) {
-        if(isSelecting || isCropping) {
+    private void handleMouseDragged(MouseEvent event)
+    {
+        if (isSelecting || isCropping)
+        {
             double x = event.getX();
             double y = event.getY();
             double width = x - selectionRectangle.getX();
@@ -174,8 +184,10 @@ public class EyedropperController extends PageControllerBase implements Initiali
     }
 
     @FXML
-    private void handleMouseReleased(MouseEvent event) {
-        if(isSelecting) {
+    private void handleMouseReleased(MouseEvent event)
+    {
+        if (isSelecting)
+        {
             Color averageColor = getAvgColorFromSelection();
 
             // Set the color label text
@@ -185,19 +197,23 @@ public class EyedropperController extends PageControllerBase implements Initiali
             addSelectedColor(averageColor);
         }
 
-        if(isCropping){
+        if (isCropping)
+        {
             canResetCrop = true;
             cropImage();
         }
     }
 
     @FXML
-    private void enterCropMode() {
+    private void enterCropMode()
+    {
         //same button is used for cropping and resetting cropping
-        if(canResetCrop){//button text is "Reset Crop"
+        if (canResetCrop)
+        {//button text is "Reset Crop"
             resetCrop();
         }
-        else{//button text is "Crop"
+        else
+        {//button text is "Crop"
             cropButton.setText("Cropping...");
             cropButton.getStyleClass().add("button-selected");
             isCropping = true;
@@ -208,13 +224,15 @@ public class EyedropperController extends PageControllerBase implements Initiali
         selectionRectangle.setVisible(false);
     }
 
-    private void resetCrop() {
+    private void resetCrop()
+    {
         resetViewport(colorPickerImgView);
         cropButton.setText("Crop");
         canResetCrop = false;
     }
 
-    private void cropImage() {
+    private void cropImage()
+    {
         //get bounds of selection rectangle
         //crop imageView accordingly
         double scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
@@ -232,7 +250,8 @@ public class EyedropperController extends PageControllerBase implements Initiali
         selectionRectangle.setVisible(false);
     }
 
-    private Color getAvgColorFromSelection(){
+    private Color getAvgColorFromSelection()
+    {
         double x = selectionRectangle.getX();//(x, y) is the top left corner of the selectionRectangle in windowspace
         double y = selectionRectangle.getY();
         double width = selectionRectangle.getWidth();
@@ -241,15 +260,18 @@ public class EyedropperController extends PageControllerBase implements Initiali
         javafx.scene.image.PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
 
         Rectangle2D viewport = colorPickerImgView.getViewport();
-        if(viewport == null){
+        if (viewport == null)
+        {
             viewport = resetViewport(colorPickerImgView);
         }
 
         double scaleFactor;
-        if(viewport == getDefaultViewport(colorPickerImgView)){//use this scaleFactor when image is not cropped
+        if (viewport == getDefaultViewport(colorPickerImgView))
+        {//use this scaleFactor when image is not cropped
             scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
         }
-        else{
+        else
+        {
             scaleFactor = calculateImgViewCroppedScaleFactor(colorPickerImgView);
         }
 
@@ -269,57 +291,72 @@ public class EyedropperController extends PageControllerBase implements Initiali
         //read pixels from selected crop
         selectedColors.clear();
         boolean badColorDetected = false;
-        for (int posX = (int) trueStartX; posX < trueEndX; posX++) {
-            for (int posY = (int) trueStartY; posY < trueEndY; posY++) {
-                try{
-                    if(viewport.contains(posX, posY)){//only add color if it is inside the viewport (visible to user)
+        for (int posX = (int) trueStartX; posX < trueEndX; posX++)
+        {
+            for (int posY = (int) trueStartY; posY < trueEndY; posY++)
+            {
+                try
+                {
+                    if (viewport.contains(posX, posY))
+                    {//only add color if it is inside the viewport (visible to user)
                         Color color = pixelReader.getColor(posX, posY);
                         selectedColors.add(color);
                     }
-                    else{
+                    else
+                    {
                         badColorDetected = true;
                     }
                 }
-                catch (IndexOutOfBoundsException e){
+                catch (IndexOutOfBoundsException e)
+                {
                     badColorDetected = true;
                 }
             }
         }
 
-        if(badColorDetected){//TODO: CHANGE SOLUTION TO THIS PROBLEM?
+        if (badColorDetected)
+        {//TODO: CHANGE SOLUTION TO THIS PROBLEM?
             log.info("Some colors could not be added. Please confirm that your selection contains the desired colors.");
         }
 
         return calculateAverageColor(selectedColors);
     }
 
-    private double calculateImgViewCroppedScaleFactor(ImageView imageView) {
+    private double calculateImgViewCroppedScaleFactor(ImageView imageView)
+    {
         Rectangle2D viewport = imageView.getViewport();
-        if(viewport.getWidth() > viewport.getHeight()){
+        if (viewport.getWidth() > viewport.getHeight())
+        {
             return viewport.getWidth() / imageView.getFitWidth();
         }
-        else{
+        else
+        {
             return viewport.getHeight() / imageView.getFitHeight();
         }
     }
 
-    private double calculateImgViewScaleFactor(ImageView imgView) {
+    private double calculateImgViewScaleFactor(ImageView imgView)
+    {
         //getWidth() and getHeight() refer to the full resolution image
         //fitWidth() and fitHeight() refer to the image in the window
-        if(imgView.getImage().getWidth() > imgView.getImage().getHeight()) {
+        if (imgView.getImage().getWidth() > imgView.getImage().getHeight())
+        {
             return imgView.getImage().getWidth() / imgView.getFitWidth();
         }
-        else {
+        else
+        {
             return imgView.getImage().getHeight() / imgView.getFitHeight();
         }
     }
 
-    private Color calculateAverageColor(List<Color> colors) {
+    private Color calculateAverageColor(List<Color> colors)
+    {
         double redSum = 0;
         double greenSum = 0;
         double blueSum = 0;
 
-        for (Color color : colors) {
+        for (Color color : colors)
+        {
             redSum += color.getRed();
             greenSum += color.getGreen();
             blueSum += color.getBlue();
@@ -333,7 +370,8 @@ public class EyedropperController extends PageControllerBase implements Initiali
         return Color.color(averageRed, averageGreen, averageBlue);
     }
 
-    private double getGreyScaleDouble(Color color){
+    private double getGreyScaleDouble(Color color)
+    {
         //new calculation uses weighted scaling
         double redVal = color.getRed();
         double greenVal = color.getGreen();
@@ -354,16 +392,18 @@ public class EyedropperController extends PageControllerBase implements Initiali
 
     //returns false if the color is null or has already been added
     @FXML
-    private boolean addSelectedColor(Color newColor) {
+    private boolean addSelectedColor(Color newColor)
+    {
         //update the text field (to int. greyscale value) and its corresponding color square
 //        Button sourceButton = resetButtonsText();
 
-        if (sourceButton != null) {
+        if (sourceButton != null)
+        {
             //modify appropriate text field to average greyscale value
             TextField partnerTxtField = getTextFieldForButton(sourceButton);
 
             //java would use the wrong overload of round() if it used a double
-            Integer greyScale = Math.round((float)getGreyScaleDouble(newColor));
+            Integer greyScale = Math.round((float) getGreyScaleDouble(newColor));
             assert partnerTxtField != null;
             partnerTxtField.setText(String.valueOf(greyScale));
 
@@ -381,7 +421,8 @@ public class EyedropperController extends PageControllerBase implements Initiali
             sourceButton.getStyleClass().remove("button-selected");
             sourceButton.setText(DEFAULT_BUTTON_TEXT);
         }
-        else{
+        else
+        {
             Toolkit.getDefaultToolkit().beep();
             return false; //source button is null
         }
@@ -390,22 +431,27 @@ public class EyedropperController extends PageControllerBase implements Initiali
         return true;//color changed successfully
     }
 
-    private void updateFinalSelectRect(Rectangle rect) {//when a text field is updated, update the rectangle beside it
+    private void updateFinalSelectRect(Rectangle rect)
+    {//when a text field is updated, update the rectangle beside it
         TextField txtField = getTextFieldForRectangle(rect);
 
         double greyScale;
-        try{
+        try
+        {
             greyScale = Integer.parseInt(txtField.getText());
         }
-        catch(NumberFormatException | NullPointerException e){
+        catch (NumberFormatException | NullPointerException e)
+        {
             greyScale = 0;
         }
 
-        if(greyScale > 255){
+        if (greyScale > 255)
+        {
             greyScale = 255;
         }
 
-        if (greyScale < 0){
+        if (greyScale < 0)
+        {
             greyScale = 0;
         }
 
@@ -415,7 +461,8 @@ public class EyedropperController extends PageControllerBase implements Initiali
     }
 
     @FXML
-    private void updatesFromTextField(KeyEvent event){
+    private void updatesFromTextField(KeyEvent event)
+    {
         //whenever a text field is updated, update its partner color rectangle and change the visibility of the Apply button
         //if all text fields contain valid info, make the Apply button functional
         //if not, make the button not functional
@@ -425,20 +472,26 @@ public class EyedropperController extends PageControllerBase implements Initiali
         updateApplyButton();
     }
 
-    public void updateApplyButton() {
+    public void updateApplyButton()
+    {
         //only enable apply button if all fields contain good data (integers) and model is loaded
-        if(areAllFieldsValid() && hasGoodLoadingModel()){//TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
-                                                        //only updates setDisable() when text field is modified
+        if (areAllFieldsValid() && hasGoodLoadingModel())
+        {
+            //TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
+            //only updates setDisable() when text field is modified
             applyButton.setDisable(false);
         }
-        else{
+        else
+        {
             applyButton.setDisable(true);
         }
     }
 
     //returns the text field the button corresponds to
-    private TextField getTextFieldForButton(Button sourceButton) {
-        switch (sourceButton.getId()){
+    private TextField getTextFieldForButton(Button sourceButton)
+    {
+        switch (sourceButton.getId())
+        {
             case "button1":
                 return txtField1;
             case "button2":
@@ -456,8 +509,10 @@ public class EyedropperController extends PageControllerBase implements Initiali
         }
     }
 
-    private Rectangle getRectangleForButton(Button sourceButton) {
-        switch (sourceButton.getId()){
+    private Rectangle getRectangleForButton(Button sourceButton)
+    {
+        switch (sourceButton.getId())
+        {
             case "button1":
                 return finalSelectRect1;
             case "button2":
@@ -475,8 +530,10 @@ public class EyedropperController extends PageControllerBase implements Initiali
         }
     }
 
-    private TextField getTextFieldForRectangle(Rectangle rect) {
-        switch (rect.getId()){
+    private TextField getTextFieldForRectangle(Rectangle rect)
+    {
+        switch (rect.getId())
+        {
             case "finalSelectRect1":
                 return txtField1;
             case "finalSelectRect2":
@@ -494,8 +551,10 @@ public class EyedropperController extends PageControllerBase implements Initiali
         }
     }
 
-    private Rectangle getRectangleForTextField(TextField txtField) {
-        switch (txtField.getId()){
+    private Rectangle getRectangleForTextField(TextField txtField)
+    {
+        switch (txtField.getId())
+        {
             case "txtField1":
                 return finalSelectRect1;
             case "txtField2":
@@ -513,32 +572,39 @@ public class EyedropperController extends PageControllerBase implements Initiali
         }
     }
 
-    @FXML private void applyButtonPressed() {
+    @FXML
+    private void applyButtonPressed()
+    {
         //check to see if all text fields contain valid input, and model is loaded
-        if(areAllFieldsValid() && hasGoodLoadingModel()) {
+        if (areAllFieldsValid() && hasGoodLoadingModel())
+        {
             ioModel.setTonemapping(
                 new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
                 new byte[]
-                {
-                    (byte) Integer.parseInt(txtField1.getText()),
-                    (byte) Integer.parseInt(txtField2.getText()),
-                    (byte) Integer.parseInt(txtField3.getText()),
-                    (byte) Integer.parseInt(txtField4.getText()),
-                    (byte) Integer.parseInt(txtField5.getText()),
-                    (byte) Integer.parseInt(txtField6.getText())
-                });
+                    {
+                        (byte) Integer.parseInt(txtField1.getText()),
+                        (byte) Integer.parseInt(txtField2.getText()),
+                        (byte) Integer.parseInt(txtField3.getText()),
+                        (byte) Integer.parseInt(txtField4.getText()),
+                        (byte) Integer.parseInt(txtField5.getText()),
+                        (byte) Integer.parseInt(txtField6.getText())
+                    });
         }
-        else{
+        else
+        {
             Toolkit.getDefaultToolkit().beep();
             //TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
             log.error("Please fill all fields and load a model before performing color calibration.");
         }
     }
 
-    private boolean areAllFieldsValid(){
+    private boolean areAllFieldsValid()
+    {
         //only return true if all text fields are filled with good info (integers)
-        for (TextField field : colorSelectTxtFields){//TODO: CHECK IF VALS ARE 0-255?
-            if(!field.getText().matches("-?\\d+")){//regex to check if input is integer
+        for (TextField field : colorSelectTxtFields)
+        {//TODO: CHECK IF VALS ARE 0-255?
+            if (!field.getText().matches("-?\\d+"))
+            {//regex to check if input is integer
                 return false;
             }
         }
@@ -546,7 +612,8 @@ public class EyedropperController extends PageControllerBase implements Initiali
     }
 
     @FXML
-    private void enterColorSelectionMode(ActionEvent actionEvent) {
+    private void enterColorSelectionMode(ActionEvent actionEvent)
+    {
 
         if (cropButton.getStyleClass().contains("button-selected"))
         {
@@ -580,12 +647,12 @@ public class EyedropperController extends PageControllerBase implements Initiali
 //            if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
 //                sourceButton = button;
 //            }
-////            button.setText(DEFAULT_BUTTON_TEXT);
+
+    /// /            button.setText(DEFAULT_BUTTON_TEXT);
 //        }
 //
 //        return sourceButton;
 //    }
-
     public void setProjectModel(ProjectModelBase projectModel)
     {
         this.projectModel = projectModel;
@@ -595,11 +662,13 @@ public class EyedropperController extends PageControllerBase implements Initiali
         }
     }
 
-    public void setIOModel(IOModel ioModel){
+    public void setIOModel(IOModel ioModel)
+    {
         this.ioModel = ioModel;
 
         //initialize txtFields with their respective values
-        if (hasGoodLoadingModel()){
+        if (hasGoodLoadingModel())
+        {
             DoubleUnaryOperator luminanceEncoding = ioModel.getLuminanceEncodingFunction();
             txtField1.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
             txtField2.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
@@ -608,20 +677,23 @@ public class EyedropperController extends PageControllerBase implements Initiali
             txtField5.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.591))));
             txtField6.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.900))));
 
-            for(Rectangle rect : finalSelectRectangles){
+            for (Rectangle rect : finalSelectRectangles)
+            {
                 rect.setVisible(true);
                 updateFinalSelectRect(rect);
             }
 
             updateApplyButton();
         }
-        else{
+        else
+        {
             //TODO: WHAT TO DO IF NO MODEL FOUND?
             log.error("Could not bring in luminance encodings: no model found");
         }
     }
 
-    private boolean hasGoodLoadingModel(){
+    private boolean hasGoodLoadingModel()
+    {
         return ioModel.hasValidHandler();
     }
 
@@ -633,12 +705,13 @@ public class EyedropperController extends PageControllerBase implements Initiali
 //    }
 
     @FXML
-    private void selectImage(ActionEvent actionEvent) {
+    private void selectImage(ActionEvent actionEvent)
+    {
         if (!multiImageWarningShown)
         {
             Alert alert = new Alert(AlertType.WARNING,
                 "Warning: using multiple images for tone calibration can result in inconsistencies in tone interpretation.  "
-                + "To be used for advanced workflows only.",
+                    + "To be used for advanced workflows only.",
                 ButtonType.OK, ButtonType.CANCEL);
             alert.setGraphic(null);
             var result = alert.showAndWait();
@@ -659,37 +732,45 @@ public class EyedropperController extends PageControllerBase implements Initiali
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        try{
+        try
+        {
             fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(0).getParentFile());
         }
-        catch(NullPointerException e){
+        catch (NullPointerException e)
+        {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please load a model before using the color checker.");
             alert.setGraphic(null);
             alert.show();
             return;
         }
 
-        Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
+        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
         setImage(file);
     }
 
     public void setImage(File file)
     {
-        if (file != null) {
+        if (file != null)
+        {
             RecentProjects.setMostRecentDirectory(file.getParentFile());
 
             //convert tiff image if necessary
-            if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
+            if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?"))
+            {
                 BufferedImage bufferedImage;
-                try {
+                try
+                {
                     bufferedImage = ImageIO.read(file);
                     colorPickerImgView.setImage(SwingFXUtils.toFXImage(bufferedImage, null));
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     log.error("Could not convert tif image: ", e);
                 }
             }
-            else {
+            else
+            {
                 selectedFile = new Image(file.toURI().toString());
                 colorPickerImgView.setImage(selectedFile);
             }
@@ -714,7 +795,7 @@ public class EyedropperController extends PageControllerBase implements Initiali
                     projectModel.setColorCheckerFile(new File(path));
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.error("Could not save file");
             }
@@ -743,14 +824,6 @@ public class EyedropperController extends PageControllerBase implements Initiali
         canResetCrop = false;
 
         selectedColors = new ArrayList<>();
-
-        colorSelectButtons = new ArrayList<>();
-        colorSelectButtons.add(button1);
-        colorSelectButtons.add(button2);
-        colorSelectButtons.add(button3);
-        colorSelectButtons.add(button4);
-        colorSelectButtons.add(button5);
-        colorSelectButtons.add(button6);
 
         colorSelectTxtFields = new ArrayList<>();
         colorSelectTxtFields.add(txtField1);
@@ -783,6 +856,11 @@ public class EyedropperController extends PageControllerBase implements Initiali
         }
 
         updateApplyButton();
+    }
+
+    @Override
+    public void finish()
+    {
     }
 
     @Override

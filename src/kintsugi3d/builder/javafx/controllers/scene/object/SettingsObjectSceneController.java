@@ -26,9 +26,11 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -37,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 public class SettingsObjectSceneController implements Initializable
@@ -185,18 +186,28 @@ public class SettingsObjectSceneController implements Initializable
             stage.setTitle("Select Orientation Reference View");
             stage.setScene(new Scene(root));
 
-            PageFrameController scrollerController = loader.getController();
+            PageFrameController frameController = loader.getController();
+            frameController.setPageFactory(pageLoader ->
+            {
+                try
+                {
+                    pageLoader.load();
+                }
+                catch (Exception e)
+                {
+                    log.error("Unable to open orientation view selector.", e);
+                }
 
-            String viewSelectPath = "/fxml/modals/createnewproject/PrimaryViewSelect.fxml";
-            FXMLLoader selectorLoader = new FXMLLoader(getClass().getResource(viewSelectPath));
-            selectorLoader.load();
+                return pageLoader;
+            });
 
-            ArrayList<Page> pages = new ArrayList<>();
-            pages.add(new PageBase(viewSelectPath, selectorLoader));
+            Page<?> viewSelectPage = frameController.createPage(
+                "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+                SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new);
 
-            scrollerController.setPages(pages, viewSelectPath);
-            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new CurrentProjectInputSource());
-            scrollerController.init();
+            frameController.setCurrentPage(viewSelectPage);
+
+            frameController.init();
 
             stage.show();
         }

@@ -19,6 +19,9 @@ import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
@@ -27,7 +30,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Optional;
 
-public class SelectToneCalibrationImageController extends PageControllerBase
+public class SelectToneCalibrationImageController
+    extends PageControllerBase<DataReceiverPage<InputSource, SelectToneCalibrationImageController>>
+    implements DataReceiverPageController<InputSource, DataReceiverPage<InputSource, SelectToneCalibrationImageController>>
 {
     private static final Logger log = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
 
@@ -38,7 +43,7 @@ public class SelectToneCalibrationImageController extends PageControllerBase
     @FXML private ToggleButton selectImageFileButton;
     @FXML private Label selectImageFileLabel;
 
-    private FileChooser imageFileChooser;
+    private final FileChooser imageFileChooser;
     private File selectedImageFile = null;
 
     private final ToggleGroup buttonGroup = new ToggleGroup();
@@ -48,7 +53,6 @@ public class SelectToneCalibrationImageController extends PageControllerBase
         imageFileChooser = new FileChooser();
         imageFileChooser.setTitle("Select tone calibration image");
     }
-
 
     @Override
     public Region getRootNode()
@@ -87,6 +91,11 @@ public class SelectToneCalibrationImageController extends PageControllerBase
         {
             buttonGroup.selectToggle(previousImageButton);
         }
+    }
+
+    @Override
+    public void finish()
+    {
     }
 
     @Override
@@ -155,5 +164,11 @@ public class SelectToneCalibrationImageController extends PageControllerBase
             selectedImageFile = temp;
             selectImageFileLabel.setText("Selected: " + temp.getName());
         }
+    }
+
+    @Override
+    public void receiveData(InputSource data)
+    {
+        // Satisfy that there is incoming data from the general purpose primary view selector; not actually used.
     }
 }

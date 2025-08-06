@@ -63,10 +63,8 @@ public class PageWindow
             PageFrameController frameController =
                 WindowUtilities.makeWindow(parentWindow, title, windowOpen, hostFXMLPath);
 
-            frameController.setPageFactory(fileName ->
+            frameController.setPageFactory(loader ->
             {
-                FXMLLoader loader = new FXMLLoader(WindowUtilities.class.getResource(fileName)); // TODO use something like Kintsugi3DBuilder.class instead?
-
                 try
                 {
                     loader.load();

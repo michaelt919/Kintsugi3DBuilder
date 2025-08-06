@@ -45,7 +45,7 @@ public class PageFrameController
     @FXML private Button nextButton;
 
     @FXML private Pane hostPane;
-    Function<String, FXMLLoader> pageFactory;
+    Function<FXMLLoader, FXMLLoader> pageFactory;
     Map<String, Page<?>> pageCache = new HashMap<>();
     Page<?> currentPage;
 
@@ -91,18 +91,25 @@ public class PageFrameController
         }
     }
 
-    public void setPageFactory(Function<String, FXMLLoader> pageFactory)
+    public void setPageFactory(Function<FXMLLoader, FXMLLoader> pageFactory)
     {
         this.pageFactory = pageFactory;
     }
 
-    public <PageType extends Page<?>> PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    public <PageType extends Page<?>> PageType createPage(String fxmlPath,
+        Function<FXMLLoader, FXMLLoader> customPageFactory, BiFunction<String, FXMLLoader, PageType> pageConstructor)
     {
-        PageType page = pageConstructor.apply(fxmlPath, pageFactory.apply(fxmlPath));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+        PageType page = pageConstructor.apply(fxmlPath, customPageFactory.apply(loader));
         page.getController().setPageFrameController(this);
         page.initController();
         pageCache.put(fxmlPath, page);
         return page;
+    }
+
+    public <PageType extends Page<?>> PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    {
+        return createPage(fxmlPath, pageFactory, pageConstructor);
     }
 
     public Page<?> getPage(String fxmlPath)

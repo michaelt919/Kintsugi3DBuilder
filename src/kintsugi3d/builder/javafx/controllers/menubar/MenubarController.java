@@ -43,17 +43,16 @@ import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
-import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController;
-import kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController;
-import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
+import kintsugi3d.builder.javafx.controllers.modals.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
@@ -1043,44 +1042,72 @@ public class MenubarController
 
     public void eyedropperColorChecker()
     {
+        final String errorMessage = "An error occurred opening color checker window";
+
         try
         {
-            ArrayList<Page> pages = new ArrayList<>();
+            PageFrameController frameController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
+                "fxml/FXMLPageScroller.fxml");
 
-            FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/modals/EyedropperColorChecker.fxml"));
-            eyedropLoader.load();
-            Page eyedropPage = new PageBase("/fxml/modals/EyedropperColorChecker.fxml", eyedropLoader);
+            frameController.setPageFactory(loader ->
+            {
+                try
+                {
+                    loader.load();
+                }
+                catch (IOException | RuntimeException e)
+                {
+                    handleException(errorMessage, e);
+                }
 
-            FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/modals/createnewproject/PrimaryViewSelect.fxml"));
+                return loader;
+            });
 
-            // Override controller class
-            viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
+            SimpleDataPassthroughPage<InputSource, ?> viewPage = frameController.createPage(
+                "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+                viewLoader ->
+                {
+                    // Override controller class
+                    viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
 
-            viewLoader.load();
+                    try
+                    {
+                        viewLoader.load();
+                    }
+                    catch (IOException | RuntimeException e)
+                    {
+                        handleException(errorMessage, e);
+                    }
 
-            CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
-
-            Page viewPage = new PageBase("/fxml/modals/createnewproject/PrimaryViewSelect.fxml", viewLoader);
-            pages.add(viewPage);
+                    return viewLoader;
+                },
+                SimpleDataPassthroughPage<InputSource, PrimaryViewSelectController>::new);
 
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();
-            Page imageSelectorPage = new PageBase("/fxml/modals/SelectToneCalibrationImage.fxml", imageSelectorLoader);
-            pages.add(imageSelectorPage);
+
+            SimpleDataReceiverPage<InputSource, ?> imageSelectorPage = frameController.createPage(
+                "/fxml/modals/SelectToneCalibrationImage.fxml",
+                SimpleDataReceiverPage<InputSource, SelectToneCalibrationImageController>::new);
+
             viewPage.setNextPage(imageSelectorPage);
 
-            pages.add(eyedropPage);
+            SimpleNonDataPage<?> eyedropPage = frameController.createPage(
+                "/fxml/modals/EyedropperColorChecker.fxml",
+                SimpleNonDataPage<EyedropperController>::new);
+
             imageSelectorPage.setNextPage(eyedropPage);
 
-            PageFrameController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
-                "fxml/FXMLPageScroller.fxml");
-            scrollerController.setPages(pages, "/fxml/modals/createnewproject/PrimaryViewSelect.fxml");
-            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
-            scrollerController.init();
+            CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
+            viewPage.receiveData(inputSource);
+
+            frameController.setCurrentPage(viewPage);
+
+            frameController.init();
         }
         catch (IOException | RuntimeException e)
         {
-            handleException("An error occurred opening color checker window", e);
+            handleException(errorMessage, e);
         }
     }
 
