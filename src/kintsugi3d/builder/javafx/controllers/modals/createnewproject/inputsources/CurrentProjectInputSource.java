@@ -16,7 +16,8 @@ import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 
 import java.io.File;
 import java.util.List;

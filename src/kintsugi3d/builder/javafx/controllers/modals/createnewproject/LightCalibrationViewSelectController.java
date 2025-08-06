@@ -15,18 +15,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
 
 import java.util.Optional;
 
 public class LightCalibrationViewSelectController extends ViewSelectController
 {
-    @Override
-    public void init()
-    {
-        super.init();
-        getCanConfirmObservable().set(false);
-    }
-
     @Override
     public boolean confirm()
     {
@@ -49,7 +43,7 @@ public class LightCalibrationViewSelectController extends ViewSelectController
         {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change light calibration view? This will clear any previous tone calibration values!");
             Optional<ButtonType> confirmResult = alert.showAndWait();
-            if (confirmResult.isEmpty() || confirmResult.get() != ButtonType.OK)
+            if (confirmResult.isEmpty() || !confirmResult.get().equals(ButtonType.OK))
             {
                 // Stay on this page
                 return false;

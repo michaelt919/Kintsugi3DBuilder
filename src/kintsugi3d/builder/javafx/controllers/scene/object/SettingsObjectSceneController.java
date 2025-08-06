@@ -26,7 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
@@ -205,7 +205,7 @@ public class SettingsObjectSceneController implements Initializable
 
             DataReceiverPage<InputSource,?> viewSelectPage = frameController.createPage(
                 "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-                SimpleDataPassthroughPage<InputSource, ViewSelectController>::new);
+                SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new);
 
             frameController.setCurrentPage(viewSelectPage);
             viewSelectPage.receiveData(new CurrentProjectInputSource());

@@ -63,7 +63,7 @@ public class MasksImportController
 
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-             SimpleDataPassthroughPage<InputSource, ViewSelectController>::new));
+             SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new));
 
         getCanConfirmObservable().set(true);
     }

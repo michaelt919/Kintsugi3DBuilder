@@ -45,7 +45,7 @@ import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.modals.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController;
@@ -1081,7 +1081,7 @@ public class MenubarController
 
                     return viewLoader;
                 },
-                SimpleDataPassthroughPage<InputSource, ViewSelectController>::new);
+                SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new);
 
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();

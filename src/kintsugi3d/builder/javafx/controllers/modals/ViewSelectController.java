@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -23,10 +23,13 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ImgSelectionThread;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.*;
+import kintsugi3d.builder.javafx.controllers.paged.DataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,41 +38,39 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
- */
-public class ViewSelectController
-    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, ViewSelectController>>
-    implements ImageThreadable
+public abstract class ViewSelectController extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, OrientationViewSelectController>> implements ImageThreadable
 {
-    //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
-    //suppress warning?
-
-    private static final Logger log = LoggerFactory.getLogger(ViewSelectController.class);
-
+    private static final Logger log = LoggerFactory.getLogger(OrientationViewSelectController.class);
+    @FXML
+    protected TreeView<String> chunkTreeView;
+    @FXML
+    protected ImageView primaryImgView;
+    @FXML
+    protected Text imgViewText;
+    @FXML
+    protected TextField imgSearchTxtField;
+    @FXML
+    protected CheckBox regexMode;
+    @FXML
+    protected VBox orientationControlsVBox;
+    @FXML
+    protected Label hintTextLabel;
+    protected InputSource newSource;
+    protected InputSource source;
+    protected HashMap<String, Image> imgCache;
     @FXML
     private AnchorPane hostAnchorPane;
-
-    @FXML
-    private TreeView<String> chunkTreeView;
-    @FXML
-    private ImageView primaryImgView;
-    @FXML
-    private Text imgViewText;
-
-    @FXML
-    private TextField imgSearchTxtField;
-    @FXML
-    private CheckBox regexMode;
-    @FXML
-    private VBox orientationControlsVBox;
-    @FXML
-    private Label hintTextLabel;
-
-    private InputSource newSource;
-    private InputSource source;
-    private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
+
+    protected abstract String getHintText();
+
+    protected abstract boolean showFixOrientation();
+
+    @Override
+    public Region getRootNode()
+    {
+        return hostAnchorPane;
+    }
 
     @Override
     public void init()
@@ -83,12 +84,6 @@ public class ViewSelectController
         hintTextLabel.setText(getHintText());
 
         getCanAdvanceObservable().set(true);
-        getCanConfirmObservable().set(true);
-    }
-
-    protected String getHintText()
-    {
-        return "Select model orientation view";
     }
 
     @Override
@@ -119,12 +114,6 @@ public class ViewSelectController
         }
 
         orientationControlsVBox.setVisible(showFixOrientation());
-    }
-
-    @Override
-    public Region getRootNode()
-    {
-        return hostAnchorPane;
     }
 
     public void selectImageInTreeView()
@@ -226,20 +215,6 @@ public class ViewSelectController
     }
 
     @Override
-    public boolean advance()
-    {
-        source.setPrimaryView(getSelectedViewName(), primaryImgView.getRotate());
-        return true;
-    }
-
-    @Override
-    public boolean confirm()
-    {
-        source.loadProject();
-        return true;
-    }
-
-    @Override
     public ImageView getImageView()
     {
         return primaryImgView;
@@ -274,11 +249,6 @@ public class ViewSelectController
         }
 
         return viewName;
-    }
-
-    protected boolean showFixOrientation()
-    {
-        return true;
     }
 
     @Override
