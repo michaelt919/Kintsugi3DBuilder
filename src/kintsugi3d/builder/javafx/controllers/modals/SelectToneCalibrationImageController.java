@@ -21,9 +21,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageController;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,8 +73,9 @@ public class SelectToneCalibrationImageController
         buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
         {
             selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
-            getPageFrameController().updatePrevAndNextButtons();
         });
+
+        this.getCanAdvanceObservable().bind(buttonGroup.selectedToggleProperty().isNotNull());
     }
 
     @Override
@@ -94,12 +93,7 @@ public class SelectToneCalibrationImageController
     }
 
     @Override
-    public void finish()
-    {
-    }
-
-    @Override
-    public boolean nextButtonPressed()
+    public boolean advance()
     {
         File imageFile = null;
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
@@ -134,12 +128,6 @@ public class SelectToneCalibrationImageController
         }
 
         return true;
-    }
-
-    @Override
-    public boolean isNextButtonValid()
-    {
-        return buttonGroup.getSelectedToggle() != null;
     }
 
     private void selectImageFileAction(ActionEvent event)

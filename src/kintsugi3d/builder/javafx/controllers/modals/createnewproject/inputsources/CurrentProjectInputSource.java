@@ -94,23 +94,23 @@ public class CurrentProjectInputSource extends InputSource
     }
 
     @Override
-    public void loadProject(String orientationViewName, double rotate)
+    public void loadProject()
     {
         ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
 
         if (currentViewSet == null)
             return;
 
-        if (orientationViewName == null)
+        if (getPrimaryView() == null)
         {
             currentViewSet.setOrientationViewIndex(-1);
         }
         else
         {
-            currentViewSet.setOrientationView(orientationViewName);
+            currentViewSet.setOrientationView(getPrimaryView());
         }
 
-        currentViewSet.setOrientationViewRotationDegrees(rotate);
+        currentViewSet.setOrientationViewRotationDegrees(getPrimaryViewRotation());
     }
 
     @Override

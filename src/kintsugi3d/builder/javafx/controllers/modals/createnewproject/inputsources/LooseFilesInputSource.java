@@ -113,7 +113,7 @@ public class LooseFilesInputSource extends InputSource
     }
 
     @Override
-    public void loadProject(String primaryView, double rotate)
+    public void loadProject()
     {
         ViewSetLoadOptions loadOptions = new ViewSetLoadOptions();
         loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
@@ -121,8 +121,8 @@ public class LooseFilesInputSource extends InputSource
         loadOptions.masksDirectory = masksDir;
         loadOptions.mainDirectories.fullResImageDirectory = photosDir;
         loadOptions.mainDirectories.fullResImagesNeedUndistort = needsUndistort;
-        loadOptions.orientationViewName = primaryView;
-        loadOptions.orientationViewRotation = rotate;
+        loadOptions.orientationViewName = getPrimaryView();
+        loadOptions.orientationViewRotation = getPrimaryViewRotation();
 
         if (hotSwap)
         {

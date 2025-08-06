@@ -11,11 +11,21 @@
 
 package kintsugi3d.builder.javafx.controllers.paged;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 public abstract class PageControllerBase<PageType extends Page<?>> implements PageController<PageType>
 {
     private PageFrameController pageFrameController;
     private PageType page;
-    protected Runnable confirmCallback;
+    private Runnable confirmCallback;
+    private final BooleanProperty canAdvanceProperty = new SimpleBooleanProperty(false);
+    private final StringProperty advanceLabelOverrideProperty = new SimpleStringProperty(null);
+    private final BooleanProperty canConfirmProperty = new SimpleBooleanProperty(false);
+
+    private boolean isConfirmed;
 
     @Override
     public PageFrameController getPageFrameController()
@@ -42,25 +52,73 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
     }
 
     @Override
-    public boolean isNextButtonValid()
+    public final boolean canAdvance()
     {
-        return page.hasNextPage();
+        return getCanAdvanceObservable().get();
     }
 
     @Override
-    public boolean nextButtonPressed()
+    public final BooleanProperty getCanAdvanceObservable()
+    {
+        return canAdvanceProperty;
+    }
+
+    @Override
+    public final StringProperty getAdvanceLabelOverrideObservable()
+    {
+        return advanceLabelOverrideProperty;
+    }
+
+    @Override
+    public final String getAdvanceLabelOverride()
+    {
+        return getAdvanceLabelOverrideObservable().get();
+    }
+
+    @Override
+    public final BooleanProperty getCanConfirmObservable()
+    {
+        return canConfirmProperty;
+    }
+
+    @Override
+    public final boolean canConfirm()
+    {
+        return canConfirmProperty.get();
+    }
+
+    @Override
+    public boolean advance()
     {
         return true;
     }
 
     @Override
-    public boolean closeButtonPressed()
+    public boolean close()
     {
         return true;
     }
 
+    @Override
+    public Runnable getConfirmCallback()
+    {
+        return confirmCallback;
+    }
+
+    @Override
     public void setConfirmCallback(Runnable callback)
     {
         this.confirmCallback = callback;
+    }
+
+    @Override
+    public boolean isConfirmed()
+    {
+        return isConfirmed;
+    }
+
+    public void setConfirmed(boolean confirmed)
+    {
+        this.isConfirmed = confirmed;
     }
 }

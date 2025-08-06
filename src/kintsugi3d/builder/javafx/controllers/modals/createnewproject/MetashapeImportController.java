@@ -78,6 +78,8 @@ public class MetashapeImportController
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
             SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
+
+        getCanConfirmObservable().set(true);
     }
 
     @Override
@@ -114,13 +116,7 @@ public class MetashapeImportController
     }
 
     @Override
-    public boolean isNextButtonValid()
-    {
-        return metashapeDocument != null && hasModels();
-    }
-
-    @Override
-    public void finish()
+    public boolean advance()
     {
         if (source instanceof MetashapeProjectInputSource)
         {
@@ -135,6 +131,15 @@ public class MetashapeImportController
         {
             log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
         }
+
+        return true;
+    }
+
+    @Override
+    public boolean confirm()
+    {
+        source.loadProject();
+        return true;
     }
 
     private static String getModelIDFromSelection(String selectionAsString)
@@ -177,7 +182,7 @@ public class MetashapeImportController
 
     private void updateChoiceBoxes(File psxFile)
     {
-        updateChunkSelectionChoiceBox(psxFile);
+        loadMetashapeDocument(psxFile);
         updateModelSelectionChoiceBox();
         updateLoadedIndicators();
     }
@@ -287,7 +292,7 @@ public class MetashapeImportController
         return !metashapeDocument.getSelectedChunk().getModels().isEmpty();
     }
 
-    private void updateChunkSelectionChoiceBox(File psxFile)
+    private void loadMetashapeDocument(File psxFile)
     {
         chunkSelectionChoiceBox.setDisable(true);
 
@@ -295,14 +300,6 @@ public class MetashapeImportController
         metashapeDocument = new MetashapeDocument(psxFile.getPath());
 
         List<MetashapeChunk> chunks = metashapeDocument.getChunks();
-
-        if (chunks.isEmpty())
-        {
-            showNoChunksAlert();
-            modelSelectionChoiceBox.getItems().clear();
-            return;
-        }
-
         chunkSelectionChoiceBox.getItems().clear();
 
         boolean missingChunks = false;
@@ -318,24 +315,33 @@ public class MetashapeImportController
             }
         }
 
-        if (chunkSelectionChoiceBox.getItems().isEmpty())
+        boolean allMissingChunks = chunkSelectionChoiceBox.getItems().isEmpty();
+        getCanAdvanceObservable().set(!allMissingChunks);
+
+        if (allMissingChunks)
         {
-            showMissingItemsAlert("All chunks are missing models.",
-                "None of your chunks have valid model data. Please select another document or create a custom project.");
+            if (chunks.isEmpty())
+            {
+                showNoChunksAlert();
+            }
+            else
+            {
+                showMissingItemsAlert("All chunks are missing models.",
+                    "None of your chunks have valid model data. Please select another document or create a custom project.");
+            }
+
             modelSelectionChoiceBox.getItems().clear();
-            return;
         }
-
-        if (missingChunks)
+        else
         {
-            showMissingItemsAlert("Some chunks are missing models.",
-                "Some of your chunks do not have models. They will not appear in the dropdown.");
-        }
+            getCanAdvanceObservable().set(true);
+            if (missingChunks)
+            {
+                showMissingItemsAlert("Some chunks are missing models.",
+                    "Some of your chunks do not have models. They will not appear in the dropdown.");
+            }
 
-        //initialize choice box to first option instead of null option
-        if (chunkSelectionChoiceBox.getItems() != null &&
-            chunkSelectionChoiceBox.getItems().get(0) != null)
-        {
+            //initialize choice box to first option instead of null option
             chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
             chunkSelectionChoiceBox.setDisable(false);
 
@@ -344,14 +350,9 @@ public class MetashapeImportController
             if (activeChunkID != null)
             {
                 String chunkName = metashapeDocument.getChunkNameFromID(activeChunkID);
-
-                for (String str : chunkSelectionChoiceBox.getItems())
+                if (chunkSelectionChoiceBox.getItems().contains(chunkName))
                 {
-                    if (str.equals(chunkName))
-                    {
-                        chunkSelectionChoiceBox.setValue(str);
-                        break;
-                    }
+                    chunkSelectionChoiceBox.setValue(chunkName);
                 }
             }
         }
@@ -363,15 +364,11 @@ public class MetashapeImportController
         {
             loadMetashapeObject.setText("Loaded");
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
-
-            getPageFrameController().setNextButtonDisable(false);
         }
         else
         {
             loadMetashapeObject.setText("Unloaded");
             loadMetashapeObject.setFill(Paint.valueOf("Red"));
-
-            getPageFrameController().setNextButtonDisable(true);
         }
     }
 

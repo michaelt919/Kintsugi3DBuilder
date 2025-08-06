@@ -131,9 +131,9 @@ public class MetashapeProjectInputSource extends InputSource{
 
     //TODO: uncouple loadProject() from orientationView
     @Override
-    public void loadProject(String orientationView, double rotate) {
-        model.getLoadPreferences().orientationViewName = orientationView;
-        model.getLoadPreferences().orientationViewRotateDegrees = rotate;
+    public void loadProject() {
+        model.getLoadPreferences().orientationViewName = getPrimaryView();
+        model.getLoadPreferences().orientationViewRotateDegrees = getPrimaryViewRotation();
         new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
     }
 

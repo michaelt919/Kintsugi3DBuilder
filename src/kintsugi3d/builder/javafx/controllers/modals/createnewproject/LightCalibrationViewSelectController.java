@@ -21,13 +21,20 @@ import java.util.Optional;
 public class LightCalibrationViewSelectController extends ViewSelectController
 {
     @Override
-    public boolean canConfirm()
+    public void init()
+    {
+        super.init();
+        getCanConfirmObservable().set(false);
+    }
+
+    @Override
+    public boolean confirm()
     {
         return false;
     }
 
     @Override
-    public boolean nextButtonPressed()
+    public boolean advance()
     {
         ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
 

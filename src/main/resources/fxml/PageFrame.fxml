@@ -30,7 +30,7 @@
           <Insets />
         </GridPane.margin>
     </Button>
-    <Button fx:id="nextButton" mnemonicParsing="false" onAction="#nextPage" styleClass="wireframeBodyLarge, button" text="Next" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+    <Button fx:id="nextButton" mnemonicParsing="false" onAction="#advancePage" styleClass="wireframeBodyLarge, button" text="Next" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
         <GridPane.margin>
           <Insets />
         </GridPane.margin>

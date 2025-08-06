@@ -33,13 +33,16 @@ public abstract class InputSource {
     public static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
     private boolean includeNoneItem = true;
 
+    private String primaryView;
+    private double primaryViewRotation;
+
     private static final int THUMBNAIL_SIZE = 30;
 
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
 
     public abstract void initTreeView();
 
-    public abstract void loadProject(String primaryView, double rotate);
+    public abstract void loadProject();
 
     @Override
     public abstract boolean equals(Object obj);
@@ -149,5 +152,21 @@ public abstract class InputSource {
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
         return new TreeItem<>(view.name, thumbnailImgView);
+    }
+
+    public String getPrimaryView()
+    {
+        return primaryView;
+    }
+
+    public void setPrimaryView(String primaryView, double primaryViewRotation)
+    {
+        this.primaryView = primaryView;
+        this.primaryViewRotation = primaryViewRotation;
+    }
+
+    public double getPrimaryViewRotation()
+    {
+        return primaryViewRotation;
     }
 }

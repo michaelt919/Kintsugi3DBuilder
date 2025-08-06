@@ -12,7 +12,8 @@
 package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -59,19 +60,22 @@ public class PageFrameController
         Platform.runLater(() -> outerGridPane.getScene().getWindow().requestFocus());
 
         outerGridPane.getScene().getWindow().setOnCloseRequest(this::onCloseRequest);
+
+        prevButton.setOnAction(e -> prevPage());
+        nextButton.setOnAction(e -> advancePage());
     }
 
-    public void setButtonShortcuts(PageController<?> pageController)
+    private void setButtonShortcuts(PageController<?> pageController)
     {
         KeyCombination leftKeyCode = new KeyCodeCombination(KeyCode.A);
         KeyCombination rightKeyCode = new KeyCodeCombination(KeyCode.D);
 
         Scene scene = pageController.getRootNode().getScene();
-        scene.getAccelerators().put(leftKeyCode, () -> this.getPrevButton().fire());
-        scene.getAccelerators().put(rightKeyCode, () -> this.getNextButton().fire());
+        scene.getAccelerators().put(leftKeyCode, () -> prevButton.fire());
+        scene.getAccelerators().put(rightKeyCode, () -> nextButton.fire());
     }
 
-    private void close(ActionEvent actionEvent)
+    private void close()
     {
         Window window = currentPage.getController().getRootNode().getScene().getWindow();
         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
@@ -79,14 +83,13 @@ public class PageFrameController
 
     private void onCloseRequest(WindowEvent windowEvent)
     {
-        if (!currentPage.getController().closeButtonPressed())
+        if (!currentPage.getController().close())
         {
             windowEvent.consume();
         }
 
-        // TODO: not a perfect solution. If we press the X to close the last page of a scrolling modal,
         // the welcome window doesn't open like it should
-        if (!(currentPage.getController() instanceof Confirmable))
+        if (!currentPage.getController().isConfirmed())
         {
             WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
         }
@@ -102,7 +105,44 @@ public class PageFrameController
     {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
         PageType page = pageConstructor.apply(fxmlPath, customPageFactory.apply(loader));
-        page.getController().setPageFrameController(this);
+
+        PageController<?> controller = page.getController();
+        controller.setPageFrameController(this);
+        nextButton.disableProperty().bind(
+            page.getNextPageProperty().isNull()
+                .and(controller.getCanConfirmObservable().not())
+                .or(controller.getCanAdvanceObservable().not()));
+
+        BooleanBinding advanceLabelOverrideNotNull = controller.getAdvanceLabelOverrideObservable().isNotNull();
+        BooleanBinding shouldConfirm = page.getNextPageProperty().isNotNull().and(controller.getCanConfirmObservable());
+
+        nextButton.textProperty().bind(new ObjectBinding<>()
+        {
+            {
+                bind(advanceLabelOverrideNotNull);
+                bind(shouldConfirm);
+            }
+
+            @Override
+            protected String computeValue()
+            {
+                if (advanceLabelOverrideNotNull.get())
+                {
+                    return controller.getAdvanceLabelOverrideObservable().get();
+                }
+                else
+                {
+                    return shouldConfirm.get() ? "Confirm" : "Next";
+                }
+            }
+        });
+
+        controller.getCanConfirmObservable().addListener(observable ->
+            nextButton.setFont(Font.font(
+                nextButton.getFont().getFamily(),
+                controller.canConfirm() ? FontWeight.BOLD : FontWeight.NORMAL,
+                nextButton.getFont().getSize())));
+
         page.initController();
         pageCache.put(fxmlPath, page);
         return page;
@@ -125,27 +165,43 @@ public class PageFrameController
             currentPage = currentPage.getPrevPage();
             initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
         }
-    }
-
-    private void prevPage(ActionEvent e)
-    {
-        //use this method for setOnAction() lamdas
-        prevPage();
-    }
-
-    public void nextPage()
-    {
-        if (currentPage.hasNextPage() && currentPage.getController().nextButtonPressed())
+        else
         {
-            // Finalizes data on the page
-            currentPage.getController().finish();
+            close();
+        }
+    }
 
-            // Passes data to the next page if applicable
-            currentPage.submit();
+    public void advancePage()
+    {
+        if (currentPage.getController().canAdvance())
+        {
+            if (currentPage.getController().advance()) // Finishes up on the current page
+            {
+                if (currentPage.hasNextPage()) // next page exists
+                {
+                    // Passes data to the next page if applicable
+                    currentPage.submit();
 
-            currentPage = currentPage.getNextPage();
-            initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
-            setButtonShortcuts(currentPage.getController());
+                    currentPage = currentPage.getNextPage();
+                    initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
+                    setButtonShortcuts(currentPage.getController());
+                }
+                else if (currentPage.getController().canConfirm()) // no next page but can submit
+                {
+                    if (currentPage.getController().getConfirmCallback() != null)
+                    {
+                        currentPage.getController().getConfirmCallback().run();
+                    }
+
+                    if (currentPage.getController().confirm())
+                    {
+                        WelcomeWindowController.getInstance().hide();
+
+                        Window window = currentPage.getController().getRootNode().getScene().getWindow();
+                        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+                    }
+                }
+            }
         }
     }
 
@@ -160,61 +216,7 @@ public class PageFrameController
         }
 
         outerGridPane.getScene().getWindow().sizeToScene();
-
         currentPage.getController().refresh();
-
-        updatePrevAndNextButtons();
-    }
-
-    public void updatePrevAndNextButtons()
-    {
-        if (currentPage.hasPrevPage())
-        {
-            prevButton.setOnAction(this::prevPage);
-        }
-        else
-        {
-            prevButton.setOnAction(this::close);
-        }
-        nextButton.setDisable(!currentPage.getController().isNextButtonValid());
-
-        //change next button to confirm button if applicable
-        PageController<?> controller = currentPage.getController();
-
-        if (controller instanceof Confirmable && ((Confirmable) controller).canConfirm())
-        {
-            nextButton.setText("Confirm");
-            nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
-
-            Confirmable confirmerController = (Confirmable) controller;
-            nextButton.setOnAction(event -> confirmerController.confirm());
-        }
-        else
-        {
-            nextButton.setText("Next");
-            nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.NORMAL, nextButton.getFont().getSize()));
-            nextButton.setOnAction(event -> nextPage());
-        }
-    }
-
-    public Button getNextButton()
-    {
-        return nextButton;
-    }
-
-    public Button getPrevButton()
-    {
-        return prevButton;
-    }
-
-    public void setNextButtonDisable(boolean b)
-    {
-        nextButton.setDisable(b);
-    }
-
-    public void updateNextButtonLabel(String labelText)
-    {
-        nextButton.setText(labelText);
     }
 
     public Page<?> getCurrentPage()

@@ -32,11 +32,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.javafx.controllers.paged.Confirmable;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
@@ -56,7 +53,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController extends PageControllerBase<Page<EyedropperController>> implements Initializable, Confirmable
+public class EyedropperController extends PageControllerBase<Page<EyedropperController>> implements Initializable
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
@@ -840,6 +837,9 @@ public class EyedropperController extends PageControllerBase<Page<EyedropperCont
         finalSelectRectangles.add(finalSelectRect6);
 
         updateApplyButton();
+
+        getCanAdvanceObservable().set(true);
+        getCanConfirmObservable().set(true);
     }
 
     @Override
@@ -857,36 +857,18 @@ public class EyedropperController extends PageControllerBase<Page<EyedropperCont
     }
 
     @Override
-    public void finish()
-    {
-    }
-
-    @Override
-    public boolean canConfirm()
-    {
-        return true;
-    }
-
-    @Override
-    public void confirm()
+    public boolean confirm()
     {
         applyButtonPressed();
 
         // Suppress warning about unsaved changes since the changes were just applied automatically.
         confirmExit = true;
 
-        Window window = outerVbox.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-    }
-
-    @Override
-    public boolean isNextButtonValid()
-    {
         return true;
     }
 
     @Override
-    public boolean closeButtonPressed()
+    public boolean close()
     {
         // Suppress warning about unsaved changes since the changes were just applied automatically.
         if (confirmExit)

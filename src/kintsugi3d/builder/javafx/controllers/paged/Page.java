@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.paged;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXMLLoader;
 
 public interface Page<ControllerType extends PageController<?>>
@@ -13,6 +14,8 @@ public interface Page<ControllerType extends PageController<?>>
     String getFXMLFilePath();
 
     Page<?> getPrevPage();
+
+    ObjectProperty<? extends Page<?>> getNextPageProperty();
 
     Page<?> getNextPage();
 

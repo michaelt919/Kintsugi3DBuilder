@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
@@ -51,23 +50,22 @@ public class MasksImportController
     public void init()
     {
         masksDirectoryChooser = new DirectoryChooser();
+
         toggleGroup = new ToggleGroup();
         toggleGroup.getToggles().add(useProjectMasksButton);
         toggleGroup.getToggles().add(customMasksDirButton);
         toggleGroup.getToggles().add(noMasksButton);
 
-        useProjectMasksButton.setOnAction(e -> getPageFrameController().updatePrevAndNextButtons());
-        customMasksDirButton.setOnAction(e ->
-        {
-            chooseMasksDir(e);
-            getPageFrameController().updatePrevAndNextButtons();
-        });
-        noMasksButton.setOnAction(e -> getPageFrameController().updatePrevAndNextButtons());
+        this.getCanAdvanceObservable().bind(toggleGroup.selectedToggleProperty().isNotNull());
+
+        customMasksDirButton.setOnAction(this::chooseMasksDir);
 
 
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
              SimpleDataPassthroughPage<InputSource, ViewSelectController>::new));
+
+        getCanConfirmObservable().set(true);
     }
 
     @Override
@@ -78,13 +76,7 @@ public class MasksImportController
     }
 
     @Override
-    public boolean isNextButtonValid()
-    {
-        return toggleGroup.getToggles().stream().anyMatch(Toggle::isSelected);
-    }
-
-    @Override
-    public void finish()
+    public boolean advance()
     {
         if (customMasksDirButton.isSelected())
         {
@@ -95,6 +87,15 @@ public class MasksImportController
             source.setMasksDirectory(null);
         }
         // Otherwise, project should already have this masks directory initialized from earlier page
+
+        return true;
+    }
+
+    @Override
+    public boolean confirm()
+    {
+        source.loadProject();
+        return true;
     }
 
     @FXML

@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.paged;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
 
 abstract class PageBase<
@@ -25,7 +27,13 @@ abstract class PageBase<
 
     private final FXMLLoader loader;
 
-    private NextPageType next;
+    private final ObjectProperty<NextPageType> nextPageProperty = new SimpleObjectProperty<>(null);
+
+    @Override
+    public ObjectProperty<NextPageType> getNextPageProperty()
+    {
+        return nextPageProperty;
+    }
 
     protected PageBase(String fxmlFile, FXMLLoader loader)
     {
@@ -61,18 +69,18 @@ abstract class PageBase<
     @Override
     public final NextPageType getNextPage()
     {
-        return next;
+        return getNextPageProperty().get();
     }
 
     @Override
     public final boolean hasNextPage()
     {
-        return next != null;
+        return getNextPageProperty().isNotNull().get();
     }
 
     public void setNextPage(NextPageType page)
     {
-        this.next = page;
+        getNextPageProperty().set(page);
     }
 
     @Override

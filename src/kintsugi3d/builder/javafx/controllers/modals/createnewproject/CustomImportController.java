@@ -71,6 +71,7 @@ public class CustomImportController
         return root;
     }
 
+    @Override
     public void init()
     {
         File recentFile = RecentProjects.getMostRecentDirectory();
@@ -89,6 +90,8 @@ public class CustomImportController
         this.getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
             SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
+
+        getCanConfirmObservable().set(true);
     }
 
     @Override
@@ -113,12 +116,6 @@ public class CustomImportController
         }
     }
 
-    @Override
-    public boolean isNextButtonValid()
-    {
-        return areAllFilesLoaded();
-    }
-
     @FXML
     private void camFileSelect()
     {
@@ -132,7 +129,10 @@ public class CustomImportController
             loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
 
-        getPageFrameController().updatePrevAndNextButtons();
+        if (areAllFilesLoaded())
+        {
+            getCanAdvanceObservable().set(true);
+        }
     }
 
 
@@ -150,7 +150,10 @@ public class CustomImportController
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
 
-        getPageFrameController().updatePrevAndNextButtons();
+        if (areAllFilesLoaded())
+        {
+            getCanAdvanceObservable().set(true);
+        }
     }
 
     @FXML
@@ -167,7 +170,10 @@ public class CustomImportController
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
 
-        getPageFrameController().updatePrevAndNextButtons();
+        if (areAllFilesLoaded())
+        {
+            getCanAdvanceObservable().set(true);
+        }
     }
 
     private boolean areAllFilesLoaded()
@@ -202,7 +208,7 @@ public class CustomImportController
     }
 
     @Override
-    public void finish()
+    public boolean advance()
     {
         if (shouldHotSwap())
         {
@@ -236,6 +242,15 @@ public class CustomImportController
                 log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
             }
         }
+
+        return true;
+    }
+
+    @Override
+    public boolean confirm()
+    {
+        source.loadProject();
+        return true;
     }
 
     @Override

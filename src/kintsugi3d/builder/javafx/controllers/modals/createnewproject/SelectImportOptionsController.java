@@ -28,11 +28,10 @@ import java.util.function.BiFunction;
 public class SelectImportOptionsController
     extends PageControllerBase<DataSourcePage<InputSource, SelectImportOptionsController>>
 {
-
     @FXML private ToggleButton metashapeImportButton;
     @FXML private ToggleButton looseFilesImportButton;
     @FXML private ToggleButton realityCaptureImportButton;
-    ToggleGroup buttons = new ToggleGroup();
+    private final ToggleGroup buttons = new ToggleGroup();
 
     @FXML private Pane rootPane;
 
@@ -48,6 +47,8 @@ public class SelectImportOptionsController
         buttons.getToggles().add(metashapeImportButton);
         buttons.getToggles().add(looseFilesImportButton);
         buttons.getToggles().add(realityCaptureImportButton);
+
+        this.getCanAdvanceObservable().bind(buttons.selectedToggleProperty().isNotNull());
 
         //add dummy input sources so we can add info to them later
         metashapeImportButton.setOnAction(e -> handleButtonSelect(metashapeImportButton,
@@ -72,8 +73,9 @@ public class SelectImportOptionsController
     }
 
     @Override
-    public void finish()
+    public boolean confirm()
     {
+        return false;
     }
 
     public void handleButtonSelect(ToggleButton button,
@@ -83,13 +85,11 @@ public class SelectImportOptionsController
         if (button.isSelected())
         {
             getPage().setNextPage(getPageFrameController().createPage(path, pageConstructor));
-            getPageFrameController().updatePrevAndNextButtons();
             this.getPage().setData(source);
         }
         else
         {
             getPage().setNextPage(null);
-            getPageFrameController().updatePrevAndNextButtons();
         }
     }
 
@@ -99,6 +99,6 @@ public class SelectImportOptionsController
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/CustomImport.fxml",
             SimpleDataPassthroughPage<InputSource, CustomImportController>::new));
-        getPageFrameController().nextPage();
+        getPageFrameController().advancePage();
     }
 }

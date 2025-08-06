@@ -1,5 +1,7 @@
 package kintsugi3d.builder.javafx.controllers.paged;
 
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
 import javafx.scene.layout.Region;
 
 public interface PageController<PageType extends Page<?>>
@@ -23,13 +25,39 @@ public interface PageController<PageType extends Page<?>>
 
     void refresh();
 
-    void finish();
+    boolean advance();
 
-    boolean isNextButtonValid();
+    boolean close();
+
+    BooleanExpression getCanAdvanceObservable();
+
+    default boolean canAdvance()
+    {
+        return getCanAdvanceObservable().get();
+    }
+
+    StringExpression getAdvanceLabelOverrideObservable();
+
+    default String getAdvanceLabelOverride()
+    {
+        return getAdvanceLabelOverrideObservable().get();
+    }
+
+    BooleanExpression getCanConfirmObservable();
+
+    default boolean canConfirm()
+    {
+        return getCanConfirmObservable().get();
+    }
+
+    boolean isConfirmed();
+
+    default boolean confirm()
+    {
+        return true;
+    }
+
+    Runnable getConfirmCallback();
 
     void setConfirmCallback(Runnable callback);
-
-    boolean nextButtonPressed();
-
-    boolean closeButtonPressed();
 }

@@ -21,15 +21,12 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.*;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +40,7 @@ import java.util.Objects;
  */
 public class ViewSelectController
     extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, ViewSelectController>>
-    implements Confirmable, ImageThreadable
+    implements ImageThreadable
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
@@ -84,6 +81,9 @@ public class ViewSelectController
             .addListener((a, b, c) -> selectImageInTreeView());
         this.imgCache = new HashMap<>();
         hintTextLabel.setText(getHintText());
+
+        getCanAdvanceObservable().set(true);
+        getCanConfirmObservable().set(true);
     }
 
     protected String getHintText()
@@ -119,11 +119,6 @@ public class ViewSelectController
         }
 
         orientationControlsVBox.setVisible(showFixOrientation());
-    }
-
-    @Override
-    public void finish()
-    {
     }
 
     @Override
@@ -169,7 +164,7 @@ public class ViewSelectController
                 if (!(source instanceof CurrentProjectInputSource))
                 {
                     // Set confirm button text
-                    getPageFrameController().updateNextButtonLabel("Skip");
+                    getAdvanceLabelOverrideObservable().set("Skip");
                 }
 
                 imgViewText.setText("Keep model orientation as imported.");
@@ -184,7 +179,7 @@ public class ViewSelectController
                 orientationControlsVBox.setVisible(showFixOrientation());
 
                 // Set confirm button text
-                getPageFrameController().updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
+                getAdvanceLabelOverrideObservable().set(null);
             }
 
             String imageName = selectedItem.getValue();
@@ -231,30 +226,16 @@ public class ViewSelectController
     }
 
     @Override
-    public boolean canConfirm()
+    public boolean advance()
     {
+        source.setPrimaryView(getSelectedViewName(), primaryImgView.getRotate());
         return true;
     }
 
     @Override
-    public void confirm()
+    public boolean confirm()
     {
-        if (confirmCallback != null)
-        {
-            confirmCallback.run();
-        }
-
-        source.loadProject(getSelectedViewName(), primaryImgView.getRotate());
-
-        WelcomeWindowController.getInstance().hide();
-
-        Window window = hostAnchorPane.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-    }
-
-    @Override
-    public boolean isNextButtonValid()
-    {
+        source.loadProject();
         return true;
     }
 
