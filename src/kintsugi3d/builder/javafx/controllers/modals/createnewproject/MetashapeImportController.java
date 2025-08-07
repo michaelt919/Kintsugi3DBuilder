@@ -77,7 +77,7 @@ public class MetashapeImportController extends DataTransformerPageControllerBase
 
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
-            SimpleDataReceiverPage<InputSource>::new));
+            SimpleDataReceiverPage<InputSource, MasksImportController>::new));
 
         setCanConfirm(true);
     }

@@ -7,8 +7,8 @@ import javafx.fxml.FXMLLoader;
  * @param <InType>
  * @param <OutType>
  */
-class DataSupplierPageBase<InType, OutType>
-    extends PageBase<InType, OutType, DataSupplierPageController<? super InType, OutType>>
+class DataSupplierPageBase<InType, OutType, ControllerType extends DataSupplierPageController<? super InType, OutType>>
+    extends PageBase<InType, OutType, ControllerType>
     implements DataSupplierPage<InType, OutType>
 {
     private OutType data;

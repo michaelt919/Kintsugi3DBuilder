@@ -89,7 +89,7 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
 
         this.getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
-            SimpleDataReceiverPage<InputSource>::new));
+            SimpleDataReceiverPage<InputSource, MasksImportController>::new));
 
         setCanConfirm(true);
     }

@@ -21,6 +21,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.DataSupplierPageController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataTransformerPage;
 
 public class SelectImportOptionsController extends DataSourcePageControllerBase<InputSource>
@@ -78,10 +79,11 @@ public class SelectImportOptionsController extends DataSourcePageControllerBase<
         }
     }
 
-    private void setupInputSource(String nextPageFXML, InputSource inputSource)
+    private <ControllerType extends DataSupplierPageController<? super InputSource, InputSource>>
+    void setupInputSource(String nextPageFXML, InputSource inputSource)
     {
         var page = getPageFrameController().createPage(nextPageFXML,
-            SimpleDataTransformerPage<InputSource, InputSource>::new);
+            SimpleDataTransformerPage<InputSource, InputSource, ControllerType>::new);
         page.setOutData(inputSource);
         getPage().setNextPage(page);
     }

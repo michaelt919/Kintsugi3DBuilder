@@ -26,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
@@ -203,7 +204,7 @@ public class SettingsObjectSceneController implements Initializable
 
             var viewSelectPage = frameController.createPage(
                 "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-                SimpleDataReceiverPage<InputSource>::new);
+                SimpleDataReceiverPage<InputSource, OrientationViewSelectController>::new);
 
             frameController.setCurrentPage(viewSelectPage);
             viewSelectPage.receiveData(new CurrentProjectInputSource());

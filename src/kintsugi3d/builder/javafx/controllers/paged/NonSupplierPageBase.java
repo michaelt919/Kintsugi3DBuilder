@@ -2,7 +2,8 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-abstract class NonSupplierPageBase<T> extends PageBase<T, T, NonSupplierPageController<T>>
+abstract class NonSupplierPageBase<T, ControllerType extends NonSupplierPageController<T>>
+    extends PageBase<T, T, ControllerType>
 {
     protected NonSupplierPageBase(String fxmlFile, FXMLLoader loader)
     {

@@ -2,7 +2,8 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public final class SimpleNonDataPage extends NonSupplierPageBase<Object>
+public final class SimpleNonDataPage<ControllerType extends NonSupplierPageController<Object>>
+    extends NonSupplierPageBase<Object, ControllerType>
 {
     public SimpleNonDataPage(String fxmlFile, FXMLLoader loader)
     {

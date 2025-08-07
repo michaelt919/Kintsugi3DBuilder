@@ -6,7 +6,8 @@ import javafx.fxml.FXMLLoader;
  * Discards any data received and supports storing data to share with the 
  * @param <T>
  */
-public final class SimpleDataSourcePage<T> extends DataSupplierPageBase<Object, T>
+public final class SimpleDataSourcePage<T, ControllerType extends DataSupplierPageController<Object, T>>
+    extends DataSupplierPageBase<Object, T, ControllerType>
 {
     public SimpleDataSourcePage(String fxmlFile, FXMLLoader loader)
     {

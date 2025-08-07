@@ -1079,20 +1079,20 @@ public class MenubarController
 
                     return viewLoader;
                 },
-                SimpleDataReceiverPage<InputSource>::new);
+                SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new);
 
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();
 
             var imageSelectorPage = frameController.createPage(
                 "/fxml/modals/SelectToneCalibrationImage.fxml",
-                SimpleDataReceiverPage<InputSource>::new);
+                SimpleNonDataPage<SelectToneCalibrationImageController>::new);
 
             viewPage.setNextPage(imageSelectorPage);
 
             var eyedropPage = frameController.createPage(
                 "/fxml/modals/EyedropperColorChecker.fxml",
-                SimpleNonDataPage::new);
+                SimpleNonDataPage<EyedropperController>::new);
 
             imageSelectorPage.setNextPage(eyedropPage);
 

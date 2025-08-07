@@ -64,7 +64,7 @@ public class MasksImportController
 
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-            SimpleDataReceiverPage<InputSource>::new));
+            SimpleDataReceiverPage<InputSource, OrientationViewSelectController>::new));
 
         setCanConfirm(true);
     }

@@ -21,9 +21,12 @@ import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.modals.AboutController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.HotSwapController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.SelectImportOptionsController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataTransformerPage;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.util.PageWindow;
@@ -232,7 +235,7 @@ public final class ProjectIO
 
         loaderWindow.open(parentWindow,"Load Files",
             "/fxml/modals/createnewproject/SelectImportOptions.fxml",
-            SimpleDataSourcePage<InputSource>::new,
+            SimpleDataSourcePage<InputSource, SelectImportOptionsController>::new,
             WelcomeWindowController.getInstance()::hide,
             () ->
             {
@@ -251,7 +254,7 @@ public final class ProjectIO
 
         loaderWindow.open(parentWindow,"Load Files",
             "/fxml/modals/createnewproject/HotSwap.fxml",
-            SimpleDataSourcePage<InputSource>::new,
+            SimpleDataTransformerPage<InputSource, InputSource, HotSwapController>::new,
             null, this::onLoadStart);
 
         // "force" the user to save their project (user can still cancel saving)
