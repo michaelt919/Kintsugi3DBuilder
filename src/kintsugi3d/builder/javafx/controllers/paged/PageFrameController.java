@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -22,7 +23,6 @@ import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -40,7 +40,7 @@ import java.util.function.Function;
 public class PageFrameController
 {
     private static final Logger log = LoggerFactory.getLogger(PageFrameController.class);
-    @FXML private GridPane outerGridPane;
+    @FXML private Pane outerRoot;
 
     @FXML private Button prevButton;
     @FXML private Button nextButton;
@@ -53,14 +53,21 @@ public class PageFrameController
 
     public void init()
     {
+        Window window = outerRoot.getScene().getWindow();
+        Platform.runLater(window::requestFocus);
+        window.setOnCloseRequest(this::onCloseRequest);
+
+        // Force the window back to the correct size in case of race conditions with the OS (esp. on Linux)
+        ChangeListener<? super Number> forceSize =
+            (obs, oldValue, newValue) ->
+                Platform.runLater(outerRoot.getScene().getWindow()::sizeToScene);
+        window.widthProperty().addListener(forceSize);
+        window.heightProperty().addListener(forceSize);
+
         String fileName = currentPage.getFXMLFilePath();
         initControllerAndUpdatePanel(fileName);
 
         setButtonShortcuts(currentPage.getController());
-        Platform.runLater(() -> outerGridPane.getScene().getWindow().requestFocus());
-
-        outerGridPane.getScene().getWindow().setOnCloseRequest(this::onCloseRequest);
-
         prevButton.setOnAction(e -> prevPage());
         nextButton.setOnAction(e -> advancePage());
     }
@@ -216,8 +223,9 @@ public class PageFrameController
             hostPane.getChildren().setAll(newContent);
         }
 
-        outerGridPane.getScene().getWindow().sizeToScene();
         currentPage.getController().refresh();
+
+        outerRoot.getScene().getWindow().sizeToScene();
     }
 
     public Page<?,?> getCurrentPage()
