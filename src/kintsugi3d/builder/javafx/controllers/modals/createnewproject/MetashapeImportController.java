@@ -28,7 +28,8 @@ import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.*;
+import kintsugi3d.builder.javafx.controllers.paged.DataTransformerPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +38,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-public class MetashapeImportController
-    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, MetashapeImportController>>
+public class MetashapeImportController extends DataTransformerPageControllerBase<InputSource, InputSource>
 {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
 
@@ -77,7 +77,7 @@ public class MetashapeImportController
 
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
-            SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
+            SimpleDataReceiverPage<InputSource>::new));
 
         setCanConfirm(true);
     }
@@ -124,7 +124,7 @@ public class MetashapeImportController
             //Note: if we send the same model with different info (new mask directory, etc.) the controller will not notice the difference because
             //it will still be looking at the same memory location
             //this isn't a problem currently but might be later
-            getPage().setData(
+            getPage().setOutData(
                 new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
         }
         else
@@ -260,7 +260,8 @@ public class MetashapeImportController
                 getPageFrameController().prevPage();//go to SelectImportOptions.fxml
                 SelectImportOptionsController controller = (SelectImportOptionsController)
                     getPageFrameController().getCurrentPage().getController();
-                controller.looseFilesSelect();
+                controller.looseFiles();
+                getPageFrameController().advancePage();
                 alertShown = false;
             });
 

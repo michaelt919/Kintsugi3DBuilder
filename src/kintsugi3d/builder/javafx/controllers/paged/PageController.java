@@ -4,14 +4,11 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.scene.layout.Region;
 
-public interface PageController<PageType extends Page<?>>
+public interface PageController<T>
 {
-    PageType getPage();
-
-    void setPage(PageType page);
+    Page<?, ?> getPage();
 
     PageFrameController getPageFrameController();
-
     void setPageFrameController(PageFrameController scroller);
 
     /**
@@ -21,43 +18,55 @@ public interface PageController<PageType extends Page<?>>
      */
     Region getRootNode();
 
-    void init();
-
-    void refresh();
-
-    boolean advance();
-
-    boolean close();
-
     BooleanExpression getCanAdvanceObservable();
-
-    default boolean canAdvance()
-    {
-        return getCanAdvanceObservable().get();
-    }
+    boolean canAdvance();
 
     StringExpression getAdvanceLabelOverrideObservable();
-
-    default String getAdvanceLabelOverride()
-    {
-        return getAdvanceLabelOverrideObservable().get();
-    }
+    String getAdvanceLabelOverride();
 
     BooleanExpression getCanConfirmObservable();
+    boolean canConfirm();
 
-    default boolean canConfirm()
-    {
-        return getCanConfirmObservable().get();
-    }
+    Runnable getConfirmCallback();
+    void setConfirmCallback(Runnable callback);
 
     boolean isConfirmed();
 
+    /**
+     * Called when the page is created.
+     */
+    void init();
+
+    /**
+     * Called when the previous page has finished if the previous page has data to share with this page
+     * and this page is set up to receive data to forward to the controller.
+     * @param data Data received from the previous page.
+     */
+    void receiveData(T data);
+
+    /**
+     * Called when the page is displayed, either through forward or backwards navigation.
+     */
+    void refresh();
+
+    /**
+     * Called when advancing from this page.
+     * @return false if navigation was cancelled by the controller; true otherwise.
+     */
+    boolean advance();
+
+    /**
+     * Called after advancing if there are no additional pages and the paged experience is thus complete.
+     * @return false if confirmation was cancelled by the controller; true otherwise.
+     */
     default boolean confirm()
     {
         return true;
     }
 
-    Runnable getConfirmCallback();
-
-    void setConfirmCallback(Runnable callback);
+    /**
+     * Called when the window should close.
+     * @return false if closing was cancelled by the controller; true otherwise.
+     */
+    boolean close();
 }

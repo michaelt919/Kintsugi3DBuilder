@@ -181,7 +181,7 @@ public final class ImageFinder
 
     public File findImageFile(File requestedFile) throws FileNotFoundException
     {
-        return findImageFile(requestedFile, null);
+        return findImageFile(requestedFile, (String[]) null);
     }
 
     public File tryFindImageFile(File requestedFile, String... suffixes)
@@ -198,6 +198,6 @@ public final class ImageFinder
 
     public File tryFindImageFile(File requestedFile)
     {
-        return tryFindImageFile(requestedFile, null);
+        return tryFindImageFile(requestedFile, (String[]) null);
     }
 }

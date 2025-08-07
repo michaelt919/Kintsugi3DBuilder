@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
@@ -21,12 +20,10 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.*;
+import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataTransformerPage;
 
-import java.util.function.BiFunction;
-
-public class SelectImportOptionsController
-    extends PageControllerBase<DataSourcePage<InputSource, SelectImportOptionsController>>
+public class SelectImportOptionsController extends DataSourcePageControllerBase<InputSource>
 {
     @FXML private ToggleButton metashapeImportButton;
     @FXML private ToggleButton looseFilesImportButton;
@@ -51,20 +48,11 @@ public class SelectImportOptionsController
         this.getCanAdvanceObservable().bind(buttons.selectedToggleProperty().isNotNull());
 
         //add dummy input sources so we can add info to them later
-        metashapeImportButton.setOnAction(e -> handleButtonSelect(metashapeImportButton,
-            "/fxml/modals/createnewproject/MetashapeImport.fxml",
-            SimpleDataPassthroughPage<InputSource, MetashapeImportController>::new,
-            new MetashapeProjectInputSource()));
+        metashapeImportButton.setOnAction(e -> onButtonAction(metashapeImportButton, this::metashape));
 
-        looseFilesImportButton.setOnAction(e -> handleButtonSelect(looseFilesImportButton,
-            "/fxml/modals/createnewproject/CustomImport.fxml",
-            SimpleDataPassthroughPage<InputSource, CustomImportController>::new,
-            new LooseFilesInputSource()));
+        looseFilesImportButton.setOnAction(e -> onButtonAction(looseFilesImportButton, this::looseFiles));
 
-        realityCaptureImportButton.setOnAction(e -> handleButtonSelect(realityCaptureImportButton,
-            "/fxml/modals/createnewproject/CustomImport.fxml",
-            SimpleDataPassthroughPage<InputSource, CustomImportController>::new,
-            new RealityCaptureInputSource()));
+        realityCaptureImportButton.setOnAction(e -> onButtonAction(realityCaptureImportButton, this::realityCapture));
     }
 
     @Override
@@ -78,14 +66,11 @@ public class SelectImportOptionsController
         return false;
     }
 
-    public void handleButtonSelect(ToggleButton button,
-        String path,  BiFunction<String, FXMLLoader, ? extends DataReceiverPage<InputSource, ?>> pageConstructor,
-        InputSource source)
+    public void onButtonAction(ToggleButton button, Runnable buttonAction)
     {
         if (button.isSelected())
         {
-            getPage().setNextPage(getPageFrameController().createPage(path, pageConstructor));
-            this.getPage().setData(source);
+            buttonAction.run();
         }
         else
         {
@@ -93,12 +78,28 @@ public class SelectImportOptionsController
         }
     }
 
-    // Have this so we can navigate to loose files selection from inside an error message somewhere else
-    public void looseFilesSelect()
+    private void setupInputSource(String nextPageFXML, InputSource inputSource)
     {
-        getPage().setNextPage(getPageFrameController().createPage(
-            "/fxml/modals/createnewproject/CustomImport.fxml",
-            SimpleDataPassthroughPage<InputSource, CustomImportController>::new));
-        getPageFrameController().advancePage();
+        var page = getPageFrameController().createPage(nextPageFXML,
+            SimpleDataTransformerPage<InputSource, InputSource>::new);
+        page.setOutData(inputSource);
+        getPage().setNextPage(page);
+    }
+
+    // Have this so we can navigate to loose files selection from inside an error message somewhere else
+    public void looseFiles()
+    {
+        setupInputSource("/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource());
+    }
+
+    // Have this so we can navigate to loose files selection from inside an error message somewhere else
+    public void realityCapture()
+    {
+        setupInputSource("/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource());
+    }
+
+    public void metashape()
+    {
+        setupInputSource("/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource());
     }
 }

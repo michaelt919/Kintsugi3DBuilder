@@ -16,8 +16,7 @@ import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
 /**
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
  */
-public class OrientationViewSelectController
-    extends ViewSelectController
+public class OrientationViewSelectController extends ViewSelectController
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?

@@ -2,31 +2,25 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public class SimpleDataReceiverPage<T, ControllerType extends DataReceiverPageController<T, DataReceiverPage<T, ControllerType>>>
-    extends NonEntryPageBase<DataSourcePage<T, ?>, NonDataReceiverPage<?>, ControllerType>
-    implements NonDataSourcePage<ControllerType>, DataReceiverPage<T, ControllerType>
+public final class SimpleDataReceiverPage<T> extends NonSupplierPageBase<T>
 {
+    private T data;
+
     public SimpleDataReceiverPage(String fxmlFile, FXMLLoader loader)
     {
         super(fxmlFile, loader);
     }
 
     @Override
-    public void initController()
-    {
-        PageBase.initController(this);
-    }
-
-    @Override
     public void receiveData(T data)
     {
-        this.getController().receiveData(data);
+        super.receiveData(data);
+        this.data = data;
     }
 
     @Override
-    public void setNextPage(NonDataReceiverPage<?> page)
+    public T getOutData()
     {
-        super.setNextPage(page);
-        page.setPrevPage(this);
+        return data;
     }
 }

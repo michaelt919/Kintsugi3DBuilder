@@ -26,12 +26,10 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -203,9 +201,9 @@ public class SettingsObjectSceneController implements Initializable
                 return pageLoader;
             });
 
-            DataReceiverPage<InputSource,?> viewSelectPage = frameController.createPage(
+            var viewSelectPage = frameController.createPage(
                 "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-                SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new);
+                SimpleDataReceiverPage<InputSource>::new);
 
             frameController.setCurrentPage(viewSelectPage);
             viewSelectPage.receiveData(new CurrentProjectInputSource());

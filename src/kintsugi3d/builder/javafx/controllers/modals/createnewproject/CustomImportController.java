@@ -24,15 +24,15 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.*;
+import kintsugi3d.builder.javafx.controllers.paged.DataTransformerPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
-public class CustomImportController
-    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, CustomImportController>>
+public class CustomImportController extends DataTransformerPageControllerBase<InputSource, InputSource>
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
 
@@ -89,7 +89,7 @@ public class CustomImportController
 
         this.getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
-            SimpleDataPassthroughPage<InputSource, MasksImportController>::new));
+            SimpleDataReceiverPage<InputSource>::new));
 
         setCanConfirm(true);
     }
@@ -212,7 +212,7 @@ public class CustomImportController
     {
         if (shouldHotSwap())
         {
-            this.getPage().setData(
+            this.getPage().setOutData(
                 new LooseFilesInputSource().setCameraFile(cameraFile)
                     .setMeshFile(meshFile)
                     .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected())
@@ -223,7 +223,7 @@ public class CustomImportController
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
             if (source instanceof RealityCaptureInputSource)
             {
-                this.getPage().setData(
+                this.getPage().setOutData(
                     new RealityCaptureInputSource()
                         .setCameraFile(cameraFile)
                         .setMeshFile(meshFile)
@@ -231,7 +231,7 @@ public class CustomImportController
             }
             else if (source instanceof LooseFilesInputSource)
             {
-                this.getPage().setData(
+                this.getPage().setOutData(
                     new LooseFilesInputSource()
                         .setCameraFile(cameraFile)
                         .setMeshFile(meshFile)

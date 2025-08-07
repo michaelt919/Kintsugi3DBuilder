@@ -34,8 +34,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.javafx.controllers.paged.Page;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.SRGB;
@@ -53,7 +52,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController extends PageControllerBase<Page<EyedropperController>> implements Initializable
+public class EyedropperController extends NonDataPageControllerBase implements Initializable
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 

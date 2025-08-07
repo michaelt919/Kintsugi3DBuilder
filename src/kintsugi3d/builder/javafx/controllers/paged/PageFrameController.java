@@ -47,9 +47,9 @@ public class PageFrameController
 
     @FXML private Pane hostPane;
 
-    private final Map<String, Page<?>> pageCache = new HashMap<>(8);
+    private final Map<String, Page<?,?>> pageCache = new HashMap<>(8);
     private Function<FXMLLoader, FXMLLoader> pageFactory;
-    private Page<?> currentPage;
+    private Page<?,?> currentPage;
 
     public void init()
     {
@@ -100,7 +100,7 @@ public class PageFrameController
         this.pageFactory = pageFactory;
     }
 
-    public <PageType extends Page<?>> PageType createPage(String fxmlPath,
+    public <PageType extends Page<InType,OutType>, InType, OutType> PageType createPage(String fxmlPath,
         Function<FXMLLoader, FXMLLoader> customPageFactory, BiFunction<String, FXMLLoader, PageType> pageConstructor)
     {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -109,12 +109,12 @@ public class PageFrameController
         PageController<?> controller = page.getController();
         controller.setPageFrameController(this);
         nextButton.disableProperty().bind(
-            page.getNextPageProperty().isNull()
+            page.getNextPageObservable().isNull()
                 .and(controller.getCanConfirmObservable().not())
                 .or(controller.getCanAdvanceObservable().not()));
 
         BooleanBinding advanceLabelOverrideNotNull = controller.getAdvanceLabelOverrideObservable().isNotNull();
-        BooleanBinding shouldConfirm = page.getNextPageProperty().isNotNull().and(controller.getCanConfirmObservable());
+        BooleanBinding shouldConfirm = page.getNextPageObservable().isNotNull().and(controller.getCanConfirmObservable());
 
         nextButton.textProperty().bind(new ObjectBinding<>()
         {
@@ -148,12 +148,13 @@ public class PageFrameController
         return page;
     }
 
-    public <PageType extends Page<?>> PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    public <PageType extends Page<InType, OutType>, InType, OutType> PageType createPage(
+        String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
     {
         return createPage(fxmlPath, pageFactory, pageConstructor);
     }
 
-    public Page<?> getPage(String fxmlPath)
+    public Page<?,?> getPage(String fxmlPath)
     {
         return pageCache.get(fxmlPath);
     }
@@ -207,7 +208,7 @@ public class PageFrameController
 
     private void initControllerAndUpdatePanel(String fileName)
     {
-        Page<?> newPage = getPage(fileName);
+        Page<?,?> newPage = getPage(fileName);
         Parent newContent = newPage.getLoader().getRoot();
 
         if (newContent != null)
@@ -219,12 +220,12 @@ public class PageFrameController
         currentPage.getController().refresh();
     }
 
-    public Page<?> getCurrentPage()
+    public Page<?,?> getCurrentPage()
     {
         return currentPage;
     }
 
-    public void setCurrentPage(Page<?> page)
+    public void setCurrentPage(Page<?,?> page)
     {
         this.currentPage = page;
     }

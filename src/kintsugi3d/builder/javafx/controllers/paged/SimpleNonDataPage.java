@@ -2,25 +2,30 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public class SimpleNonDataPage<ControllerType extends PageController<Page<ControllerType>>>
-    extends NonEntryPageBase<NonDataSourcePage<?>, NonDataReceiverPage<?>, ControllerType>
-    implements NonDataReceiverPage<ControllerType>, NonDataSourcePage<ControllerType>
+public final class SimpleNonDataPage extends NonSupplierPageBase<Object>
 {
     public SimpleNonDataPage(String fxmlFile, FXMLLoader loader)
     {
         super(fxmlFile, loader);
     }
 
+    /**
+     * Does nothing as the page does not receive data.
+     * @param data
+     */
     @Override
-    public void initController()
+    public void receiveData(Object data)
     {
-        PageBase.initController(this);
+        // Suppress as we don't expect the incoming data to be useful.
     }
 
+    /**
+     * Always returns null as the page does not supply data.
+     * @return null
+     */
     @Override
-    public void setNextPage(NonDataReceiverPage<?> page)
+    public Object getOutData()
     {
-        super.setNextPage(page);
-        page.setPrevPage(this);
+        return null;
     }
 }

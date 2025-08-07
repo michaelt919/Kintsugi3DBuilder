@@ -16,7 +16,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public abstract class PageControllerBase<PageType extends Page<?>> implements PageController<PageType>
+/**
+ * Internal base class that is extended for the public-facing classes
+ * @param <T>
+ * @param <PageType>
+ */
+abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements PageController<T>
 {
     private PageFrameController pageFrameController;
     private PageType page;
@@ -34,19 +39,18 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
     }
 
     @Override
-    public void setPageFrameController(PageFrameController scroller)
+    public final void setPageFrameController(PageFrameController frameController)
     {
-        this.pageFrameController = scroller;
+        this.pageFrameController = frameController;
     }
 
     @Override
-    public PageType getPage()
+    public final PageType getPage()
     {
         return this.page;
     }
 
-    @Override
-    public void setPage(PageType page)
+    public final void setPage(PageType page)
     {
         this.page = page;
     }
@@ -63,7 +67,7 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
         return canAdvanceProperty;
     }
 
-    protected void setCanAdvance(boolean canAdvance)
+    protected final void setCanAdvance(boolean canAdvance)
     {
         canAdvanceProperty.set(canAdvance);
     }
@@ -80,7 +84,7 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
         return getAdvanceLabelOverrideObservable().get();
     }
 
-    protected void setAdvanceLabelOverride(String advanceLabelOverride)
+    protected final void setAdvanceLabelOverride(String advanceLabelOverride)
     {
         advanceLabelOverrideProperty.set(advanceLabelOverride);
     };
@@ -97,7 +101,7 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
         return canConfirmProperty.get();
     }
 
-    protected void setCanConfirm(boolean canConfirm)
+    protected final void setCanConfirm(boolean canConfirm)
     {
         canConfirmProperty.set(canConfirm);
     }
@@ -115,24 +119,24 @@ public abstract class PageControllerBase<PageType extends Page<?>> implements Pa
     }
 
     @Override
-    public Runnable getConfirmCallback()
+    public final Runnable getConfirmCallback()
     {
         return confirmCallback;
     }
 
     @Override
-    public void setConfirmCallback(Runnable callback)
+    public final void setConfirmCallback(Runnable callback)
     {
         this.confirmCallback = callback;
     }
 
     @Override
-    public boolean isConfirmed()
+    public final boolean isConfirmed()
     {
         return isConfirmed;
     }
 
-    public void setConfirmed(boolean confirmed)
+    protected final void setConfirmed(boolean confirmed)
     {
         this.isConfirmed = confirmed;
     }

@@ -11,12 +11,11 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-
 <VBox fx:id="outerVbox" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.EyedropperController">
     <HBox spacing="32.0">
         <VBox alignment="TOP_CENTER" spacing="16.0">

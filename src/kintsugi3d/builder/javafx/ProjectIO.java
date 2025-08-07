@@ -21,11 +21,8 @@ import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.modals.AboutController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.CustomImportController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.SelectImportOptionsController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -56,9 +53,9 @@ public final class ProjectIO
     private File vsetFile;
     private boolean projectLoaded;
 
-    private Flag systemSettingsModalOpen = new Flag(false);
-    private Flag progressBarsModalOpen = new Flag(false);
-    private Flag aboutWindowOpen = new Flag(false);
+    private final Flag systemSettingsModalOpen = new Flag(false);
+    private final Flag progressBarsModalOpen = new Flag(false);
+    private final Flag aboutWindowOpen = new Flag(false);
 
     private final PageWindow loaderWindow = new PageWindow();
 
@@ -235,7 +232,7 @@ public final class ProjectIO
 
         loaderWindow.open(parentWindow,"Load Files",
             "/fxml/modals/createnewproject/SelectImportOptions.fxml",
-            SimpleDataSourcePage<InputSource, SelectImportOptionsController>::new,
+            SimpleDataSourcePage<InputSource>::new,
             WelcomeWindowController.getInstance()::hide,
             () ->
             {
@@ -254,7 +251,7 @@ public final class ProjectIO
 
         loaderWindow.open(parentWindow,"Load Files",
             "/fxml/modals/createnewproject/HotSwap.fxml",
-            SimpleDataPassthroughPage<InputSource, CustomImportController>::new,
+            SimpleDataSourcePage<InputSource>::new,
             null, this::onLoadStart);
 
         // "force" the user to save their project (user can still cancel saving)

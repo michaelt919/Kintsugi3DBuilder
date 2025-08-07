@@ -45,12 +45,10 @@ import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.modals.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataPassthroughPage;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
@@ -1063,7 +1061,7 @@ public class MenubarController
                 return loader;
             });
 
-            SimpleDataPassthroughPage<InputSource, ?> viewPage = frameController.createPage(
+            var viewPage = frameController.createPage(
                 "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
                 viewLoader ->
                 {
@@ -1081,20 +1079,20 @@ public class MenubarController
 
                     return viewLoader;
                 },
-                SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new);
+                SimpleDataReceiverPage<InputSource>::new);
 
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();
 
-            SimpleDataReceiverPage<InputSource, ?> imageSelectorPage = frameController.createPage(
+            var imageSelectorPage = frameController.createPage(
                 "/fxml/modals/SelectToneCalibrationImage.fxml",
-                SimpleDataReceiverPage<InputSource, SelectToneCalibrationImageController>::new);
+                SimpleDataReceiverPage<InputSource>::new);
 
             viewPage.setNextPage(imageSelectorPage);
 
-            SimpleNonDataPage<?> eyedropPage = frameController.createPage(
+            var eyedropPage = frameController.createPage(
                 "/fxml/modals/EyedropperColorChecker.fxml",
-                SimpleNonDataPage<EyedropperController>::new);
+                SimpleNonDataPage::new);
 
             imageSelectorPage.setNextPage(eyedropPage);
 

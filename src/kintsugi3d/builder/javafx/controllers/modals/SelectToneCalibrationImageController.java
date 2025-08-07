@@ -19,9 +19,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPage;
-import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Optional;
 
-public class SelectToneCalibrationImageController
-    extends DataReceiverPageControllerBase<InputSource, DataReceiverPage<InputSource, SelectToneCalibrationImageController>>
+public class SelectToneCalibrationImageController extends NonDataPageControllerBase
 {
     private static final Logger log = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
 
@@ -152,11 +149,5 @@ public class SelectToneCalibrationImageController
             selectedImageFile = temp;
             selectImageFileLabel.setText("Selected: " + temp.getName());
         }
-    }
-
-    @Override
-    public void receiveData(InputSource data)
-    {
-        // Satisfy that there is incoming data from the general purpose primary view selector; not actually used.
     }
 }

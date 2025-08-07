@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.util;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
-import kintsugi3d.builder.javafx.controllers.paged.PageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.PageController;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.util.Flag;
 import org.slf4j.Logger;
@@ -38,8 +38,9 @@ public class PageWindow
         return windowOpen.get();
     }
 
-    public void open(Window parentWindow, String title,
-        String firstPageFXMLPath, BiFunction<String, FXMLLoader, ? extends Page<?>> firstPageConstructor,
+    public <PageType extends Page<InType, OutType>, InType, OutType>
+    void open(Window parentWindow, String title,
+        String firstPageFXMLPath, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
         Runnable initCallback, Runnable confirmCallback)
     {
         if (windowOpen.get())
@@ -68,7 +69,7 @@ public class PageWindow
                 {
                     loader.load();
 
-                    PageControllerBase<?> controller = loader.getController();
+                    PageController<?> controller = loader.getController();
 
                     if (controller.canConfirm())
                     {
@@ -83,7 +84,7 @@ public class PageWindow
                 return loader;
             });
 
-            Page<?> firstPage = frameController.createPage(firstPageFXMLPath, firstPageConstructor);
+            Page<?,?> firstPage = frameController.createPage(firstPageFXMLPath, firstPageConstructor);
             frameController.setCurrentPage(firstPage);
             frameController.init();
 

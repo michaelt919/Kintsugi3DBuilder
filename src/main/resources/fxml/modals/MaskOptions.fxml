@@ -11,11 +11,10 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
+<?import javafx.scene.text.Text?>
 <VBox spacing="16.0" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController">
     <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Visibility/shadow testing">
     </CheckBox>

@@ -15,11 +15,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
 
-abstract class PageBase<
-        PrevPageType extends Page<?>,
-        NextPageType extends Page<?>,
-        ControllerType extends PageController<?>>
-    implements Page<ControllerType>
+abstract class PageBase<InType, OutType, ControllerType extends PageController<? super InType>>
+    implements Page<InType, OutType>
 {
     private final String fxmlFilePath;
 
@@ -27,13 +24,9 @@ abstract class PageBase<
 
     private final FXMLLoader loader;
 
-    private final ObjectProperty<NextPageType> nextPageProperty = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<Page<? super OutType, ?>> nextPageProperty = new SimpleObjectProperty<>(null);
 
-    @Override
-    public ObjectProperty<NextPageType> getNextPageProperty()
-    {
-        return nextPageProperty;
-    }
+    private Page<?, ? extends InType> prevPage = null;
 
     protected PageBase(String fxmlFile, FXMLLoader loader)
     {
@@ -42,14 +35,8 @@ abstract class PageBase<
         this.controller = loader.getController();
     }
 
-    static <PageType extends Page<ControllerType>, ControllerType extends PageController<PageType>> void initController(PageType page)
-    {
-        page.getController().setPage(page);
-        page.getController().init();
-    }
-
     @Override
-    public ControllerType getController()
+    public final ControllerType getController()
     {
         return controller;
     }
@@ -67,31 +54,64 @@ abstract class PageBase<
     }
 
     @Override
-    public final NextPageType getNextPage()
+    public final ObjectProperty<Page<? super OutType, ?>> getNextPageObservable()
     {
-        return getNextPageProperty().get();
+        return nextPageProperty;
+    }
+
+    @Override
+    public final Page<? super OutType, ?> getNextPage()
+    {
+        return nextPageProperty.get();
     }
 
     @Override
     public final boolean hasNextPage()
     {
-        return getNextPageProperty().isNotNull().get();
-    }
-
-    public void setNextPage(NextPageType page)
-    {
-        getNextPageProperty().set(page);
+        return nextPageProperty.isNotNull().get();
     }
 
     @Override
-    public PrevPageType getPrevPage()
+    public void setNextPage(Page<? super OutType, ?> page)
     {
-        return null;
+        nextPageProperty.set(page);
+
+        if (page != null)
+        {
+            page.setPrevPage(this);
+        }
     }
 
     @Override
-    public boolean hasPrevPage()
+    public final Page<?, ? extends InType> getPrevPage()
     {
-        return false;
+        return prevPage;
+    }
+
+    @Override
+    public final boolean hasPrevPage()
+    {
+        return prevPage != null;
+    }
+
+    @Override
+    public void setPrevPage(Page<?, ? extends InType> page)
+    {
+        this.prevPage = page;
+    }
+
+    @Override
+    public void receiveData(InType data)
+    {
+        this.controller.receiveData(data);
+    }
+
+    @Override
+    public final void submit()
+    {
+        if (this.hasNextPage())
+        {
+            this.getNextPage().receiveData(this.getOutData());
+        }
     }
 }

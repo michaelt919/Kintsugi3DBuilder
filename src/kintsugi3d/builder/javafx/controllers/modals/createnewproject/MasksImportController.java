@@ -21,12 +21,14 @@ import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.*;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.PageController;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 
 import java.io.File;
 
 public class MasksImportController
-    extends DataReceiverPageControllerBase<InputSource, DataPassthroughPage<InputSource, MasksImportController>>
+    extends DataReceiverPageControllerBase<InputSource> implements PageController<InputSource>
 {
     @FXML private Pane rootPane;
 
@@ -60,10 +62,9 @@ public class MasksImportController
 
         customMasksDirButton.setOnAction(this::chooseMasksDir);
 
-
         getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-             SimpleDataPassthroughPage<InputSource, OrientationViewSelectController>::new));
+            SimpleDataReceiverPage<InputSource>::new));
 
         setCanConfirm(true);
     }
