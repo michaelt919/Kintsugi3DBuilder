@@ -29,8 +29,8 @@ import kintsugi3d.builder.core.GraphicsRequestController;
 import kintsugi3d.builder.core.GraphicsRequestQueue;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,7 +176,7 @@ public class SpecularFitController implements GraphicsRequestController
                 MenubarController.getInstance().selectMaterialBasisShader();
             });
             
-            request.setIOErrorCallback(e -> ProjectIO.handleException("Error executing specular fit request:", e));
+            request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));
 
 //            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
 //            {

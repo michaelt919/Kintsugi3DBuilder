@@ -22,9 +22,9 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class MetashapeProjectInputSource extends InputSource{
         // Open the xml files that contains all the cameras' ids and file paths
         Document frame = parentChunk.getFrameXML();
         if (frame == null || frame.getDocumentElement() == null) {
-            ProjectIO.handleException("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
+            ExceptionHandling.error("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
             return;
         }
 

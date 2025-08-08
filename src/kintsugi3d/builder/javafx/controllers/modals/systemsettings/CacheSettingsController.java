@@ -20,7 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.JavaFXState;
-import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 
 import java.awt.*;
 import java.io.File;
@@ -66,7 +66,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
             Desktop.getDesktop().open(file);
         }
         catch(IOException ioe){
-            ProjectIO.handleException("Failed to open project directory.", ioe);
+            ExceptionHandling.error("Failed to open project directory.", ioe);
         }
     }
 

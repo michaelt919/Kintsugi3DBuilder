@@ -18,12 +18,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -33,9 +29,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.*;
@@ -43,59 +37,36 @@ import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.modals.*;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
+import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
+import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
-import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
+import kintsugi3d.builder.javafx.experience.ExperienceManager;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import static kintsugi3d.builder.javafx.ProjectIO.handleException;
 
 public class MenubarController
 {
-    private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
     private JavaFXState javaFXState;
-
-    //Window open flags
-    private final Flag advPhotoViewWindowOpen = new Flag(false);
-    private final Flag systemMemoryWindowOpen = new Flag(false);
-    private final Flag loadOptionsWindowOpen = new Flag(false);
-    private final Flag objectOrientationWindowOpen = new Flag(false);
-    private final Flag lightCalibrationWindowOpen = new Flag(false);
-    private final Flag maskOptionsWindowOpen = new Flag(false);
-    private final Flag colorCheckerWindowOpen = new Flag(false);
-    private final Flag unzipperOpen = new Flag(false);
-    private final Flag loggerWindowOpen = new Flag(false);
 
     //progress bar modal
     private ProgressBar localProgressBar;
@@ -135,7 +106,6 @@ public class MenubarController
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
-
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
@@ -165,6 +135,7 @@ public class MenubarController
     private final List<MenuItem> toggleableShaders = new ArrayList<>();
 
     @FXML private VBox cameraViewList;
+
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
@@ -188,6 +159,8 @@ public class MenubarController
     {
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+
+        ExperienceManager.getInstance().initialize(this.getWindow(), javaFXState);
 
         // remove camera view list from layout when invisible
         this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
@@ -360,7 +333,7 @@ public class MenubarController
                 overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
                 Platform.runLater(() -> overallProgressBar.setProgress(overallProgress));
 
-                log.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
+                LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
                 Platform.runLater(() -> overallTextLabel.setText(message));
 
@@ -399,7 +372,7 @@ public class MenubarController
                 this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
                 Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
 
-                log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
+                LOG.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
 
                 //remove stage/stageCount from txt if it wouldn't make sense for it to be there (ex. Stage 0/0)
                 //useful for simple exports like orbit animation
@@ -561,6 +534,11 @@ public class MenubarController
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
     }
 
+    public CameraViewListController getCameraViewListController()
+    {
+        return cameraViewListController;
+    }
+
     private List<RadioMenuItem> getRadioMenuItems(Menu menu)
     {
         List<RadioMenuItem> list = new ArrayList<>();
@@ -625,7 +603,7 @@ public class MenubarController
             }
             catch (IOException | NullPointerException e)
             {
-                log.error("Error attempting to load previous solution basis count:", e);
+                LOG.error("Error attempting to load previous solution basis count:", e);
             }
         }
 
@@ -682,7 +660,7 @@ public class MenubarController
                                 }
                                 catch (IllegalAccessException | InvocationTargetException | RuntimeException e)
                                 {
-                                    log.error("An error has occurred:", e);
+                                    LOG.error("An error has occurred:", e);
                                 }
                             });
                             exportMenu.getItems().add(newItem);
@@ -695,14 +673,14 @@ public class MenubarController
                     }
                     catch (ClassNotFoundException | NoSuchMethodException e)
                     {
-                        log.error("An error has occurred:", e);
+                        LOG.error("An error has occurred:", e);
                     }
                 }
             }
         }
         catch (IOException e)
         {
-            log.error("Failed to find export classes file:", e);
+            LOG.error("Failed to find export classes file:", e);
         }
         return foundExportClass;
     }
@@ -717,7 +695,7 @@ public class MenubarController
         }
         catch (IOException | RuntimeException e)
         {
-            log.error("Error opening glTF export window", e);
+            LOG.error("Error opening glTF export window", e);
         }
     }
 
@@ -743,7 +721,7 @@ public class MenubarController
 
             if (shaderData == null)
             {
-                handleException("Failed to parse shader data for rendering option.", new RuntimeException("shaderData is null!"));
+                ExceptionHandling.error("Failed to parse shader data for rendering option.", new RuntimeException("shaderData is null!"));
                 return;
             }
 
@@ -824,7 +802,7 @@ public class MenubarController
         }
         catch (Exception e)
         {
-            handleException("An error occurred handling request", e);
+            ExceptionHandling.error("An error occurred handling request", e);
         }
     }
 
@@ -845,366 +823,29 @@ public class MenubarController
         ProjectIO.getInstance().openAboutModal(window);
     }
 
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(this.window);
-
-        stage.setResizable(false);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
-    @FXML
-    private void shading_IBRSettings()
-    {
-        if (advPhotoViewWindowOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/modals/systemsettings/PhotoProjectionSettings.fxml");
-            advPhotoViewController.bind(javaFXState.getSettingsModel());
-        }
-        catch (Exception e)
-        {
-            handleException("An error occurred opening IBR settings", e);
-        }
-    }
-
-    //window helpers
-
-    private Stage makeStage(String title, Flag flag, int width, int height, FXMLLoader fxmlLoader) throws IOException
-    {
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-
-        if (width >= 0 && height >= 0)
-        {
-            stage.setScene(new Scene(root, width, height));
-        }
-        else
-        {
-            stage.setScene(new Scene(root));
-        }
-
-        stage.initOwner(this.window);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        return stage;
-    }
-
-    private FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        return new FXMLLoader(url);
-    }
-
-    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
-    {
-        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
-        return makeStage(title, flag, -1, -1, fxmlLoader);
-    }
-
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString, Consumer<Stage> stageCallback) throws IOException
-    {
-        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
-        Stage stage = makeStage(title, flag, width, height, fxmlLoader);
-
-        stage.setResizable(false);
-
-        if (stageCallback != null)
-        {
-            stageCallback.accept(stage);
-        }
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
     public void objectOrientation()
     {
-        if (!objectOrientationWindowOpen.get())
-        {
-            try
-            {
-                var stageCapture = new Object()
-                {
-                    Stage stage;
-                };
-
-                SettingsObjectSceneController objectOrientationController =
-                    makeWindow("Object Orientation", objectOrientationWindowOpen, "fxml/scene/object/SettingsObjectScene.fxml",
-                        stage -> stageCapture.stage = stage);
-
-                ObjectPoseSetting boundObjectPose = javaFXState.getObjectModel().getSelectedObjectPoseProperty().getValue();
-
-                objectOrientationController.bind(boundObjectPose);
-
-                stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
-                    e -> objectOrientationController.unbind(boundObjectPose));
-            }
-            catch (Exception e)
-            {
-                handleException("An error occurred opening color checker window", e);
-            }
-        }
-    }
-
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString, Consumer<Stage> stageCallback) throws IOException
-    {
-        return makeWindow(title, flag, -1, -1, urlString, stageCallback);
+        ExperienceManager.getInstance().getObjectOrientation().tryOpen();
     }
 
     public void lightCalibration()
     {
-        if (!lightCalibrationWindowOpen.get())
-        {
-            try
-            {
-                var stageCapture = new Object()
-                {
-                    Stage stage;
-                };
-
-                LightCalibrationController lightCalibrationController =
-                    makeWindow("Light Calibration", lightCalibrationWindowOpen, "fxml/modals/LightCalibration.fxml",
-                        stage ->
-                        {
-                            stageCapture.stage = stage;
-                            stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
-                            {
-                                Global.state().getIOModel().applyLightCalibration();
-                                Global.state().getSettingsModel().set("lightCalibrationMode", false);
-                                setShaderNameVisibility(Global.state().getIOModel().hasValidHandler());
-                            });
-                        });
-
-                // Must wait until the controllers is created to add this additional window close event handler.
-                stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
-                    e -> lightCalibrationController.unbind(javaFXState.getSettingsModel()));
-
-                // Bind controller to settings model to synchronize with "currentLightCalibration".
-                lightCalibrationController.bind(javaFXState.getSettingsModel());
-
-                if (Global.state().getIOModel().hasValidHandler())
-                {
-                    // Set the "currentLightCalibration" to the existing calibration values in the view set.
-                    ViewSet loadedViewSet = Global.state().getIOModel().getLoadedViewSet();
-
-                    javaFXState.getSettingsModel().set("currentLightCalibration",
-                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
-                }
-
-                cameraViewListController.rebindSearchableListView();
-
-                // Enables light calibration mode when the window is opened.
-                javaFXState.getSettingsModel().set("lightCalibrationMode", true);
-
-                //shader name doesn't change like it should when opening light calibration, so hide it for now
-                //TODO: figure out how to show the correct name instead of hiding the text?
-                setShaderNameVisibility(false);
-            }
-            catch (Exception e)
-            {
-                handleException("An error occurred opening light calibration window", e);
-            }
-        }
+        ExperienceManager.getInstance().getLightCalibration().tryOpen();
     }
 
     public void eyedropperColorChecker()
     {
-        final String errorMessage = "An error occurred opening color checker window";
-
-        try
-        {
-            PageFrameController frameController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
-                "fxml/PageFrame.fxml");
-
-            frameController.setPageFactory(loader ->
-            {
-                try
-                {
-                    loader.load();
-                }
-                catch (IOException | RuntimeException e)
-                {
-                    handleException(errorMessage, e);
-                }
-
-                return loader;
-            });
-
-            var viewPage = frameController.createPage(
-                "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-                viewLoader ->
-                {
-                    // Override controller class
-                    viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
-
-                    try
-                    {
-                        viewLoader.load();
-                    }
-                    catch (IOException | RuntimeException e)
-                    {
-                        handleException(errorMessage, e);
-                    }
-
-                    return viewLoader;
-                },
-                SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new);
-
-            FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
-            imageSelectorLoader.load();
-
-            var imageSelectorPage = frameController.createPage(
-                "/fxml/modals/SelectToneCalibrationImage.fxml",
-                SimpleNonDataPage<SelectToneCalibrationImageController>::new);
-
-            viewPage.setNextPage(imageSelectorPage);
-
-            var eyedropPage = frameController.createPage(
-                "/fxml/modals/EyedropperColorChecker.fxml",
-                SimpleNonDataPage<EyedropperController>::new);
-
-            imageSelectorPage.setNextPage(eyedropPage);
-
-            CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
-            viewPage.receiveData(inputSource);
-
-            frameController.setCurrentPage(viewPage);
-
-            frameController.init();
-        }
-        catch (IOException | RuntimeException e)
-        {
-            handleException(errorMessage, e);
-        }
+        ExperienceManager.getInstance().getToneCalibration().tryOpen();
     }
 
     public void maskOptions(ActionEvent actionEvent)
     {
-        if (!maskOptionsWindowOpen.get())
-        {
-            try
-            {
-                MaskOptionsController maskOptionsController =
-                    makeWindow("Mask Options", maskOptionsWindowOpen, "fxml/modals/MaskOptions.fxml");
-
-                if (Global.state().getIOModel().hasValidHandler())
-                {
-                    maskOptionsController.setProjectSettingsModel(
-                        Global.state().getIOModel().getLoadedViewSet().getProjectSettings());
-                }
-            }
-            catch (Exception e)
-            {
-                handleException("An error occurred opening mask options window", e);
-            }
-        }
-    }
-
-    private static CurrentProjectInputSource getCurrentProjectInputSource()
-    {
-        CurrentProjectInputSource inputSource = new CurrentProjectInputSource()
-        {
-            // Override this method to set the initial selection to the primary view instead of orientation view
-            @Override
-            public void setOrientationViewDefaultSelections(ViewSelectController controller)
-            {
-                ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
-
-                if (currentViewSet == null)
-                    return;
-
-                // Set the initial selection to what is currently being used
-                TreeItem<String> selectionItem = InputSource.NONE_ITEM;
-
-                if (currentViewSet.getPrimaryViewIndex() >= 0)
-                {
-                    String viewName = currentViewSet.getImageFileName(currentViewSet.getPrimaryViewIndex());
-
-                    for (int i = 0; i < searchableTreeView.getTreeView().getExpandedItemCount(); i++)
-                    {
-                        TreeItem<String> item = searchableTreeView.getTreeView().getTreeItem(i);
-                        if (Objects.equals(item.getValue(), viewName))
-                        {
-                            selectionItem = item;
-                            break;
-                        }
-                    }
-                }
-
-                searchableTreeView.getTreeView().getSelectionModel().select(selectionItem);
-            }
-        };
-
-        inputSource.setIncludeNoneItem(false);
-        return inputSource;
-    }
-
-    public void shading_SystemMemory()
-    {
-        if (systemMemoryWindowOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            makeWindow("System Memory", systemMemoryWindowOpen, "fxml/modals/systemsettings/SystemMemorySettings.fxml");
-        }
-        catch (Exception e)
-        {
-            handleException("An error occurred opening jvm settings window", e);
-        }
+        ExperienceManager.getInstance().getMaskOptions().tryOpen();
     }
 
     public void help_console()
     {
-        if (loggerWindowOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            Stage stage = makeStage("Log", loggerWindowOpen, "fxml/modals/Logger.fxml");
-            stage.setResizable(true);
-            stage.initStyle(StageStyle.DECORATED);
-            stage.show();
-        }
-        catch (Exception e)
-        {
-            handleException("An error occurred opening console window", e);
-        }
+        ExperienceManager.getInstance().getLog().tryOpen();
     }
 
     public void showProgressBars()
@@ -1212,7 +853,6 @@ public class MenubarController
         ProjectIO.getInstance().openProgressBars();
         miniProgressPane.setVisible(false);
     }
-
 
     //used so the user can click on the About menu and immediately see the about modal
     //instead of clicking on a single menu item
@@ -1236,11 +876,11 @@ public class MenubarController
         }
         catch (IllegalStateException e)
         {
-            handleException("Kintsugi 3D Viewer was not found on this computer. Check that it is installed.", e);
+            ExceptionHandling.error("Kintsugi 3D Viewer was not found on this computer. Check that it is installed.", e);
         }
         catch (Exception e)
         {
-            handleException("Failed to launch Kintsugi 3D Viewer", e);
+            ExceptionHandling.error("Failed to launch Kintsugi 3D Viewer", e);
         }
     }
 
@@ -1272,10 +912,10 @@ public class MenubarController
         toggleableShaders.forEach(menuItem -> menuItem.setDisable(b));
     }
 
-    public Window getWindow()
+    public Window getWindow() // Useful for creating alerts in back-end classes
     {
         return window;
-    } //useful for creating alerts in back-end classes
+    }
 
     public void showWelcomeWindow()
     {

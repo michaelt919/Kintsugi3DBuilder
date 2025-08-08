@@ -19,7 +19,7 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 
 import java.io.File;
 import java.text.MessageFormat;
@@ -98,8 +98,7 @@ public class LooseFilesInputSource extends InputSource
             }
             else
             {
-                ProjectIO.handleException("Error initializing primary view selection.",
-                    new IllegalArgumentException(MessageFormat.format("File extension not recognized for {0}", cameraFile.getName())));
+                ExceptionHandling.error("Error initializing primary view selection.", new IllegalArgumentException(MessageFormat.format("File extension not recognized for {0}", cameraFile.getName())));
                 return;
             }
 
@@ -108,7 +107,7 @@ public class LooseFilesInputSource extends InputSource
         }
         catch (Exception e)
         {
-            ProjectIO.handleException("Error initializing primary view selection.", e);
+            ExceptionHandling.error("Error initializing primary view selection.", e);
         }
     }
 

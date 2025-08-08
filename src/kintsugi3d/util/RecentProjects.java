@@ -23,6 +23,7 @@ import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -247,7 +248,7 @@ public class RecentProjects {
                 Desktop.getDesktop().open(file.getParentFile());
             }
             catch(IOException ioe){
-                ProjectIO.handleException("Failed to open project directory.", ioe);
+                ExceptionHandling.error("Failed to open project directory.", ioe);
             }
         });
         openInExplorer.setStyle("-fx-text-fill: #FFFFFF");

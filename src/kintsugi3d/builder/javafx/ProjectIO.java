@@ -13,8 +13,10 @@ package kintsugi3d.builder.javafx;
 
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
@@ -29,6 +31,7 @@ import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataTransformerPage;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.javafx.util.PageWindow;
 import kintsugi3d.builder.javafx.util.WindowUtilities;
 import kintsugi3d.builder.resources.project.MeshImportException;
@@ -102,18 +105,19 @@ public final class ProjectIO
                 projectLoaded = false;
                 if (e instanceof MeshImportException)
                 {
-                    handleException(e.getMessage(), e);
+                    String message = e.getMessage();
+                    ExceptionHandling.error(message, e);
                 }
                 else
                 {
-                    handleException("An error occurred while loading project", e);
+                    ExceptionHandling.error("An error occurred while loading project", e);
                 }
             }
 
             @Override
             public void warn(Throwable e)
             {
-                handleException("An error occurred while loading project", e);
+                ExceptionHandling.error("An error occurred while loading project", e);
             }
         });
     }
@@ -131,22 +135,6 @@ public final class ProjectIO
     public boolean isProjectLoaded()
     {
         return projectLoaded;
-    }
-
-    public static void handleException(String message, Throwable e)
-    {
-        LOG.error("{}:", message, e);
-        Platform.runLater(() ->
-        {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
-            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
-            ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                // Use the menubar's console open function to prevent 2 console windows from appearing
-                MenubarController.getInstance().help_console();
-            });
-            alert.show();
-        });
     }
 
     private boolean confirmClose(String text)
@@ -350,7 +338,7 @@ public final class ProjectIO
             }
             catch (Exception e)
             {
-                handleException("An error occurred opening project", e);
+                ExceptionHandling.error("An error occurred opening project", e);
             }
         }
 
@@ -456,7 +444,7 @@ public final class ProjectIO
             }
             catch(Exception e)
             {
-                handleException("An error occurred saving project", e);
+                ExceptionHandling.error("An error occurred saving project", e);
             }
         }
     }
@@ -609,7 +597,7 @@ public final class ProjectIO
         }
         catch (Exception e)
         {
-            handleException("An error occurred showing help and about", e);
+            ExceptionHandling.error("An error occurred showing help and about", e);
         }
     }
 }

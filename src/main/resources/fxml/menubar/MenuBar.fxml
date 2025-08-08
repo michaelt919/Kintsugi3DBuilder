@@ -109,8 +109,6 @@
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Environment">
-                            <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="Advanced Photo View..." visible="false" />
-                            <CheckMenuItem mnemonicParsing="false" selected="true" text="Snap-based Object Rotation (UNFINISHED)" visible="false" />
                             <SeparatorMenuItem mnemonicParsing="false" visible="false" />
                             <SeparatorMenuItem mnemonicParsing="false" visible="false">
                             </SeparatorMenuItem>

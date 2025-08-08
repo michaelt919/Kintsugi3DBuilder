@@ -14,7 +14,7 @@ package kintsugi3d.builder.core;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.GraphicsRequest;
@@ -148,7 +148,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     }
                     catch (Exception | AssertionError e)
                     {
-                        ProjectIO.handleException("Error occured while excecuting request", e);
+                        ExceptionHandling.error("Error occured while excecuting request", e);
                     }
                 }
 

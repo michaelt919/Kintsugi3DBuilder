@@ -18,10 +18,18 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class SystemSettingsController {
+public class SystemSettingsController
+{
+    private static final Logger LOG = LoggerFactory.getLogger(SystemSettingsController.class);
 
     @FXML private AnchorPane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
     //TODO: NEED TO REAPPLY ALL DEFAULT CHECKBOX SETTINGS
@@ -30,33 +38,29 @@ public class SystemSettingsController {
     //Note: settings string MUST MATCH their .fxml counterparts
     //ex. Autosave Settings --> AutosaveSettings.fxml
     //    System Memory --> SysMem.fxml will not work
-    static final String[] settingsNames =
-    {
-        //"Accessibility",
-        //"Autosave Settings",
-        "Cache Settings",
-        "Lighting Settings",
-        "Photo Projection Settings",
-        "System Memory Settings",
-        "Visual Settings"//,
-//        "Miscellaneous"
-    };
-    private JavaFXState javaFXState;
-    private Window window;
+    static final Map<String, String> settingsPages = Stream.of(
+        Map.entry("Cache Settings", "/fxml/modals/systemsettings/CacheSettings.fxml"),
+        Map.entry("Lighting Settings", "/fxml/modals/systemsettings/LightingSettings.fxml"),
+        Map.entry("Photo Projection Settings", "/fxml/modals/systemsettings/PhotoProjectionSettings.fxml"),
+        Map.entry("System Memory Settings", "/fxml/modals/systemsettings/SystemMemorySettings.fxml"),
+        Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml")
+    )
+    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, LinkedHashMap::new));
 
-    public void init(JavaFXState javaFXState, Window window) {
-        this.javaFXState = javaFXState;
-        this.window = window;
+    public void init(JavaFXState javaFXState, Window window)
+    {
         populateFileList();
         //initialize listeners for cell items
-        settingsListView.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> {
+        settingsListView.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) ->
+        {
             String selectedItem = settingsListView.getSelectionModel().getSelectedItem();
 
             //remove spaces from string and append ".fxml"
-            String fileName = "/fxml/modals/systemsettings/" + selectedItem.replace(" ", "") + ".fxml";
+            String fileName = settingsPages.get(observableValue.getValue());
 
             Parent newContent = null;
-            try {
+            try
+            {
                 //TODO: VERIFY THAT THE USER HAS SAVED ALL NECESSARY SETTINGS BEFORE SWITCHING?
                 FXMLLoader loader = new FXMLLoader(getClass().getResource(fileName));
                 newContent = loader.load();
@@ -67,15 +71,19 @@ public class SystemSettingsController {
 
                 //attach controller info
                 controller.bindInfo(javaFXState);
-                if (controller instanceof AutosaveSettingsController){
+                if (controller instanceof AutosaveSettingsController)
+                {
                     ((AutosaveSettingsController) controller).injectWindow(window);
                 }
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            }
+            catch (IOException e)
+            {
+                LOG.error("Error occurred opening system settings.", e);
             }
 
-            if (newContent != null) {
+            if (newContent != null)
+            {
                 settingsFxmlHost.getChildren().setAll(newContent);
             }
         });
@@ -83,12 +91,14 @@ public class SystemSettingsController {
     }
 
     //fill the listView with the fxml files in String folderPath
-    private void populateFileList() {
+    private void populateFileList()
+    {
         settingsListView.getItems().clear();
-        settingsListView.getItems().addAll(settingsNames);
+        settingsListView.getItems().addAll(settingsPages.keySet());
     }
 
-    public Window getHostWindow(){
+    public Window getHostWindow()
+    {
         return settingsFxmlHost.getScene().getWindow();
     }
 }
