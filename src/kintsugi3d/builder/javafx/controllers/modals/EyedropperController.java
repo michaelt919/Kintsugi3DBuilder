@@ -126,7 +126,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle)
     {
-        init();
+        initPage();
     }
 
     private static Rectangle2D resetViewport(ImageView imageView)
@@ -806,7 +806,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         selectedFile = null;
 

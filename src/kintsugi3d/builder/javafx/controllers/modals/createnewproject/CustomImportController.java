@@ -72,7 +72,7 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);

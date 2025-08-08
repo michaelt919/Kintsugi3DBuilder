@@ -22,7 +22,7 @@ class DataSupplierPageBase<InType, OutType, ControllerType extends DataSupplierP
     public final void initController()
     {
         this.getController().setPage(this);
-        this.getController().init();
+        this.getController().initPage();
     }
 
     @Override

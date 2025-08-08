@@ -49,7 +49,7 @@ public class MasksImportController
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         masksDirectoryChooser = new DirectoryChooser();
 

@@ -188,7 +188,7 @@ public class PageFrameController
                 if (currentPage.hasNextPage()) // next page exists
                 {
                     // Passes data to the next page if applicable
-                    currentPage.submit();
+                    currentPage.sendOutData();
 
                     currentPage = currentPage.getNextPage();
                     initControllerAndUpdatePanel(currentPage.getFXMLFilePath());

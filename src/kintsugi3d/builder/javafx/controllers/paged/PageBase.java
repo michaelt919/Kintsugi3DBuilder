@@ -107,7 +107,7 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     }
 
     @Override
-    public final void submit()
+    public final void sendOutData()
     {
         if (this.hasNextPage())
         {

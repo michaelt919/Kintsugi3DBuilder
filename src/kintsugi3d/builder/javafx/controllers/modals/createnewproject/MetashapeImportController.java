@@ -68,7 +68,7 @@ public class MetashapeImportController extends DataTransformerPageControllerBase
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         psxFileChooser = new FileChooser();
         psxFileChooser.setTitle("Choose .psx file");

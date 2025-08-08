@@ -56,7 +56,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         buttonGroup.getToggles().add(primaryViewImageButton);
         buttonGroup.getToggles().add(previousImageButton);

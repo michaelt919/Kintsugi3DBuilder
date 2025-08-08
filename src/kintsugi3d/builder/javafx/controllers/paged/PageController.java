@@ -33,9 +33,11 @@ public interface PageController<T>
     boolean isConfirmed();
 
     /**
-     * Called when the page is created.
+     * Called when the page is created, after the page hsa been assigned to the controller.
+     * In contrast with initialize() (which is called after JavaFX initialization, before any page object has been initialized)
+     * when initPage() is called, a valid page will have been assigned to this controller.
      */
-    void init();
+    void initPage();
 
     /**
      * Called when the previous page has finished if the previous page has data to share with this page
@@ -59,10 +61,7 @@ public interface PageController<T>
      * Called after advancing if there are no additional pages and the paged experience is thus complete.
      * @return false if confirmation was cancelled by the controller; true otherwise.
      */
-    default boolean confirm()
-    {
-        return true;
-    }
+    boolean confirm();
 
     /**
      * Called when the window should close.

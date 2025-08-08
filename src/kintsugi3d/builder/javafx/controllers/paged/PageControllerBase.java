@@ -107,18 +107,6 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     }
 
     @Override
-    public boolean advance()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean close()
-    {
-        return true;
-    }
-
-    @Override
     public final Runnable getConfirmCallback()
     {
         return confirmCallback;
@@ -139,5 +127,26 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     protected final void setConfirmed(boolean confirmed)
     {
         this.isConfirmed = confirmed;
+    }
+
+    @Override
+    public boolean advance()
+    {
+        // By default, advance without any additional logic other than what page has been assigned as nextPage.
+        return true;
+    }
+
+    @Override
+    public boolean confirm()
+    {
+        // Allow silent exit by default if no confirmation is implemented.
+        return true;
+    }
+
+    @Override
+    public boolean close()
+    {
+        // Close without any additional logic by default.
+        return true;
     }
 }

@@ -22,9 +22,9 @@ public class OrientationViewSelectController extends ViewSelectController
     //suppress warning?
 
     @Override
-    public void init()
+    public void initPage()
     {
-        super.init();
+        super.initPage();
         setCanConfirm(true);
     }
 

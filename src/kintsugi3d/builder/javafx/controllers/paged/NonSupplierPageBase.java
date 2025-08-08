@@ -14,6 +14,6 @@ abstract class NonSupplierPageBase<T, ControllerType extends NonSupplierPageCont
     public void initController()
     {
         this.getController().setPage(this);
-        this.getController().init();
+        this.getController().initPage();
     }
 }

@@ -25,5 +25,5 @@ public interface Page<InType, OutType>
     void receiveData(InType data);
     OutType getOutData();
 
-    void submit();
+    void sendOutData();
 }

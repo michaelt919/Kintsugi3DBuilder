@@ -40,7 +40,7 @@ public class SelectImportOptionsController extends DataSourcePageControllerBase<
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         buttons.getToggles().add(metashapeImportButton);
         buttons.getToggles().add(looseFilesImportButton);

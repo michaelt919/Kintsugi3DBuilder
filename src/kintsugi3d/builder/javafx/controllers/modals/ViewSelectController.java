@@ -71,7 +71,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     }
 
     @Override
-    public void init()
+    public void initPage()
     {
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
