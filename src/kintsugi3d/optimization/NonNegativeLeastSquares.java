@@ -25,7 +25,7 @@ import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public final class NonNegativeLeastSquares
 {
-    private static final Logger log = LoggerFactory.getLogger(NonNegativeLeastSquares.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NonNegativeLeastSquares.class);
 
     private static SimpleMatrix solvePartial(
         SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, List<Integer> mapping, SimpleMatrix sOut, int constraintCount)
@@ -263,7 +263,7 @@ public final class NonNegativeLeastSquares
                 }
                 catch(SingularMatrixException e)
                 {
-                    log.error("An error occurred:", e);
+                    LOG.error("An error occurred:", e);
 
                     // Roll back and finish.
                     p[k] = false;

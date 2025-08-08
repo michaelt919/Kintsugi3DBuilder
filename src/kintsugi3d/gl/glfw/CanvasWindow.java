@@ -35,7 +35,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     extends CanvasBase<ContextType> implements PollableWindow, PollableCanvas3D<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(CanvasWindow.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CanvasWindow.class);
     private final long handle;
     private final WindowListenerManager listenerManager;
 
@@ -95,12 +95,12 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         glfwSwapInterval(1);
 
         GL.createCapabilities(); // Make a valid OpenGL Context
-        log.info("OpenGL version: " + glGetString(GL_VERSION));
-        log.info("LWJGL version: " +
+        LOG.info("OpenGL version: " + glGetString(GL_VERSION));
+        LOG.info("LWJGL version: " +
                 Version.VERSION_MAJOR + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
                 (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
-        log.info("GLFW version: " + glfwGetVersionString());
+        LOG.info("GLFW version: " + glfwGetVersionString());
 
         this.context = createDefaultFramebuffer == null ?
             contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);

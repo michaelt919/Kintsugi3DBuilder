@@ -45,7 +45,7 @@ public class RecentProjects {
 
     private static final File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
-    private static final Logger log = LoggerFactory.getLogger(RecentProjects.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RecentProjects.class);
     private static File recentDirectory;
 
     private RecentProjects(){throw new IllegalStateException("Utility class");}
@@ -64,7 +64,7 @@ public class RecentProjects {
             }
             catch (IOException e)
             {
-                log.error("Could not get items from recent files list", e);
+                LOG.error("Could not get items from recent files list", e);
             }
         }
 
@@ -122,7 +122,7 @@ public class RecentProjects {
                 existingFileNames.add(line);
             }
         } catch (IOException e) {
-            log.error("Failed to update recent files list", e);
+            LOG.error("Failed to update recent files list", e);
         }
 
         // Check if the fileName is already present
@@ -137,7 +137,7 @@ public class RecentProjects {
                 writer.println(name);
             }
         } catch (IOException e) {
-            log.error("Failed to update recent files list", e);
+            LOG.error("Failed to update recent files list", e);
         }
 
         //update list of recent projects in program
@@ -281,7 +281,7 @@ public class RecentProjects {
             String fullResImgsPath = findImgsPath(factory, projFile, fullRes);
 
             if (prevResImgsPath == null && fullResImgsPath == null) {
-                log.warn("Could not find preview image for " + projFile.getName());
+                LOG.warn("Could not find preview image for " + projFile.getName());
                 return;
             }
 
@@ -294,14 +294,14 @@ public class RecentProjects {
             if (previewImgPath == null) {
                 //try full imgPath before giving up
                 if (fullResImgsPath == null) {
-                    log.warn("Could not find preview image for " + projFile.getName());
+                    LOG.warn("Could not find preview image for " + projFile.getName());
                     return;
                 }
 
                 previewImgPath = getPreviewImgPath(fullResImgsPath, projFile);
 
                 if (previewImgPath == null) {
-                    log.warn("Could not find preview image for " + projFile.getName());
+                    LOG.warn("Could not find preview image for " + projFile.getName());
                     return;
                 }
             }
@@ -315,7 +315,7 @@ public class RecentProjects {
             Platform.runLater(()-> recentButton.setGraphic(previewImgView));
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
-            log.warn("Could not find preview image for " + projFile.getName(), e);
+            LOG.warn("Could not find preview image for " + projFile.getName(), e);
         }
     }
 
@@ -345,7 +345,7 @@ public class RecentProjects {
             if (!resolvedFile.isDirectory()) {
                 //not a warning because we might find the preview image in the other image path
                 //first checks preview images, then full res images
-                log.info("Could not find preview image for " + projFile.getName() + " in " + resolvedFile.getAbsolutePath());
+                LOG.info("Could not find preview image for " + projFile.getName() + " in " + resolvedFile.getAbsolutePath());
                 return null;
             }
         }
@@ -354,7 +354,7 @@ public class RecentProjects {
         String[] childFilePaths = resolvedFile.list();
 
         if (childFilePaths == null || childFilePaths.length == 0) {
-            log.warn("No preview images found in " + resolvedFile.getAbsolutePath());
+            LOG.warn("No preview images found in " + resolvedFile.getAbsolutePath());
             return null;
         }
 
@@ -410,7 +410,7 @@ public class RecentProjects {
                 writer.println(name);
             }
         } catch (IOException ioe) {
-            log.error("Failed to update recent files list while removing invalid reference.", ioe);
+            LOG.error("Failed to update recent files list while removing invalid reference.", ioe);
         }
 
         updateAllControlStructures();
@@ -429,7 +429,7 @@ public class RecentProjects {
                 writer.println(name);
             }
         } catch (IOException e) {
-            log.error("Failed to update recent files list while removing invalid references.", e);
+            LOG.error("Failed to update recent files list while removing invalid references.", e);
         }
 
         updateAllControlStructures();
@@ -440,7 +440,7 @@ public class RecentProjects {
         try (FileWriter fileWriter = new FileWriter(recentProjectsFile.getAbsolutePath(), false)) {
             fileWriter.write("");
         } catch (IOException e) {
-            log.error("Could not write to recent files list", e);
+            LOG.error("Could not write to recent files list", e);
         }
 
         updateAllControlStructures();

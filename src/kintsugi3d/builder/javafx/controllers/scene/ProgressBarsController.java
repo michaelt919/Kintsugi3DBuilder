@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 public class ProgressBarsController {
-    private static final Logger log = LoggerFactory.getLogger(ProgressBarsController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProgressBarsController.class);
     private static ProgressBarsController INSTANCE;
 
     @FXML private Label localElapsedTimeLabel;

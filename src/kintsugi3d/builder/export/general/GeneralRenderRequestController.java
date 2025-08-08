@@ -58,7 +58,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
     @FXML private TextField heightTextField;
     @FXML private Button runButton;
 
-    private static final Logger log = LoggerFactory.getLogger(GeneralRenderRequestController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GeneralRenderRequestController.class);
 
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -84,7 +84,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
         }
         catch(IOException e)
         {
-            log.error("Error occurred loading fxml file:", e);
+            LOG.error("Error occurred loading fxml file:", e);
         }
 
         if (parent != null)
@@ -112,7 +112,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
         }
         catch (MalformedURLException e)
         {
-            log.error("Error loading window icon:", e);
+            LOG.error("Error loading window icon:", e);
         }
 
         INSTANCE.stage.setScene(SCENE);

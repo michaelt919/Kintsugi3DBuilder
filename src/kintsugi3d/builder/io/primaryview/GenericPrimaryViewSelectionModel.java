@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 
 public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
-    private static final Logger log = LoggerFactory.getLogger(GenericPrimaryViewSelectionModel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GenericPrimaryViewSelectionModel.class);
 
     private final String name;
     private final ViewSet viewSet;

@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
 
 public class ParallelViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {
-    private static final Logger log = LoggerFactory.getLogger(ParallelViewRenderStream.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ParallelViewRenderStream.class);
     private final int viewCount;
     private final Drawable<ContextType> drawable;
     private final Framebuffer<ContextType> framebuffer;
@@ -112,7 +112,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                     }
                     catch (InterruptedException e)
                     {
-                        log.error("Error: Operation interrupted:", e);
+                        LOG.error("Error: Operation interrupted:", e);
                     }
                 }
 
@@ -147,7 +147,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                 }
                 catch (RuntimeException e)
                 {
-                    log.error("An error occurred while processing a stream of rendering data: ", e);
+                    LOG.error("An error occurred while processing a stream of rendering data: ", e);
                 }
                 finally
                 {
@@ -176,7 +176,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                 }
                 catch (InterruptedException e)
                 {
-                    log.error("Error: Operation interrupted:", e);
+                    LOG.error("Error: Operation interrupted:", e);
                 }
             }
         }

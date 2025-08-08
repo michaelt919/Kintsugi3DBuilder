@@ -26,7 +26,7 @@ import java.io.IOException;
 public abstract class SpecularMaterialResourcesBase<ContextType extends Context<ContextType>>
     implements SpecularMaterialResources<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularMaterialResourcesBase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularMaterialResourcesBase.class);
 
     private static <ContextType extends Context<ContextType>> void useTextureSafe(
         Program<ContextType> program, String textureName, Texture<ContextType> texture)
@@ -81,7 +81,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving diffuse map.", e);
+            LOG.error("An error occurred saving diffuse map.", e);
         }
     }
 
@@ -97,7 +97,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving normal map.", e);
+            LOG.error("An error occurred saving normal map.", e);
         }
     }
 
@@ -113,7 +113,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving specular reflectivity map.", e);
+            LOG.error("An error occurred saving specular reflectivity map.", e);
         }
     }
 
@@ -129,7 +129,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving specular roughness map.", e);
+            LOG.error("An error occurred saving specular roughness map.", e);
         }
     }
 
@@ -145,7 +145,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving constant map.", e);
+            LOG.error("An error occurred saving constant map.", e);
         }
     }
 
@@ -176,7 +176,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving constant map.", e);
+            LOG.error("An error occurred saving constant map.", e);
         }
     }
 
@@ -192,7 +192,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving albedo map.", e);
+            LOG.error("An error occurred saving albedo map.", e);
         }
     }
 
@@ -208,7 +208,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving ORM map.", e);
+            LOG.error("An error occurred saving ORM map.", e);
         }
     }
 
@@ -225,7 +225,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
             }
             catch (IOException e)
             {
-                log.error("An error occurred saving packed weight maps.", e);
+                LOG.error("An error occurred saving packed weight maps.", e);
             }
         }
     }
@@ -243,7 +243,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
             }
             catch (IOException e)
             {
-                log.error("An error occurred saving unpacked weight maps.", e);
+                LOG.error("An error occurred saving unpacked weight maps.", e);
             }
         }
     }
@@ -269,7 +269,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
             }
             catch (IOException e)
             {
-                log.error("An error occurred saving metadata map: {}", entry.getKey(), e);
+                LOG.error("An error occurred saving metadata map: {}", entry.getKey(), e);
             }
         }
     }

@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
  */
 public final class FinalErrorCalculaton
 {
-    private static final Logger log = LoggerFactory.getLogger(FinalErrorCalculaton.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FinalErrorCalculaton.class);
     private static final FinalErrorCalculaton INSTANCE = new FinalErrorCalculaton();
 
     public static FinalErrorCalculaton getInstance()
@@ -95,14 +95,14 @@ public final class FinalErrorCalculaton
                         })
                         .average().orElse(0.0)); // mean
 
-                log.info("Normal map ground truth RMSE: " + rmse);
+                LOG.info("Normal map ground truth RMSE: " + rmse);
 
                 // Print out RMSE for normal map ground truth
                 rmseOut.println("Normal map ground truth RMSE: " + rmse);
             }
             catch (IOException e)
             {
-                log.error("An error occurred while validating normal map:", e);
+                LOG.error("An error occurred while validating normal map:", e);
             }
         }
     }
@@ -154,7 +154,7 @@ public final class FinalErrorCalculaton
         }
         catch (IOException e)
         {
-            log.error("An error occurred while calculating error metrics:", e);
+            LOG.error("An error occurred while calculating error metrics:", e);
         }
     }
 

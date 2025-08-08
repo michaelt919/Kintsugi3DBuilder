@@ -29,7 +29,7 @@ import java.util.Optional;
 
 public class SelectToneCalibrationImageController extends NonDataPageControllerBase
 {
-    private static final Logger log = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
 
     @FXML private AnchorPane anchorPane;
 
@@ -119,7 +119,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
             viewSet.clearTonemapping();
 
-            log.debug("Setting new color calibration image: {}", imageFile);
+            LOG.debug("Setting new color calibration image: {}", imageFile);
             ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
             project.setColorCheckerFile(imageFile);
         }

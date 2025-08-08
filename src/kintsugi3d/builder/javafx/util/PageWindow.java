@@ -29,7 +29,7 @@ import java.util.function.BiFunction;
 
 public class PageWindow
 {
-    private static final Logger log = LoggerFactory.getLogger(PageWindow.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PageWindow.class);
 
     private final Flag windowOpen = new Flag(false);
 
@@ -51,7 +51,7 @@ public class PageWindow
         File fxmlFilesDirectory = new File("fxml-index.txt");
 
         if (!fxmlFilesDirectory.exists()){
-            log.error("Failed to open fxml files directory for \"{}\" process.", title);
+            LOG.error("Failed to open fxml files directory for \"{}\" process.", title);
             return;
         }
 
@@ -78,7 +78,7 @@ public class PageWindow
                 }
                 catch (IOException e)
                 {
-                    log.error("Could not find fxml files for \"{}\" process.", title, e);
+                    LOG.error("Could not find fxml files for \"{}\" process.", title, e);
                 }
 
                 return loader;
@@ -95,7 +95,7 @@ public class PageWindow
         }
         catch (IOException e)
         {
-            log.error("Could not find fxml files for \"{}\" process.", title, e);
+            LOG.error("Could not find fxml files for \"{}\" process.", title, e);
         }
     }
 }

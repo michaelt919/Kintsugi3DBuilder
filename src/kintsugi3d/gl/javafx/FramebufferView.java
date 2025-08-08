@@ -43,7 +43,7 @@ import java.util.OptionalInt;
 
 public final class FramebufferView extends Region
 {
-    private static final Logger log = LoggerFactory.getLogger(FramebufferView.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FramebufferView.class);
     private final ImageView imageView;
     private FramebufferCanvas<?> canvas;
 
@@ -123,11 +123,11 @@ public final class FramebufferView extends Region
                 }
                 catch(RuntimeException e)
                 {
-                    log.error("An error has occurred:", e);
+                    LOG.error("An error has occurred:", e);
                 }
                 catch(Error e)
                 {
-                    log.error("An error has occurred:", e);
+                    LOG.error("An error has occurred:", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -460,7 +460,7 @@ public final class FramebufferView extends Region
         }
         catch (NonInvertibleTransformException e)
         {
-            log.error("Noninvertible transform", e);
+            LOG.error("Noninvertible transform", e);
             return new CursorPosition(event.getX(), event.getY());
         }
     }

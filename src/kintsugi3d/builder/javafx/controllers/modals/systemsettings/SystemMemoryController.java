@@ -27,7 +27,7 @@ import java.util.ResourceBundle;
 
 public class SystemMemoryController implements Initializable, SystemSettingsControllerBase
 {
-    private static final Logger log = LoggerFactory.getLogger(SystemMemoryController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SystemMemoryController.class);
 
     private static final int MIN_VALUE = 1;
     private static final int MAX_VALUE = 1048576;
@@ -61,14 +61,14 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
             }
             catch (AccessDeniedException e)
             {
-                log.warn("The current user does not have sufficient privileges to write to launch4j configuration file", e);
-                log.warn("Attempting to write as superuser, this will prompt for UAC!");
+                LOG.warn("The current user does not have sufficient privileges to write to launch4j configuration file", e);
+                LOG.warn("Attempting to write as superuser, this will prompt for UAC!");
                 configuration.writeAsSuperuser();
             }
         }
         catch (IOException e)
         {
-            log.error("Failed to write to launch4j configuration file", e);
+            LOG.error("Failed to write to launch4j configuration file", e);
             Alert alert = new Alert(Alert.AlertType.NONE, "", ok);
             alert.setTitle("Kintsugi 3D Builder");
             alert.setHeaderText("Writing failed");
@@ -92,8 +92,8 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         }
         catch (IOException e)
         {
-            log.error("Failed to read jvm configuration:", e);
-            log.error("Using default configuration");
+            LOG.error("Failed to read jvm configuration:", e);
+            LOG.error("Using default configuration");
             configuration = Launch4jConfiguration.empty();
         }
 

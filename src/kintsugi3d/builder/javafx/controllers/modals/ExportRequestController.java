@@ -36,7 +36,7 @@ import java.net.URL;
 
 public class ExportRequestController implements GraphicsRequestController
 {
-    private static final Logger log = LoggerFactory.getLogger(ExportRequestController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExportRequestController.class);
 
     //Initialize all the variables in the FXML file
     @FXML
@@ -143,7 +143,7 @@ public class ExportRequestController implements GraphicsRequestController
             }
             catch (Exception ex)
             {
-                log.error("Project didn't save correctly", ex);
+                LOG.error("Project didn't save correctly", ex);
             }
         });
     }

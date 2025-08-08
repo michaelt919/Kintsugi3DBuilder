@@ -37,7 +37,7 @@ import java.util.stream.IntStream;
 
 final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
-    private static final Logger log = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
     /**
      * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to determine view vectors, and for performing projective texture mapping with an image-space implementation.
@@ -163,7 +163,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                     }
                     catch (IOException e)
                     {
-                        log.error("An error occured while loading the previous specular fit (textures).", e);
+                        LOG.error("An error occured while loading the previous specular fit (textures).", e);
                         loadedFit = SpecularMaterialResources.makeNull(context);
                     }
                     specularMaterialResources = loadedFit;
@@ -222,7 +222,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                             }
                             catch (IOException e)
                             {
-                                log.error("An error occured while loading material resources (textures)", e);
+                                LOG.error("An error occured while loading material resources (textures)", e);
                                 return MaterialResources.createNull();
                             }
                         });
@@ -314,12 +314,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             }
         }
 
-        log.info("View weights:");
+        LOG.info("View weights:");
 
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            log.info(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
+            LOG.info(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
         }
 
         return cameraWeights;

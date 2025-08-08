@@ -37,7 +37,7 @@ import java.nio.FloatBuffer;
 
 public class SpecularFitGltfExporter
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitGltfExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitGltfExporter.class);
 
     private final GltfAssetV2 asset;
 
@@ -296,7 +296,7 @@ public class SpecularFitGltfExporter
         try {
             write(file);
         } catch (IOException e) {
-            log.error("Error writing glTF to disk:", e);
+            LOG.error("Error writing glTF to disk:", e);
         }
     }
 

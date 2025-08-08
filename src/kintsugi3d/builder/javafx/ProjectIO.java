@@ -50,7 +50,7 @@ public final class ProjectIO
         return INSTANCE;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(ProjectIO.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectIO.class);
 
     private File projectFile;
     private File vsetFile;
@@ -135,7 +135,7 @@ public final class ProjectIO
 
     public static void handleException(String message, Throwable e)
     {
-        log.error("{}:", message, e);
+        LOG.error("{}:", message, e);
         Platform.runLater(() ->
         {
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -285,11 +285,11 @@ public final class ProjectIO
                 }
                 catch (RuntimeException e)
                 {
-                    log.error("Error loading view set file", e);
+                    LOG.error("Error loading view set file", e);
                 }
                 catch (Error e)
                 {
-                    log.error("Error loading view set file", e);
+                    LOG.error("Error loading view set file", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -308,11 +308,11 @@ public final class ProjectIO
                 }
                 catch (RuntimeException e)
                 {
-                    log.error("Error loading view set file", e);
+                    LOG.error("Error loading view set file", e);
                 }
                 catch (Error e)
                 {
-                    log.error("Error loading view set file", e);
+                    LOG.error("Error loading view set file", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -594,7 +594,7 @@ public final class ProjectIO
         }
         catch (IOException e)
         {
-            log.error("An error occurred opening the settings modal:", e);
+            LOG.error("An error occurred opening the settings modal:", e);
         }
     }
 

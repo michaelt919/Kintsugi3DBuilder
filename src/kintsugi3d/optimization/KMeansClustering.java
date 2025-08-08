@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
 
 public class KMeansClustering
 {
-    private static final Logger log = LoggerFactory.getLogger(KMeansClustering.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KMeansClustering.class);
     private static final double TOLERANCE = 0.0001;
 
     private final ColorArrayList colorMap;
@@ -123,10 +123,10 @@ public class KMeansClustering
             centers[b] = colorMap.getRGB(index);
         }
 
-        log.info("Initial centers:");
+        LOG.info("Initial centers:");
         for (int b = 0; b < basisCount; b++)
         {
-            log.info(centers[b].toString());
+            LOG.info(centers[b].toString());
         }
 
         // Initialization is done; now it's time to iterate.

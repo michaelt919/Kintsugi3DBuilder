@@ -34,7 +34,7 @@ import java.io.File;
 
 public class CustomImportController extends DataTransformerPageControllerBase<InputSource, InputSource>
 {
-    private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CustomImportController.class);
 
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -239,7 +239,7 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
             }
             else
             {
-                log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
+                LOG.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
             }
         }
 

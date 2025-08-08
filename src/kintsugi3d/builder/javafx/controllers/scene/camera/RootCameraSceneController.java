@@ -30,7 +30,7 @@ import java.util.function.Predicate;
 
 public class RootCameraSceneController
 {
-    private static final Logger log = LoggerFactory.getLogger(RootCameraSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootCameraSceneController.class);
     @FXML
     private VBox settings;
     @FXML
@@ -86,7 +86,7 @@ public class RootCameraSceneController
     @FXML
     private void saveCameraButton()
     {
-        log.debug("TODO: saved " + getCameraSelectionModel().getSelectedItem() + " to the library.");
+        LOG.debug("TODO: saved " + getCameraSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML
@@ -190,7 +190,7 @@ public class RootCameraSceneController
     void keyframeCameraButton()
     {
         //TODO
-        log.debug("TODO: keyframe added for " + getCameraSelectionModel().getSelectedItem());
+        LOG.debug("TODO: keyframe added for " + getCameraSelectionModel().getSelectedItem());
     }
 
     @FXML

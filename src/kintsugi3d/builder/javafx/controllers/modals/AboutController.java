@@ -26,7 +26,7 @@ import java.util.List;
 
 public class AboutController {
 
-    private static final Logger log = LoggerFactory.getLogger(AboutController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AboutController.class);
     @FXML private ScrollPane scrollPane;
     @FXML private Rectangle backgroundRectangle;
     @FXML private Text aboutText;
@@ -47,7 +47,7 @@ public class AboutController {
         }
         catch (IOException e)
         {
-            log.error("An error occurred showing help and about:", e);
+            LOG.error("An error occurred showing help and about:", e);
         }
     }
 

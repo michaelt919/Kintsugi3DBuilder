@@ -23,7 +23,7 @@ import java.io.IOException;
 
 public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private static final Logger log = LoggerFactory.getLogger(AlbedoORMOptimization.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AlbedoORMOptimization.class);
 
     // Estimation program
     private ProgramObject<ContextType> estimationProgram;
@@ -189,7 +189,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         }
         catch (IOException e)
         {
-            log.error("An error occurred while saving textures:", e);
+            LOG.error("An error occurred while saving textures:", e);
         }
     }
 

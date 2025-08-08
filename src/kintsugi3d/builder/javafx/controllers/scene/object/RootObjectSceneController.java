@@ -30,7 +30,7 @@ import java.util.function.Predicate;
 
 public class RootObjectSceneController
 {
-    private static final Logger log = LoggerFactory.getLogger(RootObjectSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootObjectSceneController.class);
     @FXML
     private VBox settings;
     @FXML
@@ -97,7 +97,7 @@ public class RootObjectSceneController
     private void savePoseButton()
     {
         //TODO
-        log.debug("TODO: saved " + getObjectPoseSelectionModel().getSelectedItem() + " to the library.");
+        LOG.debug("TODO: saved " + getObjectPoseSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML
@@ -201,7 +201,7 @@ public class RootObjectSceneController
     void keyframePoseButton()
     {
         //TODO
-        log.debug("TODO: keyframe added for " + getObjectPoseSelectionModel().getSelectedItem());
+        LOG.debug("TODO: keyframe added for " + getObjectPoseSelectionModel().getSelectedItem());
     }
 
     @FXML

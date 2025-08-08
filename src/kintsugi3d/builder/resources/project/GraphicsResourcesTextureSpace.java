@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 
 public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(GraphicsResourcesTextureSpace.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesTextureSpace.class);
     /**
      * Array of image data pre-projected into texture space
      */
@@ -148,7 +148,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
             throw e;
         }
 
-        log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         if (progressMonitor != null)
         {

@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class ImgSelectionThread implements Runnable{
 
-    private static final Logger log = LoggerFactory.getLogger(ImgSelectionThread.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImgSelectionThread.class);
     private final String imageName;
     private final PrimaryViewSelectionModel model;
     private final ImageThreadable imageThreadable;
@@ -99,11 +99,11 @@ public class ImgSelectionThread implements Runnable{
             } catch (IllegalArgumentException e) {//could not find image
                 imageThreadable.setImageViewText(
                         imageThreadable.getImageViewText() + " (full res image not found)");
-                log.warn("Could not find full res image", e);
+                LOG.warn("Could not find full res image", e);
             } catch (IOException e) {
-                log.warn("Failed to read image", e);
+                LOG.warn("Failed to read image", e);
             } catch(Exception e){
-                log.warn("Image selection thread failed to find " + imageName, e);
+                LOG.warn("Image selection thread failed to find " + imageName, e);
             }
         }
 

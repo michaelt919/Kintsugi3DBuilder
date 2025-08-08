@@ -31,7 +31,7 @@ import java.util.*;
 public class InteractiveRenderableList<ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>> 
     implements InteractiveRenderable<ContextType>, SelectableList<RenderableType>
 {
-    private static final Logger log = LoggerFactory.getLogger(InteractiveRenderableList.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InteractiveRenderableList.class);
     private List<RenderableType> renderables;
     private int selectedIndex = -1;
 
@@ -74,12 +74,12 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
             }
             catch (RuntimeException|InitializationException e)
             {
-                log.error("Error while initializing renderable", e);
+                LOG.error("Error while initializing renderable", e);
                 renderables.remove(r);
             }
             catch (Error e)
             {
-                log.error("Error while initializing renderable", e);
+                LOG.error("Error while initializing renderable", e);
                 renderables.remove(r);
 
                 //noinspection ProhibitedExceptionThrown

@@ -39,7 +39,7 @@ import java.util.function.Function;
 
 public class PageFrameController
 {
-    private static final Logger log = LoggerFactory.getLogger(PageFrameController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PageFrameController.class);
     @FXML private Pane outerRoot;
 
     @FXML private Button prevButton;

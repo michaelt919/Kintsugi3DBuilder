@@ -33,7 +33,7 @@ import java.util.Optional;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {
-    private static final Logger log = LoggerFactory.getLogger(EnvironmentModelImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EnvironmentModelImpl.class);
     private ObservableValue<EnvironmentSetting> selected;
 
     private boolean environmentMapLoaded = false;
@@ -147,13 +147,13 @@ public class EnvironmentModelImpl implements EnvironmentModel
         {
             try
             {
-                log.info("Loading environment map file " + newFile.getName());
+                LOG.info("Loading environment map file " + newFile.getName());
                 Optional<EncodableColorImage> environmentMapImage = Global.state().getIOModel().loadEnvironmentMap(newFile);
                 loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
             }
             catch (FileNotFoundException e)
             {
-                log.error("Failed to find environment map file '{}':", newFile.getName(), e);
+                LOG.error("Failed to find environment map file '{}':", newFile.getName(), e);
             }
 
             if (doesSelectedExist())
@@ -185,12 +185,12 @@ public class EnvironmentModelImpl implements EnvironmentModel
         {
             try
             {
-                log.info("Loading backplate file " + newFile.getName());
+                LOG.info("Loading backplate file " + newFile.getName());
                 Global.state().getIOModel().loadBackplate(newFile);
             }
             catch (FileNotFoundException e)
             {
-                log.error("Failed to find backplate file '{}':", newFile.getName(), e);
+                LOG.error("Failed to find backplate file '{}':", newFile.getName(), e);
             }
 
             if (doesSelectedExist())

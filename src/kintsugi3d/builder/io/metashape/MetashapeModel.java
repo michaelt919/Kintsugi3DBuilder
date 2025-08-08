@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class MetashapeModel {
-    private static final Logger log = LoggerFactory.getLogger(MetashapeModel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeModel.class);
     private final MetashapeChunk chunk;
     private final Optional<Integer> id;
     private final String label;
@@ -32,14 +32,14 @@ public class MetashapeModel {
             modelID = Optional.of(Integer.parseInt(elem.getAttribute("id")));
         }
         catch(NumberFormatException nfe){
-            log.warn("Model has no id", nfe);
+            LOG.warn("Model has no id", nfe);
         }
 
         try{
             tempLabel = elem.getAttribute("label");
         }
         catch(NumberFormatException nfe){
-            log.warn("Model has no label", nfe);
+            LOG.warn("Model has no label", nfe);
         }
 
         String path = findModelPath(chunk, modelID);

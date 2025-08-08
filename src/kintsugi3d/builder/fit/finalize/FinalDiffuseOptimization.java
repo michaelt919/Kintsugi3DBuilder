@@ -27,7 +27,7 @@ import java.util.Objects;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private static final Logger log = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
 
     // Graphics context
     private final ContextType context;
@@ -106,7 +106,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         }
         catch (IOException e)
         {
-            log.error("An error occurred while filling holes:", e);
+            LOG.error("An error occurred while filling holes:", e);
         }
         finally
         {

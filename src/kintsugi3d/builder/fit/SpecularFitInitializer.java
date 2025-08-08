@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
 
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitInitializer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitInitializer.class);
     private final ReadonlyGraphicsResources<ContextType> resources;
     private final SpecularBasisSettings specularBasisSettings;
 
@@ -58,7 +58,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             Drawable<ContextType> drawable = resources.createDrawable(averageProgram))
         {
 
-            log.info("Clustering to initialize weights...");
+            LOG.info("Clustering to initialize weights...");
 
             // Clear framebuffer
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -88,15 +88,15 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
                 .forEach(p -> solution.setWeightsValidity(p, true));
 
             // Output for debugging
-            log.info("Refined centers:");
+            LOG.info("Refined centers:");
             for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
             {
-                log.info(centers.get(b).toString());
+                LOG.info(centers.get(b).toString());
             }
         }
         catch (IOException e)
         {
-            log.error("Error occurred while initializing specular fit:", e);
+            LOG.error("Error occurred while initializing specular fit:", e);
         }
     }
 
@@ -165,7 +165,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving debug image:", e);
+            LOG.error("An error occurred saving debug image:", e);
         }
     }
 }

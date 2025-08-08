@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 
 public class MaskOptionsController implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(MaskOptionsController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MaskOptionsController.class);
 
     public CheckBox occlusionCheckBox;
     public TextField occlusionBiasTextField;

@@ -58,7 +58,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 {
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
-    private static final Logger log = LoggerFactory.getLogger(GraphicsResourcesImageSpace.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesImageSpace.class);
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
@@ -404,7 +404,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 catch (FileNotFoundException e)
                 {
                     // If the file is not found, continue and try to load other images.
-                    log.error("Failed to load image.", e);
+                    LOG.error("Failed to load image.", e);
                 }
             }
 
@@ -413,7 +413,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 progressMonitor.setProgress(viewSet.getCameraPoseCount(), "All images loaded.");
             }
 
-            log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+            LOG.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
         }
         else
         {
@@ -612,7 +612,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
         catch (IOException e)
         {
-            log.error("Error updating light calibration:", e);
+            LOG.error("Error updating light calibration:", e);
         }
     }
 
@@ -713,7 +713,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
         else
         {
-            log.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?)");
+            LOG.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?)");
         }
     }
 
@@ -763,7 +763,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     {
         // Read the image (and do ICC processing, if applicable) on a worker thread
         File fullResImageFile = viewSet.findFullResImageFile(i);
-        log.info("Decoding {}", fullResImageFile);
+        LOG.info("Decoding {}", fullResImageFile);
         return ImageIO.read(fullResImageFile);
         // TODO ICC transformation?
     }
@@ -774,7 +774,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         if (maskFile == null){
             return null;
         }
-        log.info("Decoding {}", maskFile);
+        LOG.info("Decoding {}", maskFile);
         return ImageIO.read(maskFile);
     }
 
@@ -805,14 +805,14 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
     private static void resizeImage(File fullResImageFile, ViewSet viewSet, int i) throws IOException
     {
-        log.info("Resizing image {} : No distortion parameters", fullResImageFile);
+        LOG.info("Resizing image {} : No distortion parameters", fullResImageFile);
         ImageHelper resizer = new ImageHelper(fullResImageFile);
         resizer.saveAtResolution(viewSet.getPreviewImageFile(i),
             viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
     }
 
     private static void resizeImageWithMask(File fullResImageFile, File mask, ViewSet viewSet, int i) throws IOException {
-        log.info("Resizing image {} with mask {}: No distortion parameters", fullResImageFile, mask);
+        LOG.info("Resizing image {} with mask {}: No distortion parameters", fullResImageFile, mask);
         //TODO: add checks to verify mask and img are the same size?
         ImageHelper imgResizer = new ImageHelper(fullResImageFile);
         ImageHelper maskResizer = new ImageHelper(mask);
@@ -852,7 +852,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
     private static void logFinished(File fileFinished)
     {
-        log.info("Finished {}", fileFinished);
+        LOG.info("Finished {}", fileFinished);
     }
 
     private static void markFinished(ViewSet viewSet, AtomicInteger finishedCount)
@@ -862,7 +862,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
     private static void logExists(File previewImageFile)
     {
-        log.info("Skipping {} : Already exists", previewImageFile);
+        LOG.info("Skipping {} : Already exists", previewImageFile);
     }
 
     /**
@@ -879,13 +879,13 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
         else if (viewSet.getPreviewWidth() == 0 || viewSet.getPreviewHeight() == 0)
         {
-            log.warn("Preview width or preview height are 0; skipping preview images");
+            LOG.warn("Preview width or preview height are 0; skipping preview images");
         }
         else
         {
             Date timestamp = new Date();
 
-            log.info("Generating undistorted preview images...");
+            LOG.info("Generating undistorted preview images...");
 
             viewSet.getPreviewImageFilePath().mkdirs();
 
@@ -923,7 +923,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 // Generating preview images is now complete.
                 // Go back to indeterminate progress until it starts to actually load for rendering
                 progressMonitor.setMaxProgress(0.0);
-                log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+                LOG.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
             }
         }
     }
@@ -968,9 +968,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                             {
                                 BufferedImage decodedImage = getDecodedImage(viewSet, i);
                                 BufferedImage decodedMaskImage = getDecodedMaskImage(viewSet, i);
-                                log.info("Undistorting image {}", i);
+                                LOG.info("Undistorting image {}", i);
                                 BufferedImage imageOut = undistortImage(decodedImage,decodedMaskImage, true, viewSet, projectionIndex, context);
-                                log.info("Saving image {}", i);
+                                LOG.info("Saving image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                 logFinished(viewSet.getPreviewImageFile(i));
                             }
@@ -987,7 +987,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                         }
                         catch (RuntimeException | IOException ex)
                         {
-                            log.error(ex.getMessage(), ex);
+                            LOG.error(ex.getMessage(), ex);
                             failedCount.getAndAdd(1);
                         }
                     }
@@ -995,7 +995,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             }
         });
 
-        log.info("Waiting for undistortion to finish on rendering thread");
+        LOG.info("Waiting for undistortion to finish on rendering thread");
     }
 
     private static void multithreadPreviewImgGeneration(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor,
@@ -1056,7 +1056,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                                             catch (IOException|RuntimeException ex)
                                             {
                                                 // Failure to save the final file
-                                                log.error(ex.getMessage(), ex);
+                                                LOG.error(ex.getMessage(), ex);
                                                 failedCount.getAndAdd(1);
                                             }
 
@@ -1065,7 +1065,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                                     catch (IOException|RuntimeException ex)
                                     {
                                         // Failure to undistort
-                                        log.error(ex.getMessage(), ex);
+                                        LOG.error(ex.getMessage(), ex);
                                         failedCount.getAndAdd(1);
                                     }
                                 }
@@ -1074,7 +1074,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                         catch (IOException|RuntimeException ex)
                         {
                             // Failure to read the original image
-                            log.error(ex.getMessage(), ex);
+                            LOG.error(ex.getMessage(), ex);
                             failedCount.getAndAdd(1);
                         }
                     }
@@ -1095,14 +1095,14 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                         }
                         catch (IOException|RuntimeException ex)
                         {
-                            log.error(ex.getMessage(), ex);
+                            LOG.error(ex.getMessage(), ex);
                             failedCount.getAndAdd(1);
                         }
                     }
                 }
             }));
 
-        log.info("Finished reading all images; waiting for undistortion to finish on other threads");
+        LOG.info("Finished reading all images; waiting for undistortion to finish on other threads");
     }
 
     /**
@@ -1125,7 +1125,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             if (getViewSet().getCameraProjection(projectionIndex) instanceof DistortionProjection)
             {
                 // Distortion exists; undistort
-                log.info("Undistorting image {}/{}", poseIndex, getViewSet().getCameraPoseCount());
+                LOG.info("Undistorting image {}/{}", poseIndex, getViewSet().getCameraPoseCount());
 
                 DistortionProjection distortion = (DistortionProjection) getViewSet().getCameraProjection(projectionIndex);
 
@@ -1149,7 +1149,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             }
             else if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
             {
-                log.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCameraPoseCount());
+                LOG.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCameraPoseCount());
 
                 // Fallback to simply resizing without undistorting
                 resizeImage(getViewSet().findFullResImageFile(poseIndex), getViewSet(), poseIndex);
@@ -1159,7 +1159,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             else
             {
                 // No distortion or preview dimensions, just use the original image
-                log.warn("Using full resolution image {}/{} : No distortion and preview width and/or preview height are 0",
+                LOG.warn("Using full resolution image {}/{} : No distortion and preview width and/or preview height are 0",
                     poseIndex, getViewSet().getCameraPoseCount());
                 return false;
             }

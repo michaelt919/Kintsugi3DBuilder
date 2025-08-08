@@ -49,7 +49,7 @@ import java.util.function.Predicate;
 
 public class MainApplication extends Application
 {
-    private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MainApplication.class);
 
     private static MainApplication appInstance;
 
@@ -96,13 +96,13 @@ public class MainApplication extends Application
             // Commit the current user preferences to disk
             try
             {
-                log.info("Saving user preferences file to {}", JacksonUserPreferencesSerializer.getPreferencesFile());
+                LOG.info("Saving user preferences file to {}", JacksonUserPreferencesSerializer.getPreferencesFile());
                 GlobalUserPreferencesManager.getInstance().save();
-                log.debug("User preferences file saved successfully!");
+                LOG.debug("User preferences file saved successfully!");
             }
             catch (Exception e)
             {
-                log.error("An error occurred saving user preferences", e);
+                LOG.error("An error occurred saving user preferences", e);
                 Platform.runLater(() ->
                 {
                     new Alert(AlertType.ERROR, "An error occurred while saving user preferences. Your preferences may have been lost.\nCheck the log for more info.").showAndWait();
@@ -134,7 +134,7 @@ public class MainApplication extends Application
             }
             catch (InterruptedException | ExecutionException e)
             {
-                log.error("Exception occurred confirming application quit:", e);
+                LOG.error("Exception occurred confirming application quit:", e);
                 return false;
             }
         }
@@ -262,7 +262,7 @@ public class MainApplication extends Application
         DefaultSettings.applyGlobalDefaults(settingsModel);
 
         // Load user preferences, injecting where needed
-        log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
+        LOG.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
         GlobalUserPreferencesManager.getInstance().load();
 
         if (GlobalUserPreferencesManager.getInstance().hasStartupFailures())

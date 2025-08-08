@@ -29,7 +29,7 @@ import java.util.function.Function;
 
 public class NormalOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private static final Logger log = LoggerFactory.getLogger(NormalOptimization.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NormalOptimization.class);
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> smoothNormals;
     private final NormalOptimizationSettings normalOptimizationSettings;
@@ -75,7 +75,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
-            log.debug("Estimating normals...");
+            LOG.debug("Estimating normals...");
         });
 
         smoothNormals.addSetupCallback((smoothProgram, backFramebuffer) ->
@@ -97,17 +97,17 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
-            log.debug("Smoothing normals...");
+            LOG.debug("Smoothing normals...");
         });
 
         estimateNormals.addPostUpdateCallback(framebuffer ->
         {
-            log.debug("DONE!");
+            LOG.debug("DONE!");
         });
 
         smoothNormals.addPostUpdateCallback(framebuffer ->
         {
-            log.debug("DONE!");
+            LOG.debug("DONE!");
         });
     }
 
@@ -188,7 +188,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving normal map estimate:", e);
+            LOG.error("An error occurred saving normal map estimate:", e);
         }
     }
 

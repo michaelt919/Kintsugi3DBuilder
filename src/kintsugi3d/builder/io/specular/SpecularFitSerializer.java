@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 
 public final class SpecularFitSerializer
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitSerializer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitSerializer.class);
     private static final Pattern CSV_PATTERN = Pattern.compile("\\s*,+\\s*");
 
     private SpecularFitSerializer()
@@ -66,7 +66,7 @@ public final class SpecularFitSerializer
             }
             catch (IOException e)
             {
-                log.error("An error occurred saving weight images:", e);
+                LOG.error("An error occurred saving weight images:", e);
             }
         }
     }
@@ -80,7 +80,7 @@ public final class SpecularFitSerializer
             }
             catch (IOException e)
             {
-                log.error("An error occurred saving weight images:", e);
+                LOG.error("An error occurred saving weight images:", e);
             }
         }
     }
@@ -150,7 +150,7 @@ public final class SpecularFitSerializer
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving basis functions:", e);
+            LOG.error("An error occurred saving basis functions:", e);
         }
     }
 

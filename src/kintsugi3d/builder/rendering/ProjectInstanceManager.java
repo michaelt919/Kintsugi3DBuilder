@@ -41,7 +41,7 @@ import java.util.function.DoubleUnaryOperator;
 
 public class ProjectInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(ProjectInstanceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectInstanceManager.class);
 
     private final ContextType context;
 
@@ -101,7 +101,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
     private void handleMissingFiles(Exception e)
     {
-        log.error("An error occurred loading project: ", e);
+        LOG.error("An error occurred loading project: ", e);
         if (progressMonitor != null)
         {
             progressMonitor.fail(e);
@@ -110,7 +110,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
     private void handleUserCancellation(UserCancellationException e)
     {
-        log.info("Loading project was cancelled by user: ", e);
+        LOG.info("Loading project was cancelled by user: ", e);
         if (progressMonitor != null)
         {
             progressMonitor.cancelComplete(e);
@@ -183,7 +183,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
         catch (IOException e)
         {
-            log.error("One or more images failed to load", e);
+            LOG.error("One or more images failed to load", e);
         }
 
         // Create the instance (will be initialized on the graphics thread)
@@ -655,7 +655,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             }
             catch (InitializationException e)
             {
-                log.error("Error occurred initializing new instance:", e);
+                LOG.error("Error occurred initializing new instance:", e);
 
                 newInstance.close();
                 newInstance = null;

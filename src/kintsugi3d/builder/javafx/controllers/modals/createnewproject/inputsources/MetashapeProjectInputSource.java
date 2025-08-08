@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MetashapeProjectInputSource extends InputSource{
-    private static final Logger log = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
     private MetashapeModel model;
 
     @Override

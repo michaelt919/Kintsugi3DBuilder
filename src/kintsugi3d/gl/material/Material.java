@@ -23,7 +23,7 @@ import java.util.*;
 
 public class Material implements ReadonlyMaterial
 {
-    private static final Logger log = LoggerFactory.getLogger(Material.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Material.class);
     private String name;
 
     private Vector3 ambient;
@@ -260,12 +260,12 @@ public class Material implements ReadonlyMaterial
                         }
                         catch(InputMismatchException e)
                         {
-                            log.error("Error parsing MTL file:", e);
+                            LOG.error("Error parsing MTL file:", e);
                             scanner.nextLine();
                         }
                         catch(NoSuchElementException e)
                         {
-                            log.error("Error parsing MTL file:", e);
+                            LOG.error("Error parsing MTL file:", e);
                         }
                     }
 
@@ -368,7 +368,7 @@ public class Material implements ReadonlyMaterial
         }
         catch(InputMismatchException e)
         {
-            log.error("Input error:", e);
+            LOG.error("Input error:", e);
             scanner.next();
         }
     }

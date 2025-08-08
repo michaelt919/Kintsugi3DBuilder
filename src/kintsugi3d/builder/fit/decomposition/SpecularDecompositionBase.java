@@ -34,7 +34,8 @@ import java.util.stream.IntStream;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionBase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularDecompositionBase.class);
+
     private final SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
     private final TextureResolution textureResolution;
@@ -136,7 +137,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     {
         // Fill holes
         // TODO Quick hack; should be replaced with something more robust.
-        log.info("Filling holes...");
+        LOG.info("Filling holes...");
 
         int texelCount = textureResolution.width * textureResolution.height;
 
@@ -202,7 +203,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
             }
         }
 
-        log.info("DONE!");
+        LOG.info("DONE!");
     }
 
     @Override
@@ -244,7 +245,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
         }
         catch (IOException e)
         {
-            log.error("An error occurred while saving diffuse map:", e);
+            LOG.error("An error occurred while saving diffuse map:", e);
         }
     }
 

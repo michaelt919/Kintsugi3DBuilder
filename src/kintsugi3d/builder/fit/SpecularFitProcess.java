@@ -54,7 +54,7 @@ import static javax.imageio.ImageIO.read;
  */
 public class SpecularFitProcess
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitProcess.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitProcess.class);
     private static final boolean DEBUG_IMAGES = false;
     private static final boolean TRACE_IMAGES = false;
 
@@ -86,7 +86,7 @@ public class SpecularFitProcess
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), monitor);
 
         Duration duration = Duration.between(start, Instant.now());
-        log.info("Cache found / generated in: " + duration);
+        LOG.info("Cache found / generated in: " + duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
         resources.replaceSpecularMaterialResources(optimizeFitWithCache(cache, resources.getSpecularMaterialResources(), monitor));
@@ -259,7 +259,7 @@ public class SpecularFitProcess
                     @Override
                     public void setProgress(double progress, String message)
                     {
-                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
+                        LOG.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
                     }
                 }))
         {
@@ -309,7 +309,7 @@ public class SpecularFitProcess
             fullResolution.getAlbedoORMOptimization().execute(fullResolution);
 
                     Duration duration = Duration.between(start, Instant.now());
-                    log.info("Total processing time: " + duration);
+                    LOG.info("Total processing time: " + duration);
 
                     if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
                     {
@@ -319,7 +319,7 @@ public class SpecularFitProcess
                         }
                         catch (FileNotFoundException e)
                         {
-                            log.error("An error occurred writing time file:", e);
+                            LOG.error("An error occurred writing time file:", e);
                         }
                     }
 
@@ -415,7 +415,7 @@ public class SpecularFitProcess
                                 @Override
                                 public void setProgress(double progress, String message)
                                 {
-                                    log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
+                                    LOG.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
                                 }
                             }))
                     {
@@ -602,7 +602,7 @@ public class SpecularFitProcess
                 }
                 catch (IOException e)
                 {
-                    log.error("Failed to resize diffuse constant texture", e);
+                    LOG.error("Failed to resize diffuse constant texture", e);
                     throw new RuntimeException(e);
                 }
             }

@@ -23,7 +23,7 @@ import java.util.List;
 
 public class SpecularFitTextureRescaler
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitTextureRescaler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitTextureRescaler.class);
     private final ExportSettings settings;
 
     public SpecularFitTextureRescaler(ExportSettings settings)
@@ -58,7 +58,7 @@ public class SpecularFitTextureRescaler
             }
             catch (IOException e)
             {
-                log.error("Error generating LODs for file '{}':", file, e);
+                LOG.error("Error generating LODs for file '{}':", file, e);
             }
         }
     }

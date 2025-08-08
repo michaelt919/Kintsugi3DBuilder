@@ -39,7 +39,7 @@ import java.util.ResourceBundle;
 
 public class LoggerController implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(LoggerController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerController.class);
 
     @FXML private ToggleButton toggleButtonPause;
     @FXML private ToggleButton toggleButtonError;
@@ -97,7 +97,7 @@ public class LoggerController implements Initializable
         }
         catch (Exception e)
         {
-            log.error("An error occurred while opening log directory:", e);
+            LOG.error("An error occurred while opening log directory:", e);
         }
     }
 

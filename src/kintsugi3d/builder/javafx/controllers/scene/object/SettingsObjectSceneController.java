@@ -44,7 +44,7 @@ import java.util.ResourceBundle;
 
 public class SettingsObjectSceneController implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(SettingsObjectSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SettingsObjectSceneController.class);
 
 
     @FXML private VBox root;
@@ -196,7 +196,7 @@ public class SettingsObjectSceneController implements Initializable
                 }
                 catch (IOException | RuntimeException e)
                 {
-                    log.error("Unable to open orientation view selector.", e);
+                    LOG.error("Unable to open orientation view selector.", e);
                 }
 
                 return pageLoader;
@@ -215,7 +215,7 @@ public class SettingsObjectSceneController implements Initializable
         }
         catch (IOException | RuntimeException e)
         {
-            log.error("Unable to open orientation view selector.", e);
+            LOG.error("Unable to open orientation view selector.", e);
         }
     }
 }

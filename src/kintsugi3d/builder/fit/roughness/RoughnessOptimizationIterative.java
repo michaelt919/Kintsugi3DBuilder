@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 public class RoughnessOptimizationIterative<ContextType extends Context<ContextType>>
         extends RoughnessOptimizationBase<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationIterative.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoughnessOptimizationIterative.class);
     private final TextureResolution settings;
 
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
@@ -98,7 +98,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
             backFramebuffer.clearColorBuffer(2, 1.0f /* damping */, Float.MAX_VALUE /* error */, 0.0f, 0.0f);
 
-            log.debug("Optimizing roughness...");
+            LOG.debug("Optimizing roughness...");
         });
     }
 

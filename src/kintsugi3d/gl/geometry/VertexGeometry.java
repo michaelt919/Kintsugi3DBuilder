@@ -43,7 +43,7 @@ import static org.jengineering.sjmply.PLYType.*;
  */
 public final class VertexGeometry implements ReadonlyVertexGeometry
 {
-    private static final Logger log = LoggerFactory.getLogger(VertexGeometry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VertexGeometry.class);
     private static File geometryFile;
     private File filename;
 
@@ -307,7 +307,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             }
             catch(IOException e)
             {
-                log.error("IO Exception while loading material:", e);
+                LOG.error("IO Exception while loading material:", e);
                 inst.material = null;
             }
         }
@@ -316,7 +316,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             inst.material = null;
         }
 
-        log.info("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return inst;
     }

@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 
 class EventCollector
 {
-    private static final Logger log = LoggerFactory.getLogger(EventCollector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EventCollector.class);
 
     private final Queue<Consumer<CanvasPositionListener>> canvasPos = new LinkedList<>();
     private final Queue<Consumer<CanvasSizeListener>> canvasSize = new LinkedList<>();
@@ -160,7 +160,7 @@ class EventCollector
             {
                 if (event == null)
                 {
-                    log.warn("Event was null", new Throwable());
+                    LOG.warn("Event was null", new Throwable());
                 }
                 else
                 {
@@ -170,7 +170,7 @@ class EventCollector
                     }
                     catch(Exception e)
                     {
-                        log.error("An error occurred while polling events", e);
+                        LOG.error("An error occurred while polling events", e);
                     }
                 }
             }

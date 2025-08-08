@@ -54,7 +54,7 @@ import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController extends NonDataPageControllerBase implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
     private static EyedropperController instance;
@@ -310,7 +310,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
 
         if (badColorDetected)
         {//TODO: CHANGE SOLUTION TO THIS PROBLEM?
-            log.info("Some colors could not be added. Please confirm that your selection contains the desired colors.");
+            LOG.info("Some colors could not be added. Please confirm that your selection contains the desired colors.");
         }
 
         return calculateAverageColor(selectedColors);
@@ -588,7 +588,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
         {
             Toolkit.getDefaultToolkit().beep();
             //TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
-            log.error("Please fill all fields and load a model before performing color calibration.");
+            LOG.error("Please fill all fields and load a model before performing color calibration.");
         }
     }
 
@@ -682,7 +682,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
         else
         {
             //TODO: WHAT TO DO IF NO MODEL FOUND?
-            log.error("Could not bring in luminance encodings: no model found");
+            LOG.error("Could not bring in luminance encodings: no model found");
         }
     }
 
@@ -760,7 +760,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
                 }
                 catch (IOException e)
                 {
-                    log.error("Could not convert tif image: ", e);
+                    LOG.error("Could not convert tif image: ", e);
                 }
             }
             else
@@ -791,7 +791,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
             }
             catch (Exception e)
             {
-                log.error("Could not save file");
+                LOG.error("Could not save file");
             }
 
             //reset viewport and crop button text

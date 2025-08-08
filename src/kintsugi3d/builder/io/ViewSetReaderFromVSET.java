@@ -35,7 +35,7 @@ import java.util.*;
  */
 public final class ViewSetReaderFromVSET implements ViewSetReader
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
 
     private static final ViewSetReaderFromVSET INSTANCE = new ViewSetReaderFromVSET();
 
@@ -327,7 +327,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
         builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
-        log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return builder;
     }

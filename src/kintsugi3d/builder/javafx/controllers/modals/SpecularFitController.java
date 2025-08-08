@@ -41,7 +41,7 @@ import java.net.URL;
 
 public class SpecularFitController implements GraphicsRequestController
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitController.class);
 
     @FXML private Accordion advancedAccordion;
     @FXML private CheckBox smithCheckBox;

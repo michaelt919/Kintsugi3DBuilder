@@ -35,7 +35,7 @@ import java.util.Optional;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
-    private static final Logger log = LoggerFactory.getLogger(DynamicResourceLoader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DynamicResourceLoader.class);
     private final ProgressMonitor progressMonitor;
     private final ContextType context;
     private final GraphicsResources<ContextType> resources;
@@ -149,11 +149,11 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
             }
             catch (Error e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -192,11 +192,11 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
             }
             catch (Error e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -247,7 +247,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         }
         else if (environmentFile.exists())
         {
-            log.info("Loading new environment texture.");
+            LOG.info("Loading new environment texture.");
 
             this.desiredEnvironmentFile = environmentFile;
             long lastModified = environmentFile.lastModified();
@@ -286,7 +286,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                     }
                     catch (IOException e)
                     {
-                        log.error("Error loading environment map:", e);
+                        LOG.error("Error loading environment map:", e);
                     }
                 }
             }
@@ -316,7 +316,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         }
         else if (backplateFile != null && backplateFile.exists())
         {
-            log.info("Loading new backplate texture.");
+            LOG.info("Loading new backplate texture.");
 
             this.desiredBackplateFile = backplateFile;
             long lastModified = backplateFile.lastModified();
@@ -339,7 +339,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                     }
                     catch (IOException e)
                     {
-                        log.error("Error loading backplate:", e);
+                        LOG.error("Error loading backplate:", e);
                     }
                 }
             }

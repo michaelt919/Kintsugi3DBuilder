@@ -33,7 +33,7 @@ import static org.lwjgl.opengl.GL20.*;
 
 class OpenGLShader implements Shader<OpenGLContext>
 {
-    private static final Logger log = LoggerFactory.getLogger(OpenGLShader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OpenGLShader.class);
     private static final Pattern QUOTATION_MARK_PATTERN = Pattern.compile("['\"]");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
     protected final OpenGLContext context;
@@ -107,7 +107,7 @@ class OpenGLShader implements Shader<OpenGLContext>
         // Sometimes the interrupted flag gets stuck on and needs to be reset or all File IO on the thread will fail.
         if (Thread.interrupted())
         {
-            log.warn("Thread interrupted", new Throwable("Thread interrupted"));
+            LOG.warn("Thread interrupted", new Throwable("Thread interrupted"));
         }
 
         try(Scanner scanner = new Scanner(file, StandardCharsets.UTF_8))

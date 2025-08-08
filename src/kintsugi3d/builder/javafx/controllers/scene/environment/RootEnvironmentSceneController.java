@@ -31,7 +31,7 @@ import java.util.function.Predicate;
 
 public class RootEnvironmentSceneController
 {
-    private static final Logger log = LoggerFactory.getLogger(RootEnvironmentSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootEnvironmentSceneController.class);
     @FXML
     private VBox settings;
     @FXML
@@ -110,7 +110,7 @@ public class RootEnvironmentSceneController
     private void saveEnvButton()
     {
         //TODO
-        log.debug("TODO: saved " + environmentListView.getSelectionModel().getSelectedItem() + " to the library.");
+        LOG.debug("TODO: saved " + environmentListView.getSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML

@@ -27,7 +27,7 @@ import java.util.Queue;
 
 public class GraphicsRequestManager<ContextType extends Context<ContextType>> implements GraphicsRequestQueue<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(GraphicsRequestManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GraphicsRequestManager.class);
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private ProjectInstanceManager<ContextType> instanceManager;
@@ -94,11 +94,11 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     }
                     catch (UserCancellationException e)
                     {
-                        log.error("Operation was cancelled while executing request:", e);
+                        LOG.error("Operation was cancelled while executing request:", e);
                     }
                     catch (Exception | AssertionError e)
                     {
-                        log.error("Error occurred while executing request:", e);
+                        LOG.error("Error occurred while executing request:", e);
                     }
                 }
             });
@@ -143,7 +143,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     }
                     catch (UserCancellationException e)
                     {
-                        log.error("Operation was cancelled while executing request:", e);
+                        LOG.error("Operation was cancelled while executing request:", e);
                         handleCancellation();
                     }
                     catch (Exception | AssertionError e)
@@ -179,11 +179,11 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
             }
             catch (UserCancellationException e)
             {
-                log.error("Operation was cancelled while executing request:", e);
+                LOG.error("Operation was cancelled while executing request:", e);
             }
             catch(Exception | AssertionError e)
             {
-                log.error("Error occurred while executing request:", e);
+                LOG.error("Error occurred while executing request:", e);
             }
         });
     }
@@ -210,12 +210,12 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
             }
             catch (UserCancellationException e)
             {
-                log.error("Operation was cancelled while executing request:", e);
+                LOG.error("Operation was cancelled while executing request:", e);
                 handleCancellation();
             }
             catch(Exception | AssertionError e)
             {
-                log.error("Error occurred while executing request:", e);
+                LOG.error("Error occurred while executing request:", e);
                 Platform.runLater(() ->
                     new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
             }

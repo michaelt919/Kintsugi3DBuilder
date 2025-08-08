@@ -32,7 +32,7 @@ import java.util.Objects;
 public final class ToolBox
     implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, CanvasInputController
 {
-    private static final Logger log = LoggerFactory.getLogger(ToolBox.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ToolBox.class);
     private MouseMode currentMode;
     private final ToolBindingModel toolBindingModel;
 
@@ -79,11 +79,11 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("An error occurred handling scroll event", e);
+            LOG.error("An error occurred handling scroll event", e);
         }
         catch (Error e)
         {
-            log.error("An error occurred handling scroll event", e);
+            LOG.error("An error occurred handling scroll event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -105,11 +105,11 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
         }
         catch (Error e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -128,11 +128,11 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
         }
         catch (Error e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -157,11 +157,11 @@ public final class ToolBox
             }
             catch (RuntimeException e)
             {
-                log.error("Error handling event", e);
+                LOG.error("Error handling event", e);
             }
             catch (Error e)
             {
-                log.error("Error handling event", e);
+                LOG.error("Error handling event", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -190,11 +190,11 @@ public final class ToolBox
         }
         catch (RuntimeException e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
         }
         catch (Error e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }

@@ -46,7 +46,7 @@ import java.util.Collection;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(ProjectRenderingEngine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
 
     private final ContextType context;
 
@@ -171,7 +171,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         }
         catch (UserCancellationException e)
         {
-            log.error("User cancelled operation while initializing ProjectRenderingEngine:", e);
+            LOG.error("User cancelled operation while initializing ProjectRenderingEngine:", e);
             this.close();
             if (this.progressMonitor != null)
             {
@@ -181,7 +181,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         }
         catch (RuntimeException|IOException e)
         {
-            log.error("Error occurred initializing ProjectRenderingEngine:", e);
+            LOG.error("Error occurred initializing ProjectRenderingEngine:", e);
             this.close();
             if (this.progressMonitor != null)
             {
@@ -203,7 +203,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         }
         catch (Exception e)
         {
-            log.error("Error occurred during update:", e);
+            LOG.error("Error occurred during update:", e);
         }
 
         this.updateWorldSpaceDefinition();
@@ -324,13 +324,13 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         {
             if (!suppressErrors)
             {
-                log.error("Error during draw call", e);
+                LOG.error("Error during draw call", e);
                 suppressErrors = true; // Prevent excessive errors
             }
         }
         catch (Error e)
         {
-            log.error("Error during draw call", e);
+            LOG.error("Error during draw call", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -392,7 +392,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         }
         catch (Exception e)
         {
-            log.error("Error closing ProjectRenderingEngine:", e);
+            LOG.error("Error closing ProjectRenderingEngine:", e);
         }
     }
 
@@ -435,7 +435,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         }
         catch (Exception e)
         {
-            log.error("Error reloading shaders:", e);
+            LOG.error("Error reloading shaders:", e);
         }
     }
 
@@ -468,7 +468,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                 throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
             }
 
-            log.info("Starting glTF export...");
+            LOG.info("Starting glTF export...");
             if(progressMonitor != null){
                 progressMonitor.setProcessName("glTF Export");
             }
@@ -521,11 +521,11 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                 }
 
                 exporter.write(new File(outputDirectory, filename));
-                log.info("DONE!");
+                LOG.info("DONE!");
             }
             catch (IOException e)
             {
-                log.error("Error occurred during glTF export:", e);
+                LOG.error("Error occurred during glTF export:", e);
             }
         }
     }

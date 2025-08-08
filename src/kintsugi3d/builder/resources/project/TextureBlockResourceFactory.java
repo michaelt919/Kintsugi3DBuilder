@@ -25,7 +25,7 @@ import java.io.IOException;
 
 public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements Resource
 {
-    private static final Logger log = LoggerFactory.getLogger(TextureBlockResourceFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TextureBlockResourceFactory.class);
     private final ImageCache<ContextType> imageCache;
 
     private final GraphicsResourcesCommon<ContextType> sharedResources;
@@ -61,7 +61,7 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         }
         catch (IOException e)
         {
-            log.warn("Incomplete cache; will try to rebuild.");
+            LOG.warn("Incomplete cache; will try to rebuild.");
 
             // Try to reinitialize in case the cache was only partially complete.
             imageCache.initialize(new DefaultProgressMonitor()

@@ -27,7 +27,7 @@ import java.util.List;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);
 
     private final DoubleVector3[] diffuseAlbedos;
     private final SimpleMatrix specularRed;

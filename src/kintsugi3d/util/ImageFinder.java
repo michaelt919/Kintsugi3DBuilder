@@ -26,7 +26,7 @@ import java.util.stream.Stream;
  */
 public final class ImageFinder
 {
-    private static final Logger log = LoggerFactory.getLogger(ImageFinder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageFinder.class);
 
     private static final ImageFinder INSTANCE = new ImageFinder();
     private static final Set<String> IMG_FORMATS = Set.of( "png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF");
@@ -84,12 +84,12 @@ public final class ImageFinder
 
     private static void logFileGuess(File imageFileGuess)
     {
-        log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+        LOG.info("Trying '{}'", imageFileGuess.getAbsolutePath());
     }
 
     private static void logFound()
     {
-        log.info("Found!!");
+        LOG.info("Found!!");
     }
 
     public File findImageFile(File requestedFile, String... suffixes) throws FileNotFoundException

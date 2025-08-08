@@ -29,7 +29,7 @@ import java.util.*;
 
 
 public class MetashapeChunk {
-    private static final Logger log = LoggerFactory.getLogger(MetashapeChunk.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeChunk.class);
 
     private MetashapeDocument metashapeDocument;
     private String label;
@@ -65,7 +65,7 @@ public class MetashapeChunk {
             Element modelsElem = (Element) fullChunkDocument.getElementsByTagName("models").item(0);
             defaultModelID = Optional.of(Integer.parseInt(modelsElem.getAttribute("active_id")));
         } catch (NumberFormatException | NullPointerException e) {
-            log.warn("Could not find active id for " + document.getPsxFilePath(), e);
+            LOG.warn("Could not find active id for " + document.getPsxFilePath(), e);
         }
 
         //only one chunk in this inner chunk document, so no need for a for loop
@@ -89,7 +89,7 @@ public class MetashapeChunk {
         try {
             frameXML = UnzipHelper.unzipToDocument(new File(frameZipPath));
         } catch (IOException e) {
-            log.error("An error occurred loading frame.xml for Metashape chunk:", e);
+            LOG.error("An error occurred loading frame.xml for Metashape chunk:", e);
         }
 
         MetashapeChunk returned = new MetashapeChunk()

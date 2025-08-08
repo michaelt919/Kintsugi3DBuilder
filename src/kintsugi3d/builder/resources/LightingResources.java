@@ -25,7 +25,7 @@ import java.io.IOException;
 
 public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private static final Logger log = LoggerFactory.getLogger(LightingResources.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LightingResources.class);
     private final ContextType context;
     private final SceneModel sceneModel;
 
@@ -71,7 +71,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         }
         catch (IOException e)
         {
-            log.error("Failed to load shader.", e);
+            LOG.error("Failed to load shader.", e);
         }
     }
 
@@ -99,7 +99,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         }
         catch (IOException|RuntimeException e)
         {
-            log.error("Failed to load shader.", e);
+            LOG.error("Failed to load shader.", e);
         }
     }
 

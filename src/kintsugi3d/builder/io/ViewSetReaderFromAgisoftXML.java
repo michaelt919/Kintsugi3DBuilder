@@ -41,7 +41,7 @@ import java.util.zip.ZipInputStream;
  */
 public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromAgisoftXML.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSetReaderFromAgisoftXML.class);
 
     private static final ViewSetReader INSTANCE = new ViewSetReaderFromAgisoftXML();
 
@@ -244,7 +244,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 intVersion *= 10;
                                 intVersion += Integer.parseInt(verComponent);
                             }
-                            log.debug("Agisoft XML version {} ({})\n", version, intVersion);
+                            LOG.debug("Agisoft XML version {} ({})\n", version, intVersion);
                             break;
                         }
                         case "chunk":
@@ -254,7 +254,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             {
                                 chunkLabel = "unnamed";
                             }
-                            log.debug("Reading chunk '{}'\n", chunkLabel);
+                            LOG.debug("Reading chunk '{}'\n", chunkLabel);
 
                             // Commented out; chunk XMLs seem to always be labelled version 1.2.0; regardless of Metashape version or actual format details.
 //                            // chunk XMLs put the version in the chunk tag
@@ -274,14 +274,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         }
                         case "group":
                             groupLabel = reader.getAttributeValue(null, "label");
-                            log.debug("Reading group '{}'\n", groupLabel);
+                            LOG.debug("Reading group '{}'\n", groupLabel);
                             lightIndex = nextLightIndex;
                             nextLightIndex++;
-                            log.debug("Light index: " + lightIndex);
+                            LOG.debug("Light index: " + lightIndex);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
-                            log.debug("\tAdding sensor '{}'\n", sensorID);
+                            LOG.debug("\tAdding sensor '{}'\n", sensorID);
                             sensor = new Sensor(sensorID);
                             break;
                         case "camera":
@@ -306,7 +306,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                             // Set default light index
                                             lightIndex = defaultLightIndex = nextLightIndex;
                                             nextLightIndex++;
-                                            log.debug("Using default light index: " + lightIndex);
+                                            LOG.debug("Using default light index: " + lightIndex);
                                         }
 
                                         camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
@@ -488,7 +488,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     // model transform (nested within a <model> tag)
                                     if (expectedSize == 9)
                                     {
-                                        log.debug("\tSetting model rotation.");
+                                        LOG.debug("\tSetting model rotation.");
                                         modelTransform = Matrix3.fromRows(
                                                 new Vector3(m[0], m[3], m[6]),
                                                 new Vector3(m[1], m[4], m[7]),
@@ -497,7 +497,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     }
                                     else
                                     {
-                                        log.debug("\tSetting model transformation.");
+                                        LOG.debug("\tSetting model transformation.");
                                         modelTransform = Matrix3.fromRows(
                                                 new Vector3(m[0], m[4], m[8]),
                                                 new Vector3(m[1], m[5], m[9]),
@@ -512,7 +512,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     {
                                         if (expectedSize == 9)
                                         {
-                                            log.debug("\tSetting global rotation.");
+                                            LOG.debug("\tSetting global rotation.");
                                             globalTransform = Matrix3.fromRows(
                                                     new Vector3(m[0], m[3], m[6]),
                                                     new Vector3(m[1], m[4], m[7]),
@@ -521,7 +521,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                         }
                                         else
                                         {
-                                            log.debug("\tSetting global transformation.");
+                                            LOG.debug("\tSetting global transformation.");
                                             globalTransform = Matrix3.fromRows(
                                                     new Vector3(m[0], m[4], m[8]),
                                                     new Vector3(m[1], m[5], m[9]),
@@ -538,7 +538,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "translation":
                             if (camera == null && !ignoreGlobalTransforms)
                             {
-                                log.debug("\tSetting global translate.");
+                                LOG.debug("\tSetting global translate.");
                                 String[] components = reader.getElementText().split("\\s");
                                 globalTranslate = new Vector3(
                                     -Float.parseFloat(components[0]),
@@ -550,7 +550,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "scale":
                             if (camera == null && !ignoreGlobalTransforms)
                             {
-                                log.debug("\tSetting global scale.");
+                                LOG.debug("\tSetting global scale.");
                                 globalScale = 1.0f / Float.parseFloat(reader.getElementText());
                             }
                             break;
@@ -600,13 +600,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "dense_cloud":
                             if (intVersion < 110)
                             {
-                                log.debug("Unexpected tag '{}' for psz version {}\n",
+                                LOG.debug("Unexpected tag '{}' for psz version {}\n",
                                     reader.getLocalName(), version);
                             }
                             break;
 
                         default:
-                            log.debug("Unexpected tag '{}'\n", reader.getLocalName());
+                            LOG.debug("Unexpected tag '{}'\n", reader.getLocalName());
                             break;
                     }
                     break;
@@ -616,11 +616,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     switch (reader.getLocalName())
                     {
                         case "chunk":
-                            log.debug("Finished chunk '{}'\n", chunkLabel);
+                            LOG.debug("Finished chunk '{}'\n", chunkLabel);
                             chunkLabel = "";
                             break;
                         case "group":
-                            log.debug("Finished group '{}'\n", groupLabel);
+                            LOG.debug("Finished group '{}'\n", groupLabel);
                             groupLabel = "";
                             lightIndex = defaultLightIndex;
                             break;
@@ -638,7 +638,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 {
                                     // Only add camera if it has a valid transform
                                     cameraSet.add(camera);
-                                    log.debug("\tAdding camera {}, with sensor {} and image {}\n",
+                                    LOG.debug("\tAdding camera {}, with sensor {} and image {}\n",
                                         cameraID, sensorID, imageFile);
                                 }
                                 camera = null; // Clear the camera regardless
@@ -730,7 +730,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 builder.setCurrentImageFile(new File(cam.filename));
                 if (imagePathMap != null)
                 {
-                    log.error("Camera path override not found for camera: " + camID);
+                    LOG.error("Camera path override not found for camera: " + camID);
                 }
             }
 
@@ -785,7 +785,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             catch (IOException e)
             {
                 // Suppress exception so that a missing masks directory doesn't cause the whole project to fail to load.
-                log.warn("Error extracting masks: {}", masksDir);
+                LOG.warn("Error extracting masks: {}", masksDir);
             }
         }
 
@@ -866,7 +866,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     {
         Map<Integer, String> maskFiles = new HashMap<>();
 
-        log.info("Unzipping masks folder...");
+        LOG.info("Unzipping masks folder...");
         Document docXml = UnzipHelper.unzipToDocument(masksZipFile, "doc.xml");
         NodeList maskList = docXml.getElementsByTagName("mask");
 

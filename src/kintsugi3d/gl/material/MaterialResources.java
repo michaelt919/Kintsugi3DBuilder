@@ -24,7 +24,7 @@ import java.io.IOException;
 // TODO use glTF instead of / in addition to OBJ material?
 public class MaterialResources<ContextType extends Context<ContextType>> implements ContextBound<ContextType>, Resource
 {
-    private static final Logger log = LoggerFactory.getLogger(MaterialResources.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MaterialResources.class);
 
     private final ContextType context;
 
@@ -108,7 +108,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         try
         {
             File diffuseFile = finder.findImageFile(new File(textureDirectory, material.getDiffuseMap().getMapName()));
-            log.info("Diffuse texture found.");
+            LOG.info("Diffuse texture found.");
             diffuseTexture = context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true)
                 .setInternalFormat(ColorFormat.RGB8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -123,7 +123,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         try
         {
             File normalFile = finder.findImageFile(new File(textureDirectory, material.getNormalMap().getMapName()));
-            log.info("Normal texture found.");
+            LOG.info("Normal texture found.");
             normalTexture = context.getTextureFactory().build2DColorTextureFromFile(normalFile, true)
                 .setInternalFormat(ColorFormat.RG8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -138,7 +138,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         try
         {
             File specularFile = finder.findImageFile(new File(textureDirectory, material.getSpecularMap().getMapName()));
-            log.info("Specular texture found.");
+            LOG.info("Specular texture found.");
             specularTexture = context.getTextureFactory().build2DColorTextureFromFile(specularFile, true)
                 .setInternalFormat(ColorFormat.RGB8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -153,7 +153,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         try
         {
             File roughnessFile = finder.findImageFile(new File(textureDirectory, material.getRoughnessMap().getMapName()));
-            log.info("Roughness texture found.");
+            LOG.info("Roughness texture found.");
             roughnessTexture = context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true)
                 .setInternalFormat(ColorFormat.R8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -168,7 +168,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         try
         {
             File occlusionFile = finder.findImageFile(new File(textureDirectory, material.getAmbientOcclusionMap().getMapName()));
-            log.info("Occlusion texture found.");
+            LOG.info("Occlusion texture found.");
             occlusionTexture = context.getTextureFactory().build2DColorTextureFromFile(occlusionFile, true)
                 .setInternalFormat(ColorFormat.R8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())

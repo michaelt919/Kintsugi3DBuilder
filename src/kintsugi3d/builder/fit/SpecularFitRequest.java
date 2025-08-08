@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 
 public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, ObservableGraphicsRequest
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
 
     private static final boolean DEBUG_IMAGES = false;
@@ -124,7 +124,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
                 FinalReconstruction<ContextType> reconstruction =
                     new FinalReconstruction<>(resources, settings.getTextureResolution(), settings.getReconstructionSettings());
 
-                log.info("Reconstructing:");
+                LOG.info("Reconstructing:");
                 List<Map<String, ColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
                         "basis", ReconstructionShaders.getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
                         "reflectivity", ReconstructionShaders.getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),

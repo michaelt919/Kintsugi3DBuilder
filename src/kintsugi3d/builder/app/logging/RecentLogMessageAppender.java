@@ -39,7 +39,7 @@ import java.util.List;
 )
 public class RecentLogMessageAppender extends AbstractAppender
 {
-    private static final Logger logger = LoggerFactory.getLogger(RecentLogMessageAppender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RecentLogMessageAppender.class);
     private static final int MAX_MESSAGES = 2000;
     private static final int MESSAGE_TRUNC_SIZE = 10;
     private static RecentLogMessageAppender INSTANCE;
@@ -118,7 +118,7 @@ public class RecentLogMessageAppender extends AbstractAppender
 
     public boolean isLevelAvailable(Level level)
     {
-        return logger.isEnabledForLevel(level);
+        return LOG.isEnabledForLevel(level);
     }
 
     private void dispatchEvents(LogMessage message)

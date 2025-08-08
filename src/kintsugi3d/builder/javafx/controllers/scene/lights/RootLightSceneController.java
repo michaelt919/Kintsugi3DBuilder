@@ -43,7 +43,7 @@ import java.util.function.Predicate;
 
 public class RootLightSceneController implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(RootLightSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootLightSceneController.class);
     @FXML private VBox settings;
     @FXML private SettingsLightSceneController settingsController;
     @FXML private TableView<LightGroupSetting> tableView;
@@ -212,7 +212,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void saveGroup()
     {
-        log.debug("TODO saveGroup");//TODO
+        LOG.debug("TODO saveGroup");//TODO
     }
 
     @FXML
@@ -311,7 +311,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void keyframeGroup()
     {
-        log.debug("TODO keyframeGroup");//TODO
+        LOG.debug("TODO keyframeGroup");//TODO
     }
 
     @FXML
@@ -389,7 +389,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void saveLight()
     {
-        log.debug("TODO saveLight");//TODO
+        LOG.debug("TODO saveLight");//TODO
     }
 
     @FXML

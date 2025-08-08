@@ -38,7 +38,7 @@ import java.util.Objects;
 
 public abstract class ViewSelectController extends DataReceiverPageControllerBase<InputSource> implements ImageThreadable
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSelectController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSelectController.class);
     @FXML
     protected TreeView<String> chunkTreeView;
     @FXML

@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class MetashapeDocument {
-    private static final Logger log = LoggerFactory.getLogger(MetashapeDocument.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeDocument.class);
 
     private String psxFilePath;
 
@@ -89,7 +89,7 @@ public class MetashapeDocument {
             loadChunks(chunkList);
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
-            log.error("An error occurred:", e);
+            LOG.error("An error occurred:", e);
         }
     }
 

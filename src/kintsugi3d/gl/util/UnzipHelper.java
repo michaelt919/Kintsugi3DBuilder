@@ -43,7 +43,7 @@ import java.util.zip.ZipInputStream;
 
 public final class UnzipHelper
 {
-    private static final Logger log = LoggerFactory.getLogger(UnzipHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UnzipHelper.class);
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     private UnzipHelper()
@@ -53,7 +53,7 @@ public final class UnzipHelper
     private static String unzipToString(File zipFile) throws IOException
     {
         //unzip the zip file, find the .xml portion, and return it as a document
-        log.info("Unzipping {}", zipFile);
+        LOG.info("Unzipping {}", zipFile);
         try (ZipFile file = new ZipFile(zipFile))
         {
             Enumeration<? extends ZipEntry> entries = file.entries();
@@ -149,7 +149,7 @@ public final class UnzipHelper
         }
         catch (RuntimeException | IOException | ParserConfigurationException | SAXException e)
         {
-            log.error("Error converting document:", e);
+            LOG.error("Error converting document:", e);
         }
         return null;
     }
@@ -167,7 +167,7 @@ public final class UnzipHelper
         }
         catch (TransformerException e)
         {
-            log.error("Error converting document:", e);
+            LOG.error("Error converting document:", e);
         }
 
         return null;
@@ -194,10 +194,10 @@ public final class UnzipHelper
         }
         catch (IOException | ImageReadException e)
         {
-            log.error("Error unzipping images:", e);
+            LOG.error("Error unzipping images:", e);
         }
 
-        log.info("Total images extracted: {}", images.size());
+        LOG.info("Total images extracted: {}", images.size());
         return images;
     }
 
@@ -270,7 +270,7 @@ public final class UnzipHelper
         }
         catch (IOException | ImageReadException e)
         {
-            log.error("Error unzipping images:", e);
+            LOG.error("Error unzipping images:", e);
         }
 
         if (docXml == null)
@@ -297,7 +297,7 @@ public final class UnzipHelper
             imagesMap.put(cameraId, img);
         }
 
-        log.info("Total images extracted: {}", imagesMap.size());
+        LOG.info("Total images extracted: {}", imagesMap.size());
         return imagesMap;
     }
 

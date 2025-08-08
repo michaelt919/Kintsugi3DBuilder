@@ -43,7 +43,7 @@ import java.util.*;
  */
 public final class ViewSet implements ReadonlyViewSet
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
@@ -407,7 +407,7 @@ public final class ViewSet implements ReadonlyViewSet
             {
                 result.recommendedFarPlane = findFarPlane(result.cameraPoseInvList);
                 result.recommendedNearPlane = result.getRecommendedFarPlane() / 32.0f;
-                log.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
+                LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
             }
 
             // Fill with default lights if not specified
@@ -1294,7 +1294,7 @@ public final class ViewSet implements ReadonlyViewSet
 
                 if (maskFile == null)
                 {
-                    log.warn("Specified mask file not found: {}", originalMaskFile.getPath());
+                    LOG.warn("Specified mask file not found: {}", originalMaskFile.getPath());
                 }
             }
 
@@ -1337,7 +1337,7 @@ public final class ViewSet implements ReadonlyViewSet
             }
             catch (IOException e)
             {
-                log.error("Failed to copy {} to {}", srcFile.getName(), destDir.getPath());
+                LOG.error("Failed to copy {} to {}", srcFile.getName(), destDir.getPath());
             }
         }
     }
@@ -1366,7 +1366,7 @@ public final class ViewSet implements ReadonlyViewSet
         // Unzip masks if needed
         if (masksSrcDir.toString().endsWith(".zip"))
         {
-            log.info("Unzipping masks folder...");
+            LOG.info("Unzipping masks folder...");
             try
             {
                 // Just unzip everything for efficiency; could clean up any unused files (i.e. non-masks) but probably not necessary
@@ -1380,7 +1380,7 @@ public final class ViewSet implements ReadonlyViewSet
             }
             catch (IOException e)
             {
-                log.error("Failed to unzip masks.", e);
+                LOG.error("Failed to unzip masks.", e);
             }
         }
         else
@@ -1413,7 +1413,7 @@ public final class ViewSet implements ReadonlyViewSet
             }
             catch (IllegalArgumentException | NullPointerException e)
             {
-                log.warn("Exception relativizing {} within {}", this.geometryFile, effectiveModelDirectory);
+                LOG.warn("Exception relativizing {} within {}", this.geometryFile, effectiveModelDirectory);
             }
         }
 
@@ -1469,7 +1469,7 @@ public final class ViewSet implements ReadonlyViewSet
         // Unzip model and textures if needed
         if (modelSrcDir.toString().endsWith(".zip"))
         {
-            log.info("Unzipping model folder...");
+            LOG.info("Unzipping model folder...");
             try
             {
                 // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
@@ -1480,7 +1480,7 @@ public final class ViewSet implements ReadonlyViewSet
             }
             catch (IOException e)
             {
-                log.error("Failed to unzip model / textures.", e);
+                LOG.error("Failed to unzip model / textures.", e);
             }
         }
         else

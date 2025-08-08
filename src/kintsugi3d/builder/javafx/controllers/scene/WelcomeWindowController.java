@@ -36,7 +36,7 @@ import java.util.List;
 
 public class WelcomeWindowController
 {
-    private static final Logger log = LoggerFactory.getLogger(WelcomeWindowController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WelcomeWindowController.class);
 
 
     private static WelcomeWindowController INSTANCE;

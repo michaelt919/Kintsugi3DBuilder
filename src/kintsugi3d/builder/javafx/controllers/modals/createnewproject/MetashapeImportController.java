@@ -40,7 +40,7 @@ import java.util.Optional;
 
 public class MetashapeImportController extends DataTransformerPageControllerBase<InputSource, InputSource>
 {
-    private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeImportController.class);
 
     @FXML private Text fileNameTxtField;
     @FXML private Pane rootPane;
@@ -129,7 +129,7 @@ public class MetashapeImportController extends DataTransformerPageControllerBase
         }
         else
         {
-            log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
+            LOG.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
         }
 
         return true;

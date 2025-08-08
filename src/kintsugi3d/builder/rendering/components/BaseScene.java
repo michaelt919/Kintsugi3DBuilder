@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 
 public class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(BaseScene.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BaseScene.class);
 
     protected final ContextType context;
     protected final SceneModel sceneModel;
@@ -140,7 +140,7 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
             }
             catch (Exception e)
             {
-                log.error("Error occurred while closing scene:", e);
+                LOG.error("Error occurred while closing scene:", e);
             }
         }
 

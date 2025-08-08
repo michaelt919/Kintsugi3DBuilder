@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 
 public final class Rendering
 {
-    private static final Logger log = LoggerFactory.getLogger(Rendering.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Rendering.class);
     private Rendering()
     {
     }
@@ -324,7 +324,7 @@ public final class Rendering
         {
             if (key == Key.F11)
             {
-                log.info("Reloading program...");
+                LOG.info("Reloading program...");
 
                 try
                 {
@@ -333,11 +333,11 @@ public final class Rendering
                 }
                 catch (RuntimeException e)
                 {
-                    log.error("Error occurred while reloading application:", e);
+                    LOG.error("Error occurred while reloading application:", e);
                 }
                 catch(Error e)
                 {
-                    log.error("Error occurred while reloading application:", e);
+                    LOG.error("Error occurred while reloading application:", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -514,7 +514,7 @@ public final class Rendering
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
-                        log.error("Error occurred processing arguments:", e);
+                        LOG.error("Error occurred processing arguments:", e);
                     }
                 });
             }
@@ -548,7 +548,7 @@ public final class Rendering
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
             {
-                log.error("Reflection error occurred processing arguments:", e);
+                LOG.error("Reflection error occurred processing arguments:", e);
             }
         }
     }
@@ -562,6 +562,6 @@ public final class Rendering
             .map(String::toLowerCase)
             .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
-        log.info("Supported image formats: " + set);
+        LOG.info("Supported image formats: " + set);
     }
 }

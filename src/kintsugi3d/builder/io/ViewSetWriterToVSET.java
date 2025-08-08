@@ -27,7 +27,7 @@ import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSetWriterToVSET.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSetWriterToVSET.class);
     private static final ViewSetWriter INSTANCE = new ViewSetWriterToVSET();
 
     public static ViewSetWriter getInstance()
@@ -122,7 +122,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             }
             else
             {
-                log.warn("Unrecognized type in view set settings model when writing to file: {}", type);
+                LOG.warn("Unrecognized type in view set settings model when writing to file: {}", type);
             }
 
             out.print(setting.getName());

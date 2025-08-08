@@ -23,7 +23,7 @@ import java.io.IOException;
 public abstract class RoughnessOptimizationBase<ContextType extends Context<ContextType>>
         implements RoughnessOptimization<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationBase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoughnessOptimizationBase.class);
 
     protected final ProgramObject<ContextType> specularRoughnessFitProgram;
     protected final VertexBuffer<ContextType> rect;
@@ -101,7 +101,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         }
         catch (IOException e)
         {
-            log.error("An error occurred while saving textures:", e);
+            LOG.error("An error occurred while saving textures:", e);
         }
     }
 

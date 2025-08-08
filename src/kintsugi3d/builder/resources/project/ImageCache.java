@@ -46,7 +46,7 @@ import java.util.stream.IntStream;
 
 public class ImageCache<ContextType extends Context<ContextType>>
 {
-    private static final Logger log = LoggerFactory.getLogger(ImageCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageCache.class);
     private final ContextType context;
     private final GraphicsResourcesImageSpace<ContextType> resources;
     private final ImageCacheSettings settings;
@@ -77,11 +77,11 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 readSampleLocationsFromFile();
                 initialized = true; // reading sample locations succeeded; assume that we already have a valid cache
 
-                log.info("Using existing cache.");
+                LOG.info("Using existing cache.");
             }
             catch (IOException | RuntimeException e)
             {
-                log.error("Error initializing image cache:", e);
+                LOG.error("Error initializing image cache:", e);
 
                 // Reset in case it partially succeeded.
                 Arrays.stream(this.sampledPixelCoords).forEach(column -> Arrays.fill(column, null));
@@ -217,7 +217,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         // Sometimes the interrupted flag gets stuck on and needs to be reset or all File IO on the thread will fail.
         if (Thread.interrupted())
         {
-            log.warn("Thread interrupted", new Throwable("Thread interrupted"));
+            LOG.warn("Thread interrupted", new Throwable("Thread interrupted"));
         }
 
         try(Scanner scanner = new Scanner(getSampleLocationsFile(), StandardCharsets.UTF_8))
@@ -403,7 +403,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            log.warn("Incomplete cache; will try to rebuild.");
+            LOG.warn("Incomplete cache; will try to rebuild.");
 
             // Try to reinitialize in case the cache was only partially complete.
             this.initialize(new DefaultProgressMonitor()

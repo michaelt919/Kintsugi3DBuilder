@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 
 public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
-    private static final Logger log = LoggerFactory.getLogger(AgisoftPrimaryViewSelectionModel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AgisoftPrimaryViewSelectionModel.class);
     private final String chunkName;
     private final List<View> views;
     private final List<Element> cameras;
@@ -102,7 +102,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
             this.cameraIdToFullRes = parentChunk.buildCameraPathsMap(false);
         }
         catch(FileNotFoundException fnfe){
-           log.warn("Failed to find source directories in Metashape project. Project images may not be found.", fnfe);
+           LOG.warn("Failed to find source directories in Metashape project. Project images may not be found.", fnfe);
         }
     }
 
@@ -144,7 +144,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
                 }
             }
             catch(NumberFormatException nfe){
-                log.warn("Failed to parse camera id.", nfe);
+                LOG.warn("Failed to parse camera id.", nfe);
             }
         }
 
@@ -165,7 +165,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
             if(finalImgFile != null){return Optional.of(finalImgFile.getPath());}
         }
         catch(IOException e) {
-            log.warn("Error retrieving canonical file path for " + imageFile.getPath(), e);
+            LOG.warn("Error retrieving canonical file path for " + imageFile.getPath(), e);
         }
 
         //throw a hail mary and see if it sticks
