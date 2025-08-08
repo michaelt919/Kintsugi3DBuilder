@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.window;
+package kintsugi3d.builder.javafx;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
