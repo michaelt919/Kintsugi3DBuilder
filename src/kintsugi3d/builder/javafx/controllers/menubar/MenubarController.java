@@ -820,7 +820,7 @@ public class MenubarController
 
     public void openAboutModal()
     {
-        ProjectIO.getInstance().openAboutModal(window);
+        ExperienceManager.getInstance().getAbout().tryOpen();
     }
 
     public void objectOrientation()
@@ -865,7 +865,7 @@ public class MenubarController
 
     public void openSystemSettingsModal()
     {
-        ProjectIO.getInstance().openSystemSettingsModal(javaFXState, window);
+        ExperienceManager.getInstance().getSystemSettings().tryOpen();
     }
 
     public void launchViewerApp()

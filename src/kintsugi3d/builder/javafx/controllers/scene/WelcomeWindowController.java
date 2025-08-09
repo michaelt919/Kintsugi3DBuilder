@@ -22,13 +22,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.GraphicsRequestManager;
-import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.gl.core.Context;
+import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,9 +32,6 @@ import java.util.List;
 
 public class WelcomeWindowController
 {
-    private static final Logger LOG = LoggerFactory.getLogger(WelcomeWindowController.class);
-
-
     private static WelcomeWindowController INSTANCE;
 
     @FXML private Button recent1;
@@ -47,7 +40,6 @@ public class WelcomeWindowController
     @FXML private Button recent4;
     @FXML private Button recent5;
     public List<Button> recentButtons = new ArrayList<>();
-    private JavaFXState javaFXState;
 
     public static WelcomeWindowController getInstance()
     {
@@ -61,15 +53,13 @@ public class WelcomeWindowController
     private Runnable userDocumentationHandler;
     private Stage window;
 
-    public <ContextType extends Context<ContextType>> void init(
-            Stage injectedStage, GraphicsRequestManager<ContextType> requestQueue, JavaFXState javaFXState,
-            Runnable injectedUserDocumentationHandler) {
+    public void init(Stage injectedStage, Runnable injectedUserDocumentationHandler)
+    {
         INSTANCE = this;
 
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
-        this.javaFXState = javaFXState;
 
         recentButtons.add(recent1);
         recentButtons.add(recent2);
@@ -80,19 +70,23 @@ public class WelcomeWindowController
         RecentProjects.updateAllControlStructures();
     }
 
-    public void handleMenuItemSelection(MenuItem item) {
+    public void handleMenuItemSelection(MenuItem item)
+    {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
 
-    public void splitMenuButtonActions(ActionEvent actionEvent) {
+    public void splitMenuButtonActions(ActionEvent actionEvent)
+    {
         Object source = actionEvent.getSource();
         //user clicks on a menu item
-        if (source.getClass() == MenuItem.class) {
+        if (source.getClass() == MenuItem.class)
+        {
             handleMenuItemSelection((MenuItem) actionEvent.getSource());
         }
         //user clicks on the button, so unroll the menu
-        else{
+        else
+        {
             unrollMenu();
         }
     }
@@ -111,12 +105,14 @@ public class WelcomeWindowController
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
     }
 
-    public void hide(){
+    public void hide()
+    {
         window.hide();
     }
 
-    public void show(){
-        Platform.runLater(()->window.show());
+    public void show()
+    {
+        Platform.runLater(() -> window.show());
     }
 
     @FXML
@@ -125,50 +121,62 @@ public class WelcomeWindowController
         userDocumentationHandler.run();
     }
 
-    public void unrollMenu() {
+    public void unrollMenu()
+    {
         recentProjectsSplitMenuButton.show();
     }
 
-    public void hideMenu(MouseEvent mouseEvent){
+    public void hideMenu(MouseEvent mouseEvent)
+    {
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
     }
 
-    public void recentButton(ActionEvent actionEvent) {
+    public void recentButton(ActionEvent actionEvent)
+    {
         Object source = actionEvent.getSource();
         //user clicks on a menu item
-        if (source.getClass() == Button.class) {
+        if (source.getClass() == Button.class)
+        {
             handleButtonSelection((Button) actionEvent.getSource());
         }
     }
 
-    public void handleButtonSelection(Button item) {
+    public void handleButtonSelection(Button item)
+    {
         ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
         int i = 0;
-        for (Button button : recentButtons){
-            if (button == item){
+        for (Button button : recentButtons)
+        {
+            if (button == item)
+            {
                 ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
             }
             i++;
         }
     }
 
-    public void openSystemSettingsModal() {
-        ProjectIO.getInstance().openSystemSettingsModal(javaFXState, parentWindow);
+    public void openSystemSettingsModal()
+    {
+        ExperienceManager.getInstance().getSystemSettings().tryOpen();
     }
 
-    public void openAboutModal() {
-        ProjectIO.getInstance().openAboutModal(parentWindow);
+    public void openAboutModal()
+    {
+        ExperienceManager.getInstance().getAbout().tryOpen();
     }
 
-    public void showIfNoModelLoadedAndNotProcessing() {
+    public void showIfNoModelLoadedAndNotProcessing()
+    {
         if (!Global.state().getIOModel().hasValidHandler() &&
-                !ProgressBarsController.getInstance().isProcessing()) {
+            !ProgressBarsController.getInstance().isProcessing())
+        {
             show();
         }
     }
 
-    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
+    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r)
+    {
         recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
 }

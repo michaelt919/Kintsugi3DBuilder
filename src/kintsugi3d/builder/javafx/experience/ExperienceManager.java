@@ -12,6 +12,8 @@ public class ExperienceManager
     private final MaskOptions maskOptions = new MaskOptions();
     private final ToneCalibration toneCalibration = new ToneCalibration();
     private final Log log = new Log();
+    private final SystemSettings systemSettings = new SystemSettings();
+    private final About about = new About();
 
     private static final ExperienceManager INSTANCE = new ExperienceManager();
 
@@ -32,6 +34,8 @@ public class ExperienceManager
         maskOptions.initialize(parentWindow, state);
         toneCalibration.initialize(parentWindow, state);
         log.initialize(parentWindow, state);
+        systemSettings.initialize(parentWindow, state);
+        about.initialize(parentWindow, state);
     }
 
     public CreateProject getCreateProject()
@@ -62,5 +66,15 @@ public class ExperienceManager
     public Log getLog()
     {
         return log;
+    }
+
+    public SystemSettings getSystemSettings()
+    {
+        return systemSettings;
+    }
+
+    public About getAbout()
+    {
+        return about;
     }
 }

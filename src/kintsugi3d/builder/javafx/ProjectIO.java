@@ -22,14 +22,11 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.modals.AboutController;
-import kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.experience.CreateProject;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
-import kintsugi3d.builder.javafx.util.WindowUtilities;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
@@ -37,13 +34,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class ProjectIO
 {
     private static final ProjectIO INSTANCE = new ProjectIO();
+
     public static ProjectIO getInstance()
     {
         return INSTANCE;
@@ -55,9 +52,7 @@ public final class ProjectIO
     private File vsetFile;
     private boolean projectLoaded;
 
-    private final Flag systemSettingsModalOpen = new Flag(false);
     private final Flag progressBarsModalOpen = new Flag(false);
-    private final Flag aboutWindowOpen = new Flag(false);
 
     private FileChooser projectFileChooser;
 
@@ -116,34 +111,19 @@ public final class ProjectIO
         });
     }
 
-    public File getProjectFile()
-    {
-        return projectFile;
-    }
-
-    public File getVsetFile()
-    {
-        return vsetFile;
-    }
-
-    public boolean isProjectLoaded()
-    {
-        return projectLoaded;
-    }
-
     private boolean confirmClose(String text)
     {
         if (projectLoaded)
         {
             Dialog<ButtonType> confirmation = new Alert(Alert.AlertType.CONFIRMATION,
-                    "If you click OK, any unsaved changes to the current project will be lost.");
+                "If you click OK, any unsaved changes to the current project will be lost.");
             confirmation.setTitle("Close Project Confirmation");
             confirmation.setHeaderText(text);
 
             //TODO: apply dark mode to popups
             return confirmation.showAndWait()
-                    .filter(Predicate.isEqual(ButtonType.OK))
-                    .isPresent();
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .isPresent();
         }
         else
         {
@@ -187,7 +167,8 @@ public final class ProjectIO
         return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
     }
 
-    private void setViewsetDirectories(ViewSet viewSet) {
+    private void setViewsetDirectories(ViewSet viewSet)
+    {
         File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
@@ -196,8 +177,8 @@ public final class ProjectIO
         if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
         {
             // Set the root directory first, then the supporting files directory
-                Global.state().getIOModel()
-                    .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
+            Global.state().getIOModel()
+                .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
 
             viewSet.setSupportingFilesDirectory(filesDirectory);
         }
@@ -244,7 +225,7 @@ public final class ProjectIO
                 saveProject(parentWindow);
             });
 
-        createProject.tryOpen();
+        createProject.tryOpenHotSwap();
     }
 
     private static void startLoad(File projectFile, File vsetFile)
@@ -275,7 +256,7 @@ public final class ProjectIO
                     throw e;
                 }
             })
-            .start();
+                .start();
         }
         else
         {
@@ -298,7 +279,7 @@ public final class ProjectIO
                     throw e;
                 }
             })
-            .start();
+                .start();
         }
 
         //TODO: update color checker here, if the window for it is open
@@ -309,7 +290,8 @@ public final class ProjectIO
     public void openProjectFromFile(File selectedFile)
     {
         //need to check for conflicting process early so crucial info isn't unloaded
-        if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        {
             return;
         }
 
@@ -370,10 +352,12 @@ public final class ProjectIO
         }
     }
 
-    public void openProjectFromFileWithPrompt(File file){
-       if (confirmClose("Are you sure you want to open another project?")) {
-          openProjectFromFile(file);
-       }
+    public void openProjectFromFileWithPrompt(File file)
+    {
+        if (confirmClose("Are you sure you want to open another project?"))
+        {
+            openProjectFromFile(file);
+        }
     }
 
     /**
@@ -382,6 +366,7 @@ public final class ProjectIO
      * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
      * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
      * actual views (add / remove view) later on down the road.
+     *
      * @param parentWindow
      */
     public void saveProject(Window parentWindow)
@@ -435,7 +420,7 @@ public final class ProjectIO
                     });
                 });
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 ExceptionHandling.error("An error occurred saving project", e);
             }
@@ -519,6 +504,7 @@ public final class ProjectIO
      * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
      * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
      * actual views (add / remove view) later on down the road.
+     *
      * @param parentWindow
      */
     public void saveProjectAs(Window parentWindow)
@@ -552,45 +538,13 @@ public final class ProjectIO
         }
     }
 
-    public void openProgressBars(){
-        if(progressBarsModalOpen.get()){
+    public void openProgressBars()
+    {
+        if (progressBarsModalOpen.get())
+        {
             return;
         }
 
         ProgressBarsController.getInstance().showStage();
-    }
-
-    public void openSystemSettingsModal(JavaFXState javaFXState, Window window) {
-        if (systemSettingsModalOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/modals/systemsettings/SystemSettings.fxml");
-            systemSettingsController.init(javaFXState, window);
-            WelcomeWindowController.getInstance().hide();
-            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
-        }
-        catch (IOException e)
-        {
-            LOG.error("An error occurred opening the settings modal:", e);
-        }
-    }
-
-    public void openAboutModal(Window window) {
-        try
-        {
-
-            AboutController aboutController = WindowUtilities.makeWindow(window,
-                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/modals/About.fxml");
-            aboutController.init();
-            WelcomeWindowController.getInstance().hide();
-        }
-        catch (Exception e)
-        {
-            ExceptionHandling.error("An error occurred showing help and about", e);
-        }
     }
 }

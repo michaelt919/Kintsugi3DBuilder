@@ -22,7 +22,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
@@ -288,8 +287,8 @@ public class MainApplication extends Application
         //init progress bars first so other controllers can access the progress bar fxml components
         progressBarsController.init(progressBarsStage);
 
-        welcomeWindowController.init(welcomeStage, Rendering.getRequestQueue(), JavaFXState.getInstance(),
-                () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+        welcomeWindowController.init(welcomeStage,
+            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         menuBarController.init(primaryStage, JavaFXState.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));

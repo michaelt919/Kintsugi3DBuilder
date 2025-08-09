@@ -50,11 +50,7 @@ public class PageFrameController
     private Function<FXMLLoader, FXMLLoader> pageFactory;
     private Page<?,?> currentPage;
 
-    private Runnable preConfirmCallback;
     private Runnable confirmCallback;
-    private Runnable cancelCallback;
-
-    private boolean isConfirmed = false;
 
     public void init()
     {
@@ -98,11 +94,6 @@ public class PageFrameController
         if (!currentPage.getController().close())
         {
             windowEvent.consume();
-        }
-
-        if (!isConfirmed && cancelCallback != null)
-        {
-            cancelCallback.run();
         }
     }
 
@@ -200,15 +191,8 @@ public class PageFrameController
                 }
                 else if (currentPage.getController().canConfirm()) // no next page but can submit
                 {
-                    if (preConfirmCallback != null)
-                    {
-                        preConfirmCallback.run();
-                    }
-
                     if (currentPage.getController().confirm())
                     {
-                        this.isConfirmed = true;
-
                         if (confirmCallback != null)
                         {
                             confirmCallback.run();
@@ -247,16 +231,6 @@ public class PageFrameController
         this.currentPage = page;
     }
 
-    public Runnable getPreConfirmCallback()
-    {
-        return preConfirmCallback;
-    }
-
-    public void setPreConfirmCallback(Runnable preConfirmCallback)
-    {
-        this.preConfirmCallback = preConfirmCallback;
-    }
-
     public Runnable getConfirmCallback()
     {
         return confirmCallback;
@@ -265,16 +239,6 @@ public class PageFrameController
     public void setConfirmCallback(Runnable confirmCallback)
     {
         this.confirmCallback = confirmCallback;
-    }
-
-    public Runnable getCancelCallback()
-    {
-        return cancelCallback;
-    }
-
-    public void setCancelCallback(Runnable cancelCallback)
-    {
-        this.cancelCallback = cancelCallback;
     }
 }
 
