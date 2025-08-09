@@ -25,12 +25,9 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
 {
     private PageFrameController pageFrameController;
     private PageType page;
-    private Runnable confirmCallback;
     private final BooleanProperty canAdvanceProperty = new SimpleBooleanProperty(false);
     private final StringProperty advanceLabelOverrideProperty = new SimpleStringProperty(null);
     private final BooleanProperty canConfirmProperty = new SimpleBooleanProperty(false);
-
-    private boolean isConfirmed;
 
     @Override
     public PageFrameController getPageFrameController()
@@ -104,29 +101,6 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     protected final void setCanConfirm(boolean canConfirm)
     {
         canConfirmProperty.set(canConfirm);
-    }
-
-    @Override
-    public final Runnable getConfirmCallback()
-    {
-        return confirmCallback;
-    }
-
-    @Override
-    public final void setConfirmCallback(Runnable callback)
-    {
-        this.confirmCallback = callback;
-    }
-
-    @Override
-    public final boolean isConfirmed()
-    {
-        return isConfirmed;
-    }
-
-    protected final void setConfirmed(boolean confirmed)
-    {
-        this.isConfirmed = confirmed;
     }
 
     @Override

@@ -28,7 +28,8 @@ public class ToneCalibration extends ExperienceBase
     @Override
     public void open() throws IOException
     {
-        PageFrameController frameController = openPagedModal();
+        PageFrameController frameController = createPagedModal();
+        getModal().open();
 
         var viewPage = frameController.createPage(
             "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
@@ -69,7 +70,6 @@ public class ToneCalibration extends ExperienceBase
         viewPage.receiveData(inputSource);
 
         frameController.setCurrentPage(viewPage);
-
         frameController.init();
     }
 

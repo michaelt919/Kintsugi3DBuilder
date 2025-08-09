@@ -1,13 +1,16 @@
 package kintsugi3d.builder.javafx.experience;
 
+import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ModalWindow;
+import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.function.BiFunction;
 
 public abstract class ExperienceBase implements Experience
 {
@@ -21,7 +24,12 @@ public abstract class ExperienceBase implements Experience
         this.state = state;
     }
 
-    public void tryOpen()
+    public boolean isOpen()
+    {
+        return this.modal.isOpen();
+    }
+
+    public final void tryOpen()
     {
         if (modal.isOpen())
         {
@@ -36,6 +44,11 @@ public abstract class ExperienceBase implements Experience
         }
     }
 
+    protected <ControllerType> ControllerType createModal(String urlString) throws IOException
+    {
+        return modal.create(getName(), urlString);
+    }
+
     protected <ControllerType> ControllerType openModal(String urlString) throws IOException
     {
         ControllerType controller = createModal(urlString);
@@ -43,14 +56,9 @@ public abstract class ExperienceBase implements Experience
         return controller;
     }
 
-    protected <ControllerType> ControllerType createModal(String urlString) throws IOException
+    protected PageFrameController createPagedModal() throws IOException
     {
-        return modal.create(getName(), urlString);
-    }
-
-    protected PageFrameController openPagedModal() throws IOException
-    {
-        PageFrameController frameController = openModal("fxml/PageFrame.fxml");
+        PageFrameController frameController = createModal("fxml/PageFrame.fxml");
 
         frameController.setPageFactory(loader ->
         {
@@ -65,6 +73,21 @@ public abstract class ExperienceBase implements Experience
 
             return loader;
         });
+
+        return frameController;
+    }
+
+    protected <PageType extends Page<InType, OutType>, InType, OutType>
+    PageFrameController openPagedModel(
+        String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor) throws IOException
+    {
+        PageFrameController frameController = createPagedModal();
+
+        Page<?,?> firstPage = frameController.createPage(firstPageURLString, firstPageConstructor);
+        frameController.setCurrentPage(firstPage);
+        frameController.init();
+
+        modal.open();
 
         return frameController;
     }

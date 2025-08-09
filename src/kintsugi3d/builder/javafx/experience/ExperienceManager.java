@@ -6,6 +6,7 @@ import kintsugi3d.builder.javafx.JavaFXState;
 public class ExperienceManager
 {
     // Modal window manager objects
+    private final CreateProject createProject = new CreateProject();
     private final ObjectOrientation objectOrientation = new ObjectOrientation();
     private final LightCalibration lightCalibration = new LightCalibration();
     private final MaskOptions maskOptions = new MaskOptions();
@@ -25,11 +26,17 @@ public class ExperienceManager
 
     public void initialize(Window parentWindow, JavaFXState state)
     {
+        createProject.initialize(parentWindow, state);
         objectOrientation.initialize(parentWindow, state);
         lightCalibration.initialize(parentWindow, state);
         maskOptions.initialize(parentWindow, state);
         toneCalibration.initialize(parentWindow, state);
         log.initialize(parentWindow, state);
+    }
+
+    public CreateProject getCreateProject()
+    {
+        return createProject;
     }
 
     public ObjectOrientation getObjectOrientation()

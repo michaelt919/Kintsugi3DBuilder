@@ -27,11 +27,6 @@ public interface PageController<T>
     BooleanExpression getCanConfirmObservable();
     boolean canConfirm();
 
-    Runnable getConfirmCallback();
-    void setConfirmCallback(Runnable callback);
-
-    boolean isConfirmed();
-
     /**
      * Called when the page is created, after the page hsa been assigned to the controller.
      * In contrast with initialize() (which is called after JavaFX initialization, before any page object has been initialized)

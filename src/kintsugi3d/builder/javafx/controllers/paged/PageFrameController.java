@@ -28,7 +28,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +49,12 @@ public class PageFrameController
     private final Map<String, Page<?,?>> pageCache = new HashMap<>(8);
     private Function<FXMLLoader, FXMLLoader> pageFactory;
     private Page<?,?> currentPage;
+
+    private Runnable preConfirmCallback;
+    private Runnable confirmCallback;
+    private Runnable cancelCallback;
+
+    private boolean isConfirmed = false;
 
     public void init()
     {
@@ -95,10 +100,9 @@ public class PageFrameController
             windowEvent.consume();
         }
 
-        // the welcome window doesn't open like it should
-        if (!currentPage.getController().isConfirmed())
+        if (!isConfirmed && cancelCallback != null)
         {
-            WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
+            cancelCallback.run();
         }
     }
 
@@ -196,14 +200,19 @@ public class PageFrameController
                 }
                 else if (currentPage.getController().canConfirm()) // no next page but can submit
                 {
-                    if (currentPage.getController().getConfirmCallback() != null)
+                    if (preConfirmCallback != null)
                     {
-                        currentPage.getController().getConfirmCallback().run();
+                        preConfirmCallback.run();
                     }
 
                     if (currentPage.getController().confirm())
                     {
-                        WelcomeWindowController.getInstance().hide();
+                        this.isConfirmed = true;
+
+                        if (confirmCallback != null)
+                        {
+                            confirmCallback.run();
+                        }
 
                         Window window = currentPage.getController().getRootNode().getScene().getWindow();
                         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
@@ -236,6 +245,36 @@ public class PageFrameController
     public void setCurrentPage(Page<?,?> page)
     {
         this.currentPage = page;
+    }
+
+    public Runnable getPreConfirmCallback()
+    {
+        return preConfirmCallback;
+    }
+
+    public void setPreConfirmCallback(Runnable preConfirmCallback)
+    {
+        this.preConfirmCallback = preConfirmCallback;
+    }
+
+    public Runnable getConfirmCallback()
+    {
+        return confirmCallback;
+    }
+
+    public void setConfirmCallback(Runnable confirmCallback)
+    {
+        this.confirmCallback = confirmCallback;
+    }
+
+    public Runnable getCancelCallback()
+    {
+        return cancelCallback;
+    }
+
+    public void setCancelCallback(Runnable cancelCallback)
+    {
+        this.cancelCallback = cancelCallback;
     }
 }
 
