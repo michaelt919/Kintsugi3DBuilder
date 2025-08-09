@@ -22,13 +22,11 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.experience.CreateProject;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.resources.project.MeshImportException;
-import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +49,6 @@ public final class ProjectIO
     private File projectFile;
     private File vsetFile;
     private boolean projectLoaded;
-
-    private final Flag progressBarsModalOpen = new Flag(false);
 
     private FileChooser projectFileChooser;
 
@@ -523,7 +519,7 @@ public final class ProjectIO
         WelcomeWindowController.getInstance().show();
 
         //TODO: do we want this here?
-        MenubarController.getInstance().dismissMiniProgressBar();
+        MenubarController.getInstance().dismissMiniProgressBarAsync();
 
         MenubarController.getInstance().setToggleableShaderDisable(true);
         MenubarController.getInstance().setShaderNameVisibility(false);
@@ -536,15 +532,5 @@ public final class ProjectIO
         {
             closeProject();
         }
-    }
-
-    public void openProgressBars()
-    {
-        if (progressBarsModalOpen.get())
-        {
-            return;
-        }
-
-        ProgressBarsController.getInstance().showStage();
     }
 }

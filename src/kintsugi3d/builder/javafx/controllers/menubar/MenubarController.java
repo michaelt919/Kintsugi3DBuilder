@@ -13,13 +13,12 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.binding.DoubleExpression;
+import javafx.beans.binding.StringExpression;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -32,7 +31,9 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.GraphicsRequestController;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.JavaFXState;
@@ -44,7 +45,6 @@ import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -56,9 +56,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class MenubarController
@@ -67,15 +65,6 @@ public class MenubarController
 
     private static MenubarController instance;
     private JavaFXState javaFXState;
-
-    //progress bar modal
-    private ProgressBar localProgressBar;
-    private ProgressBar overallProgressBar;
-    private Button cancelButton;
-    private Button doneButton;
-
-    private Label localTextLabel;
-    private Label overallTextLabel;
 
     //minimized progress bar
     @FXML private AnchorPane miniProgressPane; //entire bottom bar
@@ -154,8 +143,7 @@ public class MenubarController
         return instance;
     }
 
-    public <ContextType extends Context<ContextType>> void init(
-        Stage injectedStage, JavaFXState javaFXState, Runnable injectedUserDocumentationHandler)
+    public void init(Stage injectedStage, JavaFXState javaFXState, Runnable injectedUserDocumentationHandler)
     {
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
@@ -168,38 +156,10 @@ public class MenubarController
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
         this.cameraViewList.visibleProperty().bind(javaFXState.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
-
-        this.cancelButton = ProgressBarsController.getInstance().getCancelButton();
-        this.doneButton = ProgressBarsController.getInstance().getDoneButton();
-        this.localTextLabel = ProgressBarsController.getInstance().getLocalTextLabel();
-        this.overallTextLabel = ProgressBarsController.getInstance().getOverallTextLabel();
-
-        this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
-        this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
-
-        this.localProgressBar.getScene().getWindow().setOnCloseRequest(
-            event -> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(javaFXState.getCameraViewListModel());
 
         this.javaFXState = javaFXState;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
-
-        // Keep track of whether cancellation was requested.
-        AtomicBoolean cancelRequested = new AtomicBoolean(false);
-
-        cancelButton.setOnAction(event ->
-        {
-            cancelRequested.set(true);
-            Platform.runLater(() -> cancelButton.setText("Cancelling..."));
-        });
-
-        doneButton.setOnAction(event ->
-        {
-            hideAllProgress();
-        });
-
-        cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
-        doneButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty());
 
         //send menubar accelerators to welcome window
         for (Menu menu : mainMenubar.getMenus())
@@ -218,241 +178,6 @@ public class MenubarController
                     Platform.runLater(() -> action.handle(new ActionEvent())));
             }
         }
-        Global.state().getIOModel().addProgressMonitor(new ProgressMonitor()
-        {
-            private double maximum = 0.0;
-            private double localProgress = 0.0;
-
-            private double overallProgress = 0.0;
-            private IntegerProperty stageCountProperty = new SimpleIntegerProperty(0);
-            private IntegerProperty currentStageProperty = new SimpleIntegerProperty(0);
-
-            private String revertText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
-
-            @Override
-            public void allowUserCancellation() throws UserCancellationException
-            {
-                if (cancelRequested.get())
-                {
-                    cancelRequested.set(false); // reset cancel flag
-
-                    WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
-                    dismissMiniProgressBar();
-
-                    //need to end stopwatches here because they might need to be reused for another process
-                    //   before cancelComplete() is called
-                    ProgressBarsController.getInstance().endStopwatches();
-
-                    throw new UserCancellationException("Cancellation requested by user.");
-                }
-            }
-
-            @Override
-            public void cancelComplete(UserCancellationException e)
-            {
-                complete();
-                hideAllProgress();
-            }
-
-            @Override
-            public void start()
-            {
-                cancelRequested.set(false);
-
-                stageCountProperty.setValue(0);
-                currentStageProperty.setValue(0);
-
-                localProgress = 0.0;
-                overallProgress = 0.0;
-                Platform.runLater(() ->
-                {
-                    localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
-                    overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
-                });
-
-                ProgressBarsController.getInstance().resetText();
-                ProgressBarsController.getInstance().showStage();
-                ProgressBarsController.getInstance().startStopwatches();
-
-                miniProgressPane.setVisible(false);
-                resetMiniProgressBar();
-
-                miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
-
-                miniProgressLabel.textProperty().bind(Bindings.createStringBinding(() ->
-                {
-                        String currProcessTxt = overallTextLabel.textProperty().getValue();
-
-                        //Display "Finishing up..." or something similar
-                        if (currentStageProperty.getValue() > stageCountProperty.getValue() &&
-                            ProgressBarsController.getInstance().isProcessing())
-                        {
-                            return localTextLabel.getText();
-                        }
-
-                        //Display "Loading..." or some end message (ex. "Finished loading images")
-                        // or just remove redundant "Stage 1/1"
-                        if (!ProgressBarsController.getInstance().isProcessing() ||
-                            stageCountProperty.getValue() <= 1)
-                        {
-                            return currProcessTxt;
-                        }
-
-                        return String.format("%s (Stage %s/%s)",
-                            currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
-
-
-                },
-                    overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
-                    localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
-            }
-
-            @Override
-            public void setProcessName(String processName)
-            {
-                Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
-                Platform.runLater(() -> progressStage.setTitle(processName));
-            }
-
-            @Override
-            public void setStageCount(int count)
-            {
-                Platform.runLater(() -> stageCountProperty.setValue(count));
-            }
-
-            @Override
-            public void setStage(int stage, String message)
-            {
-                this.localProgress = 0.0;
-                int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
-                Platform.runLater(() -> this.currentStageProperty.setValue(currentStage));
-
-                Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
-
-                //index current stage from 0 in this instance
-                overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
-                Platform.runLater(() -> overallProgressBar.setProgress(overallProgress));
-
-                LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
-
-                Platform.runLater(() -> overallTextLabel.setText(message));
-
-                if(currentStage > stageCountProperty.getValue())
-                {
-                    if (message.equals(ProgressMonitor.PREPARING_PROJECT))
-                    {
-                        Platform.runLater(()->localTextLabel.setText(ProgressMonitor.ALMOST_READY));
-                    }
-                    else
-                    {
-                        Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
-                    }
-                }
-                else
-                {
-                    ProgressBarsController.getInstance().beginNewStage();
-                }
-            }
-
-            @Override
-            public void setMaxProgress(double maxProgress)
-            {
-                this.maximum = maxProgress;
-                Platform.runLater(() -> localProgressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress / maxProgress));
-            }
-
-            @Override
-            public void setProgress(double progress, String message)
-            {
-                this.localProgress = progress / maximum;
-                Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress));
-
-                //index current stage from 0 in this instance
-                double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
-                this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
-                Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
-
-                LOG.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
-
-                //remove stage/stageCount from txt if it wouldn't make sense for it to be there (ex. Stage 0/0)
-                //useful for simple exports like orbit animation
-                boolean removeStageNums = stageCountProperty.getValue() <= 1 || currentStageProperty.getValue() == 0;
-                revertText = removeStageNums ? message :
-                    String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
-
-                Platform.runLater(() -> localTextLabel.setText(revertText));
-
-                ProgressBarsController.getInstance().clickStopwatches(progress, maximum);
-            }
-
-            @Override
-            public void complete()
-            {
-                this.maximum = 0.0;
-                ProgressBarsController.getInstance().endStopwatches();
-                setReadyToDismissMiniProgBar();
-
-                if (overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
-                {
-                    Platform.runLater(() -> overallProgressBar.setProgress(1.0));
-                }
-
-                if (localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
-                {
-                    Platform.runLater(() -> localProgressBar.setProgress(1.0));
-                }
-
-                //only revert text for processes which are not lightweight
-                if (localTextLabel.getText().equals(FINISHING_UP))
-                {
-                    Platform.runLater(() -> localTextLabel.setText(revertText));
-                }
-
-                //todo: would be nice if this was bound to a hasHandler property
-                shaderName.setVisible(Global.state().getIOModel().hasValidHandler());
-
-                Platform.runLater(() -> cancelButton.setText("Cancel"));
-                updateShaderList();
-            }
-
-            @Override
-            public void fail(Throwable e)
-            {
-                complete();
-            }
-
-            @Override
-            public boolean isConflictingProcess()
-            {
-                if (!ProgressBarsController.getInstance().isProcessing())
-                {
-                    return false;
-                }
-
-                Platform.runLater(() ->
-                {
-                    ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                    //ButtonType stopProcess = new ButtonType("Start New Process", ButtonBar.ButtonData.YES);
-                    Alert alert = new Alert(AlertType.NONE, "Cannot run multiple tasks at the same time.\n" +
-                        "Either wait for the current task to complete or cancel it." /*+
-                            "Press OK to finish the current process."*/, ok/*, stopProcess*/);
-                    alert.setHeaderText("Conflicting Tasks");
-
-//                    //continue current process, don't start a new one
-//                    ((Button) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> {
-//                    });
-//
-//                    //cancel current process and start new one
-//                    ((Button) alert.getDialogPane().lookupButton(stopProcess)).setOnAction(event -> {
-//                        cancelRequested.set(true);
-//                    });
-
-                    alert.showAndWait();
-                });
-
-                return true;
-            }
-        });
 
         boolean foundExportClass = false;
         File exportClassDefinitionFile = new File("export-classes.txt");
@@ -534,6 +259,13 @@ public class MenubarController
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
     }
 
+    public void refresh()
+    {
+        //todo: would be nice if this was bound to a hasHandler property
+        shaderName.setVisible(Global.state().getIOModel().hasValidHandler());
+        updateShaderList();
+    }
+
     public CameraViewListController getCameraViewListController()
     {
         return cameraViewListController;
@@ -559,24 +291,6 @@ public class MenubarController
                 Menu menu = (Menu) item;
                 getRadioMenuItemsHelper(radioMenuItems, menu.getItems());
             }
-        }
-    }
-
-    private void hideAllProgress()
-    {
-        ProgressBarsController.getInstance().hideStage();
-        dismissMiniProgressBar();
-    }
-
-    private void setReadyToDismissMiniProgBar()
-    {
-        setLighterMiniBar();
-        miniProgressBar.setVisible(false);
-        dismissButton.setVisible(true);
-
-        if (!ProgressBarsController.getInstance().getStage().isShowing())
-        {
-            miniProgressPane.setVisible(true);
         }
     }
 
@@ -838,7 +552,7 @@ public class MenubarController
         ExperienceManager.getInstance().getToneCalibration().tryOpen();
     }
 
-    public void maskOptions(ActionEvent actionEvent)
+    public void maskOptions()
     {
         ExperienceManager.getInstance().getMaskOptions().tryOpen();
     }
@@ -850,17 +564,8 @@ public class MenubarController
 
     public void showProgressBars()
     {
-        ProjectIO.getInstance().openProgressBars();
+        ProgressBarsController.getInstance().showStage();
         miniProgressPane.setVisible(false);
-    }
-
-    //used so the user can click on the About menu and immediately see the about modal
-    //instead of clicking on a single menu item
-    //NOT IN USE as of July 9, 2024
-    public void hideAndShowAboutModal()
-    {
-        aboutMenu.hide();
-        openAboutModal();
     }
 
     public void openSystemSettingsModal()
@@ -930,7 +635,7 @@ public class MenubarController
         if (!ProgressBarsController.getInstance().isProcessing() &&
             swapControlsStackPane.contains(relX, relY))
         {
-            dismissMiniProgressBar();
+            dismissMiniProgressBarAsync();
         }
         else
         {
@@ -938,11 +643,15 @@ public class MenubarController
         }
     }
 
-    private void resetMiniProgressBar()
+    public void resetMiniProgressBar(DoubleExpression progressProperty, StringExpression labelProperty)
     {
+        miniProgressPane.setVisible(false);
         miniProgressBar.setVisible(true);
         dismissButton.setVisible(false);
         setDarkestMiniBar();
+
+        miniProgressBar.progressProperty().bind(progressProperty);
+        miniProgressLabel.textProperty().bind(labelProperty);
     }
 
     public void mouseEnterMiniBar(MouseEvent event)
@@ -1023,7 +732,19 @@ public class MenubarController
         miniProgressBar.lookup(".track").setStyle("-fx-background-color: #CECECE");
     }
 
-    public void dismissMiniProgressBar()
+    public void showMiniProgressBar()
+    {
+        this.miniProgressPane.setVisible(true);
+    }
+
+    public void setReadyToDismissMiniProgBar()
+    {
+        setLighterMiniBar();
+        miniProgressBar.setVisible(false);
+        dismissButton.setVisible(true);
+    }
+
+    public void dismissMiniProgressBarAsync()
     {
         Platform.runLater(() -> miniProgressPane.setVisible(false));
         WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();

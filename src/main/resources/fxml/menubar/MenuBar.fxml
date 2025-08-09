@@ -206,11 +206,6 @@
                             <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
                             <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" visible="false" />
                         </Menu>
-                        <Menu fx:id="aboutMenu" mnemonicParsing="false" onShown="#hideAndShowAboutModal" text="About" visible="false">
-                            <items>
-                                <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About" />
-                            </items>
-                        </Menu>
                         <Menu mnemonicParsing="false" text="Lighting" visible="false">
                             <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" visible="false" />
                             <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources" />
@@ -262,7 +257,7 @@
                </Label>
                <StackPane fx:id="swapControlsStackPane">
                   <children>
-                     <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBar" style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss" visible="false" />
+                     <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBarAsync" style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss" visible="false" />
                      <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
                   </children>
                   <padding>
