@@ -160,7 +160,7 @@ public class MenubarController
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
-    @FXML private SideBarController leftBarController; //Jacob
+    @FXML private SideBarController leftBarController;
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -215,6 +215,7 @@ public class MenubarController
 
         doneButton.setOnAction(event ->{
             hideAllProgress();
+            leftBarController.setVisibility(true);
         });
 
         cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
