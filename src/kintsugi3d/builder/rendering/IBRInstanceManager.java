@@ -186,7 +186,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         if(progressMonitor != null)
         {
-            progressMonitor.setStageCount(2);
+            progressMonitor.setStageCount(3);
             progressMonitor.setStage(0, "Generating preview-resolution images...");
         }
 
@@ -198,6 +198,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         catch (IOException e)
         {
             log.error("One or more images failed to load", e);
+        }
+
+        if (progressMonitor != null) {
+            progressMonitor.setStage(1, "Generating thumbnail-resolution images...");
         }
 
         try {

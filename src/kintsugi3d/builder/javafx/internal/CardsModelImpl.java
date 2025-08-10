@@ -18,29 +18,16 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class CardsModelImpl implements CardsModel {
-    private String label;
-    private CardSelectionModel selectedCardsModel;
-    private CardSelectionModel expandedCardsModel;
+    private final String label;
+    private final CardSelectionModel selectedCardsModel;
+    private final CardSelectionModel expandedCardsModel;
     private ObservableList<ProjectDataCard> cardsList;
     private ViewSet viewSet;
 
     public CardsModelImpl(String label) {
         this.label = label;
-        List<ProjectDataCard> dummyCards = new ArrayList<>();
-        dummyCards.add(new ProjectDataCard("Card One", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
-            put("File Name", "file_one"); put("Resolution", "320x200"); put("Size", "500 KB"); put("Purpose", "This is a description pertaining to the FIRST card."); put("Labels", "");
-        }}));
 
-        dummyCards.add(new ProjectDataCard("Card Two", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
-            put("File Name", "file_two"); put("Resolution", "1080x200"); put("Size", "1000 KB"); put("Purpose", "This is a description pertaining to the SECOND card."); put("Labels", "");
-        }}));
-
-        dummyCards.add(new ProjectDataCard("Card Three", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
-            put("File Name", "file_three"); put("Resolution", "720x200"); put("Size", "1500 KB"); put("Purpose", "This is a description pertaining to the THIRD card."); put("Labels", "");
-        }}));
-
-        cardsList = FXCollections.observableList(dummyCards);
-
+        cardsList = FXCollections.observableList(new ArrayList<>());
         selectedCardsModel = new CardSelectionModel(cardsList);
         expandedCardsModel = new CardSelectionModel(cardsList);
     }
@@ -51,16 +38,15 @@ public class CardsModelImpl implements CardsModel {
             CardsModel model = MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras");
             List<ProjectDataCard> dataCards = new ArrayList<>();
             for (int i = 0; i < viewSet.getCameraMetadata().size(); i++) {
-                String fileName = Objects.requireNonNull(viewSet.getThumbnailImageFilePath().list())[i];
-                File filepath = viewSet.getThumbnailImageFilePath();
+                String thumbnailPath;
                 try {
-                    File file2 = viewSet.findThumbnailImageFile(i);
+                    thumbnailPath = viewSet.findThumbnailImageFile(i).toString();
                 } catch (FileNotFoundException e) {
-                    //TODO What
+                    // Default to icon if thumbnail isn't found
+                    thumbnailPath = "file:./Kintsugi3D-icon.png";
                 }
-                File fullCameraPath = new File(viewSet.getThumbnailImageFilePath(), fileName);
 
-                dataCards.add(ProjectDataCardFactory.createCameraCard(model, viewSet.getImageFiles().get(i).getName(), fullCameraPath.getAbsolutePath(), viewSet.getCameraMetadata().get(i)));
+                dataCards.add(ProjectDataCardFactory.createCameraCard(model, viewSet.getImageFiles().get(i).getName(), thumbnailPath, viewSet.getCameraMetadata().get(i)));
             }
             setCardsList(dataCards);
 

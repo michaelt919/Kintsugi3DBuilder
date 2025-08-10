@@ -420,7 +420,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if(progressMonitor != null)
             {
-                progressMonitor.setStage(0, "Loading preview-resolution images...");
+                progressMonitor.setStage(1, "Loading preview-resolution images...");
                 progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
             }
 
@@ -460,7 +460,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         if (progressMonitor != null)
         {
-            progressMonitor.setStage(1, "Finished loading images.");
+            progressMonitor.setStage(2, "Finished loading images.");
         }
 
         // Store the camera projections in a uniform buffer
@@ -933,6 +933,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         File thumbnails = new File(supportingFilePath,"thumbnails");
         thumbnails.mkdirs();
 
+        progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
+
         AtomicInteger finishedCount = new AtomicInteger(0);
         AtomicInteger failedCount = new AtomicInteger(0);
         AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
@@ -1143,7 +1145,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     private static void multithreadThumbnailImgGeneration(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor,
           AtomicInteger finishedCount, AtomicInteger failedCount)
     {
-        //progressMonitor.setProgress(0, "Importing and downsizing images (multithread)...");
+        progressMonitor.setProgress(2, "Importing and downsizing images (multithread)...");
 
         // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
         ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
@@ -1252,7 +1254,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                 {
-                    //progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i+1, viewSet.getCameraPoseCount()));
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i+1, viewSet.getCameraPoseCount()));
 
                     try
                     {

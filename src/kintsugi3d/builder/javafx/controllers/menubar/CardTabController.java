@@ -12,6 +12,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
@@ -42,7 +43,7 @@ public class CardTabController {
     {
         this.cardsModel = cardsModel;
         for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
-            createDataCard(card);
+            card_vbox.getChildren().add(createDataCard(card).getCard());
         }
 
         createListeners();

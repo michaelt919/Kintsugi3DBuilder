@@ -267,18 +267,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             .commitCurrentCameraPose();
                         break;
                     }
-                    case "x": //Jacob
-                    {
-                        int camIndex = scanner.nextInt();
-                        String camRes = scanner.next();
-                        String camSize = scanner.next();
-
-                        builder.addCameraMetadata(camIndex,camRes,camSize);
-
-                        scanner.nextLine();
-                        break;
-
-                    }
                     default:
                         // Skip unrecognized line
                         scanner.nextLine();
