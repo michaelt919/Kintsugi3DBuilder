@@ -88,7 +88,8 @@ public class SideBarController {
     public void setVisibility(boolean visible) {
         main_box.setVisible(visible);
         main_box.setManaged(visible);
-        //Platform.runLater(()->tabControllers.forEach(CardTabController::updateViewportVisibility));
+        if (visible)
+            Platform.runLater(()->tabControllers.forEach(CardTabController::updateViewportVisibility));
     }
 
     public void refreshTabs() {

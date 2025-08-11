@@ -46,13 +46,13 @@ public class CardTabController {
         for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
             displayCards.add(createDataCard(card).getCard());
         }
-
+        // Add all at once to avoid repeated listener triggers.
         card_vbox.getChildren().addAll(displayCards);
         createListeners();
     }
 
     private CardController createDataCard(ProjectDataCard card) {
-        CardController newCardController = null;
+        CardController newCardController;
         FXMLLoader loader = new FXMLLoader();
         try {
             loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/DataCard.fxml"));
@@ -77,7 +77,7 @@ public class CardTabController {
             newCardController.init(cardsModel, card);
             cardControllers.set(index, newCardController);
         } catch (Exception e) {
-            // throw new RuntimeException(e);
+            throw new RuntimeException("Failed to load DataCard.fxml",e);
         }
         return newCardController;
     }
@@ -154,7 +154,12 @@ public class CardTabController {
 
         // Updates the scrollpane after a datacard is added, removed, collapsed, etc.
         card_vbox.heightProperty().addListener((change)->{
-            Platform.runLater(this::updateViewportVisibility);
+            updateViewportVisibility();
+        });
+
+        // Fires when the viewport is resized
+        scrollpane.viewportBoundsProperty().addListener((change)-> {
+            updateViewportVisibility();
         });
     }
 
@@ -162,20 +167,12 @@ public class CardTabController {
         double viewportHeight = scrollpane.getViewportBounds().getHeight();
         double contentHeight = card_vbox.getHeight();
         double scrollPointer = scrollPosition * contentHeight;
-
-        if (scrollPosition == 0.0) {
-            double height = scrollpane.getViewportBounds().getHeight();
-            int numStartingCards = ((int) height / 36); // 36 is the height of a collapsed card.
-            for (int i = 0; i < Math.min(searchList.size(), numStartingCards); i++) {
-                searchList.get(i).setCardVisibility(true);
-            }
-        } else {
-            for (int i = 0; i < searchList.size(); i++) {
-                Bounds cardY = card_vbox.getChildren().get(i).getBoundsInParent();
-                boolean inScrollRange = (cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight);
-                searchList.get(i).setCardVisibility(inScrollRange);
-            }
+        for (int i = 0; i < searchList.size(); i++) {
+            Bounds cardY = card_vbox.getChildren().get(i).getBoundsInParent();
+            boolean inScrollRange = (cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight);
+            searchList.get(i).setCardVisibility(inScrollRange);
         }
+
     }
 }
 

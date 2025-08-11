@@ -910,7 +910,6 @@ public final class ViewSet implements ReadonlyViewSet
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
-    //TODO call this using vset loader
     public void setRelativeThumbnailImagePathName(String relativeImagePath) {
         this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
