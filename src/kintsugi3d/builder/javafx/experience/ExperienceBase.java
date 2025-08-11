@@ -31,7 +31,7 @@ public abstract class ExperienceBase implements Experience
 
     public final void tryOpen()
     {
-        if (modal.isOpen())
+        if (!modal.isOpen())
         {
             try
             {

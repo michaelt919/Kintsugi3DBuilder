@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
@@ -67,7 +68,7 @@ public class SelectImportOptionsController extends DataSourcePageControllerBase<
         return false;
     }
 
-    public void onButtonAction(ToggleButton button, Runnable buttonAction)
+    public void onButtonAction(Toggle button, Runnable buttonAction)
     {
         if (button.isSelected())
         {
@@ -82,26 +83,29 @@ public class SelectImportOptionsController extends DataSourcePageControllerBase<
     private <ControllerType extends DataSupplierPageController<? super InputSource, InputSource>>
     void setupInputSource(String nextPageFXML, InputSource inputSource)
     {
-        var page = getPageFrameController().createPage(nextPageFXML,
+        var nextPage = getPageFrameController().createPage(nextPageFXML,
             SimpleDataTransformerPage<InputSource, InputSource, ControllerType>::new);
-        page.setOutData(inputSource);
-        getPage().setNextPage(page);
+        this.getPage().setOutData(inputSource);
+        this.getPage().setNextPage(nextPage);
     }
 
     // Have this so we can navigate to loose files selection from inside an error message somewhere else
     public void looseFiles()
     {
-        setupInputSource("/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource());
+        this.<CustomImportController>setupInputSource(
+            "/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource());
     }
 
     // Have this so we can navigate to loose files selection from inside an error message somewhere else
     public void realityCapture()
     {
-        setupInputSource("/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource());
+        this.<CustomImportController>setupInputSource(
+            "/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource());
     }
 
     public void metashape()
     {
-        setupInputSource("/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource());
+        this.<MetashapeImportController>setupInputSource(
+            "/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource());
     }
 }

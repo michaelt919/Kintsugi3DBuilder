@@ -38,7 +38,7 @@ public class CreateProject extends ExperienceBase
 
     public void tryOpenHotSwap()
     {
-        if (getModal().isOpen())
+        if (!getModal().isOpen())
         {
             try
             {
