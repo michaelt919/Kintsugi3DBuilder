@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,16 +39,18 @@ public class SystemSettingsController
     //Note: settings string MUST MATCH their .fxml counterparts
     //ex. Autosave Settings --> AutosaveSettings.fxml
     //    System Memory --> SysMem.fxml will not work
-    static final Map<String, String> settingsPages = Stream.of(
-        Map.entry("Cache Settings", "/fxml/modals/systemsettings/CacheSettings.fxml"),
-        Map.entry("Lighting Settings", "/fxml/modals/systemsettings/LightingSettings.fxml"),
-        Map.entry("Photo Projection Settings", "/fxml/modals/systemsettings/PhotoProjectionSettings.fxml"),
-        Map.entry("System Memory Settings", "/fxml/modals/systemsettings/SystemMemorySettings.fxml"),
-        Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml")
-    )
-    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, LinkedHashMap::new));
+    private static final Map<String, String> SETTINGS_PAGES =
+        Collections.unmodifiableMap(
+            Stream.of(
+                Map.entry("Cache Settings", "/fxml/modals/systemsettings/CacheSettings.fxml"),
+                Map.entry("Lighting Settings", "/fxml/modals/systemsettings/LightingSettings.fxml"),
+                Map.entry("Photo Projection Settings", "/fxml/modals/systemsettings/PhotoProjectionSettings.fxml"),
+                Map.entry("System Memory Settings", "/fxml/modals/systemsettings/SystemMemorySettings.fxml"),
+                Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml")
+            )
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, LinkedHashMap::new)));
 
-    public void init(JavaFXState javaFXState, Window window)
+    public void initializeSettingsPages(Window parentWindow, JavaFXState state)
     {
         populateFileList();
         //initialize listeners for cell items
@@ -56,7 +59,7 @@ public class SystemSettingsController
             String selectedItem = settingsListView.getSelectionModel().getSelectedItem();
 
             //remove spaces from string and append ".fxml"
-            String fileName = settingsPages.get(observableValue.getValue());
+            String fileName = SETTINGS_PAGES.get(observableValue.getValue());
 
             Parent newContent = null;
             try
@@ -67,15 +70,7 @@ public class SystemSettingsController
 
                 //initialize controller
                 SystemSettingsControllerBase controller = loader.getController();
-                controller.init();
-
-                //attach controller info
-                controller.bindInfo(javaFXState);
-                if (controller instanceof AutosaveSettingsController)
-                {
-                    ((AutosaveSettingsController) controller).injectWindow(window);
-                }
-
+                controller.initializeSettingsPage(parentWindow, state);
             }
             catch (IOException e)
             {
@@ -94,7 +89,7 @@ public class SystemSettingsController
     private void populateFileList()
     {
         settingsListView.getItems().clear();
-        settingsListView.getItems().addAll(settingsPages.keySet());
+        settingsListView.getItems().addAll(SETTINGS_PAGES.keySet());
     }
 
     public Window getHostWindow()

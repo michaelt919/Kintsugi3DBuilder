@@ -12,20 +12,19 @@
 package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.util.Launch4jConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.AccessDeniedException;
-import java.util.ResourceBundle;
 
-public class SystemMemoryController implements Initializable, SystemSettingsControllerBase
+public class SystemMemoryController implements SystemSettingsControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(SystemMemoryController.class);
 
@@ -41,11 +40,23 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
     private Launch4jConfiguration configuration;
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
+    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
     {
-        init();
-    }
+        try
+        {
+            configuration = Launch4jConfiguration.read();
+        }
+        catch (IOException e)
+        {
+            LOG.error("Failed to read jvm configuration:", e);
+            LOG.error("Using default configuration");
+            configuration = Launch4jConfiguration.empty();
+        }
 
+        maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
+        maxMemSpinner.setValueFactory(
+            new IntegerSpinnerValueFactory(MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
+    }
 
     public void button_Apply()
     {
@@ -81,30 +92,5 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         alert.setHeaderText("Restart Required");
         alert.setContentText("A restart of Kintsugi 3D Builder is needed for changes to take effect.");
         alert.show();
-    }
-
-
-    @Override
-    public void init() {
-        try
-        {
-            configuration = Launch4jConfiguration.read();
-        }
-        catch (IOException e)
-        {
-            LOG.error("Failed to read jvm configuration:", e);
-            LOG.error("Using default configuration");
-            configuration = Launch4jConfiguration.empty();
-        }
-
-        maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
-        maxMemSpinner.setValueFactory(
-                new SpinnerValueFactory.IntegerSpinnerValueFactory(
-                        MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
-    }
-
-    @Override
-    public void bindInfo(JavaFXState javaFXState) {
-        //TODO: imp.
     }
 }

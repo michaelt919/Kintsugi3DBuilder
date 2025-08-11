@@ -12,11 +12,11 @@
 package kintsugi3d.builder.javafx.controllers.modals.systemsettings;//Created by alexk on 7/31/2017.
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.stage.Window;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
@@ -25,33 +25,42 @@ import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-public class AdvPhotoViewController implements Initializable, SystemSettingsControllerBase
+public class AdvPhotoViewController implements SystemSettingsControllerBase
 {
     //T ODO: LOOK AT FORMATTING OF SLIDERS (text is hard to read)
-    @FXML
-    private TextField buehlerTextField;
-    @FXML
-    private CheckBox buehlerCheckBox;
-    @FXML
-    private TextField weightExponentTextField;
-    @FXML
-    private TextField isotropyFactorTextField;
-    @FXML
-    private Slider weightExponentSlider;
-    @FXML
-    private Slider isotropyFactorSlider;
-    @FXML
-    private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
+    @FXML private TextField buehlerTextField;
+    @FXML private CheckBox buehlerCheckBox;
+    @FXML private TextField weightExponentTextField;
+    @FXML private TextField isotropyFactorTextField;
+    @FXML private Slider weightExponentSlider;
+    @FXML private Slider isotropyFactorSlider;
+    @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
 
     private SettingsModelImpl settingsModel;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources)
+    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
     {
-        init();
+        weightModeChoiceBox.setConverter(new StringConverter<>()
+        {
+            @Override
+            public String toString(ShadingParameterMode object)
+            {
+                return object.name();
+            }
+
+            @Override
+            public ShadingParameterMode fromString(String string)
+            {
+                return ShadingParameterMode.valueOf(string);
+            }
+        });
+        weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
+
+        StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
+        StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
+
+        bind(state.getSettingsModel());
     }
 
     public void bind(SettingsModelImpl injectedSettingsModel)
@@ -90,34 +99,5 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
 
         isotropyFactorSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
         isotropyFactorTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
-    }
-
-    @Override
-    public void init()
-    {
-        weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>()
-        {
-            @Override
-            public String toString(ShadingParameterMode object)
-            {
-                return object.name();
-            }
-
-            @Override
-            public ShadingParameterMode fromString(String string)
-            {
-                return ShadingParameterMode.valueOf(string);
-            }
-        });
-        weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
-
-        StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
-        StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
-    }
-
-    @Override
-    public void bindInfo(JavaFXState javaFXState)
-    {
-        bind(javaFXState.getSettingsModel());
     }
 }

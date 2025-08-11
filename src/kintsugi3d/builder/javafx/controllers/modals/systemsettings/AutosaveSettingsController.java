@@ -13,6 +13,7 @@ package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.ChoiceBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -21,57 +22,55 @@ import kintsugi3d.builder.javafx.JavaFXState;
 import java.awt.*;
 import java.io.File;
 
-public class AutosaveSettingsController implements SystemSettingsControllerBase{
-    @FXML public javafx.scene.control.ChoiceBox<String> autosaveOptionsChoiceBox;
-    String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
+public class AutosaveSettingsController implements SystemSettingsControllerBase
+{
+    @FXML private ChoiceBox<String> autosaveOptionsChoiceBox;
+    private static final String DEFAULT_AUTOSAVE_PATH = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
 
-    String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
+    private static final String DEFAULT_AUTOSAVE_SELECTION = String.format("Default Path: --> %s", DEFAULT_AUTOSAVE_PATH);
     static final String CHOOSE_LOCATION = "Choose Location...";
-    private DirectoryChooser directoryChooser = new DirectoryChooser();
+    private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
-    private Window window;
+    private Window parentWindow;
 
     @Override
-    public void init() {
+    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    {
+        this.parentWindow = parentWindow;
+
         //add "Default Path" and "Choose Location..." items to choiceBox
         //initialize directory selection dropdown menu
-        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
+        autosaveOptionsChoiceBox.getItems().addAll(DEFAULT_AUTOSAVE_SELECTION, CHOOSE_LOCATION);
 
         //initialize option to default path
-        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
+        autosaveOptionsChoiceBox.setValue(DEFAULT_AUTOSAVE_SELECTION);
 
         //attach event handler (this cannot be done in scenebuilder)
         autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
 
-    private void handleDirectoryDropdownSelection(ActionEvent event) {
+    private void handleDirectoryDropdownSelection(ActionEvent event)
+    {
         //if user clicks "choose directory" option, open the directory chooser
         //then add an item to the dropdown which contains the path they selected
 
-        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
+        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION))
+        {
             this.directoryChooser.setTitle("Choose an output directory");
 
-            Stage stage = (Stage) window;
+            Stage stage = (Stage) parentWindow;
             File file = this.directoryChooser.showDialog(stage.getOwner());
 
-            if (file != null && file.exists()){
+            if (file != null && file.exists())
+            {
                 directoryChooser.setInitialDirectory(file);
                 autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
                 autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
             }
-            else{
+            else
+            {
                 Toolkit.getDefaultToolkit().beep();
             }
         }
     }
-
-    public void injectWindow(Window window){
-        this.window = window;
-    }
-
-    @Override
-    public void bindInfo(JavaFXState javaFXState) {
-        //TODO: imp.
-    }
-
 }

@@ -20,7 +20,7 @@ import java.net.URL;
  * Creates a modal window.
  * Only one modal window managed by a single instance of this class can be open at a time.
  */
-public class ModalWindow
+public class Modal
 {
     private static final String ICON_PATH = "Kintsugi3D-icon.png";
 
@@ -30,7 +30,7 @@ public class ModalWindow
 
     private Stage stage;
 
-    public ModalWindow(Window parentWindow)
+    public Modal(Window parentWindow)
     {
         this.parentWindow = parentWindow;
     }

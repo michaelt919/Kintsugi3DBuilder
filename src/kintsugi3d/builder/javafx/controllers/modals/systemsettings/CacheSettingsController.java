@@ -18,6 +18,7 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
@@ -33,16 +34,10 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     @FXML private Label specularFitCacheLabel;
 
     @Override
-    public void init()
+    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
     {
         previewImageCacheLabel.setText(ApplicationFolders.getPreviewImagesRootDirectory().toString());
         specularFitCacheLabel.setText(ApplicationFolders.getFitCacheRootDirectory().toString());
-    }
-
-    @Override
-    public void bindInfo(JavaFXState javaFXState)
-    {
-        //TODO: imp.
     }
 
     @FXML private void openDirectory(MouseEvent e){

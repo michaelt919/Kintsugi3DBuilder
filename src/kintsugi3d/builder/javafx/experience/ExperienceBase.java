@@ -3,7 +3,7 @@ package kintsugi3d.builder.javafx.experience;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
-import kintsugi3d.builder.javafx.ModalWindow;
+import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
@@ -14,13 +14,15 @@ import java.util.function.BiFunction;
 
 public abstract class ExperienceBase implements Experience
 {
-    private ModalWindow modal;
+    private Window parentWindow;
+    private Modal modal;
     private JavaFXState state;
 
     @Override
     public final void initialize(Window parentWindow, JavaFXState state)
     {
-        this.modal = new ModalWindow(parentWindow);
+        this.parentWindow = parentWindow;
+        this.modal = new Modal(parentWindow);
         this.state = state;
     }
 
@@ -29,6 +31,7 @@ public abstract class ExperienceBase implements Experience
         return this.modal.isOpen();
     }
 
+    @Override
     public final void tryOpen()
     {
         if (!modal.isOpen())
@@ -37,7 +40,7 @@ public abstract class ExperienceBase implements Experience
             {
                 open();
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 handleError(e);
             }
@@ -66,7 +69,7 @@ public abstract class ExperienceBase implements Experience
             {
                 loader.load();
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 handleError(e);
             }
@@ -97,7 +100,12 @@ public abstract class ExperienceBase implements Experience
         ExceptionHandling.error(MessageFormat.format("An error occurred opening window: {0}", getName()), e);
     }
 
-    protected ModalWindow getModal()
+    protected Window getParentWindow()
+    {
+        return parentWindow;
+    }
+
+    protected Modal getModal()
     {
         return modal;
     }

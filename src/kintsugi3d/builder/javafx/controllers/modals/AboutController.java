@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
@@ -21,17 +22,24 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.ResourceBundle;
 
-public class AboutController {
-
+public class AboutController implements Initializable
+{
     private static final Logger LOG = LoggerFactory.getLogger(AboutController.class);
-    @FXML private ScrollPane scrollPane;
-    @FXML private Rectangle backgroundRectangle;
-    @FXML private Text aboutText;
+    @FXML
+    private ScrollPane scrollPane;
+    @FXML
+    private Rectangle backgroundRectangle;
+    @FXML
+    private Text aboutText;
 
-    public void init(){
+    @Override
+    public void initialize(URL location, ResourceBundle resources)
+    {
         try
         {
             //TODO: text appears a little blurry, also needs some beautification
@@ -42,13 +50,10 @@ public class AboutController {
             aboutText.setWrappingWidth(scrollPane.getWidth() - 20);
             backgroundRectangle.setWidth(scrollPane.getWidth());
             backgroundRectangle.setHeight(aboutText.getLayoutBounds().getHeight() + 20); // +20 to account for margins
-
-            aboutText.getScene().getWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
         }
         catch (IOException e)
         {
             LOG.error("An error occurred showing help and about:", e);
         }
     }
-
 }

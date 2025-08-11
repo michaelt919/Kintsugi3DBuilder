@@ -193,14 +193,9 @@
                                     <RadioMenuItem mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
                                         <userData>rendermodes/maps/errorMap.frag</userData>
                                     </RadioMenuItem>
-
                                 </items>
-
                             </Menu>
-
-
                         </Menu>
-
                         <Menu text="Help">
                             <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
                             <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
@@ -219,16 +214,6 @@
                             <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
                         </Menu>
                     </MenuBar>
-                    <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
-<!--                        leaving the checkbox in here causes scenebuilder to not render???-->
-<!--                        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />-->
-                        <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
-                        <HBox.margin>
-                            <Insets />
-                            </HBox.margin>
-                        </Button>
-                        <Button mnemonicParsing="false" onAction="#openAboutModal" text="About" />
-                    </HBox>
                 </children>
             </AnchorPane>
             <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">

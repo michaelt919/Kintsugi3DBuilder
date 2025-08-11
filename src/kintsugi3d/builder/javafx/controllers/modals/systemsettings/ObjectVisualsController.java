@@ -17,65 +17,64 @@ import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.stage.Window;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.JavaFXState;
 
-public class ObjectVisualsController implements SystemSettingsControllerBase{
+public class ObjectVisualsController implements SystemSettingsControllerBase
+{
 
-    final Number DEFAULT_VALUE = 1024;//default value for Preload vis and shadow testing txt fields
-    private IntegerProperty previewWidthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-    private IntegerProperty previewHeightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-    private IntegerProperty depthWidthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-    private IntegerProperty depthHeightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private static final Number DEFAULT_VALUE = 1024;//default value for Preload vis and shadow testing txt fields
+    private final IntegerProperty previewWidthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private final IntegerProperty previewHeightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private final IntegerProperty depthWidthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private final IntegerProperty depthHeightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
-    @FXML public TextField previewWidthTxtField;
-    @FXML public TextField previewHeightTxtField;
+    @FXML private TextField previewWidthTxtField;
+    @FXML private TextField previewHeightTxtField;
 
-    @FXML public CheckBox imageCompressionCheckBox;
-    @FXML public CheckBox preloadVisibilityEtcCheckBox;
-    @FXML public Label widthLabel;
-    @FXML public TextField depthWidthTxtField;
-    @FXML public Label heightLabel;
-    @FXML public TextField depthHeightTxtField;
-    @FXML public CheckBox mipmapCheckBox;
-    @FXML public CheckBox reduceViewportResCheckBox;
-
-    @Override
-    public void init() {
-        //nothing here yet
-    }
+    @FXML private CheckBox imageCompressionCheckBox;
+    @FXML private CheckBox preloadVisibilityEtcCheckBox;
+    @FXML private Label widthLabel;
+    @FXML private TextField depthWidthTxtField;
+    @FXML private Label heightLabel;
+    @FXML private TextField depthHeightTxtField;
+    @FXML private CheckBox mipmapCheckBox;
+    @FXML private CheckBox reduceViewportResCheckBox;
 
     @Override
-    public void bindInfo(JavaFXState javaFXState) {
+    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    {
         imageCompressionCheckBox.selectedProperty().bindBidirectional(
-                javaFXState.getLoadOptionsModel().compression);
+            state.getLoadOptionsModel().compression);
 
         setupTxtFieldProperties(previewWidthIntProperty, previewWidthTxtField);
         setupTxtFieldProperties(previewHeightIntProperty, previewHeightTxtField);
         setupTxtFieldProperties(depthWidthIntProperty, depthWidthTxtField);
         setupTxtFieldProperties(depthHeightIntProperty, depthHeightTxtField);
 
-        previewWidthIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().previewWidth);
-        previewHeightIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().previewHeight);
+        previewWidthIntProperty.bindBidirectional(state.getLoadOptionsModel().previewWidth);
+        previewHeightIntProperty.bindBidirectional(state.getLoadOptionsModel().previewHeight);
 
         depthWidthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
         depthHeightTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
 
         preloadVisibilityEtcCheckBox.selectedProperty().bindBidirectional(
-                javaFXState.getLoadOptionsModel().depthImages);
+            state.getLoadOptionsModel().depthImages);
 
-        depthWidthIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().depthWidth);
-        depthHeightIntProperty.bindBidirectional(javaFXState.getLoadOptionsModel().depthHeight);
+        depthWidthIntProperty.bindBidirectional(state.getLoadOptionsModel().depthWidth);
+        depthHeightIntProperty.bindBidirectional(state.getLoadOptionsModel().depthHeight);
 
-        mipmapCheckBox.selectedProperty().bindBidirectional(javaFXState.getLoadOptionsModel().mipmaps);
+        mipmapCheckBox.selectedProperty().bindBidirectional(state.getLoadOptionsModel().mipmaps);
         reduceViewportResCheckBox.selectedProperty().bindBidirectional(
-                javaFXState.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
+            state.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
     }
 
     //this function is used to hook up the text field's string property to the backend
     //StringProperty --> IntegerProperty
-    private void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField) {
-        StringConverter<Number> numberStringConverter = new StringConverter<Number>()
+    private static void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField)
+    {
+        StringConverter<Number> numberStringConverter = new StringConverter<>()
         {
             @Override
             public String toString(Number object)
