@@ -1,5 +1,8 @@
 package kintsugi3d.builder.javafx;
 
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -9,7 +12,6 @@ import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
-import kintsugi3d.util.Flag;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,19 +27,23 @@ public class Modal
     private static final String ICON_PATH = "Kintsugi3D-icon.png";
 
     private final Window parentWindow;
-    private final Flag open = new Flag(false);
-
-
     private Stage stage;
+
+    private final BooleanProperty openProperty = new SimpleBooleanProperty(false);
 
     public Modal(Window parentWindow)
     {
         this.parentWindow = parentWindow;
     }
 
+    public BooleanExpression getOpenObservable()
+    {
+        return openProperty;
+    }
+
     public boolean isOpen()
     {
-        return open.get();
+        return openProperty.get();
     }
 
     public Stage getStage()
@@ -71,16 +77,16 @@ public class Modal
         stage.setResizable(false);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, x ->
         {
-            open.set(false);
             WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
         });
+
+        openProperty.bind(stage.showingProperty());
 
         return fxmlLoader.getController();
     }
 
     public void open()
     {
-        open.set(true);
         stage.show();
         WelcomeWindowController.getInstance().hide();
     }

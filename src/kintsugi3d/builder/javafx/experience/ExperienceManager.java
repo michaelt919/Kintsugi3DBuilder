@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.experience;
 
+import javafx.beans.binding.BooleanExpression;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
 
@@ -14,6 +15,8 @@ public class ExperienceManager
     private final Log log = new Log();
     private final SystemSettings systemSettings = new SystemSettings();
     private final About about = new About();
+
+    private BooleanExpression anyModalOpen;
 
     private static final ExperienceManager INSTANCE = new ExperienceManager();
 
@@ -36,6 +39,25 @@ public class ExperienceManager
         log.initialize(parentWindow, state);
         systemSettings.initialize(parentWindow, state);
         about.initialize(parentWindow, state);
+
+        anyModalOpen = createProject.getModal().getOpenObservable()
+            .or(objectOrientation.getModal().getOpenObservable())
+            .or(lightCalibration.getModal().getOpenObservable())
+            .or(maskOptions.getModal().getOpenObservable())
+            .or(toneCalibration.getModal().getOpenObservable())
+            .or(log.getModal().getOpenObservable())
+            .or(systemSettings.getModal().getOpenObservable())
+            .or(about.getModal().getOpenObservable());
+    }
+
+    boolean isAnyModalOpen()
+    {
+        return anyModalOpen.get();
+    }
+
+    public BooleanExpression getAnyModalOpenProperty()
+    {
+        return anyModalOpen;
     }
 
     public CreateProject getCreateProject()
