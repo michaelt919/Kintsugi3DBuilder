@@ -43,7 +43,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
@@ -209,7 +208,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         /**
          *
          * @param model
-         * @param supportingFilesDirectory
          * @return
          * @throws IOException
          */
@@ -791,7 +789,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
-        BufferedImage distortedImage,BufferedImage distortedMaskImage, boolean mipmapsEnabled, ViewSet viewSet, int projectionIndex, ContextType context)
+        BufferedImage distortedImage,BufferedImage distortedMaskImage, boolean mipmapsEnabled, ViewSet viewSet,
+        int projectionIndex, ContextType context)
         throws IOException
     {
         DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
@@ -799,7 +798,20 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
         {
-            return undistort.undistort(distortedImage,distortedMaskImage, mipmapsEnabled, distortion);
+            return undistort.undistort(distortedImage, distortedMaskImage, mipmapsEnabled, distortion);
+        }
+    }
+
+    private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
+        BufferedImage distortedImage, ViewSet viewSet, int projectionIndex, ContextType context)
+        throws IOException
+    {
+        DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
+        distortion = distortion.scaledTo(viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
+
+        try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
+        {
+            return undistort.undistort(distortedImage, distortion);
         }
     }
 
@@ -1022,7 +1034,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 // Generating preview images is now complete.
                 // Go back to indeterminate progress until it starts to actually load for rendering
                 progressMonitor.setMaxProgress(0.0);
-                log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+                log.info("Undistorted preview images generated in {} milliseconds.", new Date().getTime() - timestamp.getTime());
             }
         }
     }
