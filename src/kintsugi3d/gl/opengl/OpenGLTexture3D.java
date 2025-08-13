@@ -34,9 +34,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.GL_MIRRORED_REPEAT;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.glTexImage3DMultisample;
 import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;

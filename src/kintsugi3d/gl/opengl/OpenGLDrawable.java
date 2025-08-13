@@ -21,9 +21,6 @@ import kintsugi3d.gl.vecmath.*;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
 class OpenGLDrawable extends DrawableBase<OpenGLContext>

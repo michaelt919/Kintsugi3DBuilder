@@ -21,8 +21,6 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.text.MessageFormat;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.GL_BGRA;
 import static org.lwjgl.opengl.GL30.*;
 
 abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
