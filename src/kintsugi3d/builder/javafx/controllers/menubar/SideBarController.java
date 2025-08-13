@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -82,6 +83,13 @@ public class SideBarController {
             // throw new RuntimeException(e);
         }
         return newTab;
+    }
+
+    public void setVisibility(boolean visible) {
+        main_box.setVisible(visible);
+        main_box.setManaged(visible);
+        if (visible)
+            Platform.runLater(()->tabControllers.forEach(CardTabController::updateViewportVisibility));
     }
 
     public void refreshTabs() {

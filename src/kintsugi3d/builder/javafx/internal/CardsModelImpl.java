@@ -13,7 +13,6 @@ import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.util.CardSelectionModel;
 import kintsugi3d.builder.util.ProjectDataCardFactory;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 

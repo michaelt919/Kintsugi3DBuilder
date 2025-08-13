@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+
+import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -171,40 +173,27 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         imgFiles.forEach(file->imgFileNames.add(file.getName()));
         MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
 
-        if (loadedViewSet.getCameraMetadata().size() != loadedViewSet.getImageFiles().size()) {
-            loadedViewSet.generateCameraMetadata();
-        };
-
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
 
         if(progressMonitor != null)
         {
-            progressMonitor.setStageCount(3);
+            progressMonitor.setStageCount(2);
             progressMonitor.setStage(0, "Generating preview-resolution images...");
         }
 
         try
         {
-            // Generate preview resolution images
-            builder.generateUndistortedPreviewImages();
+            // Generate preview resolution images and thumbnails
+            builder.generateUndistortedPreviewThumbnailImages();
         }
         catch (IOException e)
         {
             log.error("One or more images failed to load", e);
         }
 
-        if (progressMonitor != null) {
-            progressMonitor.setStage(1, "Generating thumbnail-resolution images...");
-        }
-
-        try {
-            builder.generateThumbnailImages();
-        } catch (IOException e) {
-            log.error("One or more thumbnails failed to load", e);
-        }
-
-        MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet);
+        loadedViewSet.generateCameraMetadata();
+        Platform.runLater(()->MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet));
 
         // Create the instance (will be initialized on the graphics thread)
         IBRInstance<ContextType> newItem = new IBREngine<>(id, context, builder);

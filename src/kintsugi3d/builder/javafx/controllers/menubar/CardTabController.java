@@ -32,7 +32,7 @@ public class CardTabController {
     @FXML private VBox card_vbox;
     @FXML private ScrollPane scrollpane;
 
-    private double scrollPosition= 0;
+    private double scrollPosition = 0;
 
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
@@ -42,15 +42,17 @@ public class CardTabController {
     public void init(CardsModel cardsModel)
     {
         this.cardsModel = cardsModel;
+        List<VBox> displayCards = new ArrayList<>();
         for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
-            card_vbox.getChildren().add(createDataCard(card).getCard());
+            displayCards.add(createDataCard(card).getCard());
         }
-
+        // Add all at once to avoid repeated listener triggers.
+        card_vbox.getChildren().addAll(displayCards);
         createListeners();
     }
 
     private CardController createDataCard(ProjectDataCard card) {
-        CardController newCardController = null;
+        CardController newCardController;
         FXMLLoader loader = new FXMLLoader();
         try {
             loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/DataCard.fxml"));
@@ -59,7 +61,7 @@ public class CardTabController {
             newCardController.init(cardsModel, card);
             cardControllers.add(newCardController);
         } catch (Exception e) {
-            // throw new RuntimeException(e);
+            throw new RuntimeException("Could not load DataCard.fxml!",e);
         }
         return newCardController;
     }
@@ -75,23 +77,9 @@ public class CardTabController {
             newCardController.init(cardsModel, card);
             cardControllers.set(index, newCardController);
         } catch (Exception e) {
-            // throw new RuntimeException(e);
+            throw new RuntimeException("Failed to load DataCard.fxml",e);
         }
         return newCardController;
-    }
-
-    @FXML
-    public void searchBarAction(KeyEvent e) {
-        /*
-        if (card_searchbar.getText().isBlank()) {
-            for (int i = 0; i < cardControllers.size(); i++) {
-                cardControllers.get(i).setCardVisibility(windowStart < i && i < windowEnd);
-            }
-        } else {
-            for (CardController cc : cardControllers) {
-                cc.setCardVisibility(cc.titleContainsString(card_searchbar.getText()));
-            }
-        }*/
     }
 
     public void setVisible(boolean visibility) {
@@ -140,8 +128,6 @@ public class CardTabController {
                     for (int i = change.getFrom(); i < change.getTo(); i++) {
                         CardController cardController = change.getList().get(i);
                         card_vbox.getChildren().add(i, cardController.getCard());
-                        // We need to give the UI time to determine the position of its children!
-                        Platform.runLater(this::updateViewportVisibility); //
                     }
                 }
                 if(change.wasReplaced()) {
@@ -152,11 +138,13 @@ public class CardTabController {
             }
         });
 
+        // Fires when scrolling. Updates Viewport Visibility
         scrollpane.vvalueProperty().addListener((ChangeListener<? super Number>) (observableValue, oldValue, newValue) -> {
             scrollPosition = newValue.doubleValue();
             updateViewportVisibility();
         });
 
+        // Search Bar Listener
         card_searchbar.textProperty().addListener((observable, oldValue, newValue) -> {
             searchList.setPredicate(controller -> {
                 // If search text is empty, display all items
@@ -164,9 +152,14 @@ public class CardTabController {
             });
         });
 
-        // Updates the scrollpane after a datacard is collapsed!!!
+        // Updates the scrollpane after a datacard is added, removed, collapsed, etc.
         card_vbox.heightProperty().addListener((change)->{
-            Platform.runLater(this::updateViewportVisibility);
+            updateViewportVisibility();
+        });
+
+        // Fires when the viewport is resized
+        scrollpane.viewportBoundsProperty().addListener((change)-> {
+            updateViewportVisibility();
         });
     }
 
@@ -174,12 +167,12 @@ public class CardTabController {
         double viewportHeight = scrollpane.getViewportBounds().getHeight();
         double contentHeight = card_vbox.getHeight();
         double scrollPointer = scrollPosition * contentHeight;
-
-        for(int i = 0; i < searchList.size(); i++) {
+        for (int i = 0; i < searchList.size(); i++) {
             Bounds cardY = card_vbox.getChildren().get(i).getBoundsInParent();
             boolean inScrollRange = (cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight);
             searchList.get(i).setCardVisibility(inScrollRange);
         }
+
     }
 }
 

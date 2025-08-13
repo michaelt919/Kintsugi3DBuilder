@@ -169,7 +169,7 @@ public class MenubarController
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
-    @FXML private SideBarController leftBarController; //Jacob
+    @FXML private SideBarController leftBarController;
 
     @FXML private Label shaderName;
 
