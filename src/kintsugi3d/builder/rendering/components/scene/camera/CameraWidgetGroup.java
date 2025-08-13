@@ -12,26 +12,15 @@
 package kintsugi3d.builder.rendering.components.scene.camera;
 
 import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.BaseScene;
-import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraFrustum;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
-import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector4;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
 
 public class CameraWidgetGroup<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {

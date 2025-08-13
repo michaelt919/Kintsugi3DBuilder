@@ -11,7 +11,6 @@
 
 package kintsugi3d.gl.glfw;
 
-import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.function.Function;

@@ -1,29 +1,21 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Predicate;
+import java.util.Collection;
 
 public class CardTabController {
 
@@ -42,7 +34,7 @@ public class CardTabController {
     public void init(CardsModel cardsModel)
     {
         this.cardsModel = cardsModel;
-        List<VBox> displayCards = new ArrayList<>();
+        Collection<VBox> displayCards = new ArrayList<>();
         for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
             displayCards.add(createDataCard(card).getCard());
         }

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.state.impl;
 
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import kintsugi3d.builder.state.ReadonlySettingsModel;

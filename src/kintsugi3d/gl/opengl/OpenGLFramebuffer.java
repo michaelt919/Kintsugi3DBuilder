@@ -21,8 +21,6 @@ import org.lwjgl.*;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.IntVector2;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 
 abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>

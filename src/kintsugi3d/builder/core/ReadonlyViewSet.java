@@ -19,7 +19,6 @@ import java.util.UUID;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;

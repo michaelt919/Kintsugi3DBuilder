@@ -1,7 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.application.Platform;
-import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.RadioButton;

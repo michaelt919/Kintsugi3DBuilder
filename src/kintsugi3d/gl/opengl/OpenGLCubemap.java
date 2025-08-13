@@ -23,10 +23,6 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
 public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>

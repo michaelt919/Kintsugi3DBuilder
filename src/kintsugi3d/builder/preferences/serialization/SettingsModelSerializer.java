@@ -12,19 +12,14 @@
 package kintsugi3d.builder.preferences.serialization;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.util.ShadingParameterMode;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 

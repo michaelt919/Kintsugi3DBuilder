@@ -18,9 +18,6 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.exceptions.UnrecognizedPrimitiveModeException;
 import kintsugi3d.gl.vecmath.*;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
 class OpenGLDrawable extends DrawableBase<OpenGLContext>

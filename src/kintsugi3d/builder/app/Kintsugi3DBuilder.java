@@ -12,7 +12,6 @@
 package kintsugi3d.builder.app;
 
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.ReadOnlyDirectoryPreferencesModel;
 import org.lwjgl.system.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

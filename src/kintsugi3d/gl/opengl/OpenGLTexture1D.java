@@ -21,10 +21,6 @@ import kintsugi3d.gl.core.Texture1D;
 import kintsugi3d.gl.core.TextureWrapMode;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL44.*;
 
 // mipmaps

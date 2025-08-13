@@ -14,10 +14,6 @@ package kintsugi3d.builder.resources.ibr;
 import java.util.List;
 
 import kintsugi3d.builder.core.ViewSet;
-import java.util.List;
-import java.util.Objects;
-
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;

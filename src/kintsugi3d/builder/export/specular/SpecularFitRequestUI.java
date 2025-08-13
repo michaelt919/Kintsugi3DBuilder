@@ -14,7 +14,6 @@ package kintsugi3d.builder.export.specular;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.text.BreakIterator;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;

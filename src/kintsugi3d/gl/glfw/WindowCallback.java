@@ -17,7 +17,6 @@ import kintsugi3d.gl.window.WindowListenerManagerInstance;
 import kintsugi3d.gl.window.listeners.*;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 
 // Other misc. callbacks
 // Keyboard callbacks

@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.gl.core.Context;
-
 import java.io.File;
 
 public interface RequestFactory

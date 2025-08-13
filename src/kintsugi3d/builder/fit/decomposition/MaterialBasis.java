@@ -12,7 +12,6 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.File;
 

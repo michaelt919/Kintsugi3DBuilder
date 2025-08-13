@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.state;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 

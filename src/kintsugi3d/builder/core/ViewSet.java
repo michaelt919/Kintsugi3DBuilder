@@ -11,14 +11,9 @@
 
 package kintsugi3d.builder.core;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
 
-import javafx.scene.control.ProgressBar;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
@@ -44,8 +39,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A class representing a collection of photographs, or views.

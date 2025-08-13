@@ -12,7 +12,6 @@
 package kintsugi3d.gl.builders;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import kintsugi3d.gl.core.Context;

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;

@@ -12,7 +12,6 @@
 package kintsugi3d.builder.resources.ibr;
 
 import java.io.File;
-import java.util.UUID;
 
 public class ImageCacheSettings
 {

@@ -32,8 +32,6 @@ import kintsugi3d.gl.opengl.OpenGLTexture3D.DepthStencilBuilder;
 import kintsugi3d.gl.opengl.OpenGLTexture3D.StencilBuilder;
 import kintsugi3d.gl.types.AbstractDataType;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLTextureFactory implements TextureFactory<OpenGLContext>

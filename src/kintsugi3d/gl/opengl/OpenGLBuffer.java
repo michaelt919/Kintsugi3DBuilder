@@ -16,7 +16,6 @@ import java.nio.ByteBuffer;
 import kintsugi3d.gl.core.ContextBound;
 import kintsugi3d.gl.core.Resource;
 
-import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;
 
 abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource

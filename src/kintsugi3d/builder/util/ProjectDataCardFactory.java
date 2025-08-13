@@ -1,10 +1,8 @@
 package kintsugi3d.builder.util;
 
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
-import java.io.File;
 import java.util.LinkedHashMap;
 
 public class ProjectDataCardFactory {

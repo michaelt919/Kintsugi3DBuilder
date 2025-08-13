@@ -16,7 +16,6 @@ import java.nio.ByteBuffer;
 import kintsugi3d.gl.core.UniformBuffer;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
-import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.*;
 
 class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer<OpenGLContext>

@@ -34,11 +34,6 @@ import kintsugi3d.gl.types.AbstractDataTypeFactory;
 import kintsugi3d.util.ImageHelper;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL44.*;
 
 final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>

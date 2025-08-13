@@ -11,7 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -26,8 +25,6 @@ import kintsugi3d.gl.exceptions.UnlinkedProgramException;
 import kintsugi3d.gl.vecmath.*;
 import kintsugi3d.util.ResourceManager;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
 
 final class OpenGLProgramObject implements ProgramObject<OpenGLContext>

@@ -11,13 +11,11 @@
 
 package kintsugi3d.builder.app;
 
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 public class ApplicationFolders
 {

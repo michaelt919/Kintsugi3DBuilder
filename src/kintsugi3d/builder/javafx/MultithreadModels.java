@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.javafx;//Created by alexk on 7/19/2017.
 
-import javafx.collections.FXCollections;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
@@ -19,8 +18,6 @@ import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.impl.CanvasModelImpl;
 import kintsugi3d.builder.state.impl.SceneViewportModelImpl;
-
-import java.util.Collections;
 
 public final class MultithreadModels implements Kintsugi3DBuilderState
 {

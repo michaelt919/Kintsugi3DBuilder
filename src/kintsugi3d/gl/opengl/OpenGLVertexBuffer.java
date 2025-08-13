@@ -14,9 +14,6 @@ package kintsugi3d.gl.opengl;
 import kintsugi3d.gl.core.VertexBuffer;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLContext>

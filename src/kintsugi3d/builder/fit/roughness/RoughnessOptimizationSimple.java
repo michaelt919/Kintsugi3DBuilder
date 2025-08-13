@@ -12,7 +12,6 @@
 package kintsugi3d.builder.fit.roughness;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import kintsugi3d.builder.core.TextureResolution;

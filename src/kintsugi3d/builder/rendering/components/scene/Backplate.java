@@ -12,7 +12,6 @@
 package kintsugi3d.builder.rendering.components.scene;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
