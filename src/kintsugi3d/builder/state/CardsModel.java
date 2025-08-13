@@ -1,7 +1,7 @@
 package kintsugi3d.builder.state;
 
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import kintsugi3d.builder.core.ViewSet;

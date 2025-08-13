@@ -11,8 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.nio.ByteBuffer;
-
 import kintsugi3d.gl.builders.base.ColorCubemapBuilderBase;
 import kintsugi3d.gl.builders.base.DepthStencilTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthTextureBuilderBase;
@@ -22,7 +20,9 @@ import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import java.nio.ByteBuffer;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
 import static org.lwjgl.opengl.GL32.*;
 
 public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>

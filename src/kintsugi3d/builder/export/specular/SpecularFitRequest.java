@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.FinalReconstruction;
 import kintsugi3d.builder.fit.ReconstructionShaders;
@@ -33,6 +26,13 @@ import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGraphicsRequest
 {

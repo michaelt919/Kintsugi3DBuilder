@@ -2,7 +2,6 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane fx:id="anchorPane" prefHeight="442.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.resources.fxml.menubar.createnewproject.MasksImportController">
    <children>
        <Label alignment="CENTER" prefWidth="600.0" styleClass="wireframeTitle" text="Select Masks Import Option" textAlignment="CENTER" AnchorPane.topAnchor="20.0" />

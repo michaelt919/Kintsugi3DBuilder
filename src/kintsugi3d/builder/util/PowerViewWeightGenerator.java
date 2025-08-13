@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.util;
 
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 
 import java.util.Objects;
 

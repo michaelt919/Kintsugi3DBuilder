@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.state.impl;
 
-import kintsugi3d.gl.window.FramebufferCanvas;
 import kintsugi3d.builder.state.CanvasModel;
+import kintsugi3d.gl.window.FramebufferCanvas;
 
 import java.util.LinkedList;
 import java.util.List;

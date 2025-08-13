@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.javafx.util;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import javafx.application.Platform;
 import javafx.beans.value.WritableValue;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class MultithreadValue<T> implements WritableValue<T>
 {

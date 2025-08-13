@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
-
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,14 +26,20 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.layout.VBox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.javafx.internal.LightingModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.util.Collections;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 public class RootLightSceneController implements Initializable
 {

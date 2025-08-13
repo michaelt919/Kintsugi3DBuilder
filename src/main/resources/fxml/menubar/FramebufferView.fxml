@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import kintsugi3d.gl.javafx.*?>
-
 <!--
   ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
@@ -13,4 +11,5 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
+<?import kintsugi3d.gl.javafx.FramebufferView?>
 <FramebufferView xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" />

@@ -11,18 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
-import java.text.MessageFormat;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BiConsumer;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
@@ -46,6 +34,18 @@ import kintsugi3d.util.ImageUndistorter;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BiConsumer;
 
 import static javax.imageio.ImageIO.read;
 

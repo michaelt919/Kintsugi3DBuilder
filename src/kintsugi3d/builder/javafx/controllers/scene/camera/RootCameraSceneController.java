@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.camera;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Predicate;
-
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -23,10 +19,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
+import kintsugi3d.builder.javafx.internal.CameraModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.javafx.internal.CameraModelImpl;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Predicate;
 
 public class RootCameraSceneController
 {

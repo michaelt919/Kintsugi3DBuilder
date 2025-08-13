@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.tools;
 
+import kintsugi3d.builder.state.ExtendedCameraModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.window.Canvas3D;
 import kintsugi3d.gl.window.listeners.ScrollListener;
-import kintsugi3d.builder.state.ExtendedCameraModel;
 
 public class ScrollDollyTool implements ScrollListener
 {

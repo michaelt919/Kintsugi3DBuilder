@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
+import kintsugi3d.builder.state.ExtendedCameraModel;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
-import kintsugi3d.builder.state.ExtendedCameraModel;
 
 final class FocalLengthTool implements DragTool
 {

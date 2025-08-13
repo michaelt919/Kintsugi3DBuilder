@@ -11,14 +11,6 @@
 
 package kintsugi3d.builder.test;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
@@ -53,6 +45,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

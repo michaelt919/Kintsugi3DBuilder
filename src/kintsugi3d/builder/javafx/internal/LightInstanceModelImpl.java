@@ -14,10 +14,10 @@ package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/25/2017.
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightInstanceSetting;
 import kintsugi3d.builder.state.LightInstanceModel;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.OrbitPolarConverter;
 
 public class LightInstanceModelImpl implements LightInstanceModel

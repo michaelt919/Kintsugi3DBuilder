@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import java.io.IOException;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -20,6 +18,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.InternalModels;
+
+import java.io.IOException;
 
 public class SystemSettingsController {
 

@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -27,6 +24,9 @@ import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class SettingsLightSceneController implements Initializable
 {

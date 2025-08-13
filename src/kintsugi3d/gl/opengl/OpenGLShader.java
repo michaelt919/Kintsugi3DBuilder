@@ -11,6 +11,13 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.core.Shader;
+import kintsugi3d.gl.exceptions.IllegalShaderDefineException;
+import kintsugi3d.gl.exceptions.ShaderCompileFailureException;
+import kintsugi3d.gl.exceptions.ShaderPreprocessingFailureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,13 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-
-import kintsugi3d.gl.core.Shader;
-import kintsugi3d.gl.exceptions.IllegalShaderDefineException;
-import kintsugi3d.gl.exceptions.ShaderCompileFailureException;
-import kintsugi3d.gl.exceptions.ShaderPreprocessingFailureException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.lwjgl.opengl.GL20.*;
 

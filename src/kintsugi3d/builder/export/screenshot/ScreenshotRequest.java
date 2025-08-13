@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.export.screenshot;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
+
+import java.io.File;
+import java.io.IOException;
 
 public class ScreenshotRequest implements ObservableIBRRequest
 {

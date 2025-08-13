@@ -11,11 +11,11 @@
 
 package kintsugi3d.gl.javafx;
 
-import java.util.*;
-import java.util.Map.Entry;
-
 import javafx.scene.input.KeyCode;
 import kintsugi3d.gl.window.Key;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 final class KeyCodeMaps
 {

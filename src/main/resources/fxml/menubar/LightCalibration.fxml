@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <!--
   ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
@@ -14,6 +11,9 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <AnchorPane fx:id="root" prefHeight="400.0" prefWidth="400.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LightCalibrationController">
    <children>
       <Slider layoutX="128.0" layoutY="331.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" AnchorPane.leftAnchor="48.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" fx:id="xSlider" />

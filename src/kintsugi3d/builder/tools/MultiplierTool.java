@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.tools;
 
+import kintsugi3d.builder.state.*;
+
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
-
-import kintsugi3d.builder.state.*;
 
 public final class MultiplierTool implements KeyPressTool
 {

@@ -11,16 +11,16 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import java.util.ArrayList;
-
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
+import kintsugi3d.builder.javafx.util.DOMConvertable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import kintsugi3d.builder.javafx.util.DOMConvertable;
+
+import java.util.ArrayList;
 
 public class LightGroupSetting implements DOMConvertable
 {

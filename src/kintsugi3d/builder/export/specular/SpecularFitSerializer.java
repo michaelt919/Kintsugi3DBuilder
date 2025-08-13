@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.export.specular;
 
-import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
+import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
 import kintsugi3d.gl.core.Texture3D;
 import kintsugi3d.gl.vecmath.DoubleVector3;

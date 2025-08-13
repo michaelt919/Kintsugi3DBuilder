@@ -11,15 +11,15 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.IntVector2;
+import org.lwjgl.BufferUtils;
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.text.MessageFormat;
-
-import org.lwjgl.*;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.IntVector2;
 
 import static org.lwjgl.opengl.GL30.*;
 

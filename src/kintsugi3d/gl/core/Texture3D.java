@@ -11,6 +11,10 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.types.AbstractDataType;
+
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -20,10 +24,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.function.Function;
-
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.types.AbstractDataType;
 
 /**
  * An interface for a three-dimensional texture.

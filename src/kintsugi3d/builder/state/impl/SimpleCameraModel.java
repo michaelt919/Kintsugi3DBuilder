@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.state.impl;
 
+import kintsugi3d.builder.state.CameraModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.state.CameraModel;
 
 public class SimpleCameraModel implements CameraModel
 {

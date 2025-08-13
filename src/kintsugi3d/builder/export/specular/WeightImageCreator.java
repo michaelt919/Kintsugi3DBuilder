@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
+
+import java.io.File;
+import java.io.IOException;
 
 public class WeightImageCreator<ContextType extends Context<ContextType>> implements Resource
 {

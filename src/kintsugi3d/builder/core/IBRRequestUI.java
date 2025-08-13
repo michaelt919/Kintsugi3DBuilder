@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
+import kintsugi3d.gl.core.Context;
 
 public interface IBRRequestUI
 {

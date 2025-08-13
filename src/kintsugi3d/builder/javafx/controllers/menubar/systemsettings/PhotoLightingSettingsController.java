@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-import java.util.Collection;
-
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -24,6 +22,8 @@ import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightInstanceSetting;
 import kintsugi3d.builder.javafx.internal.LightInstanceModelImpl;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
+
+import java.util.Collection;
 
 public class PhotoLightingSettingsController implements SystemSettingsControllerBase{
     @FXML public CheckBox fresnelEffectCheckBox;

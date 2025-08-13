@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureResolution;
@@ -28,6 +24,10 @@ import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {

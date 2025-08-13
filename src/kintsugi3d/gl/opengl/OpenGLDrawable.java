@@ -11,12 +11,15 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.util.Map;
-import java.util.TreeMap;
-
-import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.DrawableBase;
+import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.PrimitiveMode;
+import kintsugi3d.gl.core.VertexBuffer;
 import kintsugi3d.gl.exceptions.UnrecognizedPrimitiveModeException;
 import kintsugi3d.gl.vecmath.*;
+
+import java.util.Map;
+import java.util.TreeMap;
 
 import static org.lwjgl.opengl.GL32.*;
 

@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import java.io.IOException;
-
 import javafx.stage.Window;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.simpleanimation.OrbitAnimationRequest.BuilderImplementation;
+
+import java.io.IOException;
 
 public final class OrbitAnimationUIFactory
 {

@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -36,6 +32,10 @@ import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {

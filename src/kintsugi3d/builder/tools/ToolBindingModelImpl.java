@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
-import java.util.HashMap;
-import java.util.Map;
-
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ToolBindingModelImpl implements ToolBindingModel
 {

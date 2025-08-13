@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.environment;
 
-import java.io.File;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -35,6 +31,10 @@ import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.RecentProjects;
+
+import java.io.File;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class SettingsEnvironmentSceneController implements Initializable
 {

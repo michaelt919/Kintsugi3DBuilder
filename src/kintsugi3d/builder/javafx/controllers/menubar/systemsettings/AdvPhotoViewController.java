@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;//Created by alexk on 7/31/2017.
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
@@ -28,6 +25,9 @@ import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class AdvPhotoViewController implements Initializable, SystemSettingsControllerBase
 {//used to be called IBR Options

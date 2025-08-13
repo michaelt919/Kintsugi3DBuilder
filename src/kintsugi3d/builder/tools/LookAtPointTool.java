@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 8/8/2017.
 
-import kintsugi3d.gl.window.CanvasSize;
-import kintsugi3d.gl.window.CursorPosition;
 import kintsugi3d.builder.state.ExtendedCameraModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.gl.window.CanvasSize;
+import kintsugi3d.gl.window.CursorPosition;
 
 final class LookAtPointTool implements DragTool
 {

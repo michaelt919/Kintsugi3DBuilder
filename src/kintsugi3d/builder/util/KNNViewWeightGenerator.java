@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.util;
 
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
-
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 
 public class KNNViewWeightGenerator implements ViewWeightGenerator
 {

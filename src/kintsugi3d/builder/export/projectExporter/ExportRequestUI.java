@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.export.projectExporter;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,12 +25,15 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class ExportRequestUI implements IBRRequestUI {
 

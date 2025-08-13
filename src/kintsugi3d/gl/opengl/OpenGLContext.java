@@ -11,13 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
-
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
@@ -28,6 +21,13 @@ import kintsugi3d.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuild
 import kintsugi3d.gl.opengl.OpenGLProgramObject.OpenGLProgramBuilder;
 import kintsugi3d.gl.types.AbstractDataType;
 import kintsugi3d.gl.types.PackedDataType;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;

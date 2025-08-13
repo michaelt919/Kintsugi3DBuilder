@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.core;
 
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
@@ -38,6 +35,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**

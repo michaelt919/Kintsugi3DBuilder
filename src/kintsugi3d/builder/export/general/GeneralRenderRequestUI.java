@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,14 +25,19 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class GeneralRenderRequestUI implements IBRRequestUI
 {

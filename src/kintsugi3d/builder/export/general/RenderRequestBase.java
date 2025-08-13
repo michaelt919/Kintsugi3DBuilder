@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.function.Consumer;
 
 abstract class RenderRequestBase implements ObservableIBRRequest
 {

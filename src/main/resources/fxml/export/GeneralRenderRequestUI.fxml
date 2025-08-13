@@ -11,12 +11,11 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.collections.*?>
-<?import javafx.geometry.*?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kintsugi3d.builder.export.general.*?>
-
 <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" stylesheets="@../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GeneralRenderRequestUI">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />

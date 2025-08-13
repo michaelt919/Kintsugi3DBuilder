@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.state.impl;
 
-import java.util.NoSuchElementException;
-
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.builder.state.SettingsModel;
+
+import java.util.NoSuchElementException;
 
 public abstract class SettingsModelBase implements SettingsModel
 {

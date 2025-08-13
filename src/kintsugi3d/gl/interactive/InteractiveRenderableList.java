@@ -11,13 +11,13 @@
 
 package kintsugi3d.gl.interactive;
 
-import java.util.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.util.SelectableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * A container that can hold many InteractiveRenderable objects with one of them being selected/active. It

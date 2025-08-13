@@ -11,24 +11,26 @@
 
 package kintsugi3d.gl.glfw;
 
-import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
-import java.util.function.Function;
-
-import org.lwjgl.*;
-import org.lwjgl.Version.*;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.exceptions.GLFWException;
 import kintsugi3d.gl.window.*;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.Version;
+import org.lwjgl.Version.BuildType;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
+import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     extends CanvasBase<ContextType> implements PollableWindow, PollableCanvas3D<ContextType>

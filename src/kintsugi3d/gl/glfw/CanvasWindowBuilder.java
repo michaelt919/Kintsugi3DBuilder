@@ -11,10 +11,10 @@
 
 package kintsugi3d.gl.glfw;
 
-import java.util.function.Function;
-
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.window.WindowBuilderBase;
+
+import java.util.function.Function;
 
 public class CanvasWindowBuilder<ContextType extends WindowContextBase<ContextType>>
     extends WindowBuilderBase<CanvasWindow<ContextType>>

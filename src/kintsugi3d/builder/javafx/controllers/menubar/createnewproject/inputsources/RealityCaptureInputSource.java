@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser.ExtensionFilter;
+
 import java.util.Collections;
 import java.util.List;
 

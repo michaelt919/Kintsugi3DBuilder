@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-import java.text.MessageFormat;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
@@ -24,6 +20,10 @@ import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
+
+import java.io.File;
+import java.text.MessageFormat;
+import java.util.function.Consumer;
 
 class MultiviewRetargetRenderRequest extends RenderRequestBase
 {

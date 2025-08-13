@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.UserCancellationException;
@@ -38,6 +31,13 @@ import kintsugi3d.optimization.function.GeneralizedSmoothStepBasis;
 import kintsugi3d.util.ColorList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * A class that bundles all of the GPU resources for representing a final specular fit solution.

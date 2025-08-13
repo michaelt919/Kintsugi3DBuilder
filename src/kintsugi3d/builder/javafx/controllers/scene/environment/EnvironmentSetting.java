@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.environment;
 
-import java.io.File;
-
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import kintsugi3d.builder.javafx.util.DOMConvertable;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.io.File;
 
 public class EnvironmentSetting implements DOMConvertable
 {

@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+
+import java.io.File;
 
 public final class RequestFactoryImplementation implements RequestFactory
 {

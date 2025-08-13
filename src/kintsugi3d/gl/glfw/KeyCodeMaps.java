@@ -11,10 +11,10 @@
 
 package kintsugi3d.gl.glfw;
 
+import kintsugi3d.gl.window.Key;
+
 import java.util.*;
 import java.util.Map.Entry;
-
-import kintsugi3d.gl.window.Key;
 
 import static org.lwjgl.glfw.GLFW.*;
 

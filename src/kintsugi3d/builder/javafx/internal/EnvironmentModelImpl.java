@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/28/2017.
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Objects;
-import java.util.Optional;
-
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -30,6 +25,11 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Objects;
+import java.util.Optional;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {

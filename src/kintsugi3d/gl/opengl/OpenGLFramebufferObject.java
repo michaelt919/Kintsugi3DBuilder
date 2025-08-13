@@ -11,13 +11,16 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.builders.base.FramebufferObjectBuilderBase;
+import kintsugi3d.gl.core.FramebufferAttachment;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.core.Resource;
+import org.lwjgl.BufferUtils;
+
 import java.nio.IntBuffer;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
-
-import org.lwjgl.*;
-import kintsugi3d.gl.builders.base.FramebufferObjectBuilderBase;
-import kintsugi3d.gl.core.*;
 
 import static org.lwjgl.opengl.GL30.*;
 

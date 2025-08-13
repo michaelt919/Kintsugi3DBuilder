@@ -11,11 +11,11 @@
 
 package kintsugi3d.gl.builders.framebuffer;
 
+import kintsugi3d.gl.core.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import kintsugi3d.gl.core.*;
 
 public final class DefaultFramebufferFactory
 {

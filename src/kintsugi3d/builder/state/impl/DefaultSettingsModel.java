@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.state.impl;
 
-import java.util.Objects;
-
 import kintsugi3d.builder.state.SafeReadonlySettingsModel;
+
+import java.util.Objects;
 
 public class DefaultSettingsModel implements SafeReadonlySettingsModel
 {

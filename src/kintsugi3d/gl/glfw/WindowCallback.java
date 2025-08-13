@@ -11,10 +11,10 @@
 
 package kintsugi3d.gl.glfw;
 
-import org.lwjgl.glfw.*;
 import kintsugi3d.gl.window.Key;
 import kintsugi3d.gl.window.WindowListenerManagerInstance;
 import kintsugi3d.gl.window.listeners.*;
+import org.lwjgl.glfw.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 

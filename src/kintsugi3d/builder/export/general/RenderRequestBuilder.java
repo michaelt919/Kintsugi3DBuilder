@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.export.general;
 
-import java.io.File;
-import java.util.function.Consumer;
-
+import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+
+import java.io.File;
+import java.util.function.Consumer;
 
 public interface RenderRequestBuilder
 {

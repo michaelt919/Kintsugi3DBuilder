@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
@@ -25,6 +19,12 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.ShaderType;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {

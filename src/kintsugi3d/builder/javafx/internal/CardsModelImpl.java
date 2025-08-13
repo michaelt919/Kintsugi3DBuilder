@@ -14,7 +14,9 @@ import kintsugi3d.builder.util.CardSelectionModel;
 import kintsugi3d.builder.util.ProjectDataCardFactory;
 
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class CardsModelImpl implements CardsModel {
     private final String label;

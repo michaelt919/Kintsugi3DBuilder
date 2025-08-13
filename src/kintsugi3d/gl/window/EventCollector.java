@@ -11,13 +11,13 @@
 
 package kintsugi3d.gl.window;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.function.Consumer;
-
 import kintsugi3d.gl.window.listeners.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.function.Consumer;
 
 class EventCollector
 {

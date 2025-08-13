@@ -11,13 +11,13 @@
 
 package kintsugi3d.gl.builders;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.Shader;
 import kintsugi3d.gl.core.ShaderType;
+
+import java.io.File;
+import java.io.IOException;
 
 public interface ProgramBuilder<ContextType extends Context<ContextType>>
 {

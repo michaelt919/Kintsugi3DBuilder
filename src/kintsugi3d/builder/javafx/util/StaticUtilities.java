@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.javafx.util;//Created by alexk on 7/20/2017.
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 /*
 I general utilities class.

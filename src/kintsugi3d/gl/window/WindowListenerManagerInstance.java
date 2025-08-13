@@ -11,10 +11,10 @@
 
 package kintsugi3d.gl.window;
 
+import kintsugi3d.gl.window.listeners.*;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import kintsugi3d.gl.window.listeners.*;
 
 public class WindowListenerManagerInstance implements WindowListenerManager
 {

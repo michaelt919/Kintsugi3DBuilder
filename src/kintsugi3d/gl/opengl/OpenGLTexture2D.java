@@ -11,16 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.gl.builders.base.ColorTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthStencilTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthTextureBuilderBase;
@@ -33,7 +23,17 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.RadianceImageLoader;
 import kintsugi3d.util.RadianceImageLoader.Image;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
 import static org.lwjgl.opengl.GL32.*;
 
 // mipmaps

@@ -11,9 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.io.IOException;
-import java.util.*;
-
 import kintsugi3d.gl.builders.base.ProgramBuilderBase;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.Shader;
@@ -24,6 +21,9 @@ import kintsugi3d.gl.exceptions.ProgramLinkFailureException;
 import kintsugi3d.gl.exceptions.UnlinkedProgramException;
 import kintsugi3d.gl.vecmath.*;
 import kintsugi3d.util.ResourceManager;
+
+import java.io.IOException;
+import java.util.*;
 
 import static org.lwjgl.opengl.GL31.*;
 

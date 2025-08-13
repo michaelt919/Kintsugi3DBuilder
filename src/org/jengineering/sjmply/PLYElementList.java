@@ -11,13 +11,13 @@
 
 package org.jengineering.sjmply;
 
+import org.jengineering.sjmply.PLYType.*;
+
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
-
-import org.jengineering.sjmply.PLYType.*;
 
 import static java.lang.Math.toIntExact;
 import static java.lang.String.format;
