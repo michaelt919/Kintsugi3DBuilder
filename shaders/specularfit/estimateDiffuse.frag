@@ -68,5 +68,5 @@ void main()
         }
     }
 
-    diffuseOut = vec4(pow(max(vec3(0), diffuseSum.rgb / max(1.0, diffuseSum.a)), vec3(1.0 / gamma)), min(1.0, diffuseSum.a));
+    diffuseOut = vec4(linearToSRGB(max(vec3(0), diffuseSum.rgb / max(1.0, diffuseSum.a))), min(1.0, diffuseSum.a));
 }

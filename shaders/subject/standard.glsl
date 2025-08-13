@@ -61,7 +61,7 @@ vec3 diffuse(LightingParameters l, Material m)
     return m.diffuseColor;
 }
 
-vec3 emissive()
+vec3 emissive(Material m)
 {
     return vec3(0.0);
 }

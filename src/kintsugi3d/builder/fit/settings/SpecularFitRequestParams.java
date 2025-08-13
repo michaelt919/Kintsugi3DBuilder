@@ -30,7 +30,6 @@ public class SpecularFitRequestParams
 
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;
-    private float gamma = 2.2f;
 
     private boolean shouldIncludeConstantTerm;
 
@@ -51,6 +50,12 @@ public class SpecularFitRequestParams
         else
         {
             this.textureResolution = textureResolution;
+
+            imageCacheSettings.setTextureWidth(textureResolution.width);
+            imageCacheSettings.setTextureHeight(textureResolution.height);
+            imageCacheSettings.setTextureSubdiv( // TODO expose this in the interface
+                (int)Math.ceil(Math.max(textureResolution.width, textureResolution.height) / 256.0));
+            imageCacheSettings.setSampledSize(256); // TODO expose this in the interface
         }
 
         if (ibrSettings == null)
@@ -150,16 +155,6 @@ public class SpecularFitRequestParams
         }
 
         this.preliminaryConvergenceTolerance = preliminaryConvergenceTolerance;
-    }
-
-    public float getGamma()
-    {
-        return gamma;
-    }
-
-    public void setGamma(float gamma)
-    {
-        this.gamma = gamma;
     }
 
     public boolean shouldIncludeConstantTerm()

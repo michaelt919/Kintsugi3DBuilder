@@ -11,11 +11,24 @@
 
 package kintsugi3d.builder.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+
+import javafx.scene.control.ProgressBar;
+import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -36,6 +49,7 @@ import java.util.stream.Stream;
 
 /**
  * A class representing a collection of photographs, or views.
+ *
  * @author Michael Tetzlaff
  */
 public final class ViewSet implements ReadonlyViewSet
@@ -94,6 +108,8 @@ public final class ViewSet implements ReadonlyViewSet
      */
     private final List<File> imageFiles;
 
+    private final Map<Integer, File> maskFiles;
+
     private final List<LinkedHashMap<String,String>> cameraMetadata;
 
     private final List<ViewRMSE> viewErrorMetrics;
@@ -134,14 +150,14 @@ public final class ViewSet implements ReadonlyViewSet
     private File thumbnailImageDirectory;
 
     /**
+     * The directory where the masks are stored, if any are present (null if no masks)
+     */
+    private File masksDirectory;
+
+    /**
      * The mesh file.
      */
     private File geometryFile;
-
-    /**
-     * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
-     */
-    private float gamma = 2.2f;
 
     /**
      * If false, inverse-square light attenuation should be applied.
@@ -180,6 +196,8 @@ public final class ViewSet implements ReadonlyViewSet
     private int thumbnailHeight = 300;
 
 
+    private final SettingsModel viewSetSettings = new SimpleSettingsModel();
+
     public static final class Builder
     {
         private final ViewSet result;
@@ -189,9 +207,11 @@ public final class ViewSet implements ReadonlyViewSet
         private int cameraProjectionIndex = 0;
         private int lightIndex = 0;
         private File imageFile;
+        private File maskFile;
 
         /**
          * Uses root directory as supporting files directory by default
+         *
          * @param rootDirectory
          * @param initialCapacity
          */
@@ -231,6 +251,12 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setCurrentMaskFile(File maskFile)
+        {
+            this.maskFile = maskFile;
+            return this;
+        }
+
         public Builder commitCurrentCameraPose()
         {
             result.cameraPoseList.add(cameraPose);
@@ -238,6 +264,7 @@ public final class ViewSet implements ReadonlyViewSet
             result.cameraProjectionIndexList.add(cameraProjectionIndex);
             result.lightIndexList.add(lightIndex);
             result.imageFiles.add(imageFile);
+            result.maskFiles.put(result.imageFiles.size() - 1, maskFile); // associate mask file with current image file index
             result.viewErrorMetrics.add(new ViewRMSE());
             return this;
         }
@@ -279,8 +306,26 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+        {
+            result.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+            return this;
+        }
+
         /**
-         * Sets the name of the geometry file associated with this view set.
+         * Sets the geometry file associated with this view set.
+         *
+         * @param geometryFile The geometry file.
+         */
+        public Builder setGeometryFile(File geometryFile)
+        {
+            result.geometryFile = geometryFile;
+            return this;
+        }
+
+        /**
+         * Sets the name of the geometry file associated with this view set relative to the root directory.
+         *
          * @param geometryFileName The name of the geometry file.
          */
         public Builder setGeometryFileName(String geometryFileName)
@@ -289,6 +334,22 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        /**
+         * Sets the full res image directory associated with this view set.
+         *
+         * @param fullResImageDirectory The full res image directory.
+         */
+        public Builder setFullResImageDirectory(File fullResImageDirectory)
+        {
+            result.setFullResImageDirectory(fullResImageDirectory);
+            return this;
+        }
+
+        /**
+         * Sets the name of the full res image directory associated with this view set relative to the root directory.
+         *
+         * @param relativePath The path to the full res images.
+         */
         public Builder setRelativeFullResImagePathName(String relativePath)
         {
             result.setRelativeFullResImagePathName(relativePath);
@@ -297,6 +358,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         /**
          * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
+         *
          * @param relativePath The file path of the supporting files directory.
          */
         public Builder setRelativeSupportingFilesPathName(String relativePath)
@@ -317,7 +379,14 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder setOrientationViewRotation(float rotation){
+        public Builder setOrientationViewName(String viewName)
+        {
+            result.setOrientationView(viewName);
+            return this;
+        }
+
+        public Builder setOrientationViewRotation(double rotation)
+        {
             result.setOrientationViewRotationDegrees(rotation);
             return this;
         }
@@ -330,6 +399,24 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+
+        public Builder setMasksDirectory(File file)
+        {
+            result.setMasksDirectory(file);
+            return this;
+        }
+
+        public Builder addMask(int camId, String imgFilename)
+        {
+            result.addMask(camId, new File(imgFilename));
+            return this;
+        }
+
+        public Builder applySettings(ReadonlySettingsModel settings)
+        {
+            result.getViewSetSettings().copyFrom(settings);
+            return this;
+        }
 
         public ViewSet finish()
         {
@@ -353,12 +440,19 @@ public final class ViewSet implements ReadonlyViewSet
                 setGeometryFileName("manifold.obj"); // Used by some really old datasets
             }
 
+            if (result.getSupportingFilesFilePath() != null)
+            {
+                // Make sure the supporting files directory exists
+                result.getSupportingFilesFilePath().mkdirs();
+            }
+
             return result;
         }
 
         /**
          * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
          * Assumes that the object must lie between all of the cameras in the file.
+         *
          * @param cameraPoseInvList The list of camera poses.
          * @return A far plane estimate.
          */
@@ -383,10 +477,10 @@ public final class ViewSet implements ReadonlyViewSet
             }
 
             // Corner-to-corner
-            float dX = maxX-minX;
-            float dY = maxY-minY;
-            float dZ = maxZ-minZ;
-            return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
+            float dX = maxX - minX;
+            float dY = maxY - minY;
+            float dZ = maxZ - minZ;
+            return (float) Math.sqrt(dX * dX + dY * dY + dZ * dZ);
 
             // Longest Side approach
 //        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
@@ -406,6 +500,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Creates a new view set object.
+     *
      * @param initialCapacity The capacity to use for initializing array-based lists that scale with the number of views
      */
     public ViewSet(int initialCapacity)
@@ -415,6 +510,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
         this.lightIndexList = new ArrayList<>(initialCapacity);
         this.imageFiles = new ArrayList<>(initialCapacity);
+        this.maskFiles = new HashMap<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
         this.cameraMetadata = new ArrayList<>(initialCapacity);
 
@@ -426,6 +522,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Relative paths from full res image directory
+     *
      * @return List of relative paths from full res image directory
      */
     public List<File> getImageFiles()
@@ -624,9 +721,9 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(this.gamma,
-                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+            result.setTonemapping(
+                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -659,13 +756,14 @@ public final class ViewSet implements ReadonlyViewSet
         result.lightIntensityList.addAll(this.lightIntensityList);
         result.lightIndexList.addAll(this.lightIndexList);
         result.imageFiles.addAll(this.imageFiles);
+        result.maskFiles.putAll(this.maskFiles);
         result.viewErrorMetrics.addAll(this.viewErrorMetrics);
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(this.gamma,
-                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+            result.setTonemapping(
+                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -673,6 +771,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
         result.thumbnailImageDirectory = this.thumbnailImageDirectory;
+        result.masksDirectory = this.masksDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -742,6 +841,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the root directory for this view set, while leaving other file paths unmodified.
+     *
      * @param rootDirectory The root directory.
      */
     public void setRootDirectory(File rootDirectory)
@@ -756,7 +856,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return geometryFile == null ? null : geometryFile.toString();
         }
@@ -770,6 +871,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute path of the geometry file associated with this view set.
+     *
      * @param geometryFile The geometry file.
      */
     public void setGeometryFile(File geometryFile)
@@ -792,7 +894,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(supportingFilesFilePath.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return supportingFilesFilePath == null ? null : supportingFilesFilePath.toString();
         }
@@ -800,6 +903,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute file path of the supporting files (i.e. texture fit results) associated with this view set.
+     *
      * @param supportingFilesDirectory The file path of the supporting files directory.
      */
     public void setSupportingFilesDirectory(File supportingFilesDirectory)
@@ -825,6 +929,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute image file directory associated with this view set.
+     *
      * @param absoluteImageDirectory The image file path.
      */
     public void setFullResImageDirectory(File absoluteImageDirectory)
@@ -841,7 +946,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(fullResImageFilePath.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return fullResImageFilePath == null ? null : fullResImageFilePath.toString();
         }
@@ -849,6 +955,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the image file path associated with this view set from a path relative to the root directory.
+     *
      * @param relativeImagePath The image file path.
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
@@ -889,7 +996,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(previewImageFilePath.toPath()).toString();
         }
-        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException |
+               NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return previewImageFilePath == null ? null : previewImageFilePath.toString();
         }
@@ -897,6 +1005,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the image file path associated with this view set.
+     *
      * @param relativeImagePath The image file path.
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
@@ -922,14 +1031,6 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public String getImageFileNameWithFormat(int poseIndex, String format)
-    {
-        String[] parts = this.getImageFileName(poseIndex).split("\\.");
-        return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
-                .collect(Collectors.joining("."));
-    }
-
-    @Override
     public File getFullResImageFile(int poseIndex)
     {
         return new File(this.getFullResImageFilePath(), this.imageFiles.get(poseIndex).getPath());
@@ -945,7 +1046,23 @@ public final class ViewSet implements ReadonlyViewSet
     public File getPreviewImageFile(int poseIndex)
     {
         // Use PNG for preview images (TODO: make this a configurable setting?)
-        return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+        return new File(this.getPreviewImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
+    }
+
+    @Override
+    public File getMask(int poseIndex)
+    {
+        File maskFile = maskFiles.get(poseIndex);
+        if (maskFile == null || getMasksDirectory() == null)
+        {
+            // Not all images have masks, so this file may still not exist
+            return null;
+        }
+        else
+        {
+            return new File(getMasksDirectory(), maskFile.getName());
+        }
     }
 
     @Override
@@ -1003,7 +1120,8 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return poseIndex;
         }
-        else{
+        else
+        {
             //comb through manually because imageFiles could contain parent files
             //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
 
@@ -1011,12 +1129,13 @@ public final class ViewSet implements ReadonlyViewSet
             //sometimes the camera label is photo314.jpg, other times just photo314
 
             //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-            for (int i = 0; i < imageFiles.size(); ++i){
+            for (int i = 0; i < imageFiles.size(); ++i)
+            {
                 String shortenedImgName = removeExt(getImageFileName(i));
                 String shortenedViewName = removeExt(viewName);
 
-                //TODO: will this cause issues if extensions are different? (ex. photo.jpg and photo.tiff)
-                if (shortenedImgName.equals(shortenedViewName)){
+                if (shortenedImgName.equals(shortenedViewName))
+                {
                     return i;
                 }
             }
@@ -1036,6 +1155,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Set the index of the view to use as a reference pose to reorient the model
+     *
      * @param newOrientationViewIndex view index
      */
     public void setOrientationViewIndex(int newOrientationViewIndex)
@@ -1056,7 +1176,8 @@ public final class ViewSet implements ReadonlyViewSet
         }
     }
 
-    public static String removeExt(String fileName) {
+    public static String removeExt(String fileName)
+    {
         int dotIndex = fileName.lastIndexOf('.');
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
@@ -1138,16 +1259,10 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public float getGamma()
-    {
-        return gamma;
-    }
-
-    @Override
     public boolean hasCustomLuminanceEncoding()
     {
         return linearLuminanceValues != null && encodedLuminanceValues != null
-                && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
     }
 
     @Override
@@ -1155,11 +1270,11 @@ public final class ViewSet implements ReadonlyViewSet
     {
         if (hasCustomLuminanceEncoding())
         {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
+            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
         }
         else
         {
-            return new SampledLuminanceEncoding(gamma);
+            return new SampledLuminanceEncoding();
         }
     }
 
@@ -1175,9 +1290,8 @@ public final class ViewSet implements ReadonlyViewSet
         return Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
     }
 
-    public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        this.gamma = gamma;
         this.linearLuminanceValues = linearLuminanceValues.clone();
         this.encodedLuminanceValues = encodedLuminanceValues.clone();
     }
@@ -1235,6 +1349,24 @@ public final class ViewSet implements ReadonlyViewSet
         return uuid;
     }
 
+    @Override
+    public boolean hasMasks()
+    {
+        return masksDirectory != null;
+    }
+
+    @Override
+    public File getMasksDirectory()
+    {
+        return masksDirectory;
+    }
+
+    @Override
+    public Map<Integer, File> getMasksMap()
+    {
+        return Collections.unmodifiableMap(maskFiles);
+    }
+
     public void setUuid(UUID uuid)
     {
         this.uuid = uuid;
@@ -1243,5 +1375,134 @@ public final class ViewSet implements ReadonlyViewSet
     public void setOrientationViewRotationDegrees(double rotation)
     {
         orientationViewRotationDegrees = rotation;
+    }
+
+    @Override
+    public SettingsModel getViewSetSettings()
+    {
+        return viewSetSettings;
+    }
+
+    public void setMasksDirectory(File dir)
+    {
+        masksDirectory = dir;
+    }
+
+    public void addMask(int camId, File mask)
+    {
+        maskFiles.put(camId, mask);
+    }
+
+    /**
+     * Checks that all mask files exist.  In doing so, it tries several variations (i.e. mask filename vs. photo filename,
+     * _mask vs. no _mask, various file extensions) and changes the recorded mask filename for each view to an image that was found
+     * (or eliminating the mask if the file is missing).
+     */
+    public void validateMasks()
+    {
+        for (int i = 0; i < getCameraPoseCount(); i++)
+        {
+            File maskFile = getMask(i);
+            if (maskFile != null)
+            {
+                File originalMaskFile = maskFile; // remember the original filename for logging
+
+                // Could set maskFile to null if it doesn't actually exist,
+                // or change the file extension if it exists with a different file extension.
+                maskFile = ImageFinder.getInstance().tryFindImageFile(maskFile);
+
+                if (maskFile == null)
+                {
+                    log.warn("Specified mask file not found: {}", originalMaskFile.getPath());
+                }
+            }
+
+            if (maskFile == null)
+            {
+                // Search for the name of the photo in the masks directory
+                // Will check both with and without _mask suffix
+                maskFile = ImageFinder.getInstance().tryFindImageFile(
+                    new File(getMasksDirectory(), getFullResImageFile(i).getName()),
+                    "_mask");
+            }
+
+            if (maskFile == null)
+            {
+                // Remove if no mask file was found
+                maskFiles.remove(i);
+            }
+            else
+            {
+                // Overwrite based on the file that was found
+                maskFiles.put(i, maskFile);
+            }
+        }
+    }
+
+    /**
+     * Copies masks to an appropriate supporting files directory and changes the masks directory accordingly.
+     * If the masks were previously stored in a ZIP file, they will be unzipped to the new masks directory.
+     * Masks will be validated (see validateMasks()) as a result of this operation, possibly changing the recorded mask file name
+     * based on the mask files that are actually found (or eliminating masks if missing).
+     */
+    public void copyMasks()
+    {
+        if (masksDirectory == null)
+        {
+            return;
+        }
+
+        File masksSrcDir = masksDirectory;
+
+        File masksDestinationDir = supportingFilesDirectory != null ?
+            new File(supportingFilesDirectory, "masks") :
+            new File(ApplicationFolders.getMasksDirectory().toFile(), uuid.toString());
+
+        masksDestinationDir.mkdirs();
+
+        // Unzip masks if needed
+        if (masksSrcDir.toString().endsWith(".zip"))
+        {
+            log.info("Unzipping masks folder...");
+            try
+            {
+                // Just unzip everything for efficiency; could clean up any unused files (i.e. non-masks) but probably not necessary
+                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, null);
+
+                // Use the destination directory as the masks directory for validating (and thereafter)
+                setMasksDirectory(masksDestinationDir);
+
+                // Make sure the masks are there after unzipping (might change the mask filenames stored)
+                validateMasks();
+            }
+            catch (IOException e)
+            {
+                log.error("Failed to unzip masks.", e);
+            }
+        }
+        else
+        {
+            // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
+            validateMasks();
+
+            // Copy the files that were actually found
+            for (int i = 0; i < getCameraPoseCount(); i++)
+            {
+                File maskSrcFile = getMask(i);
+                if (maskSrcFile != null)
+                {
+                    File maskDestFile = new File(masksDestinationDir, maskSrcFile.getName());
+
+                    try
+                    {
+                        Files.copy(maskSrcFile.toPath(), maskDestFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                    catch (IOException e)
+                    {
+                        log.error("Failed to copy mask {} to {}", maskSrcFile.getName(), masksDestinationDir.getPath());
+                    }
+                }
+            }
+        }
     }
 }

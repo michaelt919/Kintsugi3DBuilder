@@ -72,7 +72,6 @@ public class ImgSelectionThread implements Runnable{
                     imgFile = ImageFinder.getInstance().findImageFile(new File(path));
                 }
                 catch(FileNotFoundException ignored){
-                    //camera not found in xml document
                     imageThreadable.setImageViewText(imageThreadable.getImageViewText() +
                             " (full res image not found)");
                     return;

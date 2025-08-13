@@ -18,6 +18,10 @@ package kintsugi3d.builder.core;
  */
 public interface ProgressMonitor
 {
+    String FINISHING_UP = "Finishing up...";
+    String PREPARING_PROJECT = "Preparing project...";
+    String ALMOST_READY = "This shouldn't take long...";
+
     /**
      * This method will be called at points when it is possible to cancel the process without unpredictable results.
      * If it returns true, the process will be cancelled.

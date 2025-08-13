@@ -20,18 +20,17 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
+import javax.imageio.ImageIO;
 
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.gl.vecmath.DoubleVector4;
+import kintsugi3d.util.SRGB;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.imageio.ImageIO;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {
@@ -213,7 +212,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     }
 
     @Override
-    public void saveDiffuseMap(double gamma, File outputDirectory)
+    public void saveDiffuseMap(File outputDirectory)
     {
         BufferedImage diffuseImg = new BufferedImage(getTextureResolution().width, getTextureResolution().height, BufferedImage.TYPE_INT_ARGB);
         int[] diffuseDataPacked = new int[getTextureResolution().width * getTextureResolution().height];
@@ -221,7 +220,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
         {
             DoubleVector4 diffuseSum = DoubleVector4.ZERO;
 
-            for (int b = 0; b < getSpecularBasis().getCount(); b++)
+            for (int b = 0; b < getMaterialBasis().getMaterialCount(); b++)
             {
                 diffuseSum = diffuseSum.plus(getDiffuseAlbedo(b).asVector4(1.0)
                     .times(getWeight(b, p)));
@@ -229,7 +228,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
 
             if (diffuseSum.w > 0)
             {
-                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / gamma)));
+                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, SRGB.fromLinear(x)));
 
                 // Flip vertically
                 int dataBufferIndex = p % getTextureResolution().width + getTextureResolution().width * (getTextureResolution().height - p / getTextureResolution().width - 1);
@@ -252,7 +251,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     @Override
     public void saveBasisFunctions(File outputDirectory)
     {
-        getSpecularBasis().save(outputDirectory);
+        getMaterialBasis().save(outputDirectory);
     }
 
     @Override

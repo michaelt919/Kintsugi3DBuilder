@@ -71,6 +71,11 @@ public class ReadOnlyMergedUserPreferencesModel implements ReadOnlyUserPreferenc
             }
 
             @Override
+            public Path getMasksDirectory() {
+                return nullableOverride(baseDirs.getMasksDirectory(), overrideDirs.getMasksDirectory());
+            }
+
+            @Override
             public Path getPreferencesFileLocation()
             {
                 return nullableOverride(baseDirs.getPreferencesFileLocation(), overrideDirs.getPreferencesFileLocation());

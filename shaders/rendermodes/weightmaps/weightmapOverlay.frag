@@ -50,7 +50,7 @@ vec3 global(ViewingParameters v, Material m)
     return getEnvironmentDiffuse(v.normalDir) * m.occlusion * min(vec3(1.0), m.diffuseColor + m.specularColor);
 }
 
-vec3 emissive()
+vec3 emissive(Material m)
 {
     vec2 texCoords = getTexCoords();
     vec4 weightmapTex = texture(weightMaps, vec3(texCoords, WEIGHTMAP_INDEX));
@@ -59,13 +59,14 @@ vec3 emissive()
 
 vec3 specular(LightingParameters l, Material m)
 {
-    #if FRESNEL_EFFECT_ENABLED
     // Multiply by PI since the fit was done in a divided-by-pi space in terms of diffuse albedo,
     // but we implicitly do our real-time calculations in a pre-multiplied by pi space (i.e. no division by pi for diffuse).
-    vec3 mfdFresnelBase = PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
+    vec3 mfdFresnelBase = PI * getMFDEstimate(l.nDotH);
+
+    #if FRESNEL_EFFECT_ENABLED
     return fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
     #else // !FRESNEL_EFFECT_ENABLED
-    return PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
+    return mfdFresnelBase;
     #endif // FRESNEL_EFFECT_ENABLED
 }
 

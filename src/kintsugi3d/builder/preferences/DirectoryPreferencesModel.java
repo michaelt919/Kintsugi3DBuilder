@@ -22,5 +22,6 @@ public interface DirectoryPreferencesModel extends ReadOnlyDirectoryPreferencesM
 {
     void setCacheDirectory(Path cacheDirectory);
     void setLogFileDirectory(Path logFileDirectory);
+    void setMasksDirectory(Path masksDirectory);
     void setPreviewImagesDirectory(Path previewImagesDirectory);
 }

@@ -62,11 +62,22 @@ public class FXMLPageScrollerController {
         outerGridPane.getScene().getWindow().setOnCloseRequest(this::onCloseRequest);
     }
 
+    private void close(ActionEvent actionEvent) {
+        Window window = currentPage.getController().getHostRegion().getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
     private void onCloseRequest(WindowEvent windowEvent)
     {
         if (!currentPage.getController().closeButtonPressed())
         {
             windowEvent.consume();
+        }
+
+        //TODO: not a perfect solution. If we press the X to close the last page of a scrolling modal,
+        //the welcome window doesn't open like it should
+        if (!(currentPage.getController() instanceof ConfirmablePageController)){
+            WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
         }
     }
 
@@ -158,9 +169,6 @@ public class FXMLPageScrollerController {
 
 
     public void updatePrevAndNextButtons() {
-        //prevButton.setDisable(!currentPage.hasPrevPage());
-        //instead of disabling prevButton, have it close the window instead
-
         if(currentPage.hasPrevPage()){
             prevButton.setOnAction(this::prevPage);
         }
@@ -172,12 +180,12 @@ public class FXMLPageScrollerController {
         //change next button to confirm button if applicable
         FXMLPageController controller = currentPage.getController();
 
-        if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
+        if (controller instanceof ConfirmablePageController && ((ConfirmablePageController) controller).canConfirm())
         {
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
 
-            ConfirmablePage confirmerController = (ConfirmablePage) controller;
+            ConfirmablePageController confirmerController = (ConfirmablePageController) controller;
             nextButton.setOnAction(event->confirmerController.confirmButtonPress());
         }
         else{
@@ -185,12 +193,6 @@ public class FXMLPageScrollerController {
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.NORMAL, nextButton.getFont().getSize()));
             nextButton.setOnAction(event->nextPage());
         }
-    }
-
-    private void close(ActionEvent actionEvent) {
-        Window window = currentPage.getController().getHostRegion().getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-        WelcomeWindowController.getInstance().show();
     }
 
     public void setNextButtonDisable(boolean b) {

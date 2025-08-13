@@ -51,9 +51,9 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 ## Posters
 [Kintsugi 3D Viewer: User-Centric Design for Cultural Heritage Accessibility (May 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/Research%20Day%202024%20Poster%20-%20KINTSUGI%203D%20VIEWER.pdf)
 
-[Kintsugi 3D Builder: User Experience Design and Implementation (May 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi%203D%20Builder%20Poster%20Spring%202024.pdf)
+[Kintsugi 3D Builder: User Experience Design and Implementation (May 2025)](https://michaelt919.github.io/Kintsugi3DBuilder/DenneyKintusgi2025Final.pdf)
 
-[User Experience of Visualizing Empirically-Based Textures in Kintsugi 3D Builder (December 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/SGX-Poster-F2024.pdf)
+[User Experience of Visualizing Empirically-Based Textures in Kintsugi 3D Builder (May 2025)](https://michaelt919.github.io/Kintsugi3DBuilder/EmpiricallyBasedTexturesPosterK3D_FergusonSP25.pdf)
 
 ## Contributors
 - Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - primary developer
@@ -61,6 +61,7 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Seth Berrier (University of Wisconsin - Stout) - contributor
 - Michael Ludwig (University of Minnesota) - contributor
 - Sam Steinkamp (University of Minnesota) - contributor
+- Tyler Betanski (University of Wisconsin - Stout) - contributor
 - Jacob Buelow (University of Wisconsin - Stout) - contributor
 - Luke Denney (University of Wisconsin - Stout) - contributor
 - Ian Anderson (University of Wisconsin - Stout) - contributor
@@ -69,6 +70,7 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Isaac Tesch (University of Wisconsin - Stout) - contributor
 - Nathaniel Willius (University of Wisconsin - Stout) - contributor
 - Atlas Collins (University of Wisconsin - Stout) - contributor
+- Melissa Kosharek (University of Wisconsin - Stout) - contributor
 - Darcy Hannen (University of Wisconsin - Stout) - UX designer
 - Isabel Smith (University of Wisconsin - Stout) - UX designer
 - Elliot Duffy (University of Wisconsin - Stout) - UX designer

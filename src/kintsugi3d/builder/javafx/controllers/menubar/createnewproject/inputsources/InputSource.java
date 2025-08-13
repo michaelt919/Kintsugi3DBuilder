@@ -12,11 +12,9 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
@@ -24,39 +22,70 @@ import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryVie
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class InputSource {
-    private static final int THUMBNAIL_SIZE = 30;
-    private TreeView<String> treeView;
     protected PrimaryViewSelectionModel primaryViewSelectionModel;
+
     protected SearchableTreeView searchableTreeView;
     public static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
     private boolean includeNoneItem = true;
 
+    private static final int THUMBNAIL_SIZE = 30;
+
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
-    abstract ViewSetReader getCameraFileReader();
-    public void verifyInfo(File fullResDirectoryOverride)
+
+    public abstract void initTreeView();
+
+    public abstract void loadProject(String primaryView, double rotate);
+
+    @Override
+    public abstract boolean equals(Object obj);
+
+    public void verifyInfo()
     {
     }
 
     public void setSearchableTreeView(SearchableTreeView searchableTreeView){
         this.searchableTreeView = searchableTreeView;
-        this.treeView = searchableTreeView.getTreeView();
     }
 
     public PrimaryViewSelectionModel getPrimarySelectionModel(){
         return this.primaryViewSelectionModel;
     }
 
-    public abstract void initTreeView();
+    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+    {
+        searchableTreeView.getTreeView().getSelectionModel().select(1);
+        controller.setImageRotation(0);
+    }
 
-    public abstract void loadProject(String primaryView, double rotate);
+    public void setIncludeNoneItem(boolean include)
+    {
+        this.includeNoneItem = include;
+    }
+
+    /**
+     * Return the known masks directory.
+     * @return the masks directory
+     */
+    public abstract File getMasksDirectory();
+
+    /**
+     * For setting the initial directory of the masks directory chooser. Not guaranteed to be the actual masks directory.
+     * @return a directory which will hopefully be close to the actual masks directory so the user will find it quickly
+     */
+    public abstract File getInitialMasksDirectory();
+
+    public abstract boolean doEnableProjectMasksButton();
+
+    public abstract void setMasksDirectory(File file);
 
     protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
         TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());
-        treeView.setRoot(rootItem);
+        searchableTreeView.getTreeView().setRoot(rootItem);
 
         List<View> views = primaryViewSelectionModel.getViews();
 
@@ -65,78 +94,60 @@ public abstract class InputSource {
             rootItem.getChildren().add(NONE_ITEM);
         }
 
-        for (int i = 0; i < views.size(); i++)
-        {
-            View view = views.get(i);
-
+        for (View view : views) {
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
             //unless that group already exists, then add the camera to the already created group
 
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-            if(view.group != null)
-            {
+            if (view.group != null) {
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
                 AtomicReference<TreeItem<String>> matchingItem = new AtomicReference<>();
 
                 rootChildren.forEach(item -> {
-                    if (item.getValue().equals(view.group)){
+                    if (item.getValue().equals(view.group)) {
                         groupAlreadyCreated.set(true);
                         matchingItem.set(item);
                     }
                 });
 
-                if (groupAlreadyCreated.get()){
+                if (groupAlreadyCreated.get()) {
                     //add camera to existing group
                     destinationItem = matchingItem.get();
-                }
-                else{//group has not been created yet
+                } else {//group has not been created yet
                     TreeItem<String> newGroup = new TreeItem<>(view.group);
                     rootItem.getChildren().add(newGroup);
                     destinationItem = newGroup;
                 }
-            }
-            else{
+            } else {
                 //parent is camera, so add image to root node
                 //(camera is not part of a group)
                 destinationItem = rootItem;
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = getStringTreeItem(primaryViewSelectionModel.getThumbnails(), i, view.name);
+            TreeItem<String> imageTreeItem = createTreeItem(primaryViewSelectionModel.getThumbnails(), view);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
         //unroll treeview
-        treeView.getRoot().setExpanded(true);
+        searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> getStringTreeItem(List<Image> thumbnailImgList, int i, String imageName) {
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgList, View view) {
         ImageView thumbnailImgView;
-        try {
-            thumbnailImgView = new ImageView(thumbnailImgList.get(i));
-        } catch (IndexOutOfBoundsException e) {
+        Image img = thumbnailImgList.get(view.id);
+        if (img != null){
+            thumbnailImgView = new ImageView(img);
+        }
+        else{
             //thumbnail not found in thumbnailImgList
             thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
         }
         thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
-        return new TreeItem<>(imageName, thumbnailImgView);
-    }
-
-    @Override
-    public abstract boolean equals(Object obj);
-
-    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
-    {
-        treeView.getSelectionModel().select(1);
-        controller.setImageRotation(0);
-    }
-
-    public void setIncludeNoneItem(boolean include)
-    {
-        this.includeNoneItem = include;
+        return new TreeItem<>(view.name, thumbnailImgView);
     }
 }

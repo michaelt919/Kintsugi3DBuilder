@@ -11,9 +11,18 @@
 
 package kintsugi3d.builder.javafx;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleFloatProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -31,23 +40,11 @@ import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
-import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.util.ShadingParameterMode;
+import kintsugi3d.builder.state.DefaultSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class MainApplication extends Application
 {
@@ -261,34 +258,7 @@ public class MainApplication extends Application
             canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
-        settingsModel.createBooleanSetting("lightCalibrationMode", false);
-        settingsModel.createObjectSetting("currentLightCalibration", Vector2.ZERO);
-        settingsModel.createBooleanSetting("occlusionEnabled", true, true);
-        settingsModel.createBooleanSetting("fresnelEnabled", false, true);
-        settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false, true);
-        settingsModel.createBooleanSetting("relightingEnabled", false);
-        settingsModel.createBooleanSetting("shadowsEnabled", false, true);
-        settingsModel.createBooleanSetting("visibleLightsEnabled", true);
-        settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
-        settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
-        settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
-        settingsModel.createSettingFromProperty("gamma", Number.class,
-            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)), true);
-        settingsModel.createSettingFromProperty("weightExponent", Number.class,
-            StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)), true);
-        settingsModel.createSettingFromProperty("isotropyFactor", Number.class,
-            StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)), true);
-        settingsModel.createSettingFromProperty("occlusionBias", Number.class,
-            StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)), true);
-        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
-        settingsModel.createBooleanSetting("is3DGridEnabled", true, true);
-        settingsModel.createBooleanSetting("isCameraVisualEnabled", false, true);
-        settingsModel.createBooleanSetting("compassEnabled", false, true);
-        settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
-        settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);
-        settingsModel.createBooleanSetting("sceneWindowOpen", false);
-        settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
-        settingsModel.createNumericSetting("buehlerViewCount", 5, true);
+        DefaultSettings.apply(settingsModel);
 
         // Load user preferences, injecting where needed
         log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());

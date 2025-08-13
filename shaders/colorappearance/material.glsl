@@ -18,7 +18,6 @@
 #line 19 1020
 
 in vec2 fTexCoord;
-out vec3 specularColor;
 
 #ifndef DIFFUSE_TEXTURE_ENABLED
 #define DIFFUSE_TEXTURE_ENABLED 0
@@ -146,13 +145,13 @@ Material getMaterial()
 
 #if USE_ORM
 #if USE_ALBEDO_ORM
-    vec3 albedo = pow(texture(albedoMap, texCoords).rgb, vec3(gamma));
+    vec3 albedo = sRGBToLinear(texture(albedoMap, texCoords).rgb);
 #endif
     vec3 orm = texture(ormMap, texCoords).rgb;
 #endif
 
 #if DIFFUSE_TEXTURE_ENABLED
-    m.diffuseColor = pow(texture(diffuseMap, texCoords).rgb, vec3(gamma));
+    m.diffuseColor = sRGBToLinear(texture(diffuseMap, texCoords).rgb);
 #elif USE_ALBEDO_ORM
     m.diffuseColor = albedo - albedo * orm[2];
 #else
@@ -160,7 +159,7 @@ Material getMaterial()
 #endif
 
 #if SPECULAR_TEXTURE_ENABLED
-    m.specularColor = pow(texture(specularMap, texCoords).rgb, vec3(gamma));
+    m.specularColor = sRGBToLinear(texture(specularMap, texCoords).rgb);
 #elif USE_ALBEDO_ORM
     m.specularColor = mix(vec3(0.04), albedo, orm[2]);
 #else

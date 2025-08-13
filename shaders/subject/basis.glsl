@@ -18,19 +18,19 @@
 uniform vec3 defaultDiffuseColor;
 
 #ifndef DEFAULT_DIFFUSE_COLOR
-#if SPECULAR_TEXTURE_ENABLED
+#if DIFFUSE_TEXTURE_ENABLED
 #define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
 #else
 #define DEFAULT_DIFFUSE_COLOR (defaultDiffuseColor)
-#endif // !SPECULAR_TEXTURE_ENABLED
+#endif // DIFFUSE_TEXTURE_ENABLED
 #endif // DEFAULT_DIFFUSE_COLOR
 
 #ifndef DEFAULT_SPECULAR_COLOR
-#if DIFFUSE_TEXTURE_ENABLED
+#if SPECULAR_TEXTURE_ENABLED
 #define DEFAULT_SPECULAR_COLOR (vec3(0.0))
 #else
 #define DEFAULT_SPECULAR_COLOR (vec3(0.04))
-#endif // DIFFUSE_TEXTURE_ENABLED
+#endif // SPECULAR_TEXTURE_ENABLED
 #endif // DEFAULT_SPECULAR_COLOR
 
 #ifndef DEFAULT_SPECULAR_ROUGHNESS
@@ -49,13 +49,14 @@ vec3 global(ViewingParameters v, Material m)
 
 vec3 specular(LightingParameters l, Material m)
 {
-#if FRESNEL_EFFECT_ENABLED
     // Multiply by PI since the fit was done in a divided-by-pi space in terms of diffuse albedo,
     // but we implicitly do our real-time calculations in a pre-multiplied by pi space (i.e. no division by pi for diffuse).
-    vec3 mfdFresnelBase = PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
+    vec3 mfdFresnelBase = PI * getMFDEstimate(l.nDotH);
+
+#if FRESNEL_EFFECT_ENABLED
     return fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
 #else // !FRESNEL_EFFECT_ENABLED
-    return PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
+    return mfdFresnelBase;
 #endif // FRESNEL_EFFECT_ENABLED
 }
 
@@ -64,7 +65,7 @@ vec3 diffuse(LightingParameters l, Material m)
     return m.diffuseColor;
 }
 
-vec3 emissive()
+vec3 emissive(Material m)
 {
     return vec3(0.0);
 }

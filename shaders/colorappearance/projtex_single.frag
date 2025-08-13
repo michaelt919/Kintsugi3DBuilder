@@ -31,41 +31,14 @@ uniform bool lightIntensityCompensation;
 
 void main()
 {
-    projTexCoord = cameraProjection * cameraPose * vec4(fPosition, 1.0);
-    projTexCoord /= projTexCoord.w;
-    projTexCoord = (projTexCoord + vec4(1)) / 2;
-
-    if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1
-        || projTexCoord.z < 0 || projTexCoord.z > 1)
+    if (lightIntensityCompensation)
     {
-        discard;
+        LightInfo lightInfo = getLightInfo();
+        vec4 linearColor = getLinearColor();
+        fragColor = vec4(linearToSRGB(linearColor.rgb / lightInfo.attenuatedIntensity), linearColor.a);
     }
     else
     {
-
-#if VISIBILITY_TEST_ENABLED
-        float imageDepth = texture(depthImage, projTexCoord.xy).r;
-        if (abs(projTexCoord.z - imageDepth) > occlusionBias)
-        {
-            // Occluded
-            discard;
-        }
-#endif
-
-        vec3 view = normalize(getViewVector());
-        LightInfo lightInfo = getLightInfo();
-        vec3 light = lightInfo.normalizedDirection;
-        vec3 halfway = normalize(light + view);
-        vec3 normal = normalize(fNormal);
-        shadingInfo = vec4(dot(normal, light), dot(normal, view), dot(normal, halfway), dot(halfway, view));
-
-        if (lightIntensityCompensation)
-        {
-            fragColor = vec4(pow(getLinearColor().rgb / lightInfo.attenuatedIntensity, vec3(1.0 / gamma)), 1.0);
-        }
-        else
-        {
-            fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
-        }
+        fragColor = getColor();
     }
 }

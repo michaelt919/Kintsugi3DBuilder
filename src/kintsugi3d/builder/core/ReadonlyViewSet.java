@@ -11,15 +11,18 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.metrics.ViewRMSE;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+
+import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -121,14 +124,6 @@ public interface ReadonlyViewSet
     String getImageFileName(int poseIndex);
 
     /**
-     * Gets the relative name of the image file corresponding to a particular view,
-     * with a specific file format (i.e. PNG, JPEG, etc.) -- which may not match the format originally specified in the view set.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name with the requested format.
-     */
-    String getImageFileNameWithFormat(int poseIndex, String format);
-
-    /**
      * Gets the full resolution image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.
      * @return The image file.
@@ -150,6 +145,13 @@ public interface ReadonlyViewSet
      * @return The image file.
      */
     File getThumbnailImageFile(int poseIndex);
+
+    /**
+     * Gets the mask of a particular view, if it exists
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getMask(int poseIndex);
 
     /**
      * Gets the view index to be used for color calibration and tonemapping operations
@@ -245,8 +247,6 @@ public interface ReadonlyViewSet
      */
     float getRecommendedFarPlane();
 
-    float getGamma();
-
     boolean hasCustomLuminanceEncoding();
 
     SampledLuminanceEncoding getLuminanceEncoding();
@@ -277,4 +277,16 @@ public interface ReadonlyViewSet
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
     UUID getUUID();
+
+    boolean hasMasks();
+
+    File getMasksDirectory();
+
+    Map<Integer, File> getMasksMap();
+
+    /**
+     * Gets additional settings associated with this view set
+     * @return A model containing the settings for this view set.
+     */
+    ReadonlySettingsModel getViewSetSettings();
 }

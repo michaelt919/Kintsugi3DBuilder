@@ -13,28 +13,14 @@ package kintsugi3d.builder.javafx;
 
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.HotSwapController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -47,15 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Scanner;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public final class ProjectIO
@@ -202,7 +181,18 @@ public final class ProjectIO
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
-        saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
+        saveProjectAs(parentWindow, () ->
+        {
+            setViewsetDirectories(viewSet);
+
+            ProgressMonitor monitor = MultithreadModels.getInstance().getIOModel().getProgressMonitor();
+            if (monitor != null)
+            {
+                monitor.setStage(0, ProgressMonitor.PREPARING_PROJECT);
+            }
+
+            viewSet.copyMasks();
+        });
     }
 
     public static File getDefaultSupportingFilesDirectory(File projectFile)
@@ -272,7 +262,7 @@ public final class ProjectIO
     {
         MultithreadModels.getInstance().getIOModel().unload();
 
-        RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
+        RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
         if (Objects.equals(projectFile.getParentFile(), vsetFile.getParentFile()))
         {
@@ -391,6 +381,12 @@ public final class ProjectIO
         }
     }
 
+    public void openProjectFromFileWithPrompt(File file){
+       if (confirmClose("Are you sure you want to open another project?")) {
+          openProjectFromFile(file);
+       }
+    }
+
     /**
      * NOTE: After "Save As", view set will share the same UUID as the original project,
      * including the preview resolution images and specular fit cache in the user's AppData folder.
@@ -436,7 +432,7 @@ public final class ProjectIO
                 ioModel.saveGlTF(filesDirectory);
 
                 // Save textures and basis funtions (will be deferred to graphics thread).
-                ioModel.saveMaterialFiles(filesDirectory, () ->
+                ioModel.saveAllMaterialFiles(filesDirectory, () ->
                 {
                     // Display message when all textures have been saved on graphics thread.
                     //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
@@ -522,7 +518,7 @@ public final class ProjectIO
                 callback.run();
             }
 
-            RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
+            RecentProjects.addToRecentFiles(fileContainer.selectedFile.toString());
             saveProject(parentWindow);
         }
     }
@@ -549,7 +545,14 @@ public final class ProjectIO
         MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = false;
 
+        WelcomeWindowController.getInstance().show();
+
+        //TODO: do we want this here?
+        MenubarController.getInstance().dismissMiniProgressBar();
+
         MenubarController.getInstance().setToggleableShaderDisable(true);
+        MenubarController.getInstance().setShaderNameVisibility(false);
+        MenubarController.getInstance().updateShaderList();
     }
 
     public void closeProjectAfterConfirmation()
@@ -557,9 +560,6 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to close the current project?"))
         {
             closeProject();
-            WelcomeWindowController.getInstance().show();
-            //TODO: do we want this here?
-            MenubarController.getInstance().dismissMiniProgressBar();
         }
     }
 
@@ -582,7 +582,7 @@ public final class ProjectIO
             SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(internalModels, window);
             WelcomeWindowController.getInstance().hide();
-            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
+            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing());
         }
         catch (IOException e)
         {

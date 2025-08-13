@@ -51,7 +51,6 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private final ReadonlyIBRResources<ContextType> resources;
     private final TextureResolution textureResolution;
-    private final float gamma;
 
     private final SpecularBasisSettings specularBasisSettings;
 
@@ -66,15 +65,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private SpecularFitOptimizable(
         ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureResolution textureResolution, float gamma,
-        NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
+        TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {
         super(basisResources, basisResourcesOwned, textureResolution);
         this.context = resources.getContext();
         this.resources = resources;
         this.textureResolution = textureResolution;
-        this.gamma = gamma;
         this.specularBasisSettings = specularBasisSettings;
         this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
@@ -129,18 +126,18 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         specularFit.getBasisWeightResources().useWithShaderProgram(errorCalcProgram);
         errorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
         errorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
-        errorCalcProgram.setUniform("errorGamma", 1.0f);
+        errorCalcProgram.setUniform("sRGB", false);
         return errorCalcDrawable;
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
-        float gamma, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
+        SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {
         return new SpecularFitOptimizable<>(resources,
             new BasisResources<>(resources.getContext(), specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
-                true, specularBasisSettings, programFactory, textureResolution, gamma, normalOptimizationSettings, includeConstantTerm);
+                true, specularBasisSettings, programFactory, textureResolution, normalOptimizationSettings, includeConstantTerm);
     }
 
     public ReadonlyIBRResources<ContextType> getResources()
@@ -240,7 +237,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                     }
 
                     // write out diffuse texture for debugging
-                    specularDecomposition.saveDiffuseMap(gamma, debugDirectory);
+                    specularDecomposition.saveDiffuseMap(debugDirectory);
                 }
 
                 getBasisResources().updateFromSolution(specularDecomposition);
@@ -276,7 +273,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         // Estimate specular roughness and reflectivity.
         // This can cause error to increase but it's unclear if that poses a problem for convergence.
-        getRoughnessOptimization().execute(gamma);
+        getRoughnessOptimization().execute();
 
         if (debugDirectory != null)
         {
@@ -314,7 +311,9 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             new GeneralizedSmoothStepBasis(
                 specularBasisSettings.getBasisResolution(),
                 specularBasisSettings.getMetallicity(),
-                (int) Math.round(specularBasisSettings.getSpecularSmoothness() * specularBasisSettings.getBasisResolution()),
+                specularBasisSettings.getSpecularMinWidth(),
+                specularBasisSettings.getSpecularMaxWidth(),
+                specularBasisSettings.getBasisComplexity(),
                 x -> 3 * x * x - 2 * x * x * x)
 //                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
         );
@@ -366,7 +365,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 specularDecomposition.saveWeightMaps(debugDirectory);
 
                 // write out diffuse texture for debugging
-                specularDecomposition.saveDiffuseMap(gamma, debugDirectory);
+                specularDecomposition.saveDiffuseMap(debugDirectory);
             }
         }
     }

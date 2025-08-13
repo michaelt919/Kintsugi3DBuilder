@@ -36,7 +36,7 @@ public class BRDFReconstruction
     {
         this.stepBasis = stepBasis;
         this.settings = settings;
-        matrixSize = this.settings.getBasisCount() * (this.settings.getBasisResolution() + 1);
+        matrixSize = this.settings.getBasisCount() * (this.settings.getBasisComplexity() + 1);
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution, ProgressMonitor monitor)
@@ -152,7 +152,7 @@ public class BRDFReconstruction
             sb.append("RHS, red for BRDF #").append(b).append(": ");
 
             sb.append(system.rhs[0].get(b));
-            for (int m = 0; m < settings.getBasisResolution(); m++)
+            for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
                 sb.append(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
@@ -162,7 +162,7 @@ public class BRDFReconstruction
             sb.append("RHS, green for BRDF #").append(b).append(": ");
 
             sb.append(system.rhs[1].get(b));
-            for (int m = 0; m < settings.getBasisResolution(); m++)
+            for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
                 sb.append(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
@@ -172,7 +172,7 @@ public class BRDFReconstruction
             sb.append("RHS, blue for BRDF #").append(b).append(": ");
 
             sb.append(system.rhs[2].get(b));
-            for (int m = 0; m < settings.getBasisResolution(); m++)
+            for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
                 sb.append(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));

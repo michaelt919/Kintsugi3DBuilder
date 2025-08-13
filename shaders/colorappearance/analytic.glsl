@@ -61,11 +61,10 @@ vec4 getColor(int index)
         {
             float hDotV = max(0, dot(halfway, view));
 
-            return vec4(pow((m.diffuseColor * nDotL
+            return vec4(linearToSRGB((m.diffuseColor * nDotL
                         + fresnel(m.specularColor, vec3(1.0), hDotV) * distTimesPi(nDotH, vec3(m.roughness))
                             * geom(m.roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV))
-                    * lightInfo.attenuatedIntensity,
-                vec3(1.0 / gamma)), 1.0);
+                    * lightInfo.attenuatedIntensity), 1.0);
         }
         else
         {

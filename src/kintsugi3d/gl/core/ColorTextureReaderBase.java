@@ -11,16 +11,19 @@
 
 package kintsugi3d.gl.core;
 
-import org.lwjgl.BufferUtils;
-import kintsugi3d.util.BufferedImageBuilder;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import javax.imageio.ImageIO;
+
+import kintsugi3d.gl.vecmath.IntVector4;
+import kintsugi3d.util.BufferedImageBuilder;
+import org.lwjgl.*;
 
 /**
  * Base class for texture readers that contains commonly used implementations for transferring native buffer data to a
@@ -76,11 +79,59 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     }
 
     @Override
+    public void saveToFile(String fileFormat, File file, Function<IntVector4, IntVector4> tonemapper) throws IOException
+    {
+        int[] pixels = this.readARGB();
+        BufferedImage outImg = BufferedImageBuilder.build()
+            .setDataFromArray(pixels, getWidth(), getHeight())
+            .tonemap(tonemapper)
+            .flipVertical()
+            .create();
+        ImageIO.write(outImg, fileFormat, file);
+    }
+
+    @Override
+    public void saveToFile(String fileFormat, File file, BiFunction<IntVector4, Integer, IntVector4> tonemapper) throws IOException
+    {
+        int[] pixels = this.readARGB();
+        BufferedImage outImg = BufferedImageBuilder.build()
+            .setDataFromArray(pixels, getWidth(), getHeight())
+            .tonemap(tonemapper)
+            .flipVertical()
+            .create();
+        ImageIO.write(outImg, fileFormat, file);
+    }
+
+    @Override
     public void saveToFile(int x, int y, int width, int height, String fileFormat, File file) throws IOException
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
             .setDataFromArray(pixels, width, height)
+            .flipVertical()
+            .create();
+        ImageIO.write(outImg, fileFormat, file);
+    }
+
+    @Override
+    public void saveToFile(int x, int y, int width, int height, String fileFormat, File file, Function<IntVector4, IntVector4> tonemapper) throws IOException
+    {
+        int[] pixels = this.readARGB(x, y, width, height);
+        BufferedImage outImg = BufferedImageBuilder.build()
+            .setDataFromArray(pixels, width, height)
+            .tonemap(tonemapper)
+            .flipVertical()
+            .create();
+        ImageIO.write(outImg, fileFormat, file);
+    }
+
+    @Override
+    public void saveToFile(int x, int y, int width, int height, String fileFormat, File file, BiFunction<IntVector4, Integer, IntVector4> tonemapper) throws IOException
+    {
+        int[] pixels = this.readARGB(x, y, width, height);
+        BufferedImage outImg = BufferedImageBuilder.build()
+            .setDataFromArray(pixels, width, height)
+            .tonemap(tonemapper)
             .flipVertical()
             .create();
         ImageIO.write(outImg, fileFormat, file);

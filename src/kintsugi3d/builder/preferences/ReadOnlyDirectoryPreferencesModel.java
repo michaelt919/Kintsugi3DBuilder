@@ -25,6 +25,8 @@ public interface ReadOnlyDirectoryPreferencesModel
 
     Path getCacheDirectory();
 
+    Path getMasksDirectory();
+
     @JsonIgnore
     Path getPreferencesFileLocation();
 }

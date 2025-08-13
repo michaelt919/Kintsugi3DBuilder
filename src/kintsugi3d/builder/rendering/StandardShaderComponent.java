@@ -12,7 +12,6 @@
 package kintsugi3d.builder.rendering;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +28,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
+import kintsugi3d.util.SRGB;
 import kintsugi3d.util.ShadingParameterMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -272,9 +272,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         program.setUniform("isotropyFactor", this.sceneModel.getSettingsModel().getFloat("isotropyFactor"));
         program.setUniform("occlusionBias", this.sceneModel.getSettingsModel().getFloat("occlusionBias"));
 
-        float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
-        program.setUniform("renderGamma", gamma);
-
         if (lightingResources != null)
         {
             program.setTexture("shadowMaps", lightingResources.getShadowMaps());
@@ -304,8 +301,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             program.setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
         }
 
-        program.setUniform("ambientColor",
-            sceneModel.getLightingModel().getAmbientLightColor().applyOperator(x -> Math.pow(x, gamma)));
+        program.setUniform("ambientColor", sceneModel.getLightingModel().getAmbientLightColor().applyOperator(SRGB::toLinear));
     }
 
     public boolean isLightCalibrationMode()

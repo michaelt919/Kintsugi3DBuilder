@@ -12,7 +12,9 @@
 package kintsugi3d.util;
 
 import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.DoubleVector4;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
 
 public final class SRGB
 {
@@ -22,22 +24,29 @@ public final class SRGB
 
     /**
      * Converts sRGB to linear
+     * @param encoded
+     * @return
+     */
+    public static double toLinear(double encoded)
+    {
+        if(encoded <= 0.04045)
+        {
+            return encoded / 12.92;
+        }
+        else
+        {
+            return Math.pow((encoded + 0.055) / 1.055, 2.4);
+        }
+    }
+
+    /**
+     * Converts sRGB to linear
      * @param sRGBColor
      * @return
      */
     public static DoubleVector3 toLinear(DoubleVector3 sRGBColor)
     {
-        return sRGBColor.applyOperator(x ->
-        {
-            if(x <= 0.04045)
-            {
-                return x / 12.92;
-            }
-            else
-            {
-                return Math.pow((x + 0.055) / 1.055, 2.4);
-            }
-        });
+        return sRGBColor.applyOperator(SRGB::toLinear);
     }
 
     /**
@@ -47,9 +56,25 @@ public final class SRGB
      */
     public static Vector3 toLinear(Vector3 sRGBColor)
     {
-        return toLinear(sRGBColor.asDoublePrecision()).asSinglePrecision();
+        return sRGBColor.applyOperator(SRGB::toLinear);
     }
 
+    /**
+     * Converts linear to sRGB
+     * @param linear
+     * @return
+     */
+    public static double fromLinear(double linear)
+    {
+        if(linear <= 0.0031308)
+        {
+            return 12.92 * linear;
+        }
+        else
+        {
+            return 1.055 * Math.pow(linear, 1.0/2.4) - 0.055;
+        }
+    }
 
     /**
      * Converts linear to sRGB
@@ -58,17 +83,7 @@ public final class SRGB
      */
     public static DoubleVector3 fromLinear(DoubleVector3 linearColor)
     {
-        return linearColor.applyOperator(x ->
-        {
-            if(x <= 0.0031308)
-            {
-                return 12.92 * x;
-            }
-            else
-            {
-                return 1.055 * Math.pow(x, 1.0/2.4) - 0.055;
-            }
-        });
+        return linearColor.applyOperator(SRGB::fromLinear);
     }
 
     /**
@@ -78,7 +93,27 @@ public final class SRGB
      */
     public static Vector3 fromLinear(Vector3 linearColor)
     {
-        return fromLinear(linearColor.asDoublePrecision()).asSinglePrecision();
+        return linearColor.applyOperator(SRGB::fromLinear);
+    }
+
+    /**
+     * Converts linear to sRGB (fourth channel / alpha is unmodified)
+     * @param linearColor
+     * @return
+     */
+    public static DoubleVector4 fromLinear(DoubleVector4 linearColor)
+    {
+        return linearColor.getXYZ().applyOperator(SRGB::fromLinear).asVector4(linearColor.w);
+    }
+
+    /**
+     * Converts linear to sRGB (fourth channel / alpha is unmodified)
+     * @param linearColor
+     * @return
+     */
+    public static Vector4 fromLinear(Vector4 linearColor)
+    {
+        return linearColor.getXYZ().applyOperator(SRGB::fromLinear).asVector4(linearColor.w);
     }
 
     public static double luminanceFromLinear(DoubleVector3 linearColor)

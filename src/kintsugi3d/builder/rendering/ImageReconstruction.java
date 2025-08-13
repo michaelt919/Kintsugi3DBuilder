@@ -12,7 +12,6 @@
 package kintsugi3d.builder.rendering;
 
 import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ListIterator;
@@ -31,7 +30,6 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ColorImage;
-import kintsugi3d.util.ColorList;
 import kintsugi3d.util.SRGB;
 import org.lwjgl.*;
 
@@ -181,6 +179,15 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 }
 
                 @Override
+                public DoubleVector3 getIncidentRadiance(int pixelIndex)
+                {
+                    return new DoubleVector3(
+                        incidentRadianceBuffer.get(4 * pixelIndex),
+                        incidentRadianceBuffer.get(4 * pixelIndex + 1),
+                        incidentRadianceBuffer.get(4 * pixelIndex + 2));
+                }
+
+                @Override
                 public Framebuffer<ContextType> getReconstructionFramebuffer()
                 {
                     return reconstructionFramebuffer;
@@ -193,11 +200,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 @Override
                 public ColorAppearanceRMSE reconstruct(Drawable<ContextType> drawable)
                 {
-                    // Provide gamma to shader in case it's necessary for reconstruction
-                    // TODO: use proper sRGB when possible, not gamma correction
-                    float gamma = viewSet.getGamma();
-                    drawable.program().setUniform("gamma", gamma);
-
                     // Create new framebuffer if necessary.
                     if (reconstructionFramebuffer == null
                         || reconstructionFramebuffer.getSize().width != currentGroundTruth.getWidth()
@@ -238,8 +240,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                             .mapToObj(p ->
                             {
                                 DoubleVector3 groundTruthEncoded = currentGroundTruth.get(p).getXYZ().asDoublePrecision();
-                                DoubleVector3 incidentRadiance =
-                                    new DoubleVector3(incidentRadianceBuffer.get(4 * p), incidentRadianceBuffer.get(4 * p + 1), incidentRadianceBuffer.get(4 * p + 2));
+                                DoubleVector3 incidentRadiance = getIncidentRadiance(p);
                                 DoubleVector3 reconstructedLinear =
                                     new DoubleVector3(reconstructionBuffer.get(4 * p), reconstructionBuffer.get(4 * p + 1), reconstructionBuffer.get(4 * p + 2));
 

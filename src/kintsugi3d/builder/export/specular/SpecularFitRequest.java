@@ -53,12 +53,11 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
         SpecularFitRequestParams params = new SpecularFitRequestParams(
             new TextureResolution(2048, 2048),
             modelAccess.getSettingsModel());
-        params.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
         params.setOutputDirectory(new File(args[2]));
-        return new SpecularFitRequest(params, modelAccess);
+        return new SpecularFitRequest(params);
     }
 
-    public SpecularFitRequest(SpecularFitRequestParams settings, Kintsugi3DBuilderState modelAccess)
+    public SpecularFitRequest(SpecularFitRequestParams settings)
     {
         this.settings = settings;
     }
@@ -85,7 +84,10 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             }
 
             // Perform the specular fit
-            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), monitor);
+            new SpecularFitProcess(settings).optimizeFitWithCache(renderable.getIBRResources(), monitor);
+
+            // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
+            renderable.reloadShaders();
 
             // Perform reconstruction
             //performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());
@@ -102,7 +104,8 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
             //enable shaders which only work after processing textures
             MenubarController.getInstance().setToggleableShaderDisable(false);
-
+            MenubarController.getInstance().updateShaderList();
+            MenubarController.getInstance().selectMaterialBasisShader();
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

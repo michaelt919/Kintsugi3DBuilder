@@ -51,7 +51,13 @@ public class Kintsugi3DViewerLauncher
 
         if (executable.isEmpty())
         {
-            // Try to get up to Applications directory on MacOS.
+            // Try Applications directory on MacOS.
+            executable = getExecFromDirectory(new File("/Applications"));
+        }
+
+        if (executable.isEmpty())
+        {
+            // Try the same folder as Builder on MacOS.
             executable = getExecFromDirectory(new File("../../.."));
         }
 
@@ -105,7 +111,7 @@ public class Kintsugi3DViewerLauncher
     private static Optional<File> getExecFromDirectory(File dir)
     {
         // Match "Kintsugi3DViewer", "Kintsugi3DViewer.exe" and "Kintsugi3DViewer.app"
-        File[] foundFiles = dir.listFiles((dir1, name) -> name.matches("^Kintsugi3DViewer((.exe)|(.app))?$"));
+        File[] foundFiles = dir.listFiles((dir1, name) -> name.matches("^Kintsugi\\s?3D\\s?Viewer((.exe)|(.app))?$"));
         if (foundFiles != null && foundFiles.length > 0)
         {
             return Optional.of(foundFiles[0]);
@@ -134,14 +140,26 @@ public class Kintsugi3DViewerLauncher
     {
         Optional<File> execOpt = getViewerExecutableLocation();
         if (execOpt.isEmpty())
+        {
             throw new IllegalStateException("Kintsugi 3D Viewer is not installed, or the executable could not be found");
+        }
         File executable = execOpt.get();
 
         String parameter = "";
         if (modelFile != null)
+        {
             parameter = modelFile.getAbsolutePath();
+        }
 
-        ProcessBuilder pb = new ProcessBuilder(executable.getAbsolutePath(), parameter);
-        pb.start();
+        if (ApplicationFolders.getCurrentOS() == OperatingSystem.MACOS)
+        {
+            ProcessBuilder pb = new ProcessBuilder("open", "-a", executable.getAbsolutePath(), parameter);
+            pb.start();
+        }
+        else // Windows
+        {
+            ProcessBuilder pb = new ProcessBuilder(executable.getAbsolutePath(), parameter);
+            pb.start();
+        }
     }
 }

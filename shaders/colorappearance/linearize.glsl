@@ -23,8 +23,6 @@
 uniform sampler1D luminanceMap;
 #endif
 
-uniform float gamma;
-
 float getLuminance(vec3 rgbColor)
 {
     // linearized sRGB to CIE-Y
@@ -58,6 +56,50 @@ float getMaxLuminance()
     return maxLuminance;
 }
 
+float linearToSRGB(float linear)
+{
+    if(linear <= 0.0031308)
+    {
+        return 12.92 * linear;
+    }
+    else
+    {
+        return (1.055) * pow(linear, 1.0/2.4) - 0.055;
+    }
+}
+
+vec3 linearToSRGB(vec3 color)
+{
+    return vec3(linearToSRGB(color.r), linearToSRGB(color.g), linearToSRGB(color.b));
+}
+
+vec4 linearToSRGB(vec4 color)
+{
+    return vec4(linearToSRGB(color.rgb), color.a);
+}
+
+float sRGBToLinear(float encoded)
+{
+     if(encoded <= 0.04045)
+     {
+         return encoded / 12.92;
+     }
+     else
+     {
+         return pow((encoded + 0.055) / 1.055, 2.4);
+     }
+}
+
+vec3 sRGBToLinear(vec3 sRGBColor)
+{
+     return vec3(sRGBToLinear(sRGBColor.r), sRGBToLinear(sRGBColor.g), sRGBToLinear(sRGBColor.b));
+}
+
+vec4 sRGBToLinear(vec4 sRGBColor)
+{
+    return vec4(sRGBToLinear(sRGBColor.rgb), sRGBColor.a);
+}
+
 vec3 linearizeColor(vec3 nonlinearColor)
 {
     vec3 linearColor;
@@ -69,8 +111,8 @@ vec3 linearizeColor(vec3 nonlinearColor)
     }
     else
     {
-        // Step 1: remove gamma correction
-        vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
+        // Step 1: linearize sRGB
+        vec3 colorGamma = sRGBToLinear(nonlinearColor);
 
         // Step 2: convert to CIE luminance
         float pseudoLuminance = getLuminance(colorGamma);
@@ -82,91 +124,26 @@ vec3 linearizeColor(vec3 nonlinearColor)
         else
         {
             // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
-            // Reapply gamma correction to the single luminance value
-            float scale = texture(luminanceMap, pow(pseudoLuminance, 1.0 / gamma)).r / pseudoLuminance;
+            // Reapply sRGB encoding curve ("gamma") to the single luminance value
+            float pseudoLuminanceGamma = linearToSRGB(pseudoLuminance);
+            int luminanceMapSize = textureSize(luminanceMap, 0);
+            float texCoord = (0.5 + pseudoLuminanceGamma * (luminanceMapSize - 1)) / luminanceMapSize; // adjust for how linear interpolation is performed
+
+            float scale = texture(luminanceMap, texCoord).r / pseudoLuminance;
 
             // Step 4: return the color, scaled to have the correct luminance, but the original saturation and hue.
             linearColor = colorGamma * scale;
         }
     }
 #else
-    linearColor = pow(nonlinearColor, vec3(gamma));
+    linearColor = sRGBToLinear(nonlinearColor);
 #endif
-
     return linearColor;
 }
 
 vec4 linearizeColor(vec4 nonlinearColor)
 {
     return vec4(linearizeColor(nonlinearColor.rgb), nonlinearColor.a);
-}
-
-vec3 linearToSRGB(vec3 color)
-{
-    vec3 sRGBColor;
-
-    if(color.r <= 0.0031308)
-    {
-        sRGBColor.r = 12.92 * color.r;
-    }
-    else
-    {
-        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
-    }
-
-    if(color.g <= 0.0031308)
-    {
-        sRGBColor.g = 12.92 * color.g;
-    }
-    else
-    {
-        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
-    }
-
-    if(color.b <= 0.0031308)
-    {
-        sRGBColor.b = 12.92 * color.b;
-    }
-    else
-    {
-        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
-    }
-
-    return sRGBColor;
-}
-
-vec3 sRGBToLinear(vec3 sRGBColor)
-{
-     vec3 linearColor;
-
-     if(sRGBColor.r <= 0.04045)
-     {
-         linearColor.r = sRGBColor.r / 12.92;
-     }
-     else
-     {
-         linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
-     }
-
-     if(sRGBColor.g <= 0.04045)
-     {
-         linearColor.g = sRGBColor.g / 12.92;
-     }
-     else
-     {
-         linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
-     }
-
-     if(sRGBColor.b <= 0.04045)
-     {
-         linearColor.b = sRGBColor.b / 12.92;
-     }
-     else
-     {
-         linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
-     }
-
-     return linearColor;
 }
 
 vec3 xyzToLab(vec3 xyzColor)

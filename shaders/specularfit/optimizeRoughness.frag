@@ -14,17 +14,15 @@
 
 in vec2 fTexCoord;
 
-uniform float gamma;
-uniform float gammaInv;
-
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
 
 #include "evaluateBRDF.glsl"
 #include "basisToGGXError.glsl"
+#include <colorappearance/linearize.glsl>
 
-#line 28 0
+#line 26 0
 
 #ifndef MIN_DAMPING
 #define MIN_DAMPING 1.0
@@ -48,11 +46,11 @@ void main()
     vec2 dampingError = texture(dampingTex, fTexCoord).rg;
     float dampingFactor = dampingError[0];
     vec3 reflectivityGammaPrev = texture(specularEstimate, fTexCoord).rgb;
-    vec3 reflectivity = pow(reflectivityGammaPrev, vec3(gamma));
+    vec3 reflectivity = sRGBToLinear(reflectivityGammaPrev);
     float sqrtRoughnessPrev = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughnessPrev * sqrtRoughnessPrev;
     float roughnessSquared = roughness * roughness;
-    vec3 diffuse = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
+    vec3 diffuse = pow(sRGBToLinear(diffuseMap, fTexCoord).rgb);
 
     for (int m = 1; m < BASIS_RESOLUTION; m++)
     {
@@ -71,7 +69,7 @@ void main()
 
         vec3 brdfTimes4Pi = 4 * diffuse + mfdTimesPi * reflectivity; // ignore masking / shadowing
 
-        vec3 gammaDerivative = gammaInv * pow(brdfTimes4Pi, vec3(gammaInv - 1));
+        vec3 gammaDerivative = gammaInv * pow(brdfTimes4Pi, vec3(gammaInv - 1)); // TODO calculate without gammaInv
 
         vec3 reflectivityGradients = gammaDerivative * mfdTimesPi;
         vec3 roughnessGradients = gammaDerivative * mfdDerivativeTimesPi * reflectivity;
@@ -90,7 +88,7 @@ void main()
         // Calculate RHS
         vec3 target = getMFDEstimateRaw(m); // Use nonlinear encoding of cosine ("m") directly rather than N dot H
 
-        vec3 diff = pow(4 * diffuse + PI * target, vec3(gammaInv)) - pow(brdfTimes4Pi, vec3(gammaInv));
+        vec3 diff = linearToSRGB(4 * diffuse + PI * target) - linearToSRGB(brdfTimes4Pi);
 
         vJTb += weight * vec4(reflectivityGradients * diff, dot(roughnessGradients, diff));
     }

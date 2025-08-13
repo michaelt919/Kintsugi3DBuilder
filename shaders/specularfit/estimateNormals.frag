@@ -126,7 +126,7 @@ void main()
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
             // n dot l is already incorporated by virtue of the fact that radiance is being optimized, not reflectance.
-            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
+            float weight = imgColor.a * triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
 
 #if USE_LEVENBERG_MARQUARDT
             mat3x2 mfdGradient = outerProduct(halfway.xy, getMFDGradient(nDotH)); // (d NdotH / dN) * (dD / d NdotH)

@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 import javax.imageio.ImageIO;
@@ -47,15 +46,16 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.util.SRGB;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePage
+public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePageController
 {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
@@ -94,7 +94,6 @@ public class EyedropperController extends FXMLPageController implements Initiali
     private List<Color> selectedColors;
     @FXML private ImageView colorPickerImgView;
     private Image selectedFile;
-    @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
     @FXML private HBox outerHbox;
 
@@ -340,16 +339,16 @@ public class EyedropperController extends FXMLPageController implements Initiali
         double greenVal = color.getGreen();
         double blueVal = color.getBlue();
 
-        redVal = Math.pow(redVal, 2.2);
-        greenVal = Math.pow(greenVal, 2.2);
-        blueVal = Math.pow(blueVal, 2.2);
+        redVal = SRGB.toLinear(redVal);
+        greenVal = SRGB.toLinear(greenVal);
+        blueVal = SRGB.toLinear(blueVal);
 
         redVal *= 0.2126729;
         greenVal *= 0.71522;
         blueVal *= 0.0721750;
 
         double weightedAverageColor = redVal + greenVal + blueVal;
-        weightedAverageColor = Math.pow(weightedAverageColor, 1/2.2);
+        weightedAverageColor = SRGB.fromLinear(weightedAverageColor);
         return weightedAverageColor * 255;
     }
 
@@ -592,7 +591,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
         this.projectModel = projectModel;
         if (projectModel.getColorCheckerFile() != null)
         {
-            this.setImage(new File(projectModel.getColorCheckerFile()));
+            this.setImage(projectModel.getColorCheckerFile());
         }
     }
 
@@ -707,12 +706,12 @@ public class EyedropperController extends FXMLPageController implements Initiali
             //fileChooser.setInitialFileName("colorPickerImage");
 
             //This saves the file to the location path listed
-            String path = file.getPath().toString();
+            String path = file.getPath();
             try
             {
                 if (projectModel != null)
                 {
-                    projectModel.setColorCheckerFile(path);
+                    projectModel.setColorCheckerFile(new File(path));
                 }
             }
             catch(Exception e)
@@ -780,7 +779,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
         ProjectModelBase project = (ProjectModelBase) MultithreadModels.getInstance().getProjectModel();
         if (project != null)
         {
-            setImage(new File(project.getColorCheckerFile()));
+            setImage(project.getColorCheckerFile());
         }
 
         updateApplyButton();
@@ -820,6 +819,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
         }
         else
         {
+            //TODO: shouldn't this revert to the previous color checker settings?
             Alert alert = new Alert(AlertType.CONFIRMATION, "Discard tone calibration changes?");
             var result = alert.showAndWait();
             return result.isPresent() && result.get().equals(ButtonType.OK);

@@ -14,8 +14,9 @@
 #define IMGSPACE_GLSL
 
 #include "colorappearance.glsl"
+#include "source_pixel_weights.glsl"
 
-#line 19 1101
+#line 20 1101
 
 #ifndef CAMERA_PROJECTION_COUNT
 #define CAMERA_PROJECTION_COUNT 1024
@@ -31,10 +32,6 @@
 
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED 1
-#endif
-
-#ifndef SUPPRESS_MIPMAPS
-#define SUPPRESS_MIPMAPS 0
 #endif
 
 uniform sampler2DArray viewImages;
@@ -117,10 +114,14 @@ vec4 getColor(int virtualIndex)
         }
 #endif
 
+        float sourcePixelWeight = getSourcePixelWeight(projTexCoord.xy);
+
 #if MIPMAPS_ENABLED
-        return texture(viewImages, vec3(projTexCoord.xy, viewIndex));
+        return texture(viewImages, vec3(projTexCoord.xy, viewIndex))
+            * vec4(1, 1, 1, sourcePixelWeight);
 #else
-        return textureLod(viewImages, vec3(projTexCoord.xy, viewIndex), 0);
+        return textureLod(viewImages, vec3(projTexCoord.xy, viewIndex), 0)
+            * vec4(1, 1, 1, sourcePixelWeight);
 #endif
     }
 }

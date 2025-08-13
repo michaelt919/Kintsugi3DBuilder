@@ -14,6 +14,7 @@ package kintsugi3d.builder.export.specular;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.BreakIterator;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -30,10 +31,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.IBRRequestQueue;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
@@ -52,7 +50,9 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
     @FXML private TextField basisCountTextField;
     @FXML private TextField mfdResolutionTextField;
+    @FXML private TextField specularComplexityTextField;
     @FXML private TextField convergenceToleranceTextField;
+    @FXML private TextField specularMinWidthTextField;
     @FXML private TextField specularSmoothnessTextField;
     @FXML private TextField metallicityTextField;
     @FXML private CheckBox translucencyCheckBox;
@@ -120,12 +120,11 @@ public class SpecularFitRequestUI implements IBRRequestUI
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText())),
                 modelAccess.getSettingsModel());
-            settings.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
 
             int basisCount = Integer.parseInt(basisCountTextField.getText());
             settings.getSpecularBasisSettings().setBasisCount(basisCount);
-            int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
-            settings.getSpecularBasisSettings().setBasisResolution(microfacetDistributionResolution);
+            int basisResolution = Integer.parseInt(mfdResolutionTextField.getText());
+            settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
 
             settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
             settings.getExportSettings().setOpenViewerOnceComplete(openViewerOnComplete.isSelected());
@@ -133,10 +132,21 @@ public class SpecularFitRequestUI implements IBRRequestUI
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
             settings.setConvergenceTolerance(convergenceTolerance);
-            double specularSmoothness = Double.parseDouble(specularSmoothnessTextField.getText());
-            settings.getSpecularBasisSettings().setSpecularSmoothness(specularSmoothness);
+
+            double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
+            int specularMinWidthDiscrete = (int)Math.round(specularMinWidth * basisResolution);
+            settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
+
+            double specularMaxWidth = Double.parseDouble(specularSmoothnessTextField.getText());
+            settings.getSpecularBasisSettings().setSpecularMaxWidth((int)Math.round(specularMaxWidth * basisResolution));
+
+            double specularComplexity = Double.parseDouble(specularComplexityTextField.getText());
+            settings.getSpecularBasisSettings().setBasisComplexity(
+                (int)Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
+
             double metallicity = Double.parseDouble(metallicityTextField.getText());
             settings.getSpecularBasisSettings().setMetallicity(metallicity);
+
             settings.setShouldIncludeConstantTerm(translucencyCheckBox.isSelected());
 
             // Normal estimation settings
@@ -163,13 +173,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             // Image cache settings
             settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
-            settings.getImageCacheSettings().setTextureWidth(settings.getTextureResolution().width);
-            settings.getImageCacheSettings().setTextureHeight(settings.getTextureResolution().height);
-            settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
-                (int)Math.ceil(Math.max(settings.getTextureResolution().width, settings.getTextureResolution().height) / 256.0));
-            settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
-            SpecularFitRequest request = new SpecularFitRequest(settings, modelAccess);
+            ObservableIBRRequest request = new SpecularFitRequest(settings);
 
 //            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
 //            {

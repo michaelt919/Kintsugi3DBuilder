@@ -13,6 +13,10 @@ package kintsugi3d.util;
 
 import javafx.application.Platform;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import kintsugi3d.builder.app.ApplicationFolders;
@@ -28,16 +32,18 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class RecentProjects {
 
-    private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
+    private static final File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private static final Logger log = LoggerFactory.getLogger(RecentProjects.class);
     private static File recentDirectory;
@@ -53,8 +59,7 @@ public class RecentProjects {
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
-                    String projectItem = line;
-                    projectItems.add(projectItem);
+                    projectItems.add(line);
                 }
             }
             catch (IOException e)
@@ -68,7 +73,7 @@ public class RecentProjects {
     }
 
     public static List<CustomMenuItem> getItemsAsCustomMenuItems(){
-        List<String> items = RecentProjects.getItemsFromRecentsFile();
+        List<String> items = getItemsFromRecentsFile();
 
         List<CustomMenuItem> customMenuItems = new ArrayList<>();
         int i = 0;
@@ -84,7 +89,7 @@ public class RecentProjects {
             Tooltip.install(justAdded.getContent(), tooltip);
 
             justAdded.setOnAction(event -> {
-                ProjectIO.getInstance().openProjectFromFile(new File(fileName));
+                ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
             });
 
             ++i;
@@ -108,7 +113,7 @@ public class RecentProjects {
         return ancestorFile;
     }
 
-    public static void updateRecentFiles(String fileName) {
+    public static void addToRecentFiles(String fileName) {
         // Read existing file content into a List
         List<String> existingFileNames = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile, StandardCharsets.UTF_8))) {
@@ -152,7 +157,7 @@ public class RecentProjects {
 
         recentProjsList.getItems().clear();
 
-        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>) RecentProjects.getItemsAsCustomMenuItems();
+        List<CustomMenuItem> recentItems = getItemsAsCustomMenuItems();
 
         recentProjsList.getItems().addAll(recentItems);
 
@@ -168,8 +173,7 @@ public class RecentProjects {
         SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
         List<Button> recentButtons = welcomeWindowController.recentButtons;
 
-        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>)
-                RecentProjects.getItemsAsCustomMenuItems();
+        List<CustomMenuItem> recentItems =  getItemsAsCustomMenuItems();
 
         splitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
@@ -193,6 +197,7 @@ public class RecentProjects {
 
                 addItemToQuickAccess(fileName, recentButton);
                 recentButton.setTooltip(tooltip);
+                addContextMenus(recentButton);
 
                 //note: this will still enable the button even if the project does not load properly
                 recentButton.setDisable(false);
@@ -208,6 +213,49 @@ public class RecentProjects {
         }
     }
 
+    private static void addContextMenus(Labeled control) {
+        String path = control.getTooltip().getText();
+        String projectName = control.getText();
+
+        ContextMenu contextMenu = new ContextMenu();
+
+        MenuItem remove = new MenuItem("Remove from quick access");
+        remove.setOnAction(e -> removeReference(path));
+        remove.setStyle("-fx-text-fill: #FFFFFF");
+
+        MenuItem openInExplorer = new MenuItem("Open in file explorer...");
+        openInExplorer.setOnAction(e -> {
+            File file = new File(path);
+            if (!file.exists()){
+                ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+                ButtonType removeProj = new ButtonType("Remove from quick access", ButtonBar.ButtonData.YES);
+
+                Alert alert = new Alert(Alert.AlertType.NONE,
+                        "Project not found: "+ projectName+ "\n" +
+                        "Attempted path: " + path, ok, removeProj);
+
+                ((ButtonBase) alert.getDialogPane().lookupButton(removeProj)).setOnAction(event ->
+                        removeReference(path));
+
+                alert.setTitle("Project Not Found");
+                alert.show();
+                return;
+            }
+
+            try{
+                //would be nice if this highlighted the file as well, but that (browseFileDirectory()) is not supported :/
+                Desktop.getDesktop().open(file.getParentFile());
+            }
+            catch(IOException ioe){
+                ProjectIO.handleException("Failed to open project directory.", ioe);
+            }
+        });
+        openInExplorer.setStyle("-fx-text-fill: #FFFFFF");
+
+        contextMenu.getItems().addAll(remove, openInExplorer);
+        control.setOnContextMenuRequested(e -> contextMenu.show(control, e.getScreenX(), e.getScreenY()));
+    }
+
     private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name
         File projFile = new File(fileName);
@@ -219,11 +267,7 @@ public class RecentProjects {
         recentButton.setContentDisplay(ContentDisplay.TOP);
 
         //get preview image from .k3d file or .ibr file
-        //use Platform.runLater so loading/downloading preview images doesn't slow down the builder
-        Platform.runLater(()->{
-            setRecentButtonImg(recentButton, projFile);
-        });
-
+        setRecentButtonImg(recentButton, projFile);
     }
 
     private static void setRecentButtonImg(Button recentButton, File projFile) {
@@ -262,17 +306,13 @@ public class RecentProjects {
                 }
             }
 
-            //TODO: set to loading icon
-            recentButton.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));
-            String finalPreviewImgPath = previewImgPath;
+            ImageView previewImgView = new ImageView(
+                    new Image(new File(previewImgPath).toURI().toString(),
+                            true));/*enable background loading so we don't freeze the builder*/
 
-            //downloading the img may take time, so put it in another thread
-            Platform.runLater(()->{
-                ImageView previewImgView = new ImageView(new Image(new File(finalPreviewImgPath).toURI().toString()));
-                previewImgView.setFitHeight(80);
-                previewImgView.setPreserveRatio(true);
-                recentButton.setGraphic(previewImgView);
-            });
+            previewImgView.setFitHeight(80);
+            previewImgView.setPreserveRatio(true);
+            Platform.runLater(()-> recentButton.setGraphic(previewImgView));
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
             log.warn("Could not find preview image for " + projFile.getName(), e);
@@ -280,7 +320,6 @@ public class RecentProjects {
     }
 
     private static String getPreviewImgPath(String imgsPath, File projFile) throws IOException {
-
         //build path off of home directory if path is not complete, otherwise correct path would not be found
         File imgFolder;
         if (!imgsPath.matches("^[A-Za-z]:\\\\.*")){
@@ -360,18 +399,29 @@ public class RecentProjects {
         return imgsPath;
     }
 
-    public static void removeInvalidReferences() {
-        ArrayList<String> recentItems = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
+    private static void removeReference(String fileName) {
+        List<String> newRecentItems = getItemsFromRecentsFile().stream()
+                .filter(item -> !item.equals(fileName))
+                .collect(Collectors.toList());
 
-        ArrayList<String> newRecentItems = new ArrayList<>();
-        //iterate through list and remove items which do not exist in file system
-        for (String item : recentItems){
-            File file = new File(item);
-
-            if (file.exists()){
-                newRecentItems.add(item);
+        // Write the updated content back to the file
+        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {
+            for (String name : newRecentItems) {
+                writer.println(name);
             }
+        } catch (IOException ioe) {
+            log.error("Failed to update recent files list while removing invalid reference.", ioe);
         }
+
+        updateAllControlStructures();
+    }
+
+    public static void removeInvalidReferences() {
+        List<String> newRecentItems = getItemsFromRecentsFile().stream()
+                .map(File::new)
+                .filter(File::exists)
+                .map(File::getAbsolutePath)
+                .collect(Collectors.toList());
 
         // Write the updated content back to the file
         try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {

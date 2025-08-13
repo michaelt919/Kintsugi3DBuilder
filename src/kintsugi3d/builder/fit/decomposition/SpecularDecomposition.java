@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import org.ejml.simple.SimpleMatrix;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-
 import java.io.File;
 import java.util.List;
+
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import org.ejml.simple.SimpleMatrix;
 
 public interface SpecularDecomposition
 {
     List<DoubleVector3> getDiffuseAlbedos();
 
-    SpecularBasis getSpecularBasis();
+    MaterialBasis getMaterialBasis();
     SpecularBasisWeights getWeights();
 
     TextureResolution getTextureResolution();
@@ -52,5 +52,5 @@ public interface SpecularDecomposition
 
     void saveWeightMaps(File outputDirectory);
 
-    void saveDiffuseMap(double gamma, File outputDirectory);
+    void saveDiffuseMap(File outputDirectory);
 }
