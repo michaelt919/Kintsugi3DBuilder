@@ -299,7 +299,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (this.viewSet != null)
             {
                 IBRResourcesImageSpace.generateThumbnailImages(
-                        this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.progressMonitor
+                        this.viewSet, this.imageLoadOptions.getMaxLoadingThreads(), this.progressMonitor
                 );
             }
 
@@ -308,7 +308,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         public IBRResourcesImageSpace<ContextType> create() throws IOException, UserCancellationException
         {
-            if (linearLuminanceValues != null && encodedLuminanceValues != null)
+            if ((linearLuminanceValues != null) && (encodedLuminanceValues != null))
             {
                 viewSet.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
             }
@@ -328,7 +328,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 viewSet.setOrientationView(orientationViewName);
             }
 
-            if (geometry == null && viewSet.getGeometryFile() != null)
+            if ((geometry == null) && (viewSet.getGeometryFile() != null))
             {
                 // Load geometry if it wasn't specified but a view set was.
                 geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
@@ -348,11 +348,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     {
         // IAN: This super call should be creating the geometry
         super(new IBRSharedResources<>(context, viewSet, geometry,
-                    loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
+                (loadOptions != null) ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
                 true);
 
         // Read the images from a file
-        if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getFullResImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
+        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageFilePath() != null) && (viewSet.getCameraPoseCount() > 0))
         {
             Date timestamp = new Date();
 
@@ -425,7 +425,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 progressMonitor.setProgress(viewSet.getCameraPoseCount(), "All images loaded.");
             }
 
-            log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+            log.info("View Set textures loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
         }
         else
         {
@@ -438,7 +438,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // Store the camera projections in a uniform buffer
-        if (viewSet != null && viewSet.getCameraProjectionData() != null)
+        if ((viewSet != null) && (viewSet.getCameraProjectionData() != null))
         {
             // Create the uniform buffer
             cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
@@ -449,7 +449,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // Store the camera projection indices in a uniform buffer
-        if (viewSet != null && viewSet.getCameraProjectionIndexData() != null)
+        if ((viewSet != null) && (viewSet.getCameraProjectionIndexData() != null))
         {
             cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
         }
@@ -460,7 +460,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         if (getGeometryResources() != null)
         {
-            if (viewSet != null && loadOptions != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
+            if ((viewSet != null) && (loadOptions != null) && (loadOptions.getDepthImageWidth() != 0) && (loadOptions.getDepthImageHeight() != 0))
             {
                 try
                 (
@@ -550,7 +550,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         for (short encodedDepth : depthBufferData)
         {
             int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-            minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0, nearPlane, farPlane));
+            minDepth = Math.min(minDepth, getLinearDepth(((2.0 * nonlinearDepth) / 0xFFFF) - 1.0, nearPlane, farPlane));
         }
         return minDepth;
     }
@@ -606,7 +606,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     private static double getLinearDepth(double nonLinearDepth, double nearPlane, double farPlane)
     {
-        return 2 * nearPlane * farPlane / (farPlane + nearPlane - nonLinearDepth * (farPlane - nearPlane));
+        return (2 * nearPlane * farPlane) / ((farPlane + nearPlane) - (nonLinearDepth * (farPlane - nearPlane)));
     }
 
     /**
@@ -672,7 +672,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             program.setTexture("viewImages", this.colorTextures);
         }
 
-        if (this.cameraProjectionBuffer != null && this.cameraProjectionIndexBuffer != null)
+        if ((this.cameraProjectionBuffer != null) && (this.cameraProjectionIndexBuffer != null))
         {
             program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
             program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
@@ -688,7 +688,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             program.setUniform("occlusionBias", 0.002f);
         }
 
-        if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
+        if ((this.shadowMatrixBuffer == null) || (this.shadowTextures == null))
         {
             program.setTexture("shadowImages", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
         }
@@ -912,7 +912,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
         }
-        else if (viewSet.getPreviewWidth() == 0 || viewSet.getPreviewHeight() == 0)
+        else if ((viewSet.getPreviewWidth() == 0) || (viewSet.getPreviewHeight() == 0))
         {
             log.warn("Preview width or preview height are 0; skipping preview images");
         }
@@ -940,7 +940,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
             // Wait for all threads to finish
-            while (cancelled.get() == null && failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
+            while ((cancelled.get() == null) && ((failedCount.get() + finishedCount.get()) < viewSet.getCameraPoseCount()))
             {
                 Thread.onSpinWait();
             }
@@ -958,7 +958,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 // Generating preview images is now complete.
                 // Go back to indeterminate progress until it starts to actually load for rendering
                 progressMonitor.setMaxProgress(0.0);
-                log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+                log.info("Undistorted preview images generated in {} milliseconds.", new Date().getTime() - timestamp.getTime());
             }
         }
     }
@@ -986,7 +986,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // Wait for all threads to finish
-        while (cancelled.get() == null && failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
+        while ((cancelled.get() == null) && ((failedCount.get() + finishedCount.get()) < viewSet.getCameraPoseCount()))
         {
             Thread.onSpinWait();
         }
@@ -1004,7 +1004,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             // Generating preview images is now complete.
             // Go back to indeterminate progress until it starts to actually load for rendering
             progressMonitor.setMaxProgress(0.0);
-            log.info("Undistorted thumbnail images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+            log.info("Undistorted thumbnail images generated in {} milliseconds.", new Date().getTime() - timestamp.getTime());
         }
     }
 
@@ -1378,7 +1378,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 DistortionProjection distortion = (DistortionProjection) getViewSet().getCameraProjection(projectionIndex);
 
                 // If no preview width / height is specified, just use whatever was originally in the distortion model
-                if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
+                if ((getViewSet().getPreviewWidth() > 0) && (getViewSet().getPreviewHeight() > 0))
                 {
                     distortion = distortion.scaledTo(getViewSet().getPreviewWidth(), getViewSet().getPreviewHeight());
                 }
@@ -1395,7 +1395,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                 return true;
             }
-            else if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
+            else if ((getViewSet().getPreviewWidth() > 0) && (getViewSet().getPreviewHeight() > 0))
             {
                 log.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCameraPoseCount());
 

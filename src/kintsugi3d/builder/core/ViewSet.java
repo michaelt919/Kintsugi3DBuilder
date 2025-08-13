@@ -1068,7 +1068,8 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getThumbnailImageFile(int poseIndex)
     {
-        return new File(this.getThumbnailImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+        return new File(this.getThumbnailImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithFormat(String.valueOf(poseIndex), "PNG"));
     }
 
     public int getPreviewWidth()

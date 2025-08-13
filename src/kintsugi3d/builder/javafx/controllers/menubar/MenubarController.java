@@ -42,7 +42,6 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;

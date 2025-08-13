@@ -71,6 +71,21 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
+    public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion)
+    {
+        try(Texture2D<ContextType> inTex = context.getTextureFactory()
+            .build2DColorTextureFromImage(inputImage, true)
+            .setLinearFilteringEnabled(true)
+            .createTexture();
+            Texture2D<ContextType> outTex = undistort(inTex, distortion))
+        {
+            return BufferedImageBuilder.build()
+                .setDataFromArray(outTex.getColorTextureReader().readARGB(), outTex.getWidth(), outTex.getHeight())
+                .flipVertical()
+                .create();
+        }
+    }
+
     public BufferedImage undistort(BufferedImage inputImage, BufferedImage inputMask, boolean mipmapsEnabled, DistortionProjection distortion)
     {
         try(Texture2D<ContextType> inTex = context.getTextureFactory()
