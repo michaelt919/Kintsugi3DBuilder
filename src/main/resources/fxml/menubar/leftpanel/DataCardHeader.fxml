@@ -9,10 +9,10 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 <HBox fx:id="card_top_bar" alignment="CENTER_LEFT" prefHeight="13.0" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
-    <ImageView id="texture_icon" fx:id="card_icon" fitHeight="24.0" fitWidth="24.0">
+    <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
         <Image url="@../../../../../../Kintsugi3D-icon.png" />
     </ImageView>
-    <Text id="texture_title" fx:id="card_title" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
+    <Text id="texture_title" fx:id="cardTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
         <font>
             <Font name="Segoe UI Semibold" size="12.0" />
         </font>

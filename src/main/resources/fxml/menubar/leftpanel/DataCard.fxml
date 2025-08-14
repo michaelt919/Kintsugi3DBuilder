@@ -6,13 +6,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.*?>
-<VBox id="data_card" fx:id="data_card" alignment="TOP_CENTER" styleClass="card-background" onMouseClicked="#cardClicked" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
-<VBox id="border_box" fx:id="border_box">
+<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" styleClass="card-background" onMouseClicked="#cardClicked" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
+<VBox id="border_box" fx:id="borderBox">
     <HBox fx:id="card_top_bar" alignment="CENTER_LEFT" prefHeight="13.0" stylesheets="@../../kintsugiStyling.css">
-        <ImageView fx:id="card_icon" fitHeight="24.0" fitWidth="24.0">
+        <ImageView fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
             <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
-        <Text id="texture_title" fx:id="card_title" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
+        <Text id="texture_title" fx:id="cardTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
             <font>
                 <Font name="Segoe UI Semibold" size="12.0" />
             </font>
@@ -27,9 +27,9 @@
         </padding>
     </HBox>
 
-    <VBox fx:id="card_body" prefHeight="275">
+    <VBox fx:id="cardBody" prefHeight="275">
     <HBox spacing="5.0">
-        <VBox fx:id="text_content" HBox.hgrow="ALWAYS">
+        <VBox fx:id="textContent" HBox.hgrow="ALWAYS">
             <Text text="File Name:">
                <font>
                   <Font name="Segoe UI Semibold" size="12.0" />
@@ -93,7 +93,7 @@
          </HBox.margin>
 
         </VBox>
-        <ImageView fx:id="main_image" fitHeight="212.0" fitWidth="212.0" layoutX="100.0" layoutY="100.0" pickOnBounds="true" preserveRatio="true">
+        <ImageView fx:id="mainImage" fitHeight="212.0" fitWidth="212.0" layoutX="100.0" layoutY="100.0" pickOnBounds="true" preserveRatio="true">
             <HBox.margin>
                 <Insets right="3.0" />
             </HBox.margin>
@@ -101,7 +101,7 @@
         </ImageView>
     </HBox>
 
-        <VBox fx:id="button_box">
+        <VBox fx:id="buttonBox">
         <!-- Separator -->
        <Separator prefWidth="200.0" styleClass="card-separator">
           <padding>
