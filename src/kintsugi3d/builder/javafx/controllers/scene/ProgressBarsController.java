@@ -383,7 +383,6 @@ public class ProgressBarsController
             {
                 cancelRequested.set(false); // reset cancel flag
 
-                WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
                 MenubarController.getInstance().dismissMiniProgressBarAsync();
 
                 //need to end stopwatches here because they might need to be reused for another process

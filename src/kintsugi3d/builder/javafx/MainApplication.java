@@ -213,9 +213,6 @@ public class MainApplication extends Application
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-//        primaryStage.setX(primaryScreenBounds.getMinX() + 10);
-//        primaryStage.setY(primaryScreenBounds.getMinY() + 10);
-
         welcomeStage.setX(primaryScreenBounds.getMinX() + 10);
         welcomeStage.setY(primaryScreenBounds.getMinY() + 120);
 
@@ -224,27 +221,6 @@ public class MainApplication extends Application
         sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 430);
         sceneStage.setY(primaryScreenBounds.getMinY() + 10);
         sceneStage.initOwner(primaryStage.getScene().getWindow());
-
-//        sceneStage.show();
-//        sceneStage.setMinWidth(sceneStage.getWidth());
-//        sceneStage.setMaxWidth(sceneStage.getWidth());
-
-//        String libraryFXMLFileName = "fxml/library/Library.fxml";
-//        URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
-//        assert libraryURL != null : "cant find " + libraryFXMLFileName;
-//        FXMLLoader libraryFXMLLoader = new FXMLLoader(libraryURL);
-//        LibraryController libraryController = libraryFXMLLoader.getController();
-
-//        Parent libraryRoot = libraryFXMLLoader.load();
-//        Stage libraryStage = new Stage();
-//        libraryStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-//        libraryStage.setTitle("Library");
-//        libraryStage.setScene(new Scene(libraryRoot));
-
-//        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
-//        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
-//        libraryStage.initOwner(primaryStage.getScene().getWindow());
-//        libraryStage.show();
 
         primaryStage.requestFocus();
         primaryStage.show();
@@ -287,11 +263,14 @@ public class MainApplication extends Application
         //init progress bars first so other controllers can access the progress bar fxml components
         progressBarsController.init(progressBarsStage);
 
+        menuBarController.init(primaryStage, JavaFXState.getInstance(),
+            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+
         welcomeWindowController.init(welcomeStage,
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
-        menuBarController.init(primaryStage, JavaFXState.getInstance(),
-            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+        menuBarController.initAccelerators(welcomeStage.getScene());
+        menuBarController.initAccelerators(progressBarsStage.getScene());
 
         // Open scene window from the menu
         settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->

@@ -4,7 +4,7 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
 
-public class ExperienceManager
+public final class ExperienceManager
 {
     // Modal window manager objects
     private final CreateProject createProject = new CreateProject();

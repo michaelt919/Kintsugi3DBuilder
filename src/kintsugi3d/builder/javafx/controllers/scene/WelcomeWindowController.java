@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanExpression;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -25,7 +26,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
@@ -90,9 +90,25 @@ public class WelcomeWindowController
         recentButtons.add(recent5);
 
         RecentProjects.updateAllControlStructures();
+
+        BooleanExpression shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
+            .or(ProgressBarsController.getInstance().getProcessingProperty())
+            .or(ProjectIO.getInstance().getProjectLoadedProperty());
+
+        shouldBeHidden.addListener(obs ->
+        {
+            if (shouldBeHidden.get())
+            {
+                window.hide();
+            }
+            else
+            {
+                Platform.runLater(() -> window.show());
+            }
+        });
     }
 
-    public void handleMenuItemSelection(MenuItem item)
+    private static void handleMenuItemSelection(MenuItem item)
     {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
@@ -125,16 +141,6 @@ public class WelcomeWindowController
     private void openProject()
     {
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
-    }
-
-    public void hide()
-    {
-        window.hide();
-    }
-
-    public void show()
-    {
-        Platform.runLater(() -> window.show());
     }
 
     @FXML
@@ -186,20 +192,6 @@ public class WelcomeWindowController
     public void openAboutModal()
     {
         ExperienceManager.getInstance().getAbout().tryOpen();
-    }
-
-    public void showIfNoModelLoadedAndNotProcessing()
-    {
-        if (!Global.state().getIOModel().hasValidHandler() &&
-            !ProgressBarsController.getInstance().isProcessing())
-        {
-            show();
-        }
-    }
-
-    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r)
-    {
-        recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
 
     public void updateRecentProjects()
@@ -270,8 +262,7 @@ public class WelcomeWindowController
                 ButtonType removeProj = new ButtonType("Remove from quick access", ButtonData.YES);
 
                 Alert alert = new Alert(AlertType.NONE,
-                    "Project not found: " + projectName + '\n' +
-                        "Attempted path: " + path, ok, removeProj);
+                    String.format("Project not found: %s\nAttempted path: %s", projectName, path), ok, removeProj);
 
                 ((ButtonBase) alert.getDialogPane().lookupButton(removeProj)).setOnAction(event ->
                     removeReference(path));
@@ -437,16 +428,16 @@ public class WelcomeWindowController
     {
         //build path off of home directory if path is not complete, otherwise correct path would not be found
         File imgFolder;
-        if (!imgsPath.matches("^[A-Za-z]:\\\\.*"))
+        if (imgsPath.matches("^[A-Za-z]:\\\\.*"))
+        {
+            //full path is given (starting with C:\, G:\, etc)
+            imgFolder = new File(imgsPath);
+        }
+        else
         {
             String basePath = System.getProperty("user.home");
             File baseDir = new File(basePath);
             imgFolder = new File(baseDir, imgsPath);
-        }
-        else
-        {
-            //full path is given (starting with C:\, G:\, etc)
-            imgFolder = new File(imgsPath);
         }
 
         String canonicalPath = imgFolder.getCanonicalPath();

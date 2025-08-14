@@ -13,6 +13,9 @@ package kintsugi3d.builder.javafx;
 
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -48,7 +51,7 @@ public final class ProjectIO
 
     private File projectFile;
     private File vsetFile;
-    private boolean projectLoaded;
+    private final BooleanProperty projectLoaded = new SimpleBooleanProperty(false);
 
     private FileChooser projectFileChooser;
 
@@ -74,7 +77,7 @@ public final class ProjectIO
             @Override
             public void cancelComplete(UserCancellationException e)
             {
-                projectLoaded = false;
+                projectLoaded.set(false);
                 Platform.runLater(() ->
                 {
                     Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
@@ -87,7 +90,7 @@ public final class ProjectIO
             @Override
             public void fail(Throwable e)
             {
-                projectLoaded = false;
+                projectLoaded.set(false);
                 if (e instanceof MeshImportException)
                 {
                     String message = e.getMessage();
@@ -107,9 +110,14 @@ public final class ProjectIO
         });
     }
 
+    public BooleanExpression getProjectLoadedProperty()
+    {
+        return projectLoaded;
+    }
+
     private boolean confirmClose(String text)
     {
-        if (projectLoaded)
+        if (projectLoaded.get())
         {
             Dialog<ButtonType> confirmation = new Alert(Alert.AlertType.CONFIRMATION,
                 "If you click OK, any unsaved changes to the current project will be lost.");
@@ -138,7 +146,7 @@ public final class ProjectIO
         vsetFile = null;
 
         Global.state().getIOModel().unload();
-        projectLoaded = true;
+        projectLoaded.set(true);
     }
 
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
@@ -316,14 +324,12 @@ public final class ProjectIO
         if (newVsetFile != null)
         {
             this.vsetFile = newVsetFile;
-            this.projectLoaded = true;
+            this.projectLoaded.set(true);
 
             startLoad(projectFile, vsetFile);
 
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
             Global.state().getIOModel().setLoadedProjectFile(projectFile);
-
-            WelcomeWindowController.getInstance().hide();
 
             // Disable shaders that need processed textures until project load is complete.
             MenubarController.getInstance().setToggleableShaderDisable(true);
@@ -514,9 +520,7 @@ public final class ProjectIO
         vsetFile = null;
 
         Global.state().getIOModel().unload();
-        projectLoaded = false;
-
-        WelcomeWindowController.getInstance().show();
+        projectLoaded.set(false);
 
         //TODO: do we want this here?
         MenubarController.getInstance().dismissMiniProgressBarAsync();

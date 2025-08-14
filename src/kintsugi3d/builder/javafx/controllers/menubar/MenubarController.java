@@ -18,6 +18,7 @@ import javafx.beans.binding.StringExpression;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -41,7 +42,6 @@ import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
 import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -164,24 +164,6 @@ public class MenubarController
 
         this.leftBarController.init(javaFXState.getTabModels());
 
-        //send menubar accelerators to welcome window
-        for (Menu menu : mainMenubar.getMenus())
-        {
-            for (MenuItem item : menu.getItems())
-            {
-                KeyCombination keyCodeCombo = item.getAccelerator();
-                EventHandler<ActionEvent> action = item.getOnAction();
-
-                if (keyCodeCombo == null || action == null)
-                {
-                    continue;
-                }
-
-                WelcomeWindowController.getInstance().addAccelerator(keyCodeCombo, () ->
-                    Platform.runLater(() -> action.handle(new ActionEvent())));
-            }
-        }
-
         boolean foundExportClass = false;
         File exportClassDefinitionFile = new File("export-classes.txt");
         if (exportClassDefinitionFile.exists())
@@ -260,6 +242,28 @@ public class MenubarController
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
+
+    /**
+     * Send menubar accelerators to another scene
+     * @param scene
+     */
+    public void initAccelerators(Scene scene)
+    {
+        for (Menu menu : mainMenubar.getMenus())
+        {
+            for (MenuItem item : menu.getItems())
+            {
+                KeyCombination keyCodeCombo = item.getAccelerator();
+                EventHandler<ActionEvent> action = item.getOnAction();
+
+                if (keyCodeCombo != null && action != null)
+                {
+                    scene.getAccelerators().put(keyCodeCombo,
+                        () -> Platform.runLater(() -> action.handle(new ActionEvent())));
+                }
+            }
+        }
     }
 
     public void refresh()
@@ -623,11 +627,6 @@ public class MenubarController
     public Window getWindow() // Useful for creating alerts in back-end classes
     {
         return window;
-    }
-
-    public void showWelcomeWindow()
-    {
-        WelcomeWindowController.getInstance().show();
     }
 
     public void handleMiniProgressBar(MouseEvent event)

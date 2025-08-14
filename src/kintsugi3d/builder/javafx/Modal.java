@@ -13,6 +13,7 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -75,12 +76,8 @@ public class Modal
         stage.setScene(new Scene(root));
         stage.initOwner(parentWindow);
         stage.setResizable(false);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, x ->
-        {
-            WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
-        });
-
         openProperty.bind(stage.showingProperty());
+        MenubarController.getInstance().initAccelerators(stage.getScene());
 
         return fxmlLoader.getController();
     }
@@ -88,7 +85,6 @@ public class Modal
     public void open()
     {
         stage.show();
-        WelcomeWindowController.getInstance().hide();
     }
 
     private static FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
