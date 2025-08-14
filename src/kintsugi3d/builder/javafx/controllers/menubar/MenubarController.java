@@ -162,7 +162,7 @@ public class MenubarController
         this.javaFXState = javaFXState;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
-        this.leftBarController.init(injectedInternalModels.getTabModels());
+        this.leftBarController.init(javaFXState.getTabModels());
 
         //send menubar accelerators to welcome window
         for (Menu menu : mainMenubar.getMenus())

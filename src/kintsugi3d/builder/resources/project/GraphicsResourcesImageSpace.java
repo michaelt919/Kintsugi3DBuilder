@@ -298,7 +298,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         {
             if (this.viewSet != null)
             {
-                IBRResourcesImageSpace.generateUndistortedPreviewThumbnailImages(
+                GraphicsResourcesImageSpace.generateUndistortedPreviewThumbnailImages(
                         this.viewSet, this.imageLoadOptions.getMaxLoadingThreads(), this.progressMonitor                );
             }
 
@@ -892,7 +892,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
     private static void resizeThumbnailImage(File fullResImageFile, ViewSet viewSet, int i) throws IOException
     {
-        log.info("Resizing image {} : No distortion parameters", fullResImageFile);
+        LOG.info("Resizing image {} : No distortion parameters", fullResImageFile);
         ImageHelper resizer = new ImageHelper(fullResImageFile);
         resizer.saveAtResolution(viewSet.getThumbnailImageFile(i),
                 viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
@@ -971,7 +971,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 // Generating preview images is now complete.
                 // Go back to indeterminate progress until it starts to actually load for rendering
                 progressMonitor.setMaxProgress(0.0);
-                log.info("Undistorted preview images generated in {} milliseconds.", new Date().getTime() - timestamp.getTime());
+                LOG.info("Undistorted preview images generated in {} milliseconds.", new Date().getTime() - timestamp.getTime());
             }
         }
     }
@@ -990,13 +990,13 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
         else if (viewSet.getPreviewWidth() == 0 || viewSet.getPreviewHeight() == 0)
         {
-            log.warn("Preview width or preview height are 0; skipping preview images");
+            LOG.warn("Preview width or preview height are 0; skipping preview images");
         }
         else
         {
             Date timestamp = new Date();
 
-            log.info("Generating undistorted preview images...");
+            LOG.info("Generating undistorted preview images...");
 
             viewSet.getPreviewImageFilePath().mkdirs(); // Create preview directory
             new File(viewSet.getSupportingFilesFilePath(),"thumbnails").mkdirs(); // Create thumbnail directory
@@ -1214,7 +1214,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                     }
                 }));
 
-        log.info("Finished reading all images; waiting for undistortion to finish on other threads");
+        LOG.info("Finished reading all images; waiting for undistortion to finish on other threads");
     }
 
 
@@ -1253,9 +1253,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                             int projectionIndex = viewSet.getCameraProjectionIndex(i);
                             if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection) {
                                 decodedImage = getDecodedImage(viewSet, i);
-                                log.info("Undistorting preview image {}", i);
+                                LOG.info("Undistorting preview image {}", i);
                                 BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
-                                log.info("Saving preview image {}", i);
+                                LOG.info("Saving preview image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                 logFinished(viewSet.getPreviewImageFile(i));
                             } else {
@@ -1278,9 +1278,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                                     decodedImage = getDecodedImage(viewSet, i);
                                 }
 
-                                log.info("Undistorting thumbnail image {}", i);
+                                LOG.info("Undistorting thumbnail image {}", i);
                                 BufferedImage imageOut = undistortThumbnailImage(decodedImage, viewSet, projectionIndex, context);
-                                log.info("Saving thumbnail image {}", i);
+                                LOG.info("Saving thumbnail image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getThumbnailImageFile(i));
                                 logFinished(viewSet.getThumbnailImageFile(i));
                             } else {
@@ -1292,7 +1292,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
                         markFinished(viewSet, finishedCount);
                     } catch (RuntimeException | IOException ex) {
-                        log.error(ex.getMessage(), ex);
+                        LOG.error(ex.getMessage(), ex);
                         failedCount.getAndAdd(1);
                     }
                 }
@@ -1300,7 +1300,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
         });
 
-        log.info("Waiting for undistortion to finish on rendering thread");
+        LOG.info("Waiting for undistortion to finish on rendering thread");
     }
 
     private static void multithreadPreviewThumbnailImgGeneration(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor,
@@ -1389,21 +1389,21 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                                                                     finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                                                 } catch (IOException | RuntimeException ex) {
                                                     // Failure to save the final file
-                                                    log.error(ex.getMessage(), ex);
+                                                    LOG.error(ex.getMessage(), ex);
                                                     failedCount.getAndAdd(1);
                                                 }
 
                                             }).start();
                                         } catch (IOException | RuntimeException ex) {
                                             // Failure to undistort
-                                            log.error(ex.getMessage(), ex);
+                                            LOG.error(ex.getMessage(), ex);
                                             failedCount.getAndAdd(1);
                                         }
                                     }
                                 });
                             } catch (IOException | RuntimeException ex) {
                                 // Failure to read the original image
-                                log.error(ex.getMessage(), ex);
+                                LOG.error(ex.getMessage(), ex);
                                 failedCount.getAndAdd(1);
                             }
                         } else {
@@ -1423,7 +1423,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                         }
                     }
                 } catch (IOException | RuntimeException ex) {
-                    log.error(ex.getMessage(), ex);
+                    LOG.error(ex.getMessage(), ex);
                     failedCount.getAndAdd(1);
                 }
             }));

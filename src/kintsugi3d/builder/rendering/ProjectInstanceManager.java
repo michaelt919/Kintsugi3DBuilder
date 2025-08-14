@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.rendering;
 
+import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -187,7 +188,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
 
         loadedViewSet.generateCameraMetadata();
-        Platform.runLater(()->MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet));
+        Platform.runLater(()->Global.state().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet));
 
         // Create the instance (will be initialized on the graphics thread)
         ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
@@ -502,9 +503,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
     public void setTabModels(TabModels tabModels) {
         this.tabModels = tabModels;
-        if (ibrInstance != null)
+        if (projectInstance != null)
         {
-            ibrInstance.getSceneModel().setTabModels(tabModels);
+            projectInstance.getSceneModel().setTabModels(tabModels);
         }
     }
 

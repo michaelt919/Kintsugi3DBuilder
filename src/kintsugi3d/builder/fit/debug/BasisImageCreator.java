@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.fit.debug;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
