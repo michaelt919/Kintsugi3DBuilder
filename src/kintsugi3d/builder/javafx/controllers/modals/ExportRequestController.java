@@ -25,7 +25,6 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -40,24 +39,17 @@ public class ExportRequestController implements GraphicsRequestController
     private static final Logger LOG = LoggerFactory.getLogger(ExportRequestController.class);
 
     //Initialize all the variables in the FXML file
-    @FXML
-    public Kintsugi3DBuilderState modelAccess;
-    @FXML
-    private Stage stage;
-    @FXML
-    private Button runButton;
+    @FXML private Kintsugi3DBuilderState modelAccess;
+    @FXML private Stage stage;
+    @FXML private Button runButton;
     //    @FXML private CheckBox combineWeightsCheckBox;
-    @FXML
-    private CheckBox generateLowResolutionCheckBox;
+    @FXML private CheckBox generateLowResolutionCheckBox;
     //    @FXML private CheckBox glTFEnabledCheckBox;
-    @FXML
-    private CheckBox glTFPackTexturesCheckBox;
-    @FXML
-    private CheckBox openViewerOnceCheckBox;
-    @FXML
-    private ComboBox<Integer> minimumTextureResolutionComboBox;
-    public File currentDirectoryFile;
-    public File exportLocationFile;
+    @FXML private CheckBox glTFPackTexturesCheckBox;
+    @FXML private CheckBox openViewerOnceCheckBox;
+    @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
+    private File currentDirectoryFile;
+    private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
 
 

@@ -11,6 +11,10 @@
 
 package kintsugi3d.optimization;
 
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.core.*;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -177,11 +181,9 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
     {
         int unsuccessfulIterations = 0;
 
-        ReadonlyErrorReport report;
-
         do
         {
-            report = runOnce(errorCalculator);
+            ReadonlyErrorReport report = runOnce(errorCalculator);
 
             if (report.getPreviousError() - report.getError() <= convergenceTolerance)
             {

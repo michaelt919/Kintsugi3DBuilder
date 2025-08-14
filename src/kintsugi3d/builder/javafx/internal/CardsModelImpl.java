@@ -6,8 +6,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.util.CardSelectionModel;
@@ -36,7 +36,7 @@ public class CardsModelImpl implements CardsModel {
     public void setViewSet(ViewSet vset) {
         Platform.runLater(()-> {
             this.viewSet = vset;
-            CardsModel model = MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras");
+            CardsModel model = Global.state().getTabModels().getCardsModel("Cameras");
             List<ProjectDataCard> dataCards = new ArrayList<>();
             for (int i = 0; i < viewSet.getCameraMetadata().size(); i++) {
                 String thumbnailPath;
