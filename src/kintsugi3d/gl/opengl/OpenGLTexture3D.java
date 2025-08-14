@@ -34,9 +34,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.glTexImage3DMultisample;
-import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL44.*;
 
 final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 {

@@ -127,6 +127,7 @@ public class MenubarController
 
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
+    @FXML private SideBarController leftBarController;
 
     @FXML private Label shaderName;
 
@@ -160,6 +161,8 @@ public class MenubarController
 
         this.javaFXState = javaFXState;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
+
+        this.leftBarController.init(injectedInternalModels.getTabModels());
 
         //send menubar accelerators to welcome window
         for (Menu menu : mainMenubar.getMenus())

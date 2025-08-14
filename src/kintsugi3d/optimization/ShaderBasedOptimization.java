@@ -11,10 +11,6 @@
 
 package kintsugi3d.optimization;
 
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.core.*;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;

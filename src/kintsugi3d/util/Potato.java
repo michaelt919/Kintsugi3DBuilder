@@ -11,10 +11,6 @@
 
 package kintsugi3d.util;
 
-import kintsugi3d.gl.vecmath.IntVector2;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;

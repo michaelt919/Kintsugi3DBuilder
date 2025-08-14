@@ -105,6 +105,12 @@ public interface ReadonlyViewSet
     File getPreviewImageFilePath();
 
     /**
+     * Gets the image file path for the downscaled "thumbnail" images for display.
+     * @return The image file path
+     */
+    File getThumbnailImageFilePath();
+
+    /**
      * Gets the image file path string for downscaled "preview" images for real-time rendering, relative to the root directory.
      * @return The image file path.
      */
@@ -132,6 +138,13 @@ public interface ReadonlyViewSet
      * @return The image file.
      */
     File getPreviewImageFile(int poseIndex);
+
+    /**
+     * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getThumbnailImageFile(int poseIndex);
 
     /**
      * Gets the mask of a particular view, if it exists
@@ -258,6 +271,9 @@ public interface ReadonlyViewSet
      */
     File findFullResPrimaryImageFile() throws FileNotFoundException;
     File findPreviewImageFile(int index) throws FileNotFoundException;
+
+    File findThumbnailImageFile(int index) throws FileNotFoundException;
+
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
     boolean hasMasks();

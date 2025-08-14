@@ -21,11 +21,7 @@ import kintsugi3d.gl.core.TextureWrapMode;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.GL_MIRRORED_REPEAT;
-import static org.lwjgl.opengl.GL30.GL_BGRA_INTEGER;
-import static org.lwjgl.opengl.GL30.GL_RGBA_INTEGER;
-import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL44.*;
 
 // mipmaps
 

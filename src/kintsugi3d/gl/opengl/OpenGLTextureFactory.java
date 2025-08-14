@@ -32,10 +32,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP;
-import static org.lwjgl.opengl.GL30.GL_TEXTURE_1D_ARRAY;
-import static org.lwjgl.opengl.GL30.GL_TEXTURE_2D_ARRAY;
+import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
 {

@@ -23,8 +23,7 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.GL_TEXTURE_CUBE_MAP_SEAMLESS;
+import static org.lwjgl.opengl.GL32.*;
 
 public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>
 {

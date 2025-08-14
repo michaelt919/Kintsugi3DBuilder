@@ -14,13 +14,7 @@ package kintsugi3d.gl.opengl;
 import kintsugi3d.gl.core.VertexBuffer;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_DOUBLE;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
+import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLContext>
 {

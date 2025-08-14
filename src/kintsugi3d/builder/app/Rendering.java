@@ -184,6 +184,7 @@ public final class Rendering
         SettingsModel settingsModel = Global.state().getSettingsModel();
         CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
         IOModel ioModel = Global.state().getIOModel();
+        TabModels tabModels = Global.state().getTabModels();
 
         // Bind tools
         ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
@@ -319,6 +320,7 @@ public final class Rendering
         instanceManager.setLightingModel(lightingModel);
         instanceManager.setCameraViewListModel(cameraViewListModel);
         instanceManager.setSettingsModel(settingsModel);
+        instanceManager.setTabModels(tabModels);
 
         canvas.addKeyPressListener((win, key, modifierKeys) ->
         {

@@ -28,9 +28,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.glFramebufferTexture;
-import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL44.*;
 
 abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment {
     protected final OpenGLContext context;

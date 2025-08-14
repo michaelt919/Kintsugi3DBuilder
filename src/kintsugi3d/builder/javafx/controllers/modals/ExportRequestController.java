@@ -25,6 +25,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;

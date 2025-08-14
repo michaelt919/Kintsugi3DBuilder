@@ -12,6 +12,8 @@
 package kintsugi3d.builder.javafx;
 
 import kintsugi3d.builder.javafx.internal.*;
+import kintsugi3d.builder.state.CardsModel;
+import kintsugi3d.builder.state.TabModels;
 
 public final class JavaFXState
 {
@@ -30,6 +32,7 @@ public final class JavaFXState
     private final LoadOptionsModelImpl loadOptionsModel;
     private final SettingsModelImpl settingsModel;
     private final ObservableProjectModel projectModel;
+    private final TabModelsImpl tabModels;
 
     private JavaFXState()
     {
@@ -41,6 +44,7 @@ public final class JavaFXState
         loadOptionsModel = new LoadOptionsModelImpl();
         settingsModel = new SettingsModelImpl();
         projectModel = new ObservableProjectModel();
+        tabModels = new TabModelsImpl();
     }
 
     public CameraModelImpl getCameraModel()
@@ -62,6 +66,10 @@ public final class JavaFXState
     {
         return cameraViewListModel;
     }
+
+    public CardsModel getCardsModel(String label) { return tabModels.getCardsModel(label); }
+
+    public TabModels getTabModels() { return tabModels; }
 
     public LoadOptionsModelImpl getLoadOptionsModel()
     {

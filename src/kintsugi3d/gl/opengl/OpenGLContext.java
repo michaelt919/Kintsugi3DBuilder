@@ -31,14 +31,7 @@ import java.util.function.BiPredicate;
 
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;
-import static org.lwjgl.opengl.GL31.*;
-import static org.lwjgl.opengl.GL32.GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS;
-import static org.lwjgl.opengl.GL32.GL_GEOMETRY_SHADER;
-import static org.lwjgl.opengl.GL33.GL_RGB10_A2UI;
-import static org.lwjgl.opengl.GL40.GL_TESS_CONTROL_SHADER;
-import static org.lwjgl.opengl.GL40.GL_TESS_EVALUATION_SHADER;
-import static org.lwjgl.opengl.GL41.GL_RGB565;
-import static org.lwjgl.opengl.GL43.GL_COMPUTE_SHADER;
+import static org.lwjgl.opengl.GL43.*;
 
 public class OpenGLContext extends WindowContextBase<OpenGLContext>
 {

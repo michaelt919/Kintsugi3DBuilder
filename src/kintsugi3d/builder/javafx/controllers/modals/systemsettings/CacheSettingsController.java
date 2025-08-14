@@ -28,6 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Locale;
+
 public class CacheSettingsController implements SystemSettingsControllerBase
 {
     @FXML private Label previewImageCacheLabel;

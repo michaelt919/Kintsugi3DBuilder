@@ -25,9 +25,7 @@ import kintsugi3d.util.ResourceManager;
 import java.io.IOException;
 import java.util.*;
 
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL31.glGetUniformBlockIndex;
-import static org.lwjgl.opengl.GL31.glUniformBlockBinding;
+import static org.lwjgl.opengl.GL31.*;
 
 final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
 {

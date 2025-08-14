@@ -99,6 +99,8 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final Map<Integer, File> maskFiles;
 
+    private final List<LinkedHashMap<String,String>> cameraMetadata;
+
     private final List<ViewRMSE> viewErrorMetrics;
 
     /**
@@ -130,6 +132,11 @@ public final class ViewSet implements ReadonlyViewSet
      * The directory where the results of the texture / specular fitting are stored
      */
     private File supportingFilesDirectory;
+
+    /**
+     * The directory where thumbnail images are stored
+     */
+    private File thumbnailImageDirectory;
 
     /**
      * The directory where the masks are stored, if any are present (null if no masks)
@@ -177,6 +184,9 @@ public final class ViewSet implements ReadonlyViewSet
 
     private int previewWidth = 0;
     private int previewHeight = 0;
+
+    private int thumbnailWidth = 450;
+    private int thumbnailHeight = 300;
 
     private final SettingsModel projectSettings = new SimpleSettingsModel();
     private final Map<String, File> resourceMap = new HashMap<>(32);
@@ -377,6 +387,15 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder addCameraMetadata(int index, String res, String size) { //Jacob
+            result.cameraMetadata.set(index,new LinkedHashMap<>() {{
+                put("Resolution", res);
+                put("Size", size);
+            }});
+            return this;
+        }
+
+
         public Builder setMasksDirectory(File file)
         {
             result.setMasksDirectory(file);
@@ -495,6 +514,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.imageFiles = new ArrayList<>(initialCapacity);
         this.maskFiles = new HashMap<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
+        this.cameraMetadata = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
         this.cameraProjectionList = new ArrayList<>(1);
@@ -510,6 +530,39 @@ public final class ViewSet implements ReadonlyViewSet
     public List<File> getImageFiles()
     {
         return Collections.unmodifiableList(imageFiles);
+    }
+
+    public List<LinkedHashMap<String, String>> getCameraMetadata() {
+        return Collections.unmodifiableList(cameraMetadata);
+    }
+
+    public void generateCameraMetadata() {
+        cameraMetadata.clear();
+        for(File file: imageFiles) {
+            try {
+                File finalFile = new File(fullResImageDirectory,file.getPath());
+                String res = "";
+                try (ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(finalFile))) {
+                    final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+                    if (readers.hasNext()) {
+                        ImageReader reader = readers.next();
+                        try {
+                            reader.setInput(iis);
+                            res = reader.getWidth(0) + "x" + reader.getHeight(0);
+                        } finally {
+                            reader.dispose();
+                        }
+                    }
+                };
+                String finalRes = res;
+                cameraMetadata.add(new LinkedHashMap<>() {{
+                    put("Resolution", finalRes);
+                    put("Size", (finalFile.length() / (1024 * 1024)) + " MB");
+                }});
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -680,6 +733,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
+        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.masksDirectory = this.masksDirectory;
         result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
@@ -724,6 +778,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
+        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.masksDirectory = this.masksDirectory;
         result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
@@ -777,6 +832,15 @@ public final class ViewSet implements ReadonlyViewSet
     public UUID getUUID()
     {
         return uuid;
+    }
+
+    public void deleteCamera(int index)
+    {
+        cameraPoseList.remove(index);
+        cameraPoseInvList.remove(index); // check
+        lightIndexList.remove(index);
+        imageFiles.remove(index);
+        viewErrorMetrics.remove(index);
     }
 
     @Override
@@ -837,6 +901,7 @@ public final class ViewSet implements ReadonlyViewSet
     public void setSupportingFilesDirectory(File supportingFilesDirectory)
     {
         this.supportingFilesDirectory = supportingFilesDirectory;
+        setRelativeThumbnailImagePathName(new File(supportingFilesDirectory, "thumbnails").toString());
     }
 
     @Override
@@ -905,6 +970,16 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public File getThumbnailImageFilePath() {
+        if (this.thumbnailImageDirectory == null) {
+            // If no thumbnail images, default to just using full res images, or root directory as last fallback
+            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+        } else {
+            return this.thumbnailImageDirectory;
+        }
+    }
+
+    @Override
     public String getRelativePreviewImagePathName()
     {
         File previewImageFilePath = this.getPreviewImageFilePath();
@@ -936,6 +1011,10 @@ public final class ViewSet implements ReadonlyViewSet
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
+    public void setRelativeThumbnailImagePathName(String relativeImagePath) {
+        this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+    }
+
     @Override
     public String getImageFileName(int poseIndex)
     {
@@ -962,6 +1041,13 @@ public final class ViewSet implements ReadonlyViewSet
             ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
     }
 
+    @Override
+    public File getThumbnailImageFile(int poseIndex)
+    {
+        return new File(this.getThumbnailImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithFormat(String.valueOf(poseIndex), "PNG"));
+    }
+
     public int getPreviewWidth()
     {
         return previewWidth;
@@ -971,6 +1057,9 @@ public final class ViewSet implements ReadonlyViewSet
     {
         return previewHeight;
     }
+
+    public int getThumbnailWidth() { return thumbnailWidth; }
+    public int getThumbnailHeight() { return thumbnailHeight; }
 
     public void setPreviewImageResolution(int width, int height)
     {
@@ -1223,6 +1312,12 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+    }
+
+    @Override
+    public File findThumbnailImageFile(int index) throws FileNotFoundException
+    {
+        return ImageFinder.getInstance().findImageFile(getThumbnailImageFile(index));
     }
 
     @Override

@@ -56,6 +56,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
+    private TabModels tabModels;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
@@ -159,7 +160,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
 
@@ -178,13 +178,16 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
         try
         {
-            // Generate preview resolution images
-            builder.generateUndistortedPreviewImages();
+            // Generate preview resolution images and thumbnails
+            builder.generateUndistortedPreviewThumbnailImages();
         }
         catch (IOException e)
         {
             LOG.error("One or more images failed to load", e);
         }
+
+        loadedViewSet.generateCameraMetadata();
+        Platform.runLater(()->MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet));
 
         // Create the instance (will be initialized on the graphics thread)
         ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
@@ -194,6 +197,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         newItem.getSceneModel().setLightingModel(this.lightingModel);
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
+        newItem.getSceneModel().setTabModels(this.tabModels);
 
         newItem.setProgressMonitor(new ProgressMonitor()
         {
@@ -493,6 +497,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         if (projectInstance != null)
         {
             projectInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+        }
+    }
+
+    public void setTabModels(TabModels tabModels) {
+        this.tabModels = tabModels;
+        if (ibrInstance != null)
+        {
+            ibrInstance.getSceneModel().setTabModels(tabModels);
         }
     }
 
