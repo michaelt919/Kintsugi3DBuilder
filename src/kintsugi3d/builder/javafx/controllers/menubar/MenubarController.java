@@ -750,7 +750,6 @@ public class MenubarController
     public void dismissMiniProgressBarAsync()
     {
         Platform.runLater(() -> miniProgressPane.setVisible(false));
-        WelcomeWindowController.getInstance().showIfNoModelLoadedAndNotProcessing();
     }
 
     public void file_hotSwap(ActionEvent actionEvent)
