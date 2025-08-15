@@ -25,10 +25,10 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
+import kintsugi3d.builder.javafx.controllers.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
@@ -160,11 +160,11 @@ public class MainApplication extends Application
         URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
         assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
-        String welcomeWindowFXMLFileName = "fxml/scene/WelcomeWindow.fxml";
+        String welcomeWindowFXMLFileName = "fxml/WelcomeWindow.fxml";
         URL welcomeWindowURL = getClass().getClassLoader().getResource(welcomeWindowFXMLFileName);
         assert welcomeWindowURL != null : "cant find " + welcomeWindowFXMLFileName;
 
-        String progressBarsFXMLFileName = "fxml/scene/ProgressBars.fxml";
+        String progressBarsFXMLFileName = "fxml/ProgressBars.fxml";
         URL progressBarsURL = getClass().getClassLoader().getResource(progressBarsFXMLFileName);
         assert progressBarsURL != null : "cant find " + progressBarsFXMLFileName;
 
