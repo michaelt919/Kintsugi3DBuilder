@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
@@ -55,7 +54,7 @@ public class OrbitAnimationController
     }
 
     @FXML
-    public void cancel(ActionEvent actionEvent)
+    public void cancel()
     {
         Modal.requestClose(root);
     }
