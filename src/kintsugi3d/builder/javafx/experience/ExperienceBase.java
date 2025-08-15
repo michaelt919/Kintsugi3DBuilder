@@ -100,7 +100,14 @@ public abstract class ExperienceBase implements Experience
         ExceptionHandling.error(MessageFormat.format("An error occurred opening window: {0}", getName()), e);
     }
 
-    protected Window getParentWindow()
+    @Override
+    public boolean isInitialized()
+    {
+        return parentWindow != null;
+    }
+
+    @Override
+    public Window getParentWindow()
     {
         return parentWindow;
     }

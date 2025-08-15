@@ -116,7 +116,7 @@ public class PageFrameController
                 .or(controller.getCanAdvanceObservable().not()));
 
         BooleanBinding advanceLabelOverrideNotNull = controller.getAdvanceLabelOverrideObservable().isNotNull();
-        BooleanBinding shouldConfirm = page.getNextPageObservable().isNotNull().and(controller.getCanConfirmObservable());
+        BooleanBinding shouldConfirm = page.getNextPageObservable().isNull().and(controller.getCanConfirmObservable());
 
         nextButton.textProperty().bind(new ObjectBinding<>()
         {

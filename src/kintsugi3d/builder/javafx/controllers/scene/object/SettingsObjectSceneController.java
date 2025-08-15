@@ -15,38 +15,22 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
+import kintsugi3d.builder.javafx.experience.ObjectOrientationReferenceView;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class SettingsObjectSceneController implements Initializable
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SettingsObjectSceneController.class);
-
-
     @FXML private VBox root;
 
     @FXML private Button updateOrientationViewButton;
@@ -71,8 +55,9 @@ public class SettingsObjectSceneController implements Initializable
     @FXML private Button selectPointButton;
 
     private final SafeLogScaleNumberStringConverter log10converter = new SafeLogScaleNumberStringConverter(1);
-
     private final SafeNumberStringConverter converter = new SafeNumberStringConverter(0);
+
+    private final ObjectOrientationReferenceView referenceViewExperience = new ObjectOrientationReferenceView();
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -175,47 +160,13 @@ public class SettingsObjectSceneController implements Initializable
         selectPointButton.setOnAction(actionEventEventHandler);
     }
 
-    public void onUpdateOrientationView(ActionEvent actionEvent)
+    public void onUpdateOrientationView()
     {
-        try
+        if (!referenceViewExperience.isInitialized())
         {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PageFrame.fxml"));
-            Parent viewSelectRoot = loader.load();
-
-            Stage stage = new Stage();
-            stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-            stage.setTitle("Select Orientation Reference View");
-            stage.setScene(new Scene(viewSelectRoot));
-
-            PageFrameController frameController = loader.getController();
-            frameController.setPageFactory(pageLoader ->
-            {
-                try
-                {
-                    pageLoader.load();
-                }
-                catch (IOException | RuntimeException e)
-                {
-                    LOG.error("Unable to open orientation view selector.", e);
-                }
-
-                return pageLoader;
-            });
-
-            var viewSelectPage = frameController.createPage(
-                "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-                SimpleDataReceiverPage<InputSource, OrientationViewSelectController>::new);
-
-            frameController.setCurrentPage(viewSelectPage);
-            viewSelectPage.receiveData(new CurrentProjectInputSource());
-
-            frameController.init();
-
-            stage.show();
+            referenceViewExperience.initialize(root.getScene().getWindow());
         }
-        catch (IOException | RuntimeException e)
-        {
-            LOG.error("Unable to open orientation view selector.", e);
-        }
+
+        referenceViewExperience.tryOpen();
     }
 }

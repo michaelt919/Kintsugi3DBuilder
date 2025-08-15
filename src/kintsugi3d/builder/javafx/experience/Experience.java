@@ -11,4 +11,6 @@ public interface Experience
     void initialize(Window parentWindow, JavaFXState state);
     void open() throws IOException;
     void tryOpen();
+    boolean isInitialized();
+    Window getParentWindow();
 }
