@@ -76,9 +76,9 @@ public final class ProjectIO
             @Override
             public void cancelComplete(UserCancellationException e)
             {
-                projectLoaded.set(false);
                 Platform.runLater(() ->
                 {
+                    projectLoaded.set(false);
                     Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
                     alert.setTitle("Cancelled");
                     alert.setHeaderText("Cancelled");
@@ -89,7 +89,8 @@ public final class ProjectIO
             @Override
             public void fail(Throwable e)
             {
-                projectLoaded.set(false);
+                Platform.runLater(() -> projectLoaded.set(false));
+
                 if (e instanceof MeshImportException)
                 {
                     String message = e.getMessage();

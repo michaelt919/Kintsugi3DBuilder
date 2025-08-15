@@ -55,24 +55,27 @@ public class WelcomeWindowController
 
     private static WelcomeWindowController INSTANCE;
 
-    @FXML private Button recent1;
-    @FXML private Button recent2;
-    @FXML private Button recent3;
-    @FXML private Button recent4;
-    @FXML private Button recent5;
-    private final List<Button> recentButtons = new ArrayList<>();
-
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
     }
 
+    @FXML private Button recent1;
+    @FXML private Button recent2;
+    @FXML private Button recent3;
+    @FXML private Button recent4;
+    @FXML private Button recent5;
+
     @FXML private SplitMenuButton recentProjectsSplitMenuButton;
 
+    private final List<Button> recentButtons = new ArrayList<>();
+
+    private Stage window;
     private Window parentWindow;
 
     private Runnable userDocumentationHandler;
-    private Stage window;
+
+    private BooleanExpression shouldBeHidden;
 
     public void init(Stage injectedStage, Runnable injectedUserDocumentationHandler)
     {
@@ -90,7 +93,7 @@ public class WelcomeWindowController
 
         RecentProjects.updateAllControlStructures();
 
-        BooleanExpression shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
+        shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
             .or(ProgressBarsController.getInstance().getProcessingProperty())
             .or(ProjectIO.getInstance().getProjectLoadedProperty());
 
@@ -102,7 +105,7 @@ public class WelcomeWindowController
             }
             else
             {
-                Platform.runLater(() -> window.show());
+                window.show();
             }
         });
     }

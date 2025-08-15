@@ -17,26 +17,30 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.Arrays;
 
-public class Stopwatch {
+public class Stopwatch
+{
     private static final int ARR_SIZE = 15;
     private final Long[] rollingAverageStorage = new Long[ARR_SIZE];
     private int trackingIdx = 0;
 
     private long initTime;
-    private BooleanProperty running = new SimpleBooleanProperty(false);
+    private final BooleanProperty running = new SimpleBooleanProperty(false);
 
     //used to manually set elapsed time for a stopwatch which is stopped and
     //   has its elapsed time retrieved later
     private long manualElapsedTime = -1;
 
 
-    public Stopwatch(){
+    public Stopwatch()
+    {
     }
 
-    public long start(){
-        if(running.getValue()){
+    public long start()
+    {
+        if (running.getValue())
+        {
             throw new IllegalStateException("Stopwatch object cannot be started multiple times.\n" +
-                    "This exception was likely caused by starting two processes which both require use of the progress bars modal.");
+                "This exception was likely caused by starting two processes which both require use of the progress bars modal.");
         }
 
         running.setValue(true);
@@ -49,12 +53,14 @@ public class Stopwatch {
         return initTime;
     }
 
-    public long click() {
+    public long click()
+    {
         rollingAverageStorage[trackingIdx] = System.nanoTime();
 
         int prevIndex = trackingIdx - 1;
 
-        if (prevIndex <= -1){
+        if (prevIndex <= -1)
+        {
             prevIndex = ARR_SIZE - 1;
         }
 
@@ -63,12 +69,20 @@ public class Stopwatch {
         return difference;
     }
 
-    public long getInitTime() {return initTime;}
+    public long getInitTime()
+    {
+        return initTime;
+    }
 
-    public ReadOnlyBooleanProperty isRunningProperty(){return running;}
+    public ReadOnlyBooleanProperty isRunningProperty()
+    {
+        return running;
+    }
 
-    public long getElapsedTime() {
-        if (running.getValue()){
+    public long getElapsedTime()
+    {
+        if (running.getValue())
+        {
             //TODO: need to redo this if we want to support starting and stopping stopwatches
             return System.nanoTime() - initTime;
         }
@@ -76,8 +90,10 @@ public class Stopwatch {
         return manualElapsedTime;
     }
 
-    public long stop() {
-        if(!running.getValue()){
+    public long stop()
+    {
+        if (!running.getValue())
+        {
             return manualElapsedTime;
         }
         running.setValue(false);
@@ -86,15 +102,21 @@ public class Stopwatch {
         return manualElapsedTime;
     }
 
-    public long getAvgDifference(){
+    public long getAvgDifference()
+    {
         long recordedTimes = 0;
         int numToDivide = 0;
-        for(int i = 1; i < ARR_SIZE; ++i){
-            if (rollingAverageStorage[i] == initTime){break;}
+        for (int i = 1; i < ARR_SIZE; ++i)
+        {
+            if (rollingAverageStorage[i] == initTime)
+            {
+                break;
+            }
 
-            long difference = rollingAverageStorage[i] - rollingAverageStorage[i-1];
+            long difference = rollingAverageStorage[i] - rollingAverageStorage[i - 1];
 
-            if (difference > 0){
+            if (difference > 0)
+            {
                 recordedTimes += difference;
                 numToDivide++;
             }
