@@ -4,11 +4,13 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 
 import java.io.File;
@@ -82,6 +84,21 @@ public class Modal
     public void open()
     {
         stage.show();
+    }
+
+    public void requestClose()
+    {
+        requestClose(stage);
+    }
+
+    public static void requestClose(Node node)
+    {
+        requestClose(node.getScene().getWindow());
+    }
+
+    public static void requestClose(Window window)
+    {
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     private static FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException

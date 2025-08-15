@@ -17,8 +17,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
+import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -169,8 +168,6 @@ public class LightCalibrationController implements Initializable
 
     public void apply()
     {
-        // Close window and the onCloseRequest will take care of the rest.
-        Window window = root.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+        Modal.requestClose(root);
     }
 }

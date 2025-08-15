@@ -40,8 +40,6 @@ import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
-import kintsugi3d.builder.javafx.controllers.modals.ExportRequestController;
-import kintsugi3d.builder.javafx.controllers.modals.SpecularFitController;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -376,7 +374,6 @@ public class MainWindowController
                                 try
                                 {
                                     GraphicsRequestController requestUI = (GraphicsRequestController) createMethod.invoke(null, injectedStage);
-                                    requestUI.bind(javaFXState.getSettingsModel());
                                     requestUI.prompt(Rendering.getRequestQueue());
                                 }
                                 catch (IllegalAccessException | InvocationTargetException | RuntimeException e)
@@ -404,20 +401,6 @@ public class MainWindowController
             LOG.error("Failed to find export classes file:", e);
         }
         return foundExportClass;
-    }
-
-    public void file_exportGLTF()
-    {
-        try
-        {
-            GraphicsRequestController requestUI = ExportRequestController.create(window);
-            requestUI.bind(javaFXState.getSettingsModel());
-            requestUI.prompt(Rendering.getRequestQueue());
-        }
-        catch (IOException | RuntimeException e)
-        {
-            LOG.error("Error opening glTF export window", e);
-        }
     }
 
     public FramebufferView getFramebufferView()
@@ -478,68 +461,42 @@ public class MainWindowController
             javaFXState.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
     }
 
-    //Menubar->File
-
-    @FXML
-    private void file_createProject()
+    public void createProject()
     {
         ProjectIO.getInstance().createProject(window);
     }
 
-
-    @FXML
-    private void file_openProject()
+    public void openProject()
     {
         ProjectIO.getInstance().openProjectWithPrompt(window);
     }
 
-    @FXML
-    private void file_saveProject()
+    public void saveProject()
     {
         ProjectIO.getInstance().saveProject(window);
     }
 
-    @FXML
-    private void file_saveProjectAs()
+    public void saveProjectAs()
     {
         ProjectIO.getInstance().saveProjectAs(window);
     }
 
-    @FXML
-    private void file_closeProject()
+    public void closeProject()
     {
         ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
-    @FXML
-    private void specularFit()
-    {
-        try
-        {
-            GraphicsRequestController requestUI = SpecularFitController.create(this.window);
-            requestUI.bind(javaFXState.getSettingsModel());
-            requestUI.prompt(Rendering.getRequestQueue());
-
-        }
-        catch (Exception e)
-        {
-            ExceptionHandling.error("An error occurred handling request", e);
-        }
-    }
-
-    @FXML
-    private void file_exit()
+    public void exit()
     {
         WindowSynchronization.getInstance().quit();
     }
 
-    @FXML
-    private void help_userManual()
+    public void help_userManual()
     {
         userDocumentationHandler.run();
     }
 
-    public void openAboutModal()
+    public void about()
     {
         ExperienceManager.getInstance().getAbout().tryOpen();
     }
@@ -564,7 +521,17 @@ public class MainWindowController
         ExperienceManager.getInstance().getMaskOptions().tryOpen();
     }
 
-    public void help_console()
+    public void specularFit()
+    {
+        ExperienceManager.getInstance().getSpecularFit().tryOpen();
+    }
+
+    public void exportGLTF()
+    {
+        ExperienceManager.getInstance().getExport().tryOpen();
+    }
+
+    public void log()
     {
         ExperienceManager.getInstance().getLog().tryOpen();
     }
@@ -596,12 +563,12 @@ public class MainWindowController
         }
     }
 
-    public void file_removeInvalidReferences()
+    public void removeInvalidReferences()
     {
         RecentProjects.removeInvalidReferences();
     }
 
-    public void file_removeAllReferences()
+    public void removeAllReferences()
     {
         RecentProjects.removeAllReferences();
     }

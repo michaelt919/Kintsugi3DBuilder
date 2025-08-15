@@ -28,6 +28,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.javafx.Modal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,8 +86,7 @@ public class PageFrameController
 
     private void close()
     {
-        Window window = currentPage.getController().getRootNode().getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+        Modal.requestClose(currentPage.getController().getRootNode());
     }
 
     private void onCloseRequest(WindowEvent windowEvent)
@@ -198,8 +198,7 @@ public class PageFrameController
                             confirmCallback.run();
                         }
 
-                        Window window = currentPage.getController().getRootNode().getScene().getWindow();
-                        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+                        Modal.requestClose(currentPage.getController().getRootNode());
                     }
                 }
             }

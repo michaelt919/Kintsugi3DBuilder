@@ -11,18 +11,9 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.gl.core.Context;
 
 public interface GraphicsRequestController
 {
     <ContextType extends Context<ContextType>> void prompt(GraphicsRequestQueue<ContextType> requestQueue);
-
-    /**
-     * Optional: bind UI elements to settings properties
-     * @param injectedSettingsModel
-     */
-    default void bind(SettingsModelImpl injectedSettingsModel)
-    {
-    }
 }

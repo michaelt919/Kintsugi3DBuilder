@@ -13,35 +13,27 @@ package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import javafx.scene.layout.Pane;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.GraphicsRequestController;
-import kintsugi3d.builder.core.GraphicsRequestQueue;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
-import kintsugi3d.gl.core.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
+import java.util.ResourceBundle;
 
-public class SpecularFitController implements GraphicsRequestController
+public class SpecularFitController implements Initializable
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitController.class);
+    @FXML private Pane root;
 
     @FXML private Accordion advancedAccordion;
     @FXML private CheckBox smithCheckBox;
@@ -65,130 +57,98 @@ public class SpecularFitController implements GraphicsRequestController
 
     @FXML private Button runButton;
 
-    private Stage stage;
-
-    public static SpecularFitController create(Window window) throws IOException
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle)
     {
-        String fxmlFileName = "fxml/modals/SpecularFit.fxml";
-        URL url = SpecularFitController.class.getClassLoader().getResource(fxmlFileName);
-        assert url != null : "Can't find " + fxmlFileName;
-
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent parent = fxmlLoader.load();
-        SpecularFitController controller = fxmlLoader.getController();
-
-        controller.stage = new Stage();
-        controller.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        controller.stage.setTitle("Process Textures");
-        controller.stage.setScene(new Scene(parent));
-        controller.stage.initOwner(window);
-
-        return controller;
+        advancedAccordion.expandedPaneProperty().addListener(
+            (observable, oldValue, newValue) ->
+                // Use Platform.runLater since the scene layout seems to not be updated yet at this point.
+                Platform.runLater(root.getScene().getWindow()::sizeToScene));
     }
 
     @FXML
-    public void cancelButtonAction()
+    public void run()
     {
-        stage.close();
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        {
+            return;
+        }
+
+        SpecularFitRequestParams settings = new SpecularFitRequestParams(
+            Integer.parseInt(widthTextField.getText()),
+            Integer.parseInt(heightTextField.getText()));
+
+        int basisCount = Integer.parseInt(basisCountTextField.getText());
+        settings.getSpecularBasisSettings().setBasisCount(basisCount);
+        int basisResolution = Integer.parseInt(mfdResolutionTextField.getText());
+        settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
+
+        settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
+        settings.getExportSettings().setOpenViewerOnceComplete(openViewerOnComplete.isSelected());
+
+        // Specular / general settings
+        double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
+        settings.setConvergenceTolerance(convergenceTolerance);
+
+        double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
+        int specularMinWidthDiscrete = (int) Math.round(specularMinWidth * basisResolution);
+        settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
+
+        double specularMaxWidth = Double.parseDouble(specularSmoothnessTextField.getText());
+        settings.getSpecularBasisSettings().setSpecularMaxWidth((int) Math.round(specularMaxWidth * basisResolution));
+
+        double specularComplexity = Double.parseDouble(specularComplexityTextField.getText());
+        settings.getSpecularBasisSettings().setBasisComplexity(
+            (int) Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
+
+        double metallicity = Double.parseDouble(metallicityTextField.getText());
+        settings.getSpecularBasisSettings().setMetallicity(metallicity);
+
+        settings.setShouldIncludeConstantTerm(translucencyCheckBox.isSelected());
+
+        // Normal estimation settings
+        boolean normalRefinementEnabled = normalRefinementCheckBox.isSelected();
+        settings.getNormalOptimizationSettings().setNormalRefinementEnabled(normalRefinementEnabled);
+        double minNormalDamping = Double.parseDouble(minNormalDampingTextField.getText());
+        // Negative values shouldn't break anything here.
+        settings.getNormalOptimizationSettings().setMinNormalDamping(minNormalDamping);
+        int normalSmoothingIterations = Integer.parseInt(normalSmoothingIterationsTextField.getText());
+        // Negative values shouldn't break anything here.
+        settings.getNormalOptimizationSettings().setNormalSmoothingIterations(normalSmoothingIterations);
+
+        // Settings which shouldn't usually need to be changed
+        settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
+        boolean levenbergMarquardtEnabled = true;
+        settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
+        int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
+        settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
+        settings.getReconstructionSettings().setReconstructAll(false);
+
+        // glTF export settings
+        settings.getExportSettings().setGlTFEnabled(true);
+        settings.getExportSettings().setGlTFPackTextures(false);
+
+        // Image cache settings
+        settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
+
+        SpecularFitRequest request = new SpecularFitRequest(settings);
+        request.setRequestCompleteCallback(() ->
+        {
+            //enable shaders which only work after processing textures
+            MainWindowController.getInstance().setToggleableShaderDisable(false);
+            MainWindowController.getInstance().updateShaderList();
+            MainWindowController.getInstance().selectMaterialBasisShader();
+        });
+
+        request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));
+
+        // Run as a graphics request that optimizes from scratch.
+        Rendering.getRequestQueue().addGraphicsRequest(request);
     }
 
-    @Override
-    public <ContextType extends Context<ContextType>> void prompt(GraphicsRequestQueue<ContextType> requestQueue)
+    @FXML
+    public void cancel()
     {
-        advancedAccordion.expandedPaneProperty().addListener((observable, oldValue, newValue) ->
-            // Use Platform.runLater since the scene layout seems to not be updated yet at this point.
-            Platform.runLater(stage::sizeToScene));
-
-        stage.show();
-
-        runButton.setOnAction(event ->
-        {
-            //stage.close();
-
-            if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
-            {
-                return;
-            }
-
-            SpecularFitRequestParams settings = new SpecularFitRequestParams(
-                Integer.parseInt(widthTextField.getText()),
-                Integer.parseInt(heightTextField.getText()));
-
-            int basisCount = Integer.parseInt(basisCountTextField.getText());
-            settings.getSpecularBasisSettings().setBasisCount(basisCount);
-            int basisResolution = Integer.parseInt(mfdResolutionTextField.getText());
-            settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
-
-            settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
-            settings.getExportSettings().setOpenViewerOnceComplete(openViewerOnComplete.isSelected());
-
-            // Specular / general settings
-            double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
-            settings.setConvergenceTolerance(convergenceTolerance);
-
-            double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
-            int specularMinWidthDiscrete = (int) Math.round(specularMinWidth * basisResolution);
-            settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
-
-            double specularMaxWidth = Double.parseDouble(specularSmoothnessTextField.getText());
-            settings.getSpecularBasisSettings().setSpecularMaxWidth((int) Math.round(specularMaxWidth * basisResolution));
-
-            double specularComplexity = Double.parseDouble(specularComplexityTextField.getText());
-            settings.getSpecularBasisSettings().setBasisComplexity(
-                (int) Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
-
-            double metallicity = Double.parseDouble(metallicityTextField.getText());
-            settings.getSpecularBasisSettings().setMetallicity(metallicity);
-
-            settings.setShouldIncludeConstantTerm(translucencyCheckBox.isSelected());
-
-            // Normal estimation settings
-            boolean normalRefinementEnabled = normalRefinementCheckBox.isSelected();
-            settings.getNormalOptimizationSettings().setNormalRefinementEnabled(normalRefinementEnabled);
-            double minNormalDamping = Double.parseDouble(minNormalDampingTextField.getText());
-            // Negative values shouldn't break anything here.
-            settings.getNormalOptimizationSettings().setMinNormalDamping(minNormalDamping);
-            int normalSmoothingIterations = Integer.parseInt(normalSmoothingIterationsTextField.getText());
-            // Negative values shouldn't break anything here.
-            settings.getNormalOptimizationSettings().setNormalSmoothingIterations(normalSmoothingIterations);
-
-            // Settings which shouldn't usually need to be changed
-            settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
-            boolean levenbergMarquardtEnabled = true;
-            settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
-            int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
-            settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
-            settings.getReconstructionSettings().setReconstructAll(false);
-
-            // glTF export settings
-            settings.getExportSettings().setGlTFEnabled(true);
-            settings.getExportSettings().setGlTFPackTextures(false);
-
-            // Image cache settings
-            settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
-
-            SpecularFitRequest request = new SpecularFitRequest(settings);
-            request.setRequestCompleteCallback(() ->
-            {
-                //enable shaders which only work after processing textures
-                MainWindowController.getInstance().setToggleableShaderDisable(false);
-                MainWindowController.getInstance().updateShaderList();
-                MainWindowController.getInstance().selectMaterialBasisShader();
-            });
-            
-            request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));
-
-//            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
-//            {
-//                // Run as a "Graphics request" that doesn't require project graphics resources to be loaded (since we're using a prior solution)
-//                settings.setPriorSolutionDirectory(new File(priorSolutionField.getText()));
-//                requestQueue.addGraphicsRequest(request);
-//            }
-//            else
-//            {
-            // Run as a graphics request that optimizes from scratch.
-            requestQueue.addGraphicsRequest(request);
-//            }
-        });
+        Modal.requestClose(root);
     }
 }

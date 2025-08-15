@@ -13,18 +13,18 @@ package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
+import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.image.Image;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.stage.Window;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -33,122 +33,89 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ResourceBundle;
 
-public class ExportRequestController implements GraphicsRequestController
+public class ExportRequestController implements Initializable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportRequestController.class);
 
     //Initialize all the variables in the FXML file
-    @FXML private Kintsugi3DBuilderState modelAccess;
-    @FXML private Stage stage;
-    @FXML private Button runButton;
     //    @FXML private CheckBox combineWeightsCheckBox;
+    @FXML private Pane root;
     @FXML private CheckBox generateLowResolutionCheckBox;
     //    @FXML private CheckBox glTFEnabledCheckBox;
     @FXML private CheckBox glTFPackTexturesCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
-    private File currentDirectoryFile;
+
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
 
-
-    public static ExportRequestController create(Window window) throws IOException
-    {
-        String fxmlFileName = "fxml/modals/export/ExportRequestUI.fxml";
-        URL url = ExportRequestController.class.getClassLoader().getResource(fxmlFileName);
-        assert url != null : "Can't find " + fxmlFileName;
-
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent parent = fxmlLoader.load();
-        ExportRequestController exportRequest = fxmlLoader.getController();
-
-        if (Global.state().getIOModel().getLoadedProjectFile() != null)
-        {
-            exportRequest.currentDirectoryFile = Global.state().getIOModel().getLoadedProjectFile().getParentFile();
-        }
-
-        exportRequest.stage = new Stage();
-        exportRequest.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        exportRequest.stage.setTitle("Export glTF");
-        exportRequest.stage.setScene(new Scene(parent));
-        exportRequest.stage.initOwner(window);
-        return exportRequest;
-    }
+    private ExportSettings settings;
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(GraphicsRequestQueue<ContextType> requestQueue)
+    public void initialize(URL url, ResourceBundle resourceBundle)
     {
-        ExportSettings settings = new ExportSettings();
-
-        stage.show();
+        settings = new ExportSettings();
 
         //Calls a function to set settings to defaults
-        setAllVariables(settings);
-
-        //Sets FileChooser defaults
-        if (currentDirectoryFile != null)
-        {
-            objFileChooser.setInitialDirectory(currentDirectoryFile);
-            objFileChooser.setInitialFileName(currentDirectoryFile.getName());
-        }
+        setAllVariables();
 
         objFileChooser.setTitle("Save project");
         objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
+    }
 
-        //Just sets the values in settings doesn't do anything else yet
-        runButton.setOnAction(event ->
+    public void run()
+    {
+        //Updates settings to equal what widget is displaying
+        saveAllVariables();
+
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
-            //Updates settings to equal what widget is displaying
-            saveAllVariables(settings);
+            return;
+        }
 
-            if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        try
+        {
+            exportLocationFile = objFileChooser.showSaveDialog(root.getScene().getWindow());
+            if (exportLocationFile != null)
             {
-                return;
-            }
-
-            try
-            {
-                exportLocationFile = objFileChooser.showSaveDialog(stage);
-                if (exportLocationFile != null)
+                Rendering.getRequestQueue().addGraphicsRequest(new ObservableProjectGraphicsRequest()
                 {
-                    requestQueue.addGraphicsRequest(new ObservableProjectGraphicsRequest()
+                    @Override
+                    public <ContextType extends Context<ContextType>> void executeRequest(
+                        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
                     {
-                        @Override
-                        public <ContextType extends Context<ContextType>> void executeRequest(
-                            ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+                        if (settings.isGlTFEnabled())
                         {
-                            if (settings.isGlTFEnabled())
-                            {
-                                renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
-                                modelAccess.getIOModel().saveEssentialMaterialFiles(exportLocationFile.getParentFile(), null);
-                                // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
-                                // and unpacked weight maps for the user export as those are only intended to be used internally.
-                            }
-
-                            if (settings.isOpenViewerOnceComplete())
-                            {
-                                Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
-                            }
+                            renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
+                            Global.state().getIOModel().saveEssentialMaterialFiles(exportLocationFile.getParentFile(), null);
+                            // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
+                            // and unpacked weight maps for the user export as those are only intended to be used internally.
                         }
-                    });
-                }
+
+                        if (settings.isOpenViewerOnceComplete())
+                        {
+                            Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
+                        }
+                    }
+                });
             }
-            catch (Exception ex)
-            {
-                LOG.error("Project didn't save correctly", ex);
-            }
-        });
+        }
+        catch (Exception ex)
+        {
+            LOG.error("Project didn't save correctly", ex);
+        }
     }
 
     @FXML //closes the stage
-    public void cancelButtonAction()
+    public void cancel()
     {
-        stage.close();
+        Modal.requestClose(root);
     }
 
     //Sets all the settings values on the widget to equal what they are currently
-    public void setAllVariables(ExportSettings settings)
+    public void setAllVariables()
     {
 //        combineWeightsCheckBox.setSelected(settings.isCombineWeights());
         generateLowResolutionCheckBox.setSelected(settings.isGenerateLowResTextures());
@@ -161,7 +128,7 @@ public class ExportRequestController implements GraphicsRequestController
     }
 
     //sets the settings to what the values are set on the widget
-    public void saveAllVariables(ExportSettings settings)
+    public void saveAllVariables()
     {
 //        settings.setCombineWeights(combineWeightsCheckBox.isSelected());
         settings.setGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
@@ -171,5 +138,15 @@ public class ExportRequestController implements GraphicsRequestController
         settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
         System.out.println(minimumTextureResolutionComboBox.getValue());
 
+    }
+
+    public void setCurrentDirectoryFile(File currentDirectoryFile)
+    {
+        // Sets FileChooser defaults
+        if (currentDirectoryFile != null)
+        {
+            objFileChooser.setInitialDirectory(currentDirectoryFile);
+            objFileChooser.setInitialFileName(currentDirectoryFile.getName());
+        }
     }
 }

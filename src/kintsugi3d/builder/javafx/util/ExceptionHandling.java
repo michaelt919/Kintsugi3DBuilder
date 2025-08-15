@@ -23,7 +23,7 @@ public class ExceptionHandling
             Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
                 // Use the menubar's console open function to prevent 2 console windows from appearing
-                MainWindowController.getInstance().help_console();
+                MainWindowController.getInstance().log();
             });
             alert.show();
         });

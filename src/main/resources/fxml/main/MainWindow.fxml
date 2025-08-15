@@ -23,35 +23,35 @@
                 <children>
                     <MenuBar fx:id="mainMenubar" styleClass="menu-bar" useSystemMenuBar="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                         <Menu mnemonicParsing="false" text="File">
-                            <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create New Project">
+                            <MenuItem mnemonicParsing="false" onAction="#createProject" text="Create New Project">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                             </MenuItem>
                             <MenuItem mnemonicParsing="false" onAction="#file_hotSwap" text="Hot Swap..." visible="false">
                             </MenuItem>
-                            <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open Project">
+                            <MenuItem mnemonicParsing="false" onAction="#openProject" text="Open Project">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                             </MenuItem>
-                            <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save">
+                            <MenuItem mnemonicParsing="false" onAction="#saveProject" text="Save">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                             </MenuItem>
-                            <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save As">
+                            <MenuItem mnemonicParsing="false" onAction="#saveProjectAs" text="Save As">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                             </MenuItem>
-                            <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close Project">
+                            <MenuItem mnemonicParsing="false" onAction="#closeProject" text="Close Project">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                             </MenuItem>
                             <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" onAction="#file_exportGLTF" text="Export glTF..." />
+                            <MenuItem mnemonicParsing="false" onAction="#exportGLTF" text="Export glTF..." />
                             <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export" />
                             <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false" />
                             <SeparatorMenuItem />
@@ -62,12 +62,12 @@
                             </Menu>
                      <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
                         <items>
-                            <CustomMenuItem fx:id="removeSomeRefsCustMenuItem" onAction="#file_removeInvalidReferences">
+                            <CustomMenuItem fx:id="removeSomeRefsCustMenuItem" onAction="#removeInvalidReferences">
                                 <content>
                                     <Label text="Clear Missing Projects" />
                                 </content>
                             </CustomMenuItem>
-                            <CustomMenuItem fx:id="removeAllRefsCustMenuItem" onAction="#file_removeAllReferences">
+                            <CustomMenuItem fx:id="removeAllRefsCustMenuItem" onAction="#removeAllReferences">
                                 <content>
                                     <Label text="Clear All Projects" />
                                 </content>
@@ -77,9 +77,9 @@
 
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <MenuItem mnemonicParsing="false" onAction="#openSystemSettingsModal" text="Settings..." />
-                     <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
+                     <MenuItem mnemonicParsing="false" onAction="#about" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
-                     <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
+                     <MenuItem mnemonicParsing="false" onAction="#exit" text="Exit" />
                      <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" visible="false" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="true">
@@ -103,7 +103,7 @@
                                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                     </accelerator>
                                 </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#file_exportGLTF" text="Export glTF..." />
+                                <MenuItem mnemonicParsing="false" onAction="#exportGLTF" text="Export glTF..." />
                                 <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
                             </items>
                         </Menu>
@@ -197,7 +197,7 @@
                         </Menu>
                         <Menu text="Help">
                             <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
-                            <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
+                            <MenuItem mnemonicParsing="false" onAction="#log" text="View Log" />
                             <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" visible="false" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="Lighting" visible="false">

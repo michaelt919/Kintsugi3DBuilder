@@ -12,6 +12,8 @@ public final class ExperienceManager
     private final LightCalibration lightCalibration = new LightCalibration();
     private final MaskOptions maskOptions = new MaskOptions();
     private final ToneCalibration toneCalibration = new ToneCalibration();
+    private final SpecularFit specularFit = new SpecularFit();
+    private final Export export = new Export();
     private final Log log = new Log();
     private final SystemSettings systemSettings = new SystemSettings();
     private final About about = new About();
@@ -36,6 +38,8 @@ public final class ExperienceManager
         lightCalibration.initialize(parentWindow, state);
         maskOptions.initialize(parentWindow, state);
         toneCalibration.initialize(parentWindow, state);
+        specularFit.initialize(parentWindow, state);
+        export.initialize(parentWindow, state);
         log.initialize(parentWindow, state);
         systemSettings.initialize(parentWindow, state);
         about.initialize(parentWindow, state);
@@ -45,6 +49,8 @@ public final class ExperienceManager
             .or(lightCalibration.getModal().getOpenObservable())
             .or(maskOptions.getModal().getOpenObservable())
             .or(toneCalibration.getModal().getOpenObservable())
+            .or(specularFit.getModal().getOpenObservable())
+            .or(export.getModal().getOpenObservable())
             .or(log.getModal().getOpenObservable())
             .or(systemSettings.getModal().getOpenObservable())
             .or(about.getModal().getOpenObservable());
@@ -83,6 +89,16 @@ public final class ExperienceManager
     public ToneCalibration getToneCalibration()
     {
         return toneCalibration;
+    }
+
+    public SpecularFit getSpecularFit()
+    {
+        return specularFit;
+    }
+
+    public Export getExport()
+    {
+        return export;
     }
 
     public Log getLog()
