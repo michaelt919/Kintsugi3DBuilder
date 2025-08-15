@@ -16,7 +16,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kintsugi3d.builder.export.general.*?>
-<GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" stylesheets="@../../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GeneralRenderRequestController">
+<GridPane fx:id="root" styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" stylesheets="@../../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GenericRenderRequestController">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
     </padding>
@@ -77,8 +77,8 @@
     <Label text="Height:" GridPane.columnIndex="2" GridPane.rowIndex="6" />
     <TextField fx:id="heightTextField" prefHeight="25.0" prefWidth="56.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
 
-    <Button fx:id="runButton" mnemonicParsing="false" text="Run" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
-    <Button mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+    <Button mnemonicParsing="false" onAction="#run" text="Run" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
+    <Button mnemonicParsing="false" onAction="#cancel" text="Cancel" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
 
     <columnConstraints>
         <ColumnConstraints />

@@ -11,60 +11,29 @@
 
 package kintsugi3d.builder.export.resample;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
+import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.GraphicsRequestController;
-import kintsugi3d.builder.core.GraphicsRequestQueue;
-import kintsugi3d.gl.core.Context;
+import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.util.RecentProjects;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 
-public class ResampleRequestController implements GraphicsRequestController
+public class ResampleRequestController
 {
+    @FXML private Pane root;
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
     @FXML private TextField exportDirectoryField;
     @FXML private TextField targetVSetFileField;
-    @FXML private Button runButton;
 
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
-
-    private Stage stage;
-
-    public static ResampleRequestController create(Window window) throws IOException
-    {
-        String fxmlFileName = "fxml/modals/export/ResampleRequestUI.fxml";
-        URL url = ResampleRequestController.class.getClassLoader().getResource(fxmlFileName);
-        assert url != null : "Can't find " + fxmlFileName;
-
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent parent = fxmlLoader.load();
-        ResampleRequestController resampleRequestUI = fxmlLoader.getController();
-
-        resampleRequestUI.stage = new Stage();
-        resampleRequestUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        resampleRequestUI.stage.setTitle("Resample request");
-        resampleRequestUI.stage.setScene(new Scene(parent));
-        resampleRequestUI.stage.initOwner(window);
-
-        return resampleRequestUI;
-    }
 
     @FXML
     private void exportDirectoryButtonAction()
@@ -79,7 +48,7 @@ public class ResampleRequestController implements GraphicsRequestController
             File currentValue = new File(exportDirectoryField.getText());
             this.directoryChooser.setInitialDirectory(currentValue);
         }
-        File file = this.directoryChooser.showDialog(stage.getOwner());
+        File file = this.directoryChooser.showDialog(root.getScene().getWindow());
         if (file != null)
         {
             exportDirectoryField.setText(file.toString());
@@ -103,7 +72,7 @@ public class ResampleRequestController implements GraphicsRequestController
             this.fileChooser.setInitialDirectory(currentValue.getParentFile());
             this.fileChooser.setInitialFileName(currentValue.getName());
         }
-        File file = this.fileChooser.showOpenDialog(stage.getOwner());
+        File file = this.fileChooser.showOpenDialog(root.getScene().getWindow());
         if (file != null)
         {
             targetVSetFileField.setText(file.toString());
@@ -112,30 +81,24 @@ public class ResampleRequestController implements GraphicsRequestController
     }
 
     @FXML
-    public void cancelButtonAction(ActionEvent actionEvent)
+    public void cancel()
     {
-        stage.close();
+        Modal.requestClose(root);
     }
 
-    @Override
-    public <ContextType extends Context<ContextType>> void prompt(GraphicsRequestQueue<ContextType> requestQueue)
+    @FXML
+    public void run()
     {
-        stage.show();
-
-        runButton.setOnAction(event ->
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
-            //stage.close();
+            return;
+        }
 
-            if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
-                return;
-            }
-
-            requestQueue.addGraphicsRequest(
-                new ResampleRequest(
-                    Integer.parseInt(widthTextField.getText()),
-                    Integer.parseInt(heightTextField.getText()),
-                    new File(targetVSetFileField.getText()),
-                    new File(exportDirectoryField.getText())));
-        });
+        Rendering.getRequestQueue().addGraphicsRequest(
+            new ResampleRequest(
+                Integer.parseInt(widthTextField.getText()),
+                Integer.parseInt(heightTextField.getText()),
+                new File(targetVSetFileField.getText()),
+                new File(exportDirectoryField.getText())));
     }
 }

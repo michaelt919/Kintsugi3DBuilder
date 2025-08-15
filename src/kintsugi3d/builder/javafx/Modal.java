@@ -36,7 +36,7 @@ public class Modal
         this.parentWindow = parentWindow;
     }
 
-    public BooleanExpression getOpenObservable()
+    public BooleanExpression getOpenProperty()
     {
         return openProperty;
     }

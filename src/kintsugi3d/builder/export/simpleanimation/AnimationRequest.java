@@ -23,23 +23,14 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-public abstract class SimpleAnimationRequestBase implements ObservableProjectGraphicsRequest
+public abstract class AnimationRequest implements ObservableProjectGraphicsRequest
 {
     private final int width;
     private final int height;
     private final int frameCount;
     private final File exportPath;
 
-    public interface Builder
-    {
-        Builder setWidth(int width);
-        Builder setHeight(int height);
-        Builder setFrameCount(int frameCount);
-        Builder setExportPath(File exportPath);
-        <ContextType extends Context<ContextType>> ObservableProjectGraphicsRequest create();
-    }
-
-    protected abstract static class BuilderBase implements Builder
+    protected abstract static class BuilderBase
     {
         private int width;
         private int height;
@@ -66,36 +57,34 @@ public abstract class SimpleAnimationRequestBase implements ObservableProjectGra
             return exportPath;
         }
 
-        @Override
-        public Builder setWidth(int width)
+        public BuilderBase setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
-        @Override
-        public Builder setHeight(int height)
+        public BuilderBase setHeight(int height)
         {
             this.height = height;
             return this;
         }
 
-        @Override
-        public Builder setFrameCount(int frameCount)
+        public BuilderBase setFrameCount(int frameCount)
         {
             this.frameCount = frameCount;
             return this;
         }
 
-        @Override
-        public Builder setExportPath(File exportPath)
+        public BuilderBase setExportPath(File exportPath)
         {
             this.exportPath = exportPath;
             return this;
         }
+
+        public abstract AnimationRequest create();
     }
 
-    protected SimpleAnimationRequestBase(int width, int height, int frameCount, File exportPath)
+    protected AnimationRequest(int width, int height, int frameCount, File exportPath)
     {
         this.width = width;
         this.height = height;

@@ -30,10 +30,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.GraphicsRequestController;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
@@ -41,6 +39,7 @@ import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
+import kintsugi3d.builder.javafx.experience.ExportRender;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.javafx.FramebufferView;
@@ -50,10 +49,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -162,18 +157,7 @@ public class MainWindowController
 
         this.leftBarController.init(javaFXState.getTabModels());
 
-        boolean foundExportClass = false;
-        File exportClassDefinitionFile = new File("export-classes.txt");
-        if (exportClassDefinitionFile.exists())
-        {
-            foundExportClass = loadExportClasses(injectedStage, exportClassDefinitionFile);
-        }
-
-        if (!foundExportClass)
-        {
-            exportMenu.setVisible(false);
-        }
-
+        initExportRenderMenu();
         initToggleGroups();
         bindCheckMenuItems();
 
@@ -230,7 +214,6 @@ public class MainWindowController
             availableShaders.get(idx).setSelected(true);
         });
 
-
         setToggleableShaderDisable(true);
 
         //add tooltips to recent projects list modifiers
@@ -240,6 +223,25 @@ public class MainWindowController
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
+
+    private void initExportRenderMenu()
+    {
+        List<ExportRender> exportRenderList = ExperienceManager.getInstance().getExportRenderManager().getList();
+
+        if (exportRenderList.isEmpty())
+        {
+            exportMenu.setVisible(false);
+        }
+        else
+        {
+            for (ExportRender exportRender : exportRenderList)
+            {
+                MenuItem newItem = new MenuItem(exportRender.getShortName());
+                newItem.setOnAction(event -> exportRender.tryOpen());
+                exportMenu.getItems().add(newItem);
+            }
+        }
     }
 
     /**
@@ -344,63 +346,6 @@ public class MainWindowController
                 flyout.getItems().add(i, item);
             }
         }
-    }
-
-    private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile)
-    {
-        boolean foundExportClass = false;
-        try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
-        {
-            scanner.useLocale(Locale.US);
-
-            while (scanner.hasNext())
-            {
-                String className = scanner.next();
-
-                if (scanner.hasNextLine())
-                {
-                    String menuName = scanner.nextLine().trim();
-
-                    try
-                    {
-                        Class<?> requestUIClass = Class.forName(className);
-                        Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class);
-                        if (GraphicsRequestController.class.isAssignableFrom(createMethod.getReturnType())
-                            && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
-                        {
-                            MenuItem newItem = new MenuItem(menuName);
-                            newItem.setOnAction(event ->
-                            {
-                                try
-                                {
-                                    GraphicsRequestController requestUI = (GraphicsRequestController) createMethod.invoke(null, injectedStage);
-                                    requestUI.prompt(Rendering.getRequestQueue());
-                                }
-                                catch (IllegalAccessException | InvocationTargetException | RuntimeException e)
-                                {
-                                    LOG.error("An error has occurred:", e);
-                                }
-                            });
-                            exportMenu.getItems().add(newItem);
-                            foundExportClass = true;
-                        }
-                        else
-                        {
-                            System.err.println("create() method for " + requestUIClass.getName() + " is invalid.");
-                        }
-                    }
-                    catch (ClassNotFoundException | NoSuchMethodException e)
-                    {
-                        LOG.error("An error has occurred:", e);
-                    }
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            LOG.error("Failed to find export classes file:", e);
-        }
-        return foundExportClass;
     }
 
     public FramebufferView getFramebufferView()
@@ -528,7 +473,7 @@ public class MainWindowController
 
     public void exportGLTF()
     {
-        ExperienceManager.getInstance().getExport().tryOpen();
+        ExperienceManager.getInstance().getExportModel().tryOpen();
     }
 
     public void log()

@@ -15,11 +15,10 @@ import kintsugi3d.gl.vecmath.Matrix4;
 
 import java.io.File;
 
-public final class OrbitAnimationRequest extends SimpleAnimationRequestBase
+public final class OrbitAnimationRequest extends AnimationRequest
 {
-    protected static class BuilderImplementation extends BuilderBase
+    protected static class Builder extends BuilderBase
     {
-        @Override
         public OrbitAnimationRequest create()
         {
             return new OrbitAnimationRequest(getWidth(), getHeight(), getFrameCount(), getExportPath());

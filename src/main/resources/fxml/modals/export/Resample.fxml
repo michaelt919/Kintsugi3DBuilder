@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
-<AnchorPane styleClass="modal-root" prefHeight="155.0" prefWidth="555.0" stylesheets="@../../kintsugiStyling.css"
+<AnchorPane fx:id="root" styleClass="modal-root" prefHeight="155.0" prefWidth="555.0" stylesheets="@../../kintsugiStyling.css"
             xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="kintsugi3d.builder.export.resample.ResampleRequestController">
    <Label layoutX="13.0" layoutY="46.0" text="Target view set file:"/>
@@ -24,10 +24,10 @@
            text="Choose directory..."/>
    <Button layoutX="428.0" layoutY="42.0" mnemonicParsing="false" onAction="#targetVSetFileButtonAction"
            text="Choose file..."/>
-   <Button fx:id="runButton" layoutX="16.0" layoutY="117.0" mnemonicParsing="false" text="Run"/>
+   <Button layoutX="16.0" layoutY="117.0" mnemonicParsing="false" onAction="#run" text="Run"/>
    <Label layoutX="13.0" layoutY="78.0" text="Width:"/>
    <TextField fx:id="widthTextField" layoutX="53.0" layoutY="74.0" prefWidth="56.0"/>
    <Label layoutX="122.0" layoutY="78.0" text="Height:"/>
    <TextField fx:id="heightTextField" layoutX="167.0" layoutY="74.0" prefHeight="25.0" prefWidth="56.0"/>
-   <Button layoutX="64.0" layoutY="117.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel"/>
+   <Button layoutX="64.0" layoutY="117.0" mnemonicParsing="false" onAction="#cancel" text="Cancel"/>
 </AnchorPane>

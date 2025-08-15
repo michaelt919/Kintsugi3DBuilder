@@ -13,10 +13,12 @@ public final class ExperienceManager
     private final MaskOptions maskOptions = new MaskOptions();
     private final ToneCalibration toneCalibration = new ToneCalibration();
     private final SpecularFit specularFit = new SpecularFit();
-    private final Export export = new Export();
+    private final ExportModel exportModel = new ExportModel();
     private final Log log = new Log();
     private final SystemSettings systemSettings = new SystemSettings();
     private final About about = new About();
+
+    private final ExportRenderManager exportRenderManager = new ExportRenderManager();
 
     private BooleanExpression anyModalOpen;
 
@@ -39,21 +41,23 @@ public final class ExperienceManager
         maskOptions.initialize(parentWindow, state);
         toneCalibration.initialize(parentWindow, state);
         specularFit.initialize(parentWindow, state);
-        export.initialize(parentWindow, state);
+        exportModel.initialize(parentWindow, state);
         log.initialize(parentWindow, state);
         systemSettings.initialize(parentWindow, state);
         about.initialize(parentWindow, state);
+        exportRenderManager.initialize(parentWindow, state);
 
-        anyModalOpen = createProject.getModal().getOpenObservable()
-            .or(objectOrientation.getModal().getOpenObservable())
-            .or(lightCalibration.getModal().getOpenObservable())
-            .or(maskOptions.getModal().getOpenObservable())
-            .or(toneCalibration.getModal().getOpenObservable())
-            .or(specularFit.getModal().getOpenObservable())
-            .or(export.getModal().getOpenObservable())
-            .or(log.getModal().getOpenObservable())
-            .or(systemSettings.getModal().getOpenObservable())
-            .or(about.getModal().getOpenObservable());
+        anyModalOpen = createProject.getModal().getOpenProperty()
+            .or(objectOrientation.getModal().getOpenProperty())
+            .or(lightCalibration.getModal().getOpenProperty())
+            .or(maskOptions.getModal().getOpenProperty())
+            .or(toneCalibration.getModal().getOpenProperty())
+            .or(specularFit.getModal().getOpenProperty())
+            .or(exportModel.getModal().getOpenProperty())
+            .or(log.getModal().getOpenProperty())
+            .or(systemSettings.getModal().getOpenProperty())
+            .or(about.getModal().getOpenProperty())
+            .or(exportRenderManager.getAnyModalOpenProperty());
     }
 
     boolean isAnyModalOpen()
@@ -96,9 +100,9 @@ public final class ExperienceManager
         return specularFit;
     }
 
-    public Export getExport()
+    public ExportModel getExportModel()
     {
-        return export;
+        return exportModel;
     }
 
     public Log getLog()
@@ -114,5 +118,10 @@ public final class ExperienceManager
     public About getAbout()
     {
         return about;
+    }
+
+    public ExportRenderManager getExportRenderManager()
+    {
+        return exportRenderManager;
     }
 }

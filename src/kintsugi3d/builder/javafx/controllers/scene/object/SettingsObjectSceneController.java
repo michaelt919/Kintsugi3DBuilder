@@ -33,8 +33,6 @@ public class SettingsObjectSceneController implements Initializable
 {
     @FXML private VBox root;
 
-    @FXML private Button updateOrientationViewButton;
-
     @FXML private TextField xCenterTextField;
     @FXML private TextField yCenterTextField;
     @FXML private TextField zCenterTextField;

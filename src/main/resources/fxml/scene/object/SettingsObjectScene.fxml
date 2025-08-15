@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <VBox styleClass="vbox" fx:id="root" prefWidth="400.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController">
-   <Button fx:id="updateOrientationViewButton" mnemonicParsing="false" onAction="#onUpdateOrientationView">Select orientation reference view</Button>
+   <Button mnemonicParsing="false" onAction="#onUpdateOrientationView">Select orientation reference view</Button>
    <TitledPane styleClass="titled-pane" animated="false" text="Center">
       <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>

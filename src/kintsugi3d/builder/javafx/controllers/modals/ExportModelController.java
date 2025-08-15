@@ -35,9 +35,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class ExportRequestController implements Initializable
+public class ExportModelController implements Initializable
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ExportRequestController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
     //Initialize all the variables in the FXML file
     //    @FXML private CheckBox combineWeightsCheckBox;

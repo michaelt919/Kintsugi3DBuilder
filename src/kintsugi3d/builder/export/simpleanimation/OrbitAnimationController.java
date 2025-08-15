@@ -9,52 +9,53 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.export.screenshot;
+package kintsugi3d.builder.export.simpleanimation;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
-import javafx.stage.FileChooser;
+import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.export.screenshot.ScreenshotRequest.Builder;
 import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.util.RecentProjects;
 
 import java.io.File;
 
-public class ScreenshotController
+public class OrbitAnimationController
 {
     @FXML private Pane root;
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
-    @FXML private TextField exportFileField;
+    @FXML private TextField exportDirectoryField;
+    @FXML private TextField frameCountTextField;
 
-    private final FileChooser fileChooser = new FileChooser();
+    private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
     @FXML
-    private void exportFileButtonAction()
+    private void exportDirectoryButtonAction()
     {
-        this.fileChooser.setTitle("Choose an export file");
-        if (exportFileField.getText().isEmpty())
+        this.directoryChooser.setTitle("Choose an export directory");
+        if (exportDirectoryField.getText().isEmpty())
         {
-            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+            this.directoryChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
-            File currentValue = new File(exportFileField.getText());
-            this.fileChooser.setInitialDirectory(currentValue);
+            File currentValue = new File(exportDirectoryField.getText());
+            this.directoryChooser.setInitialDirectory(currentValue);
         }
-        File file = this.fileChooser.showSaveDialog(root.getScene().getWindow());
+        File file = this.directoryChooser.showDialog(root.getScene().getWindow());
         if (file != null)
         {
-            exportFileField.setText(file.toString());
+            exportDirectoryField.setText(file.toString());
             RecentProjects.setMostRecentDirectory(file);
         }
     }
 
     @FXML
-    public void cancel()
+    public void cancel(ActionEvent actionEvent)
     {
         Modal.requestClose(root);
     }
@@ -62,15 +63,17 @@ public class ScreenshotController
     @FXML
     public void run()
     {
-        if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        {
             return;
         }
 
         Rendering.getRequestQueue().addGraphicsRequest(
-            new Builder()
+            new OrbitAnimationRequest.Builder()
                 .setWidth(Integer.parseInt(widthTextField.getText()))
                 .setHeight(Integer.parseInt(heightTextField.getText()))
-                .setExportFile(new File(exportFileField.getText()))
+                .setFrameCount(Integer.parseInt(frameCountTextField.getText()))
+                .setExportPath(new File(exportDirectoryField.getText()))
                 .create());
     }
 }

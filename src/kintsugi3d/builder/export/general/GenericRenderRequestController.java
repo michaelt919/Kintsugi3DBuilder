@@ -12,34 +12,27 @@
 package kintsugi3d.builder.export.general;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
+import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.GraphicsRequestController;
-import kintsugi3d.builder.core.GraphicsRequestQueue;
-import kintsugi3d.gl.core.Context;
+import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ResourceBundle;
 
-public class GeneralRenderRequestController implements GraphicsRequestController
+public class GenericRenderRequestController implements Initializable
 {
+    @FXML private Pane root;
     @FXML private ComboBox<LoopMode> loopModeComboBox;
     @FXML private Label outputImageLabel;
     @FXML private TextField outputImageName;
@@ -56,135 +49,70 @@ public class GeneralRenderRequestController implements GraphicsRequestController
     @FXML private TextField exportDirectoryField;
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
-    @FXML private Button runButton;
-
-    private static final Logger LOG = LoggerFactory.getLogger(GeneralRenderRequestController.class);
 
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
-    private Stage stage;
 
-    private RequestFactory requestFactory;
-
-    private static final Scene SCENE;
-    private static final GeneralRenderRequestController INSTANCE;
-
-    static
-    {
-        FXMLLoader fxmlLoader = null;
-        Parent parent = null;
-        try
-        {
-            String fxmlFileName = "fxml/modals/export/GeneralRenderRequestUI.fxml";
-            URL url = GeneralRenderRequestController.class.getClassLoader().getResource(fxmlFileName);
-            assert url != null : "Can't find " + fxmlFileName;
-
-            fxmlLoader = new FXMLLoader(url);
-            parent = fxmlLoader.load();
-        }
-        catch(IOException e)
-        {
-            LOG.error("Error occurred loading fxml file:", e);
-        }
-
-        if (parent != null)
-        {
-            SCENE = new Scene(parent);
-            INSTANCE = fxmlLoader.getController();
-            INSTANCE.init();
-        }
-        else
-        {
-            SCENE = null;
-            INSTANCE = null;
-        }
-    }
-
-    // TODO rename this and other UI create() methods, also changing its usage in reflection code, to better reflect that UIs are basically singletons.
-    public static GeneralRenderRequestController create(Window window)
-    {
-        INSTANCE.stage = new Stage();
-        INSTANCE.stage.setTitle("Generic export");
-
-        try
-        {
-            INSTANCE.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        }
-        catch (MalformedURLException e)
-        {
-            LOG.error("Error loading window icon:", e);
-        }
-
-        INSTANCE.stage.setScene(SCENE);
-        INSTANCE.stage.initOwner(window);
-        INSTANCE.requestFactory = RequestFactoryImplementation.create();
-        return INSTANCE;
-    }
-
-    private void init()
+    @Override
+    public void initialize(URL location, ResourceBundle resources)
     {
         loopModeComboBoxAction();
         vertexShaderModeComboBoxAction();
     }
 
-    @Override
-    public <ContextType extends Context<ContextType>> void prompt(GraphicsRequestQueue<ContextType> requestQueue)
+    public void run()
     {
-        stage.show();
-
-        runButton.setOnAction(event ->
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
-//            stage.close();
+            return;
+        }
 
-            if(Global.state().getIOModel().getProgressMonitor().isConflictingProcess()){
-                return;
-            }
+        File fragmentShader = new File(fragmentShaderField.getText());
+        File outputDirectory = new File(exportDirectoryField.getText());
 
-            File fragmentShader = new File(fragmentShaderField.getText());
-            File outputDirectory = new File(exportDirectoryField.getText());
+        RequestFactory requestFactory = RequestFactoryImplementation.create();
 
-            RenderRequestBuilder builder;
-            switch(loopModeComboBox.getValue())
-            {
-                case SINGLE_FRAME:
-                    builder = requestFactory.buildSingleFrameRenderRequest(fragmentShader, outputDirectory,
-                        outputImageName.getText());
-                    break;
-                case MULTIFRAME:
-                    builder = requestFactory.buildMultiframeRenderRequest(fragmentShader, outputDirectory,
-                        Integer.parseInt(frameCount.getText()));
-                    break;
-                case MULTIVIEW:
-                    builder = requestFactory.buildMultiviewRenderRequest(fragmentShader, outputDirectory);
-                    break;
-                case MULTIVIEW_RETARGET:
-                    builder = requestFactory.buildMultiviewRetargetRenderRequest(fragmentShader, outputDirectory,
-                        new File(targetVSetFileField.getText()));
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected loop mode.");
-            }
+        RenderRequestBuilder builder;
+        switch (loopModeComboBox.getValue())
+        {
+            case SINGLE_FRAME:
+                builder = requestFactory.buildSingleFrameRenderRequest(fragmentShader, outputDirectory,
+                    outputImageName.getText());
+                break;
+            case MULTIFRAME:
+                builder = requestFactory.buildMultiframeRenderRequest(fragmentShader, outputDirectory,
+                    Integer.parseInt(frameCount.getText()));
+                break;
+            case MULTIVIEW:
+                builder = requestFactory.buildMultiviewRenderRequest(fragmentShader, outputDirectory);
+                break;
+            case MULTIVIEW_RETARGET:
+                builder = requestFactory.buildMultiviewRetargetRenderRequest(fragmentShader, outputDirectory,
+                    new File(targetVSetFileField.getText()));
+                break;
+            default:
+                throw new IllegalStateException("Unexpected loop mode.");
+        }
 
-            switch(vertexShaderModeComboBox.getValue())
-            {
-                case TEXTURE_SPACE:
-                    builder.useTextureSpaceVertexShader();
-                    break;
-                case CAMERA_SPACE:
-                    builder.useCameraSpaceVertexShader();
-                    break;
-                case CUSTOM:
-                    builder.useCustomVertexShader(new File(customVertexShaderField.getText()));
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected vertex shader mode.");
-            }
+        switch (vertexShaderModeComboBox.getValue())
+        {
+            case TEXTURE_SPACE:
+                builder.useTextureSpaceVertexShader();
+                break;
+            case CAMERA_SPACE:
+                builder.useCameraSpaceVertexShader();
+                break;
+            case CUSTOM:
+                builder.useCustomVertexShader(new File(customVertexShaderField.getText()));
+                break;
+            default:
+                throw new IllegalStateException("Unexpected vertex shader mode.");
+        }
 
-            builder.setWidth(Integer.parseInt(this.widthTextField.getText()));
-            builder.setHeight(Integer.parseInt(this.heightTextField.getText()));
+        builder.setWidth(Integer.parseInt(this.widthTextField.getText()));
+        builder.setHeight(Integer.parseInt(this.heightTextField.getText()));
 
-            requestQueue.addGraphicsRequest(builder.create());
-        });
+        Rendering.getRequestQueue().addGraphicsRequest(builder.create());
     }
 
     @FXML
@@ -229,7 +157,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
             this.fileChooser.setInitialDirectory(currentValue.getParentFile());
             this.fileChooser.setInitialFileName(currentValue.getName());
         }
-        File file = this.fileChooser.showOpenDialog(stage.getOwner());
+        File file = this.fileChooser.showOpenDialog(root.getScene().getWindow());
         if (file != null)
         {
             targetVSetFileField.setText(file.toString());
@@ -253,7 +181,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
             this.fileChooser.setInitialDirectory(currentValue.getParentFile());
             this.fileChooser.setInitialFileName(currentValue.getName());
         }
-        File file = this.fileChooser.showOpenDialog(stage.getOwner());
+        File file = this.fileChooser.showOpenDialog(root.getScene().getWindow());
         if (file != null)
         {
             customVertexShaderField.setText(file.toString());
@@ -277,7 +205,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
             this.fileChooser.setInitialDirectory(currentValue.getParentFile());
             this.fileChooser.setInitialFileName(currentValue.getName());
         }
-        File file = this.fileChooser.showOpenDialog(stage.getOwner());
+        File file = this.fileChooser.showOpenDialog(root.getScene().getWindow());
         if (file != null)
         {
             fragmentShaderField.setText(file.toString());
@@ -298,7 +226,7 @@ public class GeneralRenderRequestController implements GraphicsRequestController
             File currentValue = new File(exportDirectoryField.getText());
             this.directoryChooser.setInitialDirectory(currentValue);
         }
-        File file = this.directoryChooser.showDialog(stage.getOwner());
+        File file = this.directoryChooser.showDialog(root.getScene().getWindow());
         if (file != null)
         {
             exportDirectoryField.setText(file.toString());
@@ -307,8 +235,8 @@ public class GeneralRenderRequestController implements GraphicsRequestController
     }
 
     @FXML
-    private void cancelButtonAction()
+    private void cancel()
     {
-        stage.close();
+        Modal.requestClose(root);
     }
 }
