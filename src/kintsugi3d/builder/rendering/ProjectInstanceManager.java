@@ -19,7 +19,7 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
@@ -281,17 +281,17 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 newItem.getResources().calibrateLightIntensities(false);
                 newItem.reloadShaders();
 
-                MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
+                MainWindowController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
 
                 if (hasSpecularMaterials())
                 {
                     // Prior specular fit exists; start with material (basis) shader
-                    MenubarController.getInstance().selectMaterialBasisShader();
+                    MainWindowController.getInstance().selectMaterialBasisShader();
                 }
                 else
                 {
                     // No prior fit; start with image-based shader
-                    MenubarController.getInstance().selectImageBasedShader();
+                    MainWindowController.getInstance().selectImageBasedShader();
                 }
 
                 if (progressMonitor != null)

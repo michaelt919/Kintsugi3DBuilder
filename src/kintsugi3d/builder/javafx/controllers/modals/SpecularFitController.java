@@ -29,7 +29,7 @@ import kintsugi3d.builder.core.GraphicsRequestController;
 import kintsugi3d.builder.core.GraphicsRequestQueue;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -171,9 +171,9 @@ public class SpecularFitController implements GraphicsRequestController
             request.setRequestCompleteCallback(() ->
             {
                 //enable shaders which only work after processing textures
-                MenubarController.getInstance().setToggleableShaderDisable(false);
-                MenubarController.getInstance().updateShaderList();
-                MenubarController.getInstance().selectMaterialBasisShader();
+                MainWindowController.getInstance().setToggleableShaderDisable(false);
+                MainWindowController.getInstance().updateShaderList();
+                MainWindowController.getInstance().selectMaterialBasisShader();
             });
             
             request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));

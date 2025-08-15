@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.main;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -71,7 +71,7 @@ public class SideBarController {
         CardTabController newTabController;
         FXMLLoader loader = new FXMLLoader();
         try {
-            loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/CardTab.fxml"));
+            loader.setLocation(getClass().getResource("/fxml/main/leftpanel/CardTab.fxml"));
             newTab = loader.load();
             newTabController = loader.getController();
 

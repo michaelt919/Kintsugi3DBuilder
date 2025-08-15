@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.main;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -59,11 +59,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MenubarController
+public class MainWindowController
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MenubarController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MainWindowController.class);
 
-    private static MenubarController instance;
+    private static MainWindowController instance;
     private JavaFXState javaFXState;
 
     //minimized progress bar
@@ -134,12 +134,12 @@ public class MenubarController
     private Window window;
     private Runnable userDocumentationHandler;
 
-    public MenubarController()
+    public MainWindowController()
     {
         instance = this;
     }
 
-    public static MenubarController getInstance()
+    public static MainWindowController getInstance()
     {
         return instance;
     }

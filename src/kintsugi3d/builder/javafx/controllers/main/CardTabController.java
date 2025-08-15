@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.main;
 
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -47,7 +47,7 @@ public class CardTabController {
         CardController newCardController;
         FXMLLoader loader = new FXMLLoader();
         try {
-            loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/DataCard.fxml"));
+            loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
             loader.load();
             newCardController = loader.getController();
             newCardController.init(cardsModel, card);
@@ -62,7 +62,7 @@ public class CardTabController {
         CardController newCardController = null;
         FXMLLoader loader = new FXMLLoader();
         try {
-            loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/DataCard.fxml"));
+            loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
             loader.load();
             newCardController = loader.getController();
             newCardController.setCardVisibility(false);

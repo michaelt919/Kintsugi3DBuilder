@@ -18,7 +18,7 @@ import javafx.scene.control.Tooltip;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.WelcomeWindowController;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,7 +159,7 @@ public class RecentProjects
 
     public static void updateAllControlStructures()
     {
-        if (MenubarController.getInstance() != null)
+        if (MainWindowController.getInstance() != null)
         {
             updateRecentProjectsInMenuBar();
         }
@@ -173,8 +173,8 @@ public class RecentProjects
 
     private static void updateRecentProjectsInMenuBar()
     {
-        Menu recentProjsList = MenubarController.getInstance().getRecentProjectsMenu();
-        Menu cleanRecentProjectsMenu = MenubarController.getInstance().getCleanRecentProjectsMenu();
+        Menu recentProjsList = MainWindowController.getInstance().getRecentProjectsMenu();
+        Menu cleanRecentProjectsMenu = MainWindowController.getInstance().getCleanRecentProjectsMenu();
 
         recentProjsList.getItems().clear();
 

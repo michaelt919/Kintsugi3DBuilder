@@ -24,7 +24,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.experience.CreateProject;
 import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
@@ -331,7 +331,7 @@ public final class ProjectIO
             Global.state().getIOModel().setLoadedProjectFile(projectFile);
 
             // Disable shaders that need processed textures until project load is complete.
-            MenubarController.getInstance().setToggleableShaderDisable(true);
+            MainWindowController.getInstance().setToggleableShaderDisable(true);
         }
     }
 
@@ -522,11 +522,11 @@ public final class ProjectIO
         projectLoaded.set(false);
 
         //TODO: do we want this here?
-        MenubarController.getInstance().dismissMiniProgressBarAsync();
+        MainWindowController.getInstance().dismissMiniProgressBarAsync();
 
-        MenubarController.getInstance().setToggleableShaderDisable(true);
-        MenubarController.getInstance().setShaderNameVisibility(false);
-        MenubarController.getInstance().updateShaderList();
+        MainWindowController.getInstance().setToggleableShaderDisable(true);
+        MainWindowController.getInstance().setShaderNameVisibility(false);
+        MainWindowController.getInstance().updateShaderList();
     }
 
     public void closeProjectAfterConfirmation()

@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.main;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;

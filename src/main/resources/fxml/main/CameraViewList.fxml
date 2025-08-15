@@ -16,7 +16,7 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
-<VBox prefHeight="600.0" prefWidth="300.0" styleClass="cameraviewlist" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController">
+<VBox prefHeight="600.0" prefWidth="300.0" styleClass="cameraviewlist" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.main.CameraViewListController">
    <children>
       <CheckBox fx:id="snapToView" mnemonicParsing="false" styleClass="cameraviewlist" text="Snap to view">
          <VBox.margin>

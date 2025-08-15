@@ -22,7 +22,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.resources.project.MissingImagesException;
@@ -164,7 +164,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
             directoryChooser.setTitle("Choose New Image Directory");
 
-            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
+            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(MainWindowController.getInstance().getWindow());
             try
             {
                 verifyInfo();

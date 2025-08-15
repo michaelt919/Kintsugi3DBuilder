@@ -27,7 +27,7 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.WelcomeWindowController;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
@@ -152,9 +152,9 @@ public class MainApplication extends Application
         primaryStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
 
         //get FXML URLs
-        String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
-        URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
-        assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
+        String mainWindowFXMLFileName = "fxml/main/MainWindow.fxml";
+        URL mainWindowURL = getClass().getClassLoader().getResource(mainWindowFXMLFileName);
+        assert mainWindowURL != null : "cant find " + mainWindowFXMLFileName;
 
         String sceneFXMLFileName = "fxml/scene/RootScene.fxml";
         URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
@@ -170,25 +170,25 @@ public class MainApplication extends Application
 
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
-        FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
+        FXMLLoader mainWindowFXMLLoader = new FXMLLoader(mainWindowURL);
         FXMLLoader welcomeWindowFXMLLoader = new FXMLLoader(welcomeWindowURL);
         FXMLLoader progressBarsFXMLLoader = new FXMLLoader(progressBarsURL);
 
         //load Parents
-        Parent menuBarRoot = menuBarFXMLLoader.load();
+        Parent mainWindowRoot = mainWindowFXMLLoader.load();
         Parent sceneRoot = sceneFXMLLoader.load();
         Parent welcomeRoot = welcomeWindowFXMLLoader.load();
         Parent progressBarsRoot = progressBarsFXMLLoader.load();
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
-        MenubarController menuBarController = menuBarFXMLLoader.getController();
+        MainWindowController mainWindowController = mainWindowFXMLLoader.getController();
         WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
         ProgressBarsController progressBarsController = progressBarsFXMLLoader.getController();
 
         //load stages
         primaryStage.setTitle("Kintsugi 3D Builder");
-        primaryStage.setScene(new Scene(menuBarRoot));
+        primaryStage.setScene(new Scene(mainWindowRoot));
         primaryStage.setMaximized(true);
 
         Stage welcomeStage = new Stage();
@@ -231,7 +231,7 @@ public class MainApplication extends Application
         }
 
         Global.state().getCanvasModel().addCanvasChangedListener(
-            canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
+            canvas -> mainWindowController.getFramebufferView().setCanvas(canvas));
 
         SettingsModelImpl settingsModel = JavaFXState.getInstance().getSettingsModel();
         DefaultSettings.applyGlobalDefaults(settingsModel);
@@ -246,7 +246,7 @@ public class MainApplication extends Application
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
             ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                menuBarController.help_console();
+                mainWindowController.help_console();
             });
             alert.show();
         }
@@ -263,14 +263,14 @@ public class MainApplication extends Application
         //init progress bars first so other controllers can access the progress bar fxml components
         progressBarsController.init(progressBarsStage);
 
-        menuBarController.init(primaryStage, JavaFXState.getInstance(),
+        mainWindowController.init(primaryStage, JavaFXState.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         welcomeWindowController.init(welcomeStage,
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
-        menuBarController.initAccelerators(welcomeStage.getScene());
-        menuBarController.initAccelerators(progressBarsStage.getScene());
+        mainWindowController.initAccelerators(welcomeStage.getScene());
+        mainWindowController.initAccelerators(progressBarsStage.getScene());
 
         // Open scene window from the menu
         settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->
@@ -295,10 +295,10 @@ public class MainApplication extends Application
             }
         });
 
-        SynchronizedWindow menuBarWindow = new StageSynchronization(primaryStage);
+        SynchronizedWindow mainWindow = new StageSynchronization(primaryStage);
 
         //set up close and focusGained
-        WindowSynchronization.getInstance().addListener(menuBarWindow);
+        WindowSynchronization.getInstance().addListener(mainWindow);
 
         primaryStage.setOnCloseRequest(event ->
         {
@@ -306,37 +306,6 @@ public class MainApplication extends Application
             event.consume();
             WindowSynchronization.getInstance().quit();
         });
-
-//        welcomeStage.setOnCloseRequest(event ->
-//        {
-//            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
-//            event.consume();
-//            WindowSynchronization.getInstance().quit();
-//        });
-
-        // Focus synchronization not working quite right.
-//        sceneStage.focusedProperty().addListener(event ->
-//        {
-//            if (sceneStage.isFocused())
-//            {
-//                WindowSynchronization.getInstance().focusGained(sceneWindow);
-//            }
-//            else
-//            {
-//                WindowSynchronization.getInstance().focusLost(sceneWindow);
-//            }
-//        });
-//        menuBarStage.focusedProperty().addListener(event ->
-//        {
-//            if (menuBarStage.isFocused())
-//            {
-//                WindowSynchronization.getInstance().focusGained(menuBarWindow);
-//            }
-//            else
-//            {
-//                WindowSynchronization.getInstance().focusLost(menuBarWindow);
-//            }
-//        });
 
         for (Consumer<Stage> l : START_LISTENERS)
         {

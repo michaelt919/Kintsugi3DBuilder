@@ -20,7 +20,7 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.util.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +89,7 @@ public class ProgressBarsController
         processingProperty.bind(overallStopwatch.isRunningProperty());
 
         localProgressBar.getScene().getWindow().setOnCloseRequest(
-            event -> MenubarController.getInstance().showMiniProgressBar());
+            event -> MainWindowController.getInstance().showMiniProgressBar());
 
 
         // Keep track of whether cancellation was requested.
@@ -341,7 +341,7 @@ public class ProgressBarsController
     private void hideAllProgress()
     {
         hideStage();
-        MenubarController.getInstance().dismissMiniProgressBarAsync();
+        MainWindowController.getInstance().dismissMiniProgressBarAsync();
     }
 
     private class Monitor implements ProgressMonitor
@@ -383,7 +383,7 @@ public class ProgressBarsController
             {
                 cancelRequested.set(false); // reset cancel flag
 
-                MenubarController.getInstance().dismissMiniProgressBarAsync();
+                MainWindowController.getInstance().dismissMiniProgressBarAsync();
 
                 //need to end stopwatches here because they might need to be reused for another process
                 //   before cancelComplete() is called
@@ -420,7 +420,7 @@ public class ProgressBarsController
             showStage();
             startStopwatches();
 
-            MenubarController mainWindow = MenubarController.getInstance();
+            MainWindowController mainWindow = MainWindowController.getInstance();
             mainWindow.resetMiniProgressBar(overallProgressBar.progressProperty(),
             Bindings.createStringBinding(() ->
                 {
@@ -534,7 +534,7 @@ public class ProgressBarsController
             this.maximum = 0.0;
             endStopwatches();
 
-            MenubarController mainWindow = MenubarController.getInstance();
+            MainWindowController mainWindow = MainWindowController.getInstance();
             mainWindow.setReadyToDismissMiniProgBar();
 
             if (!stage.isShowing())
