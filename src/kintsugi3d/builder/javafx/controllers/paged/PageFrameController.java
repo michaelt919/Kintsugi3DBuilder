@@ -29,8 +29,6 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.Modal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +37,6 @@ import java.util.function.Function;
 
 public class PageFrameController
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PageFrameController.class);
     @FXML private Pane outerRoot;
 
     @FXML private Button prevButton;
