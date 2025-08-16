@@ -30,10 +30,6 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/classes/fxml-index.txt</source>
-            <outputDirectory></outputDirectory>
-        </file>
-        <file>
             <source>target/Kintsugi3DBuilder.exe</source>
             <outputDirectory></outputDirectory>
         </file>
