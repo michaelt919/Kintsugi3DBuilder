@@ -71,13 +71,11 @@ public class MainWindowController
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
-    @FXML private Menu aboutMenu;
-
     @FXML private MenuBar mainMenubar;
 
     //menu items
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
-    @FXML public CheckMenuItem isCameraVisualCheckMenuItem;
+    @FXML private CheckMenuItem isCameraVisualCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
@@ -436,60 +434,28 @@ public class MainWindowController
         WindowSynchronization.getInstance().quit();
     }
 
-    public void help_userManual()
+    public void userManual()
     {
         userDocumentationHandler.run();
     }
 
-    public void about()
+    public void openExperience(ActionEvent event)
     {
-        ExperienceManager.getInstance().getAbout().tryOpen();
-    }
-
-    public void objectOrientation()
-    {
-        ExperienceManager.getInstance().getObjectOrientation().tryOpen();
-    }
-
-    public void lightCalibration()
-    {
-        ExperienceManager.getInstance().getLightCalibration().tryOpen();
-    }
-
-    public void eyedropperColorChecker()
-    {
-        ExperienceManager.getInstance().getToneCalibration().tryOpen();
-    }
-
-    public void maskOptions()
-    {
-        ExperienceManager.getInstance().getMaskOptions().tryOpen();
-    }
-
-    public void specularFit()
-    {
-        ExperienceManager.getInstance().getSpecularFit().tryOpen();
-    }
-
-    public void exportGLTF()
-    {
-        ExperienceManager.getInstance().getExportModel().tryOpen();
-    }
-
-    public void log()
-    {
-        ExperienceManager.getInstance().getLog().tryOpen();
+        if (event.getSource() instanceof MenuItem)
+        {
+            MenuItem source = (MenuItem) event.getSource();
+            if (source.getUserData() instanceof String)
+            {
+                String experienceName = (String)source.getUserData();
+                ExperienceManager.getInstance().getExperience(experienceName).tryOpen();
+            }
+        }
     }
 
     public void showProgressBars()
     {
         ProgressBarsController.getInstance().showStage();
         miniProgressPane.setVisible(false);
-    }
-
-    public void openSystemSettingsModal()
-    {
-        ExperienceManager.getInstance().getSystemSettings().tryOpen();
     }
 
     public void launchViewerApp()
@@ -663,7 +629,7 @@ public class MainWindowController
         Platform.runLater(() -> miniProgressPane.setVisible(false));
     }
 
-    public void file_hotSwap(ActionEvent actionEvent)
+    public void hotSwap()
     {
         ProjectIO.getInstance().hotSwap(window);
     }

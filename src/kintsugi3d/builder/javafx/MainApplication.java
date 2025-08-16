@@ -29,6 +29,7 @@ import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
+import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
@@ -113,9 +114,7 @@ public class MainApplication extends Application
             {
                 LOG.error("An error occurred saving user preferences", e);
                 Platform.runLater(() ->
-                {
-                    new Alert(AlertType.ERROR, "An error occurred while saving user preferences. Your preferences may have been lost.\nCheck the log for more info.").showAndWait();
-                });
+                    new Alert(AlertType.ERROR, "An error occurred while saving user preferences. Your preferences may have been lost.\nCheck the log for more info.").showAndWait());
             }
 
             Platform.runLater(stage::close);
@@ -258,10 +257,8 @@ public class MainApplication extends Application
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event ->
-            {
-                mainWindowController.log();
-            });
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(
+                event -> ExperienceManager.getInstance().getExperience("Log").tryOpen());
             alert.show();
         }
 

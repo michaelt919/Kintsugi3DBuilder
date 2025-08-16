@@ -42,8 +42,6 @@ public class ExportRenderManager
 
     public void initialize(Window parentWindow, JavaFXState state)
     {
-        anyModalOpen = null;
-
         if (EXPORT_CLASS_DEFINITION_FILE.exists())
         {
             try (Scanner scanner = new Scanner(EXPORT_CLASS_DEFINITION_FILE, StandardCharsets.UTF_8))
@@ -60,15 +58,6 @@ public class ExportRenderManager
                         ExportRender exportRender = new ExportRender(fxmlURL, menuName);
                         exportRender.initialize(parentWindow, state);
                         exportRenderList.add(exportRender);
-
-                        if (anyModalOpen == null)
-                        {
-                            anyModalOpen = exportRender.getModal().getOpenProperty();
-                        }
-                        else
-                        {
-                            anyModalOpen = anyModalOpen.or(exportRender.getModal().getOpenProperty());
-                        }
                     }
                 }
             }
@@ -78,9 +67,9 @@ public class ExportRenderManager
             }
         }
 
-        if (anyModalOpen == null)
-        {
-            anyModalOpen = new SimpleBooleanProperty(false);
-        }
+        anyModalOpen = exportRenderList.stream()
+            .map(experience -> experience.getModal().getOpenProperty())
+            .reduce(BooleanExpression::or)
+            .orElse(new SimpleBooleanProperty(false));
     }
 }

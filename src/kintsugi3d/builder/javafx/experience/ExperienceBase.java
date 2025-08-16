@@ -26,6 +26,7 @@ public abstract class ExperienceBase implements Experience
         this.state = state;
     }
 
+    @Override
     public boolean isOpen()
     {
         return this.modal.isOpen();
@@ -112,7 +113,8 @@ public abstract class ExperienceBase implements Experience
         return parentWindow;
     }
 
-    protected Modal getModal()
+    @Override
+    public Modal getModal()
     {
         return modal;
     }

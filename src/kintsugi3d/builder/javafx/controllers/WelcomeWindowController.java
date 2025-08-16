@@ -22,7 +22,6 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.ProjectIO;
@@ -156,7 +155,7 @@ public class WelcomeWindowController
         recentProjectsSplitMenuButton.show();
     }
 
-    public void hideMenu(MouseEvent mouseEvent)
+    public void hideMenu()
     {
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
@@ -188,12 +187,12 @@ public class WelcomeWindowController
 
     public void openSystemSettingsModal()
     {
-        ExperienceManager.getInstance().getSystemSettings().tryOpen();
+        ExperienceManager.getInstance().getExperience("SystemSettings").tryOpen();
     }
 
     public void openAboutModal()
     {
-        ExperienceManager.getInstance().getAbout().tryOpen();
+        ExperienceManager.getInstance().getExperience("About").tryOpen();
     }
 
     public void updateRecentProjects()

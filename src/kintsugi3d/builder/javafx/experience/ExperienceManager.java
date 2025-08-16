@@ -4,20 +4,13 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 public final class ExperienceManager
 {
-    // Modal window manager objects
-    private final CreateProject createProject = new CreateProject();
-    private final ObjectOrientation objectOrientation = new ObjectOrientation();
-    private final LightCalibration lightCalibration = new LightCalibration();
-    private final MaskOptions maskOptions = new MaskOptions();
-    private final ToneCalibration toneCalibration = new ToneCalibration();
-    private final SpecularFit specularFit = new SpecularFit();
-    private final ExportModel exportModel = new ExportModel();
-    private final Log log = new Log();
-    private final SystemSettings systemSettings = new SystemSettings();
-    private final About about = new About();
-
+    private final Map<String, Experience> experiences = new HashMap<>(16);
     private final ExportRenderManager exportRenderManager = new ExportRenderManager();
 
     private BooleanExpression anyModalOpen;
@@ -26,6 +19,16 @@ public final class ExperienceManager
 
     private ExperienceManager()
     {
+        experiences.put("CreateProject", new CreateProject());
+        experiences.put("ObjectOrientation", new ObjectOrientation());
+        experiences.put("LightCalibration", new LightCalibration());
+        experiences.put("MaskOptions", new MaskOptions());
+        experiences.put("ToneCalibration", new ToneCalibration());
+        experiences.put("SpecularFit", new SpecularFit());
+        experiences.put("ExportModel", new ExportModel());
+        experiences.put("Log", new Log());
+        experiences.put("SystemSettings", new SystemSettings());
+        experiences.put("About", new About());
     }
 
     public static ExperienceManager getInstance()
@@ -35,28 +38,16 @@ public final class ExperienceManager
 
     public void initialize(Window parentWindow, JavaFXState state)
     {
-        createProject.initialize(parentWindow, state);
-        objectOrientation.initialize(parentWindow, state);
-        lightCalibration.initialize(parentWindow, state);
-        maskOptions.initialize(parentWindow, state);
-        toneCalibration.initialize(parentWindow, state);
-        specularFit.initialize(parentWindow, state);
-        exportModel.initialize(parentWindow, state);
-        log.initialize(parentWindow, state);
-        systemSettings.initialize(parentWindow, state);
-        about.initialize(parentWindow, state);
+        for (Experience experience : experiences.values())
+        {
+            experience.initialize(parentWindow, state);
+        }
+
         exportRenderManager.initialize(parentWindow, state);
 
-        anyModalOpen = createProject.getModal().getOpenProperty()
-            .or(objectOrientation.getModal().getOpenProperty())
-            .or(lightCalibration.getModal().getOpenProperty())
-            .or(maskOptions.getModal().getOpenProperty())
-            .or(toneCalibration.getModal().getOpenProperty())
-            .or(specularFit.getModal().getOpenProperty())
-            .or(exportModel.getModal().getOpenProperty())
-            .or(log.getModal().getOpenProperty())
-            .or(systemSettings.getModal().getOpenProperty())
-            .or(about.getModal().getOpenProperty())
+        anyModalOpen = experiences.values().stream()
+            .map(experience -> experience.getModal().getOpenProperty())
+            .reduce(BooleanExpression::or).orElseThrow()
             .or(exportRenderManager.getAnyModalOpenProperty());
     }
 
@@ -70,54 +61,23 @@ public final class ExperienceManager
         return anyModalOpen;
     }
 
-    public CreateProject getCreateProject()
+    public Experience getExperience(String name)
     {
-        return createProject;
+        return experiences.get(name);
     }
 
-    public ObjectOrientation getObjectOrientation()
+    public <ExperienceType extends Experience> ExperienceType getExperience(String name, Class<ExperienceType> experienceClass)
     {
-        return objectOrientation;
-    }
-
-    public LightCalibration getLightCalibration()
-    {
-        return lightCalibration;
-    }
-
-    public MaskOptions getMaskOptions()
-    {
-        return maskOptions;
-    }
-
-    public ToneCalibration getToneCalibration()
-    {
-        return toneCalibration;
-    }
-
-    public SpecularFit getSpecularFit()
-    {
-        return specularFit;
-    }
-
-    public ExportModel getExportModel()
-    {
-        return exportModel;
-    }
-
-    public Log getLog()
-    {
-        return log;
-    }
-
-    public SystemSettings getSystemSettings()
-    {
-        return systemSettings;
-    }
-
-    public About getAbout()
-    {
-        return about;
+        Experience experience = experiences.get(name);
+        if (Objects.equals(experience.getClass(), experienceClass))
+        {
+            //noinspection unchecked
+            return (ExperienceType)experience;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public ExportRenderManager getExportRenderManager()

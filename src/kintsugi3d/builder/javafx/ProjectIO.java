@@ -135,9 +135,14 @@ public final class ProjectIO
         }
     }
 
+    private CreateProject getCreateProjectExperience()
+    {
+        return ExperienceManager.getInstance().getExperience("CreateProject", CreateProject.class);
+    }
+
     public boolean isCreateProjectWindowOpen()
     {
-        return ExperienceManager.getInstance().getCreateProject().isOpen();
+        return getCreateProjectExperience().isOpen();
     }
 
     private void onLoadStart()
@@ -200,7 +205,7 @@ public final class ProjectIO
             return;
         }
 
-        CreateProject createProject = ExperienceManager.getInstance().getCreateProject();
+        CreateProject createProject = getCreateProjectExperience();
         createProject.setConfirmCallback(() ->
         {
             onLoadStart();
@@ -218,7 +223,7 @@ public final class ProjectIO
         // remember old project filename
         File oldProjectFile = projectFile;
 
-        CreateProject createProject = ExperienceManager.getInstance().getCreateProject();
+        CreateProject createProject = getCreateProjectExperience();
         createProject.setConfirmCallback(this::onLoadStart);
 
         // "force" the user to save their project (user can still cancel saving)
