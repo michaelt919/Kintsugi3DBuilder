@@ -3,7 +3,6 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <VBox fx:id="card_tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.main.CardTabController" VBox.vgrow="ALWAYS">
@@ -16,13 +15,11 @@
             <HBox.margin>
                 <Insets left="12.0" right="8.0" />
             </HBox.margin>
-            <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
         <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
             <HBox.margin>
                 <Insets left="8.0" />
             </HBox.margin>
-            <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
         <VBox.margin>
             <Insets />

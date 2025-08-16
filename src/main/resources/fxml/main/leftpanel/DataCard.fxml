@@ -2,15 +2,14 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.*?>
-<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" styleClass="card-background" onMouseClicked="#cardClicked" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.main.CardController">
+<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.main.CardController">
 <VBox id="border_box" fx:id="borderBox">
     <HBox fx:id="card_top_bar" alignment="CENTER_LEFT" prefHeight="13.0" stylesheets="@../../kintsugiStyling.css">
         <ImageView fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
-            <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
         <Text id="texture_title" fx:id="cardTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
             <font>
@@ -21,7 +20,7 @@
             </HBox.margin>
         </Text>
         <Region maxWidth="1.7976931348623157E308" prefHeight="13.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-        <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#expansionToggleClicked" stroke="BLACK" strokeType="INSIDE" width="24.0" />
+        <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#expansionToggleClicked" stroke="BLACK" strokeType="INSIDE" visible="false" width="24.0" />
         <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
         </padding>
@@ -97,7 +96,6 @@
             <HBox.margin>
                 <Insets right="3.0" />
             </HBox.margin>
-            <Image url="@../../../../../../Kintsugi3D-icon.png" />
         </ImageView>
     </HBox>
 
@@ -112,11 +110,10 @@
         <!-- Button Section -->
         <HBox alignment="TOP_CENTER">
        <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Replace">
-          <graphic>
-             <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                   <Image url="@../../../../../../Kintsugi3D-icon.png" />
-             </ImageView>
-          </graphic>
+<!--          <graphic>-->
+<!--             <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
+<!--             </ImageView>-->
+<!--          </graphic>-->
              <font>
                 <Font name="Segoe UI Semibold" size="12.0" />
              </font>
@@ -139,11 +136,10 @@
 
         <HBox alignment="TOP_CENTER">
             <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Refresh" textFill="WHITE">
-                <graphic>
-                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                            <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                    </ImageView>
-                </graphic>
+<!--                <graphic>-->
+<!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
+<!--                    </ImageView>-->
+<!--                </graphic>-->
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
                 </font>
@@ -157,11 +153,10 @@
 
         <HBox alignment="TOP_CENTER">
             <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Disable">
-                <graphic>
-                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                            <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                    </ImageView>
-                </graphic>
+<!--                <graphic>-->
+<!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
+<!--                    </ImageView>-->
+<!--                </graphic>-->
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
                 </font>
@@ -175,11 +170,10 @@
 
         <HBox alignment="TOP_CENTER">
             <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#deleteSelf" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
-                <graphic>
-                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                            <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                    </ImageView>
-                </graphic>
+<!--                <graphic>-->
+<!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
+<!--                    </ImageView>-->
+<!--                </graphic>-->
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
                 </font>

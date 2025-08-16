@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.geometry.Rectangle2D?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -14,7 +13,6 @@
             <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>
         <ImageView fitHeight="16.0" fitWidth="12.0" pickOnBounds="true" preserveRatio="true">
-            <Image url="@../../../../../../Kintsugi3D-icon.png" />
         <viewport>
            <Rectangle2D height="16.0" minX="12.0" minY="16.0" width="12.0" />
         </viewport>

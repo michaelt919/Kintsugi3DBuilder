@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import kintsugi3d.builder.javafx.MainApplication;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
@@ -97,8 +98,7 @@ public class CardController
                 hBox.setAlignment(Pos.TOP_CENTER);
 
 //                // Button Icon
-//                Image image = new Image("file:./Kintsugi3D-icon.png");
-//                ImageView imageView = new ImageView(image);
+//                ImageView imageView = new ImageView(MainApplication.getInstance().getIcon());
 //                imageView.setFitHeight(16.0);
 //                imageView.setFitWidth(16.0);
 //                imageView.setPickOnBounds(true);
@@ -130,6 +130,11 @@ public class CardController
                 preview = new Image(dataCard.getImagePath());
                 cardIcon.setImage(preview);
                 mainImage.setImage(preview);
+            }
+            else
+            {
+                cardIcon.setImage(MainApplication.getInstance().getIcon());
+                mainImage.setImage(MainApplication.getInstance().getIcon());
             }
         });
     }

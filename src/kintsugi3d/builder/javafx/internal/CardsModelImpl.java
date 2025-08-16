@@ -8,6 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.MainApplication;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.util.CardSelectionModel;
@@ -44,7 +45,7 @@ public class CardsModelImpl implements CardsModel {
                     thumbnailPath = viewSet.findThumbnailImageFile(i).toString();
                 } catch (FileNotFoundException e) {
                     // Default to icon if thumbnail isn't found
-                    thumbnailPath = "file:./Kintsugi3D-icon.png";
+                    thumbnailPath = MainApplication.ICON_PATH;
                 }
 
                 dataCards.add(ProjectDataCardFactory.createCameraCard(model, viewSet.getImageFiles().get(i).getName(), thumbnailPath, viewSet.getCameraMetadata().get(i)));

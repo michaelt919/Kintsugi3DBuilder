@@ -59,13 +59,23 @@ public class MainApplication extends Application
         appInstance = this;
     }
 
-    public static MainApplication getAppInstance()
+    public static MainApplication getInstance()
     {
         return appInstance;
     }
 
-    public static void setArgs(String[] args) {
+    public static void setArgs(String[] args)
+    {
         arguments = args;
+    }
+
+    public static final String ICON_PATH = "Kintsugi3D-icon.png";
+
+    private Image icon;
+
+    public Image getIcon()
+    {
+        return this.icon;
     }
 
     private static class StageSynchronization implements SynchronizedWindow
@@ -149,7 +159,9 @@ public class MainApplication extends Application
     @Override
     public void start(Stage primaryStage) throws IOException
     {
-        primaryStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        this.icon = new Image(new File(ICON_PATH).toURI().toURL().toString());
+
+        primaryStage.getIcons().add(icon);
 
         //get FXML URLs
         String mainWindowFXMLFileName = "fxml/main/MainWindow.fxml";
@@ -192,18 +204,18 @@ public class MainApplication extends Application
         primaryStage.setMaximized(true);
 
         Stage welcomeStage = new Stage();
-        welcomeStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        welcomeStage.getIcons().add(icon);
         welcomeStage.setTitle("Welcome!");
         welcomeStage.setScene(new Scene(welcomeRoot));
         welcomeStage.initOwner(primaryStage.getScene().getWindow());
 
         Stage sceneStage = new Stage();
-        sceneStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        sceneStage.getIcons().add(icon);
         sceneStage.setTitle("Scene");
         sceneStage.setScene(new Scene(sceneRoot));
 
         Stage progressBarsStage = new Stage();
-        progressBarsStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        progressBarsStage.getIcons().add(icon);
         progressBarsStage.setTitle("Progress");
         progressBarsStage.setScene(new Scene(progressBarsRoot));
         progressBarsStage.initOwner(primaryStage.getScene().getWindow());
@@ -226,7 +238,8 @@ public class MainApplication extends Application
         primaryStage.show();
 
         //only show the welcome window after determining that no projects are being loaded from command line
-        if(arguments.length == 0){
+        if (arguments.length == 0)
+        {
             welcomeStage.show();
         }
 
@@ -245,7 +258,8 @@ public class MainApplication extends Application
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event ->
+            {
                 mainWindowController.log();
             });
             alert.show();

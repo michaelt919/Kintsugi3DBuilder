@@ -7,13 +7,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
@@ -24,8 +22,6 @@ import java.net.URL;
  */
 public class Modal
 {
-    private static final String ICON_PATH = "Kintsugi3D-icon.png";
-
     private final Window parentWindow;
     private Stage stage;
 
@@ -70,7 +66,7 @@ public class Modal
         Parent root = fxmlLoader.load();
 
         this.stage = new Stage();
-        stage.getIcons().add(new Image(new File(ICON_PATH).toURI().toURL().toString()));
+        stage.getIcons().add(MainApplication.getInstance().getIcon());
         stage.setTitle(title);
         stage.setScene(new Scene(root));
         stage.initOwner(parentWindow);
