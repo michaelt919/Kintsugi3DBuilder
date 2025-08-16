@@ -13,11 +13,6 @@ public class ExportRender extends ExperienceBase
         this.shortName = shortName;
     }
 
-    public String getFxmlURLString()
-    {
-        return fxmlURLString;
-    }
-
     public String getShortName()
     {
         return this.shortName;
@@ -30,7 +25,7 @@ public class ExportRender extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         openModal(fxmlURLString);
     }

@@ -23,7 +23,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         openPagedModel("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
             (fxmlFile, fxmlLoader) ->

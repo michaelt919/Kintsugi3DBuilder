@@ -15,7 +15,7 @@ public class ExportModel extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         ExportModelController exportRequest = openModal("fxml/modals/ExportModel.fxml");
 

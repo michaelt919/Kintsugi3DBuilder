@@ -14,7 +14,7 @@ public class MaskOptions extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         MaskOptionsController maskOptionsController = openModal("fxml/modals/MaskOptions.fxml");
 

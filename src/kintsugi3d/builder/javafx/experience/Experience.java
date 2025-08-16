@@ -4,8 +4,6 @@ import javafx.stage.Window;
 import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.Modal;
 
-import java.io.IOException;
-
 /**
  * An experience encapsulates, typically, a modal window and its controller.
  */
@@ -26,19 +24,14 @@ public interface Experience
     void initialize(Window parentWindow, JavaFXState state);
 
     /**
-     * Opens the experience, typically in a modal window.
-     * @throws IOException if the FXML could not be loaded.
-     */
-    void open() throws IOException;
-
-    /**
      * Gets whether the experience is currently open.
      * @return true if the experience's modal window is open; false otherwise.
      */
     boolean isOpen();
 
     /**
-     * Tries to open the experience, catching and logging any exceptions that occur.
+     * Tries to open the experience, typically in a modal window, catching and logging any exceptions that occur
+     * (i.e. if the FXML could not be loaded).
      * This method will ensure that the same modal is not opened more than once at the same time.
      */
     void tryOpen();

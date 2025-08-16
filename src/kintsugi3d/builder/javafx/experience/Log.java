@@ -14,7 +14,7 @@ public class Log extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         createModal("fxml/modals/Logger.fxml");
 

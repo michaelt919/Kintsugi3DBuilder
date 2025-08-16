@@ -11,7 +11,7 @@ public class About extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         openModal("fxml/modals/About.fxml");
     }

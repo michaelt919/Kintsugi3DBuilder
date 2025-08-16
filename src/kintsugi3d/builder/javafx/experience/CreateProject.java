@@ -20,7 +20,7 @@ public class CreateProject extends ExperienceBase
     }
 
     @Override
-    public void open() throws IOException
+    protected void open() throws IOException
     {
         PageFrameController controller = openPagedModel(
             "/fxml/modals/createnewproject/SelectImportOptions.fxml",
@@ -29,11 +29,13 @@ public class CreateProject extends ExperienceBase
         controller.setConfirmCallback(confirmCallback);
     }
 
-    public void openHotSwap() throws IOException
+    private void openHotSwap() throws IOException
     {
         PageFrameController controller = openPagedModel(
             "/fxml/modals/createnewproject/HotSwap.fxml",
             SimpleDataTransformerPage<InputSource, InputSource, HotSwapController>::new);
+
+        controller.setConfirmCallback(confirmCallback);
     }
 
     public void tryOpenHotSwap()
