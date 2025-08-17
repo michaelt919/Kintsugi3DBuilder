@@ -9,16 +9,16 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.main;
+package kintsugi3d.builder.javafx.controllers.sidebar;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextInputControl;
 
-import java.util.Map;
+public abstract class SearchableView {
+    TextInputControl textInput;
+    CheckBox regexMode;
 
-public interface ImageThreadable {
-    ImageView getImageView();
-    String getImageViewText();
-    void setImageViewText(String txt);
-    Map<String, Image> getImageCache();
+    public abstract SearchableView bind();
+
+    protected abstract void updateView();
 }

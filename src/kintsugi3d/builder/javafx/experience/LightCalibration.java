@@ -4,7 +4,6 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 
@@ -32,7 +31,6 @@ public class LightCalibration extends ExperienceBase
             {
                 Global.state().getIOModel().applyLightCalibration();
                 Global.state().getSettingsModel().set("lightCalibrationMode", false);
-                MainWindowController.getInstance().setShaderNameVisibility(Global.state().getIOModel().hasValidHandler());
             });
 
             // Must wait until the controllers is created to add this additional window close event handler.
@@ -51,14 +49,8 @@ public class LightCalibration extends ExperienceBase
                     loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
             }
 
-            MainWindowController.getInstance().getCameraViewListController().rebindSearchableListView();
-
             // Enables light calibration mode when the window is opened.
             settingsModel.set("lightCalibrationMode", true);
-
-            //shader name doesn't change like it should when opening light calibration, so hide it for now
-            //TODO: figure out how to show the correct name instead of hiding the text?
-            MainWindowController.getInstance().setShaderNameVisibility(false);
         }
     }
 }

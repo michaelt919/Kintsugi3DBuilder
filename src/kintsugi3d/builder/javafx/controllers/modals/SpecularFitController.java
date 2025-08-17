@@ -25,8 +25,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.Modal;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -132,14 +131,7 @@ public class SpecularFitController implements Initializable
         settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
 
         SpecularFitRequest request = new SpecularFitRequest(settings);
-        request.setRequestCompleteCallback(() ->
-        {
-            //enable shaders which only work after processing textures
-            MainWindowController.getInstance().setToggleableShaderDisable(false);
-            MainWindowController.getInstance().updateShaderList();
-            MainWindowController.getInstance().selectMaterialBasisShader();
-        });
-
+        request.setRequestCompleteCallback(() -> Global.state().getProjectModel().setProjectProcessed(true));
         request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));
 
         // Run as a graphics request that optimizes from scratch.

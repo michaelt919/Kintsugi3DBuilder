@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -20,7 +20,6 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.util.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +61,7 @@ public class ProgressBarsController
     private String defaultOverallElapsedTimeTxt;
     private final BooleanProperty processingProperty = new SimpleBooleanProperty(false);
 
-    public static ProgressBarsController getInstance()
+    static ProgressBarsController getInstance()
     {
         return INSTANCE;
     }
@@ -559,8 +558,6 @@ public class ProgressBarsController
             }
 
             Platform.runLater(() -> cancelButton.setText("Cancel"));
-
-            mainWindow.refresh();
         }
 
         @Override

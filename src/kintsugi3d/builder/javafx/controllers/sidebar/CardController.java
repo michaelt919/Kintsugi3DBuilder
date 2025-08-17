@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.controllers.main;
+package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import kintsugi3d.builder.javafx.MainApplication;
+import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
@@ -133,8 +133,8 @@ public class CardController
             }
             else
             {
-                cardIcon.setImage(MainApplication.getInstance().getIcon());
-                mainImage.setImage(MainApplication.getInstance().getIcon());
+                cardIcon.setImage(MainApplication.getIcon());
+                mainImage.setImage(MainApplication.getIcon());
             }
         });
     }

@@ -8,7 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.MainApplication;
+import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.util.CardSelectionModel;

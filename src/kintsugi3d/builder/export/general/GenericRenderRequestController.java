@@ -24,7 +24,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.Modal;
-import kintsugi3d.util.RecentProjects;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 
 import java.io.File;
 import java.net.URL;

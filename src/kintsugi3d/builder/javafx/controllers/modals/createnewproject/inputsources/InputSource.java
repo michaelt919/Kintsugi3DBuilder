@@ -17,8 +17,8 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
-import kintsugi3d.builder.javafx.controllers.main.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
+import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
 
 import java.io.File;
 import java.util.List;

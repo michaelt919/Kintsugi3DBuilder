@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.JavaFXState;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 
 public class PhotoLightingSettingsController implements SystemSettingsControllerBase

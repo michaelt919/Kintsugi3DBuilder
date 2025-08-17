@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx;//Created by alexk on 7/19/2017.
+package kintsugi3d.builder.javafx.core;//Created by alexk on 7/19/2017.
 
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
@@ -50,7 +50,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         lightingModel = new LightingModelWrapper(JavaFXState.getInstance().getLightingModel());
         environmentModel = new EnvironmentModelWrapper(JavaFXState.getInstance().getEnvironmentModel());
         cameraViewListModel = new CameraViewListModelWrapper(JavaFXState.getInstance().getCameraViewListModel());
-        projectModel = JavaFXState.getInstance().getProjectModel();
+        projectModel = new ProjectModelWrapper(JavaFXState.getInstance().getProjectModel());
         settingsModel = new SettingsModelWrapper(JavaFXState.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();

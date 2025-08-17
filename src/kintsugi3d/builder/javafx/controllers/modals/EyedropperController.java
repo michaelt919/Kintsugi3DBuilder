@@ -18,10 +18,10 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
@@ -35,8 +35,8 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
-import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,6 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     private static final Logger LOG = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
-    private static EyedropperController instance;
 
     @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
     @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
@@ -108,20 +107,6 @@ public class EyedropperController extends NonDataPageControllerBase implements I
      * Set to true to prevent warning about unsaved changes when closing the window via the "Confirm" button.
      */
     private boolean confirmExit = false;
-
-//    private Runnable exitCallback;
-
-    public EyedropperController()
-    {
-        instance = this;
-    }
-
-    public static EyedropperController getInstance()
-    {
-        //intended to be used to update the apply button after a project is loaded
-        //this does not work yet
-        return instance;
-    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle)

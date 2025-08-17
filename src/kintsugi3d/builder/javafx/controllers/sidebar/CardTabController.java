@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.controllers.main;
+package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;

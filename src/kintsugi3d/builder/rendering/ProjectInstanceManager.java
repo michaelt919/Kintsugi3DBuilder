@@ -19,7 +19,6 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
@@ -281,18 +280,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 newItem.getResources().calibrateLightIntensities(false);
                 newItem.reloadShaders();
 
-                MainWindowController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
-
-                if (hasSpecularMaterials())
-                {
-                    // Prior specular fit exists; start with material (basis) shader
-                    MainWindowController.getInstance().selectMaterialBasisShader();
-                }
-                else
-                {
-                    // No prior fit; start with image-based shader
-                    MainWindowController.getInstance().selectImageBasedShader();
-                }
+                Global.state().getProjectModel().setProjectLoaded(true);
+                Global.state().getProjectModel().setProjectProcessed(isProcessed());
+                Global.state().getProjectModel().setProcessedTextureResolution(
+                    projectInstance.getResources().getSpecularMaterialResources().getBasisWeightResources().weightMaps.getWidth());
 
                 if (progressMonitor != null)
                 {
@@ -476,20 +467,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     {
         if (projectInstance != null)
         {
-            ReadonlyViewSet viewSet = projectInstance.getResources().getViewSet();
-
             projectInstance.getDynamicResourceManager().setLightCalibration(
                 projectInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
     }
 
-    public boolean hasSpecularMaterials()
+    public boolean isProcessed()
     {
-        SpecularMaterialResources<ContextType> material = projectInstance.getResources().getSpecularMaterialResources();
-        return material.getAlbedoMap() != null ||
-            material.getSpecularRoughnessMap() != null ||
-            material.getSpecularReflectivityMap() != null ||
-            material.getORMMap() != null;
+        return projectInstance.getResources().getSpecularMaterialResources().getBasisWeightResources() != null;
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
@@ -654,6 +639,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 projectInstance.close();
                 projectInstance = null;
                 loadedViewSet = null;
+
+                Global.state().getProjectModel().setProjectLoaded(false);
+                Global.state().getProjectModel().setProjectProcessed(false);
+                Global.state().getProjectModel().setProcessedTextureResolution(0);
             }
 
             unloadRequested = false;
@@ -719,6 +708,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         if (projectInstance != null)
         {
             projectInstance.close();
+
+            Global.state().getProjectModel().setProjectLoaded(false);
+            Global.state().getProjectModel().setProjectProcessed(false);
+            Global.state().getProjectModel().setProcessedTextureResolution(0);
         }
     }
 }

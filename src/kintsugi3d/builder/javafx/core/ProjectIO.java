@@ -9,13 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx;
+package kintsugi3d.builder.javafx.core;
 
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -24,12 +21,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.experience.CreateProject;
-import kintsugi3d.builder.javafx.experience.ExperienceManager;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
 import kintsugi3d.builder.resources.project.MeshImportException;
-import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +34,7 @@ public final class ProjectIO
 {
     private static final ProjectIO INSTANCE = new ProjectIO();
 
-    public static ProjectIO getInstance()
+    static ProjectIO getInstance()
     {
         return INSTANCE;
     }
@@ -50,7 +43,6 @@ public final class ProjectIO
 
     private File projectFile;
     private File vsetFile;
-    private final BooleanProperty projectLoaded = new SimpleBooleanProperty(false);
 
     private FileChooser projectFileChooser;
 
@@ -76,9 +68,10 @@ public final class ProjectIO
             @Override
             public void cancelComplete(UserCancellationException e)
             {
+                Global.state().getProjectModel().setProjectOpen(false);
+
                 Platform.runLater(() ->
                 {
-                    projectLoaded.set(false);
                     Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
                     alert.setTitle("Cancelled");
                     alert.setHeaderText("Cancelled");
@@ -89,7 +82,7 @@ public final class ProjectIO
             @Override
             public void fail(Throwable e)
             {
-                Platform.runLater(() -> projectLoaded.set(false));
+                Global.state().getProjectModel().setProjectOpen(false);
 
                 if (e instanceof MeshImportException)
                 {
@@ -110,14 +103,9 @@ public final class ProjectIO
         });
     }
 
-    public BooleanExpression getProjectLoadedProperty()
-    {
-        return projectLoaded;
-    }
-
     private boolean confirmClose(String text)
     {
-        if (projectLoaded.get())
+        if (Global.state().getProjectModel().isProjectOpen())
         {
             Dialog<ButtonType> confirmation = new Alert(Alert.AlertType.CONFIRMATION,
                 "If you click OK, any unsaved changes to the current project will be lost.");
@@ -151,7 +139,8 @@ public final class ProjectIO
         vsetFile = null;
 
         Global.state().getIOModel().unload();
-        projectLoaded.set(true);
+        Global.state().getProjectModel().setProjectOpen(true);
+        Global.state().getProjectModel().setProjectName("(Untitled)");
     }
 
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
@@ -240,6 +229,7 @@ public final class ProjectIO
     private static void startLoad(File projectFile, File vsetFile)
     {
         Global.state().getIOModel().unload();
+        Global.state().getProjectModel().setProjectName(projectFile.getName());
 
         RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
@@ -329,15 +319,13 @@ public final class ProjectIO
         if (newVsetFile != null)
         {
             this.vsetFile = newVsetFile;
-            this.projectLoaded.set(true);
+            Global.state().getProjectModel().setProjectOpen(true);
 
             startLoad(projectFile, vsetFile);
 
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
             Global.state().getIOModel().setLoadedProjectFile(projectFile);
-
-            // Disable shaders that need processed textures until project load is complete.
-            MainWindowController.getInstance().setToggleableShaderDisable(true);
+            Global.state().getProjectModel().setProjectName(projectFile.getName());
         }
     }
 
@@ -398,6 +386,7 @@ public final class ProjectIO
                     this.vsetFile = projectFile;
                     this.projectFile = null;
                     Global.state().getIOModel().setLoadedProjectFile(vsetFile);
+                    Global.state().getProjectModel().setProjectName(vsetFile.getName());
                 }
                 else
                 {
@@ -408,6 +397,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(vsetFile);
                     JavaFXState.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
                     Global.state().getIOModel().setLoadedProjectFile(projectFile);
+                    Global.state().getProjectModel().setProjectName(projectFile.getName());
                 }
 
                 ioModel.saveGlTF(filesDirectory);
@@ -525,14 +515,8 @@ public final class ProjectIO
         vsetFile = null;
 
         Global.state().getIOModel().unload();
-        projectLoaded.set(false);
-
-        //TODO: do we want this here?
-        MainWindowController.getInstance().dismissMiniProgressBarAsync();
-
-        MainWindowController.getInstance().setToggleableShaderDisable(true);
-        MainWindowController.getInstance().setShaderNameVisibility(false);
-        MainWindowController.getInstance().updateShaderList();
+        Global.state().getProjectModel().setProjectOpen(false);
+        Global.state().getProjectModel().clearProjectName();
     }
 
     public void closeProjectAfterConfirmation()

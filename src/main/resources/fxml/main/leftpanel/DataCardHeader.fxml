@@ -7,7 +7,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
-<HBox alignment="CENTER_LEFT" prefHeight="13.0" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.main.CardController">
+<HBox alignment="CENTER_LEFT" prefHeight="13.0" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
     <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
     </ImageView>
     <Text id="texture_title" fx:id="cardTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">

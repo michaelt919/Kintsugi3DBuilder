@@ -20,8 +20,8 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.javafx.JavaFXState;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 
 import java.awt.*;
 import java.io.File;

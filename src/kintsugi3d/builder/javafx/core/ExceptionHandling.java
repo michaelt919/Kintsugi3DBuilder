@@ -1,11 +1,10 @@
-package kintsugi3d.builder.javafx.util;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
-import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanExpression;
@@ -24,10 +24,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.experience.ExperienceManager;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
-import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -54,7 +50,7 @@ public class WelcomeWindowController
 
     private static WelcomeWindowController INSTANCE;
 
-    public static WelcomeWindowController getInstance()
+    static WelcomeWindowController getInstance()
     {
         return INSTANCE;
     }
@@ -94,7 +90,7 @@ public class WelcomeWindowController
 
         shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
             .or(ProgressBarsController.getInstance().getProcessingProperty())
-            .or(ProjectIO.getInstance().getProjectLoadedProperty());
+            .or(JavaFXState.getInstance().getProjectModel().getProjectOpenProperty());
 
         shouldBeHidden.addListener(obs ->
         {

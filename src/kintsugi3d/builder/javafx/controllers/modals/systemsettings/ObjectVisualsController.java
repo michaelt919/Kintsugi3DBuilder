@@ -19,7 +19,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.JavaFXState;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 
 public class ObjectVisualsController implements SystemSettingsControllerBase
 {

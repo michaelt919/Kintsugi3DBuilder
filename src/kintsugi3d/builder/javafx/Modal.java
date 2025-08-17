@@ -10,7 +10,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
+import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.javafx.core.MainWindowController;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -66,13 +67,13 @@ public class Modal
         Parent root = fxmlLoader.load();
 
         this.stage = new Stage();
-        stage.getIcons().add(MainApplication.getInstance().getIcon());
+        stage.getIcons().add(MainApplication.getIcon());
         stage.setTitle(title);
         stage.setScene(new Scene(root));
         stage.initOwner(parentWindow);
         stage.setResizable(false);
         openProperty.bind(stage.showingProperty());
-        MainWindowController.getInstance().initAccelerators(stage.getScene());
+        MainApplication.initAccelerators(stage.getScene());
 
         return fxmlLoader.getController();
     }

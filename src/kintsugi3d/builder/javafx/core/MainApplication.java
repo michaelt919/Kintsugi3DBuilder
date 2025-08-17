@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -25,11 +25,7 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
-import kintsugi3d.builder.javafx.controllers.WelcomeWindowController;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
-import kintsugi3d.builder.javafx.experience.ExperienceManager;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
@@ -51,19 +47,7 @@ public class MainApplication extends Application
 {
     private static final Logger LOG = LoggerFactory.getLogger(MainApplication.class);
 
-    private static MainApplication appInstance;
-
     private static String[] arguments;
-
-    public MainApplication()
-    {
-        appInstance = this;
-    }
-
-    public static MainApplication getInstance()
-    {
-        return appInstance;
-    }
 
     public static void setArgs(String[] args)
     {
@@ -72,11 +56,16 @@ public class MainApplication extends Application
 
     public static final String ICON_PATH = "Kintsugi3D-icon.png";
 
-    private Image icon;
+    private static Image icon = null;
 
-    public Image getIcon()
+    public static Image getIcon()
     {
-        return this.icon;
+        return icon;
+    }
+
+    public static void initAccelerators(Scene scene)
+    {
+        MainWindowController.getInstance().initAccelerators(scene);
     }
 
     private static class StageSynchronization implements SynchronizedWindow
@@ -158,7 +147,10 @@ public class MainApplication extends Application
     @Override
     public void start(Stage primaryStage) throws IOException
     {
-        this.icon = new Image(new File(ICON_PATH).toURI().toURL().toString());
+        if (icon == null)
+        {
+            icon = new Image(new File(ICON_PATH).toURI().toURL().toString());
+        }
 
         primaryStage.getIcons().add(icon);
 
@@ -280,8 +272,8 @@ public class MainApplication extends Application
         welcomeWindowController.init(welcomeStage,
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
-        mainWindowController.initAccelerators(welcomeStage.getScene());
-        mainWindowController.initAccelerators(progressBarsStage.getScene());
+        initAccelerators(welcomeStage.getScene());
+        initAccelerators(progressBarsStage.getScene());
 
         // Open scene window from the menu
         settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->

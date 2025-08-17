@@ -26,7 +26,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataTransformerPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
-import kintsugi3d.util.RecentProjects;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

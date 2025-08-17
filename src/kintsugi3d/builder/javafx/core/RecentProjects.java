@@ -9,16 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.util;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.Tooltip;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.WelcomeWindowController;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

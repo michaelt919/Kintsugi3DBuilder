@@ -11,6 +11,10 @@
 
 package kintsugi3d.builder.javafx.internal;
 
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.IntegerExpression;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.*;
 import kintsugi3d.builder.javafx.controllers.scene.camera.CameraSetting;
 import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
@@ -50,6 +54,11 @@ public abstract class ProjectModelBase implements ProjectModel
 
     private File colorCheckerFile;
 
+    private final BooleanProperty projectOpen = new SimpleBooleanProperty(false);
+    private final StringProperty projectName = new SimpleStringProperty(NULL_PROJECT_NAME);
+    private final BooleanProperty projectLoaded = new SimpleBooleanProperty();
+    private final BooleanProperty projectProcessed = new SimpleBooleanProperty();
+    private final IntegerProperty processedTextureResolution = new SimpleIntegerProperty();
 
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
@@ -243,5 +252,90 @@ public abstract class ProjectModelBase implements ProjectModel
     public void setColorCheckerFile(File colorCheckerFile)
     {
         this.colorCheckerFile = colorCheckerFile;
+    }
+
+    @Override
+    public boolean isProjectOpen()
+    {
+        return projectOpen.get();
+    }
+
+    @Override
+    public void setProjectOpen(boolean projectOpen)
+    {
+        this.projectOpen.set(projectOpen);
+    }
+
+    public BooleanExpression getProjectOpenProperty()
+    {
+        return projectOpen;
+    }
+
+    @Override
+    public String getProjectName()
+    {
+        return projectName.get();
+    }
+
+    @Override
+    public void setProjectName(String projectName)
+    {
+        this.projectName.set(projectName);
+    }
+
+    public StringExpression getProjectNameProperty()
+    {
+        return projectName;
+    }
+
+    @Override
+    public boolean isProjectLoaded()
+    {
+        return projectLoaded.get();
+    }
+
+    @Override
+    public void setProjectLoaded(boolean projectLoaded)
+    {
+        this.projectLoaded.set(projectLoaded);
+    }
+
+    public BooleanExpression getProjectLoadedProperty()
+    {
+        return projectLoaded;
+    }
+
+    @Override
+    public boolean isProjectProcessed()
+    {
+        return projectProcessed.get();
+    }
+
+    @Override
+    public void setProjectProcessed(boolean projectProcessed)
+    {
+        this.projectProcessed.set(projectProcessed);
+    }
+
+    public BooleanExpression getProjectProcessedProperty()
+    {
+        return projectProcessed;
+    }
+
+    @Override
+    public int getProcessedTextureResolution()
+    {
+        return processedTextureResolution.get();
+    }
+
+    @Override
+    public void setProcessedTextureResolution(int processedTextureResolution)
+    {
+        this.processedTextureResolution.set(processedTextureResolution);
+    }
+
+    public IntegerExpression getProcessedTextureResolutionProperty()
+    {
+        return processedTextureResolution;
     }
 }

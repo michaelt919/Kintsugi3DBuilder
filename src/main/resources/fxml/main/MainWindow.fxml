@@ -16,7 +16,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.main.MainWindowController">
+<AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.MainWindowController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
           AnchorPane.topAnchor="0.0">
         <AnchorPane>
@@ -104,7 +104,7 @@
                                                 shortcut="UP"/>
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="LightCalibration" text="Light Calibration..."/>
+                    <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..."/>
                     <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="MaskOptions" text="Masking Options..."/>
                     <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="SpecularFit" text="Process Textures...">
                         <accelerator>

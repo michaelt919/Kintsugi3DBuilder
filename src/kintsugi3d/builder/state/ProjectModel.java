@@ -20,6 +20,27 @@ import java.io.IOException;
 
 public interface ProjectModel
 {
+    String NULL_PROJECT_NAME = "No Project";
+
     File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException;
     void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException;
+
+    boolean isProjectOpen();
+    void setProjectOpen(boolean projectOpen);
+
+    String getProjectName();
+    void setProjectName(String projectName);
+    default void clearProjectName()
+    {
+        this.setProjectName(NULL_PROJECT_NAME);
+    }
+
+    boolean isProjectLoaded();
+    void setProjectLoaded(boolean projectLoaded);
+
+    boolean isProjectProcessed();
+    void setProjectProcessed(boolean projectProcessed);
+
+    int getProcessedTextureResolution();
+    void setProcessedTextureResolution(int processedTextureResolution);
 }

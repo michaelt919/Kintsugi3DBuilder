@@ -22,12 +22,9 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.main.MainWindowController;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.MissingImagesException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -37,85 +34,99 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class MetashapeProjectInputSource extends InputSource{
-    private static final Logger LOG = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
+public class MetashapeProjectInputSource extends InputSource
+{
     private MetashapeModel model;
 
     @Override
-    public List<FileChooser.ExtensionFilter> getExtensionFilters() {
+    public List<FileChooser.ExtensionFilter> getExtensionFilters()
+    {
         return Collections.singletonList(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
     }
 
     @Override
-    public void verifyInfo(){
+    public void verifyInfo()
+    {
         MetashapeChunk parentChunk = model.getChunk();
 
         // Open the xml files that contains all the cameras' ids and file paths
         Document frame = parentChunk.getFrameXML();
-        if (frame == null || frame.getDocumentElement() == null) {
+        if (frame == null || frame.getDocumentElement() == null)
+        {
             ExceptionHandling.error("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
             return;
         }
 
         // Loop through the cameras and store each pair of id and path in the map
         NodeList cameraList = ((Element) frame
-                .getElementsByTagName("frame").item(0)) //assuming frame 0
-                .getElementsByTagName("camera");
+            .getElementsByTagName("frame").item(0)) //assuming frame 0
+            .getElementsByTagName("camera");
 
         int numMissingFiles = 0;
         File exceptionFolder = null;
 
-        for (int i = 0; i < cameraList.getLength(); i++) {
+        for (int i = 0; i < cameraList.getLength(); i++)
+        {
             Element cameraElement = (Element) cameraList.item(i);
 
             File imageFile = getImageFromFrameCam(cameraElement, parentChunk);
 
-            if (!imageFile.exists()) {
+            if (!imageFile.exists())
+            {
                 numMissingFiles++;
 
-                if (exceptionFolder == null) {
+                if (exceptionFolder == null)
+                {
                     exceptionFolder = imageFile.getParentFile();
                 }
             }
         }
 
-        if (numMissingFiles > 0) {
+        if (numMissingFiles > 0)
+        {
             throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
         }
     }
 
     @Override
-    public File getMasksDirectory() {
-       return model.getChunk().getMasksDirectory();
+    public File getMasksDirectory()
+    {
+        return model.getChunk().getMasksDirectory();
     }
 
     @Override
-    public File getInitialMasksDirectory() {
+    public File getInitialMasksDirectory()
+    {
         File masksDir = model.getChunk().getMasksDirectory();
         //TODO: might change this because it dumps the user deep into metashape project structure
         return masksDir != null ? masksDir.getParentFile() : model.getChunk().getPsxFile().getParentFile();
     }
 
     @Override
-    public boolean doEnableProjectMasksButton() {
-       return model.getChunk().getMasksDirectory() != null;
+    public boolean doEnableProjectMasksButton()
+    {
+        return model.getChunk().getMasksDirectory() != null;
     }
 
     @Override
-    public void setMasksDirectory(File file) {
-       model.getChunk().setMasksDirectory(file);
+    public void setMasksDirectory(File file)
+    {
+        model.getChunk().setMasksDirectory(file);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof MetashapeProjectInputSource)){
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof MetashapeProjectInputSource))
+        {
             return false;
         }
 
         MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
 
         //model and mask directory must be the same
-        if (!this.model.equals(other.model)){
+        if (!this.model.equals(other.model))
+        {
             return false;
         }
 
@@ -123,7 +134,8 @@ public class MetashapeProjectInputSource extends InputSource{
     }
 
     @Override
-    public void initTreeView() {
+    public void initTreeView()
+    {
         primaryViewSelectionModel = new AgisoftPrimaryViewSelectionModel(model);
         addTreeElems(primaryViewSelectionModel);
         searchableTreeView.bind();
@@ -131,18 +143,21 @@ public class MetashapeProjectInputSource extends InputSource{
 
     //TODO: uncouple loadProject() from orientationView
     @Override
-    public void loadProject() {
+    public void loadProject()
+    {
         model.getLoadPreferences().orientationViewName = getPrimaryView();
         model.getLoadPreferences().orientationViewRotateDegrees = getPrimaryViewRotation();
         new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
     }
 
-    public MetashapeProjectInputSource setMetashapeModel(MetashapeModel model){
+    public MetashapeProjectInputSource setMetashapeModel(MetashapeModel model)
+    {
         this.model = model;
         return this;
     }
 
-    public void showMissingImgsAlert(MissingImagesException mie, PageFrameController hostScrollerController) {
+    public void showMissingImgsAlert(MissingImagesException mie, PageFrameController hostController)
+    {
         int numMissingImgs = mie.getNumMissingImgs();
         File prevTriedDirectory = mie.getImgDirectory();
 
@@ -151,32 +166,32 @@ public class MetashapeProjectInputSource extends InputSource{
         ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.NO);
 
         Alert alert = new Alert(Alert.AlertType.NONE,
-                "Imported object is missing " + numMissingImgs + " images.",
-                cancel, newDirectory, skipMissingCams/*, openDirectory*/);
+            "Imported object is missing " + numMissingImgs + " images.",
+            cancel, newDirectory, skipMissingCams/*, openDirectory*/);
 
-        ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            hostScrollerController.prevPage();
-        });
+        ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> hostController.prevPage());
 
-        ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
+        ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event ->
+        {
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setInitialDirectory(new File(model.getChunk().getParentDocument().getPsxFilePath()).getParentFile());
 
             directoryChooser.setTitle("Choose New Image Directory");
 
-            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(MainWindowController.getInstance().getWindow());
+            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(hostController.getWindow());
             try
             {
                 verifyInfo();
                 initTreeView();
             }
-            catch(MissingImagesException mie2)
+            catch (MissingImagesException mie2)
             {
-                Platform.runLater(() -> showMissingImgsAlert(mie2, hostScrollerController));
+                Platform.runLater(() -> showMissingImgsAlert(mie2, hostController));
             }
         });
 
-        ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
+        ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event ->
+        {
             model.getLoadPreferences().fullResOverride = prevTriedDirectory;
             model.getLoadPreferences().doSkipMissingCams = true;
             initTreeView();
@@ -186,16 +201,20 @@ public class MetashapeProjectInputSource extends InputSource{
         alert.show();
     }
 
-    private static File getImageFromFrameCam(Element cameraElement, MetashapeChunk chunk) {
+    private static File getImageFromFrameCam(Element cameraElement, MetashapeChunk chunk)
+    {
         File fullResOverride = chunk.getSelectedModel().getLoadPreferences().fullResOverride;
         String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
 
         File imageFile;
-        if (fullResOverride != null) {
+        if (fullResOverride != null)
+        {
             //user selected an override
             String pathAttributeName = new File(pathAttribute).getName();
             imageFile = new File(fullResOverride, pathAttributeName);
-        } else {
+        }
+        else
+        {
             //no override
             File fullResDir = new File(chunk.getFramePath()).getParentFile();
             imageFile = new File(fullResDir, pathAttribute);

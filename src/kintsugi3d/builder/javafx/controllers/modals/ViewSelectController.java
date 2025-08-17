@@ -21,16 +21,14 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.javafx.controllers.main.ImageThreadable;
-import kintsugi3d.builder.javafx.controllers.main.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ImgSelectionThread;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
+import kintsugi3d.builder.javafx.util.ImageThreadable;
 import kintsugi3d.builder.resources.project.MissingImagesException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +36,6 @@ import java.util.Objects;
 
 public abstract class ViewSelectController extends DataReceiverPageControllerBase<InputSource> implements ImageThreadable
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ViewSelectController.class);
     @FXML
     protected TreeView<String> chunkTreeView;
     @FXML

@@ -17,7 +17,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.JavaFXState;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 
 import java.awt.*;
 import java.io.File;

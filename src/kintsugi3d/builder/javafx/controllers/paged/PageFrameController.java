@@ -50,9 +50,16 @@ public class PageFrameController
 
     private Runnable confirmCallback;
 
+    private Window window;
+
+    public Window getWindow()
+    {
+        return window;
+    }
+
     public void init()
     {
-        Window window = outerRoot.getScene().getWindow();
+        this.window = outerRoot.getScene().getWindow();
         Platform.runLater(window::requestFocus);
         window.setOnCloseRequest(this::onCloseRequest);
 

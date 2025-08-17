@@ -1,8 +1,8 @@
-package kintsugi3d.builder.javafx.experience;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.JavaFXState;
+import kintsugi3d.builder.javafx.experience.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ public final class ExperienceManager
         experiences.put("About", new About());
     }
 
-    public static ExperienceManager getInstance()
+    static ExperienceManager getInstance()
     {
         return INSTANCE;
     }

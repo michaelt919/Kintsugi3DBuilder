@@ -16,7 +16,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.JavaFXState;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.util.Launch4jConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

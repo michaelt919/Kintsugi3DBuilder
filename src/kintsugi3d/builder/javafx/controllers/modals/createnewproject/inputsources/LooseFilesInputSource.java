@@ -19,7 +19,7 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 
 import java.io.File;
 import java.text.MessageFormat;

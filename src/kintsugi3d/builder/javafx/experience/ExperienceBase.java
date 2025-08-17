@@ -2,11 +2,11 @@ package kintsugi3d.builder.javafx.experience;
 
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.JavaFXState;
 import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.controllers.paged.Page;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 
 import java.io.IOException;
 import java.text.MessageFormat;

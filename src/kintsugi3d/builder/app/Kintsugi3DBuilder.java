@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.app;
 
-import kintsugi3d.builder.javafx.MainApplication;
+import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.gl.interactive.InitializationException;
 import org.lwjgl.system.Configuration;

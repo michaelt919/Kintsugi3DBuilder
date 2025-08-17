@@ -25,12 +25,12 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.internal.EnvironmentModelImpl;
 import kintsugi3d.builder.javafx.util.ImageFactory;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.EncodableColorImage;
-import kintsugi3d.util.RecentProjects;
 
 import java.io.File;
 import java.net.URL;

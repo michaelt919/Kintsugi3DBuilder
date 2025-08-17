@@ -9,12 +9,14 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.main;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.StringExpression;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -35,15 +37,12 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
-import kintsugi3d.builder.javafx.JavaFXState;
-import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.ProgressBarsController;
-import kintsugi3d.builder.javafx.experience.ExperienceManager;
+import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
+import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
 import kintsugi3d.builder.javafx.experience.ExportRender;
-import kintsugi3d.builder.javafx.util.ExceptionHandling;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,7 +129,7 @@ public class MainWindowController
         instance = this;
     }
 
-    public static MainWindowController getInstance()
+    static MainWindowController getInstance()
     {
         return instance;
     }
@@ -180,6 +179,75 @@ public class MainWindowController
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
             ((RadioMenuItem) renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
 
+        ObservableProjectModel projectModel = javaFXState.getProjectModel();
+
+        projectModel.getProjectOpenProperty().addListener(obs ->
+        {
+            if (!projectModel.isProjectOpen())
+            {
+                dismissMiniProgressBarAsync();
+            }
+        });
+
+        shaderName.visibleProperty().bind(projectModel.getProjectLoadedProperty()
+            .and(BooleanExpression.booleanExpression(javaFXState.getSettingsModel().getBooleanProperty("lightCalibrationMode")).not()));
+
+        var resolutionFormatted = Bindings.createStringBinding(
+            () ->
+            {
+                if (projectModel.isProjectProcessed())
+                {
+                    int resolution = projectModel.getProcessedTextureResolution();
+                    return String.format(" [Processed, %dx%d]", resolution, resolution);
+                }
+                else if (projectModel.isProjectLoaded())
+                {
+                    return " [Not Processed]";
+                }
+                else if (projectModel.isProjectOpen())
+                {
+                    return " [Loading]";
+                }
+                else
+                {
+                    return "";
+                }
+            },
+            projectModel.getProjectOpenProperty(),
+            projectModel.getProjectLoadedProperty(),
+            projectModel.getProjectProcessedProperty(),
+            projectModel.getProcessedTextureResolutionProperty());
+
+        injectedStage.titleProperty().bind(
+            new SimpleStringProperty("Kintsugi 3D Builder : ")
+                .concat(projectModel.getProjectNameProperty())
+                .concat(StringExpression.stringExpression(resolutionFormatted)));
+
+        // Enable shaders which only work after processing textures
+        toggleableShaders.forEach(shader -> shader.disableProperty().bind(
+            projectModel.getProjectLoadedProperty().not().or(projectModel.getProjectProcessedProperty().not())));
+
+        // Refresh shaders after processing
+        projectModel.getProjectProcessedProperty()
+            .addListener(obs ->
+            {
+                MainWindowController.getInstance().updateShaderList();
+
+                if (projectModel.isProjectProcessed())
+                {
+                    // Automatically select material basis shader after processing textures
+                    materialBasis.setSelected(true);
+                }
+                else
+                {
+                    // Automatically select IBR shader if not processed.
+                    imageBased.setSelected(true);
+                }
+            });
+
+        projectModel.getProjectLoadedProperty().addListener(
+            obs -> cameraViewListController.rebindSearchableListView());
+
         KeyCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
         instance.window.getScene().getAccelerators().put(ctrlUp, () ->
         {
@@ -211,8 +279,6 @@ public class MainWindowController
             idx = (idx + 1) % numAvailableShaders;
             availableShaders.get(idx).setSelected(true);
         });
-
-        setToggleableShaderDisable(true);
 
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
@@ -264,18 +330,6 @@ public class MainWindowController
         }
     }
 
-    public void refresh()
-    {
-        //todo: would be nice if this was bound to a hasHandler property
-        shaderName.setVisible(Global.state().getIOModel().hasValidHandler());
-        updateShaderList();
-    }
-
-    public CameraViewListController getCameraViewListController()
-    {
-        return cameraViewListController;
-    }
-
     private List<RadioMenuItem> getRadioMenuItems(Menu menu)
     {
         List<RadioMenuItem> list = new ArrayList<>();
@@ -300,7 +354,7 @@ public class MainWindowController
     }
 
     // Populate menu based on a given input number
-    public void updateShaderList()
+    private void updateShaderList()
     {
         for (Menu flyout : shaderMenuFlyouts)
         {
@@ -452,6 +506,11 @@ public class MainWindowController
         }
     }
 
+    public void lightCalibration()
+    {
+        ExperienceManager.getInstance().getExperience("LightCalibration").tryOpen();
+    }
+
     public void showProgressBars()
     {
         ProgressBarsController.getInstance().showStage();
@@ -492,14 +551,6 @@ public class MainWindowController
     public Menu getCleanRecentProjectsMenu()
     {
         return cleanRecentProjectsMenu;
-    }
-
-    //come up with a clearer name for this
-    //set the disable of shaders which only work after processing textures
-    //TODO: bind these to some property instead of manually changing values
-    public void setToggleableShaderDisable(boolean b)
-    {
-        toggleableShaders.forEach(menuItem -> menuItem.setDisable(b));
     }
 
     public Window getWindow() // Useful for creating alerts in back-end classes
@@ -632,20 +683,5 @@ public class MainWindowController
     public void hotSwap()
     {
         ProjectIO.getInstance().hotSwap(window);
-    }
-
-    public void selectMaterialBasisShader()
-    {
-        Platform.runLater(() -> materialBasis.setSelected(true));
-    }
-
-    public void selectImageBasedShader()
-    {
-        Platform.runLater(() -> imageBased.setSelected(true));
-    }
-
-    public void setShaderNameVisibility(boolean b)
-    {
-        shaderName.setVisible(b);
     }
 }
