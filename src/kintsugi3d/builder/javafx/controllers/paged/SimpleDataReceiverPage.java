@@ -13,10 +13,11 @@ public final class SimpleDataReceiverPage<T, ControllerType extends NonSupplierP
     }
 
     @Override
-    public void receiveData(T data)
+    public SimpleDataReceiverPage<T, ControllerType> receiveData(T data)
     {
         super.receiveData(data);
         this.data = data;
+        return this;
     }
 
     @Override

@@ -15,14 +15,14 @@ public interface Page<InType, OutType>
 
     Page<?, ? extends InType> getPrevPage();
     boolean hasPrevPage();
-    void setPrevPage(Page<?, ? extends InType> page);
+    Page<?, ? extends InType> setPrevPage(Page<?, ? extends InType> page);
 
     ObjectExpression<? extends Page<? super OutType, ?>> getNextPageObservable();
     Page<? super OutType, ?> getNextPage();
     boolean hasNextPage();
-    void setNextPage(Page<? super OutType, ?> page);
+    Page<? super OutType, ?> setNextPage(Page<? super OutType, ?> page);
 
-    void receiveData(InType data);
+    Page<InType, OutType> receiveData(InType data);
     OutType getOutData();
 
     void sendOutData();

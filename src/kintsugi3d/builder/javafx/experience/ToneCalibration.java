@@ -1,6 +1,5 @@
 package kintsugi3d.builder.javafx.experience;
 
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TreeItem;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
@@ -10,7 +9,6 @@ import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
 
@@ -28,49 +26,24 @@ public class ToneCalibration extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        PageFrameController frameController = createPagedModal();
-        getModal().open();
+        openPagedModel(frameController ->
+        {
+            var firstPage = frameController.createPage(
+                "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+                SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new,
+                LightCalibrationViewSelectController::new)
+                .receiveData(getCurrentProjectInputSource());
 
-        var viewPage = frameController.createPage(
-            "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-            viewLoader ->
-            {
-                // Override controller class
-                viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
+            firstPage
+                .setNextPage(frameController.createPage(
+                    "/fxml/modals/SelectToneCalibrationImage.fxml",
+                    SimpleNonDataPage<SelectToneCalibrationImageController>::new))
+                .setNextPage(frameController.createPage(
+                    "/fxml/modals/EyedropperColorChecker.fxml",
+                    SimpleNonDataPage<EyedropperController>::new));
 
-                try
-                {
-                    viewLoader.load();
-                }
-                catch (IOException | RuntimeException e)
-                {
-                    handleError(e);
-                }
-
-                return viewLoader;
-            },
-            SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new);
-
-        FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/modals/SelectToneCalibrationImage.fxml"));
-        imageSelectorLoader.load();
-
-        var imageSelectorPage = frameController.createPage(
-            "/fxml/modals/SelectToneCalibrationImage.fxml",
-            SimpleNonDataPage<SelectToneCalibrationImageController>::new);
-
-        viewPage.setNextPage(imageSelectorPage);
-
-        var eyedropPage = frameController.createPage(
-            "/fxml/modals/EyedropperColorChecker.fxml",
-            SimpleNonDataPage<EyedropperController>::new);
-
-        imageSelectorPage.setNextPage(eyedropPage);
-
-        CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
-        viewPage.receiveData(inputSource);
-
-        frameController.setCurrentPage(viewPage);
-        frameController.init();
+            return firstPage;
+        });
     }
 
     private static CurrentProjectInputSource getCurrentProjectInputSource()

@@ -28,7 +28,7 @@ import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataTransformerPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-public class MetashapeImportController extends DataTransformerPageControllerBase<InputSource, InputSource>
+public class MetashapeImportController extends DataSourcePageControllerBase<InputSource>
 {
     private static final Logger LOG = LoggerFactory.getLogger(MetashapeImportController.class);
 
@@ -59,7 +59,7 @@ public class MetashapeImportController extends DataTransformerPageControllerBase
 
     @FXML private FileChooser psxFileChooser;
 
-    private InputSource source;
+    private final InputSource source = new MetashapeProjectInputSource();
 
     @Override
     public Region getRootNode()
@@ -371,11 +371,5 @@ public class MetashapeImportController extends DataTransformerPageControllerBase
             loadMetashapeObject.setText("Unloaded");
             loadMetashapeObject.setFill(Paint.valueOf("Red"));
         }
-    }
-
-    @Override
-    public void receiveData(InputSource source)
-    {
-        this.source = source;
     }
 }

@@ -11,11 +11,10 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
-public class HotSwapController extends CustomImportController
+public class HotSwapController extends ManualImportController
 {
-    @Override
-    protected boolean shouldHotSwap()
+    public HotSwapController()
     {
-        return true;
+        source.setHotSwap(true);
     }
 }

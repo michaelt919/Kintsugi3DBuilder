@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsourc
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
@@ -26,7 +25,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class InputSource {
+public abstract class InputSource
+{
     protected PrimaryViewSelectionModel primaryViewSelectionModel;
 
     protected SearchableTreeView searchableTreeView;
@@ -37,8 +37,6 @@ public abstract class InputSource {
     private double primaryViewRotation;
 
     private static final int THUMBNAIL_SIZE = 30;
-
-    public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
 
     public abstract void initTreeView();
 
@@ -51,11 +49,13 @@ public abstract class InputSource {
     {
     }
 
-    public void setSearchableTreeView(SearchableTreeView searchableTreeView){
+    public void setSearchableTreeView(SearchableTreeView searchableTreeView)
+    {
         this.searchableTreeView = searchableTreeView;
     }
 
-    public PrimaryViewSelectionModel getPrimarySelectionModel(){
+    public PrimaryViewSelectionModel getPrimarySelectionModel()
+    {
         return this.primaryViewSelectionModel;
     }
 
@@ -72,12 +72,14 @@ public abstract class InputSource {
 
     /**
      * Return the known masks directory.
+     *
      * @return the masks directory
      */
     public abstract File getMasksDirectory();
 
     /**
      * For setting the initial directory of the masks directory chooser. Not guaranteed to be the actual masks directory.
+     *
      * @return a directory which will hopefully be close to the actual masks directory so the user will find it quickly
      */
     public abstract File getInitialMasksDirectory();
@@ -86,7 +88,8 @@ public abstract class InputSource {
 
     public abstract void setMasksDirectory(File file);
 
-    protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
+    protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel)
+    {
         TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());
         searchableTreeView.getTreeView().setRoot(rootItem);
 
@@ -97,33 +100,42 @@ public abstract class InputSource {
             rootItem.getChildren().add(NONE_ITEM);
         }
 
-        for (View view : views) {
+        for (View view : views)
+        {
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
             //unless that group already exists, then add the camera to the already created group
 
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-            if (view.group != null) {
+            if (view.group != null)
+            {
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
                 AtomicReference<TreeItem<String>> matchingItem = new AtomicReference<>();
 
-                rootChildren.forEach(item -> {
-                    if (item.getValue().equals(view.group)) {
+                rootChildren.forEach(item ->
+                {
+                    if (item.getValue().equals(view.group))
+                    {
                         groupAlreadyCreated.set(true);
                         matchingItem.set(item);
                     }
                 });
 
-                if (groupAlreadyCreated.get()) {
+                if (groupAlreadyCreated.get())
+                {
                     //add camera to existing group
                     destinationItem = matchingItem.get();
-                } else {//group has not been created yet
+                }
+                else
+                {//group has not been created yet
                     TreeItem<String> newGroup = new TreeItem<>(view.group);
                     rootItem.getChildren().add(newGroup);
                     destinationItem = newGroup;
                 }
-            } else {
+            }
+            else
+            {
                 //parent is camera, so add image to root node
                 //(camera is not part of a group)
                 destinationItem = rootItem;
@@ -138,13 +150,16 @@ public abstract class InputSource {
         searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgList, View view) {
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgList, View view)
+    {
         ImageView thumbnailImgView;
         Image img = thumbnailImgList.get(view.id);
-        if (img != null){
+        if (img != null)
+        {
             thumbnailImgView = new ImageView(img);
         }
-        else{
+        else
+        {
             //thumbnail not found in thumbnailImgList
             thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
         }

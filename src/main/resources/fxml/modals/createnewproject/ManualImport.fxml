@@ -15,7 +15,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<VBox fx:id="root" alignment="CENTER" spacing="32.0" styleClass="root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.CustomImportController">
+<VBox fx:id="root" alignment="CENTER" spacing="32.0" styleClass="root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.ManualImportController">
    <GridPane alignment="CENTER" hgap="16.0" styleClass="grid-pane" vgap="32.0" VBox.vgrow="ALWAYS">
       <columnConstraints>
          <ColumnConstraints />
@@ -47,6 +47,6 @@
       </Text>
    </GridPane>
    <AnchorPane>
-      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" styleClass="wireframeBody, checkbox" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" onAction="#undistortToggle" selected="true" text="Undistort images" styleClass="wireframeBody, checkbox" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
    </AnchorPane>
 </VBox>

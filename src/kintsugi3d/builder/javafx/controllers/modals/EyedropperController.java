@@ -830,12 +830,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     public void refresh()
     {
         setIOModel(Global.state().getIOModel());
-
-        ProjectModelBase project = (ProjectModelBase) Global.state().getProjectModel();
-        if (project != null)
-        {
-            setImage(project.getColorCheckerFile());
-        }
+        setImage(getPageFrameController().getState().getProjectModel().getColorCheckerFile());
 
         updateApplyButton();
     }

@@ -18,14 +18,13 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.DataSupplierPageController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataTransformerPage;
+import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
 
-public class SelectImportOptionsController extends DataSourcePageControllerBase<InputSource>
+import java.util.function.Supplier;
+
+public class SelectImportOptionsController extends NonDataPageControllerBase
 {
     @FXML private ToggleButton metashapeImportButton;
     @FXML private ToggleButton looseFilesImportButton;
@@ -80,32 +79,28 @@ public class SelectImportOptionsController extends DataSourcePageControllerBase<
         }
     }
 
-    private <ControllerType extends DataSupplierPageController<? super InputSource, InputSource>>
-    void setupInputSource(String nextPageFXML, InputSource inputSource)
+    private <ControllerType extends DataSourcePageControllerBase<InputSource>>
+    void setupInputSource(String nextPageFXML, Supplier<ControllerType> controllerConstructorOverride)
     {
         var nextPage = getPageFrameController().createPage(nextPageFXML,
-            SimpleDataTransformerPage<InputSource, InputSource, ControllerType>::new);
-        this.getPage().setOutData(inputSource);
+            SimpleDataSourcePage<InputSource, ControllerType>::new, controllerConstructorOverride);
         this.getPage().setNextPage(nextPage);
     }
 
-    // Have this so we can navigate to loose files selection from inside an error message somewhere else
+    // Have this so we can navigate to manual selection from inside an error message somewhere else
     public void looseFiles()
     {
-        this.<CustomImportController>setupInputSource(
-            "/fxml/modals/createnewproject/CustomImport.fxml", new LooseFilesInputSource());
+        this.<ManualImportController>setupInputSource("/fxml/modals/createnewproject/ManualImport.fxml", null);
     }
 
-    // Have this so we can navigate to loose files selection from inside an error message somewhere else
+    // Have this so we can navigate to manual selection from inside an error message somewhere else
     public void realityCapture()
     {
-        this.<CustomImportController>setupInputSource(
-            "/fxml/modals/createnewproject/CustomImport.fxml", new RealityCaptureInputSource());
+        this.setupInputSource("/fxml/modals/createnewproject/ManualImport.fxml", RealityCaptureImportController::new);
     }
 
     public void metashape()
     {
-        this.<MetashapeImportController>setupInputSource(
-            "/fxml/modals/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource());
+        this.<MetashapeImportController>setupInputSource("/fxml/modals/createnewproject/MetashapeImport.fxml", null);
     }
 }

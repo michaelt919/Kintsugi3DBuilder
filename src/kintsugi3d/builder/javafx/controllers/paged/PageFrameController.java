@@ -14,6 +14,8 @@ package kintsugi3d.builder.javafx.controllers.paged;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,11 +31,13 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.Modal;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class PageFrameController
 {
@@ -46,20 +50,28 @@ public class PageFrameController
 
     private final Map<String, Page<?,?>> pageCache = new HashMap<>(8);
     private Function<FXMLLoader, FXMLLoader> pageFactory;
-    private Page<?,?> currentPage;
+    private final ObjectProperty<Page<?,?>> currentPage = new SimpleObjectProperty<>();
 
     private Runnable confirmCallback;
 
     private Window window;
+    private JavaFXState state;
 
     public Window getWindow()
     {
         return window;
     }
 
-    public void init()
+    public JavaFXState getState()
+    {
+        return state;
+    }
+
+    public void init(JavaFXState state)
     {
         this.window = outerRoot.getScene().getWindow();
+        this.state = state;
+
         Platform.runLater(window::requestFocus);
         window.setOnCloseRequest(this::onCloseRequest);
 
@@ -70,12 +82,10 @@ public class PageFrameController
         window.widthProperty().addListener(forceSize);
         window.heightProperty().addListener(forceSize);
 
-        String fileName = currentPage.getFXMLFilePath();
+        String fileName = currentPage.get().getFXMLFilePath();
         initControllerAndUpdatePanel(fileName);
 
-        setButtonShortcuts(currentPage.getController());
-        prevButton.setOnAction(e -> prevPage());
-        nextButton.setOnAction(e -> advancePage());
+        setButtonShortcuts(currentPage.get().getController());
     }
 
     private void setButtonShortcuts(PageController<?> pageController)
@@ -90,12 +100,12 @@ public class PageFrameController
 
     private void close()
     {
-        Modal.requestClose(currentPage.getController().getRootNode());
+        Modal.requestClose(currentPage.get().getController().getRootNode());
     }
 
     private void onCloseRequest(WindowEvent windowEvent)
     {
-        if (!currentPage.getController().close())
+        if (!currentPage.get().getController().close())
         {
             windowEvent.consume();
         }
@@ -106,58 +116,102 @@ public class PageFrameController
         this.pageFactory = pageFactory;
     }
 
-    public <PageType extends Page<InType,OutType>, InType, OutType> PageType createPage(String fxmlPath,
-        Function<FXMLLoader, FXMLLoader> customPageFactory, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    /**
+     * Constructs a page from an FXML file.
+     * @param fxmlPath
+     * @param pageConstructor
+     * @return
+     * @param <PageType>
+     * @param <InType>
+     * @param <OutType>
+     */
+    public <PageType extends Page<InType,OutType>, InType, OutType>
+    PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    {
+        return createPage(fxmlPath, pageConstructor, null);
+    }
+
+    /**
+     * Constructs a page from an FXML file
+     * but overrides the controller type specified in the FXML by providing a constructor for the desired controller.
+     * @param fxmlPath
+     * @param pageConstructor
+     * @param controllerConstructorOverride
+     * @return
+     * @param <PageType>
+     * @param <InType>
+     * @param <OutType>
+     * @param <ControllerType>
+     */
+    public <PageType extends Page<InType,OutType>, InType, OutType, ControllerType extends PageController<? super InType>>
+    PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
+        Supplier<ControllerType> controllerConstructorOverride)
     {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-        PageType page = pageConstructor.apply(fxmlPath, customPageFactory.apply(loader));
+
+        if (controllerConstructorOverride != null)
+        {
+            // Override controller type if specified.
+            loader.setControllerFactory(c -> controllerConstructorOverride.get());
+        }
+
+        PageType page = pageConstructor.apply(fxmlPath, pageFactory.apply(loader));
 
         PageController<?> controller = page.getController();
         controller.setPageFrameController(this);
-        nextButton.disableProperty().bind(
-            page.getNextPageObservable().isNull()
-                .and(controller.getCanConfirmObservable().not())
-                .or(controller.getCanAdvanceObservable().not()));
 
         BooleanBinding advanceLabelOverrideNotNull = controller.getAdvanceLabelOverrideObservable().isNotNull();
         BooleanBinding shouldConfirm = page.getNextPageObservable().isNull().and(controller.getCanConfirmObservable());
 
-        nextButton.textProperty().bind(new ObjectBinding<>()
+        currentPage.addListener(obs ->
         {
+            // if the current page is changed to the page just created, bind it to button attributes as needed
+            if (currentPage.get() == page)
             {
-                bind(advanceLabelOverrideNotNull);
-                bind(shouldConfirm);
-            }
+                nextButton.textProperty().unbind();
+                nextButton.textProperty().bind(new ObjectBinding<>()
+                {
+                    {
+                        bind(advanceLabelOverrideNotNull);
+                        bind(shouldConfirm);
+                    }
 
-            @Override
-            protected String computeValue()
-            {
-                if (advanceLabelOverrideNotNull.get())
-                {
-                    return controller.getAdvanceLabelOverrideObservable().get();
-                }
-                else
-                {
-                    return shouldConfirm.get() ? "Confirm" : "Next";
-                }
+                    @Override
+                    protected String computeValue()
+                    {
+                        if (advanceLabelOverrideNotNull.get())
+                        {
+                            return controller.getAdvanceLabelOverrideObservable().get();
+                        }
+                        else
+                        {
+                            return shouldConfirm.get() ? "Confirm" : "Next";
+                        }
+                    }
+                });
+
+                nextButton.disableProperty().unbind();
+                nextButton.disableProperty().bind(
+                    page.getNextPageObservable().isNull()
+                        .and(controller.getCanConfirmObservable().not())
+                        .or(controller.getCanAdvanceObservable().not()));
             }
         });
 
         controller.getCanConfirmObservable().addListener(observable ->
-            nextButton.setFont(Font.font(
-                nextButton.getFont().getFamily(),
-                controller.canConfirm() ? FontWeight.BOLD : FontWeight.NORMAL,
-                nextButton.getFont().getSize())));
+        {
+            if (currentPage == page) // only should apply if on the page just created
+            {
+                nextButton.setFont(Font.font(
+                    nextButton.getFont().getFamily(),
+                    controller.canConfirm() ? FontWeight.BOLD : FontWeight.NORMAL,
+                    nextButton.getFont().getSize()));
+            }
+        });
 
         page.initController();
         pageCache.put(fxmlPath, page);
         return page;
-    }
-
-    public <PageType extends Page<InType, OutType>, InType, OutType> PageType createPage(
-        String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
-    {
-        return createPage(fxmlPath, pageFactory, pageConstructor);
     }
 
     public Page<?,?> getPage(String fxmlPath)
@@ -167,10 +221,10 @@ public class PageFrameController
 
     public void prevPage()
     {
-        if (currentPage.hasPrevPage())
+        if (currentPage.get().hasPrevPage())
         {
-            currentPage = currentPage.getPrevPage();
-            initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
+            currentPage.set(currentPage.get().getPrevPage());
+            initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
         }
         else
         {
@@ -180,29 +234,29 @@ public class PageFrameController
 
     public void advancePage()
     {
-        if (currentPage.getController().canAdvance())
+        if (currentPage.get().getController().canAdvance())
         {
-            if (currentPage.getController().advance()) // Finishes up on the current page
+            if (currentPage.get().getController().advance()) // Finishes up on the current page
             {
-                if (currentPage.hasNextPage()) // next page exists
+                if (currentPage.get().hasNextPage()) // next page exists
                 {
                     // Passes data to the next page if applicable
-                    currentPage.sendOutData();
+                    currentPage.get().sendOutData();
 
-                    currentPage = currentPage.getNextPage();
-                    initControllerAndUpdatePanel(currentPage.getFXMLFilePath());
-                    setButtonShortcuts(currentPage.getController());
+                    currentPage.set(currentPage.get().getNextPage());
+                    initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
+                    setButtonShortcuts(currentPage.get().getController());
                 }
-                else if (currentPage.getController().canConfirm()) // no next page but can submit
+                else if (currentPage.get().getController().canConfirm()) // no next page but can submit
                 {
-                    if (currentPage.getController().confirm())
+                    if (currentPage.get().getController().confirm())
                     {
                         if (confirmCallback != null)
                         {
                             confirmCallback.run();
                         }
 
-                        Modal.requestClose(currentPage.getController().getRootNode());
+                        Modal.requestClose(currentPage.get().getController().getRootNode());
                     }
                 }
             }
@@ -219,19 +273,19 @@ public class PageFrameController
             hostPane.getChildren().setAll(newContent);
         }
 
-        currentPage.getController().refresh();
+        currentPage.get().getController().refresh();
 
         outerRoot.getScene().getWindow().sizeToScene();
     }
 
     public Page<?,?> getCurrentPage()
     {
-        return currentPage;
+        return currentPage.get();
     }
 
     public void setCurrentPage(Page<?,?> page)
     {
-        this.currentPage = page;
+        this.currentPage.set(page);
     }
 
     public Runnable getConfirmCallback()

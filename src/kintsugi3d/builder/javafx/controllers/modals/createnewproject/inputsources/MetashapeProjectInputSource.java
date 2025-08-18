@@ -17,7 +17,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
@@ -30,19 +29,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 public class MetashapeProjectInputSource extends InputSource
 {
     private MetashapeModel model;
-
-    @Override
-    public List<FileChooser.ExtensionFilter> getExtensionFilters()
-    {
-        return Collections.singletonList(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-    }
 
     @Override
     public void verifyInfo()

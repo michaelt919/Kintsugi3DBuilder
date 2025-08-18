@@ -21,13 +21,16 @@
    <ToggleButton fx:id="metashapeImportButton" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Metashape">
       <padding>
          <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-      </padding></ToggleButton>
-   <ToggleButton fx:id="looseFilesImportButton" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Loose Files">
-      <padding>
-         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-      </padding></ToggleButton>
+      </padding>
+   </ToggleButton>
    <ToggleButton fx:id="realityCaptureImportButton" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Reality Capture">
       <padding>
          <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-      </padding></ToggleButton>
+      </padding>
+   </ToggleButton>
+   <ToggleButton fx:id="looseFilesImportButton" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Manual">
+      <padding>
+         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+      </padding>
+   </ToggleButton>
 </VBox>

@@ -22,20 +22,16 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.LooseFilesInputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.RealityCaptureInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataTransformerPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
+import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.core.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 
-public class CustomImportController extends DataTransformerPageControllerBase<InputSource, InputSource>
+public class ManualImportController extends DataSourcePageControllerBase<InputSource>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(CustomImportController.class);
-
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
@@ -49,43 +45,39 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
 
-    private File cameraFile;
-    private File meshFile;
-    private File photoDir;
-
-    private InputSource source;
-
-    /**
-     * Overridden by child class to enable hot swap
-     *
-     * @return
-     */
-    protected boolean shouldHotSwap()
-    {
-        return false;
-    }
+    protected final ManualInputSource source = new ManualInputSource();
 
     @Override
-    public Region getRootNode()
+    public final Region getRootNode()
     {
         return root;
     }
 
     @Override
-    public void initPage()
+    public final void initPage()
     {
+        this.getPage().setOutData(source);
+
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
-        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Reality Capture CSV file", "*.csv"));
-        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
+        objFileChooser.setTitle("Select 3D model file");
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Stanford PLY file", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
-        objFileChooser.setTitle("Select object file");
+        StringBuilder cameraPositionsTextBuilder = new StringBuilder("Camera Positions\n(");
+        for (ExtensionFilter filter : getCameraExtensionFilters())
+        {
+            camFileChooser.getExtensionFilters().add(filter);
+            cameraPositionsTextBuilder.append(filter.getDescription()).append(" or\n");
+        }
 
-        photoDirectoryChooser.setTitle("Select photo directory");
+        int finalIdx = cameraPositionsTextBuilder.length();
+        cameraPositionsTextBuilder.replace(finalIdx - 4, finalIdx, ")");
+        camPositionsTxt.setText(cameraPositionsTextBuilder.toString());
+
+        photoDirectoryChooser.setTitle("Select source photo directory");
 
         this.getPage().setNextPage(getPageFrameController().createPage(
             "/fxml/modals/createnewproject/MasksImport.fxml",
@@ -94,37 +86,28 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
         setCanConfirm(true);
     }
 
+    protected List<ExtensionFilter> getCameraExtensionFilters()
+    {
+        return List.of(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"),
+            new ExtensionFilter("Reality Capture CSV file", "*.csv"));
+    }
+
     @Override
-    public void refresh()
+    public final void refresh()
     {
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
-
-        if (source != null)
-        {
-            camFileChooser.getExtensionFilters().clear();
-
-            StringBuilder cameraPositionsTextBuilder = new StringBuilder("Camera Positions\n(");
-            for (ExtensionFilter filter : source.getExtensionFilters())
-            {
-                camFileChooser.getExtensionFilters().add(filter);
-                cameraPositionsTextBuilder.append(filter.getDescription()).append(" or\n");
-            }
-            int finalIdx = cameraPositionsTextBuilder.length();
-            cameraPositionsTextBuilder.replace(finalIdx - 4, finalIdx, ")");
-            camPositionsTxt.setText(cameraPositionsTextBuilder.toString());
-        }
     }
 
     @FXML
     private void camFileSelect()
     {
-        File temp = camFileChooser.showOpenDialog(getStage());
+        File file = camFileChooser.showOpenDialog(getStage());
 
-        if (temp != null)
+        if (file != null)
         {
-            cameraFile = temp;
-            setHomeDir(temp);
+            source.setCameraFile(file);
+            setHomeDir(file);
             loadCheckCameras.setText("Loaded");
             loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
@@ -139,13 +122,12 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
     @FXML
     private void objFileSelect()
     {
+        File file = objFileChooser.showOpenDialog(getStage());
 
-        File temp = objFileChooser.showOpenDialog(getStage());
-
-        if (temp != null)
+        if (file != null)
         {
-            meshFile = temp;
-            setHomeDir(temp);
+            source.setMeshFile(file);
+            setHomeDir(file);
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
@@ -160,12 +142,12 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
     private void photoDirectorySelect()
     {
 
-        File temp = photoDirectoryChooser.showDialog(getStage());
+        File file = photoDirectoryChooser.showDialog(getStage());
 
-        if (temp != null)
+        if (file != null)
         {
-            photoDir = temp;
-            setHomeDir(temp);
+            source.setPhotosDir(file);
+            setHomeDir(file);
             loadCheckImages.setText("Loaded");
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
@@ -178,14 +160,13 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
 
     private boolean areAllFilesLoaded()
     {
-        return (cameraFile != null) && (meshFile != null) && (photoDir != null);
+        return (source.getCameraFile() != null) && (source.getMeshFile() != null) && (source.getPhotosDir() != null);
     }
 
 
     private void setHomeDir(File home)
     {
         File parentDir = home.getParentFile();
-
         setInitDirectories(parentDir);
     }
 
@@ -208,54 +189,14 @@ public class CustomImportController extends DataTransformerPageControllerBase<In
     }
 
     @Override
-    public boolean advance()
-    {
-        if (shouldHotSwap())
-        {
-            this.getPage().setOutData(
-                new LooseFilesInputSource().setCameraFile(cameraFile)
-                    .setMeshFile(meshFile)
-                    .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected())
-                    .setHotSwap(true));
-        }
-        else
-        {
-            //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
-            if (source instanceof RealityCaptureInputSource)
-            {
-                this.getPage().setOutData(
-                    new RealityCaptureInputSource()
-                        .setCameraFile(cameraFile)
-                        .setMeshFile(meshFile)
-                        .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
-            }
-            else if (source instanceof LooseFilesInputSource)
-            {
-                this.getPage().setOutData(
-                    new LooseFilesInputSource()
-                        .setCameraFile(cameraFile)
-                        .setMeshFile(meshFile)
-                        .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
-            }
-            else
-            {
-                LOG.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean confirm()
+    public final boolean confirm()
     {
         source.loadProject();
         return true;
     }
 
-    @Override
-    public void receiveData(InputSource source)
+    public void undistortToggle()
     {
-        this.source = source;
+        source.setNeedsUndistort(undistortImagesCheckBox.isSelected());
     }
 }

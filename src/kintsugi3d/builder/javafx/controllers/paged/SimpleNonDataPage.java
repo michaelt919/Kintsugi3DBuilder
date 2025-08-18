@@ -15,9 +15,10 @@ public final class SimpleNonDataPage<ControllerType extends NonSupplierPageContr
      * @param data
      */
     @Override
-    public void receiveData(Object data)
+    public SimpleNonDataPage<ControllerType> receiveData(Object data)
     {
         // Suppress as we don't expect the incoming data to be useful.
+        return this;
     }
 
     /**

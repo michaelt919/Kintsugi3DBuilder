@@ -68,9 +68,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
         selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
         buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
-        {
-            selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
-        });
+            selectImageFileLabel.setVisible(selectImageFileButton.isSelected()));
 
         this.getCanAdvanceObservable().bind(buttonGroup.selectedToggleProperty().isNotNull());
     }
@@ -120,8 +118,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
             viewSet.clearTonemapping();
 
             LOG.debug("Setting new color calibration image: {}", imageFile);
-            ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
-            project.setColorCheckerFile(imageFile);
+            getPageFrameController().getState().getProjectModel().setColorCheckerFile(imageFile);
         }
 
         return true;

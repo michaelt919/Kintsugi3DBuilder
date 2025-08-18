@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
-import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetDirectories;
@@ -23,9 +22,8 @@ import kintsugi3d.builder.javafx.core.ExceptionHandling;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.List;
 
-public class LooseFilesInputSource extends InputSource
+public class ManualInputSource extends InputSource
 {
     private File cameraFile;
     private File meshFile;
@@ -34,39 +32,52 @@ public class LooseFilesInputSource extends InputSource
     private boolean needsUndistort;
     private boolean hotSwap;
 
-    @Override
-    public List<ExtensionFilter> getExtensionFilters()
+    public File getCameraFile()
     {
-        return List.of(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"),
-            new ExtensionFilter("Reality Capture CSV file", "*.csv"));
+        return this.cameraFile;
     }
 
-    public LooseFilesInputSource setCameraFile(File cameraFile)
+    public ManualInputSource setCameraFile(File cameraFile)
     {
         this.cameraFile = cameraFile;
         return this;
     }
 
-    public LooseFilesInputSource setMeshFile(File meshFile)
+    public File getMeshFile()
+    {
+        return this.meshFile;
+    }
+
+    public ManualInputSource setMeshFile(File meshFile)
     {
         this.meshFile = meshFile;
         return this;
     }
 
-    public LooseFilesInputSource setPhotosDir(File photosDir, boolean needsUndistort)
+    public File getPhotosDir()
+    {
+        return this.photosDir;
+    }
+
+    public ManualInputSource setPhotosDir(File photosDir)
     {
         this.photosDir = photosDir;
+        return this;
+    }
+
+    public ManualInputSource setNeedsUndistort(boolean needsUndistort)
+    {
         this.needsUndistort = needsUndistort;
         return this;
     }
 
-    public LooseFilesInputSource setMasksDir(File masksDir)
+    public ManualInputSource setMasksDir(File masksDir)
     {
         this.masksDir = masksDir;
         return this;
     }
 
-    public LooseFilesInputSource setHotSwap(boolean hotSwap)
+    public ManualInputSource setHotSwap(boolean hotSwap)
     {
         this.hotSwap = hotSwap;
         return this;
@@ -140,12 +151,12 @@ public class LooseFilesInputSource extends InputSource
     @Override
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof LooseFilesInputSource))
+        if (!(obj instanceof ManualInputSource))
         {
             return false;
         }
 
-        LooseFilesInputSource other = (LooseFilesInputSource) obj;
+        ManualInputSource other = (ManualInputSource) obj;
 
         return this.cameraFile.equals(other.cameraFile) &&
             this.meshFile.equals(other.meshFile) &&

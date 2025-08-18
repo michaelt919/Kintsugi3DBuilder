@@ -5,7 +5,7 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.SelectImpor
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataTransformerPage;
+import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
 
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ public class CreateProject extends ExperienceBase
     {
         PageFrameController controller = openPagedModel(
             "/fxml/modals/createnewproject/SelectImportOptions.fxml",
-            SimpleDataSourcePage<InputSource, SelectImportOptionsController>::new);
+            SimpleNonDataPage<SelectImportOptionsController>::new);
 
         controller.setConfirmCallback(confirmCallback);
     }
@@ -32,8 +32,9 @@ public class CreateProject extends ExperienceBase
     private void openHotSwap() throws IOException
     {
         PageFrameController controller = openPagedModel(
-            "/fxml/modals/createnewproject/HotSwap.fxml",
-            SimpleDataTransformerPage<InputSource, InputSource, HotSwapController>::new);
+            "/fxml/modals/createnewproject/ManualImport.fxml",
+            SimpleDataSourcePage<InputSource, HotSwapController>::new,
+            HotSwapController::new);
 
         controller.setConfirmCallback(confirmCallback);
     }
