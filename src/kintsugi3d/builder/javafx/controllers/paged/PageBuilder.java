@@ -36,6 +36,18 @@ public class PageBuilder<InType, OutType>
         return then(fxmlPath, pageConstructor, null);
     }
 
+    public <ControllerType extends NonSupplierPageController<OutType>>
+    PageBuilder<OutType, OutType> then(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
+    {
+        return then(fxmlPath, SimpleDataReceiverPage<OutType, ControllerType>::new, controllerConstructorOverride);
+    }
+
+    public <ControllerType extends NonSupplierPageController<OutType>>
+    PageBuilder<OutType, OutType> then(String fxmlPath)
+    {
+        return this.<ControllerType>then(fxmlPath, null);
+    }
+
     public <ControllerType extends NonSupplierPageController<Object>>
     PageBuilder<?, Object> thenNonData(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
     {
@@ -46,9 +58,9 @@ public class PageBuilder<InType, OutType>
     }
 
     public <ControllerType extends NonSupplierPageController<Object>>
-    PageBuilder<?, Object> thenNonData(String fxmlPath, @SuppressWarnings("unused") Class<ControllerType> controllerClass)
+    PageBuilder<?, Object> thenNonData(String fxmlPath)
     {
-        return thenNonData(fxmlPath, (Supplier<? extends NonSupplierPageController<Object>>) null);
+        return this.<ControllerType>thenNonData(fxmlPath, null);
     }
 
     public PageBuilder<InType, OutType> with(InType data)

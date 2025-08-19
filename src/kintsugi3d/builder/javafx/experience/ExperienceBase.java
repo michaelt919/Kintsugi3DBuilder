@@ -3,10 +3,7 @@ package kintsugi3d.builder.javafx.experience;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.Modal;
-import kintsugi3d.builder.javafx.controllers.paged.Page;
-import kintsugi3d.builder.javafx.controllers.paged.PageBuilder;
-import kintsugi3d.builder.javafx.controllers.paged.PageController;
-import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
+import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 
@@ -128,7 +125,7 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <PageType extends Page<InType, OutType>, InType, OutType, ControllerType extends PageController<InType>>
-    PageBuilder<InType, OutType> buildPagedModel(
+    PageBuilder<InType, OutType> buildPagedModal(
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
         Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
@@ -148,10 +145,38 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <PageType extends Page<InType, OutType>, InType, OutType>
-    PageBuilder<InType, OutType> buildPagedModel(
+    PageBuilder<InType, OutType> buildPagedModal(
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor) throws IOException
     {
-        return buildPagedModel(firstPageURLString, firstPageConstructor, null);
+        return buildPagedModal(firstPageURLString, firstPageConstructor, null);
+    }
+
+    /**
+     * Creates and opens this experience in a paged modal window using the PageController framework.
+     * @param firstPageURLString The path of the FXML to be loaded for the first page.
+     * @param firstPageControllerConstructorOverride Overrides the controller type specified in the FXML
+     *                                       by providing a constructor for the desired controller
+     * @return A builder that can be used to continue adding additional pages.
+     * @param <ControllerType> The type of controller to be used for the first page.
+     * @throws IOException If the FXML could not be loaded.
+     */
+    protected final <ControllerType extends PageController<Object>>
+    PageBuilder<Object, Object> buildPagedModal(
+        String firstPageURLString, Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
+    {
+        return buildPagedModal(firstPageURLString, SimpleNonDataPage::new, firstPageControllerConstructorOverride);
+    }
+
+    /**
+     * Creates and opens this experience in a paged modal window using the PageController framework.
+     * @param firstPageURLString The path of the FXML to be loaded for the first page.
+     * @return A builder that can be used to continue adding additional pages.
+     * @throws IOException If the FXML could not be loaded.
+     */
+    protected final <ControllerType extends PageController<Object>>
+    PageBuilder<Object, Object> buildPagedModal(String firstPageURLString) throws IOException
+    {
+        return this.<ControllerType>buildPagedModal(firstPageURLString, null);
     }
 
     /**
@@ -173,7 +198,7 @@ public abstract class ExperienceBase implements Experience
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
         Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
-        return buildPagedModel(firstPageURLString, firstPageConstructor, firstPageControllerConstructorOverride).finish();
+        return buildPagedModal(firstPageURLString, firstPageConstructor, firstPageControllerConstructorOverride).finish();
     }
 
     /**

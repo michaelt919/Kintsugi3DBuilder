@@ -10,7 +10,6 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.LightCalibr
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -26,14 +25,12 @@ public class ToneCalibration extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        buildPagedModel("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+        buildPagedModal("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
                 SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new,
                 LightCalibrationViewSelectController::new)
             .with(getCurrentProjectInputSource())
-            .thenNonData("/fxml/modals/SelectToneCalibrationImage.fxml",
-                SelectToneCalibrationImageController.class)
-            .then("/fxml/modals/EyedropperColorChecker.fxml",
-                SimpleNonDataPage<EyedropperController>::new)
+            .<SelectToneCalibrationImageController>thenNonData("/fxml/modals/SelectToneCalibrationImage.fxml")
+            .<EyedropperController>thenNonData("/fxml/modals/EyedropperColorChecker.fxml")
             .finish();
     }
 
