@@ -28,9 +28,9 @@ public class ToneCalibration extends ExperienceBase
         buildPagedModal("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
                 SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new,
                 LightCalibrationViewSelectController::new)
-            .with(getCurrentProjectInputSource())
+            .withDefault(getCurrentProjectInputSource())
             .<SelectToneCalibrationImageController>thenNonData("/fxml/modals/SelectToneCalibrationImage.fxml")
-            .<EyedropperController>thenNonData("/fxml/modals/EyedropperColorChecker.fxml")
+            .<EyedropperController>then("/fxml/modals/EyedropperColorChecker.fxml")
             .finish();
     }
 

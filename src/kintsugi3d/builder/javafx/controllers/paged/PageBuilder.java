@@ -8,12 +8,12 @@ import java.util.function.Supplier;
 
 public class PageBuilder<InType, OutType>
 {
-    private final Page<InType, OutType> page;
-    private final PageFrameController frameController;
-    private final JavaFXState state;
-    private final Runnable callback;
+    protected final Page<InType, OutType> page;
+    protected final PageFrameController frameController;
+    protected final JavaFXState state;
+    protected final Runnable callback;
 
-    PageBuilder(Page<InType, OutType> page, PageFrameController frameController, JavaFXState state, Runnable callback)
+    public PageBuilder(Page<InType, OutType> page, PageFrameController frameController, JavaFXState state, Runnable callback)
     {
         this.page = page;
         this.frameController = frameController;
@@ -27,7 +27,7 @@ public class PageBuilder<InType, OutType>
     {
         PageType nextPage = frameController.createPage(fxmlPath, pageConstructor, controllerConstructorOverride);
         this.page.setNextPage(nextPage);
-        return new PageBuilder<>(nextPage, frameController, state, callback);
+        return new DataPageBuilder<>(nextPage, frameController, state, callback);
     }
 
     public <PageType extends Page<OutType, NextOutType>, NextOutType>
@@ -48,25 +48,19 @@ public class PageBuilder<InType, OutType>
         return this.<ControllerType>then(fxmlPath, null);
     }
 
-    public <ControllerType extends NonSupplierPageController<Object>>
-    PageBuilder<?, Object> thenNonData(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
+    protected <ControllerType extends NonSupplierPageController<Object>>
+    NonDataPageBuilder thenNonData(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
     {
-        SimpleNonDataPage<ControllerType> nextPage = frameController.createPage(
-            fxmlPath, SimpleNonDataPage<ControllerType>::new, controllerConstructorOverride);
+        SimpleNonDataPage<ControllerType> nextPage =
+            frameController.createPage(fxmlPath, SimpleNonDataPage<ControllerType>::new, controllerConstructorOverride);
         this.page.setNextPage(nextPage);
-        return new PageBuilder<>(nextPage, frameController, state, callback);
+        return new NonDataPageBuilder(nextPage, frameController, state, callback);
     }
 
-    public <ControllerType extends NonSupplierPageController<Object>>
-    PageBuilder<?, Object> thenNonData(String fxmlPath)
+    protected <ControllerType extends NonSupplierPageController<Object>>
+    NonDataPageBuilder thenNonData(String fxmlPath)
     {
         return this.<ControllerType>thenNonData(fxmlPath, null);
-    }
-
-    public PageBuilder<InType, OutType> with(InType data)
-    {
-        this.page.receiveData(data);
-        return this;
     }
 
     public PageFrameController finish()

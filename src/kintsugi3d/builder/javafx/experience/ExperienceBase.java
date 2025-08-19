@@ -125,7 +125,7 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <PageType extends Page<InType, OutType>, InType, OutType, ControllerType extends PageController<InType>>
-    PageBuilder<InType, OutType> buildPagedModal(
+    DataPageBuilder<InType, OutType> buildPagedModal(
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
         Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
@@ -145,7 +145,7 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <PageType extends Page<InType, OutType>, InType, OutType>
-    PageBuilder<InType, OutType> buildPagedModal(
+    DataPageBuilder<InType, OutType> buildPagedModal(
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor) throws IOException
     {
         return buildPagedModal(firstPageURLString, firstPageConstructor, null);
@@ -161,7 +161,7 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <ControllerType extends PageController<Object>>
-    PageBuilder<Object, Object> buildPagedModal(
+    DataPageBuilder<Object, Object> buildPagedModal(
         String firstPageURLString, Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
         return buildPagedModal(firstPageURLString, SimpleNonDataPage::new, firstPageControllerConstructorOverride);
@@ -174,7 +174,7 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <ControllerType extends PageController<Object>>
-    PageBuilder<Object, Object> buildPagedModal(String firstPageURLString) throws IOException
+    DataPageBuilder<Object, Object> buildPagedModal(String firstPageURLString) throws IOException
     {
         return this.<ControllerType>buildPagedModal(firstPageURLString, null);
     }

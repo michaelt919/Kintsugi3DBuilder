@@ -211,12 +211,12 @@ public class PageFrameController
     }
 
     public <InType, OutType, PageType extends Page<InType, OutType>, ControllerType extends PageController<?>>
-    PageBuilder<InType, OutType> begin(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
+    DataPageBuilder<InType, OutType> begin(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
         JavaFXState state, Runnable callback, Supplier<ControllerType> controllerConstructorOverride)
     {
         PageType page = createPage(fxmlPath, pageConstructor, controllerConstructorOverride);
         this.currentPage.set(page);
-        return new PageBuilder<>(page, this, state, callback);
+        return new DataPageBuilder<>(page, this, state, callback);
     }
 
     public Page<?,?> getPage(String fxmlPath)
