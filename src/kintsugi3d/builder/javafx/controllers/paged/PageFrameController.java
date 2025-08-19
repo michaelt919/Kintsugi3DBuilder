@@ -122,10 +122,8 @@ public class PageFrameController
      * @param pageConstructor
      * @return
      * @param <PageType>
-     * @param <InType>
-     * @param <OutType>
      */
-    public <PageType extends Page<InType,OutType>, InType, OutType>
+    public <PageType extends Page<?, ?>>
     PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
     {
         return createPage(fxmlPath, pageConstructor, null);
@@ -139,11 +137,9 @@ public class PageFrameController
      * @param controllerConstructorOverride
      * @return
      * @param <PageType>
-     * @param <InType>
-     * @param <OutType>
      * @param <ControllerType>
      */
-    public <PageType extends Page<InType,OutType>, InType, OutType, ControllerType extends PageController<? super InType>>
+    public <PageType extends Page<?, ?>, ControllerType extends PageController<?>>
     PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
         Supplier<ControllerType> controllerConstructorOverride)
     {
@@ -214,6 +210,15 @@ public class PageFrameController
         return page;
     }
 
+    public <InType, OutType, PageType extends Page<InType, OutType>, ControllerType extends PageController<?>>
+    PageBuilder<InType, OutType> begin(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
+        JavaFXState state, Runnable callback, Supplier<ControllerType> controllerConstructorOverride)
+    {
+        PageType page = createPage(fxmlPath, pageConstructor, controllerConstructorOverride);
+        this.currentPage.set(page);
+        return new PageBuilder<>(page, this, state, callback);
+    }
+
     public Page<?,?> getPage(String fxmlPath)
     {
         return pageCache.get(fxmlPath);
@@ -281,11 +286,6 @@ public class PageFrameController
     public Page<?,?> getCurrentPage()
     {
         return currentPage.get();
-    }
-
-    public void setCurrentPage(Page<?,?> page)
-    {
-        this.currentPage.set(page);
     }
 
     public Runnable getConfirmCallback()

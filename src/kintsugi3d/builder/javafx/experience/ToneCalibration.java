@@ -26,24 +26,15 @@ public class ToneCalibration extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        openPagedModel(frameController ->
-        {
-            var firstPage = frameController.createPage(
-                "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+        buildPagedModel("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
                 SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new,
                 LightCalibrationViewSelectController::new)
-                .receiveData(getCurrentProjectInputSource());
-
-            firstPage
-                .setNextPage(frameController.createPage(
-                    "/fxml/modals/SelectToneCalibrationImage.fxml",
-                    SimpleNonDataPage<SelectToneCalibrationImageController>::new))
-                .setNextPage(frameController.createPage(
-                    "/fxml/modals/EyedropperColorChecker.fxml",
-                    SimpleNonDataPage<EyedropperController>::new));
-
-            return firstPage;
-        });
+            .with(getCurrentProjectInputSource())
+            .thenNonData("/fxml/modals/SelectToneCalibrationImage.fxml",
+                SelectToneCalibrationImageController.class)
+            .then("/fxml/modals/EyedropperColorChecker.fxml",
+                SimpleNonDataPage<EyedropperController>::new)
+            .finish();
     }
 
     private static CurrentProjectInputSource getCurrentProjectInputSource()
