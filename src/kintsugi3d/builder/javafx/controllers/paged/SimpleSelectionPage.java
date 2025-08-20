@@ -2,12 +2,12 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public final class SimpleDataReceiverPage<T, ControllerType extends NonSupplierPageController<T>>
-    extends NonSupplierPageBase<T, ControllerType>
+public final class SimpleSelectionPage<T, ControllerType extends SelectionPageControllerBase<? super T>>
+    extends SelectionPageBase<T, ControllerType>
 {
     private T data;
 
-    public SimpleDataReceiverPage(String fxmlFile, FXMLLoader loader)
+    SimpleSelectionPage(String fxmlFile, FXMLLoader loader)
     {
         super(fxmlFile, loader);
     }

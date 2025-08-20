@@ -19,9 +19,8 @@ public final class SimpleDataSourcePage<T, ControllerType extends DataSupplierPa
      * @param data
      */
     @Override
-    public SimpleDataSourcePage<T, ControllerType> receiveData(Object data)
+    public void receiveData(Object data)
     {
         // Suppress as we don't expect the incoming data to be useful.
-        return this;
     }
 }

@@ -1,31 +1,29 @@
 package kintsugi3d.builder.javafx.controllers.paged;
 
-import kintsugi3d.builder.javafx.core.JavaFXState;
-
 import java.util.function.Supplier;
 
-public class DataPageBuilder<InType, OutType> extends PageBuilder<InType, OutType>
+public class DataPageBuilder<InType, OutType, FinishType> extends SimplePageBuilder<InType, OutType, FinishType>
 {
-    DataPageBuilder(Page<InType, OutType> page, PageFrameController frameController, JavaFXState state, Runnable callback)
+    DataPageBuilder(Page<InType, OutType> page, PageFrameController frameController, Supplier<FinishType> finisher)
     {
-        super(page, frameController, state, callback);
+        super(page, frameController, finisher);
     }
 
     @Override
     public <ControllerType extends NonSupplierPageController<Object>>
-    NonDataPageBuilder thenNonData(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
+    NonDataPageBuilder<FinishType> thenNonData(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
     {
         return super.thenNonData(fxmlPath, controllerConstructorOverride);
     }
 
     @Override
     public <ControllerType extends NonSupplierPageController<Object>>
-    NonDataPageBuilder thenNonData(String fxmlPath)
+    NonDataPageBuilder<FinishType> thenNonData(String fxmlPath)
     {
         return super.<ControllerType>thenNonData(fxmlPath);
     }
 
-    public DataPageBuilder<InType, OutType> withDefault(InType data)
+    public DataPageBuilder<InType, OutType, FinishType> withDefault(InType data)
     {
         this.page.receiveData(data);
         return this;

@@ -72,7 +72,7 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     }
 
     @Override
-    public Page<? super OutType, ?> setNextPage(Page<? super OutType, ?> page)
+    public void setNextPage(Page<? super OutType, ?> page)
     {
         nextPageProperty.set(page);
 
@@ -80,8 +80,6 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
         {
             page.setPrevPage(this);
         }
-
-        return page;
     }
 
     @Override
@@ -97,17 +95,15 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     }
 
     @Override
-    public Page<?, ? extends InType> setPrevPage(Page<?, ? extends InType> page)
+    public void setPrevPage(Page<?, ? extends InType> page)
     {
         this.prevPage = page;
-        return page;
     }
 
     @Override
-    public PageBase<InType, OutType, ControllerType> receiveData(InType data)
+    public void receiveData(InType data)
     {
         this.controller.receiveData(data);
-        return this;
     }
 
     @Override

@@ -1,27 +1,38 @@
 package kintsugi3d.builder.javafx.controllers.paged;
 
-import kintsugi3d.builder.javafx.core.JavaFXState;
-
 import java.util.function.Supplier;
 
-public class NonDataPageBuilder extends PageBuilder<Object, Object>
+public class NonDataPageBuilder<FinishType> extends SimplePageBuilder<Object, Object, FinishType>
 {
-    public NonDataPageBuilder(Page<Object, Object> page, PageFrameController frameController, JavaFXState state, Runnable callback)
+    NonDataPageBuilder(Page<Object, Object> page, PageFrameController frameController, Supplier<FinishType> finisher)
     {
-        super(page, frameController, state, callback);
+        super(page, frameController, finisher);
     }
 
     @Override
     public <ControllerType extends NonSupplierPageController<Object>>
-    NonDataPageBuilder then(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
+    NonDataPageBuilder<FinishType> then(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
     {
         return super.thenNonData(fxmlPath, controllerConstructorOverride);
     }
 
     @Override
     public <ControllerType extends NonSupplierPageController<Object>>
-    NonDataPageBuilder then(String fxmlPath)
+    NonDataPageBuilder<FinishType> then(String fxmlPath)
     {
         return super.<ControllerType>thenNonData(fxmlPath);
+    }
+
+    @Override
+    public <ControllerType extends SelectionPageControllerBase<? super Object>>
+    SelectionPageBuilder<Object, FinishType> thenSelect(Supplier<ControllerType> controllerConstructorOverride)
+    {
+        return thenSelect(SimpleNonDataSelectionPage<ControllerType>::new, controllerConstructorOverride);
+    }
+
+    @Override
+    public SelectionPageBuilder<Object, FinishType> thenSelect()
+    {
+        return this.<SimpleSelectionPageController>thenSelect(null);
     }
 }
