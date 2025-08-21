@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public final class SimpleNonDataPage<ControllerType extends NonSupplierPageController<Object>>
+public class SimpleNonDataPage<ControllerType extends NonSupplierPageController<? super Object>>
     extends NonSupplierPageBase<Object, ControllerType>
 {
     public SimpleNonDataPage(String fxmlFile, FXMLLoader loader)
@@ -15,7 +15,7 @@ public final class SimpleNonDataPage<ControllerType extends NonSupplierPageContr
      * @param data
      */
     @Override
-    public void receiveData(Object data)
+    public final void receiveData(Object data)
     {
         // Suppress as we don't expect the incoming data to be useful.
     }
@@ -25,7 +25,7 @@ public final class SimpleNonDataPage<ControllerType extends NonSupplierPageContr
      * @return null
      */
     @Override
-    public Object getOutData()
+    public final Object getOutData()
     {
         return null;
     }

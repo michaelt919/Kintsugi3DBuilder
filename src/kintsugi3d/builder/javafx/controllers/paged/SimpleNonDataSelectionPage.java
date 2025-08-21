@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public final class SimpleNonDataSelectionPage<ControllerType extends SelectionPageControllerBase<? super Object>>
+public final class SimpleNonDataSelectionPage<ControllerType extends SelectionPageController<Object>>
     extends SelectionPageBase<Object, ControllerType>
 {
     SimpleNonDataSelectionPage(String fxmlFile, FXMLLoader loader)

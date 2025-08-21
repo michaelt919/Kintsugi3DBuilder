@@ -16,6 +16,11 @@ import java.util.Objects;
 
 public class ToneCalibration extends ExperienceBase
 {
+
+    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/PrimaryViewSelect.fxml";
+    public static final String SELECT_TONE_CALIBRATION_IMAGE = "/fxml/modals/SelectToneCalibrationImage.fxml";
+    public static final String EYEDROPPER = "/fxml/modals/EyedropperColorChecker.fxml";
+
     @Override
     public String getName()
     {
@@ -25,12 +30,12 @@ public class ToneCalibration extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        buildPagedModal("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
+        this.buildPagedModal(getCurrentProjectInputSource())
+            .then(PRIMARY_VIEW_SELECT,
                 SimpleDataReceiverPage<InputSource, LightCalibrationViewSelectController>::new,
                 LightCalibrationViewSelectController::new)
-            .withDefault(getCurrentProjectInputSource())
-            .<SelectToneCalibrationImageController>thenNonData("/fxml/modals/SelectToneCalibrationImage.fxml")
-            .<EyedropperController>then("/fxml/modals/EyedropperColorChecker.fxml")
+            .<SelectToneCalibrationImageController>thenNonData(SELECT_TONE_CALIBRATION_IMAGE)
+            .<EyedropperController>then(EYEDROPPER)
             .finish();
     }
 

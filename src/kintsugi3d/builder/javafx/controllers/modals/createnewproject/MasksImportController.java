@@ -23,7 +23,6 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.paged.PageController;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 
 import java.io.File;
 
@@ -35,7 +34,6 @@ public class MasksImportController
     @FXML private ToggleButton useProjectMasksButton;
     @FXML private ToggleButton customMasksDirButton;
     @FXML private ToggleButton noMasksButton;
-    private ToggleGroup toggleGroup;
 
     private DirectoryChooser masksDirectoryChooser;
 
@@ -53,7 +51,7 @@ public class MasksImportController
     {
         masksDirectoryChooser = new DirectoryChooser();
 
-        toggleGroup = new ToggleGroup();
+        ToggleGroup toggleGroup = new ToggleGroup();
         toggleGroup.getToggles().add(useProjectMasksButton);
         toggleGroup.getToggles().add(customMasksDirButton);
         toggleGroup.getToggles().add(noMasksButton);
@@ -61,10 +59,6 @@ public class MasksImportController
         this.getCanAdvanceObservable().bind(toggleGroup.selectedToggleProperty().isNotNull());
 
         customMasksDirButton.setOnAction(this::chooseMasksDir);
-
-        getPage().setNextPage(getPageFrameController().createPage(
-            "/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-            SimpleDataReceiverPage<InputSource, OrientationViewSelectController>::new));
 
         setCanConfirm(true);
     }

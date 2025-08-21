@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-abstract class NonSupplierPageBase<T, ControllerType extends NonSupplierPageController<T>>
+abstract class NonSupplierPageBase<T, ControllerType extends NonSupplierPageController<? super T>>
     extends PageBase<T, T, ControllerType>
 {
     protected NonSupplierPageBase(String fxmlFile, FXMLLoader loader)
@@ -13,7 +13,9 @@ abstract class NonSupplierPageBase<T, ControllerType extends NonSupplierPageCont
     @Override
     public void initController()
     {
-        this.getController().setPage(this);
+        Page<?, T> test;
+        test = this;
+        this.getController().setPage(test);
         this.getController().initPage();
     }
 }

@@ -3,8 +3,6 @@ package kintsugi3d.builder.javafx.experience;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 
 import java.io.IOException;
 
@@ -25,12 +23,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        openPagedModel("/fxml/modals/createnewproject/PrimaryViewSelect.fxml",
-            (fxmlFile, fxmlLoader) ->
-            {
-                var page = new SimpleDataReceiverPage<InputSource, OrientationViewSelectController>(fxmlFile, fxmlLoader);
-                page.receiveData(new CurrentProjectInputSource());
-                return page;
-            });
+        buildPagedModal(new CurrentProjectInputSource())
+            .<OrientationViewSelectController>then("/fxml/modals/createnewproject/PrimaryViewSelect.fxml");
     }
 }

@@ -10,29 +10,29 @@ public class NonDataPageBuilder<FinishType> extends SimplePageBuilder<Object, Ob
     }
 
     @Override
-    public <ControllerType extends NonSupplierPageController<Object>>
+    public <ControllerType extends NonSupplierPageController<? super Object>>
     NonDataPageBuilder<FinishType> then(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
     {
         return super.thenNonData(fxmlPath, controllerConstructorOverride);
     }
 
     @Override
-    public <ControllerType extends NonSupplierPageController<Object>>
+    public <ControllerType extends NonSupplierPageController<? super Object>>
     NonDataPageBuilder<FinishType> then(String fxmlPath)
     {
         return super.<ControllerType>thenNonData(fxmlPath);
     }
 
     @Override
-    public <ControllerType extends SelectionPageControllerBase<? super Object>>
-    SelectionPageBuilder<Object, FinishType> thenSelect(Supplier<ControllerType> controllerConstructorOverride)
+    public <ControllerType extends SelectionPageController<Object>>
+    NonDataSelectionPageBuilder<FinishType> thenSelect(String prompt, Supplier<ControllerType> controllerConstructorOverride)
     {
-        return thenSelect(SimpleNonDataSelectionPage<ControllerType>::new, controllerConstructorOverride);
+        return thenSelectNonData(prompt, controllerConstructorOverride);
     }
 
     @Override
-    public SelectionPageBuilder<Object, FinishType> thenSelect()
+    public NonDataSelectionPageBuilder<FinishType> thenSelect(String prompt)
     {
-        return this.<SimpleSelectionPageController>thenSelect(null);
+        return this.<SelectionPageController<Object>>thenSelect(prompt, null);
     }
 }

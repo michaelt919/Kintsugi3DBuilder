@@ -32,7 +32,7 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     {
         this.fxmlFilePath = fxmlFile;
         this.loader = loader;
-        this.controller = loader.getController();
+        this.controller = loader == null ? null : loader.getController();
     }
 
     @Override

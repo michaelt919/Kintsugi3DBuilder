@@ -210,19 +210,27 @@ public class PageFrameController
         return page;
     }
 
-    public <InType, OutType, PageType extends Page<InType, OutType>, ControllerType extends PageController<?>>
-    DataPageBuilder<InType, OutType, PageFrameController> begin(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
-        JavaFXState state, Runnable callback, Supplier<ControllerType> controllerConstructorOverride)
+    public NonDataPageBuilder<PageFrameController> buildPage(JavaFXState state, Runnable callback)
     {
-        PageType page = createPage(fxmlPath, pageConstructor, controllerConstructorOverride);
-        this.currentPage.set(page);
-        return new DataPageBuilder<>(page, this,
+        return new NonDataSentinelPageBuilder(this,
             () ->
             {
                 PageFrameController.this.init(state);
                 callback.run();
                 return PageFrameController.this;
             });
+    }
+
+    public <T> DataPageBuilder<Object, T, PageFrameController> buildPage(JavaFXState state, Runnable callback, T data)
+    {
+        return new DataSentinelPageBuilder<>(this,
+            () ->
+            {
+                PageFrameController.this.init(state);
+                callback.run();
+                return PageFrameController.this;
+            },
+            data);
     }
 
     public Page<?,?> getPage(String fxmlPath)
@@ -294,14 +302,20 @@ public class PageFrameController
         return currentPage.get();
     }
 
+    void setCurrentPage(Page<?, ?> page)
+    {
+        currentPage.set(page);
+    }
+
     public Runnable getConfirmCallback()
     {
         return confirmCallback;
     }
 
-    public void setConfirmCallback(Runnable confirmCallback)
+    public PageFrameController setConfirmCallback(Runnable confirmCallback)
     {
         this.confirmCallback = confirmCallback;
+        return this;
     }
 }
 

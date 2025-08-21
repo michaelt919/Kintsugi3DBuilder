@@ -2,19 +2,29 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
-public abstract class SelectionPageBase<T, ControllerType extends SelectionPageControllerBase<? super T>>
+public abstract class SelectionPageBase<T, ControllerType extends SelectionPageController<T>>
     extends PageBase<T, T, ControllerType> implements SelectionPage<T>
 {
+    private String prompt = "Select an option:";
     private final HashMap<String, Page<? super T, ?>> choicePages = new LinkedHashMap<>(4);
 
     SelectionPageBase(String fxmlFile, FXMLLoader loader)
     {
         super(fxmlFile, loader);
+    }
+
+    @Override
+    public String getPrompt()
+    {
+        return prompt;
+    }
+
+    @Override
+    public void setPrompt(String prompt)
+    {
+        this.prompt = prompt;
     }
 
     @Override
@@ -43,8 +53,8 @@ public abstract class SelectionPageBase<T, ControllerType extends SelectionPageC
     }
 
     @Override
-    public Iterator<Map.Entry<String, Page<? super T, ?>>> iterator()
+    public Set<Map.Entry<String, Page<? super T, ?>>> getChoices()
     {
-        return choicePages.entrySet().iterator();
+        return Collections.unmodifiableSet(choicePages.entrySet());
     }
 }

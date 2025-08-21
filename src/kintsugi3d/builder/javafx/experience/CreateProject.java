@@ -1,16 +1,18 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.HotSwapController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.SelectImportOptionsController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleNonDataPage;
 
 import java.io.IOException;
 
 public class CreateProject extends ExperienceBase
 {
+    private static final String METASHAPE_IMPORT = "/fxml/modals/createnewproject/MetashapeImport.fxml";
+    public static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
+    private static final String MASKS_IMPORT = "/fxml/modals/createnewproject/MasksImport.fxml";
+    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/PrimaryViewSelect.fxml";
+
     private Runnable confirmCallback;
 
     @Override
@@ -22,21 +24,30 @@ public class CreateProject extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        PageFrameController controller = openPagedModel(
-            "/fxml/modals/createnewproject/SelectImportOptions.fxml",
-            SimpleNonDataPage<SelectImportOptionsController>::new);
+        var masks = buildPagedModal()
+            .thenSelect("Select Import Option")
+            .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<InputSource, MetashapeImportController>::new)
+                .<MasksImportController>then(MASKS_IMPORT);
 
-        controller.setConfirmCallback(confirmCallback);
+            masks.<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
+                .finish()
+            .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<InputSource, RealityCaptureImportController>::new,
+                    RealityCaptureImportController::new)
+                .join(masks.getPage())
+            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<InputSource, ManualImportController>::new)
+                .join(masks.getPage())
+            .finish()
+            .setConfirmCallback(confirmCallback);
     }
 
     private void openHotSwap() throws IOException
     {
-        PageFrameController controller = openPagedModel(
-            "/fxml/modals/createnewproject/ManualImport.fxml",
-            SimpleDataSourcePage<InputSource, HotSwapController>::new,
-            HotSwapController::new);
-
-        controller.setConfirmCallback(confirmCallback);
+        buildPagedModal()
+            .then(MANUAL_IMPORT, SimpleDataSourcePage<InputSource, HotSwapController>::new, HotSwapController::new)
+            .<MasksImportController>then(MASKS_IMPORT)
+            .<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
+            .finish()
+            .setConfirmCallback(confirmCallback);
     }
 
     public void tryOpenHotSwap()

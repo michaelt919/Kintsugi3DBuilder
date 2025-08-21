@@ -9,7 +9,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
  * @param <T>
  */
 public abstract class DataReceiverPageControllerBase<T>
-    extends PageControllerBase<T, Page<?, T>>
+    extends PageControllerBase<T, Page<?, ? extends T>>
     implements NonSupplierPageController<T>
 {
 }

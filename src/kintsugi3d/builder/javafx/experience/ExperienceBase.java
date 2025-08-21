@@ -111,72 +111,21 @@ public abstract class ExperienceBase implements Experience
     }
 
     /**
-     * Creates and opens this experience in a paged modal window using the PageController framework.
-     * @param firstPageURLString The path of the FXML to be loaded for the first page.
-     * @param firstPageConstructor The constructor or a method effectively constructing the first page object.
-     *                             Typically this will be in the form of SomeSubclassOfPage::new.
-     * @param firstPageControllerConstructorOverride Overrides the controller type specified in the FXML
-     *                                       by providing a constructor for the desired controller
-     * @return A builder that can be used to continue adding additional pages.
-     * @param <PageType> The type of the first page.
-     * @param <InType> The type of page that the first page can link to as a previous page.
-     * @param <OutType> The type of page that the first page can link to as a next page.
-     * @param <ControllerType> The type of controller to be used for the first page.
+     * Builds a paged modal with multiple pages.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <PageType extends Page<InType, OutType>, InType, OutType, ControllerType extends PageController<InType>>
-    DataPageBuilder<InType, OutType, PageFrameController> buildPagedModal(
-        String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
-        Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
+    protected final NonDataPageBuilder<PageFrameController> buildPagedModal() throws IOException
     {
-        return createPagedModal()
-            .begin(firstPageURLString, firstPageConstructor, getState(), modal::open, firstPageControllerConstructorOverride);
+        return createPagedModal().buildPage(getState(), modal::open);
     }
 
     /**
-     * Creates and opens this experience in a paged modal window using the PageController framework.
-     * @param firstPageURLString The path of the FXML to be loaded for the first page.
-     * @param firstPageConstructor The constructor or a method effectively constructing the first page object.
-     *                             Typically this will be in the form of SomeSubclassOfPage::new.
-     * @return A builder that can be used to continue adding additional pages.
-     * @param <PageType> The type of the first page.
-     * @param <InType> The type of page that the first page can link to as a previous page.
-     * @param <OutType> The type of page that the first page can link to as a next page.
+     * Builds a paged modal with multiple pages.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <PageType extends Page<InType, OutType>, InType, OutType>
-    DataPageBuilder<InType, OutType, PageFrameController> buildPagedModal(
-        String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor) throws IOException
+    protected final <T> DataPageBuilder<Object, T, PageFrameController> buildPagedModal(T data) throws IOException
     {
-        return buildPagedModal(firstPageURLString, firstPageConstructor, null);
-    }
-
-    /**
-     * Creates and opens this experience in a paged modal window using the PageController framework.
-     * @param firstPageURLString The path of the FXML to be loaded for the first page.
-     * @param firstPageControllerConstructorOverride Overrides the controller type specified in the FXML
-     *                                       by providing a constructor for the desired controller
-     * @return A builder that can be used to continue adding additional pages.
-     * @param <ControllerType> The type of controller to be used for the first page.
-     * @throws IOException If the FXML could not be loaded.
-     */
-    protected final <ControllerType extends PageController<Object>>
-    DataPageBuilder<Object, Object, PageFrameController> buildPagedModal(
-        String firstPageURLString, Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
-    {
-        return buildPagedModal(firstPageURLString, SimpleNonDataPage::new, firstPageControllerConstructorOverride);
-    }
-
-    /**
-     * Creates and opens this experience in a paged modal window using the PageController framework.
-     * @param firstPageURLString The path of the FXML to be loaded for the first page.
-     * @return A builder that can be used to continue adding additional pages.
-     * @throws IOException If the FXML could not be loaded.
-     */
-    protected final <ControllerType extends PageController<Object>>
-    DataPageBuilder<Object, Object, PageFrameController> buildPagedModal(String firstPageURLString) throws IOException
-    {
-        return this.<ControllerType>buildPagedModal(firstPageURLString, null);
+        return createPagedModal().buildPage(getState(), modal::open, data);
     }
 
     /**
@@ -193,12 +142,14 @@ public abstract class ExperienceBase implements Experience
      * @param <ControllerType> The type of controller to be used for the first page.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <PageType extends Page<InType, OutType>, InType, OutType, ControllerType extends PageController<InType>>
+    protected final <PageType extends Page<Object, OutType>, InType, OutType, ControllerType extends PageController<InType>>
     PageFrameController openPagedModel(
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
         Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
-        return buildPagedModal(firstPageURLString, firstPageConstructor, firstPageControllerConstructorOverride).finish();
+        return buildPagedModal()
+            .then(firstPageURLString, firstPageConstructor, firstPageControllerConstructorOverride).
+            finish();
     }
 
     /**
@@ -208,11 +159,10 @@ public abstract class ExperienceBase implements Experience
      *                             Typically this will be in the form of SomeSubclassOfPage::new.
      * @return The PageFrameController for the window housing this experience.
      * @param <PageType> The type of the first page.
-     * @param <InType> The type of page that the first page can link to as a previous page.
      * @param <OutType> The type of page that the first page can link to as a next page.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <PageType extends Page<InType, OutType>, InType, OutType>
+    protected final <PageType extends Page<Object, OutType>, OutType>
     PageFrameController openPagedModel(
         String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor) throws IOException
     {

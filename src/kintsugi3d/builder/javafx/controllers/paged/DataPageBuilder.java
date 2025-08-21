@@ -4,28 +4,48 @@ import java.util.function.Supplier;
 
 public class DataPageBuilder<InType, OutType, FinishType> extends SimplePageBuilder<InType, OutType, FinishType>
 {
-    DataPageBuilder(Page<InType, OutType> page, PageFrameController frameController, Supplier<FinishType> finisher)
+    DataPageBuilder(Page<? super InType, OutType> page, PageFrameController frameController, Supplier<FinishType> finisher)
     {
         super(page, frameController, finisher);
     }
 
     @Override
-    public <ControllerType extends NonSupplierPageController<Object>>
+    public <ControllerType extends NonSupplierPageController<? super OutType>>
+    DataPageBuilder<OutType, OutType, FinishType> then(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
+    {
+        return then(fxmlPath, SimpleDataReceiverPage<OutType, ControllerType>::new, controllerConstructorOverride);
+    }
+
+    @Override
+    public <ControllerType extends NonSupplierPageController<? super OutType>>
+    DataPageBuilder<OutType, OutType, FinishType> then(String fxmlPath)
+    {
+        return this.<ControllerType>then(fxmlPath, null);
+    }
+
+    @Override
+    public <ControllerType extends NonSupplierPageController<? super Object>>
     NonDataPageBuilder<FinishType> thenNonData(String fxmlPath, Supplier<ControllerType> controllerConstructorOverride)
     {
         return super.thenNonData(fxmlPath, controllerConstructorOverride);
     }
 
     @Override
-    public <ControllerType extends NonSupplierPageController<Object>>
+    public <ControllerType extends NonSupplierPageController<? super Object>>
     NonDataPageBuilder<FinishType> thenNonData(String fxmlPath)
     {
         return super.<ControllerType>thenNonData(fxmlPath);
     }
 
-    public DataPageBuilder<InType, OutType, FinishType> withDefault(InType data)
+    @Override
+    public <ControllerType extends SelectionPageController<Object>> NonDataSelectionPageBuilder<FinishType> thenSelectNonData(String prompt, Supplier<ControllerType> controllerConstructorOverride)
     {
-        this.page.receiveData(data);
-        return this;
+        return super.thenSelectNonData(prompt, controllerConstructorOverride);
+    }
+
+    @Override
+    public NonDataSelectionPageBuilder<FinishType> thenSelectNonData(String prompt)
+    {
+        return super.thenSelectNonData(prompt);
     }
 }

@@ -29,7 +29,6 @@ import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,10 +73,6 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
         psxFileChooser.setTitle("Choose .psx file");
         psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
-
-        getPage().setNextPage(getPageFrameController().createPage(
-            "/fxml/modals/createnewproject/MasksImport.fxml",
-            SimpleDataReceiverPage<InputSource, MasksImportController>::new));
 
         setCanConfirm(true);
     }
@@ -258,10 +253,10 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
             {
                 //manually navigate though pages to get to custom loader
                 getPageFrameController().prevPage();//go to SelectImportOptions.fxml
-                SelectImportOptionsController controller = (SelectImportOptionsController)
-                    getPageFrameController().getCurrentPage().getController();
-                controller.looseFiles();
-                getPageFrameController().advancePage();
+//                SelectImportOptionsController controller = (SelectImportOptionsController)
+//                    getPageFrameController().getCurrentPage().getController();
+//                controller.looseFiles();
+//                getPageFrameController().advancePage();
                 alertShown = false;
             });
 

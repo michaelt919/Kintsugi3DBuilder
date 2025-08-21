@@ -24,7 +24,6 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 
 import java.io.File;
@@ -78,10 +77,6 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
         camPositionsTxt.setText(cameraPositionsTextBuilder.toString());
 
         photoDirectoryChooser.setTitle("Select source photo directory");
-
-        this.getPage().setNextPage(getPageFrameController().createPage(
-            "/fxml/modals/createnewproject/MasksImport.fxml",
-            SimpleDataReceiverPage<InputSource, MasksImportController>::new));
 
         setCanConfirm(true);
     }

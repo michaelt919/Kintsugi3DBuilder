@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-public final class SimpleSelectionPage<T, ControllerType extends SelectionPageControllerBase<? super T>>
+public final class SimpleSelectionPage<T, ControllerType extends SelectionPageController<T>>
     extends SelectionPageBase<T, ControllerType>
 {
     private T data;
