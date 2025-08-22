@@ -59,6 +59,10 @@ public class SelectionPageController<T> extends PageControllerBase<T, SelectionP
             rootNode.getChildren().add(button);
             buttons.getToggles().add(button);
         }
+
+        // CSS needs to re-run after dynamically adding buttons.
+        rootNode.applyCss();
+        rootNode.layout();
     }
 
     private void onButtonAction(Toggle button, Page<? super T, ?> page)
