@@ -51,7 +51,7 @@ public class SelectionPageController<T> extends PageControllerBase<T, SelectionP
             ToggleButton button = new ToggleButton();
             button.setText(choice.getKey());
             button.setPrefWidth(BUTTON_PREF_WIDTH);
-            button.setStyle(BUTTON_STYLE_CLASS);
+            button.getStyleClass().add(BUTTON_STYLE_CLASS);
             button.setPadding(BUTTON_INSETS);
             button.setOnAction(e -> onButtonAction(button, choice.getValue()));
 
@@ -59,10 +59,6 @@ public class SelectionPageController<T> extends PageControllerBase<T, SelectionP
             rootNode.getChildren().add(button);
             buttons.getToggles().add(button);
         }
-
-        // CSS needs to re-run after dynamically adding buttons.
-        rootNode.applyCss();
-        rootNode.layout();
     }
 
     private void onButtonAction(Toggle button, Page<? super T, ?> page)
