@@ -16,11 +16,11 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<VBox fx:id="outerVbox" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.EyedropperController">
+<VBox fx:id="outerVbox" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.EyedropperController">
     <HBox spacing="32.0">
         <VBox alignment="TOP_CENTER" spacing="16.0">
             <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeCaption" text="No Tone Selected" />
-            <StackPane>
+            <StackPane maxHeight="350.0" maxWidth="350.0" minHeight="350.0" minWidth="350.0" prefHeight="350.0" prefWidth="350.0">
                 <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                 <Pane onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased">
                     <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
