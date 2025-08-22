@@ -76,7 +76,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @Override
     public void refresh()
     {
-        ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
+        ObservableProjectModel project = getPageFrameController().getState().getProjectModel();
 
         boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && project.getColorCheckerFile().exists();
         previousImageButton.setDisable(!hasPreviousColorCheckerImage);
@@ -127,15 +127,19 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     private void selectImageFileAction(ActionEvent event)
     {
         // Don't show file chooser when deselecting
-        if (! selectImageFileButton.isSelected())
+        if (!selectImageFileButton.isSelected())
+        {
             return;
+        }
 
-        ObservableProjectModel project = (ObservableProjectModel) Global.state().getProjectModel();
+        ObservableProjectModel project = getPageFrameController().getState().getProjectModel();
         File colorCheckerFile = project.getColorCheckerFile();
-        if (colorCheckerFile != null && colorCheckerFile.exists()){
+        if (colorCheckerFile != null && colorCheckerFile.exists())
+        {
             imageFileChooser.setInitialDirectory(colorCheckerFile.getParentFile());
         }
-        else{
+        else
+        {
             ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
 
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());

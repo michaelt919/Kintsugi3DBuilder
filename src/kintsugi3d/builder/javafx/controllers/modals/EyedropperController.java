@@ -632,14 +632,6 @@ public class EyedropperController extends NonDataPageControllerBase implements I
 //
 //        return sourceButton;
 //    }
-    public void setProjectModel(ProjectModelBase projectModel)
-    {
-        this.projectModel = projectModel;
-        if (projectModel.getColorCheckerFile() != null)
-        {
-            this.setImage(projectModel.getColorCheckerFile());
-        }
-    }
 
     public void setIOModel(IOModel ioModel)
     {
