@@ -22,6 +22,8 @@ public interface Page<InType, OutType>
     boolean hasNextPage();
     void setNextPage(Page<? super OutType, ?> page);
 
+    void linkBackFromNextPage();
+
     void receiveData(InType data);
     OutType getOutData();
 

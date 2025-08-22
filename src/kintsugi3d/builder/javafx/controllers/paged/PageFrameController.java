@@ -262,7 +262,13 @@ public class PageFrameController
                     // Passes data to the next page if applicable
                     currentPage.get().sendOutData();
 
+                    // Set the link back from the next page to this page.
+                    currentPage.get().linkBackFromNextPage();
+
+                    // Actual advance the page.
                     currentPage.set(currentPage.get().getNextPage());
+
+                    // Initialization
                     initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
                     setButtonShortcuts(currentPage.get().getController());
                 }

@@ -75,11 +75,6 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     public void setNextPage(Page<? super OutType, ?> page)
     {
         nextPageProperty.set(page);
-
-        if (page != null)
-        {
-            page.setPrevPage(this);
-        }
     }
 
     @Override
@@ -98,6 +93,12 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     public void setPrevPage(Page<?, ? extends InType> page)
     {
         this.prevPage = page;
+    }
+
+    @Override
+    public void linkBackFromNextPage()
+    {
+        this.nextPageProperty.get().setPrevPage(this);
     }
 
     @Override

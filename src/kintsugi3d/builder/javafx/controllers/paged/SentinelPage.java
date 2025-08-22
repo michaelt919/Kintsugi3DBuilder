@@ -22,6 +22,5 @@ public class SentinelPage<T> extends PageBase<Object, T, PageController<? super 
     public void setNextPage(Page<? super T, ?> page)
     {
         super.setNextPage(page);
-        page.setPrevPage(null); // remove link back to this sentinel page so it can be garbage collected once builder is finished.
     }
 }
