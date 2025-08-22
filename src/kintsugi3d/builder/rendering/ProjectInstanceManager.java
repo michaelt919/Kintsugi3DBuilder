@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
@@ -282,8 +283,18 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
                 Global.state().getProjectModel().setProjectLoaded(true);
                 Global.state().getProjectModel().setProjectProcessed(isProcessed());
-                Global.state().getProjectModel().setProcessedTextureResolution(
-                    projectInstance.getResources().getSpecularMaterialResources().getBasisWeightResources().weightMaps.getWidth());
+
+                if (isProcessed())
+                {
+                    BasisWeightResources<ContextType> basisWeightResources =
+                        projectInstance.getResources().getSpecularMaterialResources().getBasisWeightResources();
+
+                    Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.weightMaps.getWidth());
+                }
+                else
+                {
+                    Global.state().getProjectModel().setProcessedTextureResolution(0);
+                }
 
                 if (progressMonitor != null)
                 {
