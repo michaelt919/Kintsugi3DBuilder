@@ -36,7 +36,6 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.RecentProjects;
-import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +92,6 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     @FXML private VBox outerVbox;
 
     private IOModel ioModel = new IOModel();
-    private ProjectModelBase projectModel = null;
 
     private Button sourceButton;
 
@@ -761,10 +759,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
             String path = file.getPath();
             try
             {
-                if (projectModel != null)
-                {
-                    projectModel.setColorCheckerFile(new File(path));
-                }
+                getPageFrameController().getState().getProjectModel().setColorCheckerFile(new File(path));
             }
             catch (Exception e)
             {
