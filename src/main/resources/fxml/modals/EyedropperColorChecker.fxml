@@ -40,7 +40,7 @@
             <GridPane hgap="8.0" vgap="8.0">
                 <columnConstraints>
                     <ColumnConstraints />
-                    <ColumnConstraints maxWidth="118.66666666666669" minWidth="45.333333333333314" prefWidth="94.33333333333331" />
+                    <ColumnConstraints />
                     <ColumnConstraints />
                     <ColumnConstraints />
                 </columnConstraints>
