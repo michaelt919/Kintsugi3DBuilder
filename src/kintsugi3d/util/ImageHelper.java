@@ -30,16 +30,16 @@ import java.util.Objects;
 public class ImageHelper
 {
     private static final int DEFAULT_MIN_SIZE = 128;
-    private BufferedImage inputImage;
+    private BufferedImage image;
 
     public ImageHelper(File imageFile) throws IOException
     {
-        inputImage = ImageIO.read(imageFile);
+        image = ImageIO.read(imageFile);
     }
 
-    public ImageHelper(BufferedImage inputImage)
+    public ImageHelper(BufferedImage image)
     {
-        this.inputImage = inputImage;
+        this.image = image;
     }
 
     public static void generateLods(File inputFile) throws IOException
@@ -61,7 +61,7 @@ public class ImageHelper
             filename = filename.substring(0, i);
         }
 
-        for (int size = resize.inputImage.getHeight() / 2; size >= minSize; size /= 2)
+        for (int size = resize.image.getHeight() / 2; size >= minSize; size /= 2)
         {
             resize.saveAtResolution(new File(dir, filename + "-" + size + extension), size);
         }
@@ -69,12 +69,12 @@ public class ImageHelper
 
     public ImageHelper setAlphaMask(BufferedImage mask)
     {
-        int width = inputImage.getWidth();
-        int height = inputImage.getHeight();
+        int width = image.getWidth();
+        int height = image.getHeight();
 
-        BufferedImage result = new BufferedImage(width, height, inputImage.getType());
+        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-        int[] imagePixels = inputImage.getRGB(0, 0, width, height, null, 0, width);
+        int[] imagePixels = image.getRGB(0, 0, width, height, null, 0, width);
         int[] maskPixels = mask.getRGB(0, 0, width, height, null, 0, width);
 
         int[] resultPixels = result.getRGB(0, 0, width, height, null, 0, width);
@@ -87,7 +87,7 @@ public class ImageHelper
         }
 
         result.setRGB(0, 0, width, height, resultPixels, 0, width);
-        inputImage = result;
+        image = result;
 
         return this;
     }
@@ -99,12 +99,12 @@ public class ImageHelper
 
     public void saveAtResolution(File file, int height) throws IOException
     {
-        saveAtScale(file, (double) height / inputImage.getHeight());
+        saveAtScale(file, (double) height / image.getHeight());
     }
 
     public void saveAtScale(File file, double factor) throws IOException
     {
-        saveAtResolution(file, (int)(inputImage.getWidth() * factor), (int)(inputImage.getHeight() * factor));
+        saveAtResolution(file, (int)(image.getWidth() * factor), (int)(image.getHeight() * factor));
     }
 
     public void saveAtResolution(File file, int width, int height) throws IOException
@@ -121,12 +121,12 @@ public class ImageHelper
 
     public BufferedImage getBufferedImage()
     {
-        return inputImage;
+        return image;
     }
 
     public BufferedImage scaleToResolution(int width, int height)
     {
-        return scaleBy((double) width / inputImage.getWidth(), (double) height / inputImage.getHeight());
+        return scaleBy((double) width / image.getWidth(), (double) height / image.getHeight());
     }
 
     public BufferedImage scaleBy(double factor)
@@ -136,37 +136,37 @@ public class ImageHelper
 
     public BufferedImage scaleBy(double factorX, double factorY)
     {
-        int w = (int) (factorX * inputImage.getWidth());
-        int h = (int) (factorY * inputImage.getHeight());
+        int w = (int) (factorX * image.getWidth());
+        int h = (int) (factorY * image.getHeight());
         BufferedImage scaled = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         AffineTransform transform = new AffineTransform();
         transform.scale(factorX, factorY);
         AffineTransformOp operation = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
-        scaled = operation.filter(inputImage, scaled);
+        scaled = operation.filter(image, scaled);
         return scaled;
     }
 
     public BufferedImage forceSRGB ()
     {
         // TODO is there a cleaner way to ignore input color space?  Maybe work with the Raster object directly?
-        return inputImage == null || !(inputImage.getColorModel() instanceof ComponentColorModel) ? inputImage
+        return image == null || !(image.getColorModel() instanceof ComponentColorModel) ? image
             : new BufferedImage(
             new ComponentColorModel(
                 ColorSpace.getInstance(ColorSpace.CS_sRGB),
-                inputImage.getColorModel().hasAlpha(),
-                inputImage.isAlphaPremultiplied(),
-                inputImage.getTransparency(),
-                inputImage.getColorModel().getTransferType()),
-            inputImage.getRaster(),
-            inputImage.isAlphaPremultiplied(),
+                image.getColorModel().hasAlpha(),
+                image.isAlphaPremultiplied(),
+                image.getTransparency(),
+                image.getColorModel().getTransferType()),
+            image.getRaster(),
+            image.isAlphaPremultiplied(),
             null);
     }
 
     public BufferedImage convertICCToSRGB()
     {
-        if (inputImage == null || !(inputImage.getColorModel().getColorSpace() instanceof ICC_ColorSpace))
+        if (image == null || !(image.getColorModel().getColorSpace() instanceof ICC_ColorSpace))
         {
-            return inputImage;
+            return image;
         }
         else
         {
@@ -174,13 +174,13 @@ public class ImageHelper
             ColorTransform[] transformList = new ColorTransform[2];
             ICC_ColorSpace srgbCS = (ICC_ColorSpace) ColorSpace.getInstance(ColorSpace.CS_sRGB);
             PCMM mdl = CMSManager.getModule();
-            ICC_ColorSpace colorSpace = (ICC_ColorSpace) inputImage.getColorModel().getColorSpace();
+            ICC_ColorSpace colorSpace = (ICC_ColorSpace) image.getColorModel().getColorSpace();
 
             if (Objects.equals(srgbCS, colorSpace))
             {
                 // Color spaces are the same; no conversion necessary
                 // (and attempting to convert seems to cause a segfault)
-                return inputImage;
+                return image;
             }
             else
             {
@@ -207,8 +207,8 @@ public class ImageHelper
                 float[] destMaxVal = new float[nc];
                 Arrays.fill(destMaxVal, 1.0f);
 
-                BufferedImage result = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-                this2srgb.colorConvert(inputImage.getRaster(), result.getRaster(), minVal, maxVal, destMinVal, destMaxVal);
+                BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+                this2srgb.colorConvert(image.getRaster(), result.getRaster(), minVal, maxVal, destMinVal, destMaxVal);
                 return result;
             }
         }
