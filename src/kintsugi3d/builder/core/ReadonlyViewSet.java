@@ -270,9 +270,16 @@ public interface ReadonlyViewSet
      * @throws FileNotFoundException if the image file cannot be found.
      */
     File findFullResPrimaryImageFile() throws FileNotFoundException;
+
     File findPreviewImageFile(int index) throws FileNotFoundException;
 
     File findThumbnailImageFile(int index) throws FileNotFoundException;
+
+    File tryFindFullResImageFile(int index);
+
+    File tryFindPreviewImageFile(int index);
+
+    File tryFindThumbnailImageFile(int index);
 
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 

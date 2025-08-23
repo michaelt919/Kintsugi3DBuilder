@@ -103,7 +103,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final Map<Integer, File> maskFiles;
 
-    private final List<LinkedHashMap<String,String>> cameraMetadata;
+    private final List<LinkedHashMap<String, String>> cameraMetadata;
 
     private final List<ViewRMSE> viewErrorMetrics;
 
@@ -391,15 +391,6 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder addCameraMetadata(int index, String res, String size) { //Jacob
-            result.cameraMetadata.set(index,new LinkedHashMap<>() {{
-                put("Resolution", res);
-                put("Size", size);
-            }});
-            return this;
-        }
-
-
         public Builder setMasksDirectory(File file)
         {
             result.setMasksDirectory(file);
@@ -536,34 +527,46 @@ public final class ViewSet implements ReadonlyViewSet
         return Collections.unmodifiableList(imageFiles);
     }
 
-    public List<LinkedHashMap<String, String>> getCameraMetadata() {
+    public List<LinkedHashMap<String, String>> getCameraMetadata()
+    {
         return Collections.unmodifiableList(cameraMetadata);
     }
 
-    public void generateCameraMetadata() {
+    public void generateCameraMetadata()
+    {
         cameraMetadata.clear();
-        for(File file: imageFiles) {
-            try {
-                File finalFile = new File(fullResImageDirectory,file.getPath());
+        for (File file : imageFiles)
+        {
+            try
+            {
+                File finalFile = new File(fullResImageDirectory, file.getPath());
                 String res = "";
-                try (ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(finalFile))) {
+                try (ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(finalFile)))
+                {
                     final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
-                    if (readers.hasNext()) {
+                    if (readers.hasNext())
+                    {
                         ImageReader reader = readers.next();
-                        try {
+                        try
+                        {
                             reader.setInput(iis);
                             res = reader.getWidth(0) + "x" + reader.getHeight(0);
-                        } finally {
+                        }
+                        finally
+                        {
                             reader.dispose();
                         }
                     }
-                };
+                }
                 String finalRes = res;
-                cameraMetadata.add(new LinkedHashMap<>() {{
+                cameraMetadata.add(new LinkedHashMap<>()
+                {{
                     put("Resolution", finalRes);
                     put("Size", (finalFile.length() / (1024 * 1024)) + " MB");
                 }});
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 throw new RuntimeException(e);
             }
         }
@@ -803,7 +806,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     public static ReadonlyViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
-                                                   float nearPlane, float aspect, float sensorWidth, float focalLength)
+        float nearPlane, float aspect, float sensorWidth, float focalLength)
     {
         ViewSet result = new ViewSet(viewDir.size());
 
@@ -891,7 +894,7 @@ public final class ViewSet implements ReadonlyViewSet
             return this.rootDirectory.toPath().relativize(supportingFilesFilePath.toPath()).toString();
         }
         catch (IllegalArgumentException |
-               NullPointerException e) //If the root and other directories are located under different drive letters on windows
+            NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return supportingFilesFilePath == null ? null : supportingFilesFilePath.toString();
         }
@@ -943,7 +946,7 @@ public final class ViewSet implements ReadonlyViewSet
             return this.rootDirectory.toPath().relativize(fullResImageFilePath.toPath()).toString();
         }
         catch (IllegalArgumentException |
-               NullPointerException e) //If the root and other directories are located under different drive letters on windows
+            NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return fullResImageFilePath == null ? null : fullResImageFilePath.toString();
         }
@@ -974,11 +977,15 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getThumbnailImageFilePath() {
-        if (this.thumbnailImageDirectory == null) {
+    public File getThumbnailImageFilePath()
+    {
+        if (this.thumbnailImageDirectory == null)
+        {
             // If no thumbnail images, default to just using full res images, or root directory as last fallback
             return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
-        } else {
+        }
+        else
+        {
             return this.thumbnailImageDirectory;
         }
     }
@@ -993,7 +1000,7 @@ public final class ViewSet implements ReadonlyViewSet
             return this.rootDirectory.toPath().relativize(previewImageFilePath.toPath()).toString();
         }
         catch (IllegalArgumentException |
-               NullPointerException e) //If the root and other directories are located under different drive letters on windows
+            NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
             return previewImageFilePath == null ? null : previewImageFilePath.toString();
         }
@@ -1015,7 +1022,8 @@ public final class ViewSet implements ReadonlyViewSet
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
-    public void setRelativeThumbnailImagePathName(String relativeImagePath) {
+    public void setRelativeThumbnailImagePathName(String relativeImagePath)
+    {
         this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
@@ -1062,8 +1070,15 @@ public final class ViewSet implements ReadonlyViewSet
         return previewHeight;
     }
 
-    public int getThumbnailWidth() { return thumbnailWidth; }
-    public int getThumbnailHeight() { return thumbnailHeight; }
+    public int getThumbnailWidth()
+    {
+        return thumbnailWidth;
+    }
+
+    public int getThumbnailHeight()
+    {
+        return thumbnailHeight;
+    }
 
     public void setPreviewImageResolution(int width, int height)
     {
@@ -1080,15 +1095,6 @@ public final class ViewSet implements ReadonlyViewSet
     public void setPrimaryViewIndex(int poseIndex)
     {
         this.primaryViewIndex = poseIndex;
-    }
-
-    public void setPrimaryView(String viewName)
-    {
-        int viewIndex = findIndexOfView(viewName);
-        if (viewIndex >= 0)
-        {
-            this.primaryViewIndex = viewIndex;
-        }
     }
 
     @Override
@@ -1307,9 +1313,27 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public File tryFindFullResImageFile(int index)
+    {
+        return ImageFinder.getInstance().tryFindImageFile(getFullResImageFile(index));
+    }
+
+    @Override
     public File findFullResPrimaryImageFile() throws FileNotFoundException
     {
         return findFullResImageFile(primaryViewIndex);
+    }
+
+    @Override
+    public File tryFindPreviewImageFile(int index)
+    {
+        return ImageFinder.getInstance().tryFindImageFile(getPreviewImageFile(index));
+    }
+
+    @Override
+    public File tryFindThumbnailImageFile(int index)
+    {
+        return ImageFinder.getInstance().tryFindImageFile(getThumbnailImageFile(index));
     }
 
     @Override
@@ -1421,6 +1445,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Checks for whether srcFile is null before copying into destDir.
+     *
      * @param srcFile
      * @param destDir
      */

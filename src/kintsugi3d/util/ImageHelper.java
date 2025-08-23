@@ -30,11 +30,11 @@ import java.util.Objects;
 public class ImageHelper
 {
     private static final int DEFAULT_MIN_SIZE = 128;
-    private final BufferedImage inputImage;
+    private BufferedImage inputImage;
 
-    public ImageHelper(File inputFile) throws IOException
+    public ImageHelper(File imageFile) throws IOException
     {
-        inputImage = ImageIO.read(inputFile);
+        inputImage = ImageIO.read(imageFile);
     }
 
     public ImageHelper(BufferedImage inputImage)
@@ -67,6 +67,36 @@ public class ImageHelper
         }
     }
 
+    public ImageHelper setAlphaMask(BufferedImage mask)
+    {
+        int width = inputImage.getWidth();
+        int height = inputImage.getHeight();
+
+        BufferedImage result = new BufferedImage(width, height, inputImage.getType());
+
+        int[] imagePixels = inputImage.getRGB(0, 0, width, height, null, 0, width);
+        int[] maskPixels = mask.getRGB(0, 0, width, height, null, 0, width);
+
+        int[] resultPixels = result.getRGB(0, 0, width, height, null, 0, width);
+
+        for (int i = 0; i < imagePixels.length; i++)
+        {
+            int color = imagePixels[i] & 0x00ffffff; // Mask preexisting alpha
+            int alpha = maskPixels[i] << 24; // Shift blue to alpha
+            resultPixels[i] = color | alpha;
+        }
+
+        result.setRGB(0, 0, width, height, resultPixels, 0, width);
+        inputImage = result;
+
+        return this;
+    }
+
+    public ImageHelper setAlphaMask(File maskFile) throws IOException
+    {
+        return setAlphaMask(ImageIO.read(maskFile));
+    }
+
     public void saveAtResolution(File file, int height) throws IOException
     {
         saveAtScale(file, (double) height / inputImage.getHeight());
@@ -87,6 +117,11 @@ public class ImageHelper
     {
         int i = file.getName().lastIndexOf('.');
         return file.getName().substring(i + 1).toUpperCase();
+    }
+
+    public BufferedImage getBufferedImage()
+    {
+        return inputImage;
     }
 
     public BufferedImage scaleToResolution(int width, int height)

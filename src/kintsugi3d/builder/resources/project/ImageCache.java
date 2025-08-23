@@ -285,10 +285,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     monitor.allowUserCancellation();
                 }
 
-                try (SingleCalibratedImageResource<ContextType> image =
-                    resources.createSingleImageResource(k,
-                        resources.getViewSet().findFullResImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
-                        loadOptions))
+                try (SingleCalibratedImageResource<ContextType> image = resources.createSingleImageResource(k, loadOptions))
                 {
                     fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                     image.setupShaderProgram(texSpaceProgram);

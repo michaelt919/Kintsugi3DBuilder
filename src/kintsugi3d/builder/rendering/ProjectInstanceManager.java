@@ -180,7 +180,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         try
         {
             // Generate preview resolution images and thumbnails
-            builder.generateUndistortedPreviewThumbnailImages();
+            builder.generateAllPreviewImages();
         }
         catch (IOException e)
         {

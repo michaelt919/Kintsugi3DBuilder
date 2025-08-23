@@ -30,6 +30,7 @@ import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
+import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
@@ -133,7 +134,7 @@ public class SpecularFitProcess
                     else
                     {
                         return mask != null ?
-                                new BufferedImageColorList(GraphicsResourcesImageSpace.applyGrayscaleMaskToAlpha(image, mask)) :
+                                new BufferedImageColorList(new ImageHelper(image).setAlphaMask(mask).getBufferedImage()) :
                                 new BufferedImageColorList(image);
                     }
                 }
@@ -194,7 +195,7 @@ public class SpecularFitProcess
                 (stream, monitorLocal) -> specularFit.optimizeFromScratch(
                     decomposition, stream, settings.getPreliminaryConvergenceTolerance(),
                     monitorLocal, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
-                specularFit, monitor);
+                monitor);
 
 //            if (settings.getOutputDirectory() != null)
 //            {
@@ -233,8 +234,6 @@ public class SpecularFitProcess
         {
             monitor.setStage(1, "Performing low-res fit...");
         }
-
-        SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
         try (GraphicsResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
                 new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
@@ -288,6 +287,7 @@ public class SpecularFitProcess
                 {
                     // Basis functions are not spatial, so we want to just copy for future use
                     // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
+                    assert fullResolution.getBasisResources() != null;
                     fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
 
                     File geometryFile = sampled.getViewSet().getGeometryFile();
@@ -456,7 +456,6 @@ public class SpecularFitProcess
                                 (stream, monitorLocal) -> blockOptimization.optimizeFromExistingBasis(
                                     blockDecomposition, stream, settings.getConvergenceTolerance(), monitorLocal,
                                     TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
-                                blockOptimization,
                                 new DefaultProgressMonitor() // wrap progress monitor with logic to account for it being just one block out of the whole.
                                 {
                                     private double maxProgress = 0.0;
@@ -509,12 +508,14 @@ public class SpecularFitProcess
                             blockDecomposition.fillHoles();
 
                             // Update the GPU resources with the hole-filled weight maps.
+                            assert blockOptimization.getBasisWeightResources() != null;
                             blockOptimization.getBasisWeightResources().updateFromSolution(blockDecomposition);
 
                             // Calculate final diffuse map without the constraint of basis functions.
                             blockOptimization.getDiffuseOptimization().execute(blockOptimization);
 
                             // Fit specular textures after filling holes
+                            assert blockOptimization.getRoughnessOptimization() != null;
                             blockOptimization.getRoughnessOptimization().execute();
 
                             // Copy partial solution into the full solution.
@@ -530,7 +531,7 @@ public class SpecularFitProcess
         GraphicsResources<ContextType> resources,
         TextureResolution resolution,
         OptimizationMethod<ContextType> optimizationMethod,
-        SpecularMaterialResources<ContextType> resultsForErrorCalc, ProgressMonitor monitor) throws IOException, UserCancellationException
+        ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -541,7 +542,7 @@ public class SpecularFitProcess
                 getReflectanceProgramBuilder(resources, programFactory),
                 resources.getContext().buildFramebufferObject(resolution.width, resolution.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
-                    .addColorAttachment(ColorFormat.RGBA32F));
+                    .addColorAttachment(ColorFormat.RGBA32F))
         )
         {
             optimizationMethod.optimize(stream, monitor);
