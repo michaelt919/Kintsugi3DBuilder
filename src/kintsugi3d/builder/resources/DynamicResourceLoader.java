@@ -17,6 +17,7 @@ import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ArrayBackedColorImage;
 import kintsugi3d.util.EncodableColorImage;
@@ -24,7 +25,6 @@ import kintsugi3d.util.EnvironmentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -329,7 +329,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                 {
                     try
                     {
-                        this.newBackplateData = ImageIO.read(backplateFile);
+                        this.newBackplateData = ImageHelper.read(backplateFile).getBufferedImage();
                         this.currentBackplateFile = backplateFile;
                         readCompleted = true;
                     }

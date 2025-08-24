@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.gl.util;
+package kintsugi3d.util;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
@@ -130,7 +130,7 @@ public final class UnzipHelper
     {
         byte[] buffer = new byte[1024];
         StringBuilder s = new StringBuilder();
-        int read = 0;
+        int read;
         while ((read = stream.read(buffer, 0, 1024)) >= 0)
         {
             s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));

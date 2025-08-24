@@ -4,7 +4,7 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.util.ImageHelper;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ class PreviewImages
     private boolean missingPreview;
     private boolean missingThumbnail;
 
-    private BufferedImage fullResImage;
+    private ImageHelper fullResImage;
     private BufferedImage undistortedPreviewImage;
 
     PreviewImages(int viewIndex, ViewSet viewSet, ProgressMonitor progressMonitor,
@@ -70,7 +70,7 @@ class PreviewImages
         {
             try
             {
-                fullResImage = loadFullResMaskedImage(viewSet, viewIndex);
+                fullResImage = viewSet.loadFullResMaskedImage(viewIndex);
             }
             catch (RuntimeException | IOException ex)
             {
@@ -78,19 +78,6 @@ class PreviewImages
                 failedCount.getAndAdd(1);
             }
         }
-    }
-
-    private static BufferedImage loadFullResMaskedImage( ViewSet viewSet, int i) throws IOException
-    {
-        ImageHelper source = new ImageHelper(viewSet.findFullResImageFile(i));
-
-        File maskFile = viewSet.getMask(i);
-        if (maskFile != null && maskFile.exists())
-        {
-            source.setAlphaMask(maskFile);
-        }
-
-        return source.getBufferedImage();
     }
 
     boolean fullResImageExists()
@@ -124,7 +111,7 @@ class PreviewImages
 
             try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
             {
-                undistortedPreviewImage = undistort.undistort(fullResImage, distortion);
+                undistortedPreviewImage = undistort.undistort(fullResImage.getBufferedImage(), distortion);
             }
         }
         catch (IOException | RuntimeException ex)
@@ -173,8 +160,7 @@ class PreviewImages
                     if (missingThumbnail)
                     {
                         // Thumbnail doesn't need undistortion.
-                        ImageHelper helper = new ImageHelper(fullResImage);
-                        helper.saveAtResolution(viewSet.getThumbnailImageFile(viewIndex),
+                        fullResImage.saveAtResolution(viewSet.getThumbnailImageFile(viewIndex),
                             viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
                         logFinished(viewSet.getThumbnailImageFile(viewIndex));
                     }
@@ -199,18 +185,16 @@ class PreviewImages
         try
         {
             // Fallback to simply resizing without undistorting
-            ImageHelper helper = new ImageHelper(fullResImage);
-
             if (missingPreview)
             {
-                helper.saveAtResolution(viewSet.getPreviewImageFile(viewIndex),
+                fullResImage.saveAtResolution(viewSet.getPreviewImageFile(viewIndex),
                     viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
                 logFinished(viewSet.getPreviewImageFile(viewIndex));
             }
 
             if (missingThumbnail)
             {
-                helper.saveAtResolution(viewSet.getThumbnailImageFile(viewIndex),
+                fullResImage.saveAtResolution(viewSet.getThumbnailImageFile(viewIndex),
                     viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
                 logFinished(viewSet.getThumbnailImageFile(viewIndex));
             }

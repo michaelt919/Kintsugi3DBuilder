@@ -21,7 +21,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.ImgSelectionThread;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
@@ -55,7 +54,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     protected HashMap<String, Image> imgCache;
     @FXML
     private AnchorPane hostAnchorPane;
-    private ImgSelectionThread loadImgThread;
+    private ImageSelectionThread loadImgThread;
 
     protected abstract String getHintText();
 
@@ -176,7 +175,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 setThumbnailAsFullImage(selectedItem);
             }
 
-            loadImgThread = new ImgSelectionThread(imageName, this, source.getPrimarySelectionModel());
+            loadImgThread = new ImageSelectionThread(imageName, this, source.getPrimarySelectionModel());
             Thread myThread = new Thread(loadImgThread);
             myThread.start();
         }

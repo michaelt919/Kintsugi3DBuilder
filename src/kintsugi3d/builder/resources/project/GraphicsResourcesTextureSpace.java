@@ -11,21 +11,20 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ColorAppearanceMode;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.GeometryTextures;
-import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.TextureLoadOptions;
-import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -53,26 +52,6 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
     private final int texWidth;
     private final int texHeight;
 
-
-    GraphicsResourcesTextureSpace(
-        ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions,
-        int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException
-    {
-        super(new GraphicsResourcesCommon<>(context, viewSet, geometry, loadOptions), true);
-
-        // Deferred rendering: draw to geometry textures initially and then just draw using a rectangle and
-        // the geometry info cached in the textures
-        geometryTextures = getGeometryResources().createGeometryFramebuffer(texWidth, texHeight);
-
-        rectangle = context.createRectangle();
-
-        this.texWidth = texWidth;
-        this.texHeight = texHeight;
-
-        // TODO load images in texture space
-        throw new UnsupportedOperationException();
-    }
-
     /**
      *
      * @param sharedResources
@@ -84,9 +63,10 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
      * @param progressMonitor
      * @throws IOException
      */
-    GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> sharedResources, Supplier<GeometryTextures<ContextType>> geometryTextureFactory,
-         File textureDirectory, TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor)
-             throws IOException, UserCancellationException
+    GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> sharedResources,
+        Supplier<GeometryTextures<ContextType>> geometryTextureFactory, File textureDirectory,
+        TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor)
+            throws IOException, UserCancellationException
     {
         super(sharedResources, false);
 
@@ -157,51 +137,6 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
         this.geometryTextures = geometryTextureFactory.get();
         this.rectangle = sharedResources.getContext().createRectangle();
-    }
-
-    /**
-     * Generates geometry textures using default implementation (rendering the geometry to an offscreen framebuffer)
-     * @param sharedResources
-     * @param textureDirectory
-     * @param loadOptions
-     * @param texWidth
-     * @param texHeight
-     * @param progressMonitor
-     * @throws IOException
-     */
-    GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
-    {
-        this(sharedResources, () -> sharedResources.getGeometryResources().createGeometryFramebuffer(texWidth, texHeight),
-            textureDirectory, loadOptions, texWidth, texHeight, progressMonitor);
-    }
-
-    GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, IntVector2 dimensions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
-    {
-        this(sharedResources, textureDirectory, loadOptions, dimensions.x, dimensions.y, progressMonitor);
-    }
-
-    private static IntVector2 readDimensionsFromFile(File imageFile) throws IOException
-    {
-        // Read an image to get the width and height
-        BufferedImage image = ImageIO.read(imageFile);
-        return new IntVector2(image.getWidth(), image.getHeight());
-    }
-
-    /**
-     * Loads an image an extra time to infer the width and height
-     * @param sharedResources
-     * @param textureDirectory
-     * @throws IOException
-     */
-    GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
-    {
-        this(sharedResources, textureDirectory, loadOptions,
-            readDimensionsFromFile(ImageFinder.getInstance().findImageFile(new File(textureDirectory,
-                sharedResources.getViewSet().getImageFileName(0)))),
-            progressMonitor);
     }
 
     @Override

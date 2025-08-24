@@ -21,19 +21,17 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.util.UnzipHelper;
+import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
+import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -540,28 +538,11 @@ public final class ViewSet implements ReadonlyViewSet
             try
             {
                 File finalFile = new File(fullResImageDirectory, file.getPath());
-                String res = "";
-                try (ImageInputStream iis = ImageIO.createImageInputStream(new FileInputStream(finalFile)))
-                {
-                    final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
-                    if (readers.hasNext())
-                    {
-                        ImageReader reader = readers.next();
-                        try
-                        {
-                            reader.setInput(iis);
-                            res = reader.getWidth(0) + "x" + reader.getHeight(0);
-                        }
-                        finally
-                        {
-                            reader.dispose();
-                        }
-                    }
-                }
-                String finalRes = res;
+                IntVector2 dimensions = ImageHelper.dimensionsOf(finalFile);
+                String res = dimensions.x + "x" + dimensions.y;
                 cameraMetadata.add(new LinkedHashMap<>()
                 {{
-                    put("Resolution", finalRes);
+                    put("Resolution", res);
                     put("Size", (finalFile.length() / (1024 * 1024)) + " MB");
                 }});
             }
@@ -1182,6 +1163,12 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public Projection getCameraProjectionForViewIndex(int viewIndex)
+    {
+        return getCameraProjection(getCameraProjectionIndex(viewIndex));
+    }
+
+    @Override
     public int getCameraProjectionIndex(int poseIndex)
     {
         return this.cameraProjectionIndexList.get(poseIndex);
@@ -1395,6 +1382,12 @@ public final class ViewSet implements ReadonlyViewSet
     public void addMask(int camId, File mask)
     {
         maskFiles.put(camId, mask);
+    }
+
+    @Override
+    public ImageHelper loadFullResMaskedImage(int index) throws IOException
+    {
+        return ImageHelper.read(findFullResImageFile(index)).withAlphaMask(getMask(index));
     }
 
     /**

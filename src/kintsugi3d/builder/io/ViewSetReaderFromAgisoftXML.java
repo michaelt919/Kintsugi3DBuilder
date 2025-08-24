@@ -16,10 +16,10 @@ import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
-import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -188,7 +188,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             {
                 try
                 {
-                    int id2 = Integer.parseInt(c2.id);
+                    Integer.parseInt(c2.id);
 
                     // id2 is a number but id1 isn't
                     return 1;
@@ -661,8 +661,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         {
             for (Sensor s : sensors)
             {
-                s.cx += s.width * 0.5;
-                s.cy += s.height * 0.5;
+                s.cx += s.width * 0.5f;
+                s.cy += s.height * 0.5f;
             }
         }
 

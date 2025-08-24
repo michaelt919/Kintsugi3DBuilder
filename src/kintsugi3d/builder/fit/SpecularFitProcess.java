@@ -28,15 +28,14 @@ import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
-import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,8 +46,6 @@ import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
-
-import static javax.imageio.ImageIO.read;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -119,23 +116,18 @@ public class SpecularFitProcess
             {
                 try
                 {
-                    Projection projection = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(viewIndex));
-                    BufferedImage image = read(viewSet.findFullResImageFile(viewIndex));
-
-                    File maskFile = viewSet.getMask(viewIndex);
-                    BufferedImage mask = maskFile == null ? null : read(maskFile);
+                    Projection projection = resources.getViewSet().getCameraProjectionForViewIndex(viewIndex);
+                    ImageHelper image = viewSet.loadFullResMaskedImage(viewIndex);
 
                     if (projection instanceof DistortionProjection)
                     {
                         // undistort if we have a DistortionProjection.
                         return new BufferedImageColorList(new ImageUndistorter<>(resources.getContext())
-                                .undistort(image, mask, false /* no mipmaps for error estimation */, (DistortionProjection) projection));
+                                .undistort(image.getBufferedImage(), (DistortionProjection) projection, false /* no mipmaps for error estimation */));
                     }
                     else
                     {
-                        return mask != null ?
-                                new BufferedImageColorList(new ImageHelper(image).setAlphaMask(mask).getBufferedImage()) :
-                                new BufferedImageColorList(image);
+                        return new BufferedImageColorList(image.getBufferedImage());
                     }
                 }
                 catch (IOException e)

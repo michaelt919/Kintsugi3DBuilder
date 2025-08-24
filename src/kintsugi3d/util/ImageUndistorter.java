@@ -16,7 +16,6 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector4;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -86,10 +85,10 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public BufferedImage undistort(BufferedImage inputImage, BufferedImage inputMask, boolean mipmapsEnabled, DistortionProjection distortion)
+    public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion, boolean mipmapsEnabled)
     {
         try(Texture2D<ContextType> inTex = context.getTextureFactory()
-            .build2DColorTextureFromImageWithMask(inputImage, inputMask, true)
+            .build2DColorTextureFromImage(inputImage, true)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(mipmapsEnabled)
             .createTexture();
@@ -100,14 +99,6 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
                 .flipVertical()
                 .create();
         }
-    }
-
-    public void undistortFile(File inputImage, File maskImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
-    {
-        BufferedImage imageIn = ImageIO.read(inputImage);
-        BufferedImage maskIn = maskImage != null ? ImageIO.read(maskImage) : null;
-        BufferedImage imageOut = undistort(imageIn, maskIn, mipmapsEnabled, distortion);
-        ImageIO.write(imageOut, "PNG", outputImage);
     }
 
     @Override

@@ -19,11 +19,10 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
-import kintsugi3d.util.ImageHelper;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.RadianceImageLoader;
 import kintsugi3d.util.RadianceImageLoader.Image;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -48,22 +47,13 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         private final int textureTarget;
         private final BufferedImage colorImg;
-        private BufferedImage maskImg;
         private final boolean flipVertical;
 
         OpenGLTexture2DFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = colorImg;
-            this.maskImg = maskImg;
-            if (maskImg != null)
-            {
-                if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
-                {
-                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
-                }
-            }
+            this.colorImg = ImageHelper.of(colorImg).withAlphaMask(maskImg).getBufferedImage();
             this.flipVertical = flipVertical;
         }
 
@@ -71,15 +61,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = ImageIO.read(imageStream);
-            if (maskStream != null)
-            {
-                this.maskImg = ImageIO.read(maskStream);
-                if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
-                {
-                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
-                }
-            }
+            this.colorImg = ImageHelper.read(imageStream).withAlphaMask(maskStream).getBufferedImage();
             this.flipVertical = flipVertical;
         }
 
@@ -88,10 +70,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             int width = colorImg.getWidth();
             int height = colorImg.getHeight();
-            ByteBuffer buffer = bufferedImageToNativeBuffer(
-                isICCTransformationRequested() ?
-                        new ImageHelper(colorImg).convertICCToSRGB() :
-                        new ImageHelper(colorImg).forceSRGB(), /* masks shouldn't be using ICC */ maskImg, flipVertical);
+            ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, flipVertical);
 
             if (this.isInternalFormatCompressed())
             {
@@ -132,7 +111,6 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         private final int textureTarget;
         private final BufferedImage colorImg;
-        private BufferedImage maskImg;
         private final boolean flipVertical;
         private final AbstractDataType<? super MappedType> mappedType;
         private final Function<Color, MappedType> mappingFunction;
@@ -142,8 +120,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = colorImg;
-            this.maskImg = maskImg;
+            this.colorImg = ImageHelper.of(colorImg).withAlphaMask(colorImg).getBufferedImage();
             if (maskImg != null)
             {
                 if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
@@ -161,15 +138,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = ImageIO.read(imageStream);
-            if (maskStream != null)
-            {
-                this.maskImg = ImageIO.read(maskStream);
-                if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
-                {
-                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
-                }
-            }
+            this.colorImg = ImageHelper.read(imageStream).withAlphaMask(maskStream).getBufferedImage();
             this.flipVertical = flipVertical;
             this.mappedType = mappedType;
             this.mappingFunction = mappingFunction;
@@ -196,7 +165,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                 return (index, color) -> partiallyWrappedBuffer.accept(index, mappingFunction.apply(color));
             };
 
-            ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
+            ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
 
             if (this.isInternalFormatCompressed())
             {
@@ -246,11 +215,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             this.colorImg = new RadianceImageLoader().read(imageStream, flipVertical, true);
             if (maskStream != null)
             {
-                this.maskImg = ImageIO.read(maskStream);
-                if (maskImg.getWidth() != colorImg.width || maskImg.getHeight() != colorImg.height)
-                {
-                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
-                }
+                this.maskImg = ImageHelper.read(maskStream).scaledToResolution(colorImg.width, colorImg.height).getBufferedImage();
             }
         }
 

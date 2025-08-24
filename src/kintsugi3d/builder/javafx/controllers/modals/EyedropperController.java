@@ -36,11 +36,11 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -161,7 +161,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     }
 
     @FXML
-    private void handleMouseReleased(MouseEvent event)
+    private void handleMouseReleased()
     {
         if (isSelecting)
         {
@@ -368,7 +368,6 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     }
 
     //returns false if the color is null or has already been added
-    @FXML
     private boolean addSelectedColor(Color newColor)
     {
         //update the text field (to int. greyscale value) and its corresponding color square
@@ -452,16 +451,9 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     public void updateApplyButton()
     {
         //only enable apply button if all fields contain good data (integers) and model is loaded
-        if (areAllFieldsValid() && hasGoodLoadingModel())
-        {
-            //TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
-            //only updates setDisable() when text field is modified
-            applyButton.setDisable(false);
-        }
-        else
-        {
-            applyButton.setDisable(true);
-        }
+        //only updates setDisable() when text field is modified
+        //TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
+        applyButton.setDisable(!areAllFieldsValid() || !hasGoodLoadingModel());
     }
 
     //returns the text field the button corresponds to
@@ -730,7 +722,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
                 BufferedImage bufferedImage;
                 try
                 {
-                    bufferedImage = ImageIO.read(file);
+                    bufferedImage = ImageHelper.read(file).getBufferedImage();
                     colorPickerImgView.setImage(SwingFXUtils.toFXImage(bufferedImage, null));
                 }
                 catch (IOException e)

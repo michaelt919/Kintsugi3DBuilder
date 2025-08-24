@@ -11,9 +11,9 @@
 
 package kintsugi3d.util;
 
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector4;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.RenderedImage;
@@ -44,7 +44,7 @@ public class BufferedImageBuilder
 
     public BufferedImageBuilder loadDataFromFile(File file) throws IOException
     {
-        BufferedImage img = ImageIO.read(file);
+        BufferedImage img = ImageHelper.read(file).getBufferedImage();
         this.width = img.getWidth();
         this.height = img.getHeight();
         this.data = img.getRGB(0, 0, width, height, null, 0, width);

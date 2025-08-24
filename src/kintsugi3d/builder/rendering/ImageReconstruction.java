@@ -17,13 +17,13 @@ import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ColorImage;
 import kintsugi3d.util.SRGB;
 import org.lwjgl.BufferUtils;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -63,7 +63,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 // load new ground truth
                 try
                 {
-                    BufferedImage groundTruthImage = ImageIO.read(viewSet.findFullResImageFile(viewIndex));
+                    BufferedImage groundTruthImage = ImageHelper.read(viewSet.findFullResImageFile(viewIndex)).getBufferedImage();
                     return new BufferedImageColorList(groundTruthImage);
                 }
                 catch (IOException e)

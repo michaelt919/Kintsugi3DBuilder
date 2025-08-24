@@ -12,7 +12,7 @@
 package kintsugi3d.builder.io.specular;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.ImageHelper;
+import kintsugi3d.gl.util.ImageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +65,23 @@ public class SpecularFitTextureRescaler
 
     public void generateLodsFor(File file) throws IOException
     {
-        ImageHelper.generateLods(file, settings.getMinimumTextureResolution());
+        int minSize = settings.getMinimumTextureResolution();
+
+        String filename = file.getName();
+        String extension = "";
+        int i = filename.lastIndexOf('.'); //Strip file extension
+        if (i > 0)
+        {
+            extension = filename.substring(i);
+            filename = filename.substring(0, i);
+        }
+
+        ImageHelper imageHelper = ImageHelper.read(file);
+
+        for (int size = imageHelper.getBufferedImage().getHeight() / 2; size >= minSize; size /= 2)
+        {
+            imageHelper.saveAtResolution(new File(file.getParent(), filename + "-" + size + extension), size);
+        }
     }
 
 }

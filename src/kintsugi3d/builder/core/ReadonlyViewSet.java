@@ -14,11 +14,13 @@ package kintsugi3d.builder.core;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
@@ -173,11 +175,19 @@ public interface ReadonlyViewSet
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.
-     * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
+     * @param projectionIndex The index of the projection transformation to retrieve.
      * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
      * @return The projection transformation.
      */
     Projection getCameraProjection(int projectionIndex);
+
+    /**
+     * Gets the projection transformation defining the intrinsic properties for a specific view.
+     * @param viewIndex The index of the view whose projection transformation should be retrieved.
+     * This works by first finding the camera projection index for the view and then looking up the projection itself by that index.
+     * @return The projection transformation.
+     */
+    Projection getCameraProjectionForViewIndex(int viewIndex);
 
     /**
      * Gets the index of the projection transformation to be used for a particular view,
@@ -288,6 +298,8 @@ public interface ReadonlyViewSet
     File getMasksDirectory();
 
     Map<Integer, File> getMasksMap();
+
+    ImageHelper loadFullResMaskedImage(int index) throws IOException;
 
     /**
      * Gets additional settings associated with this view set

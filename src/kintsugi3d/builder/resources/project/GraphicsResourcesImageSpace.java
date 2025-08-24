@@ -27,16 +27,18 @@ import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
-import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -334,22 +336,10 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             try
             {
                 File imageFile = viewSet.findPreviewPrimaryImageFile();
+                IntVector2 dimensions = ImageHelper.dimensionsOf(imageFile);
 
-                // Read a single image to get the dimensions for the texture array
-                BufferedImage img;
-                try (InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
-                {
-                    img = ImageIO.read(input);
-                }
-
-                if (img == null)
-                {
-                    throw new IOException(String.format("Error: Unsupported image format '%s'.",
-                        viewSet.getImageFileName(0)));
-                }
-
-                width = img.getWidth();
-                height = img.getHeight();
+                width = dimensions.x;
+                height = dimensions.y;
             }
             catch (FileNotFoundException e)
             {
