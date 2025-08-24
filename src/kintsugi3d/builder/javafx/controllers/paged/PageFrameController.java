@@ -295,7 +295,7 @@ public class PageFrameController
         return currentPage.get();
     }
 
-    void setCurrentPage(Page<?, ?> page)
+    public void setCurrentPage(Page<?, ?> page)
     {
         currentPage.set(page);
     }
