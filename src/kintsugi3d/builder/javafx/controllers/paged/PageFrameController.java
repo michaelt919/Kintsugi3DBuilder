@@ -117,19 +117,6 @@ public class PageFrameController
     }
 
     /**
-     * Constructs a page from an FXML file.
-     * @param fxmlPath
-     * @param pageConstructor
-     * @return
-     * @param <PageType>
-     */
-    public <PageType extends Page<?, ?>>
-    PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
-    {
-        return createPage(fxmlPath, pageConstructor, null);
-    }
-
-    /**
      * Constructs a page from an FXML file
      * but overrides the controller type specified in the FXML by providing a constructor for the desired controller.
      * @param fxmlPath
@@ -139,7 +126,7 @@ public class PageFrameController
      * @param <PageType>
      * @param <ControllerType>
      */
-    public <PageType extends Page<?, ?>, ControllerType extends PageController<?>>
+    <PageType extends Page<?, ?>, ControllerType extends PageController<?>>
     PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
         Supplier<ControllerType> controllerConstructorOverride)
     {
