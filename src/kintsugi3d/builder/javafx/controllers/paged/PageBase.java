@@ -15,6 +15,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 abstract class PageBase<InType, OutType, ControllerType extends PageController<? super InType>>
     implements Page<InType, OutType>
 {
@@ -27,6 +30,8 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     private final ObjectProperty<Page<? super OutType, ?>> nextPageProperty = new SimpleObjectProperty<>(null);
 
     private Page<?, ? extends InType> prevPage = null;
+
+    private final Map<String, Page<? super OutType,?>> fallbackPages = new LinkedHashMap<>();
 
     protected PageBase(String fxmlFile, FXMLLoader loader)
     {
@@ -75,6 +80,30 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     public void setNextPage(Page<? super OutType, ?> page)
     {
         nextPageProperty.set(page);
+
+        if (page.getPrevPage() == null)
+        {
+            // set default link back (useful for fallback pages which weren't accessed via next button)
+            page.setPrevPage(this);
+        }
+    }
+
+    @Override
+    public Map<String, Page<? super OutType, ?>> getFallbackPages()
+    {
+        return fallbackPages;
+    }
+
+    @Override
+    public boolean hasFallbackPage()
+    {
+        return !fallbackPages.isEmpty();
+    }
+
+    @Override
+    public void addFallbackPage(String fallbackName, Page<? super OutType, ?> page)
+    {
+        fallbackPages.put(fallbackName, page);
     }
 
     @Override

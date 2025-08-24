@@ -30,8 +30,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.core.JavaFXState;
+import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -208,7 +208,7 @@ public class PageFrameController
             });
     }
 
-    public <T> DataPageBuilder<Object, T, PageFrameController> buildPage(JavaFXState state, Runnable callback, T data)
+    public <T> SimplePageBuilder<Object, T, PageFrameController> buildPage(JavaFXState state, Runnable callback, T data)
     {
         return new DataSentinelPageBuilder<>(this,
             () ->
@@ -272,6 +272,20 @@ public class PageFrameController
                     }
                 }
             }
+        }
+    }
+
+    public void fallbackPage(String pageName)
+    {
+        Page<?,?> fallbackPage = currentPage.get().getFallbackPages().get(pageName);
+        if (fallbackPage != null)
+        {
+            currentPage.set(fallbackPage);
+            initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
+        }
+        else
+        {
+            close();
         }
     }
 

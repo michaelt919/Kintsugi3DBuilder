@@ -25,20 +25,25 @@ public class CreateProject extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        var masks = buildPagedModal()
+        var metashape = buildPagedModal()
             .thenSelect("Select Import Option")
-            .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<InputSource, MetashapeImportController>::new)
-                .<MasksImportController>then(MASKS_IMPORT);
+            .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<InputSource, MetashapeImportController>::new);
 
+        var masks = metashape.<MasksImportController>then(MASKS_IMPORT);
+
+        var manual =
             masks.<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
                 .finish()
             .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, RealityCaptureImportController>::new,
                     RealityCaptureImportController::new)
                 .join(masks.getPage())
-            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, ManualImportController>::new)
-                .join(masks.getPage())
+            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, ManualImportController>::new);
+
+        manual.join(masks.getPage())
             .finish()
             .setConfirmCallback(confirmCallback);
+
+        metashape.joinFallback("Manual Import", manual.getPage());
     }
 
     private void openHotSwap() throws IOException

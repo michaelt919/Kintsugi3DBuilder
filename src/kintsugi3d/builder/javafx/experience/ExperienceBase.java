@@ -2,7 +2,6 @@ package kintsugi3d.builder.javafx.experience;
 
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
@@ -123,7 +122,7 @@ public abstract class ExperienceBase implements Experience
      * Builds a paged modal with multiple pages.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <T> DataPageBuilder<Object, T, PageFrameController> buildPagedModal(T data) throws IOException
+    protected final <T> SimplePageBuilder<Object, T, PageFrameController> buildPagedModal(T data) throws IOException
     {
         return createPagedModal().buildPage(getState(), modal::open, data);
     }

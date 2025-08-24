@@ -24,8 +24,8 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.net.URL;
 import java.util.ResourceBundle;

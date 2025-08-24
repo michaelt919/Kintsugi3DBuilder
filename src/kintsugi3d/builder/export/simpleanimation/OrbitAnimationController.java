@@ -17,8 +17,8 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.Modal;
 import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.io.File;
 

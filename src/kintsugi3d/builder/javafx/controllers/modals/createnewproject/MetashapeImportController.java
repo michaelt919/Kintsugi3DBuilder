@@ -16,7 +16,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
@@ -49,8 +49,6 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     private static final String NO_MODEL_ID_MSG = "No Model ID";
     private static final String NO_MODEL_NAME_MSG = "Unnamed Model";
     private static final String SPACER = "   ";
-
-    private volatile boolean alertShown = false;
 
     @FXML private FileChooser psxFileChooser;
 
@@ -185,7 +183,8 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
 
         if (!hasModels())
         {
-            showNoModelsAlert();
+            handleError("Metashape chunk has no models.",
+                "Please select another chunk or import manually.");
             return;
         }
 
@@ -215,51 +214,6 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
                 break;
             }
         }
-    }
-
-    private void showMissingItemsAlert(String title, String msg)
-    {
-        if (alertShown) // Prevent multiple alerts from showing at once
-        {
-            return;
-        }
-
-        alertShown = true;
-        Platform.runLater(() ->
-        {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
-            ButtonType openCustomProj = new ButtonType("Manual Import", ButtonBar.ButtonData.YES);
-
-            Alert alert = new Alert(Alert.AlertType.NONE, msg, ok, openCustomProj);
-
-            ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event ->
-            {
-                // Manually navigate though pages to get to custom loader
-                getPageFrameController().prevPage();//go to SelectImportOptions.fxml
-//                SelectImportOptionsController controller = (SelectImportOptionsController)
-//                    getPageFrameController().getCurrentPage().getController();
-//                controller.looseFiles();
-//                getPageFrameController().advancePage();
-                alertShown = false;
-            });
-
-            ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
-
-            alert.setTitle(title);
-            alert.show();
-        });
-    }
-
-    private void showNoChunksAlert()
-    {
-        showMissingItemsAlert("Metashape document has no chunks.",
-            "Please select another document or create a custom project.");
-    }
-
-    private void showNoModelsAlert()
-    {
-        showMissingItemsAlert("Metashape chunk has no models.",
-            "Please select another chunk or create a custom project.");
     }
 
     private boolean hasModels()
@@ -301,12 +255,13 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
         {
             if (chunks.isEmpty())
             {
-                showNoChunksAlert();
+                handleError("Metashape document has no chunks.",
+                    "Please select another document or import manually.");
             }
             else
             {
-                showMissingItemsAlert("All chunks are missing models.",
-                    "None of your chunks have valid model data. Please select another document or create a custom project.");
+                handleError("All chunks are missing models.",
+                    "None of your chunks have valid model data. Please select another document or import manually.");
             }
 
             modelSelectionChoiceBox.getItems().clear();
@@ -316,7 +271,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
             setCanAdvance(true);
             if (missingChunks)
             {
-                showMissingItemsAlert("Some chunks are missing models.",
+                handleError("Some chunks are missing models.",
                     "Some of your chunks do not have models. They will not appear in the dropdown.");
             }
 

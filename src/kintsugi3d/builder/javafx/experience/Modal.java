@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx;
+package kintsugi3d.builder.javafx.experience;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;

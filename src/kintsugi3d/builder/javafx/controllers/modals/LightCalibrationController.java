@@ -17,7 +17,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import kintsugi3d.builder.javafx.Modal;
+import kintsugi3d.builder.javafx.experience.Modal;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -34,8 +34,6 @@ public class LightCalibrationController implements Initializable
     @FXML private Slider xSlider;
     @FXML private Slider ySlider;
 
-    private ChangeListener<? super Number> xListener;
-    private ChangeListener<? super Number> yListener;
     private ChangeListener<Vector2> settingsListener;
 
     @Override
@@ -48,12 +46,12 @@ public class LightCalibrationController implements Initializable
     public void bind(SettingsModelImpl injectedSettingsModel)
     {
         // Bind sliders to settings model
-        xListener = (observable, oldValue, newValue) ->
+        ChangeListener<? super Number> xListener = (observable, oldValue, newValue) ->
             injectedSettingsModel.set("currentLightCalibration",
                 new Vector2(newValue.floatValue(), injectedSettingsModel.get("currentLightCalibration", Vector2.class).y));
         xSlider.valueProperty().addListener(xListener);
 
-        yListener = (observable, oldValue, newValue) ->
+        ChangeListener<? super Number> yListener = (observable, oldValue, newValue) ->
             injectedSettingsModel.set("currentLightCalibration",
                 new Vector2(injectedSettingsModel.get("currentLightCalibration", Vector2.class).x, newValue.floatValue()));
         ySlider.valueProperty().addListener(yListener);

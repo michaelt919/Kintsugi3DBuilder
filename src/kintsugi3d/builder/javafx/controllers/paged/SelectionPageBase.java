@@ -44,6 +44,12 @@ public abstract class SelectionPageBase<T, ControllerType extends SelectionPageC
     public void addChoice(String choiceLabel, Page<? super T, ?> page)
     {
         choicePages.put(choiceLabel, page);
+
+        if (page.getPrevPage() == null)
+        {
+            // set default link back (useful for fallback pages which weren't accessed via next button)
+            page.setPrevPage(this);
+        }
     }
 
     @Override

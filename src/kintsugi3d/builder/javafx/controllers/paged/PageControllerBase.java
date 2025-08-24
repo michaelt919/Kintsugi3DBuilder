@@ -11,10 +11,18 @@
 
 package kintsugi3d.builder.javafx.controllers.paged;
 
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ButtonType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Internal base class that is extended for the public-facing classes
@@ -28,6 +36,8 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     private final BooleanProperty canAdvanceProperty = new SimpleBooleanProperty(false);
     private final StringProperty advanceLabelOverrideProperty = new SimpleStringProperty(null);
     private final BooleanProperty canConfirmProperty = new SimpleBooleanProperty(false);
+
+    private volatile boolean alertShown = false;
 
     @Override
     public PageFrameController getPageFrameController()
@@ -84,7 +94,7 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     protected final void setAdvanceLabelOverride(String advanceLabelOverride)
     {
         advanceLabelOverrideProperty.set(advanceLabelOverride);
-    };
+    }
 
     @Override
     public final BooleanProperty getCanConfirmObservable()
@@ -122,5 +132,50 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     {
         // Close without any additional logic by default.
         return true;
+    }
+
+    protected void handleError(String title, String message)
+    {
+        if (alertShown) // Prevent multiple alerts from showing at once
+        {
+            return;
+        }
+
+        alertShown = true;
+        Platform.runLater(() ->
+        {
+            if (getPage().hasFallbackPage())
+            {
+                List<ButtonType> buttons = new ArrayList<>(getPage().getFallbackPages().size() + 1);
+                buttons.add(new ButtonType("Cancel", ButtonBar.ButtonData.LEFT));
+
+                for (var fallback : getPage().getFallbackPages().entrySet())
+                {
+                    String fallbackName = fallback.getKey();
+                    buttons.add(new ButtonType(fallbackName, ButtonBar.ButtonData.YES));
+                }
+
+                Alert alert = new Alert(Alert.AlertType.NONE, message, buttons.toArray(ButtonType[]::new));
+
+                for (ButtonType button : buttons)
+                {
+                    ((ButtonBase) alert.getDialogPane().lookupButton(button)).setOnAction(event ->
+                    {
+                        getPageFrameController().fallbackPage(button.getText());
+                        alertShown = false;
+                    });
+                }
+                alert.setTitle(title);
+                alert.show();
+            }
+            else
+            {
+                ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+                Alert alert = new Alert(Alert.AlertType.NONE, message, ok);
+                ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
+                alert.setTitle(title);
+                alert.show();
+            }
+        });
     }
 }

@@ -22,5 +22,11 @@ public class SentinelPage<T> extends PageBase<Object, T, PageController<? super 
     public void setNextPage(Page<? super T, ?> page)
     {
         super.setNextPage(page);
+
+        if (page.getPrevPage() == this)
+        {
+            // don't link back to this page
+            page.setPrevPage(null);
+        }
     }
 }
