@@ -36,29 +36,13 @@ public class ImageHelper
 {
     public static final String ERROR_UNSUPPORTED_IMAGE_FORMAT = "Error: Unsupported image format.";
 
-    private final BufferedImage image;
-
-    private static boolean iccTransformEnabled = false;
-
     /**
      * Whether or not to use (transform to sRGB) or ignore (reinterpret as sRGB) any ICC transformation
      * specified in images loaded from file or input stream
-     * @return true if ICC transform enabled, false otherwise
      */
-    public static boolean isICCTransformEnabled()
-    {
-        return iccTransformEnabled;
-    }
+    private static final boolean ICC_TRANSFORM_ENABLED = false;
 
-    /**
-     * Sets whether or not to use (transform to sRGB) or ignore (reinterpret as sRGB) any ICC transformation
-     * specified in images loaded from file or input stream
-     * @param iccTransformEnabled true if ICC transform enabled, false otherwise
-     */
-    public static void setICCTransformEnabled(boolean iccTransformEnabled)
-    {
-        ImageHelper.iccTransformEnabled = iccTransformEnabled;
-    }
+    private final BufferedImage image;
 
     public static IntVector2 dimensionsOf(File file) throws IOException
     {
@@ -97,21 +81,21 @@ public class ImageHelper
     {
         ImageHelper raw = new ImageHelper(ImageIO.read(file));
         raw.validate(file);
-        return iccTransformEnabled ? raw.convertedICCToSRGB() : raw.forcedSRGB();
+        return ICC_TRANSFORM_ENABLED ? raw.convertedICCToSRGB() : raw.forcedSRGB();
     }
 
     public static ImageHelper read(InputStream input) throws IOException
     {
         ImageHelper raw = new ImageHelper(ImageIO.read(input));
         raw.validate(null);
-        return iccTransformEnabled ? raw.convertedICCToSRGB() : raw.forcedSRGB();
+        return ICC_TRANSFORM_ENABLED ? raw.convertedICCToSRGB() : raw.forcedSRGB();
     }
 
     public static ImageHelper of(BufferedImage image)
     {
         ImageHelper raw = new ImageHelper(image);
         Objects.requireNonNull(image);
-        return iccTransformEnabled ? raw.convertedICCToSRGB() : raw.forcedSRGB();
+        return ICC_TRANSFORM_ENABLED ? raw.convertedICCToSRGB() : raw.forcedSRGB();
     }
 
     private ImageHelper validate(File file) throws IOException
