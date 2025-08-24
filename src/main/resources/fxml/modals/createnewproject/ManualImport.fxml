@@ -47,6 +47,6 @@
       </Text>
    </GridPane>
    <AnchorPane>
-      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" onAction="#undistortToggle" selected="true" text="Undistort images" styleClass="wireframeBody, checkbox" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" styleClass="wireframeBody, checkbox" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
    </AnchorPane>
 </VBox>

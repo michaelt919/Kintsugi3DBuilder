@@ -21,7 +21,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
 import kintsugi3d.builder.javafx.core.RecentProjects;
@@ -29,7 +28,7 @@ import kintsugi3d.builder.javafx.core.RecentProjects;
 import java.io.File;
 import java.util.List;
 
-public class ManualImportController extends DataSourcePageControllerBase<InputSource>
+public class ManualImportController extends DataSourcePageControllerBase<ManualInputSource>
 {
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -44,7 +43,9 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
 
-    protected final ManualInputSource source = new ManualInputSource();
+    private File cameraFile;
+    private File meshFile;
+    private File photosDir;
 
     @Override
     public final Region getRootNode()
@@ -55,8 +56,6 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
     @Override
     public final void initPage()
     {
-        this.getPage().setOutData(source);
-
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
@@ -101,7 +100,7 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
 
         if (file != null)
         {
-            source.setCameraFile(file);
+            cameraFile = file;
             setHomeDir(file);
             loadCheckCameras.setText("Loaded");
             loadCheckCameras.setFill(Paint.valueOf("Green"));
@@ -121,7 +120,7 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
 
         if (file != null)
         {
-            source.setMeshFile(file);
+            meshFile = file;
             setHomeDir(file);
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
@@ -141,7 +140,7 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
 
         if (file != null)
         {
-            source.setPhotosDir(file);
+            photosDir = file;
             setHomeDir(file);
             loadCheckImages.setText("Loaded");
             loadCheckImages.setFill(Paint.valueOf("Green"));
@@ -155,7 +154,7 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
 
     private boolean areAllFilesLoaded()
     {
-        return (source.getCameraFile() != null) && (source.getMeshFile() != null) && (source.getPhotosDir() != null);
+        return cameraFile != null && meshFile != null && photosDir != null;
     }
 
 
@@ -184,14 +183,20 @@ public class ManualImportController extends DataSourcePageControllerBase<InputSo
     }
 
     @Override
-    public final boolean confirm()
+    public boolean advance()
     {
-        source.loadProject();
+        getPage().setOutData(new ManualInputSource()
+            .setCameraFile(cameraFile)
+            .setMeshFile(meshFile)
+            .setPhotosDir(photosDir)
+            .setNeedsUndistort(undistortImagesCheckBox.isSelected()));
         return true;
     }
 
-    public void undistortToggle()
+    @Override
+    public final boolean confirm()
     {
-        source.setNeedsUndistort(undistortImagesCheckBox.isSelected());
+        getPage().getOutData().loadProject();
+        return true;
     }
 }

@@ -2,6 +2,7 @@ package kintsugi3d.builder.javafx.experience;
 
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
 
 import java.io.IOException;
@@ -31,10 +32,10 @@ public class CreateProject extends ExperienceBase
 
             masks.<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
                 .finish()
-            .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<InputSource, RealityCaptureImportController>::new,
+            .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, RealityCaptureImportController>::new,
                     RealityCaptureImportController::new)
                 .join(masks.getPage())
-            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<InputSource, ManualImportController>::new)
+            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, ManualImportController>::new)
                 .join(masks.getPage())
             .finish()
             .setConfirmCallback(confirmCallback);
@@ -43,7 +44,7 @@ public class CreateProject extends ExperienceBase
     private void openHotSwap() throws IOException
     {
         buildPagedModal()
-            .then(MANUAL_IMPORT, SimpleDataSourcePage<InputSource, HotSwapController>::new, HotSwapController::new)
+            .then(MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, HotSwapController>::new, HotSwapController::new)
             .<MasksImportController>then(MASKS_IMPORT)
             .<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
             .finish()

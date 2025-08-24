@@ -30,8 +30,6 @@ import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsource
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
 import kintsugi3d.builder.javafx.core.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -39,8 +37,6 @@ import java.util.Optional;
 
 public class MetashapeImportController extends DataSourcePageControllerBase<InputSource>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MetashapeImportController.class);
-
     @FXML private Text fileNameTxtField;
     @FXML private Pane rootPane;
     @FXML private Text loadMetashapeObject;
@@ -57,8 +53,6 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     private volatile boolean alertShown = false;
 
     @FXML private FileChooser psxFileChooser;
-
-    private final InputSource source = new MetashapeProjectInputSource();
 
     @Override
     public Region getRootNode()
@@ -113,19 +107,8 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     @Override
     public boolean advance()
     {
-        if (source instanceof MetashapeProjectInputSource)
-        {
-            //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
-            //Note: if we send the same model with different info (new mask directory, etc.) the controller will not notice the difference because
-            //it will still be looking at the same memory location
-            //this isn't a problem currently but might be later
-            getPage().setOutData(
-                new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
-        }
-        else
-        {
-            LOG.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
-        }
+        getPage().setOutData(
+            new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
 
         return true;
     }
@@ -133,7 +116,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     @Override
     public boolean confirm()
     {
-        source.loadProject();
+        getPage().getOutData().loadProject();
         return true;
     }
 
@@ -236,22 +219,22 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
 
     private void showMissingItemsAlert(String title, String msg)
     {
-        if (alertShown)
+        if (alertShown) // Prevent multiple alerts from showing at once
         {
             return;
-        } //prevent multiple alerts from showing at once
+        }
 
         alertShown = true;
         Platform.runLater(() ->
         {
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
-            ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
+            ButtonType openCustomProj = new ButtonType("Manual Import", ButtonBar.ButtonData.YES);
 
             Alert alert = new Alert(Alert.AlertType.NONE, msg, ok, openCustomProj);
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event ->
             {
-                //manually navigate though pages to get to custom loader
+                // Manually navigate though pages to get to custom loader
                 getPageFrameController().prevPage();//go to SelectImportOptions.fxml
 //                SelectImportOptionsController controller = (SelectImportOptionsController)
 //                    getPageFrameController().getCurrentPage().getController();

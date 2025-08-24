@@ -13,8 +13,11 @@ package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 public class HotSwapController extends ManualImportController
 {
-    public HotSwapController()
+    @Override
+    public boolean advance()
     {
-        source.setHotSwap(true);
+        super.advance();
+        getPage().getOutData().setHotSwap(true);
+        return true;
     }
 }
