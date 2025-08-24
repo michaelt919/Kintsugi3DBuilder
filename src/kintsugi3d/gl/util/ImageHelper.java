@@ -242,7 +242,9 @@ public class ImageHelper
     {
         // TODO is there a cleaner way to ignore input color space?  Maybe work with the Raster object directly?
         return new ImageHelper(
-            image == null || !(image.getColorModel() instanceof ComponentColorModel) ? image
+            image == null || !(image.getColorModel() instanceof ComponentColorModel) || image.getColorModel().getNumComponents() < 3
+                // skip forced color space if not ComponentColorModel or if the number of components is < 3 (i.e. grayscale)
+                ? image
                 : new BufferedImage(
                 new ComponentColorModel(
                     ColorSpace.getInstance(ColorSpace.CS_sRGB),
