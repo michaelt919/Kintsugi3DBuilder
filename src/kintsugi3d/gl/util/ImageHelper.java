@@ -46,17 +46,7 @@ public class ImageHelper
 
     public static IntVector2 dimensionsOf(File file) throws IOException
     {
-        IntVector2 dimensions = dimensionsOfHelper(new FileInputStream(file));
-        if (dimensions != null)
-        {
-            return dimensions;
-        }
-
-        throw unsupportedFormatException(file);
-    }
-
-    private static IntVector2 dimensionsOfHelper(InputStream input) throws IOException
-    {
+        InputStream input = new FileInputStream(file);
         try (ImageInputStream iis = ImageIO.createImageInputStream(input))
         {
             final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
@@ -74,7 +64,8 @@ public class ImageHelper
                 }
             }
         }
-        return null;
+
+        throw unsupportedFormatException(file);
     }
 
     public static ImageHelper read(File file) throws IOException
