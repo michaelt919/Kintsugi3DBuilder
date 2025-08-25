@@ -19,9 +19,6 @@ import kintsugi3d.builder.core.ViewSet;
  */
 public class OrientationViewSelectController extends ViewSelectController
 {
-    //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
-    //suppress warning?
-
     @Override
     public void initPage()
     {

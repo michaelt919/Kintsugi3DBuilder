@@ -36,6 +36,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class ViewSelectController extends DataReceiverPageControllerBase<ViewSelectable> implements ImageThreadable
 {
+    //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
+    //suppress warning?
+
     private static final int THUMBNAIL_SIZE = 30;
     private static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
 
