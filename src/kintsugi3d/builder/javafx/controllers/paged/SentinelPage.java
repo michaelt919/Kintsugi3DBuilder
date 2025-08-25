@@ -4,7 +4,7 @@ public class SentinelPage<T> extends PageBase<Object, T, PageController<? super 
 {
     public SentinelPage()
     {
-        super(null, null);
+        super(null);
     }
 
     @Override

@@ -5,9 +5,9 @@ import javafx.fxml.FXMLLoader;
 public class SimpleNonDataPage<ControllerType extends NonSupplierPageController<? super Object>>
     extends NonSupplierPageBase<Object, ControllerType>
 {
-    public SimpleNonDataPage(String fxmlFile, FXMLLoader loader)
+    public SimpleNonDataPage(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     /**

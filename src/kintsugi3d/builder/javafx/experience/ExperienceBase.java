@@ -8,7 +8,7 @@ import kintsugi3d.builder.javafx.core.JavaFXState;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -143,7 +143,7 @@ public abstract class ExperienceBase implements Experience
      */
     protected final <PageType extends Page<Object, OutType>, InType, OutType, ControllerType extends PageController<InType>>
     PageFrameController openPagedModel(
-        String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor,
+        String firstPageURLString, Function<FXMLLoader, PageType> firstPageConstructor,
         Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
         return buildPagedModal()
@@ -163,7 +163,7 @@ public abstract class ExperienceBase implements Experience
      */
     protected final <PageType extends Page<Object, OutType>, OutType>
     PageFrameController openPagedModel(
-        String firstPageURLString, BiFunction<String, FXMLLoader, PageType> firstPageConstructor) throws IOException
+        String firstPageURLString, Function<FXMLLoader, PageType> firstPageConstructor) throws IOException
     {
         return openPagedModel(firstPageURLString, firstPageConstructor, null);
     }

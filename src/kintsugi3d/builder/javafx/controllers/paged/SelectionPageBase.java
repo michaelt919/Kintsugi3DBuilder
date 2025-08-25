@@ -10,9 +10,9 @@ public abstract class SelectionPageBase<T, ControllerType extends SelectionPageC
     private String prompt = "Select an option:";
     private final HashMap<String, Page<? super T, ?>> choicePages = new LinkedHashMap<>(4);
 
-    SelectionPageBase(String fxmlFile, FXMLLoader loader)
+    SelectionPageBase(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     @Override

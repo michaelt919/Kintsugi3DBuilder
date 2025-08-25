@@ -7,9 +7,9 @@ public final class SimpleSelectionPage<T, ControllerType extends SelectionPageCo
 {
     private T data;
 
-    SimpleSelectionPage(String fxmlFile, FXMLLoader loader)
+    SimpleSelectionPage(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     @Override

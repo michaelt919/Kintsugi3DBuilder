@@ -13,9 +13,9 @@ class DataSupplierPageBase<InType, OutType, ControllerType extends DataSupplierP
 {
     private OutType data;
 
-    public DataSupplierPageBase(String fxmlFile, FXMLLoader loader)
+    public DataSupplierPageBase(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     @Override

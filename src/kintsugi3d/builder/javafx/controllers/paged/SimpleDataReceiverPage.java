@@ -7,9 +7,9 @@ public final class SimpleDataReceiverPage<T, ControllerType extends NonSupplierP
 {
     private T data;
 
-    public SimpleDataReceiverPage(String fxmlFile, FXMLLoader loader)
+    public SimpleDataReceiverPage(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     @Override

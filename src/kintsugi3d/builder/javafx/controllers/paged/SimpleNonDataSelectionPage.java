@@ -5,9 +5,9 @@ import javafx.fxml.FXMLLoader;
 public final class SimpleNonDataSelectionPage<ControllerType extends SelectionPageController<Object>>
     extends SelectionPageBase<Object, ControllerType>
 {
-    SimpleNonDataSelectionPage(String fxmlFile, FXMLLoader loader)
+    SimpleNonDataSelectionPage(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     /**

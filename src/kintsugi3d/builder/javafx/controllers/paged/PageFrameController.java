@@ -33,9 +33,6 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.experience.Modal;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -48,7 +45,6 @@ public class PageFrameController
 
     @FXML private Pane hostPane;
 
-    private final Map<String, Page<?,?>> pageCache = new HashMap<>(8);
     private Function<FXMLLoader, FXMLLoader> pageFactory;
     private final ObjectProperty<Page<?,?>> currentPage = new SimpleObjectProperty<>();
 
@@ -82,8 +78,7 @@ public class PageFrameController
         window.widthProperty().addListener(forceSize);
         window.heightProperty().addListener(forceSize);
 
-        String fileName = currentPage.get().getFXMLFilePath();
-        initControllerAndUpdatePanel(fileName);
+        initControllerAndUpdatePanel();
 
         setButtonShortcuts(currentPage.get().getController());
     }
@@ -127,7 +122,7 @@ public class PageFrameController
      * @param <ControllerType>
      */
     <PageType extends Page<?, ?>, ControllerType extends PageController<?>>
-    PageType createPage(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
+    PageType createPage(String fxmlPath, Function<FXMLLoader, PageType> pageConstructor,
         Supplier<ControllerType> controllerConstructorOverride)
     {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -138,7 +133,7 @@ public class PageFrameController
             loader.setControllerFactory(c -> controllerConstructorOverride.get());
         }
 
-        PageType page = pageConstructor.apply(fxmlPath, pageFactory.apply(loader));
+        PageType page = pageConstructor.apply(pageFactory.apply(loader));
 
         PageController<?> controller = page.getController();
         controller.setPageFrameController(this);
@@ -193,7 +188,6 @@ public class PageFrameController
         });
 
         page.initController();
-        pageCache.put(fxmlPath, page);
         return page;
     }
 
@@ -220,17 +214,12 @@ public class PageFrameController
             data);
     }
 
-    public Page<?,?> getPage(String fxmlPath)
-    {
-        return pageCache.get(fxmlPath);
-    }
-
     public void prevPage()
     {
         if (currentPage.get().hasPrevPage())
         {
             currentPage.set(currentPage.get().getPrevPage());
-            initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
+            initControllerAndUpdatePanel();
         }
         else
         {
@@ -256,7 +245,7 @@ public class PageFrameController
                     currentPage.set(currentPage.get().getNextPage());
 
                     // Initialization
-                    initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
+                    initControllerAndUpdatePanel();
                     setButtonShortcuts(currentPage.get().getController());
                 }
                 else if (currentPage.get().getController().canConfirm()) // no next page but can submit
@@ -281,7 +270,7 @@ public class PageFrameController
         if (fallbackPage != null)
         {
             currentPage.set(fallbackPage);
-            initControllerAndUpdatePanel(currentPage.get().getFXMLFilePath());
+            initControllerAndUpdatePanel();
         }
         else
         {
@@ -289,10 +278,9 @@ public class PageFrameController
         }
     }
 
-    private void initControllerAndUpdatePanel(String fileName)
+    private void initControllerAndUpdatePanel()
     {
-        Page<?,?> newPage = getPage(fileName);
-        Parent newContent = newPage.getLoader().getRoot();
+        Parent newContent = getCurrentPage().getRoot();
 
         if (newContent != null)
         {

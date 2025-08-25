@@ -190,10 +190,7 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
 
                 if (allowContinue)
                 {
-                    ((ButtonBase) alert.getDialogPane().lookupButton(continueButton)).setOnAction(event ->
-                    {
-                        alertShown = false;
-                    });
+                    ((ButtonBase) alert.getDialogPane().lookupButton(continueButton)).setOnAction(event -> alertShown = false);
                 }
 
                 alert.setTitle(title);
@@ -203,7 +200,11 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
             {
                 ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
                 Alert alert = new Alert(Alert.AlertType.NONE, message, ok);
-                ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
+                ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event ->
+                {
+                    Modal.requestClose(getPageFrameController().getWindow());
+                    alertShown = false;
+                });
                 alert.setTitle(title);
                 alert.show();
             }

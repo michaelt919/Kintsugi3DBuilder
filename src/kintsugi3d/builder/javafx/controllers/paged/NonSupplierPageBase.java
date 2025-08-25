@@ -5,9 +5,9 @@ import javafx.fxml.FXMLLoader;
 abstract class NonSupplierPageBase<T, ControllerType extends NonSupplierPageController<? super T>>
     extends PageBase<T, T, ControllerType>
 {
-    protected NonSupplierPageBase(String fxmlFile, FXMLLoader loader)
+    protected NonSupplierPageBase(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     @Override

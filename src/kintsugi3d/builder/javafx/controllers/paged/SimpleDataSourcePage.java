@@ -9,9 +9,9 @@ import javafx.fxml.FXMLLoader;
 public final class SimpleDataSourcePage<T, ControllerType extends DataSupplierPageController<Object, T>>
     extends DataSupplierPageBase<Object, T, ControllerType>
 {
-    public SimpleDataSourcePage(String fxmlFile, FXMLLoader loader)
+    public SimpleDataSourcePage(FXMLLoader loader)
     {
-        super(fxmlFile, loader);
+        super(loader);
     }
 
     /**

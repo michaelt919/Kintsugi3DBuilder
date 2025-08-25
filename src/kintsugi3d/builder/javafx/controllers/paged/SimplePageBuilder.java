@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 
 import javafx.fxml.FXMLLoader;
 
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public abstract class SimplePageBuilder<InType, OutType, FinishType> extends PageBuilder<FinishType>
@@ -29,7 +29,7 @@ public abstract class SimplePageBuilder<InType, OutType, FinishType> extends Pag
     }
 
     public <PageType extends Page<? super OutType, NextOutType>, NextOutType, ControllerType extends PageController<?>>
-    SimplePageBuilder<OutType, NextOutType, FinishType> then(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
+    SimplePageBuilder<OutType, NextOutType, FinishType> then(String fxmlPath, Function<FXMLLoader, PageType> pageConstructor,
         Supplier<ControllerType> controllerConstructorOverride)
     {
         PageType nextPage = frameController.createPage(fxmlPath, pageConstructor, controllerConstructorOverride);
@@ -38,7 +38,7 @@ public abstract class SimplePageBuilder<InType, OutType, FinishType> extends Pag
     }
 
     public <PageType extends Page<? super OutType, NextOutType>, NextOutType>
-    SimplePageBuilder<OutType, NextOutType, FinishType> then(String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    SimplePageBuilder<OutType, NextOutType, FinishType> then(String fxmlPath, Function<FXMLLoader, PageType> pageConstructor)
     {
         return then(fxmlPath, pageConstructor, null);
     }
@@ -65,7 +65,7 @@ public abstract class SimplePageBuilder<InType, OutType, FinishType> extends Pag
     }
 
     public <PageType extends SelectionPage<OutType>, ControllerType extends PageController<OutType>>
-    SelectionPageBuilder<? super OutType, FinishType> thenSelect(String prompt, BiFunction<String, FXMLLoader, PageType> pageConstructor, Supplier<ControllerType> controllerConstructorOverride)
+    SelectionPageBuilder<? super OutType, FinishType> thenSelect(String prompt, Function<FXMLLoader, PageType> pageConstructor, Supplier<ControllerType> controllerConstructorOverride)
     {
         PageType nextPage = frameController.createPage(SELECTION_PAGE_FXML, pageConstructor, controllerConstructorOverride);
         nextPage.setPrompt(prompt);
@@ -74,7 +74,7 @@ public abstract class SimplePageBuilder<InType, OutType, FinishType> extends Pag
     }
 
     public <PageType extends SelectionPage<OutType>, ControllerType extends PageController<OutType>>
-    SelectionPageBuilder<? super OutType, FinishType> thenSelect(String prompt, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    SelectionPageBuilder<? super OutType, FinishType> thenSelect(String prompt, Function<FXMLLoader, PageType> pageConstructor)
     {
         return this.<PageType, ControllerType>thenSelect(prompt, pageConstructor, null);
     }
@@ -108,7 +108,7 @@ public abstract class SimplePageBuilder<InType, OutType, FinishType> extends Pag
 
     public <PageType extends Page<? super Object, NextOutType>, NextOutType, ControllerType extends PageController<?>>
     SimplePageBuilder<Object, NextOutType, SimplePageBuilder<InType, OutType, FinishType>>
-    buildFallback(String label, String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor,
+    buildFallback(String label, String fxmlPath, Function<FXMLLoader, PageType> pageConstructor,
         Supplier<ControllerType> controllerConstructorOverride)
     {
         PageType fallbackPage = frameController.createPage(fxmlPath, pageConstructor, controllerConstructorOverride);
@@ -118,7 +118,7 @@ public abstract class SimplePageBuilder<InType, OutType, FinishType> extends Pag
 
     public <PageType extends Page<? super Object, NextOutType>, NextOutType>
     SimplePageBuilder<Object, NextOutType, SimplePageBuilder<InType, OutType, FinishType>>
-    buildFallback(String label, String fxmlPath, BiFunction<String, FXMLLoader, PageType> pageConstructor)
+    buildFallback(String label, String fxmlPath, Function<FXMLLoader, PageType> pageConstructor)
     {
         return buildFallback(label, fxmlPath, pageConstructor, null);
     }

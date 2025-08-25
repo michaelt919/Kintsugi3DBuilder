@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,11 +22,9 @@ import java.util.Map;
 abstract class PageBase<InType, OutType, ControllerType extends PageController<? super InType>>
     implements Page<InType, OutType>
 {
-    private final String fxmlFilePath;
-
     private final ControllerType controller;
 
-    private final FXMLLoader loader;
+    private final Parent root;
 
     private final ObjectProperty<Page<? super OutType, ?>> nextPageProperty = new SimpleObjectProperty<>(null);
 
@@ -33,11 +32,18 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
 
     private final Map<String, Page<? super OutType,?>> fallbackPages = new LinkedHashMap<>();
 
-    protected PageBase(String fxmlFile, FXMLLoader loader)
+    protected PageBase(FXMLLoader loader)
     {
-        this.fxmlFilePath = fxmlFile;
-        this.loader = loader;
-        this.controller = loader == null ? null : loader.getController();
+        if (loader == null)
+        {
+            this.controller = null;
+            this.root = null;
+        }
+        else
+        {
+            this.controller = loader.getController();
+            this.root = loader.getRoot();
+        }
     }
 
     @Override
@@ -47,15 +53,9 @@ abstract class PageBase<InType, OutType, ControllerType extends PageController<?
     }
 
     @Override
-    public final FXMLLoader getLoader()
+    public final Parent getRoot()
     {
-        return loader;
-    }
-
-    @Override
-    public final String getFXMLFilePath()
-    {
-        return fxmlFilePath;
+        return root;
     }
 
     @Override
