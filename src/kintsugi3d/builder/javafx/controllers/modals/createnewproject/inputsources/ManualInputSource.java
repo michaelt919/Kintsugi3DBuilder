@@ -16,14 +16,16 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
-import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
-import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.io.primaryview.GenericViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.MetashapeViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.function.Consumer;
 
-public class ManualInputSource extends InputSource
+public class ManualInputSource extends InputSourceBase
 {
     private File cameraFile;
     private File meshFile;
@@ -71,12 +73,6 @@ public class ManualInputSource extends InputSource
         return this;
     }
 
-    public ManualInputSource setMasksDir(File masksDir)
-    {
-        this.masksDir = masksDir;
-        return this;
-    }
-
     public ManualInputSource setHotSwap(boolean hotSwap)
     {
         this.hotSwap = hotSwap;
@@ -84,46 +80,38 @@ public class ManualInputSource extends InputSource
     }
 
     @Override
-    public void initTreeView()
+    protected void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete) throws Exception
     {
-        try
+        if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
         {
-            if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
-            {
-                primaryViewSelectionModel = new AgisoftPrimaryViewSelectionModel(cameraFile, photosDir);
-            }
-            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
-            {
-                ViewSetDirectories directories = new ViewSetDirectories();
-                directories.projectRoot = cameraFile.getParentFile();
-                directories.fullResImageDirectory = photosDir;
-                directories.fullResImagesNeedUndistort = needsUndistort;
-
-                ViewSet viewSet = ViewSetReaderFromRealityCaptureCSV.getInstance()
-                    .readFromFile(cameraFile, directories)
-                    .setGeometryFile(meshFile)
-                    .setMasksDirectory(masksDir)
-                    .finish();
-
-                primaryViewSelectionModel = new GenericPrimaryViewSelectionModel(cameraFile.getName(), viewSet);
-            }
-            else
-            {
-                ExceptionHandling.error("Error initializing primary view selection.", new IllegalArgumentException(MessageFormat.format("File extension not recognized for {0}", cameraFile.getName())));
-                return;
-            }
-
-            addTreeElems(primaryViewSelectionModel);
-            searchableTreeView.bind();
+            viewSelectionModel = new MetashapeViewSelectionModel(cameraFile, photosDir);
+            onLoadComplete.accept(viewSelectionModel);
         }
-        catch (Exception e)
+        else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
         {
-            ExceptionHandling.error("Error initializing primary view selection.", e);
+            ViewSetDirectories directories = new ViewSetDirectories();
+            directories.projectRoot = cameraFile.getParentFile();
+            directories.fullResImageDirectory = photosDir;
+            directories.fullResImagesNeedUndistort = needsUndistort;
+
+            ViewSet viewSet = ViewSetReaderFromRealityCaptureCSV.getInstance()
+                .readFromFile(cameraFile, directories)
+                .setGeometryFile(meshFile)
+                .setMasksDirectory(masksDir)
+                .finish();
+
+            viewSelectionModel = new GenericViewSelectionModel(cameraFile.getName(), viewSet);
+            onLoadComplete.accept(viewSelectionModel);
+        }
+        else
+        {
+            throw new IllegalArgumentException(
+                MessageFormat.format("File extension not recognized for {0}", cameraFile.getName()));
         }
     }
 
     @Override
-    public void loadProject()
+    public void confirm()
     {
         ViewSetLoadOptions loadOptions = new ViewSetLoadOptions();
         loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
@@ -131,8 +119,8 @@ public class ManualInputSource extends InputSource
         loadOptions.masksDirectory = masksDir;
         loadOptions.mainDirectories.fullResImageDirectory = photosDir;
         loadOptions.mainDirectories.fullResImagesNeedUndistort = needsUndistort;
-        loadOptions.orientationViewName = getPrimaryView();
-        loadOptions.orientationViewRotation = getPrimaryViewRotation();
+        loadOptions.orientationViewName = getViewSelection();
+        loadOptions.orientationViewRotation = getViewRotation();
 
         if (hotSwap)
         {
@@ -149,19 +137,32 @@ public class ManualInputSource extends InputSource
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean needsRefresh(ViewSelectable oldInstance)
     {
-        if (!(obj instanceof ManualInputSource))
+        if (oldInstance instanceof ManualInputSource)
         {
-            return false;
+            ManualInputSource other = (ManualInputSource) oldInstance;
+            return !(this.cameraFile.equals(other.cameraFile) &&
+                this.meshFile.equals(other.meshFile) &&
+                this.photosDir.equals(other.photosDir) &&
+                this.masksDir.equals(other.masksDir));
         }
+        else
+        {
+            return true;
+        }
+    }
 
-        ManualInputSource other = (ManualInputSource) obj;
+    @Override
+    public File getInitialPhotosDirectory()
+    {
+        return photosDir != null ? photosDir : cameraFile.getParentFile();
+    }
 
-        return this.cameraFile.equals(other.cameraFile) &&
-            this.meshFile.equals(other.meshFile) &&
-            this.photosDir.equals(other.photosDir) &&
-            this.masksDir.equals(other.masksDir);
+    @Override
+    public void overrideFullResImageDirectory(File directory)
+    {
+        setPhotosDir(directory);
     }
 
     @Override
@@ -177,7 +178,7 @@ public class ManualInputSource extends InputSource
     }
 
     @Override
-    public boolean doEnableProjectMasksButton()
+    public boolean hasProjectMasks()
     {
         return false;
     }

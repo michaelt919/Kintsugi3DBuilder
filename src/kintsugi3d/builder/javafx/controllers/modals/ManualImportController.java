@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
@@ -196,7 +196,7 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
     @Override
     public final boolean confirm()
     {
-        getPage().getOutData().loadProject();
+        getPage().getOutData().confirm();
         return true;
     }
 }

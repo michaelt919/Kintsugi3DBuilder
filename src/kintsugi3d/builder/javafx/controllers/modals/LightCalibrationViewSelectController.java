@@ -9,13 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectController;
 
 import java.util.Optional;
 
@@ -62,7 +62,13 @@ public class LightCalibrationViewSelectController extends ViewSelectController
     }
 
     @Override
-    protected boolean showFixOrientation()
+    protected boolean allowViewRotation()
+    {
+        return false;
+    }
+
+    @Override
+    protected boolean allowNullViewSelection()
     {
         return false;
     }

@@ -13,8 +13,6 @@ package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
 import kintsugi3d.builder.core.ViewSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,14 +21,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
+public final class GenericViewSelectionModel implements ViewSelectionModel
 {
-    private static final Logger LOG = LoggerFactory.getLogger(GenericPrimaryViewSelectionModel.class);
-
     private final String name;
     private final ViewSet viewSet;
 
-    public GenericPrimaryViewSelectionModel(String name, ViewSet viewSet)
+    public GenericViewSelectionModel(String name, ViewSet viewSet)
     {
         this.name = name;
         this.viewSet = viewSet;
@@ -58,10 +54,13 @@ public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelect
     }
 
     @Override
-    public Optional<String> findFullResImagePath(String imageName) {
-        for (int i = 0; i < viewSet.getImageFiles().size(); ++i){
+    public Optional<String> findFullResImagePath(String imageName)
+    {
+        for (int i = 0; i < viewSet.getImageFiles().size(); ++i)
+        {
             String fileName = viewSet.getImageFileName(i);
-            if (fileName.matches(".*" + imageName + ".*")){
+            if (fileName.matches(".*" + imageName + ".*"))
+            {
                 return Optional.of(viewSet.getFullResImageFile(i).getPath());
             }
         }

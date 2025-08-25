@@ -317,7 +317,7 @@ public class MetashapeChunk
         return enabledCams;
     }
 
-    public Map<Integer, String> buildCameraPathsMap(boolean useRelativePaths) throws FileNotFoundException
+    public Map<Integer, String> buildCameraPathsMap(boolean useRelativePaths) throws FileNotFoundException, MissingImagesException
     {
         File rootDirectory = new File(getParentDocument().getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists())
@@ -381,7 +381,7 @@ public class MetashapeChunk
             }
         }
 
-        if (!getSelectedModel().getLoadPreferences().doSkipMissingCams && numMissingFiles > 0)
+        if (numMissingFiles > 0)
         {
             throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
         }

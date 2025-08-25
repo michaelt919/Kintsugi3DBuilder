@@ -1,8 +1,8 @@
 package kintsugi3d.builder.javafx.experience;
 
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.OrientationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.CurrentProjectViewSelectable;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController;
 
 import java.io.IOException;
 
@@ -23,7 +23,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        buildPagedModal(new CurrentProjectInputSource())
+        buildPagedModal(new CurrentProjectViewSelectable())
             .<OrientationViewSelectController>then("/fxml/modals/createnewproject/PrimaryViewSelect.fxml");
     }
 }

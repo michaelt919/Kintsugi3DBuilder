@@ -114,7 +114,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     @Override
     public boolean confirm()
     {
-        getPage().getOutData().loadProject();
+        getPage().getOutData().confirm();
         return true;
     }
 

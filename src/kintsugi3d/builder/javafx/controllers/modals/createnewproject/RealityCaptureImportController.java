@@ -1,6 +1,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.javafx.controllers.modals.ManualImportController;
 
 import java.util.Collections;
 import java.util.List;

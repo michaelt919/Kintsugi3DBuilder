@@ -67,7 +67,7 @@ public class MasksImportController
     public void refresh()
     {
         masksDirectoryChooser.setInitialDirectory(source.getInitialMasksDirectory());
-        useProjectMasksButton.setDisable(!source.doEnableProjectMasksButton());
+        useProjectMasksButton.setDisable(!source.hasProjectMasks());
     }
 
     @Override
@@ -89,7 +89,7 @@ public class MasksImportController
     @Override
     public boolean confirm()
     {
-        source.loadProject();
+        source.confirm();
         return true;
     }
 

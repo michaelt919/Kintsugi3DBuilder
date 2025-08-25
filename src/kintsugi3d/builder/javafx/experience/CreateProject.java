@@ -1,8 +1,13 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.*;
+import kintsugi3d.builder.javafx.controllers.modals.ManualImportController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.HotSwapController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.MasksImportController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.MetashapeImportController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.RealityCaptureImportController;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
 
 import java.io.IOException;

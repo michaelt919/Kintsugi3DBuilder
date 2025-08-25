@@ -11,73 +11,21 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonBase;
-import javafx.scene.control.ButtonType;
-import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.paged.PageFrameController;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.io.primaryview.MetashapeViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
 import kintsugi3d.builder.resources.project.MissingImagesException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Objects;
+import java.util.function.Consumer;
 
-public class MetashapeProjectInputSource extends InputSource
+public class MetashapeProjectInputSource extends InputSourceBase
 {
     private MetashapeModel model;
-
-    @Override
-    public void verifyInfo()
-    {
-        MetashapeChunk parentChunk = model.getChunk();
-
-        // Open the xml files that contains all the cameras' ids and file paths
-        Document frame = parentChunk.getFrameXML();
-        if (frame == null || frame.getDocumentElement() == null)
-        {
-            ExceptionHandling.error("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
-            return;
-        }
-
-        // Loop through the cameras and store each pair of id and path in the map
-        NodeList cameraList = ((Element) frame
-            .getElementsByTagName("frame").item(0)) //assuming frame 0
-            .getElementsByTagName("camera");
-
-        int numMissingFiles = 0;
-        File exceptionFolder = null;
-
-        for (int i = 0; i < cameraList.getLength(); i++)
-        {
-            Element cameraElement = (Element) cameraList.item(i);
-
-            File imageFile = getImageFromFrameCam(cameraElement, parentChunk);
-
-            if (!imageFile.exists())
-            {
-                numMissingFiles++;
-
-                if (exceptionFolder == null)
-                {
-                    exceptionFolder = imageFile.getParentFile();
-                }
-            }
-        }
-
-        if (numMissingFiles > 0)
-        {
-            throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
-        }
-    }
 
     @Override
     public File getMasksDirectory()
@@ -94,7 +42,7 @@ public class MetashapeProjectInputSource extends InputSource
     }
 
     @Override
-    public boolean doEnableProjectMasksButton()
+    public boolean hasProjectMasks()
     {
         return model.getChunk().getMasksDirectory() != null;
     }
@@ -106,38 +54,36 @@ public class MetashapeProjectInputSource extends InputSource
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean needsRefresh(ViewSelectable oldInstance)
     {
-        if (!(obj instanceof MetashapeProjectInputSource))
+        if (oldInstance instanceof MetashapeProjectInputSource)
         {
-            return false;
+            MetashapeProjectInputSource other = (MetashapeProjectInputSource) oldInstance;
+
+            //model and mask directory must be the same
+            return this.model.equals(other.model)
+                && Objects.equals(this.model.getChunk().getMasksDirectory(), other.model.getChunk().getMasksDirectory());
         }
-
-        MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
-
-        //model and mask directory must be the same
-        if (!this.model.equals(other.model))
+        else
         {
-            return false;
+            return true;
         }
-
-        return Objects.equals(this.model.getChunk().getMasksDirectory(), other.model.getChunk().getMasksDirectory());
     }
 
     @Override
-    public void initTreeView()
+    protected void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete)
+        throws FileNotFoundException, MissingImagesException
     {
-        primaryViewSelectionModel = new AgisoftPrimaryViewSelectionModel(model);
-        addTreeElems(primaryViewSelectionModel);
-        searchableTreeView.bind();
+        viewSelectionModel = new MetashapeViewSelectionModel(model);
+        onLoadComplete.accept(viewSelectionModel);
     }
 
     //TODO: uncouple loadProject() from orientationView
     @Override
-    public void loadProject()
+    public void confirm()
     {
-        model.getLoadPreferences().orientationViewName = getPrimaryView();
-        model.getLoadPreferences().orientationViewRotateDegrees = getPrimaryViewRotation();
+        model.getLoadPreferences().orientationViewName = getViewSelection();
+        model.getLoadPreferences().orientationViewRotateDegrees = getViewRotation();
         new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
     }
 
@@ -147,69 +93,15 @@ public class MetashapeProjectInputSource extends InputSource
         return this;
     }
 
-    public void showMissingImgsAlert(MissingImagesException mie, PageFrameController hostController)
+    @Override
+    public File getInitialPhotosDirectory()
     {
-        int numMissingImgs = mie.getNumMissingImgs();
-        File prevTriedDirectory = mie.getImgDirectory();
-
-        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-        ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.YES);
-        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.NO);
-
-        Alert alert = new Alert(Alert.AlertType.NONE,
-            "Imported object is missing " + numMissingImgs + " images.",
-            cancel, newDirectory, skipMissingCams/*, openDirectory*/);
-
-        ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> hostController.prevPage());
-
-        ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event ->
-        {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(model.getChunk().getParentDocument().getPsxFilePath()).getParentFile());
-
-            directoryChooser.setTitle("Choose New Image Directory");
-
-            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(hostController.getWindow());
-            try
-            {
-                verifyInfo();
-                initTreeView();
-            }
-            catch (MissingImagesException mie2)
-            {
-                Platform.runLater(() -> showMissingImgsAlert(mie2, hostController));
-            }
-        });
-
-        ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event ->
-        {
-            model.getLoadPreferences().fullResOverride = prevTriedDirectory;
-            model.getLoadPreferences().doSkipMissingCams = true;
-            initTreeView();
-        });
-
-        alert.setTitle("Project is Missing Images");
-        alert.show();
+        return new File(model.getChunk().getParentDocument().getPsxFilePath()).getParentFile();
     }
 
-    private static File getImageFromFrameCam(Element cameraElement, MetashapeChunk chunk)
+    @Override
+    public void overrideFullResImageDirectory(File directory)
     {
-        File fullResOverride = chunk.getSelectedModel().getLoadPreferences().fullResOverride;
-        String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
-
-        File imageFile;
-        if (fullResOverride != null)
-        {
-            //user selected an override
-            String pathAttributeName = new File(pathAttribute).getName();
-            imageFile = new File(fullResOverride, pathAttributeName);
-        }
-        else
-        {
-            //no override
-            File fullResDir = new File(chunk.getFramePath()).getParentFile();
-            imageFile = new File(fullResDir, pathAttribute);
-        }
-        return imageFile;
+        model.getLoadPreferences().fullResOverride = directory;
     }
 }

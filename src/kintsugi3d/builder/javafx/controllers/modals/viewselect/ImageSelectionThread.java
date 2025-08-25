@@ -9,13 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals;
+package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 import kintsugi3d.builder.javafx.util.ImageThreadable;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageFinder;
@@ -32,12 +32,12 @@ class ImageSelectionThread implements Runnable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImageSelectionThread.class);
     private final String imageName;
-    private final PrimaryViewSelectionModel model;
+    private final ViewSelectionModel model;
     private final ImageThreadable imageThreadable;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
-    ImageSelectionThread(String imageName, ImageThreadable imgThreadable, PrimaryViewSelectionModel model)
+    ImageSelectionThread(String imageName, ImageThreadable imgThreadable, ViewSelectionModel model)
     {
         this.imageName = imageName;
         this.imageThreadable = imgThreadable;

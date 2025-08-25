@@ -9,9 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
-import kintsugi3d.builder.javafx.controllers.modals.ViewSelectController;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ViewSet;
 
 /**
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
@@ -31,14 +32,32 @@ public class OrientationViewSelectController extends ViewSelectController
     @Override
     public boolean advance()
     {
-        source.setPrimaryView(getSelectedViewName(), primaryImgView.getRotate());
+        data.selectView(getSelectedViewName(), primaryImgView.getRotate());
         return true;
     }
 
     @Override
     public boolean confirm()
     {
-        source.loadProject();
+        // If a view set was already loaded, apply changes.
+        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
+        if (currentViewSet != null)
+        {
+            if (data.getViewSelection() == null)
+            {
+                currentViewSet.setOrientationViewIndex(-1);
+            }
+            else
+            {
+                currentViewSet.setOrientationView(data.getViewSelection());
+            }
+
+            currentViewSet.setOrientationViewRotationDegrees(data.getViewRotation());
+        }
+
+        // The input source will handle loading if a view set wasn't already loaded.
+        data.confirm();
+
         return true;
     }
 
@@ -49,7 +68,13 @@ public class OrientationViewSelectController extends ViewSelectController
     }
 
     @Override
-    protected boolean showFixOrientation()
+    protected boolean allowViewRotation()
+    {
+        return true;
+    }
+
+    @Override
+    protected boolean allowNullViewSelection()
     {
         return true;
     }

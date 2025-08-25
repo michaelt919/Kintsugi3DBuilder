@@ -203,7 +203,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
          * @throws IOException
          */
         public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
-            throws IOException, XMLStreamException
+            throws IOException, XMLStreamException, MissingImagesException
         {
             this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk()).finish();
             updateViewSetFromImageLoadOptions();

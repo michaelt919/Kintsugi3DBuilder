@@ -16,6 +16,7 @@ import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -755,7 +756,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     public static ViewSet.Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk)
-        throws IOException, XMLStreamException
+        throws IOException, XMLStreamException, MissingImagesException
     {
         // Get reference to the chunk directory
         File chunkDirectory = new File(metashapeChunk.getChunkDirectoryPath());

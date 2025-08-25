@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public interface PrimaryViewSelectionModel {
+public interface ViewSelectionModel
+{
     String getName();
     List<View> getViews();
     Map<Integer, Image> getThumbnails();
