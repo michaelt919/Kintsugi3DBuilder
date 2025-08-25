@@ -183,7 +183,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
 
         if (!hasModels())
         {
-            handleError("Metashape chunk has no models.",
+            error("Metashape chunk has no models.",
                 "Please select another chunk or import manually.");
             return;
         }
@@ -255,12 +255,12 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
         {
             if (chunks.isEmpty())
             {
-                handleError("Metashape document has no chunks.",
+                error("Metashape document has no chunks.",
                     "Please select another document or import manually.");
             }
             else
             {
-                handleError("All chunks are missing models.",
+                error("All chunks are missing models.",
                     "None of your chunks have valid model data. Please select another document or import manually.");
             }
 
@@ -271,7 +271,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
             setCanAdvance(true);
             if (missingChunks)
             {
-                handleError("Some chunks are missing models.",
+                warning("Some chunks are missing models.",
                     "Some of your chunks do not have models. They will not appear in the dropdown.");
             }
 

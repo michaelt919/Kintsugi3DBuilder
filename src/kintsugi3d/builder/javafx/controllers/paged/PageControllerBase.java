@@ -20,6 +20,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
+import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,7 +135,7 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
         return true;
     }
 
-    protected void handleError(String title, String message)
+    private void alert(String title, String message, boolean allowContinue)
     {
         if (alertShown) // Prevent multiple alerts from showing at once
         {
@@ -146,18 +147,39 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
         {
             if (getPage().hasFallbackPage())
             {
-                List<ButtonType> buttons = new ArrayList<>(getPage().getFallbackPages().size() + 1);
-                buttons.add(new ButtonType("Cancel", ButtonBar.ButtonData.LEFT));
+                // "Cancel" closes the modal entirely
+                ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.LEFT);
 
+                // "Fallback" buttons navigate to a different page.
+                List<ButtonType> fallbackButtons = new ArrayList<>(getPage().getFallbackPages().size());
                 for (var fallback : getPage().getFallbackPages().entrySet())
                 {
                     String fallbackName = fallback.getKey();
-                    buttons.add(new ButtonType(fallbackName, ButtonBar.ButtonData.YES));
+                    fallbackButtons.add(new ButtonType(fallbackName));
                 }
 
-                Alert alert = new Alert(Alert.AlertType.NONE, message, buttons.toArray(ButtonType[]::new));
+                List<ButtonType> allButtons = new ArrayList<>(fallbackButtons.size() + 2);
+                allButtons.add(cancel);
+                allButtons.addAll(fallbackButtons);
 
-                for (ButtonType button : buttons)
+                // If allowed, "Continue" just continues as if nothing happened (only allowed for warnings)
+                ButtonType continueButton = null;
+                if (allowContinue)
+                {
+                    continueButton = new ButtonType("Continue", ButtonBar.ButtonData.RIGHT);
+                    allButtons.add(continueButton);
+                }
+
+                Alert alert = new Alert(Alert.AlertType.NONE, message, allButtons.toArray(ButtonType[]::new));
+                alert.setWidth(480);
+
+                ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event ->
+                {
+                    Modal.requestClose(getPageFrameController().getWindow());
+                    alertShown = false;
+                });
+
+                for (ButtonType button : fallbackButtons)
                 {
                     ((ButtonBase) alert.getDialogPane().lookupButton(button)).setOnAction(event ->
                     {
@@ -165,6 +187,15 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
                         alertShown = false;
                     });
                 }
+
+                if (allowContinue)
+                {
+                    ((ButtonBase) alert.getDialogPane().lookupButton(continueButton)).setOnAction(event ->
+                    {
+                        alertShown = false;
+                    });
+                }
+
                 alert.setTitle(title);
                 alert.show();
             }
@@ -177,5 +208,15 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
                 alert.show();
             }
         });
+    }
+
+    protected void error(String title, String message)
+    {
+        alert(title, message, false);
+    }
+
+    protected void warning(String title, String message)
+    {
+        alert(title, message, true);
     }
 }
