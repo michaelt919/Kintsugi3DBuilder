@@ -50,7 +50,7 @@ public class MetashapeProjectInputSource extends InputSourceBase
     @Override
     public void setMasksDirectory(File file)
     {
-        model.getChunk().setMasksDirectory(file);
+        model.getChunk().setMasksDirectoryOverride(file);
     }
 
     @Override

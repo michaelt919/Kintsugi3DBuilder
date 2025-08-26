@@ -44,6 +44,7 @@ public class MetashapeChunk
     private MetashapeModel currModel;
     private File thumbnailsDir;
     private File masksDir = null;
+    private File masksDirOverride = null;
 
     public static MetashapeChunk parseFromElement(MetashapeDocument document, Element chunkElement) throws IOException
     {
@@ -426,12 +427,12 @@ public class MetashapeChunk
 
     public File getMasksDirectory()
     {
-        return this.masksDir;
+        return this.masksDirOverride == null ? this.masksDir : this.masksDirOverride;
     }
 
-    public void setMasksDirectory(File dir)
+    public void setMasksDirectoryOverride(File dir)
     {
-        this.masksDir = dir;
+        this.masksDirOverride = dir;
     }
 
     @Override
