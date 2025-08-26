@@ -63,6 +63,10 @@ int getViewIndex(int virtualIndex)
 #define INFINITE_LIGHT_SOURCES 0
 #endif
 
+#ifndef FLATFIELD_CORRECTED
+#define FLATFIELD_CORRECTED 0
+#endif
+
 layout(std140) uniform CameraWeights
 {
     vec4 cameraWeights[CAMERA_POSE_COUNT_DIV_4];
@@ -142,12 +146,44 @@ vec3 getLightIntensity(int virtualIndex)
 LightInfo getLightInfo(int virtualIndex)
 {
     LightInfo result;
-    result.normalizedDirection = getLightVector(virtualIndex);
+
+#if FLATFIELD_CORRECTED
+    // Just use normalize() since we won't actually be needing a true lightDistSquared.
+    result.normalizedDirection = normalize(getLightVector(virtualIndex));
+
+    // Tone calibration assumes the tone patches are square with the camera, essentially on camera axis,
+    // at the same distance as the closest point on the object.
+    // Flat field correction means that a white card placed at that same distance, with the same tone as any particular
+    // patch on the calibration chart, will after correction have the same values everywhere
+    // So after flat field correction and tone calibration together, we should get an exact albedo measurement
+    // from the RGB pixel values at that specific distance.
+    //
+    // Flat field correction does not work perfectly if the uniform card is not at the same distance (particularly if closer)
+    // -- i.e. in an extreme example where the uniform card is much closer to the light there will be a hot spot in the center
+    // that is not present in the other photos, which will become a dark spot after flat field correction.
+    // So let's assume that the flat field card is at the same distance as the tone calibration card.
+    //
+    // Flatfield gain = average(flatfield image pixels) / (specific flatfield image pixel)
+    // Using inverse-square attenuation, this comes out to average(1 / flatfield_light_dist^2) / (1 / flatfield_light_dist[x,y]^2)
+    //  = flatfield_light_dist[x,y]^2 * average(1 / flatfield_light_dist^2)
+    //
+    // Therefore, incident radiance = light_power / light_dist^2 * flatfield_light_dist[x,y]^2 * average(1 / flatfield_light_dist^2)
+    //
+    // For now, to keep things simple let's just approximate that:
+    // flatfield_light_dist[x,y]^2 / light_dist^2 = flatfield_camera_axis_dist^2 / surface_camera_axis_dist^2
+    // and that flatfield_camera_axis_dist^2 * average(1 / flatfield_light_dist^2) is approximately 1.0
+    // With those approximations, incident radiance is just light_power / surface_camera_axis_dist^2
+
+    // Transform to camera space and just grab the z-axis.
+    float cameraAxisDist = (cameraPoses[getViewIndex(virtualIndex)] * vec4(position, 1.0)).z;
+    float lightDistSquared = dot(cameraAxisDist, cameraAxisDist);
+#else
+    vec3 unnormalizedDirection = getLightVector(virtualIndex);
+    float lightDistSquared = dot(unnormalizedDirection, unnormalizedDirection);
+    result.normalizedDirection = unnormalizedDirection * inversesqrt(lightDistSquared);
+#endif
+
     result.attenuatedIntensity = getLightIntensity(virtualIndex);
-
-    float lightDistSquared = dot(result.normalizedDirection, result.normalizedDirection);
-    result.normalizedDirection *= inversesqrt(lightDistSquared);
-
 #if !INFINITE_LIGHT_SOURCES
     result.attenuatedIntensity /= lightDistSquared;
 #endif
