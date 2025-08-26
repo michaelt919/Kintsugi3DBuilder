@@ -60,9 +60,9 @@ public class MetashapeProjectInputSource extends InputSourceBase
         {
             MetashapeProjectInputSource other = (MetashapeProjectInputSource) oldInstance;
 
-            //model and mask directory must be the same
-            return this.model.equals(other.model)
-                && Objects.equals(this.model.getChunk().getMasksDirectory(), other.model.getChunk().getMasksDirectory());
+            // model and mask directory must be the same to not need refresh
+            return !Objects.equals(this.model, other.model)
+                || !Objects.equals(this.model.getChunk().getMasksDirectory(), other.model.getChunk().getMasksDirectory());
         }
         else
         {

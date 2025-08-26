@@ -23,6 +23,7 @@ import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ManualInputSource extends InputSourceBase
@@ -142,10 +143,10 @@ public class ManualInputSource extends InputSourceBase
         if (oldInstance instanceof ManualInputSource)
         {
             ManualInputSource other = (ManualInputSource) oldInstance;
-            return !(this.cameraFile.equals(other.cameraFile) &&
-                this.meshFile.equals(other.meshFile) &&
-                this.photosDir.equals(other.photosDir) &&
-                this.masksDir.equals(other.masksDir));
+            return !(Objects.equals(this.cameraFile, other.cameraFile) ||
+                !Objects.equals(this.meshFile, other.meshFile) ||
+                !Objects.equals(this.photosDir, other.photosDir) ||
+                !Objects.equals(this.masksDir, other.masksDir));
         }
         else
         {
