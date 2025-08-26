@@ -21,10 +21,17 @@ import java.util.function.Consumer;
 public class CurrentProjectViewSelectable extends ViewSelectableBase
 {
     @Override
+    public String getAdvanceLabelOverride()
+    {
+        // No override
+        return null;
+    }
+
+    @Override
     public void loadForViewSelection(Consumer<ViewSelectionModel> onLoadComplete)
     {
         ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
-        viewSelectionModel = new GenericViewSelectionModel("Current Project", currentViewSet);
+        setViewSelectionModel(new GenericViewSelectionModel("Current Project", currentViewSet));
 
         if (currentViewSet.getOrientationViewIndex() >= 0)
         {
@@ -32,7 +39,7 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
             selectView(viewName, currentViewSet.getOrientationViewRotationDegrees());
         }
 
-        onLoadComplete.accept(viewSelectionModel);
+        onLoadComplete.accept(getViewSelectionModel());
     }
 
     @Override

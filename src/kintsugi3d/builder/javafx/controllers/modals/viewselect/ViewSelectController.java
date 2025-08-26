@@ -105,7 +105,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
             SearchableTreeView searchableTreeView =
                 SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode);
-            data.setSearchableTreeView(searchableTreeView);
+            data.setModalWindow(getRootNode().getScene().getWindow());
             data.loadForViewSelection(viewSelectionModel ->
             {
                 addTreeElems(searchableTreeView, viewSelectionModel);
@@ -259,11 +259,10 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 // Hide orientation controls
                 orientationControlsVBox.setVisible(false);
 
-                // Don't change the button text to "Skip" when working with an existing project
-                if (!(data instanceof CurrentProjectViewSelectable))
+                if (data.getAdvanceLabelOverride() != null)
                 {
                     // Set confirm button text
-                    setAdvanceLabelOverride("Skip");
+                    setAdvanceLabelOverride(data.getAdvanceLabelOverride());
                 }
 
                 imgViewText.setText("Keep model orientation as imported.");

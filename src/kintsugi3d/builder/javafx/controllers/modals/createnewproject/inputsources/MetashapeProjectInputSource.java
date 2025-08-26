@@ -74,8 +74,8 @@ public class MetashapeProjectInputSource extends InputSourceBase
     protected void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete)
         throws FileNotFoundException, MissingImagesException
     {
-        viewSelectionModel = new MetashapeViewSelectionModel(model);
-        onLoadComplete.accept(viewSelectionModel);
+        setViewSelectionModel(new MetashapeViewSelectionModel(model));
+        onLoadComplete.accept(getViewSelectionModel());
     }
 
     //TODO: uncouple loadProject() from orientationView

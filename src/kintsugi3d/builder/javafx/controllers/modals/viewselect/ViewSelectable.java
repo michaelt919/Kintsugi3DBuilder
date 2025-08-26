@@ -1,15 +1,17 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
+import javafx.stage.Window;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
 
 import java.util.function.Consumer;
 
 public interface ViewSelectable
 {
     boolean needsRefresh(ViewSelectable oldInstance);
+    String getAdvanceLabelOverride();
 
-    void setSearchableTreeView(SearchableTreeView searchableTreeView);
+    Window getModalWindow();
+    void setModalWindow(Window modalWindow);
 
     void loadForViewSelection(Consumer<ViewSelectionModel> onLoadComplete);
 

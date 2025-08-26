@@ -1,12 +1,13 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
+import javafx.stage.Window;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
 
 public abstract class ViewSelectableBase implements ViewSelectable
 {
-    protected ViewSelectionModel viewSelectionModel;
-    protected SearchableTreeView searchableTreeView;
+    private Window modalWindow;
+    private ViewSelectionModel viewSelectionModel;
+
     private String primaryView;
     private double primaryViewRotation;
 
@@ -18,15 +19,32 @@ public abstract class ViewSelectableBase implements ViewSelectable
     }
 
     @Override
-    public void setSearchableTreeView(SearchableTreeView searchableTreeView)
+    public String getAdvanceLabelOverride()
     {
-        this.searchableTreeView = searchableTreeView;
+        return "Skip";
+    }
+
+    @Override
+    public Window getModalWindow()
+    {
+        return modalWindow;
+    }
+
+    @Override
+    public void setModalWindow(Window modalWindow)
+    {
+        this.modalWindow = modalWindow;
     }
 
     @Override
     public ViewSelectionModel getViewSelectionModel()
     {
         return this.viewSelectionModel;
+    }
+
+    protected void setViewSelectionModel(ViewSelectionModel viewSelectionModel)
+    {
+        this.viewSelectionModel = viewSelectionModel;
     }
 
     @Override
@@ -47,5 +65,4 @@ public abstract class ViewSelectableBase implements ViewSelectable
     {
         return primaryViewRotation;
     }
-
 }

@@ -288,7 +288,6 @@ public class PageFrameController
         }
 
         currentPage.get().getController().refresh();
-
         outerRoot.getScene().getWindow().sizeToScene();
     }
 

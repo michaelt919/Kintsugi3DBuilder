@@ -28,8 +28,7 @@ public abstract class InputSourceBase extends ViewSelectableBase implements Inpu
         }
         catch (MissingImagesException e)
         {
-            showMissingImagesAlert(e, () -> loadForViewSelection(onLoadComplete),
-                searchableTreeView.getTreeView().getScene().getWindow());
+            showMissingImagesAlert(e, () -> loadForViewSelection(onLoadComplete), getModalWindow());
         }
         catch (Exception e)
         {

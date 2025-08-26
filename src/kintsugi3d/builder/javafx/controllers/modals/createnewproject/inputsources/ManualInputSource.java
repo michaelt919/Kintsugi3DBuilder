@@ -84,8 +84,8 @@ public class ManualInputSource extends InputSourceBase
     {
         if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
         {
-            viewSelectionModel = new MetashapeViewSelectionModel(cameraFile, photosDir);
-            onLoadComplete.accept(viewSelectionModel);
+            setViewSelectionModel(new MetashapeViewSelectionModel(cameraFile, photosDir));
+            onLoadComplete.accept(getViewSelectionModel());
         }
         else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
         {
@@ -100,8 +100,8 @@ public class ManualInputSource extends InputSourceBase
                 .setMasksDirectory(masksDir)
                 .finish();
 
-            viewSelectionModel = new GenericViewSelectionModel(cameraFile.getName(), viewSet);
-            onLoadComplete.accept(viewSelectionModel);
+            setViewSelectionModel(new GenericViewSelectionModel(cameraFile.getName(), viewSet));
+            onLoadComplete.accept(getViewSelectionModel());
         }
         else
         {

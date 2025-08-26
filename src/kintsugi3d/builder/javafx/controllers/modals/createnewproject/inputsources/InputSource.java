@@ -17,7 +17,6 @@ import java.io.File;
 
 public interface InputSource extends ViewSelectable
 {
-
     /**
      * Return the known masks directory.
      *
