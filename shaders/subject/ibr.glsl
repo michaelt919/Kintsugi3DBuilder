@@ -159,7 +159,7 @@ LightingParameters getCameraSpaceLightingForSample(int virtualSampleIndex, vec3 
     // See colorappearance.glsl for detailed analysis.
     // In this case, we're in camera space already so it's easy:
     // the camera axis distance is just the the z-coordinate of the view vector.
-    l.lightDistSquared = l.viewDir.z * l.viewDir.z;
+    l.lightDistSquared = l.viewDirUnnorm.z * l.viewDirUnnorm.z;
 #endif
 
     return l;

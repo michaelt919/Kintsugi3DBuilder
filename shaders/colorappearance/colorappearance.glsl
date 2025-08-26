@@ -175,7 +175,7 @@ LightInfo getLightInfo(int virtualIndex)
     // With those approximations, incident radiance is just light_power / surface_camera_axis_dist^2
 
     // Transform to camera space and just grab the z-axis.
-    float cameraAxisDist = (cameraPoses[getViewIndex(virtualIndex)] * vec4(position, 1.0)).z;
+    float cameraAxisDist = (cameraPoses[getViewIndex(virtualIndex)] * vec4(getPosition(), 1.0)).z;
     float lightDistSquared = dot(cameraAxisDist, cameraAxisDist);
 #else
     vec3 unnormalizedDirection = getLightVector(virtualIndex);
