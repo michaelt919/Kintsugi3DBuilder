@@ -220,10 +220,10 @@ class PreviewImages
 
     private void markCreated()
     {
+        finishedCount.getAndAdd(1); // mark finished even if trivial
+
         if (hasMissingFiles())
         {
-            finishedCount.getAndAdd(1);
-
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
                 MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
                     finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
