@@ -38,8 +38,7 @@ public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>>
         return getSharedResources().getShaderProgramBuilder()
                 .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
                 .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
-                .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.ANALYTIC)
-                .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount());
+                .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.ANALYTIC);
     }
 
     @Override
