@@ -18,9 +18,12 @@ import kintsugi3d.gl.core.ShaderType;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public interface ProgramBuilder<ContextType extends Context<ContextType>>
 {
+    Map<String, Object> getDefines();
+
     ProgramBuilder<ContextType> define(String key, Object value);
     ProgramBuilder<ContextType> addShader(Shader<ContextType> shader);
     ProgramBuilder<ContextType> addShader(ShaderType type, File shaderFile);

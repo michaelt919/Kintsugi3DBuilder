@@ -16,7 +16,6 @@ import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
-import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -80,11 +79,23 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     {
         if (getDrawable() != null && getDrawable().program() != null)
         {
-            Map<String, Optional<Object>> defineMap = getPreprocessorDefines();
+            Map<String, Optional<Object>> settingsDefines = getPreprocessorDefines();
+            Map<String, Object> resourceDefines = resources.getShaderProgramBuilder().getDefines();
+            Program<ContextType> currentProgram = getDrawable().program();
 
             // Reloads shaders only if compiled settings have changed.
-            if (defineMap.entrySet().stream().anyMatch(
-                defineEntry -> !Objects.equals(getDrawable().program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+            if (settingsDefines.entrySet().stream().anyMatch(settingsDefine ->
+                    // Check for settings (which should be the final override) that don't match defines in the current program
+                    // if setting is empty, then fallback to whatever's in the resource defines and make sure it matches.
+                    // Some settings might actually be empty even after that if they fallback to defaults defined in the shader itself.
+                    !Objects.equals(currentProgram.getDefine(settingsDefine.getKey()), settingsDefine.getValue()
+                        .or(() -> Optional.ofNullable(resourceDefines.get(settingsDefine.getKey())))))
+                || resourceDefines.entrySet().stream().anyMatch(resourceDefine ->
+                    // Check for resource defines that don't match defines in the current program after accounting for settings overrides
+                    !Objects.equals(currentProgram.getDefine(resourceDefine.getKey()).orElse(null),
+                        settingsDefines.containsKey(resourceDefine.getKey()) ? // might not be recognized by settings defines, in which case it will be null not Optional.empty()
+                            settingsDefines.get(resourceDefine.getKey()).orElse(resourceDefine.getValue())
+                            : resourceDefine.getValue())))
             {
                 LOG.info("Updating compiled render settings.");
                 reloadShaders();
@@ -103,6 +114,15 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         return this.fragmentShaderFile;
     }
 
+    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws IOException
+    {
+        return this.getProgramBuilder(defineMap)
+            .define("SPOTLIGHTS_ENABLED", true)
+            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, fragmentShaderFile)
+            .createProgram();
+    }
+
     private ProgramBuilder<ContextType> getProgramBuilder(Map<String, Optional<Object>> defineMap)
     {
         ProgramBuilder<ContextType> programBuilder = resources.getShaderProgramBuilder();
@@ -118,20 +138,16 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         return programBuilder;
     }
 
-    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws IOException
-    {
-        return this.getProgramBuilder(defineMap)
-            .define("SPOTLIGHTS_ENABLED", true)
-            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, fragmentShaderFile)
-            .createProgram();
-    }
-
+    /**
+     * Determine shader defines related to settings here.  Shaders will be automatically reloaded if any of these change.
+     * These defines override the defines set by the graphics resources.
+     * @return
+     */
     private Map<String, Optional<Object>> getPreprocessorDefines()
     {
         Map<String, Optional<Object>> defineMap = new HashMap<>(256);
 
-        // Initialize to defaults
+        // Initialize to shader-defined defaults
         defineMap.put("PHYSICALLY_BASED_MASKING_SHADOWING", Optional.empty());
         defineMap.put("FRESNEL_EFFECT_ENABLED", Optional.empty());
         defineMap.put("SHADOWS_ENABLED", Optional.empty());
@@ -147,11 +163,17 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.empty());
         defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.empty());
 
-        defineMap.put("LUMINANCE_MAP_ENABLED", Optional.of(this.resources.getViewSet().hasCustomLuminanceEncoding()));
-        defineMap.put("INVERSE_LUMINANCE_MAP_ENABLED", Optional.of(false/*this.resources.viewSet.hasCustomLuminanceEncoding()*/));
+        // Override to disable inverse luminance map for tonemapping
+        defineMap.put("INVERSE_LUMINANCE_MAP_ENABLED", Optional.of(false));
 
         defineMap.put("RAY_DEPTH_GRADIENT", Optional.of(0.1 * sceneModel.getScale()));
         defineMap.put("RAY_POSITION_JITTER", Optional.of(0.01 * sceneModel.getScale()));
+
+        if (lightCalibrationMode)
+        {
+            defineMap.put("USE_VIEW_INDICES", Optional.of(true));
+            defineMap.put("VIEW_COUNT", Optional.of(1));
+        }
 
         if (this.sceneModel.getSettingsModel() != null)
         {
@@ -165,28 +187,24 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             defineMap.put("RELIGHTING_ENABLED", Optional.of(this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
                 && lightingResources != null && this.sceneModel.getLightingModel() != null));
 
-            SettingsModel projectSettings = resources.getViewSet().getProjectSettings();
-            boolean occlusionEnabled = projectSettings.getBoolean("occlusionEnabled")
-                && (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                    || lightCalibrationMode
-                    || this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
+            if (this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM
+                && !this.sceneModel.getSettingsModel().getBoolean("relightingEnabled") && !lightCalibrationMode)
+            {
+                // Disable visibility / shadow test if weight mode is "uniform" and relighting is disabled.
+                defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(false));
+                defineMap.put("SHADOW_TEST_ENABLED", Optional.of(false));
+            }
 
-            defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
-            defineMap.put("SHADOW_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.shadowTextures != null
-                && lightingResources != null));
-
-            defineMap.put("EDGE_PROXIMITY_WEIGHT_ENABLED", Optional.of(projectSettings.getBoolean("edgeProximityWeightEnabled")));
+            if (lightingResources == null)
+            {
+                // Disable shadow test if lighting resources are not available.
+                defineMap.put("SHADOW_TEST_ENABLED", Optional.of(false));
+            }
 
             defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED",
                 Optional.of(!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
                         && !lightCalibrationMode
                     && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM));
-
-            if (lightCalibrationMode)
-            {
-                defineMap.put("USE_VIEW_INDICES", Optional.of(true));
-                defineMap.put("VIEW_COUNT", Optional.of(1));
-            }
 
             if (this.sceneModel.getLightingModel() != null && this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
                 && lightingResources != null)

@@ -142,6 +142,10 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
     @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
+        // Determine shader defines here that do not typically change
+        // and should apply globally as defaults, but only for texture-space source photos.
+        // The shader will not reload automatically when these change.
+        // The defines can be overridden by the actual shader.
         return getSharedResources().getShaderProgramBuilder()
             .define("GEOMETRY_TEXTURES_ENABLED", true)
             .define("GEOMETRY_MODE", GeometryMode.RECTANGLE)

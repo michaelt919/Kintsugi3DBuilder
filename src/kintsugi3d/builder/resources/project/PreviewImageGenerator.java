@@ -20,7 +20,6 @@ public class PreviewImageGenerator
     private final AtomicInteger failedCount = new AtomicInteger(0);
     AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
 
-
     static PreviewImageGenerator start(ViewSet viewSet)
     {
         return start(viewSet, new DefaultProgressMonitor());

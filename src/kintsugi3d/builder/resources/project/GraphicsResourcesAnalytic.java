@@ -31,6 +31,10 @@ public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>>
     @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
+        // Determine shader defines here that do not typically change
+        // and should apply globally as defaults, but only for analytic / "fake" source photos.
+        // The shader will not reload automatically when these change.
+        // The defines can be overridden by the actual shader.
         return getSharedResources().getShaderProgramBuilder()
                 .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
                 .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case

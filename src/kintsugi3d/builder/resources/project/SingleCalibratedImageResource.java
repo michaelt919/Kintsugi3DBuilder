@@ -29,7 +29,6 @@ import java.io.IOException;
  */
 public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements Resource
 {
-    private final ContextType context;
     private final ReadonlyViewSet viewSet;
     private final int viewIndex;
     private GeometryResources<ContextType> geometryResources;
@@ -57,27 +56,9 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
             loadOptions);
     }
 
-    /**
-     *
-     * Creates a calibrated image resource, using pre-loaded geometry resources (which will not be managed by this resource
-     * @param context
-     * @param viewSet
-     * @param viewIndex
-     * @param imageFile
-     * @param geometryResources
-     * @param loadOptions
-     * @throws IOException
-     */
-    private SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile,
-        GeometryResources<ContextType> geometryResources, ReadonlyLoadOptionsModel loadOptions) throws IOException
-    {
-        this(context, viewSet, viewIndex, imageFile, geometryResources, false, loadOptions);
-    }
-
     private SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile,
         GeometryResources<ContextType> geometryResources, boolean geometryResourcesOwned, ReadonlyLoadOptionsModel loadOptions) throws IOException
     {
-        this.context = context;
         this.viewSet = viewSet;
         this.viewIndex = viewIndex;
         this.geometryResources = geometryResources;
@@ -149,33 +130,23 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
         }
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder()
-    {
-        return context.getShaderProgramBuilder()
-            .define("INFINITE_LIGHT_SOURCE", this.viewSet.areLightSourcesInfinite())
-            .define("VISIBILITY_TEST_ENABLED", this.depthTexture != null)
-            .define("SHADOW_TEST_ENABLED", this.shadowTexture != null);
-    }
-
     public static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getShaderProgramBuilder(
         ContextType context, ReadonlyViewSet viewSet, ReadonlyLoadOptionsModel loadOptions)
     {
-        return context.getShaderProgramBuilder()
-            .define("INFINITE_LIGHT_SOURCE", viewSet.areLightSourcesInfinite())
-            .define("VISIBILITY_TEST_ENABLED", viewSet.getGeometryFile() != null && loadOptions.areDepthImagesRequested())
-            .define("SHADOW_TEST_ENABLED", viewSet.getGeometryFile() != null && loadOptions.areDepthImagesRequested());
+        ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context);
+
+        if (viewSet.getGeometryFile() == null || !loadOptions.areDepthImagesRequested())
+        {
+            // Disable visibility and shadow test if not generating depth images for this resource.
+            builder.define("VISIBILITY_TEST_ENABLED", false).define("SHADOW_TEST_ENABLED", false);
+        }
+
+        return builder;
     }
 
     public void setupShaderProgram(Program<ContextType> program)
     {
-        if (viewSet.getProjectSettings().exists("occlusionBias"))
-        {
-            program.setUniform("occlusionBias", viewSet.getProjectSettings().getFloat("occlusionBias"));
-        }
-        else
-        {
-            program.setUniform("occlusionBias", 0.0025f);
-        }
+        viewSet.setupShaderProgram(program);
 
         if (this.colorTexture != null)
         {

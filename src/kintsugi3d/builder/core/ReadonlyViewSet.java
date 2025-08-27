@@ -13,6 +13,9 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -308,4 +311,8 @@ public interface ReadonlyViewSet
     ReadonlySettingsModel getProjectSettings();
 
     Map<String, File> getResourceMap();
+
+    <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getShaderProgramBuilder(ContextType context);
+
+    <ContextType extends Context<ContextType>> void setupShaderProgram(Program<ContextType> program);
 }

@@ -19,7 +19,6 @@ uniform int viewIndex;
 
 #line 21 1002
 
-#define INFINITE_LIGHT_SOURCE INFINITE_LIGHT_SOURCES
 #define cameraPose             (cameraPoses[viewIndex])
 #define lightPosition          (lightPositions[getLightIndex(viewIndex)].xyz)
 #define lightIntensity         (getLightIntensity(viewIndex).rgb)

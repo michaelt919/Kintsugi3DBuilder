@@ -79,6 +79,7 @@ public abstract class ProgramBuilderBase<ContextType extends Context<ContextType
         return this;
     }
 
+    @Override
     public Map<String, Object> getDefines()
     {
         return Collections.unmodifiableMap(defines);

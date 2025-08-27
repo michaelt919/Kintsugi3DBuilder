@@ -153,6 +153,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                                 1, viewSet.getCameraPoseCount(), this.cameraWeights));
 
                 Material material = geometry.getMaterial();
+                String geometryFileName = viewSet.getGeometryFileName();
 
                 if (viewSet.getSupportingFilesFilePath() != null) // Load texture fit from previous session
                 {
@@ -168,12 +169,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                     }
                     specularMaterialResources = loadedFit;
                 }
-                else if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
+                else if (material != null && geometryFileName != null /* need an actual file path to load the textures */)
                 {
                     // Load material from OBJ file
 
                     // Default texture names if not specified by the material
-                    String prefix = viewSet.getGeometryFileName().split("\\.")[0];
+                    String prefix = geometryFileName.split("\\.")[0];
 
                     if (material.getDiffuseMap() == null || material.getDiffuseMap().getMapName() == null)
                     {
@@ -339,7 +340,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     {
         if (this.cameraWeights != null)
         {
-            return this.getCameraWeight(index);
+            return this.cameraWeights[index];
         }
         else
         {
@@ -453,12 +454,9 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         boolean basisEnabled = specularMaterialResources.getBasisResources() != null
             && specularMaterialResources.getBasisWeightResources() != null;
 
-        ProgramBuilder<ContextType> builder = context.getShaderProgramBuilder()
-            .define("CAMERA_POSE_COUNT", viewSet.getCameraPoseCount())
-            .define("LIGHT_COUNT", viewSet.getLightCount())
-            .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
-            .define("LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getLuminanceMap() != null)
-            .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getInverseLuminanceMap() != null)
+        // Determine shader defines here that should apply globally as defaults and require specific graphics resources.
+        // The defines can be overridden by the actual shader.
+        ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context)
             .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null)
             .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null)
             .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null)
@@ -476,12 +474,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
 
         return builder;
-
-
     }
 
     public void setupShaderProgram(Program<ContextType> program)
     {
+        viewSet.setupShaderProgram(program);
+
         if (this.cameraWeightBuffer != null)
         {
             program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
@@ -501,10 +499,6 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         getLuminanceMapResources().setupShaderProgram(program);
         getSpecularMaterialResources().setupShaderProgram(program);
-
-        program.setUniform("occlusionBias", viewSet.getProjectSettings().getFloat("occlusionBias"));
-        program.setUniform("edgeProximityMargin", viewSet.getProjectSettings().getFloat("edgeProximityMargin"));
-        program.setUniform("edgeProximityCutoff", viewSet.getProjectSettings().getFloat("edgeProximityCutoff"));
     }
 
     public void close()

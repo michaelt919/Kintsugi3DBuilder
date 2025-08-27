@@ -59,5 +59,6 @@ public final class DefaultSettings
         settingsModel.createBooleanSetting("edgeProximityWeightEnabled", true);
         settingsModel.createNumericSetting("edgeProximityMargin", 0.1f);
         settingsModel.createNumericSetting("edgeProximityCutoff", 0.01f);
+        settingsModel.createBooleanSetting("flatfieldCorrected", false);
     }
 }

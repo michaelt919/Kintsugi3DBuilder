@@ -121,6 +121,12 @@ final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
     }
 
     @Override
+    public Map<String, Object> getDefines()
+    {
+        return defines;
+    }
+
+    @Override
     public OpenGLContext getContext()
     {
         return this.context;

@@ -16,7 +16,6 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -613,15 +612,27 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        SettingsModel projectSettings = getViewSet().getProjectSettings();
-        return getSharedResources().getShaderProgramBuilder()
+        // Determine shader defines here that should apply globally as defaults, but only for image-space source photos.
+        // The shader will not reload automatically when these change.
+        // The defines can be overridden by the actual shader.
+        ProgramBuilder<ContextType> builder = getSharedResources().getShaderProgramBuilder()
             .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
-            .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case
-            .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount())
-            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null && projectSettings.getBoolean("occlusionEnabled"))
-            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null && projectSettings.getBoolean("occlusionEnabled"))
-            .define("EDGE_PROXIMITY_WEIGHT_ENABLED", projectSettings.getBoolean("edgeProximityWeightEnabled"));
+            .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE); // should default to this, but just in case
+
+        if (this.depthTextures == null)
+        {
+            // Override to disable visibility test if no depth textures exist
+            builder.define("VISIBILITY_TEST_ENABLED", false);
+        }
+
+        if (this.shadowTextures == null)
+        {
+            // Override to disable shadow test if no shadow textures exist
+            builder.define("SHADOW_TEST_ENABLED", false);
+        }
+
+        return builder;
     }
 
     @Override

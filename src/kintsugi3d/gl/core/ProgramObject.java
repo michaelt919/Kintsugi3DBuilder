@@ -18,5 +18,4 @@ package kintsugi3d.gl.core;
  */
 public interface ProgramObject<ContextType extends Context<ContextType>> extends Resource, Program<ContextType>
 {
-
 }

@@ -17,6 +17,9 @@ import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -1627,5 +1630,33 @@ public final class ViewSet implements ReadonlyViewSet
     public Map<String, File> getResourceMap()
     {
         return resourceMap;
+    }
+
+    @Override
+    public <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getShaderProgramBuilder(ContextType context)
+    {
+        // Determine shader defines here that should apply globally as defaults without require specific resources other than view set data.
+        // The defines can be overridden by the actual shader.
+        return context.getShaderProgramBuilder()
+            .define("CAMERA_POSE_COUNT", getCameraPoseCount())
+            .define("CAMERA_PROJECTION_COUNT", getCameraProjectionCount())
+            .define("LIGHT_COUNT", getLightCount())
+            .define("INFINITE_LIGHT_SOURCES", areLightSourcesInfinite())
+            .define("FLATFIELD_CORRECTED", projectSettings.getBoolean("flatfieldCorrected"))
+            .define("LUMINANCE_MAP_ENABLED", hasCustomLuminanceEncoding())
+            .define("INVERSE_LUMINANCE_MAP_ENABLED", hasCustomLuminanceEncoding())
+            .define("VISIBILITY_TEST_ENABLED", projectSettings.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", projectSettings.getBoolean("occlusionEnabled"))
+            .define("EDGE_PROXIMITY_WEIGHT_ENABLED", projectSettings.getBoolean("edgeProximityWeightEnabled"));
+    }
+
+    @Override
+    public <ContextType extends Context<ContextType>> void setupShaderProgram(Program<ContextType> program)
+    {
+        // Determine shader uniforms here that should apply globally as defaults without require specific resources other than view set data.
+        // The uniforms can be overridden by the actual shader.
+        program.setUniform("occlusionBias", projectSettings.getFloat("occlusionBias"));
+        program.setUniform("edgeProximityMargin", projectSettings.getFloat("edgeProximityMargin"));
+        program.setUniform("edgeProximityCutoff", projectSettings.getFloat("edgeProximityCutoff"));
     }
 }

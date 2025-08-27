@@ -13,6 +13,7 @@ package kintsugi3d.gl.core;
 
 import kintsugi3d.gl.vecmath.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,6 +43,12 @@ public interface Program<ContextType extends Context<ContextType>> extends Conte
      * @return The value that should be assigned to that name in the shader, if it has been specified.
      */
     Optional<Object> getDefine(String key);
+
+    /**
+     * Gets all defines for this program.
+     * @return A map of the associations between define names and their values.
+     */
+    Map<String, Object> getDefines();
 
     /**
      * Sets a uniform variable by its shader name.
