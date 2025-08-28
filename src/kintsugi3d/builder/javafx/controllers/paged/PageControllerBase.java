@@ -16,6 +16,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
@@ -171,7 +172,13 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
                 }
 
                 Alert alert = new Alert(Alert.AlertType.NONE, message, allButtons.toArray(ButtonType[]::new));
-                alert.setWidth(480);
+
+                // Force the window back to the correct size in case of race conditions with the OS (esp. on Linux)
+                ChangeListener<? super Number> forceSize =
+                    (obs, oldValue, newValue) ->
+                        Platform.runLater(alert.getDialogPane()::autosize);
+                alert.getDialogPane().widthProperty().addListener(forceSize);
+                alert.getDialogPane().heightProperty().addListener(forceSize);
 
                 ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event ->
                 {

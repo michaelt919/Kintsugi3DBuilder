@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.BooleanExpression;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -92,7 +93,7 @@ public class WelcomeWindowController
             .or(ProgressBarsController.getInstance().getProcessingProperty())
             .or(JavaFXState.getInstance().getProjectModel().getProjectOpenProperty());
 
-        shouldBeHidden.addListener(obs ->
+        InvalidationListener windowHide = obs ->
         {
             if (shouldBeHidden.get())
             {
@@ -102,7 +103,11 @@ public class WelcomeWindowController
             {
                 window.show();
             }
-        });
+        };
+        shouldBeHidden.addListener(windowHide);
+
+        // Prevent race condition when closing main window.
+        parentWindow.onCloseRequestProperty().addListener(obs -> shouldBeHidden.removeListener(windowHide));
     }
 
     private static void handleMenuItemSelection(MenuItem item)

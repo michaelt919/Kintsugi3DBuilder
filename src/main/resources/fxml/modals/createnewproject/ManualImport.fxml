@@ -15,7 +15,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<VBox fx:id="root" alignment="CENTER" spacing="32.0" styleClass="root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.ManualImportController">
+<VBox fx:id="root" alignment="CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.ManualImportController">
    <GridPane alignment="CENTER" hgap="16.0" styleClass="grid-pane" vgap="32.0" VBox.vgrow="ALWAYS">
       <columnConstraints>
          <ColumnConstraints />
@@ -29,7 +29,7 @@
       </rowConstraints>
       <Text fx:id="camPositionsTxt" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Camera Positions&#10;(Agisoft Metashape XML or RealityCapture CSV file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
       </Text>
-      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Mesh&#10;(Wavefront OBJ or Stanford PLY file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Mesh&#10;(Wavefront OBJ or &#10;Stanford PLY file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
       </Text>
       <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Images&#10;(Directory containing images:&#10;PNG, JPEG, or TIFF)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
       </Text>
@@ -47,6 +47,6 @@
       </Text>
    </GridPane>
    <AnchorPane>
-      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" styleClass="wireframeBody, checkbox" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody, checkbox" text="Undistort images" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
    </AnchorPane>
 </VBox>

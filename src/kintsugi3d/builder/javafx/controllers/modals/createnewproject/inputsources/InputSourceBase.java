@@ -48,6 +48,7 @@ public abstract class InputSourceBase extends ViewSelectableBase implements Inpu
         Alert alert = new Alert(Alert.AlertType.NONE,
             "Imported object is missing " + numMissingImgs + " images.",
             cancel, newDirectory, skipMissingCams/*, openDirectory*/);
+        alert.getDialogPane().autosize();
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(
             event -> Modal.requestClose(modalWindow));

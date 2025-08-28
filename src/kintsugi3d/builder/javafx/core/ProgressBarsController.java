@@ -99,10 +99,7 @@ public class ProgressBarsController
             Platform.runLater(() -> cancelButton.setText("Cancelling..."));
         });
 
-        doneButton.setOnAction(event ->
-        {
-            hideAllProgress();
-        });
+        doneButton.setOnAction(event -> hideAllProgress());
 
         cancelButton.disableProperty().bind(getProcessingProperty().not());
         doneButton.disableProperty().bind(getProcessingProperty());
@@ -442,8 +439,6 @@ public class ProgressBarsController
 
                     return String.format("%s (Stage %s/%s)",
                         currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
-
-
                 },
                 overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
                 localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often

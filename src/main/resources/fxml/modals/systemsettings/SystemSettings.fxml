@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.*?>
-<GridPane prefHeight="600.0" prefWidth="800.0" styleClass="root" stylesheets="@../../kintsugiStyling.css"
+<GridPane prefHeight="600.0" prefWidth="800.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css"
           xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController">
     <columnConstraints>
