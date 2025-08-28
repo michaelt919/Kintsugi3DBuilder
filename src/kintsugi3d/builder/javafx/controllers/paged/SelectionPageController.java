@@ -6,14 +6,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import java.util.function.Predicate;
-
 public class SelectionPageController<T> extends PageControllerBase<T, SelectionPage<T>>
 {
-    private static final double BUTTON_PREF_WIDTH = 330.0;
+    private static final double BUTTON_MIN_WIDTH = 400.0;
     private static final String BUTTON_STYLE_CLASS = "wireframeSubtitle";
     private static final Insets BUTTON_INSETS = new Insets(16.0);
 
@@ -21,6 +20,7 @@ public class SelectionPageController<T> extends PageControllerBase<T, SelectionP
 
     @FXML private VBox rootNode;
     @FXML private Label promptLabel;
+    @FXML private VBox optionsRoot;
 
     @Override
     public Region getRootNode()
@@ -37,27 +37,45 @@ public class SelectionPageController<T> extends PageControllerBase<T, SelectionP
     @Override
     public void refresh()
     {
+        ToggleButton prevSelected = (ToggleButton)buttons.getSelectedToggle();
+        String prevSelectedName = null;
+        if (prevSelected != null)
+        {
+            prevSelectedName = prevSelected.getText();
+        }
+
         promptLabel.setText(getPage().getPrompt());
 
         // Clear and repopulate
         buttons.getToggles().clear();
-
-        // Remove all except the prompt label.
-        rootNode.getChildren().removeIf(Predicate.not(promptLabel::equals));
+        optionsRoot.getChildren().clear();
 
         for (var choice : getPage().getChoices())
         {
             // create button
             ToggleButton button = new ToggleButton();
             button.setText(choice.getKey());
-            button.setPrefWidth(BUTTON_PREF_WIDTH);
+            button.setMinWidth(BUTTON_MIN_WIDTH);
             button.getStyleClass().add(BUTTON_STYLE_CLASS);
             button.setPadding(BUTTON_INSETS);
             button.setOnAction(e -> onButtonAction(button, choice.getValue()));
 
+            // create anchor pane
+            AnchorPane anchorPane = new AnchorPane();
+            anchorPane.getChildren().add(button);
+            AnchorPane.setTopAnchor(button, 0.0);
+            AnchorPane.setBottomAnchor(button, 0.0);
+            AnchorPane.setLeftAnchor(button, 0.0);
+            AnchorPane.setRightAnchor(button, 0.0);
+
             // add to root node and button group
-            rootNode.getChildren().add(button);
+            optionsRoot.getChildren().add(anchorPane);
             buttons.getToggles().add(button);
+
+            if (choice.getKey().equals(prevSelectedName))
+            {
+                buttons.selectToggle(button);
+            }
         }
     }
 

@@ -31,7 +31,7 @@ public class CreateProject extends ExperienceBase
     protected void open() throws IOException
     {
         var metashape = buildPagedModal()
-            .thenSelect("Select Import Option")
+            .thenSelect("How are you importing your project?")
             .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<InputSource, MetashapeImportController>::new);
 
         var masks = metashape.<MasksImportController>then(MASKS_IMPORT);

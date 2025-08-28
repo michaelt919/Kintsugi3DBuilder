@@ -1,5 +1,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
@@ -48,7 +50,17 @@ public abstract class InputSourceBase extends ViewSelectableBase implements Inpu
         Alert alert = new Alert(Alert.AlertType.NONE,
             "Imported object is missing " + numMissingImgs + " images.",
             cancel, newDirectory, skipMissingCams/*, openDirectory*/);
-        alert.getDialogPane().autosize();
+
+        // Force the window back to the correct size in case of race conditions with the OS (esp. on Linux)
+        ChangeListener<? super Number> forceSize =
+            (obs, oldValue, newValue) ->
+                Platform.runLater(() ->
+                {
+                    alert.getDialogPane().autosize();
+                    alert.getDialogPane().getScene().getWindow().sizeToScene();
+                });
+        alert.getDialogPane().widthProperty().addListener(forceSize);
+        alert.getDialogPane().heightProperty().addListener(forceSize);
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(
             event -> Modal.requestClose(modalWindow));

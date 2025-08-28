@@ -94,20 +94,31 @@ public class WelcomeWindowController
             .or(JavaFXState.getInstance().getProjectModel().getProjectOpenProperty());
 
         InvalidationListener windowHide = obs ->
-        {
-            if (shouldBeHidden.get())
+            // Delay to allow it to catch if the main window is being closed.
+            Platform.runLater(() ->
             {
-                window.hide();
-            }
-            else
-            {
-                window.show();
-            }
-        };
+                if (parentWindow.isShowing()) // Try to prevent race condition when closing main window.
+                {
+                    if (shouldBeHidden.get())
+                    {
+                        window.hide();
+                    }
+                    else
+                    {
+                        window.show();
+                    }
+                }
+            });
         shouldBeHidden.addListener(windowHide);
 
-        // Prevent race condition when closing main window.
-        parentWindow.onCloseRequestProperty().addListener(obs -> shouldBeHidden.removeListener(windowHide));
+        // Try to prevent race condition when closing main window.
+        parentWindow.showingProperty().addListener(obs ->
+        {
+            if (!parentWindow.isShowing())
+            {
+                shouldBeHidden.removeListener(windowHide);
+            }
+        });
     }
 
     private static void handleMenuItemSelection(MenuItem item)

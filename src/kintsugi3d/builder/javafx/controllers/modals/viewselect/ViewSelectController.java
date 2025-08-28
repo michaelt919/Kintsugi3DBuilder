@@ -15,9 +15,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import kintsugi3d.builder.io.primaryview.View;
@@ -53,14 +52,14 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @FXML
     protected CheckBox regexMode;
     @FXML
-    protected VBox orientationControlsVBox;
+    protected Pane orientationControls;
     @FXML
     protected Label hintTextLabel;
     protected ViewSelectable newData;
     protected ViewSelectable data;
     protected HashMap<String, Image> imgCache;
     @FXML
-    private AnchorPane hostAnchorPane;
+    private Pane hostPane;
     private ImageSelectionThread loadImgThread;
 
     protected abstract String getHintText();
@@ -72,7 +71,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public Region getRootNode()
     {
-        return hostAnchorPane;
+        return hostPane;
     }
 
     @Override
@@ -84,7 +83,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         imgViewText.setFill(Paint.valueOf("white"));
 
         hintTextLabel.setText(getHintText());
-        orientationControlsVBox.setVisible(allowViewRotation());
+        orientationControls.setVisible(allowViewRotation());
 
         chunkTreeView.getSelectionModel().selectedIndexProperty()
             .addListener((a, b, c) -> selectImageInTreeView());
@@ -257,7 +256,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             if (selectedItem == NONE_ITEM)
             {
                 // Hide orientation controls
-                orientationControlsVBox.setVisible(false);
+                orientationControls.setVisible(false);
 
                 if (data.getAdvanceLabelOverride() != null)
                 {
@@ -274,7 +273,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             else
             {
                 // Show orientation controls
-                orientationControlsVBox.setVisible(allowViewRotation());
+                orientationControls.setVisible(allowViewRotation());
 
                 // Set confirm button text
                 setAdvanceLabelOverride(null);

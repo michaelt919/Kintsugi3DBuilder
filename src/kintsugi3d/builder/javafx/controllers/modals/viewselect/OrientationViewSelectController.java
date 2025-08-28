@@ -61,7 +61,7 @@ public class OrientationViewSelectController extends ViewSelectController
     @Override
     protected String getHintText()
     {
-        return "Select model orientation view";
+        return "Select a photo to use to orient the object:";
     }
 
     @Override

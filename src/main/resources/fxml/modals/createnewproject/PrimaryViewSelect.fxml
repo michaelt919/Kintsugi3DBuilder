@@ -16,52 +16,47 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<AnchorPane fx:id="hostAnchorPane" prefHeight="486.0" prefWidth="830.0" styleClass="modal-root"
-            stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController">
-   <VBox>
-      <Label fx:id="hintTextLabel" prefWidth="830.0" alignment="CENTER" styleClass="wireframeSubtitle"
-             textAlignment="CENTER">Select model orientation view
+<VBox fx:id="hostPane" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController">
+   <StackPane>
+      <Label fx:id="hintTextLabel" alignment="CENTER" styleClass="wireframeTitle" textAlignment="CENTER">
+         Select model orientation view
       </Label>
-      <HBox spacing="40.0">
-         <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-         </padding>
-         <VBox spacing="20.0">
-            <HBox alignment="CENTER_LEFT" spacing="64.0">
-               <VBox.margin>
-                  <Insets/>
-               </VBox.margin>
-               <TextField fx:id="imgSearchTxtField" prefColumnCount="25" prefHeight="25.0" prefWidth="452.0"
-                          promptText="Enter image name"/>
-               <!--                        <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" visible="false" />-->
-            </HBox>
-            <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView"
-                      onKeyTyped="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0"/>
-         </VBox>
-         <AnchorPane>
-            <Text fx:id="imgViewText" fontSmoothingType="LCD" layoutX="-3.0" layoutY="2.0"
-                  text="No Image Selected" textAlignment="CENTER" textOrigin="TOP"
-                  wrappingWidth="299.0000000000002"/>
-            <VBox alignment="CENTER" prefHeight="445.3333333333333" prefWidth="299.3333333333333"
+   </StackPane>
+   <HBox spacing="40.0">
+      <padding>
+         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      </padding>
+      <VBox spacing="20.0" HBox.hgrow="ALWAYS">
+         <HBox alignment="CENTER_LEFT" spacing="64.0">
+            <VBox.margin>
+               <Insets />
+            </VBox.margin>
+            <TextField fx:id="imgSearchTxtField" prefColumnCount="25" prefHeight="25.0" promptText="Enter image name" HBox.hgrow="ALWAYS" />
+            <!--                        <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" visible="false" />-->
+         </HBox>
+         <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" VBox.vgrow="ALWAYS" />
+      </VBox>
+      <VBox spacing="8.0">
+         <AnchorPane minHeight="48.0">
+            <Text fx:id="imgViewText" fill="WHITE" fontSmoothingType="LCD" styleClass="wireframeBodyLarge"
+                  text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="300"
                   AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                  AnchorPane.topAnchor="0.0">
-               <ImageView fx:id="primaryImgView" fitHeight="251.0" fitWidth="299.0" pickOnBounds="true"
-                          preserveRatio="true"/>
-            </VBox>
-            <VBox fx:id="orientationControlsVBox" alignment="BOTTOM_CENTER" layoutY="378.0"
-                  prefHeight="445.3333333333333" prefWidth="299.3333333333333" spacing="8.0"
-                  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-               <Label styleClass="wireframeBodyStrong" text="Fix Orientation"/>
-               <HBox alignment="CENTER" spacing="80.0">
-                  <Button mnemonicParsing="false" onAction="#rotateLeft" prefHeight="40.0"
-                          prefWidth="80.0" text="Left"/>
-                  <Button mnemonicParsing="false" onAction="#rotateRight" prefHeight="40.0"
-                          prefWidth="80.0" text="Right"/>
-               </HBox>
-            </VBox>
+                  AnchorPane.topAnchor="0.0"/>
          </AnchorPane>
-      </HBox>
-   </VBox>
-</AnchorPane>
+         <StackPane VBox.vgrow="ALWAYS">
+            <ImageView fx:id="primaryImgView" fitHeight="300.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
+         </StackPane>
+         <VBox spacing="8.0">
+            <StackPane>
+               <Label styleClass="wireframeBodyLarge" text="Fix orientation:"/>
+            </StackPane>
+            <AnchorPane fx:id="orientationControls">
+               <Button mnemonicParsing="false" onAction="#rotateLeft" styleClass="wireframeBodyLarge, button"
+                       text="Left" AnchorPane.leftAnchor="0.0"/>
+               <Button mnemonicParsing="false" onAction="#rotateRight" styleClass="wireframeBodyLarge, button"
+                       text="Right" AnchorPane.rightAnchor="0.0"/>
+            </AnchorPane>
+         </VBox>
+      </VBox>
+   </HBox>
+</VBox>

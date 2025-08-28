@@ -14,23 +14,36 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
-<VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MasksImportController">
-   <Label alignment="CENTER" styleClass="wireframeTitle" text="Select Masks Import Option" textAlignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-   <ToggleButton fx:id="useProjectMasksButton" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Use Project Masks">
-      <padding>
-         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-      </padding>
-   </ToggleButton>
-   <ToggleButton fx:id="customMasksDirButton" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Choose New Masks Directory">
-      <padding>
-         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-      </padding>
-   </ToggleButton>
-   <ToggleButton fx:id="noMasksButton" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefWidth="330.0" styleClass="wireframeSubtitle" text="Do Not Use Masks">
-      <padding>
-         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-      </padding>
-   </ToggleButton>
+<?import javafx.scene.layout.*?>
+<VBox fx:id="rootPane" alignment="TOP_CENTER" fillWidth="false" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MasksImportController">
+   <Label alignment="CENTER" styleClass="wireframeTitle" text="Do you want to import masks?" textAlignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+   <VBox spacing="32.0">
+      <AnchorPane>
+         <ToggleButton fx:id="useProjectMasksButton" minWidth="400.0" mnemonicParsing="false"
+                       styleClass="wireframeSubtitle" text="Use imported project masks" AnchorPane.bottomAnchor="0.0"
+                       AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+      <AnchorPane>
+         <ToggleButton fx:id="customMasksDirButton" minWidth="400.0" mnemonicParsing="false"
+                       styleClass="wireframeSubtitle" text="Choose masks directory" AnchorPane.bottomAnchor="0.0"
+                       AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+      <AnchorPane>
+         <ToggleButton fx:id="noMasksButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle"
+                       text="Do not use masks" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                       AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+   </VBox>
 </VBox>
