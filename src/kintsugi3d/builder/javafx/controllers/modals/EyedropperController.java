@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.controllers.modals;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -45,42 +44,40 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.ResourceBundle;
+import java.util.Map;
 import java.util.function.DoubleUnaryOperator;
 
-public class EyedropperController extends NonDataPageControllerBase implements Initializable
+public class EyedropperController extends NonDataPageControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(EyedropperController.class);
 
-    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    private static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+
+    private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
     @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
     @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
     @FXML private Button cropButton; //appears below the choose new image button --> hidden upon opening
 
-    @FXML
-    private Rectangle selectionRectangle;
+    @FXML private Rectangle selectionRectangle;
 
-    @FXML
-    private Rectangle finalSelectRect1, finalSelectRect2, finalSelectRect3, finalSelectRect4, finalSelectRect5, finalSelectRect6;
+    @FXML private Rectangle finalSelectRect1, finalSelectRect2, finalSelectRect3, finalSelectRect4, finalSelectRect5, finalSelectRect6;
     private List<Rectangle> finalSelectRectangles;
 
-    @FXML
-    private Button applyButton;
+    @FXML private Button button1, button2, button3, button4, button5, button6;
+
     private boolean isCropping; // enabled by crop button and disabled when cropping is finished
     private boolean isSelecting; // enabled by "Select Tone Patch" buttons and disabled when selection is finished
     private boolean canResetCrop; // enabled when cropping is finished and disabled when crop is reset to default viewport
     static final String DEFAULT_BUTTON_TEXT = "Select Tone Patch";
 
-    @FXML
-    private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
+    @FXML private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
     private List<TextField> colorSelectTxtFields;
 
-    @FXML
-    private Label colorLabel;
+    @FXML private Label colorLabel;
 
     private List<Color> selectedColors;
     @FXML private ImageView colorPickerImgView;
@@ -90,6 +87,9 @@ public class EyedropperController extends NonDataPageControllerBase implements I
 
     private IOModel ioModel = new IOModel();
 
+    // Use short to avoid sign issues
+    private byte[] prevEncodedLuminanceValues;
+
     private Button sourceButton;
 
     /**
@@ -98,14 +98,103 @@ public class EyedropperController extends NonDataPageControllerBase implements I
      */
     private boolean multiImageWarningShown = false;
 
-    /**
-     * Set to true to prevent warning about unsaved changes when closing the window via the "Confirm" button.
-     */
-    private boolean confirmExit = false;
+    private final Map<Button, TextField> textFieldForButton = new HashMap<>(6);
+    private final Map<Button, Rectangle> rectangleForButton = new HashMap<>(6);
+    private final Map<Rectangle, TextField> textFieldForRectangle = new HashMap<>(6);
+    private final Map<TextField, Rectangle> rectangleForTextField = new HashMap<>(6);
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
+    public Region getRootNode()
     {
+        return outerVbox;
+    }
+
+    @Override
+    public void initPage()
+    {
+        selectedFile = null;
+
+        colorPickerImgView.setPreserveRatio(true);
+        colorPickerImgView.setSmooth(true);
+
+        isSelecting = false;
+        isCropping = false;
+        canResetCrop = false;
+
+        selectedColors = new ArrayList<>();
+
+        colorSelectTxtFields = new ArrayList<>();
+        colorSelectTxtFields.add(txtField1);
+        colorSelectTxtFields.add(txtField2);
+        colorSelectTxtFields.add(txtField3);
+        colorSelectTxtFields.add(txtField4);
+        colorSelectTxtFields.add(txtField5);
+        colorSelectTxtFields.add(txtField6);
+
+        finalSelectRectangles = new ArrayList<>();
+        finalSelectRectangles.add(finalSelectRect1);
+        finalSelectRectangles.add(finalSelectRect2);
+        finalSelectRectangles.add(finalSelectRect3);
+        finalSelectRectangles.add(finalSelectRect4);
+        finalSelectRectangles.add(finalSelectRect5);
+        finalSelectRectangles.add(finalSelectRect6);
+
+        registerToneWidget(button1, txtField1, finalSelectRect1);
+        registerToneWidget(button2, txtField2, finalSelectRect2);
+        registerToneWidget(button3, txtField3, finalSelectRect3);
+        registerToneWidget(button4, txtField4, finalSelectRect4);
+        registerToneWidget(button5, txtField5, finalSelectRect5);
+        registerToneWidget(button6, txtField6, finalSelectRect6);
+
+        autoApply();
+
+        setCanAdvance(true);
+        setCanConfirm(true);
+    }
+
+    @Override
+    public void refresh()
+    {
+        setIOModel(Global.state().getIOModel());
+        setImage(getPageFrameController().getState().getProjectModel().getColorCheckerFile());
+
+        autoApply();
+    }
+
+    @Override
+    public boolean confirm()
+    {
+        apply();
+        return true;
+    }
+
+    @Override
+    public boolean cancel()
+    {
+        Alert alert = new Alert(AlertType.CONFIRMATION, "Discard tone calibration changes?");
+        var result = alert.showAndWait();
+        if (result.isPresent() && result.get().equals(ButtonType.OK))
+        {
+            // revert the tone calibration to what it was when the page was opened.
+            if (ioModel != null && prevEncodedLuminanceValues != null)
+            {
+                ioModel.setTonemapping(LINEAR_LUMINANCE_VALUES, prevEncodedLuminanceValues);
+            }
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private void registerToneWidget(Button button, TextField textField, Rectangle rectangle)
+    {
+        textFieldForButton.put(button, textField);
+        rectangleForButton.put(button, rectangle);
+        textFieldForRectangle.put(rectangle, textField);
+        rectangleForTextField.put(textField, rectangle);
     }
 
     private static Rectangle2D resetViewport(ImageView imageView)
@@ -364,57 +453,61 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     }
 
     //returns false if the color is null or has already been added
-    private boolean addSelectedColor(Color newColor)
+    private void addSelectedColor(Color newColor)
     {
-        //update the text field (to int. greyscale value) and its corresponding color square
-//        Button sourceButton = resetButtonsText();
-
-        if (sourceButton != null)
+        if (sourceButton == null)
         {
-            //modify appropriate text field to average greyscale value
-            TextField partnerTxtField = getTextFieldForButton(sourceButton);
+            Toolkit.getDefaultToolkit().beep();
+        }
+        else
+        {
+            // modify appropriate text field to average greyscale value
+            TextField partnerTxtField = textFieldForButton.get(sourceButton);
 
-            //java would use the wrong overload of round() if it used a double
+            // java would use the wrong overload of round() if it used a double
             Integer greyScale = Math.round((float) getGreyScaleDouble(newColor));
             assert partnerTxtField != null;
             partnerTxtField.setText(String.valueOf(greyScale));
 
-            //without these two lines, text field would not update properly
+            // without these two lines, text field would not update properly
             partnerTxtField.positionCaret(partnerTxtField.getText().length());
             partnerTxtField.positionCaret(0);
 
-            //update square which contains the average color visual for the button
-            Rectangle partnerRectangle = getRectangleForButton(sourceButton);
+            // update square which contains the average color visual for the button
+            Rectangle partnerRectangle = rectangleForButton.get(sourceButton);
             updateFinalSelectRect(partnerRectangle);
 
-            //disable/enable apply button as needed
-            updateApplyButton();
+            // auto-apply if possible
+            autoApply();
 
             sourceButton.getStyleClass().remove("button-selected");
             sourceButton.setText(DEFAULT_BUTTON_TEXT);
+
+            isSelecting = false;
+            sourceButton = null;
         }
-        else
-        {
-            Toolkit.getDefaultToolkit().beep();
-            return false; //source button is null
-        }
-        isSelecting = false;
-        sourceButton = null;
-        return true;//color changed successfully
     }
 
     private void updateFinalSelectRect(Rectangle rect)
-    {//when a text field is updated, update the rectangle beside it
-        TextField txtField = getTextFieldForRectangle(rect);
+    {
+        // when a text field is updated, update the rectangle beside it
+        TextField txtField = textFieldForRectangle.get(rect);
 
         double greyScale;
-        try
-        {
-            greyScale = Integer.parseInt(txtField.getText());
-        }
-        catch (NumberFormatException | NullPointerException e)
+        if (txtField == null)
         {
             greyScale = 0;
+        }
+        else
+        {
+            try
+            {
+                greyScale = Integer.parseInt(txtField.getText());
+            }
+            catch (NumberFormatException e)
+            {
+                greyScale = 0;
+            }
         }
 
         if (greyScale > 255)
@@ -439,112 +532,28 @@ public class EyedropperController extends NonDataPageControllerBase implements I
         //if all text fields contain valid info, make the Apply button functional
         //if not, make the button not functional
         TextField sourceTxtField = (TextField) event.getSource();
-        updateFinalSelectRect(getRectangleForTextField(sourceTxtField));
+        updateFinalSelectRect(rectangleForTextField.get(sourceTxtField));
 
-        updateApplyButton();
+        autoApply();
     }
 
-    public void updateApplyButton()
+    private void autoApply()
     {
-        //only enable apply button if all fields contain good data (integers) and model is loaded
-        //only updates setDisable() when text field is modified
-        //TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
-        applyButton.setDisable(!areAllFieldsValid() || !hasGoodLoadingModel());
-    }
-
-    //returns the text field the button corresponds to
-    private TextField getTextFieldForButton(Button sourceButton)
-    {
-        switch (sourceButton.getId())
+        // Only apply if all fields contain good data (integers) and model is loaded
+        if (areAllFieldsValid() && hasGoodLoadingModel())
         {
-            case "button1":
-                return txtField1;
-            case "button2":
-                return txtField2;
-            case "button3":
-                return txtField3;
-            case "button4":
-                return txtField4;
-            case "button5":
-                return txtField5;
-            case "button6":
-                return txtField6;
-            default:
-                return null;
-        }
-    }
-
-    private Rectangle getRectangleForButton(Button sourceButton)
-    {
-        switch (sourceButton.getId())
-        {
-            case "button1":
-                return finalSelectRect1;
-            case "button2":
-                return finalSelectRect2;
-            case "button3":
-                return finalSelectRect3;
-            case "button4":
-                return finalSelectRect4;
-            case "button5":
-                return finalSelectRect5;
-            case "button6":
-                return finalSelectRect6;
-            default:
-                return null;
-        }
-    }
-
-    private TextField getTextFieldForRectangle(Rectangle rect)
-    {
-        switch (rect.getId())
-        {
-            case "finalSelectRect1":
-                return txtField1;
-            case "finalSelectRect2":
-                return txtField2;
-            case "finalSelectRect3":
-                return txtField3;
-            case "finalSelectRect4":
-                return txtField4;
-            case "finalSelectRect5":
-                return txtField5;
-            case "finalSelectRect6":
-                return txtField6;
-            default:
-                return null;
-        }
-    }
-
-    private Rectangle getRectangleForTextField(TextField txtField)
-    {
-        switch (txtField.getId())
-        {
-            case "txtField1":
-                return finalSelectRect1;
-            case "txtField2":
-                return finalSelectRect2;
-            case "txtField3":
-                return finalSelectRect3;
-            case "txtField4":
-                return finalSelectRect4;
-            case "txtField5":
-                return finalSelectRect5;
-            case "txtField6":
-                return finalSelectRect6;
-            default:
-                return null;
+            apply();
         }
     }
 
     @FXML
     private void apply()
     {
-        //check to see if all text fields contain valid input, and model is loaded
+        // check to see if all text fields contain valid input, and model is loaded
         if (areAllFieldsValid() && hasGoodLoadingModel())
         {
             ioModel.setTonemapping(
-                new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
+                LINEAR_LUMINANCE_VALUES,
                 new byte[]
                 {
                     (byte) Integer.parseInt(txtField1.getText()),
@@ -559,7 +568,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
         {
             Toolkit.getDefaultToolkit().beep();
             //TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
-            LOG.error("Please fill all fields and load a model before performing color calibration.");
+            LOG.error("Please fill all fields and load a model before performing tone calibration.");
         }
     }
 
@@ -620,33 +629,53 @@ public class EyedropperController extends NonDataPageControllerBase implements I
 //        return sourceButton;
 //    }
 
-    public void setIOModel(IOModel ioModel)
+    private void setIOModel(IOModel ioModel)
     {
         this.ioModel = ioModel;
 
-        //initialize txtFields with their respective values
-        if (hasGoodLoadingModel())
+        // First time opening the page -- get the old values and use them as the starting values.
+        if (prevEncodedLuminanceValues == null)
         {
-            DoubleUnaryOperator luminanceEncoding = ioModel.getLuminanceEncodingFunction();
-            txtField1.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
-            txtField2.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
-            txtField3.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.198))));
-            txtField4.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.362))));
-            txtField5.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.591))));
-            txtField6.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.900))));
-
-            for (Rectangle rect : finalSelectRectangles)
+            //initialize txtFields with their respective values
+            if (hasGoodLoadingModel())
             {
-                rect.setVisible(true);
-                updateFinalSelectRect(rect);
-            }
+                DoubleUnaryOperator luminanceEncoding = ioModel.getLuminanceEncodingFunction();
 
-            updateApplyButton();
+                // Calculate starting encoded luminance values and remember them so we can cancel.
+                prevEncodedLuminanceValues = new byte[LINEAR_LUMINANCE_VALUES.length];
+                for (int i = 0; i < LINEAR_LUMINANCE_VALUES.length; i++)
+                {
+                    prevEncodedLuminanceValues[i] = (byte) Math.round(luminanceEncoding.applyAsDouble(LINEAR_LUMINANCE_VALUES[i]));
+                }
+
+                // Put values into text fields.
+                // encoded luminance values are essentially unsigned bytes but will be interpreted as signed unless we're explicit about it.
+                txtField1.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[0]));
+                txtField2.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[1]));
+                txtField3.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[2]));
+                txtField4.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[3]));
+                txtField5.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[4]));
+                txtField6.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[5]));
+
+                for (Rectangle rect : finalSelectRectangles)
+                {
+                    rect.setVisible(true);
+                    updateFinalSelectRect(rect);
+                }
+
+                autoApply();
+            }
+            else
+            {
+                //TODO: WHAT TO DO IF NO MODEL FOUND?
+                LOG.error("Could not bring in luminance encodings: no model found");
+            }
         }
         else
         {
-            //TODO: WHAT TO DO IF NO MODEL FOUND?
-            LOG.error("Could not bring in luminance encodings: no model found");
+            // Navigated to the page again after pressing Back and then Next
+            // Keep the values the same but try to auto-apply them as a preview.
+            autoApply();
         }
     }
 
@@ -707,7 +736,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
         setImage(file);
     }
 
-    public void setImage(File file)
+    private void setImage(File file)
     {
         if (file != null)
         {
@@ -757,85 +786,6 @@ public class EyedropperController extends NonDataPageControllerBase implements I
 
             //reset viewport and crop button text
             resetCrop();
-        }
-    }
-
-    @Override
-    public Region getRootNode()
-    {
-        return outerVbox;
-    }
-
-    @Override
-    public void initPage()
-    {
-        selectedFile = null;
-
-        colorPickerImgView.setPreserveRatio(true);
-        colorPickerImgView.setSmooth(true);
-
-        isSelecting = false;
-        isCropping = false;
-        canResetCrop = false;
-
-        selectedColors = new ArrayList<>();
-
-        colorSelectTxtFields = new ArrayList<>();
-        colorSelectTxtFields.add(txtField1);
-        colorSelectTxtFields.add(txtField2);
-        colorSelectTxtFields.add(txtField3);
-        colorSelectTxtFields.add(txtField4);
-        colorSelectTxtFields.add(txtField5);
-        colorSelectTxtFields.add(txtField6);
-
-        finalSelectRectangles = new ArrayList<>();
-        finalSelectRectangles.add(finalSelectRect1);
-        finalSelectRectangles.add(finalSelectRect2);
-        finalSelectRectangles.add(finalSelectRect3);
-        finalSelectRectangles.add(finalSelectRect4);
-        finalSelectRectangles.add(finalSelectRect5);
-        finalSelectRectangles.add(finalSelectRect6);
-
-        updateApplyButton();
-
-        setCanAdvance(true);
-        setCanConfirm(true);
-    }
-
-    @Override
-    public void refresh()
-    {
-        setIOModel(Global.state().getIOModel());
-        setImage(getPageFrameController().getState().getProjectModel().getColorCheckerFile());
-
-        updateApplyButton();
-    }
-
-    @Override
-    public boolean confirm()
-    {
-        apply();
-
-        // Suppress warning about unsaved changes since the changes were just applied automatically.
-        confirmExit = true;
-
-        return true;
-    }
-
-    @Override
-    public boolean close()
-    {
-        // Suppress warning about unsaved changes since the changes were just applied automatically.
-        if (confirmExit)
-        {
-            return true;
-        }
-        else
-        {
-            //TODO: shouldn't this revert to the previous color checker settings?
-            Alert alert = new Alert(AlertType.CONFIRMATION, "Discard tone calibration changes?");
-            var result = alert.showAndWait();
-            return result.isPresent() && result.get().equals(ButtonType.OK);
         }
     }
 }

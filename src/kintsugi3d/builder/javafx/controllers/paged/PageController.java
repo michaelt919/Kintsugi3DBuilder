@@ -62,5 +62,5 @@ public interface PageController<T>
      * Called when the window should close.
      * @return false if closing was cancelled by the controller; true otherwise.
      */
-    boolean close();
+    boolean cancel();
 }

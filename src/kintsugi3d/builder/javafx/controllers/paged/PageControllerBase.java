@@ -130,7 +130,7 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     }
 
     @Override
-    public boolean close()
+    public boolean cancel()
     {
         // Close without any additional logic by default.
         return true;

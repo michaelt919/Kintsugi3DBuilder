@@ -63,6 +63,8 @@ public class PageFrameController
         return state;
     }
 
+    private boolean isConfirmed = false;
+
     public void init(JavaFXState state)
     {
         this.window = outerRoot.getScene().getWindow();
@@ -100,7 +102,9 @@ public class PageFrameController
 
     private void onCloseRequest(WindowEvent windowEvent)
     {
-        if (!currentPage.get().getController().close())
+        // If confirmed, do nothing.
+        // Otherwise, try to close the current page, but if it's overridden, consume the event to prevent the modal from closing.
+        if (!isConfirmed && !currentPage.get().getController().cancel())
         {
             windowEvent.consume();
         }
@@ -218,8 +222,11 @@ public class PageFrameController
     {
         if (currentPage.get().hasPrevPage())
         {
-            currentPage.set(currentPage.get().getPrevPage());
-            initControllerAndUpdatePanel();
+            if (currentPage.get().getController().cancel()) // Cancel the current page, could be overridden.
+            {
+                currentPage.set(currentPage.get().getPrevPage());
+                initControllerAndUpdatePanel();
+            }
         }
         else
         {
@@ -252,6 +259,8 @@ public class PageFrameController
                 {
                     if (currentPage.get().getController().confirm())
                     {
+                        isConfirmed = true;
+
                         if (confirmCallback != null)
                         {
                             confirmCallback.run();
