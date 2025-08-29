@@ -297,7 +297,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
         if (hasModels())
         {
             loadMetashapeObject.setText("Loaded");
-            loadMetashapeObject.setFill(Paint.valueOf("Green"));
+            loadMetashapeObject.setFill(Paint.valueOf("LimeGreen"));
         }
         else
         {

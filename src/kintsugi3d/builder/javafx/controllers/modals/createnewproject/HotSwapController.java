@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
-import kintsugi3d.builder.javafx.controllers.modals.ManualImportController;
-
 public class HotSwapController extends ManualImportController
 {
     @Override

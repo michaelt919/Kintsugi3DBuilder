@@ -38,23 +38,18 @@
       </VBox>
       <VBox spacing="8.0">
          <AnchorPane minHeight="48.0">
-            <Text fx:id="imgViewText" fill="WHITE" fontSmoothingType="LCD" styleClass="wireframeBodyLarge"
-                  text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="300"
-                  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                  AnchorPane.topAnchor="0.0"/>
+            <Text fx:id="imgViewText" fill="WHITE" fontSmoothingType="LCD" styleClass="wireframeBodyLarge" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="300" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
          </AnchorPane>
          <StackPane VBox.vgrow="ALWAYS">
             <ImageView fx:id="primaryImgView" fitHeight="300.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
          </StackPane>
-         <VBox spacing="8.0">
+         <VBox spacing="8.0" fx:id="orientationControls">
             <StackPane>
-               <Label styleClass="wireframeBodyLarge" text="Fix orientation:"/>
+               <Label styleClass="wireframeBodyLarge" text="Fix orientation:" />
             </StackPane>
-            <AnchorPane fx:id="orientationControls">
-               <Button mnemonicParsing="false" onAction="#rotateLeft" styleClass="wireframeBodyLarge, button"
-                       text="Left" AnchorPane.leftAnchor="0.0"/>
-               <Button mnemonicParsing="false" onAction="#rotateRight" styleClass="wireframeBodyLarge, button"
-                       text="Right" AnchorPane.rightAnchor="0.0"/>
+            <AnchorPane>
+               <Button mnemonicParsing="false" onAction="#rotateLeft" styleClass="wireframeBodyLarge, button" text="Left" AnchorPane.leftAnchor="0.0" />
+               <Button mnemonicParsing="false" onAction="#rotateRight" styleClass="wireframeBodyLarge, button" text="Right" AnchorPane.rightAnchor="0.0" />
             </AnchorPane>
          </VBox>
       </VBox>

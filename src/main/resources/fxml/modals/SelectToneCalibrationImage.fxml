@@ -11,21 +11,36 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane fx:id="anchorPane" prefHeight="450.0" prefWidth="600.0" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.SelectToneCalibrationImageController">
-   <children>
-      <Label alignment="CENTER" prefWidth="600.0" styleClass="wireframeTitle" text="Select tone calibration image" textAlignment="CENTER" AnchorPane.topAnchor="20.0" />
-      <VBox alignment="CENTER" layoutY="20.0" prefHeight="400.0" prefWidth="600.0" spacing="40.0" AnchorPane.bottomAnchor="-20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
-         <children>
-            <ToggleButton fx:id="primaryViewImageButton" styleClass="wireframeSubtitle" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Use Primary View">
-               </ToggleButton>
-            <ToggleButton fx:id="previousImageButton" styleClass="wireframeSubtitle" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Use Previous Image">
-               </ToggleButton>
-            <ToggleButton fx:id="selectImageFileButton" styleClass="wireframeSubtitle" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Select Image...">
-               </ToggleButton>
-            <Label fx:id="selectImageFileLabel"/>
-         </children>
-      </VBox>
-   </children>
-</AnchorPane>
+<VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.SelectToneCalibrationImageController">
+   <Label alignment="CENTER" styleClass="wireframeTitle" text="What image do you want to use for tone calibration?" textAlignment="CENTER" />
+   <VBox alignment="TOP_CENTER" fillWidth="false" spacing="32.0">
+      <AnchorPane>
+         <ToggleButton fx:id="primaryViewImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle" text="Use calibrated reference view" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+      <AnchorPane>
+         <ToggleButton fx:id="previousImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle" text="Use previously chosen image" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+      <AnchorPane>
+         <ToggleButton fx:id="selectImageFileButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle" text="Select image from file..." AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+      <Label fx:id="selectImageFileLabel" styleClass="wireframeBody, text"/>
+      <padding>
+         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+      </padding>
+   </VBox>
+</VBox>

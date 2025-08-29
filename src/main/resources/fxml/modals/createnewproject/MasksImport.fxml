@@ -15,8 +15,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="rootPane" alignment="TOP_CENTER" fillWidth="false" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MasksImportController">
-   <Label alignment="CENTER" styleClass="wireframeTitle" text="Do you want to import masks?" textAlignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+<VBox fx:id="rootPane" alignment="TOP_CENTER" fillWidth="false" spacing="32.0" styleClass="content-root"
+      stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MasksImportController">
+   <Label alignment="CENTER" styleClass="wireframeTitle" text="Do you want to import masks?" textAlignment="CENTER" />
    <VBox spacing="32.0">
       <AnchorPane>
          <ToggleButton fx:id="useProjectMasksButton" minWidth="400.0" mnemonicParsing="false"

@@ -1,10 +1,6 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.javafx.controllers.modals.ManualImportController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.HotSwapController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.MasksImportController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.MetashapeImportController;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.RealityCaptureImportController;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.*;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController;
@@ -17,7 +13,7 @@ public class CreateProject extends ExperienceBase
     private static final String METASHAPE_IMPORT = "/fxml/modals/createnewproject/MetashapeImport.fxml";
     public static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
     private static final String MASKS_IMPORT = "/fxml/modals/createnewproject/MasksImport.fxml";
-    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/PrimaryViewSelect.fxml";
+    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/VIewSelect.fxml";
 
     private Runnable confirmCallback;
 

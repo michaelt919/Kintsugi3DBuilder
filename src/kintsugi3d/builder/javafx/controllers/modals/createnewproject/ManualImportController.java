@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals;
+package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
@@ -103,7 +103,7 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
             cameraFile = file;
             setHomeDir(file);
             loadCheckCameras.setText("Loaded");
-            loadCheckCameras.setFill(Paint.valueOf("Green"));
+            loadCheckCameras.setFill(Paint.valueOf("LimeGreen"));
         }
 
         if (areAllFilesLoaded())
@@ -123,7 +123,7 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
             meshFile = file;
             setHomeDir(file);
             loadCheckObj.setText("Loaded");
-            loadCheckObj.setFill(Paint.valueOf("Green"));
+            loadCheckObj.setFill(Paint.valueOf("LimeGreen"));
         }
 
         if (areAllFilesLoaded())
@@ -143,7 +143,7 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
             photosDir = file;
             setHomeDir(file);
             loadCheckImages.setText("Loaded");
-            loadCheckImages.setFill(Paint.valueOf("Green"));
+            loadCheckImages.setFill(Paint.valueOf("LimeGreen"));
         }
 
         if (areAllFilesLoaded())

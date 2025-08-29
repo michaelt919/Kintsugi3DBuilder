@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.controllers.modals;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
@@ -31,7 +31,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 {
     private static final Logger LOG = LoggerFactory.getLogger(SelectToneCalibrationImageController.class);
 
-    @FXML private AnchorPane anchorPane;
+    @FXML private Pane rootPane;
 
     @FXML private ToggleButton primaryViewImageButton;
     @FXML private ToggleButton previousImageButton;
@@ -52,7 +52,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @Override
     public Region getRootNode()
     {
-        return anchorPane;
+        return rootPane;
     }
 
     @Override
@@ -144,7 +144,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());
         }
-        File temp = imageFileChooser.showOpenDialog(anchorPane.getScene().getWindow());
+        File temp = imageFileChooser.showOpenDialog(rootPane.getScene().getWindow());
         if (temp != null)
         {
             selectedImageFile = temp;

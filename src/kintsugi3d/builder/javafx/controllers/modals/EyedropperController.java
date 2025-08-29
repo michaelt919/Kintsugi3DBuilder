@@ -69,13 +69,10 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     private List<Rectangle> finalSelectRectangles;
 
     @FXML
-    private Button button1, button2, button3, button4, button5, button6;
-
-    @FXML
     private Button applyButton;
-    private boolean isCropping;//enabled by crop button and disabled when cropping is finished
-    private boolean isSelecting;//enabled by "Select Tone Patch" buttons and disabled when selection is finished
-    private boolean canResetCrop; //enabled when cropping is finished and disabled when crop is reset to default viewport
+    private boolean isCropping; // enabled by crop button and disabled when cropping is finished
+    private boolean isSelecting; // enabled by "Select Tone Patch" buttons and disabled when selection is finished
+    private boolean canResetCrop; // enabled when cropping is finished and disabled when crop is reset to default viewport
     static final String DEFAULT_BUTTON_TEXT = "Select Tone Patch";
 
     @FXML
@@ -541,7 +538,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     }
 
     @FXML
-    private void applyButtonPressed()
+    private void apply()
     {
         //check to see if all text fields contain valid input, and model is loaded
         if (areAllFieldsValid() && hasGoodLoadingModel())
@@ -549,14 +546,14 @@ public class EyedropperController extends NonDataPageControllerBase implements I
             ioModel.setTonemapping(
                 new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
                 new byte[]
-                    {
-                        (byte) Integer.parseInt(txtField1.getText()),
-                        (byte) Integer.parseInt(txtField2.getText()),
-                        (byte) Integer.parseInt(txtField3.getText()),
-                        (byte) Integer.parseInt(txtField4.getText()),
-                        (byte) Integer.parseInt(txtField5.getText()),
-                        (byte) Integer.parseInt(txtField6.getText())
-                    });
+                {
+                    (byte) Integer.parseInt(txtField1.getText()),
+                    (byte) Integer.parseInt(txtField2.getText()),
+                    (byte) Integer.parseInt(txtField3.getText()),
+                    (byte) Integer.parseInt(txtField4.getText()),
+                    (byte) Integer.parseInt(txtField5.getText()),
+                    (byte) Integer.parseInt(txtField6.getText())
+                });
         }
         else
         {
@@ -568,11 +565,12 @@ public class EyedropperController extends NonDataPageControllerBase implements I
 
     private boolean areAllFieldsValid()
     {
-        //only return true if all text fields are filled with good info (integers)
+        // only return true if all text fields are filled with good info (integers)
         for (TextField field : colorSelectTxtFields)
-        {//TODO: CHECK IF VALS ARE 0-255?
+        {   //TODO: CHECK IF VALS ARE 0-255?
             if (!field.getText().matches("-?\\d+"))
-            {//regex to check if input is integer
+            {
+                // regex to check if input is integer
                 return false;
             }
         }
@@ -816,7 +814,7 @@ public class EyedropperController extends NonDataPageControllerBase implements I
     @Override
     public boolean confirm()
     {
-        applyButtonPressed();
+        apply();
 
         // Suppress warning about unsaved changes since the changes were just applied automatically.
         confirmExit = true;

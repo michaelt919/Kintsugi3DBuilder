@@ -24,7 +24,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     protected void open() throws IOException
     {
         buildPagedModal(new CurrentProjectViewSelectable())
-            .<OrientationViewSelectController>then("/fxml/modals/createnewproject/PrimaryViewSelect.fxml")
+            .<OrientationViewSelectController>then("/fxml/modals/createnewproject/VIewSelect.fxml")
             .finish();
     }
 }
