@@ -3,6 +3,7 @@ package kintsugi3d.builder.javafx.controllers.sidebar;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
@@ -21,6 +22,11 @@ public class SideBarController {
     public List<RadioButton> buttons = new ArrayList<>();
     public List<CardTabController> tabControllers = new ArrayList<>();
     public TabModels tabModels;
+
+    public Node getRootNode()
+    {
+        return main_box;
+    }
 
     public void init(TabModels tabModels) {
         this.tabModels = tabModels;

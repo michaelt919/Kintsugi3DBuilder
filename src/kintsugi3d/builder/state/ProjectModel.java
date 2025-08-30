@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state;
 
+import kintsugi3d.gl.vecmath.Vector3;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,4 +44,7 @@ public interface ProjectModel
 
     int getProcessedTextureResolution();
     void setProcessedTextureResolution(int processedTextureResolution);
+
+    Vector3 getModelSize();
+    void setModelSize(Vector3 modelSize);
 }

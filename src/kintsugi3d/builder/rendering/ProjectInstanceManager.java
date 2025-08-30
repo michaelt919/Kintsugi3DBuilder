@@ -29,6 +29,7 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -283,6 +284,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
                 Global.state().getProjectModel().setProjectLoaded(true);
                 Global.state().getProjectModel().setProjectProcessed(isProcessed());
+                Global.state().getProjectModel().setModelSize(newItem.getActiveGeometry().getBoundingBoxSize());
 
                 if (isProcessed())
                 {
@@ -654,6 +656,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 Global.state().getProjectModel().setProjectLoaded(false);
                 Global.state().getProjectModel().setProjectProcessed(false);
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
+                Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
             }
 
             unloadRequested = false;
@@ -723,6 +726,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             Global.state().getProjectModel().setProjectLoaded(false);
             Global.state().getProjectModel().setProjectProcessed(false);
             Global.state().getProjectModel().setProcessedTextureResolution(0);
+            Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
         }
     }
 }

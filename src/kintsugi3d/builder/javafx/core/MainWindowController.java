@@ -280,6 +280,10 @@ public class MainWindowController
             availableShaders.get(idx).setSelected(true);
         });
 
+        // hide cards in light calibration mode (for now until we have a better UX solution)
+        leftBarController.getRootNode().managedProperty().bind(cameraViewList.visibleProperty().not());
+        leftBarController.getRootNode().visibleProperty().bind(cameraViewList.visibleProperty().not());
+
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
             "Will not modify your file system.");

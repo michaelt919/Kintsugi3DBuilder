@@ -2,6 +2,7 @@ package kintsugi3d.builder.javafx.multithread;
 
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.ProjectModel;
+import kintsugi3d.gl.vecmath.Vector3;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -18,6 +19,7 @@ public class ProjectModelWrapper implements ProjectModel
     private final MultithreadValue<Boolean> projectLoaded;
     private final MultithreadValue<Boolean> projectProcessed;
     private final MultithreadValue<Integer> processedTextureResolution;
+    private final MultithreadValue<Vector3> modelSize;
 
     public ProjectModelWrapper(ProjectModel baseModel)
     {
@@ -27,6 +29,7 @@ public class ProjectModelWrapper implements ProjectModel
         this.projectLoaded = MultithreadValue.createFromFunctions(baseModel::isProjectLoaded, baseModel::setProjectLoaded);
         this.projectProcessed = MultithreadValue.createFromFunctions(baseModel::isProjectProcessed, baseModel::setProjectProcessed);
         this.processedTextureResolution = MultithreadValue.createFromFunctions(baseModel::getProcessedTextureResolution, baseModel::setProcessedTextureResolution);
+        this.modelSize = MultithreadValue.createFromFunctions(baseModel::getModelSize, baseModel::setModelSize);
     }
 
     @Override
@@ -99,5 +102,17 @@ public class ProjectModelWrapper implements ProjectModel
     public void setProcessedTextureResolution(int processedTextureResolution)
     {
         this.processedTextureResolution.setValue(processedTextureResolution);
+    }
+
+    @Override
+    public Vector3 getModelSize()
+    {
+        return modelSize.getValue();
+    }
+
+    @Override
+    public void setModelSize(Vector3 modelSize)
+    {
+        this.modelSize.setValue(modelSize);
     }
 }

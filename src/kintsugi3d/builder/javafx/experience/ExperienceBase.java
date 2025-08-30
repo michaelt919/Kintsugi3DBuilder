@@ -1,6 +1,5 @@
 package kintsugi3d.builder.javafx.experience;
 
-import javafx.fxml.FXMLLoader;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
@@ -8,7 +7,6 @@ import kintsugi3d.builder.javafx.core.JavaFXState;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -91,6 +89,7 @@ public abstract class ExperienceBase implements Experience
     protected final PageFrameController createPagedModal() throws IOException
     {
         PageFrameController frameController = createModal("fxml/PageFrame.fxml");
+        frameController.setState(getState());
 
         frameController.setPageFactory(loader ->
         {
@@ -115,7 +114,7 @@ public abstract class ExperienceBase implements Experience
      */
     protected final NonDataPageBuilder<PageFrameController> buildPagedModal() throws IOException
     {
-        return createPagedModal().buildPage(getState(), modal::open);
+        return createPagedModal().buildPage(modal::open);
     }
 
     /**
@@ -124,50 +123,39 @@ public abstract class ExperienceBase implements Experience
      */
     protected final <T> SimplePageBuilder<Object, T, PageFrameController> buildPagedModal(T data) throws IOException
     {
-        return createPagedModal().buildPage(getState(), modal::open, data);
+        return createPagedModal().buildPage(modal::open, data);
     }
 
     /**
      * Creates and opens this experience in a paged modal window using the PageController framework.
      * @param firstPageURLString The path of the FXML to be loaded for the first page.
-     * @param firstPageConstructor The constructor or a method effectively constructing the first page object.
-     *                             Typically this will be in the form of SomeSubclassOfPage::new.
      * @param firstPageControllerConstructorOverride Overrides the controller type specified in the FXML
      *                                       by providing a constructor for the desired controller
      * @return The PageFrameController for the window housing this experience.
-     * @param <PageType> The type of the first page.
-     * @param <InType> The type of page that the first page can link to as a previous page.
-     * @param <OutType> The type of page that the first page can link to as a next page.
      * @param <ControllerType> The type of controller to be used for the first page.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <PageType extends Page<Object, OutType>, InType, OutType, ControllerType extends PageController<InType>>
+    protected final <ControllerType extends NonSupplierPageController<Object>>
     PageFrameController openPagedModel(
-        String firstPageURLString, Function<FXMLLoader, PageType> firstPageConstructor,
-        Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
+        String firstPageURLString, Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
         return buildPagedModal()
-            .then(firstPageURLString, firstPageConstructor, firstPageControllerConstructorOverride).
+            .<SimpleNonDataPage<ControllerType>, Object, ControllerType>then(
+                firstPageURLString, SimpleNonDataPage::new, firstPageControllerConstructorOverride).
             finish();
     }
 
     /**
      * Creates and opens this experience in a paged modal window using the PageController framework.
      * @param firstPageURLString The path of the FXML to be loaded for the first page.
-     * @param firstPageConstructor The constructor or a method effectively constructing the first page object.
-     *                             Typically this will be in the form of SomeSubclassOfPage::new.
      * @return The PageFrameController for the window housing this experience.
-     * @param <PageType> The type of the first page.
-     * @param <OutType> The type of page that the first page can link to as a next page.
      * @throws IOException If the FXML could not be loaded.
      */
-    protected final <PageType extends Page<Object, OutType>, OutType>
-    PageFrameController openPagedModel(
-        String firstPageURLString, Function<FXMLLoader, PageType> firstPageConstructor) throws IOException
+    protected final <ControllerType extends NonSupplierPageController<Object>>
+    PageFrameController openPagedModel(String firstPageURLString) throws IOException
     {
-        return openPagedModel(firstPageURLString, firstPageConstructor, null);
+        return this.<ControllerType>openPagedModel(firstPageURLString, null);
     }
-
     /**
      * Handles errors that occur opening this experience (logging them and popping up a dialog window indicating that an error occurred).
      * @param e The exception that occurred.

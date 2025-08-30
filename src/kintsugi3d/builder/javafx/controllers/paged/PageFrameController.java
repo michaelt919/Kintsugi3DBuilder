@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.controllers.paged;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -63,12 +64,16 @@ public class PageFrameController
         return state;
     }
 
+    public void setState(JavaFXState state)
+    {
+        this.state = state;
+    }
+
     private boolean isConfirmed = false;
 
-    public void init(JavaFXState state)
+    public void init()
     {
         this.window = outerRoot.getScene().getWindow();
-        this.state = state;
 
         Platform.runLater(window::requestFocus);
         window.setOnCloseRequest(this::onCloseRequest);
@@ -81,6 +86,19 @@ public class PageFrameController
         window.heightProperty().addListener(forceSize);
 
         initControllerAndUpdatePanel();
+
+        prevButton.textProperty().bind(new StringBinding()
+        {
+            {
+                bind(currentPage);
+            }
+
+            @Override
+            protected String computeValue()
+            {
+                return currentPage.getValue().getPrevPage() == null ? "Cancel" : "Back";
+            }
+        });
 
         setButtonShortcuts(currentPage.get().getController());
     }
@@ -195,23 +213,23 @@ public class PageFrameController
         return page;
     }
 
-    public NonDataPageBuilder<PageFrameController> buildPage(JavaFXState state, Runnable callback)
+    public NonDataPageBuilder<PageFrameController> buildPage(Runnable callback)
     {
         return new NonDataSentinelPageBuilder(this,
             () ->
             {
-                PageFrameController.this.init(state);
+                PageFrameController.this.init();
                 callback.run();
                 return PageFrameController.this;
             });
     }
 
-    public <T> SimplePageBuilder<Object, T, PageFrameController> buildPage(JavaFXState state, Runnable callback, T data)
+    public <T> SimplePageBuilder<Object, T, PageFrameController> buildPage(Runnable callback, T data)
     {
         return new DataSentinelPageBuilder<>(this,
             () ->
             {
-                PageFrameController.this.init(state);
+                PageFrameController.this.init();
                 callback.run();
                 return PageFrameController.this;
             },
@@ -321,4 +339,3 @@ public class PageFrameController
         return this;
     }
 }
-

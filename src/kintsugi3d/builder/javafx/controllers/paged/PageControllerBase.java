@@ -21,6 +21,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
+import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.util.ArrayList;
@@ -51,6 +52,11 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
     public final void setPageFrameController(PageFrameController frameController)
     {
         this.pageFrameController = frameController;
+    }
+
+    protected final JavaFXState getState()
+    {
+        return this.pageFrameController.getState();
     }
 
     @Override

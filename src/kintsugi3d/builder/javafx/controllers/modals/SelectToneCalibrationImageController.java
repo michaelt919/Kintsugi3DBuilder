@@ -76,7 +76,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @Override
     public void refresh()
     {
-        ObservableProjectModel project = getPageFrameController().getState().getProjectModel();
+        ObservableProjectModel project = getState().getProjectModel();
 
         boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && project.getColorCheckerFile().exists();
         previousImageButton.setDisable(!hasPreviousColorCheckerImage);
@@ -118,7 +118,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
             viewSet.clearTonemapping();
 
             LOG.debug("Setting new color calibration image: {}", imageFile);
-            getPageFrameController().getState().getProjectModel().setColorCheckerFile(imageFile);
+            getState().getProjectModel().setColorCheckerFile(imageFile);
         }
 
         return true;
@@ -132,7 +132,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
             return;
         }
 
-        ObservableProjectModel project = getPageFrameController().getState().getProjectModel();
+        ObservableProjectModel project = getState().getProjectModel();
         File colorCheckerFile = project.getColorCheckerFile();
         if (colorCheckerFile != null && colorCheckerFile.exists())
         {

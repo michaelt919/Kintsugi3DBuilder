@@ -156,7 +156,7 @@ public class EyedropperController extends NonDataPageControllerBase
     public void refresh()
     {
         setIOModel(Global.state().getIOModel());
-        setImage(getPageFrameController().getState().getProjectModel().getColorCheckerFile());
+        setImage(getState().getProjectModel().getColorCheckerFile());
 
         autoApply();
     }
@@ -777,7 +777,7 @@ public class EyedropperController extends NonDataPageControllerBase
             String path = file.getPath();
             try
             {
-                getPageFrameController().getState().getProjectModel().setColorCheckerFile(new File(path));
+                getState().getProjectModel().setColorCheckerFile(new File(path));
             }
             catch (Exception e)
             {

@@ -13,22 +13,22 @@ package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import kintsugi3d.builder.javafx.experience.Modal;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-public class LightCalibrationController implements Initializable
+public class LightCalibrationController extends NonDataPageControllerBase
 {
-    @FXML private AnchorPane root;
+    @FXML private Pane root;
     @FXML private TextField xTextField;
     @FXML private TextField yTextField;
     @FXML private Slider xSlider;
@@ -36,24 +36,72 @@ public class LightCalibrationController implements Initializable
 
     private ChangeListener<Vector2> settingsListener;
 
+    private SettingsModelImpl settingsModel;
+
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
+    public Region getRootNode()
+    {
+        return root;
+    }
+
+    @Override
+    public void initPage()
     {
         StaticUtilities.makeNumeric(xTextField);
         StaticUtilities.makeNumeric(yTextField);
+
+        settingsModel = getState().getSettingsModel();
+
+        setCanAdvance(true);
+        setCanConfirm(true);
     }
 
-    public void bind(SettingsModelImpl injectedSettingsModel)
+    @Override
+    public void refresh()
+    {
+        // Bind controller to settings model to synchronize with "currentLightCalibration".
+        bind();
+
+        if (Global.state().getIOModel().hasValidHandler())
+        {
+            // Set the "currentLightCalibration" to the existing calibration values in the view set.
+            ViewSet loadedViewSet = Global.state().getIOModel().getLoadedViewSet();
+
+            settingsModel.set("currentLightCalibration",
+                loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
+        }
+
+        // Enables light calibration mode when the window is opened.
+        settingsModel.set("lightCalibrationMode", true);
+    }
+
+    @Override
+    public boolean cancel()
+    {
+        settingsModel.set("lightCalibrationMode", false);
+        unbind();
+        return true;
+    }
+
+    public boolean confirm()
+    {
+        Global.state().getIOModel().applyLightCalibration();
+        settingsModel.set("lightCalibrationMode", false);
+        unbind();
+        return true;
+    }
+
+    public void bind()
     {
         // Bind sliders to settings model
         ChangeListener<? super Number> xListener = (observable, oldValue, newValue) ->
-            injectedSettingsModel.set("currentLightCalibration",
-                new Vector2(newValue.floatValue(), injectedSettingsModel.get("currentLightCalibration", Vector2.class).y));
+            settingsModel.set("currentLightCalibration",
+                new Vector2(newValue.floatValue(), settingsModel.get("currentLightCalibration", Vector2.class).y));
         xSlider.valueProperty().addListener(xListener);
 
         ChangeListener<? super Number> yListener = (observable, oldValue, newValue) ->
-            injectedSettingsModel.set("currentLightCalibration",
-                new Vector2(injectedSettingsModel.get("currentLightCalibration", Vector2.class).x, newValue.floatValue()));
+            settingsModel.set("currentLightCalibration",
+                new Vector2(settingsModel.get("currentLightCalibration", Vector2.class).x, newValue.floatValue()));
         ySlider.valueProperty().addListener(yListener);
 
         settingsListener = (observable, oldValue, newValue) ->
@@ -62,7 +110,11 @@ public class LightCalibrationController implements Initializable
             ySlider.setValue(newValue.y);
         };
 
-        injectedSettingsModel.getObjectProperty("currentLightCalibration", Vector2.class).addListener(settingsListener);
+        settingsModel.getObjectProperty("currentLightCalibration", Vector2.class).addListener(settingsListener);
+
+        Vector3 bounds = getState().getProjectModel().getModelSize();
+        double origScale = Math.max(bounds.x, Math.max(bounds.y, bounds.z));
+        double finalScale = roundToLeadingDecimal(0.5 * origScale);
 
         SafeDecimalNumberStringConverter converter = new SafeDecimalNumberStringConverter(0.0f);
 
@@ -70,55 +122,48 @@ public class LightCalibrationController implements Initializable
         xTextField.textProperty().addListener((observable, oldValue, newValue) ->
         {
             double x = converter.fromString(newValue);
-            if (x > 5)
+            if (x > xSlider.getMax())
             {
                 // Adjust bounds first
-                xSlider.setMin(-x);
-                xSlider.setMax(x);
-                xSlider.setValue(x);
+                double newMax = roundToLeadingDecimal(x * 2.0);
+                xSlider.setMin(-newMax);
+                xSlider.setMax(newMax);
             }
-            else if (x < -5)
+            else if (x < xSlider.getMin())
             {
                 // Adjust bounds first
-                xSlider.setMin(x);
-                xSlider.setMax(-x);
-                xSlider.setValue(x);
+                double newMax = roundToLeadingDecimal(-x * 2.0);
+                xSlider.setMin(-newMax);
+                xSlider.setMax(newMax);
             }
-            else
-            {
-                // Adjust value first in case it was previously out of standard bounds
-                xSlider.setValue(x);
-                xSlider.setMin(-5);
-                xSlider.setMax(5);
-            }
+
+            xSlider.setMajorTickUnit(Math.floor(xSlider.getMax() / 2.0));
+
+            xSlider.setValue(x);
         });
 
         yTextField.textProperty().addListener( (observable, oldValue, newValue) ->
         {
             double y = converter.fromString(newValue);
 
-            if (y > 5)
+            if (y > ySlider.getMax())
+            {
+                double newMax = roundToLeadingDecimal(y * 2.0);
+                // Adjust bounds first
+                ySlider.setMin(-newMax);
+                ySlider.setMax(newMax);
+            }
+            else if (y < ySlider.getMin())
             {
                 // Adjust bounds first
-                ySlider.setMin(-y);
-                ySlider.setMax(y);
-                ySlider.setValue(y);
-            }
-            else if (y < -5)
-            {
-                // Adjust bounds first
-                ySlider.setMin(y);
-                ySlider.setMax(-y);
-                ySlider.setValue(y);
-            }
-            else
-            {
-                // Adjust value first in case it was previously out of standard bounds
-                ySlider.setValue(y);
-                ySlider.setMin(-5);
-                ySlider.setMax(5);
+                double newMax = roundToLeadingDecimal(-y * 2.0);
+                ySlider.setMin(-newMax);
+                ySlider.setMax(newMax);
             }
 
+            ySlider.setMajorTickUnit(Math.floor(ySlider.getMax() / 2.0));
+
+            ySlider.setValue(y);
         });
 
         xSlider.valueProperty().addListener((observable, oldValue, newValue) ->
@@ -141,31 +186,36 @@ public class LightCalibrationController implements Initializable
         });
 
         // Set initial value to start out synchronized.
-        Vector2 originalLightCalibration = injectedSettingsModel.get("currentLightCalibration", Vector2.class);
+        Vector2 originalLightCalibration = settingsModel.get("currentLightCalibration", Vector2.class);
 
         // Set initial bounds based on original calibration.
-        float xMax = Math.max(5, Math.max(originalLightCalibration.x, -originalLightCalibration.x));
-        float yMax = Math.max(5, Math.max(originalLightCalibration.y, -originalLightCalibration.y));
+        double xMax = Math.max(finalScale, roundToLeadingDecimal(2 * Math.max(originalLightCalibration.x, -originalLightCalibration.x)));
+        double yMax = Math.max(finalScale, roundToLeadingDecimal(2 * Math.max(originalLightCalibration.y, -originalLightCalibration.y)));
 
         xSlider.setMax(xMax);
         xSlider.setMin(-xMax);
         xSlider.setValue(originalLightCalibration.x);
+        xSlider.setMajorTickUnit(xSlider.getMax() / 2.0);
 
         ySlider.setMax(yMax);
         ySlider.setMin(-yMax);
         ySlider.setValue(originalLightCalibration.y);
+        ySlider.setMajorTickUnit(ySlider.getMax() / 2.0);
 
         xTextField.setText(converter.toString(xSlider.getValue()));
         yTextField.setText(converter.toString(ySlider.getValue()));
     }
 
-    public void unbind(SettingsModelImpl injectedSettingsModel)
+    private static double roundToLeadingDecimal(double value)
     {
-        injectedSettingsModel.getObjectProperty("currentLightCalibration", Vector2.class).removeListener(settingsListener);
+        double orderOfMagnitude = Math.floor(Math.log10(value)); // figure out the leading decimal place
+        double oomScale = Math.pow(10, orderOfMagnitude); // put a 1 in the leading decimal place followed by zeros
+        // Round to the leading decimal place
+        return Math.round(value / oomScale) * oomScale;
     }
 
-    public void apply()
+    public void unbind()
     {
-        Modal.requestClose(root);
+        settingsModel.getObjectProperty("currentLightCalibration", Vector2.class).removeListener(settingsListener);
     }
 }

@@ -20,6 +20,7 @@ import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSettin
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.state.ProjectModel;
+import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -59,6 +60,7 @@ public abstract class ProjectModelBase implements ProjectModel
     private final BooleanProperty projectLoaded = new SimpleBooleanProperty();
     private final BooleanProperty projectProcessed = new SimpleBooleanProperty();
     private final IntegerProperty processedTextureResolution = new SimpleIntegerProperty();
+    private final ObjectProperty<Vector3> modelSize = new SimpleObjectProperty<>(new Vector3(1));
 
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
@@ -337,5 +339,22 @@ public abstract class ProjectModelBase implements ProjectModel
     public IntegerExpression getProcessedTextureResolutionProperty()
     {
         return processedTextureResolution;
+    }
+
+    @Override
+    public Vector3 getModelSize()
+    {
+        return modelSize.get();
+    }
+
+    @Override
+    public void setModelSize(Vector3 modelSize)
+    {
+        this.modelSize.set(modelSize);
+    }
+
+    public ObjectProperty<Vector3> getModelSizeProperty()
+    {
+        return modelSize;
     }
 }
