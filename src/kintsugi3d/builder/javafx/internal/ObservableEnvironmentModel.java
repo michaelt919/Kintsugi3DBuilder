@@ -31,9 +31,9 @@ import java.io.FileNotFoundException;
 import java.util.Objects;
 import java.util.Optional;
 
-public class EnvironmentModelImpl implements EnvironmentModel
+public class ObservableEnvironmentModel implements EnvironmentModel
 {
-    private static final Logger LOG = LoggerFactory.getLogger(EnvironmentModelImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ObservableEnvironmentModel.class);
     private ObservableValue<EnvironmentSetting> selected;
 
     private boolean environmentMapLoaded = false;

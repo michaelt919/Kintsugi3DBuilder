@@ -22,7 +22,7 @@ import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.javafx.internal.LoadOptionsModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.GraphicsResources;
@@ -996,7 +996,7 @@ class ImageReconstructionTests
         Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new LoadOptionsModelImpl();
+        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
 
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
@@ -1017,7 +1017,7 @@ class ImageReconstructionTests
 
     private void testFitVSET(File viewSetFile, Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
     {
-        LoadOptionsModel loadOptions = new LoadOptionsModelImpl();
+        LoadOptionsModel loadOptions = new ObservableLoadOptionsModel();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
             .setImageLoadOptions(loadOptions)

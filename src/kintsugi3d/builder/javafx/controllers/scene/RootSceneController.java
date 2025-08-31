@@ -30,8 +30,8 @@ public class RootSceneController
     @FXML
     private RootObjectSceneController objectPosesController;
 
-    public void init(CameraModelImpl cameraModel, LightingModelImpl lightingModel, EnvironmentModelImpl environmentMapModel,
-                     ObjectModelImpl objectModel, ObservableProjectModel projectModel, SceneViewportModel sceneViewportModel)
+    public void init(ObservableCameraModel cameraModel, ObservableLightingModel lightingModel, ObservableEnvironmentModel environmentMapModel,
+                     ObservableObjectModel objectModel, ObservableProjectModel projectModel, SceneViewportModel sceneViewportModel)
     {
         cameraController.init(cameraModel, projectModel);
         lightsController.init(lightingModel, projectModel, sceneViewportModel);

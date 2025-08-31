@@ -11,52 +11,49 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<VBox spacing="16.0" styleClass="modal-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MaskOptionsController">
-    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Visibility/shadow testing">
-    </CheckBox>
-    <HBox spacing="16.0">
-        <Text styleClass="wireframeBody, text" text="Visibility bias: ">
-            <HBox.margin>
-                <Insets bottom="12.0" top="12.0" />
-            </HBox.margin>
-        </Text>
-        <TextField fx:id="occlusionBiasTextField" prefWidth="100.0" styleClass="wireframeBody">
-         <HBox.margin>
-            <Insets bottom="7.0" top="7.0" />
-         </HBox.margin>
-        </TextField>
-        <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025" HBox.hgrow="ALWAYS">
-        </Slider>
-    </HBox>
-    <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Edge proximity weights">
-    </CheckBox>
-    <GridPane hgap="16.0" vgap="16.0">
-        <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        </rowConstraints>
-        <Text styleClass="wireframeBody, text" text="Edge proximity margin: " GridPane.hgrow="ALWAYS">
-        </Text>
-        <TextField fx:id="edgeProximityMarginTextField" prefHeight="39.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1">
-        </TextField>
-        <Slider fx:id="edgeProximityMarginSlider" majorTickUnit="0.5" max="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.1" GridPane.columnIndex="2" />
-        <Text styleClass="wireframeBody, text" text="Edge proximity cutoff: " GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
-        </Text>
-        <TextField fx:id="edgeProximityCutoffTextField" prefHeight="39.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.rowIndex="1">
-        </TextField>
-        <Slider fx:id="edgeProximityCutoffSlider" majorTickUnit="0.05" max="0.1" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.01" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-    </GridPane>
-    <AnchorPane>
-        <Button mnemonicParsing="false" onAction="#apply" styleClass="wireframeBodyLarge, button" text="Apply" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="38.0">
-        </Button>
-    </AnchorPane>
+<VBox fx:id="rootNode" alignment="CENTER" fillWidth="false" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController">
+    <VBox spacing="16.0">
+        <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Visibility/shadow testing">
+        </CheckBox>
+        <GridPane hgap="16.0">
+            <columnConstraints>
+                <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            </columnConstraints>
+            <Text styleClass="wireframeBody, text" text="Visibility bias: " />
+            <TextField fx:id="occlusionBiasTextField" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1" />
+            <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.0025" GridPane.columnIndex="2">
+            </Slider>
+         <rowConstraints>
+            <RowConstraints />
+         </rowConstraints>
+        </GridPane>
+        <CheckBox fx:id="edgeProximityWeightCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" styleClass="wireframeBody, checkbox" text="Edge proximity weights">
+        </CheckBox>
+        <GridPane hgap="16.0" vgap="16.0">
+            <columnConstraints>
+                <ColumnConstraints hgrow="NEVER" minWidth="10.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <Text styleClass="wireframeBody, text" text="Edge proximity margin: ">
+            </Text>
+            <TextField fx:id="edgeProximityMarginTextField" prefHeight="39.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1">
+            </TextField>
+            <Slider fx:id="edgeProximityMarginSlider" majorTickUnit="0.5" max="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.1" GridPane.columnIndex="2" />
+            <Text styleClass="wireframeBody, text" text="Edge proximity cutoff: " GridPane.rowIndex="1">
+            </Text>
+            <TextField fx:id="edgeProximityCutoffTextField" prefHeight="39.0" prefWidth="100.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            </TextField>
+            <Slider fx:id="edgeProximityCutoffSlider" majorTickUnit="0.05" max="0.1" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.01" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+        </GridPane>
+    </VBox>
 </VBox>

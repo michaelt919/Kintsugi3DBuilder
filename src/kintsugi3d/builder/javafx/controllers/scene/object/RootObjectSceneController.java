@@ -19,7 +19,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.internal.ObjectModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableObjectModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class RootObjectSceneController
 
     private ObservableProjectModel projectModel;
 
-    public void init(ObjectModelImpl objectModel, ObservableProjectModel injectedProjectModel)
+    public void init(ObservableObjectModel objectModel, ObservableProjectModel injectedProjectModel)
     {
         this.projectModel = injectedProjectModel;
 

@@ -1,6 +1,0 @@
-/fxml/modals/createnewproject/CustomImport.fxml
-/fxml/modals/createnewproject/SelectImportOptions.fxml
-/fxml/modals/createnewproject/MetashapeImport.fxml
-/fxml/modals/createnewproject/PrimaryViewSelect.fxml
-/fxml/modals/createnewproject/HotSwap.fxml
-/fxml/modals/createnewproject/MasksImport.fxml

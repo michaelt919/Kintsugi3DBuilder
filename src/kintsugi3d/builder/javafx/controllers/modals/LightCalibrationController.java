@@ -20,7 +20,7 @@ import javafx.scene.layout.Region;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -36,7 +36,7 @@ public class LightCalibrationController extends NonDataPageControllerBase
 
     private ChangeListener<Vector2> settingsListener;
 
-    private SettingsModelImpl settingsModel;
+    private ObservableSettingsModel settingsModel;
 
     @Override
     public Region getRootNode()
@@ -73,6 +73,11 @@ public class LightCalibrationController extends NonDataPageControllerBase
 
         // Enables light calibration mode when the window is opened.
         settingsModel.set("lightCalibrationMode", true);
+
+//        // Force square aspect ratio to be more efficient with screen space.
+//        Window window = root.getScene().getWindow();
+//        window.setWidth(window.getHeight());
+//        window.widthProperty().addListener(obs -> window.setWidth(window.getHeight()));
     }
 
     @Override

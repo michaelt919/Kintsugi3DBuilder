@@ -16,8 +16,8 @@ public class TabModelsImpl implements TabModels {
 
     public TabModelsImpl() {
         models = new LinkedHashMap<>() {{
-            put("Cameras", new CardsModelImpl("Cameras"));
-            put("Textures", new CardsModelImpl("Textures"));
+            put("Cameras", new ObservableCardsModel("Cameras"));
+            put("Textures", new ObservableCardsModel("Textures"));
             //put("Shaders", new CardsModelImpl("Shaders"));
         }};
         observableModels = FXCollections.observableMap(models);

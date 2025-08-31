@@ -16,14 +16,14 @@ import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
 import kintsugi3d.builder.state.EnvironmentModel;
 import kintsugi3d.builder.state.impl.ExtendedLightingModelBase;
 
-public final class LightingModelImpl extends ExtendedLightingModelBase<LightInstanceModelImpl>
+public final class ObservableLightingModel extends ExtendedLightingModelBase<ObservableLightInstanceModel>
 {
     private ObservableValue<LightGroupSetting> selectedLightGroupSetting;
     private final LightGroupSetting sentinel = new LightGroupSetting("sentinel");
 
-    public LightingModelImpl(EnvironmentModel envModel)
+    public ObservableLightingModel(EnvironmentModel envModel)
     {
-        super(LightGroupSetting.LIGHT_LIMIT, i -> new LightInstanceModelImpl(), envModel);
+        super(LightGroupSetting.LIGHT_LIMIT, i -> new ObservableLightInstanceModel(), envModel);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
         {
             getLight(i).setSubLightSettingObservableValue(sentinel.lightListProperty().valueAt(i));

@@ -17,7 +17,7 @@ import kintsugi3d.builder.state.impl.ExtendedObjectModelBase;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class ObjectModelImpl extends ExtendedObjectModelBase
+public class ObservableObjectModel extends ExtendedObjectModelBase
 {
     private ObservableValue<ObjectPoseSetting> selectedObjectPoseProperty;
     private final ObjectPoseSetting sentinel = new ObjectPoseSetting(

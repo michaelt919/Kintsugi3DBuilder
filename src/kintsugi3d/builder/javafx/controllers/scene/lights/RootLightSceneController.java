@@ -26,7 +26,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.internal.LightingModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableLightingModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
@@ -152,7 +152,7 @@ public class RootLightSceneController implements Initializable
         };
     }
 
-    public void init(LightingModelImpl lightingModel, ObservableProjectModel injectedProjectModel, SceneViewportModel injectedSceneViewportModel)
+    public void init(ObservableLightingModel lightingModel, ObservableProjectModel injectedProjectModel, SceneViewportModel injectedSceneViewportModel)
     {
         this.projectModel = injectedProjectModel;
         this.sceneViewportModel = injectedSceneViewportModel;

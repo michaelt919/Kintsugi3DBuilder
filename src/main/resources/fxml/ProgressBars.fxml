@@ -89,6 +89,6 @@
          </padding>
       </Button>
       <Label fx:id="pageCountLabel" alignment="CENTER" text="4/5" visible="false" GridPane.columnIndex="1" />
-      <Button fx:id="doneButton" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" styleClass="wireframeBodyLarge" text="Done" GridPane.columnIndex="2" GridPane.halignment="RIGHT" />
+      <Button fx:id="doneButton" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" styleClass="wireframeBodyLarge" text="Done" GridPane.columnIndex="2" GridPane.halignment="RIGHT" />
    </GridPane>
 </VBox>

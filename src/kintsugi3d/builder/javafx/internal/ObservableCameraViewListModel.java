@@ -21,7 +21,7 @@ import kintsugi3d.builder.state.CameraViewListModel;
 import java.util.Collections;
 import java.util.List;
 
-public class CameraViewListModelImpl implements CameraViewListModel
+public class ObservableCameraViewListModel implements CameraViewListModel
 {
     private MultipleSelectionModel<String> selectedCameraViewModel;
     private Property<ObservableList<String>> cameraViewListProperty;

@@ -16,12 +16,12 @@ import kintsugi3d.builder.javafx.controllers.scene.camera.CameraSetting;
 import kintsugi3d.builder.state.impl.ExtendedCameraModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class CameraModelImpl extends ExtendedCameraModelBase
+public class ObservableCameraModel extends ExtendedCameraModelBase
 {
     private ObservableValue<CameraSetting> selectedCameraSetting;
     private final CameraSetting sentinel = new CameraSetting();
 
-    public CameraModelImpl()
+    public ObservableCameraModel()
     {
         sentinel.setLocked(true);
         sentinel.setName("sentinel");

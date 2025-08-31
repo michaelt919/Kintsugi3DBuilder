@@ -19,14 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class CardsModelImpl implements CardsModel {
+public class ObservableCardsModel implements CardsModel {
     private final String label;
     private final CardSelectionModel selectedCardsModel;
     private final CardSelectionModel expandedCardsModel;
     private ObservableList<ProjectDataCard> cardsList;
     private ViewSet viewSet;
 
-    public CardsModelImpl(String label) {
+    public ObservableCardsModel(String label) {
         this.label = label;
 
         cardsList = FXCollections.observableList(new ArrayList<>());

@@ -26,7 +26,7 @@ import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
-import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import kintsugi3d.builder.state.DefaultSettings;
@@ -237,7 +237,7 @@ public class MainApplication extends Application
         Global.state().getCanvasModel().addCanvasChangedListener(
             canvas -> mainWindowController.getFramebufferView().setCanvas(canvas));
 
-        SettingsModelImpl settingsModel = JavaFXState.getInstance().getSettingsModel();
+        ObservableSettingsModel settingsModel = JavaFXState.getInstance().getSettingsModel();
         DefaultSettings.applyGlobalDefaults(settingsModel);
 
         // Load user preferences, injecting where needed

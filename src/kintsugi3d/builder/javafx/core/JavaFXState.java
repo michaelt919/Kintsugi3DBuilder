@@ -24,45 +24,45 @@ public final class JavaFXState
         return INSTANCE;
     }
 
-    private final CameraModelImpl cameraModel;
-    private final EnvironmentModelImpl environmentModel;
-    private final LightingModelImpl lightingModel;
-    private final ObjectModelImpl objectModel;
-    private final CameraViewListModelImpl cameraViewListModel;
-    private final LoadOptionsModelImpl loadOptionsModel;
-    private final SettingsModelImpl settingsModel;
+    private final ObservableCameraModel cameraModel;
+    private final ObservableEnvironmentModel environmentModel;
+    private final ObservableLightingModel lightingModel;
+    private final ObservableObjectModel objectModel;
+    private final ObservableCameraViewListModel cameraViewListModel;
+    private final ObservableLoadOptionsModel loadOptionsModel;
+    private final ObservableSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
     private final TabModelsImpl tabModels;
 
     private JavaFXState()
     {
-        cameraModel = new CameraModelImpl();
-        environmentModel = new EnvironmentModelImpl();
-        objectModel = new ObjectModelImpl();
-        lightingModel = new LightingModelImpl(environmentModel);
-        cameraViewListModel = new CameraViewListModelImpl();
-        loadOptionsModel = new LoadOptionsModelImpl();
-        settingsModel = new SettingsModelImpl();
+        cameraModel = new ObservableCameraModel();
+        environmentModel = new ObservableEnvironmentModel();
+        objectModel = new ObservableObjectModel();
+        lightingModel = new ObservableLightingModel(environmentModel);
+        cameraViewListModel = new ObservableCameraViewListModel();
+        loadOptionsModel = new ObservableLoadOptionsModel();
+        settingsModel = new ObservableSettingsModel();
         projectModel = new ObservableProjectModel();
         tabModels = new TabModelsImpl();
     }
 
-    public CameraModelImpl getCameraModel()
+    public ObservableCameraModel getCameraModel()
     {
         return cameraModel;
     }
 
-    public LightingModelImpl getLightingModel()
+    public ObservableLightingModel getLightingModel()
     {
         return lightingModel;
     }
 
-    public ObjectModelImpl getObjectModel()
+    public ObservableObjectModel getObjectModel()
     {
         return objectModel;
     }
 
-    public CameraViewListModelImpl getCameraViewListModel()
+    public ObservableCameraViewListModel getCameraViewListModel()
     {
         return cameraViewListModel;
     }
@@ -71,17 +71,17 @@ public final class JavaFXState
 
     public TabModels getTabModels() { return tabModels; }
 
-    public LoadOptionsModelImpl getLoadOptionsModel()
+    public ObservableLoadOptionsModel getLoadOptionsModel()
     {
         return loadOptionsModel;
     }
 
-    public SettingsModelImpl getSettingsModel()
+    public ObservableSettingsModel getSettingsModel()
     {
         return settingsModel;
     }
 
-    public EnvironmentModelImpl getEnvironmentModel()
+    public ObservableEnvironmentModel getEnvironmentModel()
     {
         return environmentModel;
     }

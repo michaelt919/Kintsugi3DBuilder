@@ -30,7 +30,7 @@ public abstract class SettingsModelBase implements SettingsModel
         }
         else
         {
-            throw new NoSuchElementException("No setting called \"" + name + " exists");
+            throw new NoSuchElementException("No setting called \"" + name + "\" exists");
         }
     }
 
@@ -40,17 +40,13 @@ public abstract class SettingsModelBase implements SettingsModel
         if (this.exists(name))
         {
             Object value = this.getUnchecked(name);
-            if (settingType.isInstance(value))
+            if (settingType.isAssignableFrom(value.getClass()))
             {
                 return (T) value;
             }
-            else if (value == null && settingType.isAssignableFrom(this.getType(name)))
-            {
-                return null;
-            }
         }
 
-        throw new NoSuchElementException("No setting called \"" + name + " exists that can be cast to type " + settingType);
+        throw new NoSuchElementException("No setting called \"" + name + "\" exists that can be cast to type " + settingType);
     }
 
     @Override
@@ -58,18 +54,18 @@ public abstract class SettingsModelBase implements SettingsModel
     {
         if (this.exists(name))
         {
-            if (value == null || this.getType(name).isInstance(value))
+            if (value == null || this.getType(name).isAssignableFrom(value.getClass()))
             {
                 this.setUnchecked(name, value);
             }
             else
             {
-                throw new NoSuchElementException("No setting called \"" + name + " exists that can be assigned from type " + value.getClass());
+                throw new NoSuchElementException("No setting called \"" + name + "\" exists that can be assigned from type " + value.getClass());
             }
         }
         else
         {
-            throw new NoSuchElementException("No setting called \"" + name + " exists that can be assigned from type " + value.getClass());
+            throw new NoSuchElementException("No setting called \"" + name + "\" exists that can be assigned from type " + value.getClass());
         }
     }
 

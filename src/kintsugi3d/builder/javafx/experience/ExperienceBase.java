@@ -162,7 +162,7 @@ public abstract class ExperienceBase implements Experience
      */
     protected void handleError(Exception e)
     {
-        ExceptionHandling.error(MessageFormat.format("An error occurred opening window: {0}", getName()), e);
+        ExceptionHandling.error(MessageFormat.format("An error occurred opening window:\n{0}", getName()), e);
     }
 
     @Override

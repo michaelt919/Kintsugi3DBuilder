@@ -22,148 +22,26 @@ import kintsugi3d.builder.state.impl.SettingsModelBase;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class SettingsModelImpl extends SettingsModelBase
+public class ObservableSettingsModel extends SettingsModelBase
 {
-    private interface TypedProperty<T> extends Property<T>
+    private static class TypedProperty implements Property<Object>
     {
-        Class<? extends T> getType();
-        boolean shouldSerialize();
-    }
+        protected final ObjectProperty<Object> base;
+        protected final Class<?> type;
+        protected final boolean serialize;
 
-    private static class TypedPropertyGenericImpl<T> implements TypedProperty<T>
-    {
-        private final Property<T> base;
-        private final Class<T> type;
-        private final boolean serialize;
-
-        TypedPropertyGenericImpl(Class<T> type, Property<T> base, boolean serialize)
-        {
-            this.base = base;
-            this.type = type;
-            this.serialize = serialize;
-        }
-
-        TypedPropertyGenericImpl(Class<T> type, Property<T> base)
-        {
-            this(type, base, false);
-        }
-
-        @Override
-        public Class<T> getType()
-        {
-            return this.type;
-        }
-
-        @Override
-        public boolean shouldSerialize()
-        {
-            return serialize;
-        }
-
-        @Override
-        public void bind(ObservableValue<? extends T> observable)
-        {
-            base.bind(observable);
-        }
-
-        @Override
-        public void unbind()
-        {
-            base.unbind();
-        }
-
-        @Override
-        public boolean isBound()
-        {
-            return base.isBound();
-        }
-
-        @Override
-        public void bindBidirectional(Property<T> other)
-        {
-            base.bindBidirectional(other);
-        }
-
-        @Override
-        public void unbindBidirectional(Property<T> other)
-        {
-            base.unbindBidirectional(other);
-        }
-
-        @Override
-        public Object getBean()
-        {
-            return base.getBean();
-        }
-
-        @Override
-        public String getName()
-        {
-            return base.getName();
-        }
-
-        @Override
-        public void addListener(ChangeListener<? super T> listener)
-        {
-            base.addListener(listener);
-        }
-
-        @Override
-        public void removeListener(ChangeListener<? super T> listener)
-        {
-            base.removeListener(listener);
-        }
-
-        @Override
-        public T getValue()
-        {
-            return base.getValue();
-        }
-
-        @Override
-        public void addListener(InvalidationListener listener)
-        {
-            base.addListener(listener);
-        }
-
-        @Override
-        public void removeListener(InvalidationListener listener)
-        {
-            base.removeListener(listener);
-        }
-
-        @Override
-        public void setValue(T value)
-        {
-            base.setValue(value);
-        }
-    }
-
-    private static class TypedPropertyNonGenericImpl implements TypedProperty<Object>
-    {
-        private final ObjectProperty<Object> base;
-        private final Class<?> type;
-        private final boolean serialize;
-
-        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue, boolean serialize)
+        private TypedProperty(Object initialValue, Class<?> type, boolean serialize)
         {
             this.base = new SimpleObjectProperty<>(initialValue);
             this.type = type;
             this.serialize = serialize;
         }
 
-        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue)
-        {
-            this(type, initialValue, false);
-        }
-
-        @Override
         public Class<?> getType()
         {
             return this.type;
         }
 
-        @Override
         public boolean shouldSerialize()
         {
             return serialize;
@@ -248,13 +126,13 @@ public class SettingsModelImpl extends SettingsModelBase
         }
     }
 
-    private final Map<String, TypedProperty<?>> settingsMap = new HashMap<>(32);
+    private final Map<String, TypedProperty> settingsMap = new HashMap<>(32);
 
     private static class SettingImpl implements Setting
     {
-        private final Entry<String, TypedProperty<?>> nextEntry;
+        private final Entry<String, TypedProperty> nextEntry;
 
-        SettingImpl(Entry<String, TypedProperty<?>> nextEntry)
+        SettingImpl(Entry<String, TypedProperty> nextEntry)
         {
             this.nextEntry = nextEntry;
         }
@@ -293,7 +171,7 @@ public class SettingsModelImpl extends SettingsModelBase
     @Override
     protected void setUnchecked(String name, Object value)
     {
-        ((Property<Object>)settingsMap.get(name)).setValue(value);
+        settingsMap.get(name).setValue(value);
     }
 
     @Override
@@ -329,9 +207,9 @@ public class SettingsModelImpl extends SettingsModelBase
     @Override
     public Iterator<Setting> iterator()
     {
-        return new Iterator<Setting>()
+        return new Iterator<>()
         {
-            private final Iterator<Entry<String, TypedProperty<?>>> innerIterator = settingsMap.entrySet().iterator();
+            private final Iterator<Entry<String, TypedProperty>> innerIterator = settingsMap.entrySet().iterator();
 
             @Override
             public boolean hasNext()
@@ -342,7 +220,7 @@ public class SettingsModelImpl extends SettingsModelBase
             @Override
             public Setting next()
             {
-                Entry<String, TypedProperty<?>> nextEntry = innerIterator.next();
+                Entry<String, TypedProperty> nextEntry = innerIterator.next();
 
                 return new SettingImpl(nextEntry);
             }
@@ -363,7 +241,7 @@ public class SettingsModelImpl extends SettingsModelBase
     {
         if (settingsMap.containsKey(name))
         {
-            TypedProperty<?> entry = settingsMap.get(name);
+            TypedProperty entry = settingsMap.get(name);
             if (Objects.equals(settingType, entry.getType()))
             {
                 return (Property<T>) entry;
@@ -378,32 +256,17 @@ public class SettingsModelImpl extends SettingsModelBase
     {
         if(settingsMap.containsKey(name))
         {
-            throw new IllegalArgumentException("The setting to be created already exists.");
+            // Set value to new initialValue if it already exists.
+            // Note: this will not change whether serialize was set.
+            TypedProperty entry = settingsMap.get(name);
+            if (Objects.equals(settingType, entry.getType()))
+            {
+                setUnchecked(name, initialValue);
+            }
         }
         else
         {
-            settingsMap.put(name, new TypedPropertyNonGenericImpl(settingType, initialValue, serialize));
-        }
-    }
-
-    public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property)
-    {
-        createSettingFromProperty(name, settingType, property, false);
-    }
-
-    public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property, boolean serialize)
-    {
-        if (settingsMap.containsKey(name))
-        {
-            throw new IllegalArgumentException("The setting to be created already exists.");
-        }
-        else if (property == null)
-        {
-            throw new IllegalArgumentException("The parameter \"property\" may not be null.");
-        }
-        else
-        {
-            settingsMap.put(name, new TypedPropertyGenericImpl<>(settingType, property, serialize));
+            settingsMap.put(name, new TypedProperty(initialValue, settingType, serialize));
         }
     }
 }

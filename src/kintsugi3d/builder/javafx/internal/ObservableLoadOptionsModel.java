@@ -17,7 +17,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import kintsugi3d.builder.core.LoadOptionsModel;
 
-public class LoadOptionsModelImpl implements LoadOptionsModel
+public class ObservableLoadOptionsModel implements LoadOptionsModel
 {
     public final BooleanProperty colorImages = new SimpleBooleanProperty(true);
     public final BooleanProperty mipmaps = new SimpleBooleanProperty(true);

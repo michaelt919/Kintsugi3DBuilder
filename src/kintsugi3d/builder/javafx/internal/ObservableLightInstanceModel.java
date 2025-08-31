@@ -20,12 +20,12 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.OrbitPolarConverter;
 
-public class LightInstanceModelImpl implements LightInstanceModel
+public class ObservableLightInstanceModel implements LightInstanceModel
 {
     private ObservableValue<LightInstanceSetting> subLightSettingObservableValue;
     private final LightInstanceSetting sentinel;
 
-    public LightInstanceModelImpl()
+    public ObservableLightInstanceModel()
     {
         this.sentinel = new LightInstanceSetting("sentinel", new SimpleBooleanProperty(true));
         this.sentinel.intensity().set(0.0);
