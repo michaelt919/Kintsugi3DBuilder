@@ -1,7 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.binding.BooleanBinding;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -20,6 +19,7 @@ import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
+import java.io.File;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -125,16 +125,25 @@ public class CardController
         // Load the image for each card when it becomes visible.
         dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->
         {
-            if (preview == null && newVal)
+            File imageFile = new File(dataCard.getImagePath());
+            if (preview == null)
             {
-                preview = new Image(dataCard.getImagePath());
-                cardIcon.setImage(preview);
-                mainImage.setImage(preview);
+                if (newVal && imageFile.exists())
+                {
+                    preview = new Image(imageFile.toURI().toString());
+                    cardIcon.setImage(preview);
+                    mainImage.setImage(preview);
+                }
+                else
+                {
+                    cardIcon.setImage(MainApplication.getIcon());
+                    mainImage.setImage(MainApplication.getIcon());
+                }
             }
             else
             {
-                cardIcon.setImage(MainApplication.getIcon());
-                mainImage.setImage(MainApplication.getIcon());
+                cardIcon.setImage(preview);
+                mainImage.setImage(preview);
             }
         });
     }
@@ -211,7 +220,7 @@ public class CardController
     }
 
     @FXML
-    public void deleteSelf(ActionEvent e)
+    public void delete()
     {
         cameraCardsModel.deleteCard(cardId);
     }
