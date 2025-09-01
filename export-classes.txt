@@ -1,4 +1,4 @@
-fxml/modals/export/GenericRenderRequest.fxml    Generic
-fxml/modals/export/Screenshot.fxml              Single Screenshot
-fxml/modals/export/Resample.fxml                Resample
-fxml/modals/export/OrbitAnimation.fxml          Orbit Animation
+/fxml/modals/export/GenericRenderRequest.fxml    Generic
+/fxml/modals/export/Screenshot.fxml              Single Screenshot
+/fxml/modals/export/Resample.fxml                Resample
+/fxml/modals/export/OrbitAnimation.fxml          Orbit Animation

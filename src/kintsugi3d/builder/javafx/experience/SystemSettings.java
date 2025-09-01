@@ -15,7 +15,7 @@ public class SystemSettings extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        SystemSettingsController controller = openModal("fxml/modals/systemsettings/SystemSettings.fxml");
+        SystemSettingsController controller = openModal("/fxml/modals/systemsettings/SystemSettings.fxml");
         controller.initializeSettingsPages(getParentWindow(), getState());
     }
 }

@@ -16,7 +16,7 @@ public class Log extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        createModal("fxml/modals/Logger.fxml");
+        createModal("/fxml/modals/Logger.fxml");
 
         // Change a few settings before opening the modal.
         Stage stage = getModal().getStage();

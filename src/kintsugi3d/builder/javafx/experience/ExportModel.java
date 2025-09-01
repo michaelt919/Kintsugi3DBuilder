@@ -17,7 +17,7 @@ public class ExportModel extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        ExportModelController exportRequest = openModal("fxml/modals/ExportModel.fxml");
+        ExportModelController exportRequest = openModal("/fxml/modals/ExportModel.fxml");
 
         File loadedProjectFile = Global.state().getIOModel().getLoadedProjectFile();
         if (loadedProjectFile != null)

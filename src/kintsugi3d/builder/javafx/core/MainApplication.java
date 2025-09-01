@@ -155,20 +155,20 @@ public class MainApplication extends Application
         primaryStage.getIcons().add(icon);
 
         //get FXML URLs
-        String mainWindowFXMLFileName = "fxml/main/MainWindow.fxml";
-        URL mainWindowURL = getClass().getClassLoader().getResource(mainWindowFXMLFileName);
+        String mainWindowFXMLFileName = "/fxml/main/MainWindow.fxml";
+        URL mainWindowURL = getClass().getResource(mainWindowFXMLFileName);
         assert mainWindowURL != null : "cant find " + mainWindowFXMLFileName;
 
-        String sceneFXMLFileName = "fxml/scene/RootScene.fxml";
-        URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
+        String sceneFXMLFileName = "/fxml/scene/RootScene.fxml";
+        URL sceneURL = getClass().getResource(sceneFXMLFileName);
         assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
-        String welcomeWindowFXMLFileName = "fxml/WelcomeWindow.fxml";
-        URL welcomeWindowURL = getClass().getClassLoader().getResource(welcomeWindowFXMLFileName);
+        String welcomeWindowFXMLFileName = "/fxml/WelcomeWindow.fxml";
+        URL welcomeWindowURL = getClass().getResource(welcomeWindowFXMLFileName);
         assert welcomeWindowURL != null : "cant find " + welcomeWindowFXMLFileName;
 
-        String progressBarsFXMLFileName = "fxml/ProgressBars.fxml";
-        URL progressBarsURL = getClass().getClassLoader().getResource(progressBarsFXMLFileName);
+        String progressBarsFXMLFileName = "/fxml/ProgressBars.fxml";
+        URL progressBarsURL = getClass().getResource(progressBarsFXMLFileName);
         assert progressBarsURL != null : "cant find " + progressBarsFXMLFileName;
 
         //init fxml loaders

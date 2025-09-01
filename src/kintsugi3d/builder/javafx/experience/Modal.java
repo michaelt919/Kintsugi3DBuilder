@@ -100,7 +100,7 @@ public class Modal
 
     private static FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
     {
-        URL url = MainWindowController.class.getClassLoader().getResource(urlString);
+        URL url = MainWindowController.class.getResource(urlString);
         if (url == null)
         {
             throw new FileNotFoundException(urlString);

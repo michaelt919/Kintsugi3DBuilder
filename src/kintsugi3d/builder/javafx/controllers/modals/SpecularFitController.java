@@ -13,24 +13,20 @@ package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.javafx.experience.Modal;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-public class SpecularFitController implements Initializable
+public class SpecularFitController extends NonDataPageControllerBase
 {
     @FXML private Pane root;
 
@@ -54,23 +50,41 @@ public class SpecularFitController implements Initializable
 
     @FXML private CheckBox openViewerOnComplete;
 
-    @FXML private Button runButton;
+    @Override
+    public Region getRootNode()
+    {
+        return root;
+    }
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
+    public void initPage()
     {
         advancedAccordion.expandedPaneProperty().addListener(
             (observable, oldValue, newValue) ->
                 // Use Platform.runLater since the scene layout seems to not be updated yet at this point.
                 Platform.runLater(root.getScene().getWindow()::sizeToScene));
+
+        setCanAdvance(true);
+        setCanConfirm(true);
+    }
+
+    @Override
+    public void refresh()
+    {
     }
 
     @FXML
-    public void run()
+    public boolean cancel()
+    {
+        return true;
+    }
+
+    @FXML
+    public boolean confirm()
     {
         if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
-            return;
+            return false;
         }
 
         SpecularFitRequestParams settings = new SpecularFitRequestParams(
@@ -136,11 +150,7 @@ public class SpecularFitController implements Initializable
 
         // Run as a graphics request that optimizes from scratch.
         Rendering.getRequestQueue().addGraphicsRequest(request);
-    }
 
-    @FXML
-    public void cancel()
-    {
-        Modal.requestClose(root);
+        return true;
     }
 }

@@ -13,6 +13,6 @@ public class About extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        openModal("fxml/modals/About.fxml");
+        openModal("/fxml/modals/About.fxml");
     }
 }
