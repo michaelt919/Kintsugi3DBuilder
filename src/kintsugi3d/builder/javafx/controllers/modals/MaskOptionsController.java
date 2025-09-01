@@ -12,12 +12,14 @@
 package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.util.StringConverter;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
@@ -60,9 +62,9 @@ public class MaskOptionsController extends NonDataPageControllerBase
         // Remember what to set back to if the user cancels
         DefaultSettings.applyProjectDefaults(revertSettingsModel);
 
-        StaticUtilities.makeClampedNumeric(0, 0.04, occlusionBiasTextField);
-        StaticUtilities.makeClampedNumeric(0, 1.0, edgeProximityMarginTextField);
-        StaticUtilities.makeClampedNumeric(0, 0.1, edgeProximityCutoffTextField);
+        StaticUtilities.makeClampedNumeric(0, Float.MAX_VALUE, occlusionBiasTextField);
+        StaticUtilities.makeClampedNumeric(0, 1, edgeProximityMarginTextField);
+        StaticUtilities.makeClampedNumeric(0, 1, edgeProximityCutoffTextField);
 
         setCanAdvance(true);
         setCanConfirm(true);
@@ -74,6 +76,16 @@ public class MaskOptionsController extends NonDataPageControllerBase
         // Add a listener to automatically push to the project settings model.
         uiProperty.setValue(settingsProperty.getValue());
         uiProperty.bindBidirectional(settingsProperty);
+        settingsProperty.addListener(obs ->
+            projectSettingsModel.copyFrom(localSettingsModel));
+    }
+
+    private <T> void bind(StringProperty uiProperty, Property<T> settingsProperty, StringConverter<T> converter)
+    {
+        // Local model automatically updates when the UI is change
+        // Add a listener to automatically push to the project settings model.
+        uiProperty.setValue(converter.toString(settingsProperty.getValue()));
+        uiProperty.bindBidirectional(settingsProperty, converter);
         settingsProperty.addListener(obs ->
             projectSettingsModel.copyFrom(localSettingsModel));
     }
@@ -96,22 +108,18 @@ public class MaskOptionsController extends NonDataPageControllerBase
         this.revertSettingsModel.copyFrom(localSettingsModel); // Remember what to set back to if the user cancels
 
         bind(occlusionCheckBox.selectedProperty(), localSettingsModel.getBooleanProperty("occlusionEnabled"));
-        bind(occlusionBiasSlider.valueProperty(), localSettingsModel.getNumericProperty("occlusionBias"));
+        bind(occlusionBiasTextField.textProperty(), localSettingsModel.getNumericProperty("occlusionBias"),
+            new SafeDecimalNumberStringConverter(projectSettingsModel.getFloat("occlusionBias")));
 
         bind(edgeProximityWeightCheckBox.selectedProperty(), localSettingsModel.getBooleanProperty("edgeProximityWeightEnabled"));
-        bind(edgeProximityMarginSlider.valueProperty(), localSettingsModel.getNumericProperty("edgeProximityMargin"));
-        bind(edgeProximityCutoffSlider.valueProperty(), localSettingsModel.getNumericProperty("edgeProximityCutoff"));
+        bind(edgeProximityMarginTextField.textProperty(), localSettingsModel.getNumericProperty("edgeProximityMargin"),
+            new SafeDecimalNumberStringConverter(projectSettingsModel.getFloat("edgeProximityMargin")));
+        bind(edgeProximityCutoffTextField.textProperty(), localSettingsModel.getNumericProperty("edgeProximityCutoff"),
+            new SafeDecimalNumberStringConverter(projectSettingsModel.getFloat("edgeProximityCutoff")));
 
-        // The slider is the authority for what the value is on the UI end.
-        // Not sure if this is actually what we want as it causes issues if the text bounds are larger than the slider bounds.
-        // If we want users to be able to enter out-of-bounds values we'd need to make the text field the authority
-        // and flip it around.
-        occlusionBiasTextField.textProperty().bindBidirectional(occlusionBiasSlider.valueProperty(),
-            new SafeDecimalNumberStringConverter(0.0025f));
-        edgeProximityMarginTextField.textProperty().bindBidirectional(edgeProximityMarginSlider.valueProperty(),
-            new SafeDecimalNumberStringConverter(0.1f));
-        edgeProximityCutoffTextField.textProperty().bindBidirectional(edgeProximityCutoffSlider.valueProperty(),
-            new SafeDecimalNumberStringConverter(0.01f));
+        occlusionBiasSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("occlusionBias"));
+        edgeProximityMarginSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityMargin"));
+        edgeProximityCutoffSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityCutoff"));
     }
     
     @Override

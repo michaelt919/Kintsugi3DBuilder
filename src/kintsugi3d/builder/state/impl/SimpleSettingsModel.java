@@ -75,7 +75,8 @@ public class SimpleSettingsModel extends SettingsModelBase
             @Override
             public Class<?> getType()
             {
-                return value.getClass();
+                // Don't change the type as that can cause unexpected issues especially with number types.
+                return old.getType();
             }
 
             @Override

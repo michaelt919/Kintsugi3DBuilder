@@ -23,6 +23,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
@@ -81,10 +83,13 @@ public final class Kintsugi3DBuilder
 
         MainApplication.setArgs(args);
 
+        File stderrFileName = new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(),
+            String.format("Kintsugi3DBuilder-%s-standard-error.log",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss").format(LocalDateTime.now())));
+
         if (GRAPHICS_WINDOW_ENABLED)
         {
-            try (FileOutputStream standardErr = new FileOutputStream(
-                new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
+            try (FileOutputStream standardErr = new FileOutputStream(stderrFileName);
                 PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
@@ -99,8 +104,7 @@ public final class Kintsugi3DBuilder
         }
         else
         {
-            try (FileOutputStream standardErr = new FileOutputStream(
-                    new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
+            try (FileOutputStream standardErr = new FileOutputStream(stderrFileName);
                  PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
