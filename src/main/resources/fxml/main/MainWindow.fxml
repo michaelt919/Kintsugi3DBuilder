@@ -105,7 +105,7 @@
                         </accelerator>
                     </MenuItem>
                     <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..."/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="MaskOptions" text="Masking Options..."/>
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="MaskOptions" text="Mask / Feather Options..."/>
                     <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="SpecularFit" text="Process Textures...">
                         <accelerator>
                             <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP"

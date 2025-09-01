@@ -9,7 +9,7 @@ public class MaskOptions extends ExperienceBase
     @Override
     public String getName()
     {
-        return "Mask Options";
+        return "Mask / Feather Options";
     }
 
     @Override
