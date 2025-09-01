@@ -1,7 +1,7 @@
 package kintsugi3d.builder.javafx.experience;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.controllers.modals.ExportModelController;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.ExportModelController;
 
 import java.io.File;
 import java.io.IOException;

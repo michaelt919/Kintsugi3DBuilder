@@ -1,6 +1,6 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.LightCalibrationController;
 
 import java.io.IOException;
 

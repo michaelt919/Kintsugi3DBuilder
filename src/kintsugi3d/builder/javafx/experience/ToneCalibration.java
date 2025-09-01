@@ -1,10 +1,10 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.javafx.controllers.modals.EyedropperController;
-import kintsugi3d.builder.javafx.controllers.modals.LightCalibrationViewSelectController;
-import kintsugi3d.builder.javafx.controllers.modals.SelectToneCalibrationImageController;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.CurrentProjectViewSelectable;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.EyedropperController;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.LightCalibrationViewSelectController;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.SelectToneCalibrationImageController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataReceiverPage;
 
 import java.io.IOException;

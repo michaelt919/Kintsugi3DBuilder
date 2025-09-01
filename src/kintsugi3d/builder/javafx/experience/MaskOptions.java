@@ -1,6 +1,6 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.javafx.controllers.modals.MaskOptionsController;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.MaskOptionsController;
 
 import java.io.IOException;
 

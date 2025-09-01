@@ -16,7 +16,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<VBox fx:id="outerVbox" alignment="TOP_CENTER" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.EyedropperController">
+<VBox fx:id="outerVbox" alignment="TOP_CENTER" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.EyedropperController">
     <HBox alignment="TOP_CENTER" spacing="32.0">
         <VBox alignment="TOP_CENTER" spacing="16.0">
             <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No Tone Selected" />

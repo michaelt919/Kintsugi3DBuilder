@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<StackPane fx:id="root" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.LightCalibrationController">
+<StackPane fx:id="root" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.LightCalibrationController">
    <AnchorPane maxHeight="400.0" maxWidth="400.0" prefHeight="400.0" prefWidth="400.0" StackPane.alignment="CENTER">
       <Slider layoutX="128.0" layoutY="331.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" fx:id="xSlider" />
       <Slider fx:id="ySlider" layoutX="54.0" layoutY="48.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" orientation="VERTICAL" showTickLabels="true" showTickMarks="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="40.0" />

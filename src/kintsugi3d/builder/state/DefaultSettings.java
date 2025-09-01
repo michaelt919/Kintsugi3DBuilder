@@ -54,11 +54,31 @@ public final class DefaultSettings
 
     public static void applyProjectDefaults(SettingsModel settingsModel)
     {
+        // Mask / feathering settings
         settingsModel.createBooleanSetting("occlusionEnabled", true);
         settingsModel.createNumericSetting("occlusionBias", 0.0025f);
         settingsModel.createBooleanSetting("edgeProximityWeightEnabled", true);
         settingsModel.createNumericSetting("edgeProximityMargin", 0.1f);
         settingsModel.createNumericSetting("edgeProximityCutoff", 0.01f);
+
+        // Tone calibration settings
         settingsModel.createBooleanSetting("flatfieldCorrected", false);
+
+        // Specular fit settings
+        settingsModel.createNumericSetting("textureSize", 2048);
+        settingsModel.createNumericSetting("basisCount", 8);
+        settingsModel.createNumericSetting("specularMinWidthFrac", 0.2f);
+        settingsModel.createNumericSetting("specularMaxWidthFrac", 1.0f);
+        settingsModel.createBooleanSetting("constantTermEnabled", false);
+        settingsModel.createNumericSetting("basisResolution", 90);
+        settingsModel.createNumericSetting("basisComplexity", 1.0f);
+        settingsModel.createNumericSetting("metallicity", 0.0f);
+        settingsModel.createBooleanSetting("smithMaskingShadowingEnabled", true);
+        settingsModel.createNumericSetting("convergenceTolerance", 0.00001f);
+        settingsModel.createBooleanSetting("normalOptimizationEnabled", true);
+        settingsModel.createNumericSetting("minNormalDamping", 1.0f);
+        settingsModel.createNumericSetting("normalSmoothIterations", 0);
+        settingsModel.createNumericSetting("unsuccessfulLMIterationsAllowed", 8);
+        settingsModel.createBooleanSetting("openViewerOnProcessingComplete", false);
     }
 }
