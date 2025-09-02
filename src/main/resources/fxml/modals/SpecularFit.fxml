@@ -14,8 +14,8 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" minWidth="440.0" prefHeight="627.0" prefWidth="440.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SpecularFitController">
-    <VBox prefWidth="424.0">
+<VBox fx:id="root" minWidth="440.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SpecularFitController">
+    <VBox>
         <VBox.margin>
             <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
         </VBox.margin>
@@ -23,18 +23,12 @@
             <padding>
                 <Insets bottom="4.0" top="4.0" />
             </padding>
-            <Label text="Width:">
+            <Label text="Texture resolution:">
                 <padding>
                     <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
                 </padding>
             </Label>
-            <TextField fx:id="widthTextField" prefHeight="25.0" prefWidth="56.0" text="2048" />
-            <Label text="Height:">
-                <padding>
-                    <Insets bottom="4.0" left="16.0" right="4.0" top="4.0" />
-                </padding>
-            </Label>
-            <TextField fx:id="heightTextField" prefHeight="25.0" prefWidth="56.0" text="2048" />
+         <ComboBox fx:id="resolutionComboBox" promptText="Select a resolution..." />
         </HBox>
         <HBox>
             <padding>

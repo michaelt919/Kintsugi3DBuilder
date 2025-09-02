@@ -1,0 +1,48 @@
+package kintsugi3d.builder.javafx.util;
+
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
+/**
+ * Used by UI elements to display resolution in the form DxD where D is both the width and height.
+ */
+public class SquareResolution
+{
+    private final IntegerProperty size = new SimpleIntegerProperty(2048);
+
+    public SquareResolution()
+    {
+    }
+
+    public SquareResolution(int size)
+    {
+        this.size.set(size);
+    }
+
+    public int getSize()
+    {
+        return size.get();
+    }
+
+    public void setSize(int size)
+    {
+        this.size.set(size);
+    }
+
+    public IntegerProperty sizeProperty()
+    {
+        return size;
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        return other instanceof SquareResolution && this.size == ((SquareResolution)other).size;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("%dx%d", getSize(), getSize());
+    }
+}

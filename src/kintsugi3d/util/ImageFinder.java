@@ -84,12 +84,12 @@ public final class ImageFinder
 
     private static void logFileGuess(File imageFileGuess)
     {
-        LOG.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+        LOG.debug("Trying '{}'", imageFileGuess.getAbsolutePath());
     }
 
     private static void logFound()
     {
-        LOG.info("Found!!");
+        LOG.debug("Found!!");
     }
 
     public File findImageFile(File requestedFile, String... suffixes) throws FileNotFoundException

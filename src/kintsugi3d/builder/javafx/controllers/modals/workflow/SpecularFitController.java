@@ -12,19 +12,25 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
+import kintsugi3d.builder.javafx.util.SquareResolution;
+import kintsugi3d.builder.state.DefaultSettings;
 
 public class SpecularFitController extends NonDataPageControllerBase
 {
@@ -33,8 +39,7 @@ public class SpecularFitController extends NonDataPageControllerBase
     @FXML private Accordion advancedAccordion;
     @FXML private CheckBox smithCheckBox;
     @FXML private TextField unsuccessfulLMIterationsTextField;
-    @FXML private TextField widthTextField;
-    @FXML private TextField heightTextField;
+    @FXML private ComboBox<SquareResolution> resolutionComboBox;
 
     @FXML private TextField basisCountTextField;
     @FXML private TextField mfdResolutionTextField;
@@ -50,6 +55,8 @@ public class SpecularFitController extends NonDataPageControllerBase
 
     @FXML private CheckBox openViewerOnComplete;
 
+    private final ObservableSettingsModel localSettingsModel = new ObservableSettingsModel();
+
     @Override
     public Region getRootNode()
     {
@@ -59,6 +66,13 @@ public class SpecularFitController extends NonDataPageControllerBase
     @Override
     public void initPage()
     {
+        DefaultSettings.applyProjectDefaults(localSettingsModel);
+
+        resolutionComboBox.setItems(FXCollections.observableArrayList(
+            new SquareResolution(256), new SquareResolution(512), new SquareResolution(1024),
+            new SquareResolution(2048), new SquareResolution(4096), new SquareResolution(8192)));
+        resolutionComboBox.getSelectionModel().select(3); // 2048x2048
+
         advancedAccordion.expandedPaneProperty().addListener(
             (observable, oldValue, newValue) ->
                 // Use Platform.runLater since the scene layout seems to not be updated yet at this point.
@@ -71,6 +85,11 @@ public class SpecularFitController extends NonDataPageControllerBase
     @Override
     public void refresh()
     {
+        IOModel ioModel = Global.state().getIOModel();
+        if (ioModel.hasValidHandler())
+        {
+            localSettingsModel.copyFrom(ioModel.getLoadedViewSet().getProjectSettings());
+        }
     }
 
     @FXML
@@ -87,9 +106,8 @@ public class SpecularFitController extends NonDataPageControllerBase
             return false;
         }
 
-        SpecularFitRequestParams settings = new SpecularFitRequestParams(
-            Integer.parseInt(widthTextField.getText()),
-            Integer.parseInt(heightTextField.getText()));
+        int textureSize = resolutionComboBox.getValue().getSize();
+        SpecularFitRequestParams settings = new SpecularFitRequestParams(textureSize, textureSize);
 
         int basisCount = Integer.parseInt(basisCountTextField.getText());
         settings.getSpecularBasisSettings().setBasisCount(basisCount);
