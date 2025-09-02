@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
 import kintsugi3d.builder.javafx.util.MultithreadValue;
-import kintsugi3d.builder.state.ProjectModel;
+import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.xml.sax.SAXException;
 

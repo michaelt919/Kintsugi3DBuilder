@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
-import kintsugi3d.builder.state.LightGroupSetting;
+import kintsugi3d.builder.state.project.LightGroupSetting;
 
 import java.util.ArrayList;
 

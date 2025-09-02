@@ -12,13 +12,13 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import kintsugi3d.builder.javafx.util.MultithreadValue;
-import kintsugi3d.builder.state.ExtendedCameraModel;
-import kintsugi3d.builder.state.impl.ExtendedCameraModelBase;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
+import kintsugi3d.builder.state.impl.ExtendedViewpointModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class CameraModelWrapper extends ExtendedCameraModelBase
+public class CameraModelWrapper extends ExtendedViewpointModelBase
 {
-    private final ExtendedCameraModel baseModel;
+    private final ExtendedViewpointModel baseModel;
 
     private final MultithreadValue<Vector3> target;
     private final MultithreadValue<Float> azimuth;
@@ -29,7 +29,7 @@ public class CameraModelWrapper extends ExtendedCameraModelBase
     private final MultithreadValue<Float> focalLength;
     private final MultithreadValue<Boolean> orthographic;
 
-    public CameraModelWrapper(ExtendedCameraModel baseModel)
+    public CameraModelWrapper(ExtendedViewpointModel baseModel)
     {
         this.baseModel = baseModel;
         this.target = MultithreadValue.createFromFunctions(baseModel::getTarget, baseModel::setTarget);

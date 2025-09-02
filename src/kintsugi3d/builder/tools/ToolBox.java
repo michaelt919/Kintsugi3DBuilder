@@ -201,7 +201,7 @@ public final class ToolBox
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentModel environmentModel, ExtendedLightingModel lightingModel,
+    private ToolBox(ExtendedViewpointModel cameraModel, EnvironmentModel environmentModel, ExtendedLightingModel lightingModel,
                     ExtendedObjectModel objectModel, SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
@@ -294,7 +294,7 @@ public final class ToolBox
     public static final class Builder
     {
         private ToolBindingModel toolBindingModel;
-        private ExtendedCameraModel cameraModel;
+        private ExtendedViewpointModel cameraModel;
         private EnvironmentModel environmentModel;
         private SettingsModel settingsModel;
         private ExtendedLightingModel lightingModel;
@@ -316,7 +316,7 @@ public final class ToolBox
             return this;
         }
 
-        public Builder setCameraModel(ExtendedCameraModel cameraModel)
+        public Builder setCameraModel(ExtendedViewpointModel cameraModel)
         {
             this.cameraModel = cameraModel;
             return this;

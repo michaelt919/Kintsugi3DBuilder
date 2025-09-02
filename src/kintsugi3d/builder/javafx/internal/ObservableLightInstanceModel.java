@@ -16,20 +16,21 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightInstanceSetting;
 import kintsugi3d.builder.state.LightInstanceModel;
+import kintsugi3d.builder.state.impl.ExtendedViewpointModelBase;
+import kintsugi3d.builder.state.project.LightInstanceSetting;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.OrbitPolarConverter;
 
-public class ObservableLightInstanceModel implements LightInstanceModel
+public class ObservableLightInstanceModel extends ExtendedViewpointModelBase implements LightInstanceModel
 {
     private ObservableValue<ObservableLightInstanceSetting> subLightSettingObservableValue;
-    private final ObservableLightInstanceSetting sentinel;
+    private final LightInstanceSetting sentinel;
 
     public ObservableLightInstanceModel()
     {
         this.sentinel = new ObservableLightInstanceSetting("sentinel", new SimpleBooleanProperty(true));
-        this.sentinel.intensity().set(0.0);
-        this.sentinel.locked().set(true);
+        this.sentinel.setIntensity(0.0);
+        this.sentinel.setLocked(true);
     }
 
     public void setSubLightSettingObservableValue(ObservableValue<ObservableLightInstanceSetting> subLightSettingObservableValue)
@@ -37,7 +38,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
         this.subLightSettingObservableValue = subLightSettingObservableValue;
     }
 
-    private ObservableLightInstanceSetting getLightInstance()
+    private LightInstanceSetting getLightInstance()
     {
         if (subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null)
         {
@@ -50,39 +51,9 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     }
 
     @Override
-    public Matrix4 getLookMatrix()
-    {
-        return Matrix4.lookAt(
-            new Vector3(0, 0, getDistance()),
-            Vector3.ZERO,
-            new Vector3(0, 1, 0)
-        ).times(getOrbit().times(
-            Matrix4.translate(getTarget().negated())
-        ));
-    }
-
-    @Override
-    public Matrix4 getOrbit()
-    {
-        Vector3 polar = new Vector3((float) getLightInstance().azimuth().get(), (float) getLightInstance().inclination().get(), 0);
-        return OrbitPolarConverter.getInstance().convertToOrbitMatrix(polar);
-    }
-
-    @Override
-    public void setOrbit(Matrix4 orbit)
-    {
-        if (!this.isLocked())
-        {
-            Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-            getLightInstance().azimuth().set(polar.x);
-            getLightInstance().inclination().set(polar.y);
-        }
-    }
-
-    @Override
     public float getLog10Distance()
     {
-        return (float) getLightInstance().log10Distance().get();
+        return (float) getLightInstance().getLog10Distance();
     }
 
     @Override
@@ -90,28 +61,16 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().log10Distance().set(log10Distance);
+            getLightInstance().setLog10Distance(log10Distance);
         }
-    }
-
-    @Override
-    public float getDistance()
-    {
-        return (float) Math.pow(10, getLog10Distance());
-    }
-
-    @Override
-    public void setDistance(float distance)
-    {
-        this.setLog10Distance((float) Math.log10(distance));
     }
 
     @Override
     public Vector3 getTarget()
     {
-        return new Vector3((float) getLightInstance().targetX().get(),
-            (float) getLightInstance().targetY().get(),
-            (float) getLightInstance().targetZ().get());
+        return new Vector3((float) getLightInstance().getTargetX(),
+            (float) getLightInstance().getTargetY(),
+            (float) getLightInstance().getTargetZ());
     }
 
     @Override
@@ -119,9 +78,9 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().targetX().set(target.x);
-            getLightInstance().targetY().set(target.y);
-            getLightInstance().targetZ().set(target.z);
+            getLightInstance().setTargetX(target.x);
+            getLightInstance().setTargetY(target.y);
+            getLightInstance().setTargetZ(target.z);
         }
     }
 
@@ -139,7 +98,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     @Override
     public float getAzimuth()
     {
-        return (float) getLightInstance().azimuth().get();
+        return (float) getLightInstance().getAzimuth();
     }
 
     @Override
@@ -147,14 +106,14 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().azimuth().set(azimuth);
+            getLightInstance().setAzimuth(azimuth);
         }
     }
 
     @Override
     public float getInclination()
     {
-        return (float) getLightInstance().inclination().get();
+        return (float) getLightInstance().getInclination();
     }
 
     @Override
@@ -174,7 +133,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().inclination().set(inclination);
+            getLightInstance().setInclination(inclination);
         }
     }
 
@@ -212,16 +171,16 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     @Override
     public boolean isLocked()
     {
-        return getLightInstance().locked().get() || getLightInstance().isGroupLocked();
+        return getLightInstance().isLocked() || getLightInstance().isGroupLocked();
     }
 
     @Override
     public Vector3 getColor()
     {
-        Color color = getLightInstance().color().getValue();
+        Color color = getLightInstance().getColor();
         Vector3 out = new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue());
 //        System.out.println("Light Color: " + out);
-        return out.times((float) getLightInstance().intensity().get());
+        return out.times((float) getLightInstance().getIntensity());
     }
 
     @Override
@@ -229,17 +188,17 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            ObservableLightInstanceSetting lightInstance = getLightInstance();
-            double intensity = lightInstance.intensity().get();
+            LightInstanceSetting lightInstance = getLightInstance();
+            double intensity = lightInstance.getIntensity();
 
             if (intensity > 0.0)
             {
-                lightInstance.color().setValue(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
+                lightInstance.setColor(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
             }
             else
             {
-                lightInstance.intensity().set(1.0);
-                lightInstance.color().setValue(new Color(color.x, color.y, color.z, 1));
+                lightInstance.setIntensity(1.0);
+                lightInstance.setColor(new Color(color.x, color.y, color.z, 1));
             }
         }
     }
@@ -247,7 +206,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     @Override
     public float getSpotSize()
     {
-        return (float)(getLightInstance().spotSize().get() * Math.PI / 180.0);
+        return (float)(getLightInstance().getSpotSize() * Math.PI / 180.0);
     }
 
     @Override
@@ -255,14 +214,14 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().spotSize().set(spotSize * 180 / Math.PI);
+            getLightInstance().setSpotSize(spotSize * 180 / Math.PI);
         }
     }
 
     @Override
     public float getSpotTaper()
     {
-        return (float)getLightInstance().spotTaper().get();
+        return (float)getLightInstance().getSpotTaper();
     }
 
     @Override
@@ -270,7 +229,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().spotTaper().set(spotTaper);
+            getLightInstance().setSpotTaper(spotTaper);
         }
     }
 

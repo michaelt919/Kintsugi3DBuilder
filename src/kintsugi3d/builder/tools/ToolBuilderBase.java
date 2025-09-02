@@ -16,7 +16,7 @@ import kintsugi3d.builder.state.*;
 abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
 {
     private ToolBindingModel toolBindingModel;
-    private ExtendedCameraModel cameraModel;
+    private ExtendedViewpointModel cameraModel;
     private EnvironmentModel environmentModel;
     private ExtendedLightingModel lightingModel;
     private ExtendedObjectModel objectModel;
@@ -35,7 +35,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setCameraModel(ExtendedCameraModel cameraModel)
+    public ToolBuilder<ToolType> setCameraModel(ExtendedViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
         return this;
@@ -81,7 +81,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return toolBindingModel;
     }
 
-    ExtendedCameraModel getCameraModel()
+    ExtendedViewpointModel getCameraModel()
     {
         return cameraModel;
     }

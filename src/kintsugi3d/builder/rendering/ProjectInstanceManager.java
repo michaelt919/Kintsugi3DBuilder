@@ -54,7 +54,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectModel objectModel;
-    private ReadonlyCameraModel cameraModel;
+    private ReadonlyViewpointModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
@@ -516,7 +516,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
-    public void setCameraModel(ReadonlyCameraModel cameraModel)
+    public void setCameraModel(ReadonlyViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
         if (projectInstance != null)

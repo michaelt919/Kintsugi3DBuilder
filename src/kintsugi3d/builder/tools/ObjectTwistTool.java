@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
 import kintsugi3d.builder.state.ExtendedObjectModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
@@ -27,7 +27,7 @@ final class ObjectTwistTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final ExtendedCameraModel cameraModel;
+    private final ExtendedViewpointModel cameraModel;
     private final ExtendedObjectModel objectModel;
 
     private static class Builder extends ToolBuilderBase<ObjectTwistTool>
@@ -44,7 +44,7 @@ final class ObjectTwistTool implements DragTool
         return new Builder();
     }
 
-    private ObjectTwistTool(ExtendedCameraModel cameraModel, ExtendedObjectModel objectModel)
+    private ObjectTwistTool(ExtendedViewpointModel cameraModel, ExtendedObjectModel objectModel)
     {
         this.cameraModel = cameraModel;
         this.objectModel = objectModel;

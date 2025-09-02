@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.LightInstanceSetting;
+import kintsugi3d.builder.state.project.LightInstanceSetting;
 
 public class ObservableLightInstanceSetting extends LightInstanceSetting
 {
@@ -34,6 +34,7 @@ public class ObservableLightInstanceSetting extends LightInstanceSetting
 
     private final BooleanProperty groupLocked;
 
+    @Override
     public boolean isGroupLocked()
     {
         return groupLocked.get();

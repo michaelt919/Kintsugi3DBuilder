@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.state.impl;
 
-import kintsugi3d.builder.state.CameraModel;
+import kintsugi3d.builder.state.ViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class SimpleCameraModel implements CameraModel
+public class SimpleCameraModel implements ViewpointModel
 {
     private Matrix4 lookMatrix;
 

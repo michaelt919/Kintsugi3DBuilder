@@ -13,7 +13,7 @@ package kintsugi3d.builder.javafx.controllers.scene.camera;
 
 import javafx.beans.property.*;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.CameraSetting;
+import kintsugi3d.builder.state.project.CameraSetting;
 
 public class ObservableCameraSetting extends CameraSetting
 {

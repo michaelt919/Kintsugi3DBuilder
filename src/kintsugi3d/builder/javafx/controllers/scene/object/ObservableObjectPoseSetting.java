@@ -13,7 +13,7 @@ package kintsugi3d.builder.javafx.controllers.scene.object;
 
 import javafx.beans.property.*;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.ObjectPoseSetting;
+import kintsugi3d.builder.state.project.ObjectPoseSetting;
 
 public class ObservableObjectPoseSetting extends ObjectPoseSetting
 {

@@ -8,7 +8,7 @@ public final class Global
     {
     }
 
-    public static MultithreadState state()
+    public static Kintsugi3DBuilderState state()
     {
         return MultithreadState.getInstance();
     }

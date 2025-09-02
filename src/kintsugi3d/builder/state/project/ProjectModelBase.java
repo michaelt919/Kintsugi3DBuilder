@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state.project;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,6 +34,11 @@ import java.util.Objects;
 
 /**
  * Base class that primarily handles serialization in a UI-agnostic manner (no JavaFX coupling)
+ * The camera / environment / lights / object pose exist here primarily for serialization purposes
+ * (saving and loading from the project file).
+ * They will also typically be bound to the JavaFX frontend to ensure that they are constantly synchronized.
+ * For typical 3D manipulation use cases (interaction between 3D backend and JavaFX frontend),
+ * the CameraModel / LightingModel / EnvironmentModel / ObjectModel instances  accessible through Global.state() should be used instead.
  * @param <CameraSettingType>
  * @param <EnvironmentSettingType>
  * @param <LightGroupSettingType>

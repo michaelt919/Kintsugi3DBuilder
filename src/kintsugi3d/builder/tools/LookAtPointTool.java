@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 8/8/2017.
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
 import kintsugi3d.gl.window.CanvasSize;
@@ -19,7 +19,7 @@ import kintsugi3d.gl.window.CursorPosition;
 
 final class LookAtPointTool implements DragTool
 {
-    private final ExtendedCameraModel cameraModel;
+    private final ExtendedViewpointModel cameraModel;
     private final SceneViewportModel sceneViewportModel;
 
     private static class Builder extends ToolBuilderBase<LookAtPointTool>
@@ -36,7 +36,7 @@ final class LookAtPointTool implements DragTool
         return new Builder();
     }
 
-    private LookAtPointTool(ExtendedCameraModel cameraModel, SceneViewportModel sceneViewportModel)
+    private LookAtPointTool(ExtendedViewpointModel cameraModel, SceneViewportModel sceneViewportModel)
     {
         this.cameraModel = cameraModel;
         this.sceneViewportModel = sceneViewportModel;

@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.window.Canvas3D;
 import kintsugi3d.gl.window.listeners.ScrollListener;
@@ -20,7 +20,7 @@ public class ScrollDollyTool implements ScrollListener
 {
     private static final float SENSITIVITY = 0.001f;
 
-    private final ExtendedCameraModel cameraModel;
+    private final ExtendedViewpointModel cameraModel;
 
     private static class Builder extends ToolBuilderBase<ScrollDollyTool>
     {
@@ -36,7 +36,7 @@ public class ScrollDollyTool implements ScrollListener
         return new ScrollDollyTool.Builder();
     }
 
-    private ScrollDollyTool(ExtendedCameraModel cameraModel)
+    private ScrollDollyTool(ExtendedViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }

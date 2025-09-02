@@ -31,7 +31,7 @@ import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.ProjectModel;
+import kintsugi3d.builder.state.project.ProjectModel;
 
 public class SpecularFitController extends NonDataPageControllerBase
 {

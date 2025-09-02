@@ -9,15 +9,20 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state;//Created by alexk on 7/21/2017.
 
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 
-public interface CameraModel extends ReadonlyCameraModel
+public interface ExtendedViewpointModel extends ViewpointModel, ReadonlyExtendedViewpointModel
 {
-    void setLookMatrix(Matrix4 lookMatrix);
-    void setTarget(Vector3 target);
-    void setHorizontalFOV(float fov);
-    void setOrthographic(boolean orthographic);
+    @Override
+    float getHorizontalFOV();
+
+    void setOrbit(Matrix4 orbit);
+    void setLog10Distance(float log10Distance);
+    void setDistance(float distance);
+    void setTwist(float twist);
+    void setAzimuth(float azimuth);
+    void setInclination(float inclination);
+    void setFocalLength(float focalLength);
 }

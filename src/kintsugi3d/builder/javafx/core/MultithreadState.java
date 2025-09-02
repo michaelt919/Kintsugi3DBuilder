@@ -18,10 +18,11 @@ import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.impl.CanvasModelImpl;
 import kintsugi3d.builder.state.impl.SceneViewportModelImpl;
+import kintsugi3d.builder.state.project.ProjectModel;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
 {
-    private final ExtendedCameraModel cameraModel;
+    private final ExtendedViewpointModel cameraModel;
     private final EnvironmentModel environmentModel;
     private final ExtendedLightingModel lightingModel;
     private final ExtendedObjectModel objectModel;
@@ -61,7 +62,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public ExtendedCameraModel getCameraModel()
+    public ExtendedViewpointModel getCameraModel()
     {
         return cameraModel;
     }

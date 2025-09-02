@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.state.impl;
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.OrbitPolarConverter;
 
-public abstract class ExtendedCameraModelBase implements ExtendedCameraModel
+public abstract class ExtendedViewpointModelBase implements ExtendedViewpointModel
 {
     @Override
     public Matrix4 getLookMatrix()

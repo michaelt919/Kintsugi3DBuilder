@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
 
@@ -24,7 +24,7 @@ final class FocalLengthTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final ExtendedCameraModel cameraModel;
+    private final ExtendedViewpointModel cameraModel;
 
     private static class Builder extends ToolBuilderBase<FocalLengthTool>
     {
@@ -40,7 +40,7 @@ final class FocalLengthTool implements DragTool
         return new Builder();
     }
 
-    private FocalLengthTool(ExtendedCameraModel cameraModel)
+    private FocalLengthTool(ExtendedViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }

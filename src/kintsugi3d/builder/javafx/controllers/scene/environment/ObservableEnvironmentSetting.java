@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene.environment;
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.EnvironmentSetting;
+import kintsugi3d.builder.state.project.EnvironmentSetting;
 
 import java.io.File;
 

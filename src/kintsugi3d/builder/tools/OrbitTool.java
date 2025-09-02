@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.CanvasSize;
@@ -27,7 +27,7 @@ final class OrbitTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final ExtendedCameraModel cameraModel;
+    private final ExtendedViewpointModel cameraModel;
 
     private static class Builder extends ToolBuilderBase<OrbitTool>
     {
@@ -43,7 +43,7 @@ final class OrbitTool implements DragTool
         return new Builder();
     }
 
-    private OrbitTool(ExtendedCameraModel cameraModel)
+    private OrbitTool(ExtendedViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }

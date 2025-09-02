@@ -57,7 +57,7 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setCameraModel(ExtendedCameraModel cameraModel)
+        public ToolBuilder<MultiplierTool> setCameraModel(ExtendedViewpointModel cameraModel)
         {
             return this;
         }

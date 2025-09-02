@@ -11,16 +11,16 @@
 
 package kintsugi3d.builder.state.impl;
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ExtendedViewpointModel;
 import kintsugi3d.builder.state.LightInstanceModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public abstract class LightInstanceModelBase implements LightInstanceModel
 {
-    private final ExtendedCameraModel lightCameraModel;
+    private final ExtendedViewpointModel lightCameraModel;
 
-    protected LightInstanceModelBase(ExtendedCameraModel lightCameraModel)
+    protected LightInstanceModelBase(ExtendedViewpointModel lightCameraModel)
     {
         this.lightCameraModel = lightCameraModel;
     }

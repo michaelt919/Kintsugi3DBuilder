@@ -13,13 +13,14 @@ package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/21/2017.
 
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSetting;
-import kintsugi3d.builder.state.impl.ExtendedCameraModelBase;
+import kintsugi3d.builder.state.impl.ExtendedViewpointModelBase;
+import kintsugi3d.builder.state.project.CameraSetting;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class ObservableCameraModel extends ExtendedCameraModelBase
+public class ObservableCameraModel extends ExtendedViewpointModelBase
 {
     private ObservableValue<ObservableCameraSetting> selectedCameraSetting;
-    private final ObservableCameraSetting sentinel = new ObservableCameraSetting("sentinel");
+    private final CameraSetting sentinel = new ObservableCameraSetting("sentinel");
 
     public ObservableCameraModel()
     {
@@ -31,7 +32,7 @@ public class ObservableCameraModel extends ExtendedCameraModelBase
         this.selectedCameraSetting = selectedCameraSetting;
     }
 
-    private ObservableCameraSetting getActiveCameraSetting()
+    private CameraSetting getActiveCameraSetting()
     {
         if (selectedCameraSetting == null || selectedCameraSetting.getValue() == null)
         {

@@ -9,20 +9,28 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;//Created by alexk on 7/21/2017.
+package kintsugi3d.builder.state;
 
 import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
-public interface ExtendedCameraModel extends CameraModel, ReadonlyExtendedCameraModel 
+@FunctionalInterface
+public interface ReadonlyViewpointModel
 {
-    @Override
-    float getHorizontalFOV();
+    Matrix4 getLookMatrix();
 
-    void setOrbit(Matrix4 orbit);
-    void setLog10Distance(float log10Distance);
-    void setDistance(float distance);
-    void setTwist(float twist);
-    void setAzimuth(float azimuth);
-    void setInclination(float inclination);
-    void setFocalLength(float focalLength);
+    default Vector3 getTarget()
+    {
+        return Vector3.ZERO;
+    }
+
+    default float getHorizontalFOV()
+    {
+        return (float)(360 / Math.PI /* convert and multiply by 2) */ * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
+    }
+
+    default boolean isOrthographic()
+    {
+        return false;
+    }
 }

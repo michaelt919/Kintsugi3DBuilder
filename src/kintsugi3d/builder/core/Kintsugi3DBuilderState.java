@@ -12,10 +12,11 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.project.ProjectModel;
 
 public interface Kintsugi3DBuilderState
 {
-    ReadonlyCameraModel getCameraModel();
+    ReadonlyViewpointModel getCameraModel();
     ReadonlyLightingModel getLightingModel();
     ReadonlyObjectModel getObjectModel();
     ReadonlyEnvironmentModel getEnvironmentModel();

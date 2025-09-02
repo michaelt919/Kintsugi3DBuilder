@@ -14,6 +14,7 @@ package kintsugi3d.builder.app;//Created by alexk on 7/19/2017.
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.javafx.core.MultithreadState;
 import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.tools.DragToolType;
@@ -68,7 +69,7 @@ public final class Rendering
         requestQueue.addBackgroundGraphicsRequest(new GraphicsRequest()
         {
             @Override
-            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws Exception
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
             {
                 runnable.run();
             }
@@ -177,10 +178,10 @@ public final class Rendering
 
         context.getState().enableDepthTest();
 
-        ExtendedLightingModel lightingModel = Global.state().getLightingModel();
-        EnvironmentModel environmentModel = Global.state().getEnvironmentModel();
-        ExtendedCameraModel cameraModel = Global.state().getCameraModel();
-        ExtendedObjectModel objectModel = Global.state().getObjectModel();
+        ExtendedLightingModel lightingModel = MultithreadState.getInstance().getLightingModel();
+        EnvironmentModel environmentModel = MultithreadState.getInstance().getEnvironmentModel();
+        ExtendedViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
+        ExtendedObjectModel objectModel = MultithreadState.getInstance().getObjectModel();
         SettingsModel settingsModel = Global.state().getSettingsModel();
         CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
         IOModel ioModel = Global.state().getIOModel();

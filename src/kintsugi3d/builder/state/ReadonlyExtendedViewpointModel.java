@@ -13,7 +13,7 @@ package kintsugi3d.builder.state;
 
 import kintsugi3d.gl.vecmath.Matrix4;
 
-public interface ReadonlyExtendedCameraModel extends ReadonlyCameraModel
+public interface ReadonlyExtendedViewpointModel extends ReadonlyViewpointModel
 {
     /**
      * This method is intended to return whether or not the selected camera is locked.

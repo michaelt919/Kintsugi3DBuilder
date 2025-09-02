@@ -14,23 +14,10 @@ package kintsugi3d.builder.state;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
-@FunctionalInterface
-public interface ReadonlyCameraModel 
+public interface ViewpointModel extends ReadonlyViewpointModel
 {
-    Matrix4 getLookMatrix();
-
-    default Vector3 getTarget()
-    {
-        return Vector3.ZERO;
-    }
-
-    default float getHorizontalFOV()
-    {
-        return (float)(360 / Math.PI /* convert and multiply by 2) */ * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
-    }
-
-    default boolean isOrthographic()
-    {
-        return false;
-    }
+    void setLookMatrix(Matrix4 lookMatrix);
+    void setTarget(Vector3 target);
+    void setHorizontalFOV(float fov);
+    void setOrthographic(boolean orthographic);
 }

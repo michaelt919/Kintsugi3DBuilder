@@ -20,6 +20,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSetting;
 import kintsugi3d.builder.state.BackgroundMode;
 import kintsugi3d.builder.state.EnvironmentModel;
+import kintsugi3d.builder.state.project.EnvironmentSetting;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
@@ -65,7 +66,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            ObservableEnvironmentSetting selectedEnvironment = selected.getValue();
+            EnvironmentSetting selectedEnvironment = selected.getValue();
             if (selectedEnvironment.isEnvironmentColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvironmentImageEnabled()))
             {
                 Color color = selectedEnvironment.getEnvironmentColor();
@@ -92,7 +93,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            ObservableEnvironmentSetting selectedEnvironment = selected.getValue();
+            EnvironmentSetting selectedEnvironment = selected.getValue();
 
             if (selectedEnvironment.isBackplateColorEnabled() && (backplateLoaded || !selectedEnvironment.isBackplateImageEnabled()))
             {
@@ -222,7 +223,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     @Override
     public BackgroundMode getBackgroundMode()
     {
-        ObservableEnvironmentSetting selectedEnvironment = selected.getValue();
+        EnvironmentSetting selectedEnvironment = selected.getValue();
         if (this.backplateLoaded && doesSelectedExist() && selectedEnvironment.isBackplateImageEnabled())
         {
             return BackgroundMode.IMAGE;

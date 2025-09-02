@@ -11,6 +11,6 @@
 
 package kintsugi3d.builder.state;//Created by alexk on 7/25/2017.
 
-public interface LightInstanceModel extends ReadonlyLightInstanceModel, ExtendedCameraModel, LightPrototypeModel
+public interface LightInstanceModel extends ReadonlyLightInstanceModel, ExtendedViewpointModel, LightPrototypeModel
 {
 }

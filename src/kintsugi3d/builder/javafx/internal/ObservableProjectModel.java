@@ -23,7 +23,7 @@ import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnviron
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSetting;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightInstanceSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSetting;
-import kintsugi3d.builder.state.ProjectModelBase;
+import kintsugi3d.builder.state.project.ProjectModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.File;

@@ -1,4 +1,4 @@
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state.project;
 
 import javafx.scene.paint.Color;
 import org.w3c.dom.Document;

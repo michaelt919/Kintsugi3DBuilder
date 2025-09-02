@@ -1,4 +1,4 @@
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state.project;
 
 import javafx.scene.paint.Color;
 import org.w3c.dom.Document;
@@ -55,6 +55,8 @@ public abstract class LightInstanceSetting implements DOMConvertable
 
         return setting;
     }
+
+    public abstract boolean isGroupLocked();
 
     public abstract double getTargetX();
 

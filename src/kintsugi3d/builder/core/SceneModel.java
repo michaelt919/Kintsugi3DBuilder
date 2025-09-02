@@ -22,7 +22,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 public class SceneModel
 {
     private ReadonlyObjectModel objectModel;
-    private ReadonlyCameraModel cameraModel;
+    private ReadonlyViewpointModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private SafeReadonlySettingsModel settingsModel = new DefaultSettingsModel();
     private CameraViewListModel cameraViewListModel;
@@ -39,7 +39,7 @@ public class SceneModel
         return objectModel;
     }
 
-    public ReadonlyCameraModel getCameraModel()
+    public ReadonlyViewpointModel getCameraModel()
     {
         return cameraModel;
     }
@@ -86,7 +86,7 @@ public class SceneModel
         this.objectModel = objectModel;
     }
 
-    public void setCameraModel(ReadonlyCameraModel cameraModel)
+    public void setCameraModel(ReadonlyViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }

@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.state;
 
-public interface ReadonlyLightInstanceModel extends ReadonlyCameraModel, ReadonlyLightPrototypeModel
+public interface ReadonlyLightInstanceModel extends ReadonlyViewpointModel, ReadonlyLightPrototypeModel
 {
     boolean isEnabled();
 }

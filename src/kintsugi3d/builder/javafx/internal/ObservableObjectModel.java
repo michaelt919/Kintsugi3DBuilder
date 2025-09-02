@@ -14,13 +14,13 @@ package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/21/2017.
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSetting;
 import kintsugi3d.builder.state.impl.ExtendedObjectModelBase;
-import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.builder.state.project.ObjectPoseSetting;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public class ObservableObjectModel extends ExtendedObjectModelBase
 {
     private ObservableValue<ObservableObjectPoseSetting> selectedObjectPoseProperty;
-    private final ObservableObjectPoseSetting sentinel = new ObservableObjectPoseSetting("sentinel");
+    private final ObjectPoseSetting sentinel = new ObservableObjectPoseSetting("sentinel");
 
     public ObservableValue<ObservableObjectPoseSetting> getSelectedObjectPoseProperty()
     {
@@ -32,7 +32,7 @@ public class ObservableObjectModel extends ExtendedObjectModelBase
         this.selectedObjectPoseProperty = selectedObjectPoseProperty;
     }
 
-    private ObservableObjectPoseSetting getActiveObjectPose()
+    private ObjectPoseSetting getActiveObjectPose()
     {
         if (selectedObjectPoseProperty == null || selectedObjectPoseProperty.getValue() == null)
         {
@@ -42,13 +42,6 @@ public class ObservableObjectModel extends ExtendedObjectModelBase
         {
             return selectedObjectPoseProperty.getValue();
         }
-    }
-
-    @Override
-    public Matrix4 getTransformationMatrix()
-    {//TODO: REMOVE DUPLICATE METHOD? (also found in parent class ExtendedObjectModelBase.java)
-        return getOrbit().times(Matrix4.translate(getCenter().negated()))
-                .times(Matrix4.scale(getScale()));
     }
 
     @Override
