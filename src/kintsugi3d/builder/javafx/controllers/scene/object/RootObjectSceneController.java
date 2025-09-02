@@ -36,7 +36,7 @@ public class RootObjectSceneController
     @FXML
     private SettingsObjectSceneController settingsController;
     @FXML
-    private ListView<ObjectPoseSetting> objectPoseListView;
+    private ListView<ObservableObjectPoseSetting> objectPoseListView;
     @FXML
     private VBox listControls;
     @FXML
@@ -51,24 +51,14 @@ public class RootObjectSceneController
         objectPoseListView.setItems(projectModel.getObjectPoseList());
         objectPoseListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        ObjectPoseSetting defaultPose = new ObjectPoseSetting(
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            false,
-            1.0,
-            "Default Pose"
-        );
+        ObservableObjectPoseSetting defaultPose = new ObservableObjectPoseSetting();
 
-        ObservableList<ObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
+        ObservableList<ObservableObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
 
         objectPoseList.add(defaultPose);
         objectPoseListView.getSelectionModel().select(defaultPose);
 
-        objectPoseList.addListener((ListChangeListener<? super ObjectPoseSetting>) change ->
+        objectPoseList.addListener((ListChangeListener<? super ObservableObjectPoseSetting>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == objectPoseList.size())
@@ -80,7 +70,7 @@ public class RootObjectSceneController
         objectModel.setSelectedObjectPoseProperty(objectPoseListView.getSelectionModel().selectedItemProperty());
     }
 
-    private SelectionModel<ObjectPoseSetting> getObjectPoseSelectionModel()
+    private SelectionModel<ObservableObjectPoseSetting> getObjectPoseSelectionModel()
     {
         return objectPoseListView.getSelectionModel();
     }
@@ -180,7 +170,7 @@ public class RootObjectSceneController
     void moveDOWNButton()
     {
         int i = getObjectPoseSelectionModel().getSelectedIndex();
-        List<ObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
+        List<ObservableObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
         if (i != 0 && i < objectPoseList.size() - 1)
         {
             Collections.swap(objectPoseList, i, i + 1);
@@ -191,7 +181,7 @@ public class RootObjectSceneController
     @FXML
     void lockPoseButton()
     {
-        Boolean newValue = !getObjectPoseSelectionModel().getSelectedItem().isLocked();
+        boolean newValue = !getObjectPoseSelectionModel().getSelectedItem().isLocked();
         getObjectPoseSelectionModel().getSelectedItem().setLocked(newValue);
         settingsController.setDisabled(newValue);
         objectPoseListView.refresh();

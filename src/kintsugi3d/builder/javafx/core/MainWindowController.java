@@ -245,6 +245,14 @@ public class MainWindowController
                 }
             });
 
+        // For re-processing a second time, we still want to switch to the material basis shader (?)
+        // even though the "processed" state technically hasn't changed.
+        projectModel.setOnProcessingComplete(event ->
+        {
+            // Automatically select material basis shader after processing textures
+            materialBasis.setSelected(true);
+        });
+
         projectModel.getProjectLoadedProperty().addListener(
             obs -> cameraViewListController.rebindSearchableListView());
 

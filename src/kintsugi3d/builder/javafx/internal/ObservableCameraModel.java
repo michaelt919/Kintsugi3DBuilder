@@ -12,27 +12,26 @@
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/21/2017.
 
 import javafx.beans.value.ObservableValue;
-import kintsugi3d.builder.javafx.controllers.scene.camera.CameraSetting;
+import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSetting;
 import kintsugi3d.builder.state.impl.ExtendedCameraModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public class ObservableCameraModel extends ExtendedCameraModelBase
 {
-    private ObservableValue<CameraSetting> selectedCameraSetting;
-    private final CameraSetting sentinel = new CameraSetting();
+    private ObservableValue<ObservableCameraSetting> selectedCameraSetting;
+    private final ObservableCameraSetting sentinel = new ObservableCameraSetting("sentinel");
 
     public ObservableCameraModel()
     {
         sentinel.setLocked(true);
-        sentinel.setName("sentinel");
     }
 
-    public void setSelectedCameraSetting(ObservableValue<CameraSetting> selectedCameraSetting)
+    public void setSelectedCameraSetting(ObservableValue<ObservableCameraSetting> selectedCameraSetting)
     {
         this.selectedCameraSetting = selectedCameraSetting;
     }
 
-    private CameraSetting getActiveCameraSetting()
+    private ObservableCameraSetting getActiveCameraSetting()
     {
         if (selectedCameraSetting == null || selectedCameraSetting.getValue() == null)
         {

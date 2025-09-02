@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/25/2017.
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
-import kintsugi3d.builder.javafx.controllers.scene.lights.LightInstanceSetting;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightInstanceSetting;
 import kintsugi3d.builder.state.LightInstanceModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -22,22 +22,22 @@ import kintsugi3d.util.OrbitPolarConverter;
 
 public class ObservableLightInstanceModel implements LightInstanceModel
 {
-    private ObservableValue<LightInstanceSetting> subLightSettingObservableValue;
-    private final LightInstanceSetting sentinel;
+    private ObservableValue<ObservableLightInstanceSetting> subLightSettingObservableValue;
+    private final ObservableLightInstanceSetting sentinel;
 
     public ObservableLightInstanceModel()
     {
-        this.sentinel = new LightInstanceSetting("sentinel", new SimpleBooleanProperty(true));
+        this.sentinel = new ObservableLightInstanceSetting("sentinel", new SimpleBooleanProperty(true));
         this.sentinel.intensity().set(0.0);
         this.sentinel.locked().set(true);
     }
 
-    public void setSubLightSettingObservableValue(ObservableValue<LightInstanceSetting> subLightSettingObservableValue)
+    public void setSubLightSettingObservableValue(ObservableValue<ObservableLightInstanceSetting> subLightSettingObservableValue)
     {
         this.subLightSettingObservableValue = subLightSettingObservableValue;
     }
 
-    private LightInstanceSetting getLightInstance()
+    private ObservableLightInstanceSetting getLightInstance()
     {
         if (subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null)
         {
@@ -74,8 +74,8 @@ public class ObservableLightInstanceModel implements LightInstanceModel
         if (!this.isLocked())
         {
             Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-            getLightInstance().azimuth().set((double) polar.x);
-            getLightInstance().inclination().set((double) polar.y);
+            getLightInstance().azimuth().set(polar.x);
+            getLightInstance().inclination().set(polar.y);
         }
     }
 
@@ -90,7 +90,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().log10Distance().set((double) log10Distance);
+            getLightInstance().log10Distance().set(log10Distance);
         }
     }
 
@@ -119,9 +119,9 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().targetX().set((double) target.x);
-            getLightInstance().targetY().set((double) target.y);
-            getLightInstance().targetZ().set((double) target.z);
+            getLightInstance().targetX().set(target.x);
+            getLightInstance().targetY().set(target.y);
+            getLightInstance().targetZ().set(target.z);
         }
     }
 
@@ -147,7 +147,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().azimuth().set((double) azimuth);
+            getLightInstance().azimuth().set(azimuth);
         }
     }
 
@@ -174,7 +174,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().inclination().set((double) inclination);
+            getLightInstance().inclination().set(inclination);
         }
     }
 
@@ -229,7 +229,7 @@ public class ObservableLightInstanceModel implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            LightInstanceSetting lightInstance = getLightInstance();
+            ObservableLightInstanceSetting lightInstance = getLightInstance();
             double intensity = lightInstance.intensity().get();
 
             if (intensity > 0.0)

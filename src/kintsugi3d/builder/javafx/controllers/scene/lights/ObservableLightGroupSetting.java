@@ -14,44 +14,51 @@ package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
-import kintsugi3d.builder.javafx.util.DOMConvertable;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import kintsugi3d.builder.state.LightGroupSetting;
 
 import java.util.ArrayList;
 
-public class LightGroupSetting implements DOMConvertable
+public class ObservableLightGroupSetting extends LightGroupSetting<ObservableLightInstanceSetting>
 {
     public static final int LIGHT_LIMIT = 4;
 
-    private final ListProperty<LightInstanceSetting> lightList = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>(LIGHT_LIMIT)));
+    private final ListProperty<ObservableLightInstanceSetting> lightList = new SimpleListProperty<>(new ObservableListWrapper<>(new ArrayList<>(LIGHT_LIMIT)));
     private final BooleanProperty locked = new SimpleBooleanProperty(false);
-    private final StringProperty name = new SimpleStringProperty();
+    private final StringProperty name = new SimpleStringProperty("New Group");
 
     private final IntegerProperty selectedLightIndex = new SimpleIntegerProperty(0);
 
-    public LightGroupSetting(String name)
+    public ObservableLightGroupSetting()
     {
-        this.name.setValue(name);
+    }
+
+    public ObservableLightGroupSetting(String name)
+    {
+        this.setName(name);
+    }
+
+    @Override
+    protected ObservableLightInstanceSetting constructLightInstanceSetting()
+    {
+        return new ObservableLightInstanceSetting(locked);
     }
 
     public void addLight()
     {
         if (lightList.size() < LIGHT_LIMIT)
         {
-            lightList.add(new LightInstanceSetting("X", locked));
+            lightList.add(new ObservableLightInstanceSetting(locked));
         }
     }
 
+    @Override
     public void addLight(int index, double targetX, double targetY, double targetZ)
     {
         if (lightList.size() < LIGHT_LIMIT)
         {
             if (index >= 0 && index < lightList.size())
             {
-                LightInstanceSetting newLight = lightList.get(index).duplicate();
+                ObservableLightInstanceSetting newLight = lightList.get(index).duplicate();
                 newLight.targetX().set(targetX);
                 newLight.targetY().set(targetY);
                 newLight.targetZ().set(targetZ);
@@ -64,14 +71,7 @@ public class LightGroupSetting implements DOMConvertable
         }
     }
 
-    public void removeLight()
-    {
-        if (!lightList.isEmpty())
-        {
-            lightList.remove(lightList.size() - 1);
-        }
-    }
-
+    @Override
     public void removeLight(int index)
     {
         if (!lightList.isEmpty())
@@ -84,53 +84,23 @@ public class LightGroupSetting implements DOMConvertable
     }
 
     @Override
-    public Element toDOMElement(Document document)
-    {
-        Element element = document.createElement("LightGroup");
-        element.setAttribute("name", name.getValue());
-        element.setAttribute("locked", locked.getValue().toString());
-
-        for(LightInstanceSetting lightInstance : lightList)
-        {
-            element.appendChild(lightInstance.toDOMElement(document));
-        }
-
-        return element;
-    }
-
-    public static LightGroupSetting fromDOMElement(Element element)
-    {
-        LightGroupSetting lightGroup = new LightGroupSetting(element.getAttribute("name"));
-        lightGroup.setLocked(Boolean.valueOf(element.getAttribute("locked")));
-
-        NodeList children = element.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++)
-        {
-            Node child = children.item(i);
-            if (child instanceof Element)
-            {
-                lightGroup.lightList.add(LightInstanceSetting.fromDOMElement((Element)child, lightGroup.locked));
-            }
-        }
-
-        return lightGroup;
-    }
-
     public int getLightCount()
     {
         return lightList.size();
     }
 
-    public ObservableList<LightInstanceSetting> getLightList()
+    @Override
+    public ObservableList<ObservableLightInstanceSetting> getLightList()
     {
         return lightList.get();
     }
 
-    public ListProperty<LightInstanceSetting> lightListProperty()
+    public ListProperty<ObservableLightInstanceSetting> lightListProperty()
     {
         return lightList;
     }
 
+    @Override
     public boolean isLocked()
     {
         return locked.get();
@@ -141,11 +111,13 @@ public class LightGroupSetting implements DOMConvertable
         return locked;
     }
 
+    @Override
     public void setLocked(boolean locked)
     {
         this.locked.set(locked);
     }
 
+    @Override
     public String getName()
     {
         return name.get();
@@ -156,6 +128,7 @@ public class LightGroupSetting implements DOMConvertable
         return name;
     }
 
+    @Override
     public void setName(String name)
     {
         this.name.set(name);

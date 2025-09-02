@@ -19,12 +19,18 @@ import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Interface accessible from both the graphics thread and JavaFX for managing project state
+ */
 public interface ProjectModel
 {
     String NULL_PROJECT_NAME = "No Project";
 
     File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException;
     void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException;
+
+    File getColorCheckerFile();
+    void setColorCheckerFile(File colorCheckerFile);
 
     boolean isProjectOpen();
     void setProjectOpen(boolean projectOpen);
@@ -47,4 +53,6 @@ public interface ProjectModel
 
     Vector3 getModelSize();
     void setModelSize(Vector3 modelSize);
+
+    void notifyProcessingComplete();
 }

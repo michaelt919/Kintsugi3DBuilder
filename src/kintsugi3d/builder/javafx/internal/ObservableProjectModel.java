@@ -12,44 +12,235 @@
 package kintsugi3d.builder.javafx.internal;
 
 import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.IntegerExpression;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.*;
 import javafx.collections.ObservableList;
-import kintsugi3d.builder.javafx.controllers.scene.camera.CameraSetting;
-import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
-import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
+import javafx.event.EventHandler;
+import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSetting;
+import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSetting;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSetting;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightInstanceSetting;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSetting;
+import kintsugi3d.builder.state.ProjectModelBase;
+import kintsugi3d.gl.vecmath.Vector3;
 
-public class ObservableProjectModel extends SynchronizedProjectModel
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+
+/**
+ * Project model with all the JavaFX properties and bindings.
+ */
+public class ObservableProjectModel extends ProjectModelBase<
+    ObservableCameraSetting, ObservableEnvironmentSetting, ObservableLightGroupSetting,
+    ObservableLightInstanceSetting, ObservableObjectPoseSetting>
 {
-    private final ObservableList<CameraSetting> cameraList = new ObservableListWrapper<>(super.getCameraList());
-    private final ObservableList<EnvironmentSetting> environmentList = new ObservableListWrapper<>(super.getEnvironmentList());
-    private final ObservableList<LightGroupSetting> lightGroupList = new ObservableListWrapper<>(super.getLightGroupList());
-    private final ObservableList<ObjectPoseSetting> objectPoseList = new ObservableListWrapper<>(super.getObjectPoseList());
+    private final ObservableList<ObservableCameraSetting> cameraList =
+        new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
+    private final ObservableList<ObservableEnvironmentSetting> environmentList =
+        new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
+    private final ObservableList<ObservableLightGroupSetting> lightGroupList =
+        new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
+    private final ObservableList<ObservableObjectPoseSetting> objectPoseList =
+        new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
+
+    private final ObjectProperty<File> colorCheckerFile = new SimpleObjectProperty<>();
+
+    private final BooleanProperty projectOpen = new SimpleBooleanProperty(false);
+    private final StringProperty projectName = new SimpleStringProperty(NULL_PROJECT_NAME);
+    private final BooleanProperty projectLoaded = new SimpleBooleanProperty();
+    private final BooleanProperty projectProcessed = new SimpleBooleanProperty();
+    private final IntegerProperty processedTextureResolution = new SimpleIntegerProperty();
+    private final ObjectProperty<Vector3> modelSize = new SimpleObjectProperty<>(new Vector3(1));
+
+    private final ObjectProperty<EventHandler<ProcessingCompleteEvent>> onProcessingComplete = new SimpleObjectProperty<>();
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<CameraSetting> getCameraList()
+    public ObservableList<ObservableCameraSetting> getCameraList()
     {
         return this.cameraList;
     }
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<EnvironmentSetting> getEnvironmentList()
+    public ObservableList<ObservableEnvironmentSetting> getEnvironmentList()
     {
         return this.environmentList;
     }
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<LightGroupSetting> getLightGroupList()
+    public ObservableList<ObservableLightGroupSetting> getLightGroupList()
     {
         return this.lightGroupList;
     }
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<ObjectPoseSetting> getObjectPoseList()
+    public ObservableList<ObservableObjectPoseSetting> getObjectPoseList()
     {
         return this.objectPoseList;
+    }
+
+    @Override
+    protected ObservableCameraSetting constructCameraSetting()
+    {
+        return new ObservableCameraSetting();
+    }
+
+    @Override
+    protected ObservableEnvironmentSetting constructEnvironmentSetting()
+    {
+        return new ObservableEnvironmentSetting();
+    }
+
+    @Override
+    protected ObservableLightGroupSetting constructLightGroupSetting()
+    {
+        return new ObservableLightGroupSetting();
+    }
+
+    @Override
+    protected ObservableObjectPoseSetting constructObjectPoseSetting()
+    {
+        return new ObservableObjectPoseSetting();
+    }
+
+    public EventHandler<ProcessingCompleteEvent> getOnProcessingComplete()
+    {
+        return onProcessingComplete.get();
+    }
+
+    public ObjectProperty<EventHandler<ProcessingCompleteEvent>> onProcessingCompleteProperty()
+    {
+        return onProcessingComplete;
+    }
+
+    public void setOnProcessingComplete(EventHandler<ProcessingCompleteEvent> onProcessingComplete)
+    {
+        this.onProcessingComplete.set(onProcessingComplete);
+    }
+
+    @Override
+    public void notifyProcessingComplete()
+    {
+        onProcessingComplete.get().handle(new ProcessingCompleteEvent());
+    }
+
+    @Override
+    public File getColorCheckerFile()
+    {
+        return this.colorCheckerFile.get();
+    }
+
+    @Override
+    public void setColorCheckerFile(File colorCheckerFile)
+    {
+        this.colorCheckerFile.set(colorCheckerFile);
+    }
+
+    @Override
+    public boolean isProjectOpen()
+    {
+        return projectOpen.get();
+    }
+
+    @Override
+    public void setProjectOpen(boolean projectOpen)
+    {
+        this.projectOpen.set(projectOpen);
+    }
+
+    public BooleanExpression getProjectOpenProperty()
+    {
+        return projectOpen;
+    }
+
+    @Override
+    public String getProjectName()
+    {
+        return projectName.get();
+    }
+
+    @Override
+    public void setProjectName(String projectName)
+    {
+        this.projectName.set(projectName);
+    }
+
+    public StringExpression getProjectNameProperty()
+    {
+        return projectName;
+    }
+
+    @Override
+    public boolean isProjectLoaded()
+    {
+        return projectLoaded.get();
+    }
+
+    @Override
+    public void setProjectLoaded(boolean projectLoaded)
+    {
+        this.projectLoaded.set(projectLoaded);
+    }
+
+    public BooleanExpression getProjectLoadedProperty()
+    {
+        return projectLoaded;
+    }
+
+    @Override
+    public boolean isProjectProcessed()
+    {
+        return projectProcessed.get();
+    }
+
+    @Override
+    public void setProjectProcessed(boolean projectProcessed)
+    {
+        this.projectProcessed.set(projectProcessed);
+    }
+
+    public BooleanExpression getProjectProcessedProperty()
+    {
+        return projectProcessed;
+    }
+
+    @Override
+    public int getProcessedTextureResolution()
+    {
+        return processedTextureResolution.get();
+    }
+
+    @Override
+    public void setProcessedTextureResolution(int processedTextureResolution)
+    {
+        this.processedTextureResolution.set(processedTextureResolution);
+    }
+
+    public IntegerExpression getProcessedTextureResolutionProperty()
+    {
+        return processedTextureResolution;
+    }
+
+    @Override
+    public Vector3 getModelSize()
+    {
+        return modelSize.get();
+    }
+
+    @Override
+    public void setModelSize(Vector3 modelSize)
+    {
+        this.modelSize.set(modelSize);
+    }
+
+    public ObjectProperty<Vector3> getModelSizeProperty()
+    {
+        return modelSize;
     }
 }

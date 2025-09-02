@@ -97,7 +97,7 @@ public class SettingsLightSceneController implements Initializable
     private final SafeNumberStringConverter numberStringConverter = new SafeNumberStringConverter(0);
     private final SafeLogScaleNumberStringConverter logScaleNumberStringConverter = new SafeLogScaleNumberStringConverter(1);
 
-    public final ChangeListener<LightInstanceSetting> changeListener = (observable, oldValue, newValue) ->
+    public final ChangeListener<ObservableLightInstanceSetting> changeListener = (observable, oldValue, newValue) ->
     {
         if (oldValue != null)
         {
@@ -120,7 +120,7 @@ public class SettingsLightSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    private void bind(LightInstanceSetting setting)
+    private void bind(ObservableLightInstanceSetting setting)
     {
         xCenterTextField.textProperty().bindBidirectional(setting.targetX(), numberStringConverter);
         yCenterTextField.textProperty().bindBidirectional(setting.targetY(), numberStringConverter);
@@ -143,7 +143,7 @@ public class SettingsLightSceneController implements Initializable
         colorPicker.valueProperty().bindBidirectional(setting.color());
     }
 
-    private void unbind(LightInstanceSetting setting)
+    private void unbind(ObservableLightInstanceSetting setting)
     {
         xCenterTextField.textProperty().unbindBidirectional(setting.targetX());
         yCenterTextField.textProperty().unbindBidirectional(setting.targetY());

@@ -12,25 +12,25 @@
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/25/2017.
 
 import javafx.beans.value.ObservableValue;
-import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSetting;
 import kintsugi3d.builder.state.EnvironmentModel;
 import kintsugi3d.builder.state.impl.ExtendedLightingModelBase;
 
 public final class ObservableLightingModel extends ExtendedLightingModelBase<ObservableLightInstanceModel>
 {
-    private ObservableValue<LightGroupSetting> selectedLightGroupSetting;
-    private final LightGroupSetting sentinel = new LightGroupSetting("sentinel");
+    private ObservableValue<ObservableLightGroupSetting> selectedLightGroupSetting;
+    private final ObservableLightGroupSetting sentinel = new ObservableLightGroupSetting("sentinel");
 
     public ObservableLightingModel(EnvironmentModel envModel)
     {
-        super(LightGroupSetting.LIGHT_LIMIT, i -> new ObservableLightInstanceModel(), envModel);
-        for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+        super(ObservableLightGroupSetting.LIGHT_LIMIT, i -> new ObservableLightInstanceModel(), envModel);
+        for (int i = 0; i < ObservableLightGroupSetting.LIGHT_LIMIT; i++)
         {
             getLight(i).setSubLightSettingObservableValue(sentinel.lightListProperty().valueAt(i));
         }
     }
 
-    public void setSelectedLightGroupSetting(ObservableValue<LightGroupSetting> selectedLightGroupSetting)
+    public void setSelectedLightGroupSetting(ObservableValue<ObservableLightGroupSetting> selectedLightGroupSetting)
     {
         this.selectedLightGroupSetting = selectedLightGroupSetting;
 
@@ -38,14 +38,14 @@ public final class ObservableLightingModel extends ExtendedLightingModelBase<Obs
         {
             if (newValue != null)
             {
-                for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+                for (int i = 0; i < ObservableLightGroupSetting.LIGHT_LIMIT; i++)
                 {
                     getLight(i).setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
                 }
             }
             else
             {
-                for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+                for (int i = 0; i < ObservableLightGroupSetting.LIGHT_LIMIT; i++)
                 {
                     getLight(i).setSubLightSettingObservableValue(sentinel.lightListProperty().valueAt(i));
                 }
@@ -53,7 +53,7 @@ public final class ObservableLightingModel extends ExtendedLightingModelBase<Obs
         });
     }
 
-    private LightGroupSetting getActiveLightGroupSetting()
+    private ObservableLightGroupSetting getActiveLightGroupSetting()
     {
         if (selectedLightGroupSetting == null || selectedLightGroupSetting.getValue() == null)
         {
@@ -80,7 +80,7 @@ public final class ObservableLightingModel extends ExtendedLightingModelBase<Obs
     @Override
     public boolean isLightWidgetEnabled(int index)
     {
-        LightGroupSetting activeLightGroup = getActiveLightGroupSetting();
+        ObservableLightGroupSetting activeLightGroup = getActiveLightGroupSetting();
         return !activeLightGroup.isLocked() && !activeLightGroup.getLightList().get(index).locked().get();
     }
 

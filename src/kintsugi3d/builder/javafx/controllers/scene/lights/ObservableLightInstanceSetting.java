@@ -13,13 +13,12 @@ package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on
 
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
-import kintsugi3d.builder.javafx.util.DOMConvertable;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import kintsugi3d.builder.state.LightInstanceSetting;
 
-public class LightInstanceSetting implements DOMConvertable
+public class ObservableLightInstanceSetting extends LightInstanceSetting
 {
+
     private final DoubleProperty targetX = new SimpleDoubleProperty();
     private final DoubleProperty targetY = new SimpleDoubleProperty();
     private final DoubleProperty targetZ = new SimpleDoubleProperty();
@@ -28,7 +27,7 @@ public class LightInstanceSetting implements DOMConvertable
     private final DoubleProperty log10Distance = new SimpleDoubleProperty();
     private final DoubleProperty intensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final BooleanProperty locked = new SimpleBooleanProperty();
-    private final StringProperty name = new SimpleStringProperty();
+    private final StringProperty name = new SimpleStringProperty("X");
     private final DoubleProperty spotSize = StaticUtilities.clamp(0.0, 90.0, new SimpleDoubleProperty(45.0));
     private final DoubleProperty spotTaper = StaticUtilities.clamp(0.0, 1.0, new SimpleDoubleProperty());
     private final Property<Color> color = new SimpleObjectProperty<>(Color.WHITE);
@@ -40,15 +39,21 @@ public class LightInstanceSetting implements DOMConvertable
         return groupLocked.get();
     }
 
-    public LightInstanceSetting(String name, BooleanProperty groupLockedProperty)
+    public ObservableLightInstanceSetting(String name, BooleanProperty groupLockedProperty)
     {
-        this.name.setValue(name);
+        this.setName(name);
         this.groupLocked = groupLockedProperty;
     }
 
-    public LightInstanceSetting duplicate()
+    public ObservableLightInstanceSetting(BooleanProperty groupLockedProperty)
     {
-        LightInstanceSetting dupl = new LightInstanceSetting(name.getValue(), this.groupLocked);
+        this.groupLocked = groupLockedProperty;
+    }
+
+
+    public ObservableLightInstanceSetting duplicate()
+    {
+        ObservableLightInstanceSetting dupl = new ObservableLightInstanceSetting(name.getValue(), this.groupLocked);
         dupl.targetX.set(this.targetX.get());
         dupl.targetY.set(this.targetY.get());
         dupl.targetZ.set(this.targetZ.get());
@@ -70,49 +75,147 @@ public class LightInstanceSetting implements DOMConvertable
     }
 
     @Override
-    public Element toDOMElement(Document document)
+    public double getTargetX()
     {
-        Element element = document.createElement("LightInstance");
-        element.setAttribute("targetX", targetX.getValue().toString());
-        element.setAttribute("targetY", targetY.getValue().toString());
-        element.setAttribute("targetZ", targetZ.getValue().toString());
-        element.setAttribute("azimuth", azimuth.getValue().toString());
-        element.setAttribute("inclination", inclination.getValue().toString());
-        element.setAttribute("log10Distance", log10Distance.getValue().toString());
-        element.setAttribute("intensity", intensity.getValue().toString());
-        element.setAttribute("spotSize", spotSize.getValue().toString());
-        element.setAttribute("spotTaper", spotTaper.getValue().toString());
-        element.setAttribute("locked", locked.getValue().toString());
-        element.setAttribute("name", name.getValue());
-        element.setAttribute("color", color.getValue().toString());
-        return element;
+        return targetX.get();
     }
 
-    public static LightInstanceSetting fromDOMElement(Element element, BooleanProperty groupLockedProperty)
+    @Override
+    public double getTargetY()
     {
-        LightInstanceSetting setting = new LightInstanceSetting(element.getAttribute("name"), groupLockedProperty);
-        setting.targetX.set(Double.valueOf(element.getAttribute("targetX")));
-        setting.targetY.set(Double.valueOf(element.getAttribute("targetY")));
-        setting.targetZ.set(Double.valueOf(element.getAttribute("targetZ")));
-        setting.azimuth.set(Double.valueOf(element.getAttribute("azimuth")));
-        setting.inclination.set(Double.valueOf(element.getAttribute("inclination")));
-        setting.log10Distance.set(Double.valueOf(element.getAttribute("log10Distance")));
-        setting.intensity.set(Double.valueOf(element.getAttribute("intensity")));
+        return targetY.get();
+    }
 
-        if (element.hasAttribute("spotSize"))
-        {
-            setting.spotSize.set(Double.valueOf(element.getAttribute("spotSize")));
-        }
+    @Override
+    public double getTargetZ()
+    {
+        return targetZ.get();
+    }
 
-        if (element.hasAttribute("spotTaper"))
-        {
-            setting.spotTaper.set(Double.valueOf(element.getAttribute("spotTaper")));
-        }
+    @Override
+    public double getAzimuth()
+    {
+        return azimuth.get();
+    }
 
-        setting.locked.set(Boolean.valueOf(element.getAttribute("locked")));
-        setting.color.setValue(Color.valueOf(element.getAttribute("color")));
+    @Override
+    public double getInclination()
+    {
+        return inclination.get();
+    }
 
-        return setting;
+    @Override
+    public double getLog10Distance()
+    {
+        return log10Distance.get();
+    }
+
+    @Override
+    public double getIntensity()
+    {
+        return intensity.get();
+    }
+
+    @Override
+    public boolean isLocked()
+    {
+        return locked.get();
+    }
+
+    @Override
+    public String getName()
+    {
+        return name.get();
+    }
+
+    @Override
+    public double getSpotSize()
+    {
+        return spotSize.get();
+    }
+
+    @Override
+    public double getSpotTaper()
+    {
+        return spotTaper.get();
+    }
+
+    @Override
+    public Color getColor()
+    {
+        return color.getValue();
+    }
+
+    @Override
+    public void setTargetX(double value)
+    {
+        this.targetX.set(value);
+    }
+
+    @Override
+    public void setTargetY(double value)
+    {
+        this.targetY.set(value);
+    }
+
+    @Override
+    public void setTargetZ(double value)
+    {
+        this.targetZ.set(value);
+    }
+
+    @Override
+    public void setAzimuth(double value)
+    {
+        this.azimuth.set(value);
+    }
+
+    @Override
+    public void setInclination(double value)
+    {
+        this.inclination.set(value);
+    }
+
+    @Override
+    public void setLog10Distance(double value)
+    {
+        this.log10Distance.set(value);
+    }
+
+    @Override
+    public void setIntensity(double value)
+    {
+        this.intensity.set(value);
+    }
+
+    @Override
+    public void setLocked(boolean value)
+    {
+        this.locked.set(value);
+    }
+
+    @Override
+    public void setName(String value)
+    {
+        this.name.set(value);
+    }
+
+    @Override
+    public void setSpotSize(double value)
+    {
+        this.spotSize.set(value);
+    }
+
+    @Override
+    public void setSpotTaper(double value)
+    {
+        this.spotTaper.set(value);
+    }
+
+    @Override
+    public void setColor(Color value)
+    {
+        this.color.setValue(value);
     }
 
     public DoubleProperty targetX()

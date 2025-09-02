@@ -31,6 +31,7 @@ import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.state.DefaultSettings;
+import kintsugi3d.builder.state.ProjectModel;
 
 public class SpecularFitController extends NonDataPageControllerBase
 {
@@ -163,7 +164,13 @@ public class SpecularFitController extends NonDataPageControllerBase
         settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
 
         SpecularFitRequest request = new SpecularFitRequest(settings);
-        request.setRequestCompleteCallback(() -> Global.state().getProjectModel().setProjectProcessed(true));
+        request.setRequestCompleteCallback(() ->
+        {
+            ProjectModel projectModel = Global.state().getProjectModel();
+            projectModel.setProjectProcessed(true);
+            projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
+            projectModel.notifyProcessingComplete();
+        });
         request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));
 
         // Run as a graphics request that optimizes from scratch.

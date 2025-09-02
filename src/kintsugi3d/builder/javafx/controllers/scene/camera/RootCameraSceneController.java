@@ -36,7 +36,7 @@ public class RootCameraSceneController
     @FXML
     private SettingsCameraSceneController settingsController;
     @FXML
-    private ListView<CameraSetting> cameraListView;
+    private ListView<ObservableCameraSetting> cameraListView;
     @FXML
     private VBox listControls;
     @FXML
@@ -51,15 +51,15 @@ public class RootCameraSceneController
         cameraListView.setItems(projectModel.getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        CameraSetting freeCam = new CameraSetting();
+        ObservableCameraSetting freeCam = new ObservableCameraSetting();
         freeCam.setName("Free Camera");
 
-        ObservableList<CameraSetting> cameraList = projectModel.getCameraList();
+        ObservableList<ObservableCameraSetting> cameraList = projectModel.getCameraList();
 
         cameraList.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
 
-        cameraList.addListener((ListChangeListener<? super CameraSetting>) change ->
+        cameraList.addListener((ListChangeListener<? super ObservableCameraSetting>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == cameraList.size())
@@ -71,7 +71,7 @@ public class RootCameraSceneController
         cameraModel.setSelectedCameraSetting(cameraListView.getSelectionModel().selectedItemProperty());
     }
 
-    private SelectionModel<CameraSetting> getCameraSelectionModel()
+    private SelectionModel<ObservableCameraSetting> getCameraSelectionModel()
     {
         return cameraListView.getSelectionModel();
     }
@@ -169,7 +169,7 @@ public class RootCameraSceneController
     void moveDOWNButton()
     {
         int i = getCameraSelectionModel().getSelectedIndex();
-        List<CameraSetting> cameraList = projectModel.getCameraList();
+        List<ObservableCameraSetting> cameraList = projectModel.getCameraList();
         if (i != 0 && i < cameraList.size() - 1)
         {
             Collections.swap(cameraList, i, i + 1);
@@ -180,7 +180,7 @@ public class RootCameraSceneController
     @FXML
     void lockCameraButton()
     {
-        Boolean newValue = !getCameraSelectionModel().getSelectedItem().isLocked();
+        boolean newValue = !getCameraSelectionModel().getSelectedItem().isLocked();
         getCameraSelectionModel().getSelectedItem().setLocked(newValue);
         settingsController.setDisabled(newValue);
         cameraListView.refresh();

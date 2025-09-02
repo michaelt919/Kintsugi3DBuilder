@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class TabModelsImpl implements TabModels {
-    private LinkedHashMap<String, CardsModel> models; //CardsModelImpl
+public class ObservableTabsModel implements TabModels {
+    private LinkedHashMap<String, CardsModel> models; // ObservableCardsModel
     private ObservableMap<String, CardsModel> observableModels;
     //private int modelCount;
 
-    public TabModelsImpl() {
+    public ObservableTabsModel() {
         models = new LinkedHashMap<>() {{
             put("Cameras", new ObservableCardsModel("Cameras"));
             put("Textures", new ObservableCardsModel("Textures"));

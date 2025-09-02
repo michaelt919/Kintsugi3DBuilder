@@ -17,7 +17,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
+import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSetting;
 import kintsugi3d.builder.state.BackgroundMode;
 import kintsugi3d.builder.state.EnvironmentModel;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -34,7 +34,7 @@ import java.util.Optional;
 public class ObservableEnvironmentModel implements EnvironmentModel
 {
     private static final Logger LOG = LoggerFactory.getLogger(ObservableEnvironmentModel.class);
-    private ObservableValue<EnvironmentSetting> selected;
+    private ObservableValue<ObservableEnvironmentSetting> selected;
 
     private boolean environmentMapLoaded = false;
     private boolean backplateLoaded = false;
@@ -44,7 +44,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
 
     private final Property<EncodableColorImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
 
-    public void setSelected(ObservableValue<EnvironmentSetting> selected)
+    public void setSelected(ObservableValue<ObservableEnvironmentSetting> selected)
     {
         this.selected = selected;
         this.selected.addListener(settingChange);
@@ -65,16 +65,16 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            EnvironmentSetting selectedEnvironment = selected.getValue();
-            if (selectedEnvironment.isEnvUseColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvUseImageEnabled()))
+            ObservableEnvironmentSetting selectedEnvironment = selected.getValue();
+            if (selectedEnvironment.isEnvironmentColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvironmentImageEnabled()))
             {
-                Color color = selectedEnvironment.getEnvColor();
+                Color color = selectedEnvironment.getEnvironmentColor();
                 return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
-                    .times((float) selectedEnvironment.getEnvIntensity());
+                    .times((float) selectedEnvironment.getEnvironmentColorIntensity());
             }
-            else if (selectedEnvironment.isEnvUseImageEnabled() && environmentMapLoaded)
+            else if (selectedEnvironment.isEnvironmentImageEnabled() && environmentMapLoaded)
             {
-                return new Vector3((float) selectedEnvironment.getEnvIntensity());
+                return new Vector3((float) selectedEnvironment.getEnvironmentColorIntensity());
             }
             else
             {
@@ -92,27 +92,27 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            EnvironmentSetting selectedEnvironment = selected.getValue();
+            ObservableEnvironmentSetting selectedEnvironment = selected.getValue();
 
-            if (selectedEnvironment.isBPUseColorEnabled() && (backplateLoaded || !selectedEnvironment.isBPUseImageEnabled()))
+            if (selectedEnvironment.isBackplateColorEnabled() && (backplateLoaded || !selectedEnvironment.isBackplateImageEnabled()))
             {
-                Color color = selectedEnvironment.getBpColor();
+                Color color = selectedEnvironment.getBackplateColor();
                 return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
                     .times((float) selectedEnvironment.getBackgroundIntensity());
             }
-            else if (selectedEnvironment.isBPUseImageEnabled() && backplateLoaded)
+            else if (selectedEnvironment.isBackplateImageEnabled() && backplateLoaded)
             {
                 return new Vector3((float) selectedEnvironment.getBackgroundIntensity());
             }
-            else if (selectedEnvironment.isEnvUseColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvUseImageEnabled()))
+            else if (selectedEnvironment.isEnvironmentColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvironmentImageEnabled()))
             {
-                Color color = selectedEnvironment.getEnvColor();
+                Color color = selectedEnvironment.getEnvironmentColor();
                 return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
-                    .times((float)(selectedEnvironment.getBackgroundIntensity() * selectedEnvironment.getEnvIntensity()));
+                    .times((float)(selectedEnvironment.getBackgroundIntensity() * selectedEnvironment.getEnvironmentColorIntensity()));
             }
-            else if (selectedEnvironment.isEnvUseImageEnabled() && environmentMapLoaded)
+            else if (selectedEnvironment.isEnvironmentImageEnabled() && environmentMapLoaded)
             {
-                return new Vector3((float)(selectedEnvironment.getBackgroundIntensity() * selectedEnvironment.getEnvIntensity()));
+                return new Vector3((float)(selectedEnvironment.getBackgroundIntensity() * selectedEnvironment.getEnvironmentColorIntensity()));
             }
             else
             {
@@ -158,7 +158,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
 
             if (doesSelectedExist())
             {
-                selected.getValue().setEnvLoaded(true);
+                selected.getValue().setEnvironmentLoaded(true);
             }
 
             environmentMapLoaded = true;
@@ -195,21 +195,21 @@ public class ObservableEnvironmentModel implements EnvironmentModel
 
             if (doesSelectedExist())
             {
-                selected.getValue().setBPLoaded(true);
+                selected.getValue().setBackplateLoaded(true);
             }
         })
         .start();
     }
 
-    private final ChangeListener<EnvironmentSetting> settingChange = (observable, oldSetting, newSetting) ->
+    private final ChangeListener<ObservableEnvironmentSetting> settingChange = (observable, oldSetting, newSetting) ->
     {
         if (newSetting != null)
         {
             newSetting.envImageFileProperty().addListener(envFileChange);
-            envFileChange.changed(null, oldSetting == null ? null : oldSetting.getEnvImageFile(), newSetting.getEnvImageFile());
+            envFileChange.changed(null, oldSetting == null ? null : oldSetting.getEnvironmentImageFile(), newSetting.getEnvironmentImageFile());
 
             newSetting.bpImageFileProperty().addListener(bpFileChange);
-            bpFileChange.changed(null, oldSetting == null ? null : oldSetting.getBpImageFile(), newSetting.getBpImageFile());
+            bpFileChange.changed(null, oldSetting == null ? null : oldSetting.getBackplateImageFile(), newSetting.getBackplateImageFile());
         }
 
         if (oldSetting != null)
@@ -222,12 +222,12 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     @Override
     public BackgroundMode getBackgroundMode()
     {
-        EnvironmentSetting selectedEnvironment = selected.getValue();
-        if (this.backplateLoaded && doesSelectedExist() && selectedEnvironment.isBPUseImageEnabled())
+        ObservableEnvironmentSetting selectedEnvironment = selected.getValue();
+        if (this.backplateLoaded && doesSelectedExist() && selectedEnvironment.isBackplateImageEnabled())
         {
             return BackgroundMode.IMAGE;
         }
-        else if (selectedEnvironment.isBPUseColorEnabled())
+        else if (selectedEnvironment.isBackplateColorEnabled())
         {
             return BackgroundMode.COLOR;
         }
@@ -244,7 +244,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     @Override
     public boolean isEnvironmentMappingEnabled()
     {
-        return this.environmentMapLoaded && doesSelectedExist() && selected.getValue().isEnvUseImageEnabled();
+        return this.environmentMapLoaded && doesSelectedExist() && selected.getValue().isEnvironmentImageEnabled();
     }
 
     @Override
@@ -252,7 +252,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            double azimuth = selected.getValue().getEnvRotation();
+            double azimuth = selected.getValue().getEnvironmentRotation();
             return Matrix4.rotateY(Math.toRadians(azimuth));
         }
         else
@@ -264,13 +264,13 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     @Override
     public float getEnvironmentMapFilteringBias()
     {
-        return doesSelectedExist() ? (float)selected.getValue().getEnvFilteringBias() : 0;
+        return doesSelectedExist() ? (float)selected.getValue().getEnvironmentFilteringBias() : 0;
     }
 
     @Override
     public float getEnvironmentRotation()
     {
-        return doesSelectedExist() ? (float)(selected.getValue().getEnvRotation() * Math.PI / 180) : 0.0f;
+        return doesSelectedExist() ? (float)(selected.getValue().getEnvironmentRotation() * Math.PI / 180) : 0.0f;
     }
 
     @Override
@@ -278,14 +278,14 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist() && !selected.getValue().isLocked())
         {
-            selected.getValue().setEnvRotation(environmentRotation * 180 / Math.PI);
+            selected.getValue().setEnvironmentRotation(environmentRotation * 180 / Math.PI);
         }
     }
 
     @Override
     public float getEnvironmentIntensity()
     {
-        return doesSelectedExist() ? (float)selected.getValue().getEnvIntensity() : 0.0f;
+        return doesSelectedExist() ? (float)selected.getValue().getEnvironmentColorIntensity() : 0.0f;
     }
 
     @Override
@@ -293,7 +293,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist() && !selected.getValue().isLocked())
         {
-            selected.getValue().setEnvIntensity(environmentIntensity);
+            selected.getValue().setEnvironmentIntensity(environmentIntensity);
         }
     }
 
@@ -315,7 +315,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     @Override
     public boolean isGroundPlaneEnabled()
     {
-        return doesSelectedExist() && selected.getValue().isGPEnabled();
+        return doesSelectedExist() && selected.getValue().isGroundPlaneEnabled();
     }
 
     @Override
@@ -323,7 +323,7 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            Color color = selected.getValue().getGPColor();
+            Color color = selected.getValue().getGroundPlaneCrolor();
             return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue());
         }
         else
@@ -336,12 +336,12 @@ public class ObservableEnvironmentModel implements EnvironmentModel
     @Override
     public float getGroundPlaneHeight()
     {
-        return doesSelectedExist() ? (float)selected.getValue().getGPHeight() : 0.0f;
+        return doesSelectedExist() ? (float)selected.getValue().getGroundPlaneHeight() : 0.0f;
     }
 
     @Override
     public float getGroundPlaneSize()
     {
-        return doesSelectedExist() ? (float)selected.getValue().getGPSize() : 1.0f;
+        return doesSelectedExist() ? (float)selected.getValue().getGroundPlaneSize() : 1.0f;
     }
 }

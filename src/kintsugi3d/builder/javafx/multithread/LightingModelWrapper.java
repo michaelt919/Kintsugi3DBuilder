@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSetting;
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.ExtendedLightingModel;
 import kintsugi3d.builder.state.impl.ExtendedLightingModelBase;
@@ -23,7 +23,7 @@ public class LightingModelWrapper extends ExtendedLightingModelBase<LightInstanc
 
     public LightingModelWrapper(ExtendedLightingModel baseModel)
     {
-        super(LightGroupSetting.LIGHT_LIMIT,
+        super(ObservableLightGroupSetting.LIGHT_LIMIT,
             index -> new LightInstanceModelWrapper(baseModel.getLight(index)),
             new EnvironmentModelWrapper(baseModel.getEnvironmentModel()));
         this.baseModel = baseModel;

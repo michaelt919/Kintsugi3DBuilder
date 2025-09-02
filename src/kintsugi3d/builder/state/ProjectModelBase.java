@@ -9,18 +9,8 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.internal;
+package kintsugi3d.builder.state;
 
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.IntegerExpression;
-import javafx.beans.binding.StringExpression;
-import javafx.beans.property.*;
-import kintsugi3d.builder.javafx.controllers.scene.camera.CameraSetting;
-import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
-import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
-import kintsugi3d.builder.state.ProjectModel;
-import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -42,25 +32,29 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 
-// TODO can this class be refactored to eliminate dependency on JavaFX?
-public abstract class ProjectModelBase implements ProjectModel
+/**
+ * Base class that primarily handles serialization in a UI-agnostic manner (no JavaFX coupling)
+ * @param <CameraSettingType>
+ * @param <EnvironmentSettingType>
+ * @param <LightGroupSettingType>
+ * @param <LightInstanceSettingType>
+ * @param <ObjectPoseSettingType>
+ */
+public abstract class ProjectModelBase<
+    CameraSettingType extends CameraSetting, EnvironmentSettingType extends EnvironmentSetting,
+    LightGroupSettingType extends LightGroupSetting<LightInstanceSettingType>,
+    LightInstanceSettingType extends LightInstanceSetting, ObjectPoseSettingType extends ObjectPoseSetting>
+    implements ProjectModel
 {
-    public abstract List<CameraSetting> getCameraList();
+    private final EnvironmentSettingType noEnvironment = EnvironmentSetting.createNoEnvironment(this::constructEnvironmentSetting);
 
-    public abstract List<EnvironmentSetting> getEnvironmentList();
+    public abstract List<CameraSettingType> getCameraList();
 
-    public abstract List<LightGroupSetting> getLightGroupList();
+    public abstract List<EnvironmentSettingType> getEnvironmentList();
 
-    public abstract List<ObjectPoseSetting> getObjectPoseList();
+    public abstract List<LightGroupSettingType> getLightGroupList();
 
-    private File colorCheckerFile;
-
-    private final BooleanProperty projectOpen = new SimpleBooleanProperty(false);
-    private final StringProperty projectName = new SimpleStringProperty(NULL_PROJECT_NAME);
-    private final BooleanProperty projectLoaded = new SimpleBooleanProperty();
-    private final BooleanProperty projectProcessed = new SimpleBooleanProperty();
-    private final IntegerProperty processedTextureResolution = new SimpleIntegerProperty();
-    private final ObjectProperty<Vector3> modelSize = new SimpleObjectProperty<>(new Vector3(1));
+    public abstract List<ObjectPoseSettingType> getObjectPoseList();
 
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
@@ -96,7 +90,8 @@ public abstract class ProjectModelBase implements ProjectModel
                         Node cameraNode = cameraNodes.item(i);
                         if (cameraNode instanceof Element)
                         {
-                            this.getCameraList().add(CameraSetting.fromDOMElement((Element) cameraNode));
+                            this.getCameraList().add(CameraSetting.fromDOMElement(
+                                (Element) cameraNode, this::constructCameraSetting));
                         }
                     }
                 }
@@ -110,14 +105,15 @@ public abstract class ProjectModelBase implements ProjectModel
                 synchronized (this.getEnvironmentList())
                 {
                     this.getEnvironmentList().clear();
-                    this.getEnvironmentList().add(EnvironmentSetting.NO_ENVIRONMENT);
+                    this.getEnvironmentList().add(noEnvironment);
 
                     for (int i = 0; i < environmentNodes.getLength(); i++)
                     {
                         Node environmentNode = environmentNodes.item(i);
                         if (environmentNode instanceof Element)
                         {
-                            this.getEnvironmentList().add(EnvironmentSetting.fromDOMElement((Element) environmentNode));
+                            this.getEnvironmentList().add(EnvironmentSetting.fromDOMElement(
+                                (Element) environmentNode, this::constructEnvironmentSetting));
                         }
                     }
                 }
@@ -136,7 +132,8 @@ public abstract class ProjectModelBase implements ProjectModel
                         Node lightGroupNode = lightGroupNodes.item(i);
                         if (lightGroupNode instanceof Element)
                         {
-                            this.getLightGroupList().add(LightGroupSetting.fromDOMElement((Element) lightGroupNode));
+                            this.getLightGroupList().add(LightGroupSetting.fromDOMElement(
+                                (Element) lightGroupNode, this::constructLightGroupSetting));
                         }
                     }
                 }
@@ -155,7 +152,8 @@ public abstract class ProjectModelBase implements ProjectModel
                         Node objectPoseNode = objectPoseNodes.item(i);
                         if (objectPoseNode instanceof Element)
                         {
-                            this.getObjectPoseList().add(ObjectPoseSetting.fromDOMElement((Element) objectPoseNode));
+                            this.getObjectPoseList().add(ObjectPoseSetting.fromDOMElement(
+                                (Element) objectPoseNode, this::constructObjectPoseSetting));
                         }
                     }
                 }
@@ -164,7 +162,7 @@ public abstract class ProjectModelBase implements ProjectModel
             Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
             if (colorPickerImageNode != null)
             {
-                this.colorCheckerFile = new File(colorPickerImageNode.getTextContent());
+                this.setColorCheckerFile(new File(colorPickerImageNode.getTextContent()));
             }
 
             return newVsetFile;
@@ -204,7 +202,7 @@ public abstract class ProjectModelBase implements ProjectModel
 
             for (EnvironmentSetting environment : this.getEnvironmentList())
             {
-                if (!Objects.equals(environment, EnvironmentSetting.NO_ENVIRONMENT))
+                if (!Objects.equals(environment, noEnvironment))
                 {
                     environmentListElement.appendChild(environment.toDOMElement(document));
                 }
@@ -216,7 +214,7 @@ public abstract class ProjectModelBase implements ProjectModel
             Element lightGroupListElement = document.createElement("LightGroupList");
             rootElement.appendChild(lightGroupListElement);
 
-            for (LightGroupSetting lightGroup : this.getLightGroupList())
+            for (LightGroupSetting<LightInstanceSettingType> lightGroup : this.getLightGroupList())
             {
                 lightGroupListElement.appendChild(lightGroup.toDOMElement(document));
             }
@@ -249,112 +247,13 @@ public abstract class ProjectModelBase implements ProjectModel
         }
     }
 
-    public File getColorCheckerFile() {return this.colorCheckerFile;}
+    protected abstract CameraSettingType constructCameraSetting();
+    protected abstract EnvironmentSettingType constructEnvironmentSetting();
+    protected abstract LightGroupSettingType constructLightGroupSetting();
+    protected abstract ObjectPoseSettingType constructObjectPoseSetting();
 
-    public void setColorCheckerFile(File colorCheckerFile)
+    public EnvironmentSettingType getNoEnvironment()
     {
-        this.colorCheckerFile = colorCheckerFile;
-    }
-
-    @Override
-    public boolean isProjectOpen()
-    {
-        return projectOpen.get();
-    }
-
-    @Override
-    public void setProjectOpen(boolean projectOpen)
-    {
-        this.projectOpen.set(projectOpen);
-    }
-
-    public BooleanExpression getProjectOpenProperty()
-    {
-        return projectOpen;
-    }
-
-    @Override
-    public String getProjectName()
-    {
-        return projectName.get();
-    }
-
-    @Override
-    public void setProjectName(String projectName)
-    {
-        this.projectName.set(projectName);
-    }
-
-    public StringExpression getProjectNameProperty()
-    {
-        return projectName;
-    }
-
-    @Override
-    public boolean isProjectLoaded()
-    {
-        return projectLoaded.get();
-    }
-
-    @Override
-    public void setProjectLoaded(boolean projectLoaded)
-    {
-        this.projectLoaded.set(projectLoaded);
-    }
-
-    public BooleanExpression getProjectLoadedProperty()
-    {
-        return projectLoaded;
-    }
-
-    @Override
-    public boolean isProjectProcessed()
-    {
-        return projectProcessed.get();
-    }
-
-    @Override
-    public void setProjectProcessed(boolean projectProcessed)
-    {
-        this.projectProcessed.set(projectProcessed);
-    }
-
-    public BooleanExpression getProjectProcessedProperty()
-    {
-        return projectProcessed;
-    }
-
-    @Override
-    public int getProcessedTextureResolution()
-    {
-        return processedTextureResolution.get();
-    }
-
-    @Override
-    public void setProcessedTextureResolution(int processedTextureResolution)
-    {
-        this.processedTextureResolution.set(processedTextureResolution);
-    }
-
-    public IntegerExpression getProcessedTextureResolutionProperty()
-    {
-        return processedTextureResolution;
-    }
-
-    @Override
-    public Vector3 getModelSize()
-    {
-        return modelSize.get();
-    }
-
-    @Override
-    public void setModelSize(Vector3 modelSize)
-    {
-        this.modelSize.set(modelSize);
-    }
-
-    public ObjectProperty<Vector3> getModelSizeProperty()
-    {
-        return modelSize;
+        return this.noEnvironment;
     }
 }

@@ -12,12 +12,10 @@
 package kintsugi3d.builder.javafx.controllers.scene.object;
 
 import javafx.beans.property.*;
-import kintsugi3d.builder.javafx.util.DOMConvertable;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import kintsugi3d.builder.state.ObjectPoseSetting;
 
-public class ObjectPoseSetting implements DOMConvertable
+public class ObservableObjectPoseSetting extends ObjectPoseSetting
 {
     private final DoubleProperty centerX = new SimpleDoubleProperty();
     private final DoubleProperty centerY = new SimpleDoubleProperty();
@@ -26,53 +24,17 @@ public class ObjectPoseSetting implements DOMConvertable
     private final DoubleProperty rotateX = StaticUtilities.clamp(-90, 90, new SimpleDoubleProperty());
     private final DoubleProperty rotateZ = StaticUtilities.wrapAround(-180.0, 180.0, new SimpleDoubleProperty());
     private final BooleanProperty locked = new SimpleBooleanProperty();
-    private final StringProperty name = new SimpleStringProperty();
+    private final StringProperty name = new SimpleStringProperty("Default Pose");
 
-    private final DoubleProperty scale = new SimpleDoubleProperty();
+    private final DoubleProperty scale = new SimpleDoubleProperty(1.0);
 
-    public ObjectPoseSetting(Double centerX, Double centerY, Double centerZ,
-                             Double rotateY, Double rotateX, Double rotateZ, Boolean locked, Double scale, String name)
+    public ObservableObjectPoseSetting()
     {
-        this.centerX.setValue(centerX);
-        this.centerY.setValue(centerY);
-        this.centerZ.setValue(centerZ);
-        this.rotateY.setValue(rotateY);
-        this.rotateX.setValue(rotateX);
-        this.rotateZ.setValue(rotateZ);
-        this.locked.setValue(locked);
-        this.scale.setValue(scale);
-        this.name.setValue(name);
     }
 
-    @Override
-    public Element toDOMElement(Document document)
+    public ObservableObjectPoseSetting(String name)
     {
-        Element element = document.createElement("Camera");
-        element.setAttribute("centerX", centerX.getValue().toString());
-        element.setAttribute("centerY", centerY.getValue().toString());
-        element.setAttribute("centerZ", centerZ.getValue().toString());
-        element.setAttribute("rotateY", rotateY.getValue().toString());
-        element.setAttribute("rotateX", rotateX.getValue().toString());
-        element.setAttribute("rotateZ", rotateZ.getValue().toString());
-        element.setAttribute("locked", locked.getValue().toString());
-        element.setAttribute("scale", scale.getValue().toString());
-        element.setAttribute("name", name.getValue());
-        return element;
-    }
-
-    public static ObjectPoseSetting fromDOMElement(Element element)
-    {
-        return new ObjectPoseSetting(
-            Double.valueOf(element.getAttribute("centerX")),
-            Double.valueOf(element.getAttribute("centerY")),
-            Double.valueOf(element.getAttribute("centerZ")),
-            Double.valueOf(element.getAttribute("rotateY")),
-            Double.valueOf(element.getAttribute("rotateX")),
-            Double.valueOf(element.getAttribute("rotateZ")),
-            Boolean.valueOf(element.getAttribute("locked")),
-            element.hasAttribute("scale") ? Double.parseDouble(element.getAttribute("scale")) : 1.0,
-            element.getAttribute("name")
-        );
+        this.setName(name);
     }
 
     @Override
@@ -88,22 +50,26 @@ public class ObjectPoseSetting implements DOMConvertable
         }
     }
 
-    public ObjectPoseSetting duplicate()
+    public ObservableObjectPoseSetting duplicate()
     {
-        return new ObjectPoseSetting(
-            this.centerX.getValue(),
-            this.centerY.getValue(),
-            this.centerZ.getValue(),
-            this.rotateY.getValue(),
-            this.rotateX.getValue(),
-            this.rotateZ.getValue(),
-            this.locked.getValue(),
-            this.scale.getValue(),
-            this.name.getValue()
-                    + " copy"
-        );
+        ObservableObjectPoseSetting copy = new ObservableObjectPoseSetting();
+
+        copy.setCenterX(this.getCenterX());
+        copy.setCenterY(this.getCenterY());
+        copy.setCenterZ(this.getCenterZ());
+
+        copy.setRotateY(this.getRotateY());
+        copy.setRotateX(this.getRotateX());
+        copy.setRotateZ(this.getRotateZ());
+
+        copy.setLocked(this.isLocked());
+        copy.setScale(this.getScale());
+        copy.setName(this.getName() + " copy");
+
+        return copy;
     }
 
+    @Override
     public double getCenterX()
     {
         return centerX.get();
@@ -114,11 +80,13 @@ public class ObjectPoseSetting implements DOMConvertable
         return centerX;
     }
 
+    @Override
     public void setCenterX(double centerX)
     {
         this.centerX.set(centerX);
     }
 
+    @Override
     public double getCenterY()
     {
         return centerY.get();
@@ -129,11 +97,13 @@ public class ObjectPoseSetting implements DOMConvertable
         return centerY;
     }
 
+    @Override
     public void setCenterY(double centerY)
     {
         this.centerY.set(centerY);
     }
 
+    @Override
     public double getCenterZ()
     {
         return centerZ.get();
@@ -144,11 +114,13 @@ public class ObjectPoseSetting implements DOMConvertable
         return centerZ;
     }
 
+    @Override
     public void setCenterZ(double centerZ)
     {
         this.centerZ.set(centerZ);
     }
 
+    @Override
     public double getRotateY()
     {
         return rotateY.get();
@@ -159,11 +131,13 @@ public class ObjectPoseSetting implements DOMConvertable
         return rotateY;
     }
 
+    @Override
     public void setRotateY(double rotateY)
     {
         this.rotateY.set(rotateY);
     }
 
+    @Override
     public double getRotateX()
     {
         return rotateX.get();
@@ -174,11 +148,13 @@ public class ObjectPoseSetting implements DOMConvertable
         return rotateX;
     }
 
+    @Override
     public void setRotateX(double rotateX)
     {
         this.rotateX.set(rotateX);
     }
 
+    @Override
     public double getRotateZ()
     {
         return rotateZ.get();
@@ -189,11 +165,13 @@ public class ObjectPoseSetting implements DOMConvertable
         return rotateZ;
     }
 
+    @Override
     public void setRotateZ(double rotateZ)
     {
         this.rotateZ.set(rotateZ);
     }
 
+    @Override
     public boolean isLocked()
     {
         return locked.get();
@@ -204,6 +182,7 @@ public class ObjectPoseSetting implements DOMConvertable
         return locked;
     }
 
+    @Override
     public void setLocked(boolean locked)
     {
         this.locked.set(locked);
@@ -211,11 +190,14 @@ public class ObjectPoseSetting implements DOMConvertable
 
     public DoubleProperty scaleProperty(){return scale;}
 
+    @Override
     public double getScale(){return Math.pow(10, scale.get());}
         //scale.get() returns the slider value before it has been adjusted to a logarithmic scale
 
+    @Override
     public void setScale(double scale){this.scale.set(scale);}
 
+    @Override
     public String getName()
     {
         return name.get();
@@ -226,6 +208,7 @@ public class ObjectPoseSetting implements DOMConvertable
         return name;
     }
 
+    @Override
     public void setName(String name)
     {
         this.name.set(name);

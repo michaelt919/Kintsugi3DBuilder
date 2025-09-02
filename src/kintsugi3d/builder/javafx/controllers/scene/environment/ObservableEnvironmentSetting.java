@@ -13,14 +13,12 @@ package kintsugi3d.builder.javafx.controllers.scene.environment;
 
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
-import kintsugi3d.builder.javafx.util.DOMConvertable;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import kintsugi3d.builder.state.EnvironmentSetting;
 
 import java.io.File;
 
-public class EnvironmentSetting implements DOMConvertable
+public class ObservableEnvironmentSetting extends EnvironmentSetting
 {
     private final BooleanProperty envUseImage = new SimpleBooleanProperty();
     private final BooleanProperty envUseColor = new SimpleBooleanProperty(true);
@@ -48,84 +46,10 @@ public class EnvironmentSetting implements DOMConvertable
     private final DoubleProperty gpHeight = new SimpleDoubleProperty();
     private final DoubleProperty gpSize = new SimpleDoubleProperty(1.0);
 
-    public static final EnvironmentSetting NO_ENVIRONMENT;
-
-    static
-    {
-        NO_ENVIRONMENT = new EnvironmentSetting();
-        NO_ENVIRONMENT.setName("No Environment");
-        NO_ENVIRONMENT.setLocked(true);
-    }
-
-    @Override
-    public Element toDOMElement(Document document)
-    {
-        Element element = document.createElement("Environment");
-        element.setAttribute("envUseImage", envUseImage.getValue().toString());
-        element.setAttribute("envUseColor", envUseColor.getValue().toString());
-        element.setAttribute("bpUseImage", bpUseImage.getValue().toString());
-        element.setAttribute("bpUseColor", bpUseColor.getValue().toString());
-        element.setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString());
-        if (envImageFile.getValue() != null)
-        {
-            element.setAttribute("envImageFile", envImageFile.getValue().getPath());
-        }
-        if (bpImageFile.getValue() != null)
-        {
-            element.setAttribute("bpImageFile", bpImageFile.getValue().getPath());
-        }
-        element.setAttribute("backgroundIntensity", backgroundIntensity.getValue().toString());
-        element.setAttribute("envColorIntensity", envColorIntensity.getValue().toString());
-        element.setAttribute("envRotation", envRotation.getValue().toString());
-        element.setAttribute("envFilteringBias", envFilteringBias.getValue().toString());
-        element.setAttribute("envColor", envColor.getValue().toString());
-        element.setAttribute("bpColor", bpColor.getValue().toString());
-        element.setAttribute("name", name.getValue());
-        element.setAttribute("locked", locked.getValue().toString());
-        element.setAttribute("envLoaded", envLoaded.getValue().toString());
-        element.setAttribute("bpLoaded", bpLoaded.getValue().toString());
-        element.setAttribute("gpEnabled", gpEnabled.getValue().toString());
-        element.setAttribute("gpColor", gpColor.getValue().toString());
-        element.setAttribute("gpHeight", gpHeight.getValue().toString());
-        element.setAttribute("gpSize", gpSize.getValue().toString());
-        return element;
-    }
-
-    public static EnvironmentSetting fromDOMElement(Element element)
-    {
-        EnvironmentSetting newEnvironment = new EnvironmentSetting();
-        newEnvironment.envUseImage.setValue(Boolean.valueOf(element.getAttribute("envUseImage")));
-        newEnvironment.envUseColor.setValue(Boolean.valueOf(element.getAttribute("envUseColor")));
-        newEnvironment.bpUseImage.setValue(Boolean.valueOf(element.getAttribute("bpUseImage")));
-        newEnvironment.bpUseColor.setValue(Boolean.valueOf(element.getAttribute("bpUseColor")));
-        newEnvironment.imagePathsRelative.setValue(Boolean.valueOf(element.getAttribute("imagePathsRelative")));
-        newEnvironment.envImageFile.setValue(element.hasAttribute("envImageFile") ?
-            new File(element.getAttribute("envImageFile")) : null);
-        newEnvironment.bpImageFile.setValue(element.hasAttribute("bpImageFile") ?
-            new File(element.getAttribute("bpImageFile")) : null);
-        newEnvironment.backgroundIntensity.setValue(Double.valueOf(element.getAttribute("backgroundIntensity")));
-        newEnvironment.envColorIntensity.setValue(Double.valueOf(element.getAttribute("envColorIntensity")));
-        newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
-        newEnvironment.envColor.setValue(Color.valueOf(element.getAttribute("envColor")));
-        newEnvironment.envFilteringBias.setValue(element.hasAttribute("envFilteringBias") ?
-            Double.parseDouble(element.getAttribute("envFilteringBias")) : 0);
-        newEnvironment.bpColor.setValue(Color.valueOf(element.getAttribute("bpColor")));
-        newEnvironment.name.setValue(element.getAttribute("name"));
-        newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
-        newEnvironment.envLoaded.setValue(Boolean.valueOf(element.getAttribute("envLoaded")));
-        newEnvironment.bpLoaded.setValue(Boolean.valueOf(element.getAttribute("bpLoaded")));
-        newEnvironment.gpEnabled.setValue(element.hasAttribute("gpEnabled") && Boolean.parseBoolean(element.getAttribute("gpEnabled")));
-        newEnvironment.gpColor.setValue(element.hasAttribute("gpColor") ?
-            Color.valueOf(element.getAttribute("gpColor")) : Color.WHITE);
-        newEnvironment.gpHeight.setValue(element.hasAttribute("gpHeight") ? Double.parseDouble(element.getAttribute("gpHeight")) : 0.0);
-        newEnvironment.gpSize.setValue(element.hasAttribute("gpSize") ? Double.parseDouble(element.getAttribute("gpSize")) : 0.0);
-        return newEnvironment;
-    }
-
     @Override
     public String toString()
     {
-        if (!this.equals(NO_ENVIRONMENT) && locked.getValue())
+        if (!this.isNoEnvironment() && locked.getValue())
         {
             return "(L) " + this.name.getValue();
         }
@@ -135,9 +59,9 @@ public class EnvironmentSetting implements DOMConvertable
         }
     }
 
-    public EnvironmentSetting duplicate()
+    public ObservableEnvironmentSetting duplicate()
     {
-        EnvironmentSetting newEnvironment = new EnvironmentSetting();
+        ObservableEnvironmentSetting newEnvironment = new ObservableEnvironmentSetting();
         newEnvironment.envUseImage.setValue(envUseImage.getValue());
         newEnvironment.envUseColor.setValue(envUseColor.getValue());
         newEnvironment.bpUseImage.setValue(bpUseImage.getValue());
@@ -162,7 +86,8 @@ public class EnvironmentSetting implements DOMConvertable
         return newEnvironment;
     }
 
-    public boolean isEnvUseImageEnabled()
+    @Override
+    public boolean isEnvironmentImageEnabled()
     {
         return envUseImage.get();
     }
@@ -172,12 +97,14 @@ public class EnvironmentSetting implements DOMConvertable
         return envUseImage;
     }
 
-    public void setEnvUseImageEnabled(boolean envUseImage)
+    @Override
+    public void setEnvironmentImageEnabled(boolean envUseImage)
     {
         this.envUseImage.set(envUseImage);
     }
 
-    public boolean isEnvUseColorEnabled()
+    @Override
+    public boolean isEnvironmentColorEnabled()
     {
         return envUseColor.get();
     }
@@ -187,12 +114,14 @@ public class EnvironmentSetting implements DOMConvertable
         return envUseColor;
     }
 
-    public void setEnvUseColorEnabled(boolean envUseColor)
+    @Override
+    public void setEnvironmentColorEnabled(boolean envUseColor)
     {
         this.envUseColor.set(envUseColor);
     }
 
-    public boolean isBPUseImageEnabled()
+    @Override
+    public boolean isBackplateImageEnabled()
     {
         return bpUseImage.get();
     }
@@ -202,12 +131,14 @@ public class EnvironmentSetting implements DOMConvertable
         return bpUseImage;
     }
 
-    public void setBpUseImageEnabled(boolean bpUseImage)
+    @Override
+    public void setBackplateImageEnabled(boolean bpUseImage)
     {
         this.bpUseImage.set(bpUseImage);
     }
 
-    public boolean isBPUseColorEnabled()
+    @Override
+    public boolean isBackplateColorEnabled()
     {
         return bpUseColor.get();
     }
@@ -217,11 +148,13 @@ public class EnvironmentSetting implements DOMConvertable
         return bpUseColor;
     }
 
-    public void setBpUseColorEnabled(boolean bpUseColor)
+    @Override
+    public void setBackplateColorEnabled(boolean bpUseColor)
     {
         this.bpUseColor.set(bpUseColor);
     }
 
+    @Override
     public boolean areImagePathsRelative()
     {
         return imagePathsRelative.get();
@@ -232,12 +165,14 @@ public class EnvironmentSetting implements DOMConvertable
         return imagePathsRelative;
     }
 
+    @Override
     public void setImagePathsRelative(boolean imagePathsRelative)
     {
         this.imagePathsRelative.set(imagePathsRelative);
     }
 
-    public File getEnvImageFile()
+    @Override
+    public File getEnvironmentImageFile()
     {
         return envImageFile.getValue();
     }
@@ -247,12 +182,14 @@ public class EnvironmentSetting implements DOMConvertable
         return envImageFile;
     }
 
-    public void setEnvImageFile(File envImageFile)
+    @Override
+    public void setEnvironmentImageFile(File envImageFile)
     {
         this.envImageFile.setValue(envImageFile);
     }
 
-    public File getBpImageFile()
+    @Override
+    public File getBackplateImageFile()
     {
         return bpImageFile.getValue();
     }
@@ -262,11 +199,13 @@ public class EnvironmentSetting implements DOMConvertable
         return bpImageFile;
     }
 
-    public void setBpImageFile(File bpImageFile)
+    @Override
+    public void setBackplateImageFile(File bpImageFile)
     {
         this.bpImageFile.setValue(bpImageFile);
     }
 
+    @Override
     public double getBackgroundIntensity()
     {
         return backgroundIntensity.get();
@@ -277,12 +216,14 @@ public class EnvironmentSetting implements DOMConvertable
         return backgroundIntensity;
     }
 
+    @Override
     public void setBackgroundIntensity(double backgroundIntensity)
     {
         this.backgroundIntensity.set(backgroundIntensity);
     }
 
-    public double getEnvIntensity()
+    @Override
+    public double getEnvironmentColorIntensity()
     {
         return envColorIntensity.get();
     }
@@ -292,12 +233,14 @@ public class EnvironmentSetting implements DOMConvertable
         return envColorIntensity;
     }
 
-    public void setEnvIntensity(double envColorIntensity)
+    @Override
+    public void setEnvironmentIntensity(double envColorIntensity)
     {
         this.envColorIntensity.set(envColorIntensity);
     }
 
-    public double getEnvRotation()
+    @Override
+    public double getEnvironmentRotation()
     {
         return envRotation.get();
     }
@@ -307,7 +250,8 @@ public class EnvironmentSetting implements DOMConvertable
         return envRotation;
     }
 
-    public void setEnvRotation(double envRotation)
+    @Override
+    public void setEnvironmentRotation(double envRotation)
     {
         this.envRotation.set(envRotation);
     }
@@ -317,17 +261,20 @@ public class EnvironmentSetting implements DOMConvertable
         return envFilteringBias;
     }
 
-    public double getEnvFilteringBias()
+    @Override
+    public double getEnvironmentFilteringBias()
     {
         return envFilteringBias.get();
     }
 
-    public void setEnvFilteringBias(double envFilteringBias)
+    @Override
+    public void setEnvironmentFilteringBias(double envFilteringBias)
     {
         this.envFilteringBias.set(envFilteringBias);
     }
 
-    public Color getEnvColor()
+    @Override
+    public Color getEnvironmentColor()
     {
         return envColor.getValue();
     }
@@ -337,12 +284,14 @@ public class EnvironmentSetting implements DOMConvertable
         return envColor;
     }
 
-    public void setEnvColor(Color envColor)
+    @Override
+    public void setEnvironmentColor(Color envColor)
     {
         this.envColor.setValue(envColor);
     }
 
-    public Color getBpColor()
+    @Override
+    public Color getBackplateColor()
     {
         return bpColor.getValue();
     }
@@ -352,11 +301,13 @@ public class EnvironmentSetting implements DOMConvertable
         return bpColor;
     }
 
-    public void setBpColor(Color bpColor)
+    @Override
+    public void setBackplateColor(Color bpColor)
     {
         this.bpColor.setValue(bpColor);
     }
 
+    @Override
     public String getName()
     {
         return name.get();
@@ -367,11 +318,13 @@ public class EnvironmentSetting implements DOMConvertable
         return name;
     }
 
+    @Override
     public void setName(String name)
     {
         this.name.set(name);
     }
 
+    @Override
     public boolean isLocked()
     {
         return locked.get();
@@ -382,12 +335,14 @@ public class EnvironmentSetting implements DOMConvertable
         return locked;
     }
 
+    @Override
     public void setLocked(boolean locked)
     {
         this.locked.set(locked);
     }
 
-    public boolean isEnvLoaded()
+    @Override
+    public boolean isEnvironmentLoaded()
     {
         return envLoaded.get();
     }
@@ -397,12 +352,14 @@ public class EnvironmentSetting implements DOMConvertable
         return envLoaded;
     }
 
-    public void setEnvLoaded(boolean envLoaded)
+    @Override
+    public void setEnvironmentLoaded(boolean envLoaded)
     {
         this.envLoaded.set(envLoaded);
     }
 
-    public boolean isBPLoaded()
+    @Override
+    public boolean isBackplateLoaded()
     {
         return bpLoaded.get();
     }
@@ -412,12 +369,14 @@ public class EnvironmentSetting implements DOMConvertable
         return bpLoaded;
     }
 
-    public void setBPLoaded(boolean bpLoaded)
+    @Override
+    public void setBackplateLoaded(boolean bpLoaded)
     {
         this.bpLoaded.set(bpLoaded);
     }
 
-    public boolean isGPEnabled()
+    @Override
+    public boolean isGroundPlaneEnabled()
     {
         return gpEnabled.get();
     }
@@ -427,12 +386,14 @@ public class EnvironmentSetting implements DOMConvertable
         return gpEnabled;
     }
 
-    public void setGpEnabled(boolean gpEnabled)
+    @Override
+    public void setGroundPlaneEnabled(boolean gpEnabled)
     {
         this.gpEnabled.set(gpEnabled);
     }
 
-    public Color getGPColor()
+    @Override
+    public Color getGroundPlaneCrolor()
     {
         return gpColor.getValue();
     }
@@ -442,12 +403,14 @@ public class EnvironmentSetting implements DOMConvertable
         return gpColor;
     }
 
-    public void setGPColor(Color gpColor)
+    @Override
+    public void setGroundPlaneColor(Color gpColor)
     {
         this.gpColor.setValue(gpColor);
     }
 
-    public double getGPHeight()
+    @Override
+    public double getGroundPlaneHeight()
     {
         return gpHeight.getValue();
     }
@@ -457,12 +420,14 @@ public class EnvironmentSetting implements DOMConvertable
         return gpHeight;
     }
 
-    public void setGPHeight(double gpHeight)
+    @Override
+    public void setGroundPlaneHeight(double gpHeight)
     {
         this.gpHeight.setValue(gpHeight);
     }
 
-    public double getGPSize()
+    @Override
+    public double getGroundPlaneSize()
     {
         return gpSize.getValue();
     }
@@ -472,7 +437,8 @@ public class EnvironmentSetting implements DOMConvertable
         return gpSize;
     }
 
-    public void setGPSize(double gpSize)
+    @Override
+    public void setGroundPlaneSize(double gpSize)
     {
         this.gpSize.setValue(gpSize);
     }

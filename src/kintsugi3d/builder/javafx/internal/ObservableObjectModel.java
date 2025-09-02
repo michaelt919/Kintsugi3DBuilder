@@ -12,37 +12,27 @@
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/21/2017.
 
 import javafx.beans.value.ObservableValue;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSetting;
 import kintsugi3d.builder.state.impl.ExtendedObjectModelBase;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public class ObservableObjectModel extends ExtendedObjectModelBase
 {
-    private ObservableValue<ObjectPoseSetting> selectedObjectPoseProperty;
-    private final ObjectPoseSetting sentinel = new ObjectPoseSetting(
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        false,
-        1.0,
-        "sentinel"
-    );
+    private ObservableValue<ObservableObjectPoseSetting> selectedObjectPoseProperty;
+    private final ObservableObjectPoseSetting sentinel = new ObservableObjectPoseSetting("sentinel");
 
-    public ObservableValue<ObjectPoseSetting> getSelectedObjectPoseProperty()
+    public ObservableValue<ObservableObjectPoseSetting> getSelectedObjectPoseProperty()
     {
         return this.selectedObjectPoseProperty;
     }
 
-    public void setSelectedObjectPoseProperty(ObservableValue<ObjectPoseSetting> selectedObjectPoseProperty)
+    public void setSelectedObjectPoseProperty(ObservableValue<ObservableObjectPoseSetting> selectedObjectPoseProperty)
     {
         this.selectedObjectPoseProperty = selectedObjectPoseProperty;
     }
 
-    private ObjectPoseSetting getActiveObjectPose()
+    private ObservableObjectPoseSetting getActiveObjectPose()
     {
         if (selectedObjectPoseProperty == null || selectedObjectPoseProperty.getValue() == null)
         {

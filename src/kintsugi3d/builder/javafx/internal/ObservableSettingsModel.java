@@ -128,11 +128,11 @@ public class ObservableSettingsModel extends SettingsModelBase
 
     private final Map<String, TypedProperty> settingsMap = new HashMap<>(32);
 
-    private static class SettingImpl implements Setting
+    private static class ObservableSetting implements Setting
     {
         private final Entry<String, TypedProperty> nextEntry;
 
-        SettingImpl(Entry<String, TypedProperty> nextEntry)
+        ObservableSetting(Entry<String, TypedProperty> nextEntry)
         {
             this.nextEntry = nextEntry;
         }
@@ -222,7 +222,7 @@ public class ObservableSettingsModel extends SettingsModelBase
             {
                 Entry<String, TypedProperty> nextEntry = innerIterator.next();
 
-                return new SettingImpl(nextEntry);
+                return new ObservableSetting(nextEntry);
             }
         };
     }
@@ -237,6 +237,7 @@ public class ObservableSettingsModel extends SettingsModelBase
         return getObjectProperty(name, Number.class);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Property<T> getObjectProperty(String name, Class<T> settingType)
     {
         if (settingsMap.containsKey(name))

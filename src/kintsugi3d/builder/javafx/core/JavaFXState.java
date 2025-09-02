@@ -32,7 +32,7 @@ public final class JavaFXState
     private final ObservableLoadOptionsModel loadOptionsModel;
     private final ObservableSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
-    private final TabModelsImpl tabModels;
+    private final ObservableTabsModel tabModels;
 
     private JavaFXState()
     {
@@ -44,7 +44,7 @@ public final class JavaFXState
         loadOptionsModel = new ObservableLoadOptionsModel();
         settingsModel = new ObservableSettingsModel();
         projectModel = new ObservableProjectModel();
-        tabModels = new TabModelsImpl();
+        tabModels = new ObservableTabsModel();
     }
 
     public ObservableCameraModel getCameraModel()
