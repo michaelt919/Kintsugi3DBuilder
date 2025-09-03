@@ -13,7 +13,7 @@ package kintsugi3d.builder.state;
 
 import java.util.NoSuchElementException;
 
-public abstract class GlobalSettingsModelBase implements GlobalSettingsModel
+public abstract class GeneralSettingsModelBase implements GeneralSettingsModel
 {
     protected abstract Object getUnchecked(String name);
     protected abstract void setUnchecked(String name, Object value);
@@ -68,7 +68,7 @@ public abstract class GlobalSettingsModelBase implements GlobalSettingsModel
     }
 
     @Override
-    public void copyFrom(ReadonlyGlobalSettingsModel other)
+    public void copyFrom(ReadonlyGeneralSettingsModel other)
     {
         for (Setting s : other)
         {

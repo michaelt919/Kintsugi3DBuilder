@@ -19,7 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.core.JavaFXState;
-import kintsugi3d.builder.javafx.internal.ObservableGlobalSettingsModel;
+import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -36,7 +36,7 @@ public class AdvPhotoViewController implements SystemSettingsControllerBase
     @FXML private Slider isotropyFactorSlider;
     @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
 
-    private ObservableGlobalSettingsModel settingsModel;
+    private ObservableGeneralSettingsModel settingsModel;
 
     @Override
     public void initializeSettingsPage(Window parentWindow, JavaFXState state)
@@ -63,7 +63,7 @@ public class AdvPhotoViewController implements SystemSettingsControllerBase
         bind(state.getSettingsModel());
     }
 
-    public void bind(ObservableGlobalSettingsModel injectedSettingsModel)
+    public void bind(ObservableGeneralSettingsModel injectedSettingsModel)
     {
         buehlerCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("buehlerAlgorithm"));
 

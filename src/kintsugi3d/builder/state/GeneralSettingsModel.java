@@ -16,12 +16,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import kintsugi3d.builder.preferences.serialization.SettingsModelDeserializer;
 import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 
-@JsonSerialize(as = GlobalSettingsModel.class, using = SettingsModelSerializer.class)
-@JsonDeserialize(as = GlobalSettingsModel.class, using = SettingsModelDeserializer.class)
-public interface GlobalSettingsModel extends ReadonlyGlobalSettingsModel
+@JsonSerialize(as = GeneralSettingsModel.class, using = SettingsModelSerializer.class)
+@JsonDeserialize(as = GeneralSettingsModel.class, using = SettingsModelDeserializer.class)
+public interface GeneralSettingsModel extends ReadonlyGeneralSettingsModel
 {
     <T> void set(String name, T value);
-    void copyFrom(ReadonlyGlobalSettingsModel other);
+    void copyFrom(ReadonlyGeneralSettingsModel other);
     void createSetting(String name, Class<?> type, Object initialValue, boolean serialize);
     default void createBooleanSetting(String name, boolean initialValue)
     {

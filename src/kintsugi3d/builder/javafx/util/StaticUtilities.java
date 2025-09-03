@@ -17,14 +17,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /*
 I general utilities class.
  */
 public final class StaticUtilities
 {
-    private static final Pattern NUMERIC_REGEX = Pattern.compile("-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?");
+//    private static final Pattern NUMERIC_REGEX = Pattern.compile("-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?");
 
     private StaticUtilities()
     {
@@ -67,7 +66,6 @@ public final class StaticUtilities
                 {
                     double value = Double.parseDouble(textField.getText());
                     textField.setText(Double.toString(wrapAround(min, max, value)));
-//                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -88,7 +86,6 @@ public final class StaticUtilities
                 {
                     double value = Double.parseDouble(textField.getText());
                     textField.setText(Double.toString(clamp(min, max, value)));
-//                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -107,15 +104,43 @@ public final class StaticUtilities
                 return change;
             }
             String text = change.getControlNewText();
-            if (text.isEmpty() || Objects.equals("-", text) || NUMERIC_REGEX.matcher(text).matches())
+            if (text.isEmpty() || Objects.equals("-", text))
             {
                 return change;
             }
             else
             {
-                return null;
+                try
+                {
+                    Double.parseDouble(text);
+                    return change;
+                }
+                catch (NumberFormatException e)
+                {
+                    return null;
+                }
             }
         }));
+    }
+
+    public static void makeClampedInteger(double min, double max, TextField textField)
+    {
+        makeNumeric(textField);
+        textField.focusedProperty().addListener((ob, o, n) ->
+        {
+            if (o && !n)
+            {
+                try
+                {
+                    double value = Double.parseDouble(textField.getText());
+                    textField.setText(Long.toString(Math.round(clamp(min, max, value))));
+                }
+                catch (NumberFormatException nfe)
+                {
+                    //do nothing
+                }
+            }
+        });
     }
 
     public static void bindLogScaleToLinear(DoubleProperty logScaleProperty, DoubleProperty linearScaleProperty)

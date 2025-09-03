@@ -16,12 +16,19 @@ import javafx.util.converter.NumberStringConverter;
 
 public class SafeNumberStringConverter extends StringConverter<Number>
 {
-    private final NumberStringConverter base = new NumberStringConverter();
+    private final NumberStringConverter base;
     private final Number defaultValue;
 
     public SafeNumberStringConverter(Number defaultValue)
     {
         this.defaultValue = defaultValue;
+        base = new NumberStringConverter();
+    }
+
+    public SafeNumberStringConverter(Number defaultValue, String formatString)
+    {
+        this.defaultValue = defaultValue;
+        base = new NumberStringConverter(formatString);
     }
 
     @Override

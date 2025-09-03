@@ -14,36 +14,33 @@ package kintsugi3d.builder.preferences.serialization;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import kintsugi3d.builder.state.GlobalSettingsModel;
-import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-public class SettingsModelSerializer extends StdSerializer<GlobalSettingsModel>
+public class SettingsModelSerializer extends StdSerializer<GeneralSettingsModel>
 {
     public SettingsModelSerializer()
     {
         this(null);
     }
 
-    protected SettingsModelSerializer(Class<GlobalSettingsModel> t)
+    protected SettingsModelSerializer(Class<GeneralSettingsModel> t)
     {
         super(t);
     }
 
     @Override
-    public void serialize(GlobalSettingsModel settingsModel, JsonGenerator jGen, SerializerProvider serializerProvider) throws IOException
+    public void serialize(GeneralSettingsModel settingsModel, JsonGenerator jGen, SerializerProvider serializerProvider) throws IOException
     {
         jGen.writeStartObject();
 
-        for (Iterator<ReadonlyGlobalSettingsModel.Setting> it = settingsModel.iterator(); it.hasNext(); )
+        for (ReadonlyGeneralSettingsModel.Setting setting : settingsModel)
         {
-            ReadonlyGlobalSettingsModel.Setting setting = it.next();
-
             if (!setting.shouldSerialize())
             {
                 continue;

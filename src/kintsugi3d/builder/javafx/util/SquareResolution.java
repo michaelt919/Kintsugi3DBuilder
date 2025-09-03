@@ -35,9 +35,15 @@ public class SquareResolution
     }
 
     @Override
+    public int hashCode()
+    {
+        return Integer.hashCode(getSize());
+    }
+
+    @Override
     public boolean equals(Object other)
     {
-        return other instanceof SquareResolution && this.size == ((SquareResolution)other).size;
+        return other instanceof SquareResolution && this.getSize() == ((SquareResolution)other).getSize();
     }
 
     @Override

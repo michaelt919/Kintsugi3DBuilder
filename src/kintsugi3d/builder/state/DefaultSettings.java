@@ -16,7 +16,7 @@ import kintsugi3d.util.ShadingParameterMode;
 
 public final class DefaultSettings
 {
-    public static void applyGlobalDefaults(GlobalSettingsModel settingsModel)
+    public static void applyGlobalDefaults(GeneralSettingsModel settingsModel)
     {
         // Application state
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
@@ -52,7 +52,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
     }
 
-    public static void applyProjectDefaults(GlobalSettingsModel settingsModel)
+    public static void applyProjectDefaults(GeneralSettingsModel settingsModel)
     {
         // Mask / feathering settings
         settingsModel.createBooleanSetting("occlusionEnabled", true);
@@ -71,7 +71,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("specularMaxWidthFrac", 1.0f);
         settingsModel.createBooleanSetting("constantTermEnabled", false);
         settingsModel.createNumericSetting("basisResolution", 90);
-        settingsModel.createNumericSetting("basisComplexity", 1.0f);
+        settingsModel.createNumericSetting("basisComplexityFrac", 1.0f);
         settingsModel.createNumericSetting("metallicity", 0.0f);
         settingsModel.createBooleanSetting("smithMaskingShadowingEnabled", true);
         settingsModel.createNumericSetting("convergenceTolerance", 0.00001f);

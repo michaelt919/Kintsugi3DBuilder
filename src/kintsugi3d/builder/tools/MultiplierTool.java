@@ -75,7 +75,7 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setSettingsModel(GlobalSettingsModel settingsModel)
+        public ToolBuilder<MultiplierTool> setSettingsModel(GeneralSettingsModel settingsModel)
         {
             return this;
         }

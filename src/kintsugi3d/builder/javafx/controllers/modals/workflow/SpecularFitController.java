@@ -20,18 +20,16 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.fit.SpecularFitRequest;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.javafx.internal.ObservableGlobalSettingsModel;
+import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
+import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SquareResolution;
+import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.project.ProjectModel;
 
 public class SpecularFitController extends NonDataPageControllerBase
 {
@@ -56,12 +54,49 @@ public class SpecularFitController extends NonDataPageControllerBase
 
     @FXML private CheckBox openViewerOnComplete;
 
-    private final ObservableGlobalSettingsModel localSettingsModel = new ObservableGlobalSettingsModel();
+    private final ObservableGeneralSettingsModel localSettingsModel = new ObservableGeneralSettingsModel();
 
     @Override
     public Region getRootNode()
     {
         return root;
+    }
+
+    private void bindEpsilonSetting(TextField textField, String settingName)
+    {
+        StaticUtilities.makeClampedNumeric(0, 1, textField);
+        SafeNumberStringConverter converter = new SafeNumberStringConverter(localSettingsModel.getFloat(settingName), "0.###E0");
+        textField.setText(converter.toString(localSettingsModel.getFloat(settingName)));
+        textField.textProperty().bindBidirectional(
+            localSettingsModel.getNumericProperty(settingName),
+            converter);
+    }
+
+    private void bindNormalizedSetting(TextField textField, String settingName)
+    {
+        StaticUtilities.makeClampedNumeric(0, 1, textField);
+        SafeNumberStringConverter converter = new SafeNumberStringConverter(localSettingsModel.getFloat(settingName));
+        textField.setText(converter.toString(localSettingsModel.getFloat(settingName)));
+        textField.textProperty().bindBidirectional(
+            localSettingsModel.getNumericProperty(settingName),
+            converter);
+    }
+
+    private void bindNonNegativeIntegerSetting(TextField textField, String settingName, int maxValue)
+    {
+        StaticUtilities.makeClampedInteger(0, maxValue, textField);
+        SafeNumberStringConverter converter = new SafeNumberStringConverter(localSettingsModel.getInt(settingName));
+        textField.setText(converter.toString(localSettingsModel.getInt(settingName)));
+        textField.textProperty().bindBidirectional(
+            localSettingsModel.getNumericProperty(settingName),
+            converter);
+    }
+
+    private void bindBooleanSetting(CheckBox checkBox, String settingName)
+    {
+        checkBox.setSelected(localSettingsModel.getBoolean(settingName));
+        checkBox.selectedProperty().bindBidirectional(
+            localSettingsModel.getBooleanProperty(settingName));
     }
 
     @Override
@@ -86,11 +121,37 @@ public class SpecularFitController extends NonDataPageControllerBase
     @Override
     public void refresh()
     {
+        // Populate local model with the current project settings.
         IOModel ioModel = Global.state().getIOModel();
         if (ioModel.hasValidHandler())
         {
             localSettingsModel.copyFrom(ioModel.getLoadedViewSet().getProjectSettings());
         }
+
+        // Manually bind resolution both ways as a combo box.
+        resolutionComboBox.valueProperty().addListener(
+            (obs, oldValue, newValue) ->
+                localSettingsModel.set("textureSize", newValue.getSize()));
+        localSettingsModel.getNumericProperty("textureSize").addListener(
+            (obs, oldValue, newValue) ->
+                resolutionComboBox.setValue(new SquareResolution(newValue.intValue())));
+        resolutionComboBox.setValue(new SquareResolution(localSettingsModel.getInt("textureSize")));
+
+        // Bind everything else.
+        bindNonNegativeIntegerSetting(basisCountTextField, "basisCount", 256);
+        bindNormalizedSetting(specularMinWidthTextField, "specularMinWidthFrac");
+        bindNormalizedSetting(specularSmoothnessTextField, "specularMaxWidthFrac");
+        bindBooleanSetting(translucencyCheckBox, "constantTermEnabled");
+        bindNonNegativeIntegerSetting(mfdResolutionTextField, "basisResolution", 8192);
+        bindNormalizedSetting(specularComplexityTextField, "basisComplexityFrac");
+        bindNormalizedSetting(metallicityTextField, "metallicity");
+        bindBooleanSetting(smithCheckBox, "smithMaskingShadowingEnabled");
+        bindEpsilonSetting(convergenceToleranceTextField, "convergenceTolerance");
+        bindBooleanSetting(normalRefinementCheckBox, "normalOptimizationEnabled");
+        bindNormalizedSetting(minNormalDampingTextField, "minNormalDamping");
+        bindNonNegativeIntegerSetting(normalSmoothingIterationsTextField, "normalSmoothIterations", 8192);
+        bindNonNegativeIntegerSetting(unsuccessfulLMIterationsTextField, "unsuccessfulLMIterationsAllowed", Integer.MAX_VALUE);
+        bindBooleanSetting(openViewerOnComplete, "openViewerOnProcessingComplete");
     }
 
     @FXML
@@ -102,79 +163,25 @@ public class SpecularFitController extends NonDataPageControllerBase
     @FXML
     public boolean confirm()
     {
-        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        IOModel ioModel = Global.state().getIOModel();
+        if (!ioModel.hasValidHandler())
         {
+            error("Failed to start process", "No project is loaded.");
             return false;
         }
 
-        int textureSize = resolutionComboBox.getValue().getSize();
-        SpecularFitRequestParams settings = new SpecularFitRequestParams(textureSize, textureSize);
+        // Apply settings so they're seen by the SpecularFitRequest and also remembered for later.
+        ioModel.getLoadedViewSet().getProjectSettings().copyFrom(localSettingsModel);
 
-        int basisCount = Integer.parseInt(basisCountTextField.getText());
-        settings.getSpecularBasisSettings().setBasisCount(basisCount);
-        int basisResolution = Integer.parseInt(mfdResolutionTextField.getText());
-        settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
-
-        settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
-        settings.getExportSettings().setOpenViewerOnceComplete(openViewerOnComplete.isSelected());
-
-        // Specular / general settings
-        double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
-        settings.setConvergenceTolerance(convergenceTolerance);
-
-        double specularMinWidth = Double.parseDouble(specularMinWidthTextField.getText());
-        int specularMinWidthDiscrete = (int) Math.round(specularMinWidth * basisResolution);
-        settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
-
-        double specularMaxWidth = Double.parseDouble(specularSmoothnessTextField.getText());
-        settings.getSpecularBasisSettings().setSpecularMaxWidth((int) Math.round(specularMaxWidth * basisResolution));
-
-        double specularComplexity = Double.parseDouble(specularComplexityTextField.getText());
-        settings.getSpecularBasisSettings().setBasisComplexity(
-            (int) Math.round(specularComplexity * (basisResolution - specularMinWidthDiscrete + 1)));
-
-        double metallicity = Double.parseDouble(metallicityTextField.getText());
-        settings.getSpecularBasisSettings().setMetallicity(metallicity);
-
-        settings.setShouldIncludeConstantTerm(translucencyCheckBox.isSelected());
-
-        // Normal estimation settings
-        boolean normalRefinementEnabled = normalRefinementCheckBox.isSelected();
-        settings.getNormalOptimizationSettings().setNormalRefinementEnabled(normalRefinementEnabled);
-        double minNormalDamping = Double.parseDouble(minNormalDampingTextField.getText());
-        // Negative values shouldn't break anything here.
-        settings.getNormalOptimizationSettings().setMinNormalDamping(minNormalDamping);
-        int normalSmoothingIterations = Integer.parseInt(normalSmoothingIterationsTextField.getText());
-        // Negative values shouldn't break anything here.
-        settings.getNormalOptimizationSettings().setNormalSmoothingIterations(normalSmoothingIterations);
-
-        // Settings which shouldn't usually need to be changed
-        settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
-        boolean levenbergMarquardtEnabled = true;
-        settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
-        int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
-        settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
-        settings.getReconstructionSettings().setReconstructAll(false);
-
-        // glTF export settings
-        settings.getExportSettings().setGlTFEnabled(true);
-        settings.getExportSettings().setGlTFPackTextures(false);
-
-        // Image cache settings
-        settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
-
-        SpecularFitRequest request = new SpecularFitRequest(settings);
-        request.setRequestCompleteCallback(() ->
+        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
-            ProjectModel projectModel = Global.state().getProjectModel();
-            projectModel.setProjectProcessed(true);
-            projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
-            projectModel.notifyProcessingComplete();
-        });
-        request.setIOErrorCallback(e -> ExceptionHandling.error("Error executing specular fit request:", e));
+            error("Failed to start process", "Another process is already running.");
+            return false;
+        }
 
         // Run as a graphics request that optimizes from scratch.
-        Rendering.getRequestQueue().addGraphicsRequest(request);
+        // Automatically pulls settings from project settings.
+        Rendering.getRequestQueue().addGraphicsRequest(new SpecularFitRequest());
 
         return true;
     }

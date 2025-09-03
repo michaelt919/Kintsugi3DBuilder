@@ -26,7 +26,7 @@ public interface Kintsugi3DBuilderState
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
      * @return
      */
-    GlobalSettingsModel getSettingsModel();
+    GeneralSettingsModel getSettingsModel();
 
     CanvasModel getCanvasModel();
 

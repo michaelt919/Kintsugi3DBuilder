@@ -16,7 +16,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class SimpleGlobalSettingsModel extends GlobalSettingsModelBase
+public class SimpleGeneralSettingsModel extends GeneralSettingsModelBase
 {
     private final Map<String, Setting> settingMap = new HashMap<>(32);
 

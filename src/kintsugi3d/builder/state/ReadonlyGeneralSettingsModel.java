@@ -16,8 +16,8 @@ import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 
 import java.util.Iterator;
 
-@JsonSerialize(as = GlobalSettingsModel.class, using = SettingsModelSerializer.class)
-public interface ReadonlyGlobalSettingsModel extends Iterable<ReadonlyGlobalSettingsModel.Setting>
+@JsonSerialize(as = GeneralSettingsModel.class, using = SettingsModelSerializer.class)
+public interface ReadonlyGeneralSettingsModel extends Iterable<ReadonlyGeneralSettingsModel.Setting>
 {
     interface Setting
     {

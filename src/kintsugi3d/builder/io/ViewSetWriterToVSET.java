@@ -12,11 +12,9 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
+import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -27,7 +25,6 @@ import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ViewSetWriterToVSET.class);
     private static final ViewSetWriter INSTANCE = new ViewSetWriterToVSET();
 
     public static ViewSetWriter getInstance()
@@ -96,7 +93,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("r %s%n", viewSet.getOrientationViewRotationDegrees());
 
         boolean firstSetting = true;
-        for (ReadonlyGlobalSettingsModel.Setting setting : viewSet.getProjectSettings())
+        for (ReadonlyGeneralSettingsModel.Setting setting : viewSet.getProjectSettings())
         {
             if (firstSetting) // print only for the first setting; do not print at all if no settings
             {
@@ -105,26 +102,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
                 firstSetting = false;
             }
 
-            Class<?> type = setting.getType();
-            if (type.equals(Boolean.class))
-            {
-                out.print("zb ");
-            }
-            else if (type.equals(Integer.class) || type.equals(Short.class))
-            {
-                out.print("zi ");
-                // no support at present for 64-bit integers, could add if needed
-            }
-            else if (type.equals(Float.class) || type.equals(Double.class))
-            {
-                out.print("zf ");
-                // doubles will be reduced to single-precision floats when the file is read
-            }
-            else
-            {
-                LOG.warn("Unrecognized type in view set settings model when writing to file: {}", type);
-            }
-
+            out.print("z ");
             out.print(setting.getName());
             out.print(' ');
             out.println(setting.getValue());

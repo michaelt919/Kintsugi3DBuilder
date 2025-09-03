@@ -190,7 +190,7 @@ public final class ToolBox implements CanvasListener
 
     //builder
     private ToolBox(ManipulableViewpointModel cameraModel, ManipulableLightingEnvironmentModel lightingModel,
-                    ManipulableObjectPoseModel objectModel, GlobalSettingsModel settingsModel,
+                    ManipulableObjectPoseModel objectModel, GeneralSettingsModel settingsModel,
                     ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
@@ -282,7 +282,7 @@ public final class ToolBox implements CanvasListener
     {
         private ToolBindingModel toolBindingModel;
         private ManipulableViewpointModel cameraModel;
-        private GlobalSettingsModel settingsModel;
+        private GeneralSettingsModel settingsModel;
         private ManipulableLightingEnvironmentModel lightingModel;
         private ManipulableObjectPoseModel objectModel;
         private SceneViewportModel sceneViewportModel;
@@ -314,7 +314,7 @@ public final class ToolBox implements CanvasListener
             return this;
         }
 
-        public Builder setSettingsModel(GlobalSettingsModel settingsModel)
+        public Builder setSettingsModel(GeneralSettingsModel settingsModel)
         {
             this.settingsModel = settingsModel;
             return this;

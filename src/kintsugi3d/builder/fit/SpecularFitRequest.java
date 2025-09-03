@@ -11,14 +11,15 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -30,7 +31,6 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, ObservableGraphicsRequest
 {
@@ -38,10 +38,6 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
     private final SpecularFitRequestParams settings;
 
     private static final boolean DEBUG_IMAGES = false;
-
-    private Runnable requestCompleteCallback;
-
-    private Consumer<IOException> ioErrorCallback;
 
     /**
      * Default constructor for CLI args requests
@@ -53,6 +49,58 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
         SpecularFitRequestParams params = new SpecularFitRequestParams(2048, 2048);
         params.setOutputDirectory(new File(args[2]));
         return new SpecularFitRequest(params);
+    }
+
+    public SpecularFitRequest()
+    {
+        this(getSettingsFromProject());
+    }
+
+    private static SpecularFitRequestParams getSettingsFromProject()
+    {
+        GeneralSettingsModel projectSettings = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
+
+        // Start with texture size
+        int textureSize = projectSettings.getInt("textureSize");
+        SpecularFitRequestParams settings = new SpecularFitRequestParams(textureSize, textureSize);
+
+        // Basis settings
+        int basisResolution = projectSettings.getInt("basisResolution");
+        settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
+        settings.getSpecularBasisSettings().setBasisCount(projectSettings.getInt("basisCount"));
+        settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(projectSettings.getBoolean("smithMaskingShadowingEnabled"));
+
+        // Specular / general settings
+        int specularMinWidthDiscrete = Math.round(projectSettings.getFloat("specularMinWidthFrac") * basisResolution);
+        settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
+        settings.getSpecularBasisSettings().setSpecularMaxWidth(
+            Math.round(projectSettings.getFloat("specularMaxWidthFrac") * basisResolution));
+        settings.getSpecularBasisSettings().setBasisComplexity(
+            Math.round(projectSettings.getFloat("basisComplexityFrac") * (basisResolution - specularMinWidthDiscrete + 1)));
+        settings.setConvergenceTolerance(projectSettings.getFloat("convergenceTolerance"));
+        settings.getSpecularBasisSettings().setMetallicity(projectSettings.getFloat("metallicity"));
+        settings.setShouldIncludeConstantTerm(projectSettings.getBoolean("constantTermEnabled"));
+
+        // Normal estimation settings
+        settings.getNormalOptimizationSettings().setNormalRefinementEnabled(projectSettings.getBoolean("normalOptimizationEnabled"));
+        settings.getNormalOptimizationSettings().setMinNormalDamping(projectSettings.getFloat("minNormalDamping"));
+        settings.getNormalOptimizationSettings().setNormalSmoothingIterations(projectSettings.getInt("normalSmoothIterations"));
+        settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(projectSettings.getInt("unsuccessfulLMIterationsAllowed"));
+
+        // Settings which shouldn't aren't currently exposed.
+        settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(true);
+        settings.getReconstructionSettings().setReconstructAll(false);
+
+        // glTF export settings
+        settings.getExportSettings().setGlTFEnabled(true);
+        settings.getExportSettings().setGlTFPackTextures(false);
+        settings.getExportSettings().setCombineWeights(true);
+        settings.getExportSettings().setOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnProcessingComplete"));
+
+        // Image cache settings
+        settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
+
+        return settings;
     }
 
     public SpecularFitRequest(SpecularFitRequestParams settings)
@@ -100,11 +148,14 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
                 Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
             }
 
-            requestCompleteCallback.run();
+            ProjectModel projectModel = Global.state().getProjectModel();
+            projectModel.setProjectProcessed(true);
+            projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
+            projectModel.notifyProcessingComplete();
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
-            ioErrorCallback.accept(e);
+            ExceptionHandling.error("Error executing specular fit request:", e);
         }
     }
 
@@ -157,25 +208,5 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
                 }
             }
         }
-    }
-
-    public Runnable getRequestCompleteCallback()
-    {
-        return requestCompleteCallback;
-    }
-
-    public void setRequestCompleteCallback(Runnable requestCompleteCallback)
-    {
-        this.requestCompleteCallback = requestCompleteCallback;
-    }
-
-    public Consumer<IOException> getIOErrorCallback()
-    {
-        return ioErrorCallback;
-    }
-
-    public void setIOErrorCallback(Consumer<IOException> ioErrorCallback)
-    {
-        this.ioErrorCallback = ioErrorCallback;
     }
 }

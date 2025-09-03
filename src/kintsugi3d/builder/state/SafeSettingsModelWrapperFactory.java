@@ -26,9 +26,9 @@ public class SafeSettingsModelWrapperFactory
 
     private static class Implementation implements SafeReadonlyGlobalSettingsModel
     {
-        private final ReadonlyGlobalSettingsModel base;
+        private final ReadonlyGeneralSettingsModel base;
 
-        Implementation(ReadonlyGlobalSettingsModel base)
+        Implementation(ReadonlyGeneralSettingsModel base)
         {
             this.base = base;
         }
@@ -49,7 +49,7 @@ public class SafeSettingsModelWrapperFactory
         }
     }
 
-    public SafeReadonlyGlobalSettingsModel wrapUnsafeModel(ReadonlyGlobalSettingsModel base)
+    public SafeReadonlyGlobalSettingsModel wrapUnsafeModel(ReadonlyGeneralSettingsModel base)
     {
         return new Implementation(base);
     }

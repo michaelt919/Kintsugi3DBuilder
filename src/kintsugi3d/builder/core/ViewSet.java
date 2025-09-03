@@ -14,9 +14,9 @@ package kintsugi3d.builder.core;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.GlobalSettingsModel;
-import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
-import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -193,7 +193,7 @@ public final class ViewSet implements ReadonlyViewSet
     private int thumbnailWidth = 450;
     private int thumbnailHeight = 300;
 
-    private final GlobalSettingsModel projectSettings = new SimpleGlobalSettingsModel();
+    private final GeneralSettingsModel projectSettings = new SimpleGeneralSettingsModel();
     private final Map<String, File> resourceMap = new HashMap<>(32);
 
     public static final class Builder
@@ -404,7 +404,7 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder applySettings(ReadonlyGlobalSettingsModel settings)
+        public Builder applySettings(ReadonlyGeneralSettingsModel settings)
         {
             result.getProjectSettings().copyFrom(settings);
             return this;
@@ -1621,7 +1621,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public GlobalSettingsModel getProjectSettings()
+    public GeneralSettingsModel getProjectSettings()
     {
         return projectSettings;
     }

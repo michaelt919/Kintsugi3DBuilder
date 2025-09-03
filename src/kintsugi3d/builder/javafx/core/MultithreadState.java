@@ -26,7 +26,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final CameraViewListModel cameraViewListModel;
     private final ProjectModel projectModel;
 
-    private final GlobalSettingsModel settingsModel;
+    private final GeneralSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final CanvasModel canvasModel;
@@ -48,7 +48,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         lightingModel = new SynchronizedLightingEnvironmentModel(JavaFXState.getInstance().getLightingModel());
         cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
-        settingsModel = new SynchronizedGlobalSettingsModel(JavaFXState.getInstance().getSettingsModel());
+        settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
@@ -93,7 +93,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public GlobalSettingsModel getSettingsModel()
+    public GeneralSettingsModel getSettingsModel()
     {
         return settingsModel;
     }

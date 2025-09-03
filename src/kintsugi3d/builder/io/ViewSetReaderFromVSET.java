@@ -15,8 +15,9 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.builder.state.GlobalSettingsModel;
-import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
+import kintsugi3d.builder.state.DefaultSettings;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -71,7 +72,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
 
-        GlobalSettingsModel settings = new SimpleGlobalSettingsModel();
+        GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
+        DefaultSettings.applyProjectDefaults(settings);
         Map<String, File> resourceMap = new HashMap<>(32);
 
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
@@ -286,20 +288,48 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         builder.addMask(cameraId, imgFilename);
                         break;
                     }
-                    case "zb":
-                        // boolean setting
-                        settings.createBooleanSetting(scanner.next(), Boolean.parseBoolean(scanner.next()));
-                        scanner.nextLine(); // Ignore rest of line
-                        break;
-                    case "zi":
-                        // integer setting
-                        settings.createNumericSetting(scanner.next(), Integer.parseInt(scanner.next()));
-                        scanner.nextLine(); // Ignore rest of line
-                        break;
-                    case "zf":
-                        // integer setting
-                        settings.createNumericSetting(scanner.next(), Float.parseFloat(scanner.next()));
-                        scanner.nextLine(); // Ignore rest of line
+                    case "z":
+                        String name = scanner.next();
+                        Class<?> type = settings.getType(name);
+                        if (type.isAssignableFrom(Boolean.class))
+                        {
+                            // boolean setting
+                            settings.set(name, Boolean.parseBoolean(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
+                        else if (type.isAssignableFrom(Double.class))
+                        {
+                            // integer setting
+                            settings.set(name, Double.parseDouble(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
+                        else if (type.isAssignableFrom(Float.class))
+                        {
+                            // integer setting
+                            settings.set(name, Float.parseFloat(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
+                        else if (type.isAssignableFrom(Long.class))
+                        {
+                            // integer setting
+                            settings.set(name, Long.parseLong(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
+                        else if (type.isAssignableFrom(Integer.class))
+                        {
+                            settings.set(name, Integer.parseInt(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
+                        else if (type.isAssignableFrom(Short.class))
+                        {
+                            settings.set(name, Short.parseShort(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
+                        else if (type.isAssignableFrom(Byte.class))
+                        {
+                            settings.set(name, Byte.parseByte(scanner.next()));
+                            scanner.nextLine(); // Ignore rest of line
+                        }
                         break;
                     case "zr":
                         // resource file

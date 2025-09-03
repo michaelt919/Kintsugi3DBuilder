@@ -12,19 +12,19 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.beans.value.WritableValue;
-import kintsugi3d.builder.state.GlobalSettingsModel;
-import kintsugi3d.builder.state.GlobalSettingsModelBase;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.GeneralSettingsModelBase;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class SynchronizedGlobalSettingsModel extends GlobalSettingsModelBase
+public class SynchronizedGeneralSettingsModel extends GeneralSettingsModelBase
 {
     private final Map<String, SynchronizedValue<Object>> settings = new HashMap<>(32);
-    private final GlobalSettingsModel baseModel;
+    private final GeneralSettingsModel baseModel;
 
-    public SynchronizedGlobalSettingsModel(GlobalSettingsModel baseModel)
+    public SynchronizedGeneralSettingsModel(GeneralSettingsModel baseModel)
     {
         this.baseModel = baseModel;
     }
@@ -99,7 +99,7 @@ public class SynchronizedGlobalSettingsModel extends GlobalSettingsModelBase
             @Override
             public Class<?> getType()
             {
-                return SynchronizedGlobalSettingsModel.this.getType(settingName);
+                return SynchronizedGeneralSettingsModel.this.getType(settingName);
             }
 
             @Override
@@ -111,7 +111,7 @@ public class SynchronizedGlobalSettingsModel extends GlobalSettingsModelBase
             @Override
             public boolean shouldSerialize()
             {
-                return SynchronizedGlobalSettingsModel.this.shouldSerialize(settingName);
+                return SynchronizedGeneralSettingsModel.this.shouldSerialize(settingName);
             }
         };
     }

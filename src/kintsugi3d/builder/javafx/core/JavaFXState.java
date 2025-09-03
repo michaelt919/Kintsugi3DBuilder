@@ -29,7 +29,7 @@ public final class JavaFXState
     private final ObservableObjectPoseModel objectModel;
     private final ObservableCameraViewListModel cameraViewListModel;
     private final ObservableLoadOptionsModel loadOptionsModel;
-    private final ObservableGlobalSettingsModel settingsModel;
+    private final ObservableGeneralSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
     private final ObservableTabsModel tabModels;
 
@@ -41,7 +41,7 @@ public final class JavaFXState
         lightingModel = new ObservableLightingEnvironmentModel(environmentModel);
         cameraViewListModel = new ObservableCameraViewListModel();
         loadOptionsModel = new ObservableLoadOptionsModel();
-        settingsModel = new ObservableGlobalSettingsModel();
+        settingsModel = new ObservableGeneralSettingsModel();
         projectModel = new ObservableProjectModel();
         tabModels = new ObservableTabsModel();
     }
@@ -73,7 +73,7 @@ public final class JavaFXState
         return loadOptionsModel;
     }
 
-    public ObservableGlobalSettingsModel getSettingsModel()
+    public ObservableGeneralSettingsModel getSettingsModel()
     {
         return settingsModel;
     }

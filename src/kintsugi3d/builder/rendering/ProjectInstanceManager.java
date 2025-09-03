@@ -56,7 +56,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private ReadonlyObjectPoseModel objectModel;
     private ReadonlyViewpointModel cameraModel;
     private ReadonlyLightingEnvironmentModel lightingModel;
-    private ReadonlyGlobalSettingsModel settingsModel;
+    private ReadonlyGeneralSettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
@@ -524,7 +524,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
-    public void setSettingsModel(ReadonlyGlobalSettingsModel settingsModel)
+    public void setSettingsModel(ReadonlyGeneralSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
         if (projectInstance != null)

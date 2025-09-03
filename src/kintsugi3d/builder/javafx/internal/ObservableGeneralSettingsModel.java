@@ -17,12 +17,12 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import kintsugi3d.builder.state.GlobalSettingsModelBase;
+import kintsugi3d.builder.state.GeneralSettingsModelBase;
 
 import java.util.*;
 import java.util.Map.Entry;
 
-public class ObservableGlobalSettingsModel extends GlobalSettingsModelBase
+public class ObservableGeneralSettingsModel extends GeneralSettingsModelBase
 {
     private static class TypedProperty implements Property<Object>
     {

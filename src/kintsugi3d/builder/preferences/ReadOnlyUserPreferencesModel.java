@@ -13,7 +13,7 @@ package kintsugi3d.builder.preferences;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
-import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
+import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
 
 public interface ReadOnlyUserPreferencesModel
 {
@@ -24,6 +24,6 @@ public interface ReadOnlyUserPreferencesModel
     ReadOnlyDirectoryPreferencesModel getReadOnlyDirectoryPreferences();
 
     @JsonProperty("settings")
-    ReadonlyGlobalSettingsModel getReadOnlySettings();
+    ReadonlyGeneralSettingsModel getReadOnlySettings();
 
 }

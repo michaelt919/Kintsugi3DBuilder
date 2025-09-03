@@ -19,7 +19,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     private ManipulableLightingEnvironmentModel lightingEnvironmentModel;
     private ManipulableObjectPoseModel objectModel;
     private SceneViewportModel sceneViewportModel;
-    private GlobalSettingsModel settingsModel;
+    private GeneralSettingsModel settingsModel;
 
     protected ToolBuilderBase()
     {
@@ -54,7 +54,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setSettingsModel(GlobalSettingsModel settingsModel)
+    public ToolBuilder<ToolType> setSettingsModel(GeneralSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
         return this;
@@ -80,7 +80,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return sceneViewportModel;
     }
 
-    GlobalSettingsModel getSettingsModel()
+    GeneralSettingsModel getSettingsModel()
     {
         return settingsModel;
     }

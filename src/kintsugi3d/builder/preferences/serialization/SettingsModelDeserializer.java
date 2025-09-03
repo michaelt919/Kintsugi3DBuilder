@@ -17,8 +17,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import kintsugi3d.builder.state.GlobalSettingsModel;
-import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-public class SettingsModelDeserializer extends StdDeserializer<GlobalSettingsModel>
+public class SettingsModelDeserializer extends StdDeserializer<GeneralSettingsModel>
 {
     public SettingsModelDeserializer()
     {
@@ -40,9 +40,9 @@ public class SettingsModelDeserializer extends StdDeserializer<GlobalSettingsMod
     }
 
     @Override
-    public GlobalSettingsModel deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException
+    public GeneralSettingsModel deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException
     {
-        SimpleGlobalSettingsModel outputModel = new SimpleGlobalSettingsModel();
+        SimpleGeneralSettingsModel outputModel = new SimpleGeneralSettingsModel();
         ObjectMapper mapper = new ObjectMapper();
 
         SimpleModule module = new SimpleModule();

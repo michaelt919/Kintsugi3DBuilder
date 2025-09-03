@@ -181,10 +181,9 @@ public final class Rendering
         ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
         ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
         ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
-        GlobalSettingsModel settingsModel = Global.state().getSettingsModel();
+        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
         CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
         IOModel ioModel = Global.state().getIOModel();
-        TabModels tabModels = Global.state().getTabModels();
 
         // Bind tools
         ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
