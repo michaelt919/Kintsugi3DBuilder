@@ -9,27 +9,24 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.core;//Created by alexk on 7/19/2017.
+package kintsugi3d.builder.javafx.core;
 
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
-import kintsugi3d.builder.state.impl.CanvasModelImpl;
-import kintsugi3d.builder.state.impl.SceneViewportModelImpl;
 import kintsugi3d.builder.state.project.ProjectModel;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
 {
-    private final ExtendedViewpointModel cameraModel;
-    private final EnvironmentModel environmentModel;
-    private final ExtendedLightingModel lightingModel;
-    private final ExtendedObjectModel objectModel;
+    private final ManipulableViewpointModel cameraModel;
+    private final ManipulableLightingEnvironmentModel lightingModel;
+    private final ManipulableObjectPoseModel objectModel;
     private final CameraViewListModel cameraViewListModel;
     private final ProjectModel projectModel;
 
-    private final SettingsModel settingsModel;
+    private final GlobalSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final CanvasModel canvasModel;
@@ -46,13 +43,12 @@ public final class MultithreadState implements Kintsugi3DBuilderState
 
     private MultithreadState()
     {
-        cameraModel = new CameraModelWrapper(JavaFXState.getInstance().getCameraModel());
-        objectModel = new ObjectModelWrapper(JavaFXState.getInstance().getObjectModel());
-        lightingModel = new LightingModelWrapper(JavaFXState.getInstance().getLightingModel());
-        environmentModel = new EnvironmentModelWrapper(JavaFXState.getInstance().getEnvironmentModel());
-        cameraViewListModel = new CameraViewListModelWrapper(JavaFXState.getInstance().getCameraViewListModel());
-        projectModel = new ProjectModelWrapper(JavaFXState.getInstance().getProjectModel());
-        settingsModel = new SettingsModelWrapper(JavaFXState.getInstance().getSettingsModel());
+        cameraModel = new SynchronizedCameraModel(JavaFXState.getInstance().getCameraModel());
+        objectModel = new SynchronizedObjectPoseModel(JavaFXState.getInstance().getObjectModel());
+        lightingModel = new SynchronizedLightingEnvironmentModel(JavaFXState.getInstance().getLightingModel());
+        cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
+        projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
+        settingsModel = new SynchronizedGlobalSettingsModel(JavaFXState.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
@@ -62,19 +58,19 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public ExtendedViewpointModel getCameraModel()
+    public ManipulableViewpointModel getCameraModel()
     {
         return cameraModel;
     }
 
     @Override
-    public ExtendedLightingModel getLightingModel()
+    public ManipulableLightingEnvironmentModel getLightingModel()
     {
         return lightingModel;
     }
 
     @Override
-    public ExtendedObjectModel getObjectModel()
+    public ManipulableObjectPoseModel getObjectModel()
     {
         return objectModel;
     }
@@ -97,15 +93,9 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public SettingsModel getSettingsModel()
+    public GlobalSettingsModel getSettingsModel()
     {
         return settingsModel;
-    }
-
-    @Override
-    public EnvironmentModel getEnvironmentModel()
-    {
-        return environmentModel;
     }
 
     @Override

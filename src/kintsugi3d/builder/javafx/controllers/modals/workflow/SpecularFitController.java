@@ -28,7 +28,7 @@ import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
+import kintsugi3d.builder.javafx.internal.ObservableGlobalSettingsModel;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.project.ProjectModel;
@@ -56,7 +56,7 @@ public class SpecularFitController extends NonDataPageControllerBase
 
     @FXML private CheckBox openViewerOnComplete;
 
-    private final ObservableSettingsModel localSettingsModel = new ObservableSettingsModel();
+    private final ObservableGlobalSettingsModel localSettingsModel = new ObservableGlobalSettingsModel();
 
     @Override
     public Region getRootNode()

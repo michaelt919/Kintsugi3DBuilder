@@ -15,8 +15,8 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.GlobalSettingsModel;
+import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -71,7 +71,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
 
-        SettingsModel settings = new SimpleSettingsModel();
+        GlobalSettingsModel settings = new SimpleGlobalSettingsModel();
         Map<String, File> resourceMap = new HashMap<>(32);
 
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))

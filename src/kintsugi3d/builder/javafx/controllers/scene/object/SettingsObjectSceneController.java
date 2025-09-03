@@ -87,7 +87,7 @@ public class SettingsObjectSceneController implements Initializable
         });
     }
 
-    public final ChangeListener<ObservableObjectPoseSetting> changeListener =
+    public final ChangeListener<ObservableObjectPoseSettings> changeListener =
         (observable, oldValue, newValue) ->
         {
             if (oldValue != null)
@@ -111,7 +111,7 @@ public class SettingsObjectSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    public void bind(ObservableObjectPoseSetting objectPose)
+    public void bind(ObservableObjectPoseSettings objectPose)
     {
         xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
         yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);
@@ -133,7 +133,7 @@ public class SettingsObjectSceneController implements Initializable
         scaleSlider.valueProperty().bindBidirectional(objectPose.scaleProperty());
     }
 
-    public void unbind(ObservableObjectPoseSetting objectPose)
+    public void unbind(ObservableObjectPoseSettings objectPose)
     {
 
         xCenterTextField.textProperty().unbindBidirectional(objectPose.centerXProperty());

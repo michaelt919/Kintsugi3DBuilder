@@ -12,8 +12,8 @@
 package kintsugi3d.builder.tools;
 
 import kintsugi3d.builder.state.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.SimpleCameraModel;
 import kintsugi3d.builder.state.ViewpointModel;
-import kintsugi3d.builder.state.impl.SimpleCameraModel;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;

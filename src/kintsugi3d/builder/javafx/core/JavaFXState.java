@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.core;
 
 import kintsugi3d.builder.javafx.internal.*;
-import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.TabModels;
 
 public final class JavaFXState
@@ -26,11 +25,11 @@ public final class JavaFXState
 
     private final ObservableCameraModel cameraModel;
     private final ObservableEnvironmentModel environmentModel;
-    private final ObservableLightingModel lightingModel;
-    private final ObservableObjectModel objectModel;
+    private final ObservableLightingEnvironmentModel lightingModel;
+    private final ObservableObjectPoseModel objectModel;
     private final ObservableCameraViewListModel cameraViewListModel;
     private final ObservableLoadOptionsModel loadOptionsModel;
-    private final ObservableSettingsModel settingsModel;
+    private final ObservableGlobalSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
     private final ObservableTabsModel tabModels;
 
@@ -38,11 +37,11 @@ public final class JavaFXState
     {
         cameraModel = new ObservableCameraModel();
         environmentModel = new ObservableEnvironmentModel();
-        objectModel = new ObservableObjectModel();
-        lightingModel = new ObservableLightingModel(environmentModel);
+        objectModel = new ObservableObjectPoseModel();
+        lightingModel = new ObservableLightingEnvironmentModel(environmentModel);
         cameraViewListModel = new ObservableCameraViewListModel();
         loadOptionsModel = new ObservableLoadOptionsModel();
-        settingsModel = new ObservableSettingsModel();
+        settingsModel = new ObservableGlobalSettingsModel();
         projectModel = new ObservableProjectModel();
         tabModels = new ObservableTabsModel();
     }
@@ -52,12 +51,12 @@ public final class JavaFXState
         return cameraModel;
     }
 
-    public ObservableLightingModel getLightingModel()
+    public ObservableLightingEnvironmentModel getLightingModel()
     {
         return lightingModel;
     }
 
-    public ObservableObjectModel getObjectModel()
+    public ObservableObjectPoseModel getObjectModel()
     {
         return objectModel;
     }
@@ -67,8 +66,6 @@ public final class JavaFXState
         return cameraViewListModel;
     }
 
-    public CardsModel getCardsModel(String label) { return tabModels.getCardsModel(label); }
-
     public TabModels getTabModels() { return tabModels; }
 
     public ObservableLoadOptionsModel getLoadOptionsModel()
@@ -76,7 +73,7 @@ public final class JavaFXState
         return loadOptionsModel;
     }
 
-    public ObservableSettingsModel getSettingsModel()
+    public ObservableGlobalSettingsModel getSettingsModel()
     {
         return settingsModel;
     }

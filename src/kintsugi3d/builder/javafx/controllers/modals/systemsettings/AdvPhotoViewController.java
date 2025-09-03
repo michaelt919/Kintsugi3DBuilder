@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.systemsettings;//Created by alexk on 7/31/2017.
+package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
@@ -19,7 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.core.JavaFXState;
-import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
+import kintsugi3d.builder.javafx.internal.ObservableGlobalSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -36,7 +36,7 @@ public class AdvPhotoViewController implements SystemSettingsControllerBase
     @FXML private Slider isotropyFactorSlider;
     @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
 
-    private ObservableSettingsModel settingsModel;
+    private ObservableGlobalSettingsModel settingsModel;
 
     @Override
     public void initializeSettingsPage(Window parentWindow, JavaFXState state)
@@ -63,7 +63,7 @@ public class AdvPhotoViewController implements SystemSettingsControllerBase
         bind(state.getSettingsModel());
     }
 
-    public void bind(ObservableSettingsModel injectedSettingsModel)
+    public void bind(ObservableGlobalSettingsModel injectedSettingsModel)
     {
         buehlerCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("buehlerAlgorithm"));
 

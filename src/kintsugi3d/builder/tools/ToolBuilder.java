@@ -15,12 +15,10 @@ import kintsugi3d.builder.state.*;
 
 interface ToolBuilder<ToolType>
 {
-    ToolBuilder<ToolType> setToolBindingModel(ToolBindingModel toolBindingModel);
-    ToolBuilder<ToolType> setCameraModel(ExtendedViewpointModel cameraModel);
-    ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentModel environmentModel);
-    ToolBuilder<ToolType> setLightingModel(ExtendedLightingModel lightingModel);
-    ToolBuilder<ToolType> setObjectModel(ExtendedObjectModel lightingModel);
+    ToolBuilder<ToolType> setCameraModel(ManipulableViewpointModel cameraModel);
+    ToolBuilder<ToolType> setLightingEnvironmentModel(ManipulableLightingEnvironmentModel lightingModel);
+    ToolBuilder<ToolType> setObjectModel(ManipulableObjectPoseModel lightingModel);
     ToolBuilder<ToolType> setSceneViewportModel(SceneViewportModel sceneViewportModel);
-    ToolBuilder<ToolType> setSettingsModel(SettingsModel settingsModel);
+    ToolBuilder<ToolType> setSettingsModel(GlobalSettingsModel settingsModel);
     ToolType create();
 }

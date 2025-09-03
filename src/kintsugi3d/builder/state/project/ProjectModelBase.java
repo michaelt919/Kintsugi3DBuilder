@@ -39,27 +39,27 @@ import java.util.Objects;
  * They will also typically be bound to the JavaFX frontend to ensure that they are constantly synchronized.
  * For typical 3D manipulation use cases (interaction between 3D backend and JavaFX frontend),
  * the CameraModel / LightingModel / EnvironmentModel / ObjectModel instances  accessible through Global.state() should be used instead.
- * @param <CameraSettingType>
- * @param <EnvironmentSettingType>
- * @param <LightGroupSettingType>
- * @param <LightInstanceSettingType>
- * @param <ObjectPoseSettingType>
+ * @param <CameraType>
+ * @param <EnvironmentType>
+ * @param <LightGroupType>
+ * @param <LightType>
+ * @param <ObjectPoseType>
  */
 public abstract class ProjectModelBase<
-    CameraSettingType extends CameraSetting, EnvironmentSettingType extends EnvironmentSetting,
-    LightGroupSettingType extends LightGroupSetting<LightInstanceSettingType>,
-    LightInstanceSettingType extends LightInstanceSetting, ObjectPoseSettingType extends ObjectPoseSetting>
+    CameraType extends SerializableCameraSettings, EnvironmentType extends SerializableEnvironmentSettings,
+    LightGroupType extends SerializableLightGroupSettings<LightType>, LightType extends SerializableLightSettings,
+    ObjectPoseType extends SerializableObjectPoseSettings>
     implements ProjectModel
 {
-    private final EnvironmentSettingType noEnvironment = EnvironmentSetting.createNoEnvironment(this::constructEnvironmentSetting);
+    private final EnvironmentType noEnvironment = SerializableEnvironmentSettings.createNoEnvironment(this::constructEnvironmentSetting);
 
-    public abstract List<CameraSettingType> getCameraList();
+    public abstract List<CameraType> getCameraList();
 
-    public abstract List<EnvironmentSettingType> getEnvironmentList();
+    public abstract List<EnvironmentType> getEnvironmentList();
 
-    public abstract List<LightGroupSettingType> getLightGroupList();
+    public abstract List<LightGroupType> getLightGroupList();
 
-    public abstract List<ObjectPoseSettingType> getObjectPoseList();
+    public abstract List<ObjectPoseType> getObjectPoseList();
 
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
@@ -95,7 +95,7 @@ public abstract class ProjectModelBase<
                         Node cameraNode = cameraNodes.item(i);
                         if (cameraNode instanceof Element)
                         {
-                            this.getCameraList().add(CameraSetting.fromDOMElement(
+                            this.getCameraList().add(SerializableCameraSettings.fromDOMElement(
                                 (Element) cameraNode, this::constructCameraSetting));
                         }
                     }
@@ -117,7 +117,7 @@ public abstract class ProjectModelBase<
                         Node environmentNode = environmentNodes.item(i);
                         if (environmentNode instanceof Element)
                         {
-                            this.getEnvironmentList().add(EnvironmentSetting.fromDOMElement(
+                            this.getEnvironmentList().add(SerializableEnvironmentSettings.fromDOMElement(
                                 (Element) environmentNode, this::constructEnvironmentSetting));
                         }
                     }
@@ -137,7 +137,7 @@ public abstract class ProjectModelBase<
                         Node lightGroupNode = lightGroupNodes.item(i);
                         if (lightGroupNode instanceof Element)
                         {
-                            this.getLightGroupList().add(LightGroupSetting.fromDOMElement(
+                            this.getLightGroupList().add(SerializableLightGroupSettings.fromDOMElement(
                                 (Element) lightGroupNode, this::constructLightGroupSetting));
                         }
                     }
@@ -157,7 +157,7 @@ public abstract class ProjectModelBase<
                         Node objectPoseNode = objectPoseNodes.item(i);
                         if (objectPoseNode instanceof Element)
                         {
-                            this.getObjectPoseList().add(ObjectPoseSetting.fromDOMElement(
+                            this.getObjectPoseList().add(SerializableObjectPoseSettings.fromDOMElement(
                                 (Element) objectPoseNode, this::constructObjectPoseSetting));
                         }
                     }
@@ -194,7 +194,7 @@ public abstract class ProjectModelBase<
             Element cameraListElement = document.createElement("CameraList");
             rootElement.appendChild(cameraListElement);
 
-            for (CameraSetting camera : this.getCameraList())
+            for (SerializableCameraSettings camera : this.getCameraList())
             {
                 cameraListElement.appendChild(camera.toDOMElement(document));
             }
@@ -205,7 +205,7 @@ public abstract class ProjectModelBase<
             Element environmentListElement = document.createElement("EnvironmentList");
             rootElement.appendChild(environmentListElement);
 
-            for (EnvironmentSetting environment : this.getEnvironmentList())
+            for (SerializableEnvironmentSettings environment : this.getEnvironmentList())
             {
                 if (!Objects.equals(environment, noEnvironment))
                 {
@@ -219,7 +219,7 @@ public abstract class ProjectModelBase<
             Element lightGroupListElement = document.createElement("LightGroupList");
             rootElement.appendChild(lightGroupListElement);
 
-            for (LightGroupSetting<LightInstanceSettingType> lightGroup : this.getLightGroupList())
+            for (SerializableLightGroupSettings<LightType> lightGroup : this.getLightGroupList())
             {
                 lightGroupListElement.appendChild(lightGroup.toDOMElement(document));
             }
@@ -230,7 +230,7 @@ public abstract class ProjectModelBase<
             Element objectPoseListElement = document.createElement("ObjectPoseList");
             rootElement.appendChild(objectPoseListElement);
 
-            for (ObjectPoseSetting objectPose : this.getObjectPoseList())
+            for (SerializableObjectPoseSettings objectPose : this.getObjectPoseList())
             {
                 objectPoseListElement.appendChild(objectPose.toDOMElement(document));
             }
@@ -252,12 +252,12 @@ public abstract class ProjectModelBase<
         }
     }
 
-    protected abstract CameraSettingType constructCameraSetting();
-    protected abstract EnvironmentSettingType constructEnvironmentSetting();
-    protected abstract LightGroupSettingType constructLightGroupSetting();
-    protected abstract ObjectPoseSettingType constructObjectPoseSetting();
+    protected abstract CameraType constructCameraSetting();
+    protected abstract EnvironmentType constructEnvironmentSetting();
+    protected abstract LightGroupType constructLightGroupSetting();
+    protected abstract ObjectPoseType constructObjectPoseSetting();
 
-    public EnvironmentSettingType getNoEnvironment()
+    public EnvironmentType getNoEnvironment()
     {
         return this.noEnvironment;
     }

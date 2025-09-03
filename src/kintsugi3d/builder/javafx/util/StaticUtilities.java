@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.util;//Created by alexk on 7/20/2017.
+package kintsugi3d.builder.javafx.util;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
@@ -65,7 +65,7 @@ public final class StaticUtilities
             {
                 try
                 {
-                    double value = Double.valueOf(textField.getText());
+                    double value = Double.parseDouble(textField.getText());
                     textField.setText(Double.toString(wrapAround(min, max, value)));
 //                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
@@ -86,7 +86,7 @@ public final class StaticUtilities
             {
                 try
                 {
-                    double value = Double.valueOf(textField.getText());
+                    double value = Double.parseDouble(textField.getText());
                     textField.setText(Double.toString(clamp(min, max, value)));
 //                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }

@@ -85,7 +85,7 @@ public class SettingsEnvironmentSceneController implements Initializable
 
     private ObservableEnvironmentModel environmentMapModel;
 
-    final ChangeListener<ObservableEnvironmentSetting> changeListener = (observable, oldValue, newValue) ->
+    final ChangeListener<ObservableEnvironmentSettings> changeListener = (observable, oldValue, newValue) ->
     {
         if (oldValue != null)
         {
@@ -108,7 +108,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         root.setDisable(value);
     }
 
-    private void bind(ObservableEnvironmentSetting envSetting)
+    private void bind(ObservableEnvironmentSettings envSetting)
     {
         envUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.envUseImageProperty());
         envUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.envUseColorProperty());
@@ -140,7 +140,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         gpSizeTextField.textProperty().bindBidirectional(trueGPSize, numberStringConverter);
     }
 
-    private void unbind(ObservableEnvironmentSetting envSetting)
+    private void unbind(ObservableEnvironmentSettings envSetting)
     {
         envUseImageCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseImageProperty());
         envUseColorCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseColorProperty());

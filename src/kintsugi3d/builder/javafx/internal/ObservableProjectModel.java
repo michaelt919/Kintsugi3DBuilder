@@ -18,11 +18,11 @@ import javafx.beans.binding.StringExpression;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSetting;
-import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSetting;
-import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSetting;
-import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightInstanceSetting;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSetting;
+import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSettings;
+import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSettings;
+import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightSettings;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSettings;
 import kintsugi3d.builder.state.project.ProjectModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -34,16 +34,16 @@ import java.util.Collections;
  * Project model with all the JavaFX properties and bindings.
  */
 public class ObservableProjectModel extends ProjectModelBase<
-    ObservableCameraSetting, ObservableEnvironmentSetting, ObservableLightGroupSetting,
-    ObservableLightInstanceSetting, ObservableObjectPoseSetting>
+    ObservableCameraSettings, ObservableEnvironmentSettings, ObservableLightGroupSettings,
+    ObservableLightSettings, ObservableObjectPoseSettings>
 {
-    private final ObservableList<ObservableCameraSetting> cameraList =
+    private final ObservableList<ObservableCameraSettings> cameraList =
         new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
-    private final ObservableList<ObservableEnvironmentSetting> environmentList =
+    private final ObservableList<ObservableEnvironmentSettings> environmentList =
         new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
-    private final ObservableList<ObservableLightGroupSetting> lightGroupList =
+    private final ObservableList<ObservableLightGroupSettings> lightGroupList =
         new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
-    private final ObservableList<ObservableObjectPoseSetting> objectPoseList =
+    private final ObservableList<ObservableObjectPoseSettings> objectPoseList =
         new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
 
     private final ObjectProperty<File> colorCheckerFile = new SimpleObjectProperty<>();
@@ -59,54 +59,54 @@ public class ObservableProjectModel extends ProjectModelBase<
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<ObservableCameraSetting> getCameraList()
+    public ObservableList<ObservableCameraSettings> getCameraList()
     {
         return this.cameraList;
     }
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<ObservableEnvironmentSetting> getEnvironmentList()
+    public ObservableList<ObservableEnvironmentSettings> getEnvironmentList()
     {
         return this.environmentList;
     }
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<ObservableLightGroupSetting> getLightGroupList()
+    public ObservableList<ObservableLightGroupSettings> getLightGroupList()
     {
         return this.lightGroupList;
     }
 
     @Override
     @SuppressWarnings("ReturnOfCollectionOrArrayField")
-    public ObservableList<ObservableObjectPoseSetting> getObjectPoseList()
+    public ObservableList<ObservableObjectPoseSettings> getObjectPoseList()
     {
         return this.objectPoseList;
     }
 
     @Override
-    protected ObservableCameraSetting constructCameraSetting()
+    protected ObservableCameraSettings constructCameraSetting()
     {
-        return new ObservableCameraSetting();
+        return new ObservableCameraSettings();
     }
 
     @Override
-    protected ObservableEnvironmentSetting constructEnvironmentSetting()
+    protected ObservableEnvironmentSettings constructEnvironmentSetting()
     {
-        return new ObservableEnvironmentSetting();
+        return new ObservableEnvironmentSettings();
     }
 
     @Override
-    protected ObservableLightGroupSetting constructLightGroupSetting()
+    protected ObservableLightGroupSettings constructLightGroupSetting()
     {
-        return new ObservableLightGroupSetting();
+        return new ObservableLightGroupSettings();
     }
 
     @Override
-    protected ObservableObjectPoseSetting constructObjectPoseSetting()
+    protected ObservableObjectPoseSettings constructObjectPoseSetting()
     {
-        return new ObservableObjectPoseSetting();
+        return new ObservableObjectPoseSettings();
     }
 
     public EventHandler<ProcessingCompleteEvent> getOnProcessingComplete()

@@ -15,9 +15,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.GlobalSettingsModel;
+import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
+import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
 
 public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 {
@@ -25,7 +25,7 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 
     private DirectoryPreferencesModel directoryPreferencesModel = SimpleDirectoryPreferencesModel.createDefault();
 
-    private SettingsModel settingsModel = new SimpleSettingsModel();
+    private GlobalSettingsModel settingsModel = new SimpleGlobalSettingsModel();
 
     private UserPreferencesModel() {}
 
@@ -59,7 +59,7 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 
     @Override
     @JsonIgnore
-    public ReadonlySettingsModel getReadOnlySettings()
+    public ReadonlyGlobalSettingsModel getReadOnlySettings()
     {
         return settingsModel;
     }
@@ -84,12 +84,12 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
         this.loadOptionsModel = loadOptionsModel;
     }
 
-    public SettingsModel getSettings()
+    public GlobalSettingsModel getSettings()
     {
         return settingsModel;
     }
 
-    public void setSettings(SettingsModel settingsModel)
+    public void setSettings(GlobalSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
     }

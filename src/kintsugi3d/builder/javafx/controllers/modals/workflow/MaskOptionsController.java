@@ -22,12 +22,12 @@ import javafx.scene.layout.Region;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
+import kintsugi3d.builder.javafx.internal.ObservableGlobalSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.GlobalSettingsModel;
+import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
 
 public class MaskOptionsController extends NonDataPageControllerBase
 {
@@ -43,9 +43,9 @@ public class MaskOptionsController extends NonDataPageControllerBase
     @FXML private TextField edgeProximityCutoffTextField;
     @FXML private Slider edgeProximityCutoffSlider;
 
-    private SettingsModel projectSettingsModel;
-    private final ObservableSettingsModel revertSettingsModel = new ObservableSettingsModel();
-    private final ObservableSettingsModel localSettingsModel = new ObservableSettingsModel();
+    private GlobalSettingsModel projectSettingsModel;
+    private final ObservableGlobalSettingsModel revertSettingsModel = new ObservableGlobalSettingsModel();
+    private final ObservableGlobalSettingsModel localSettingsModel = new ObservableGlobalSettingsModel();
 
     @Override
     public Region getRootNode()
@@ -99,7 +99,7 @@ public class MaskOptionsController extends NonDataPageControllerBase
         }
         else
         {
-            this.projectSettingsModel = new SimpleSettingsModel();
+            this.projectSettingsModel = new SimpleGlobalSettingsModel();
             DefaultSettings.applyProjectDefaults(projectSettingsModel);
         }
 

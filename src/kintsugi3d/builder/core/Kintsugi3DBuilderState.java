@@ -17,9 +17,8 @@ import kintsugi3d.builder.state.project.ProjectModel;
 public interface Kintsugi3DBuilderState
 {
     ReadonlyViewpointModel getCameraModel();
-    ReadonlyLightingModel getLightingModel();
-    ReadonlyObjectModel getObjectModel();
-    ReadonlyEnvironmentModel getEnvironmentModel();
+    ReadonlyLightingEnvironmentModel getLightingModel();
+    ReadonlyObjectPoseModel getObjectModel();
     CameraViewListModel getCameraViewListModel();
     TabModels getTabModels();
 
@@ -27,7 +26,7 @@ public interface Kintsugi3DBuilderState
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
      * @return
      */
-    SettingsModel getSettingsModel();
+    GlobalSettingsModel getSettingsModel();
 
     CanvasModel getCanvasModel();
 

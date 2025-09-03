@@ -36,7 +36,7 @@ public class RootCameraSceneController
     @FXML
     private SettingsCameraSceneController settingsController;
     @FXML
-    private ListView<ObservableCameraSetting> cameraListView;
+    private ListView<ObservableCameraSettings> cameraListView;
     @FXML
     private VBox listControls;
     @FXML
@@ -51,15 +51,15 @@ public class RootCameraSceneController
         cameraListView.setItems(projectModel.getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        ObservableCameraSetting freeCam = new ObservableCameraSetting();
+        ObservableCameraSettings freeCam = new ObservableCameraSettings();
         freeCam.setName("Free Camera");
 
-        ObservableList<ObservableCameraSetting> cameraList = projectModel.getCameraList();
+        ObservableList<ObservableCameraSettings> cameraList = projectModel.getCameraList();
 
         cameraList.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
 
-        cameraList.addListener((ListChangeListener<? super ObservableCameraSetting>) change ->
+        cameraList.addListener((ListChangeListener<? super ObservableCameraSettings>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == cameraList.size())
@@ -71,7 +71,7 @@ public class RootCameraSceneController
         cameraModel.setSelectedCameraSetting(cameraListView.getSelectionModel().selectedItemProperty());
     }
 
-    private SelectionModel<ObservableCameraSetting> getCameraSelectionModel()
+    private SelectionModel<ObservableCameraSettings> getCameraSelectionModel()
     {
         return cameraListView.getSelectionModel();
     }
@@ -169,7 +169,7 @@ public class RootCameraSceneController
     void moveDOWNButton()
     {
         int i = getCameraSelectionModel().getSelectedIndex();
-        List<ObservableCameraSetting> cameraList = projectModel.getCameraList();
+        List<ObservableCameraSettings> cameraList = projectModel.getCameraList();
         if (i != 0 && i < cameraList.size() - 1)
         {
             Collections.swap(cameraList, i, i + 1);

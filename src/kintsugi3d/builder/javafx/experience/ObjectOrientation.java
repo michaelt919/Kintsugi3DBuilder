@@ -1,7 +1,7 @@
 package kintsugi3d.builder.javafx.experience;
 
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSetting;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSettings;
 import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class ObjectOrientation extends ExperienceBase
 
         if (objectOrientationController != null)
         {
-            ObservableObjectPoseSetting boundObjectPose = getState().getObjectModel().getSelectedObjectPoseProperty().getValue();
+            ObservableObjectPoseSettings boundObjectPose = getState().getObjectModel().getSelectedObjectPoseProperty().getValue();
 
             objectOrientationController.bind(boundObjectPose);
             getModal().getStage().addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,

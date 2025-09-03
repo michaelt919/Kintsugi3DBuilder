@@ -53,12 +53,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private ProjectInstance<ContextType> newInstance = null;
     private ProgressMonitor progressMonitor;
 
-    private ReadonlyObjectModel objectModel;
+    private ReadonlyObjectPoseModel objectModel;
     private ReadonlyViewpointModel cameraModel;
-    private ReadonlyLightingModel lightingModel;
-    private ReadonlySettingsModel settingsModel;
+    private ReadonlyLightingEnvironmentModel lightingModel;
+    private ReadonlyGlobalSettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
-    private TabModels tabModels;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
@@ -199,7 +198,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         newItem.getSceneModel().setLightingModel(this.lightingModel);
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
-        newItem.getSceneModel().setTabModels(this.tabModels);
 
         newItem.setProgressMonitor(new ProgressMonitor()
         {
@@ -499,15 +497,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
-    public void setTabModels(TabModels tabModels) {
-        this.tabModels = tabModels;
-        if (projectInstance != null)
-        {
-            projectInstance.getSceneModel().setTabModels(tabModels);
-        }
-    }
-
-    public void setObjectModel(ReadonlyObjectModel objectModel)
+    public void setObjectModel(ReadonlyObjectPoseModel objectModel)
     {
         this.objectModel = objectModel;
         if (projectInstance != null)
@@ -525,7 +515,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
-    public void setLightingModel(ReadonlyLightingModel lightingModel)
+    public void setLightingModel(ReadonlyLightingEnvironmentModel lightingModel)
     {
         this.lightingModel = lightingModel;
         if (projectInstance != null)
@@ -534,7 +524,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
-    public void setSettingsModel(ReadonlySettingsModel settingsModel)
+    public void setSettingsModel(ReadonlyGlobalSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
         if (projectInstance != null)

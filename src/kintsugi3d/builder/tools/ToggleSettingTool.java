@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.GlobalSettingsModel;
 
 public class ToggleSettingTool implements KeyPressTool
 {
@@ -37,9 +37,9 @@ public class ToggleSettingTool implements KeyPressTool
     }
 
     private final String settingName;
-    private final SettingsModel settingsModel;
+    private final GlobalSettingsModel settingsModel;
 
-    public ToggleSettingTool(String settingName, SettingsModel settingsModel)
+    public ToggleSettingTool(String settingName, GlobalSettingsModel settingsModel)
     {
         this.settingName = settingName;
         this.settingsModel = settingsModel;

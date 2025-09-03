@@ -12,8 +12,6 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.state.*;
-import kintsugi3d.builder.state.impl.DefaultSettingsModel;
-import kintsugi3d.builder.state.impl.SafeSettingsModelWrapperFactory;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -21,12 +19,11 @@ import kintsugi3d.gl.vecmath.Vector3;
 
 public class SceneModel
 {
-    private ReadonlyObjectModel objectModel;
+    private ReadonlyObjectPoseModel objectModel;
     private ReadonlyViewpointModel cameraModel;
-    private ReadonlyLightingModel lightingModel;
-    private SafeReadonlySettingsModel settingsModel = new DefaultSettingsModel();
+    private ReadonlyLightingEnvironmentModel lightingModel;
+    private SafeReadonlyGlobalSettingsModel settingsModel = new DefaultGlobalSettingsModel();
     private CameraViewListModel cameraViewListModel;
-    private TabModels tabModels;
 
     private Vector3 centroid = Vector3.ZERO;
     private Matrix3 orientation = Matrix3.IDENTITY;
@@ -34,7 +31,7 @@ public class SceneModel
 
     private Vector3 clearColor = Vector3.ZERO;
 
-    public ReadonlyObjectModel getObjectModel()
+    public ReadonlyObjectPoseModel getObjectModel()
     {
         return objectModel;
     }
@@ -44,12 +41,12 @@ public class SceneModel
         return cameraModel;
     }
 
-    public ReadonlyLightingModel getLightingModel()
+    public ReadonlyLightingEnvironmentModel getLightingModel()
     {
         return lightingModel;
     }
 
-    public SafeReadonlySettingsModel getSettingsModel()
+    public SafeReadonlyGlobalSettingsModel getSettingsModel()
     {
         return this.settingsModel;
     }
@@ -58,8 +55,6 @@ public class SceneModel
     {
         return cameraViewListModel;
     }
-
-    public TabModels getTabModels() { return tabModels; }
 
 
     public Vector3 getCentroid()
@@ -81,7 +76,7 @@ public class SceneModel
     {
         return clearColor;
     }
-    public void setObjectModel(ReadonlyObjectModel objectModel)
+    public void setObjectModel(ReadonlyObjectPoseModel objectModel)
     {
         this.objectModel = objectModel;
     }
@@ -91,12 +86,12 @@ public class SceneModel
         this.cameraModel = cameraModel;
     }
 
-    public void setLightingModel(ReadonlyLightingModel lightingModel)
+    public void setLightingModel(ReadonlyLightingEnvironmentModel lightingModel)
     {
         this.lightingModel = lightingModel;
     }
 
-    public void setSettingsModel(ReadonlySettingsModel settingsModel)
+    public void setSettingsModel(ReadonlyGlobalSettingsModel settingsModel)
     {
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
     }
@@ -104,10 +99,6 @@ public class SceneModel
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
     {
         this.cameraViewListModel = cameraViewListModel;
-    }
-
-    public void setTabModels(TabModels tabModels) {
-        this.tabModels = tabModels;
     }
 
     public void setCentroid(Vector3 centroid)

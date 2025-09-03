@@ -103,7 +103,7 @@ public class SettingsCameraSceneController implements Initializable
         });
     }
 
-    public final ChangeListener<ObservableCameraSetting> changeListener =
+    public final ChangeListener<ObservableCameraSettings> changeListener =
         (observable, oldValue, newValue) ->
         {
             if (oldValue != null)
@@ -127,7 +127,7 @@ public class SettingsCameraSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    private void bind(ObservableCameraSetting camera)
+    private void bind(ObservableCameraSettings camera)
     {
 
         xCenterTextField.textProperty().bindBidirectional(camera.xCenterProperty(), n);
@@ -156,7 +156,7 @@ public class SettingsCameraSceneController implements Initializable
         focalLength.bindBidirectional(camera.focalLengthProperty());
     }
 
-    private void unbind(ObservableCameraSetting camera)
+    private void unbind(ObservableCameraSettings camera)
     {
 
         xCenterTextField.textProperty().unbindBidirectional(camera.xCenterProperty());

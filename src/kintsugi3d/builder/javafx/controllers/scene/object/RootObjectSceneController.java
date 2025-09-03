@@ -19,7 +19,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.internal.ObservableObjectModel;
+import kintsugi3d.builder.javafx.internal.ObservableObjectPoseModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class RootObjectSceneController
     @FXML
     private SettingsObjectSceneController settingsController;
     @FXML
-    private ListView<ObservableObjectPoseSetting> objectPoseListView;
+    private ListView<ObservableObjectPoseSettings> objectPoseListView;
     @FXML
     private VBox listControls;
     @FXML
@@ -44,21 +44,21 @@ public class RootObjectSceneController
 
     private ObservableProjectModel projectModel;
 
-    public void init(ObservableObjectModel objectModel, ObservableProjectModel injectedProjectModel)
+    public void init(ObservableObjectPoseModel objectModel, ObservableProjectModel injectedProjectModel)
     {
         this.projectModel = injectedProjectModel;
 
         objectPoseListView.setItems(projectModel.getObjectPoseList());
         objectPoseListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        ObservableObjectPoseSetting defaultPose = new ObservableObjectPoseSetting();
+        ObservableObjectPoseSettings defaultPose = new ObservableObjectPoseSettings();
 
-        ObservableList<ObservableObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
+        ObservableList<ObservableObjectPoseSettings> objectPoseList = projectModel.getObjectPoseList();
 
         objectPoseList.add(defaultPose);
         objectPoseListView.getSelectionModel().select(defaultPose);
 
-        objectPoseList.addListener((ListChangeListener<? super ObservableObjectPoseSetting>) change ->
+        objectPoseList.addListener((ListChangeListener<? super ObservableObjectPoseSettings>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == objectPoseList.size())
@@ -70,7 +70,7 @@ public class RootObjectSceneController
         objectModel.setSelectedObjectPoseProperty(objectPoseListView.getSelectionModel().selectedItemProperty());
     }
 
-    private SelectionModel<ObservableObjectPoseSetting> getObjectPoseSelectionModel()
+    private SelectionModel<ObservableObjectPoseSettings> getObjectPoseSelectionModel()
     {
         return objectPoseListView.getSelectionModel();
     }
@@ -170,7 +170,7 @@ public class RootObjectSceneController
     void moveDOWNButton()
     {
         int i = getObjectPoseSelectionModel().getSelectedIndex();
-        List<ObservableObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
+        List<ObservableObjectPoseSettings> objectPoseList = projectModel.getObjectPoseList();
         if (i != 0 && i < objectPoseList.size() - 1)
         {
             Collections.swap(objectPoseList, i, i + 1);

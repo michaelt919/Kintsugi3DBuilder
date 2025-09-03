@@ -51,31 +51,19 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setToolBindingModel(ToolBindingModel toolBindingModel)
+        public ToolBuilder<MultiplierTool> setCameraModel(ManipulableViewpointModel cameraModel)
         {
             return this;
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setCameraModel(ExtendedViewpointModel cameraModel)
+        public ToolBuilder<MultiplierTool> setLightingEnvironmentModel(ManipulableLightingEnvironmentModel lightingModel)
         {
             return this;
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setEnvironmentMapModel(EnvironmentModel environmentModel)
-        {
-            return this;
-        }
-
-        @Override
-        public ToolBuilder<MultiplierTool> setLightingModel(ExtendedLightingModel lightingModel)
-        {
-            return this;
-        }
-
-        @Override
-        public ToolBuilder<MultiplierTool> setObjectModel(ExtendedObjectModel lightingModel)
+        public ToolBuilder<MultiplierTool> setObjectModel(ManipulableObjectPoseModel lightingModel)
         {
             return this;
         }
@@ -87,7 +75,7 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setSettingsModel(SettingsModel settingsModel)
+        public ToolBuilder<MultiplierTool> setSettingsModel(GlobalSettingsModel settingsModel)
         {
             return this;
         }

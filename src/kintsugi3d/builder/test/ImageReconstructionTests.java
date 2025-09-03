@@ -31,8 +31,8 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.GlobalSettingsModel;
+import kintsugi3d.builder.state.SimpleGlobalSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
@@ -204,7 +204,7 @@ class ImageReconstructionTests
             String groundTruthName)
         throws IOException
     {
-        SimpleSettingsModel globalSettings = new SimpleSettingsModel();
+        SimpleGlobalSettingsModel globalSettings = new SimpleGlobalSettingsModel();
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
@@ -851,7 +851,7 @@ class ImageReconstructionTests
         Consumer<ColorAppearanceRMSE> validation,
         String testName) throws IOException
     {
-        SimpleSettingsModel globalSettings = new SimpleSettingsModel();
+        SimpleGlobalSettingsModel globalSettings = new SimpleGlobalSettingsModel();
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
@@ -950,7 +950,7 @@ class ImageReconstructionTests
             File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
             outputDirectory.mkdirs();
 
-            SettingsModel settings = new SimpleSettingsModel();
+            GlobalSettingsModel settings = new SimpleGlobalSettingsModel();
             DefaultSettings.applyGlobalDefaults(settings);
             SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
             params.setOutputDirectory(outputDirectory);
@@ -1041,7 +1041,7 @@ class ImageReconstructionTests
         File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
         outputDirectory.mkdirs();
 
-        SettingsModel settings = new SimpleSettingsModel();
+        GlobalSettingsModel settings = new SimpleGlobalSettingsModel();
         DefaultSettings.applyGlobalDefaults(settings);
         SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
         params.setOutputDirectory(outputDirectory);

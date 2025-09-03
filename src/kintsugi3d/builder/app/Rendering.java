@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.app;//Created by alexk on 7/19/2017.
+package kintsugi3d.builder.app;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -32,7 +32,7 @@ import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.*;
-import kintsugi3d.util.CanvasInputController;
+import kintsugi3d.util.CanvasListener;
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
 import org.slf4j.Logger;
@@ -178,11 +178,10 @@ public final class Rendering
 
         context.getState().enableDepthTest();
 
-        ExtendedLightingModel lightingModel = MultithreadState.getInstance().getLightingModel();
-        EnvironmentModel environmentModel = MultithreadState.getInstance().getEnvironmentModel();
-        ExtendedViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
-        ExtendedObjectModel objectModel = MultithreadState.getInstance().getObjectModel();
-        SettingsModel settingsModel = Global.state().getSettingsModel();
+        ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
+        ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
+        ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
+        GlobalSettingsModel settingsModel = Global.state().getSettingsModel();
         CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
         IOModel ioModel = Global.state().getIOModel();
         TabModels tabModels = Global.state().getTabModels();
@@ -302,9 +301,8 @@ public final class Rendering
             }
         });
 
-        CanvasInputController canvasInputController = Builder.create()
+        CanvasListener canvasListener = Builder.create()
             .setCameraModel(cameraModel)
-            .setEnvironmentModel(environmentModel)
             .setLightingModel(lightingModel)
             .setObjectModel(objectModel)
             .setSettingsModel(settingsModel)
@@ -312,7 +310,7 @@ public final class Rendering
             .setSceneViewportModel(sceneViewportModel)
             .build();
 
-        canvasInputController.addAsCanvasListener(canvas);
+        canvasListener.addToCanvas(canvas);
 
         ioModel.setLoadingHandler(instanceManager);
 
@@ -321,7 +319,6 @@ public final class Rendering
         instanceManager.setLightingModel(lightingModel);
         instanceManager.setCameraViewListModel(cameraViewListModel);
         instanceManager.setSettingsModel(settingsModel);
-        instanceManager.setTabModels(tabModels);
 
         canvas.addKeyPressListener((win, key, modifierKeys) ->
         {

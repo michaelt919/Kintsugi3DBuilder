@@ -15,48 +15,32 @@ import kintsugi3d.builder.state.*;
 
 abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
 {
-    private ToolBindingModel toolBindingModel;
-    private ExtendedViewpointModel cameraModel;
-    private EnvironmentModel environmentModel;
-    private ExtendedLightingModel lightingModel;
-    private ExtendedObjectModel objectModel;
+    private ManipulableViewpointModel cameraModel;
+    private ManipulableLightingEnvironmentModel lightingEnvironmentModel;
+    private ManipulableObjectPoseModel objectModel;
     private SceneViewportModel sceneViewportModel;
-    private SettingsModel settingsModel;
+    private GlobalSettingsModel settingsModel;
 
     protected ToolBuilderBase()
     {
     }
 
     @Override
-    public ToolBuilder<ToolType> setToolBindingModel(ToolBindingModel toolBindingModel)
-    {
-        this.toolBindingModel = toolBindingModel;
-        return this;
-    }
-
-    @Override
-    public ToolBuilder<ToolType> setCameraModel(ExtendedViewpointModel cameraModel)
+    public ToolBuilder<ToolType> setCameraModel(ManipulableViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
         return this;
     }
 
     @Override
-    public ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentModel environmentModel)
+    public ToolBuilder<ToolType> setLightingEnvironmentModel(ManipulableLightingEnvironmentModel lightingModel)
     {
-        this.environmentModel = environmentModel;
+        this.lightingEnvironmentModel = lightingModel;
         return this;
     }
 
     @Override
-    public ToolBuilder<ToolType> setLightingModel(ExtendedLightingModel lightingModel)
-    {
-        this.lightingModel = lightingModel;
-        return this;
-    }
-
-    @Override
-    public ToolBuilder<ToolType> setObjectModel(ExtendedObjectModel objectModel)
+    public ToolBuilder<ToolType> setObjectModel(ManipulableObjectPoseModel objectModel)
     {
         this.objectModel = objectModel;
         return this;
@@ -70,33 +54,23 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setSettingsModel(SettingsModel settingsModel)
+    public ToolBuilder<ToolType> setSettingsModel(GlobalSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
         return this;
     }
 
-    ToolBindingModel getToolBindingModel()
-    {
-        return toolBindingModel;
-    }
-
-    ExtendedViewpointModel getCameraModel()
+    ManipulableViewpointModel getCameraModel()
     {
         return cameraModel;
     }
 
-    EnvironmentModel getEnvironmentModel()
+    ManipulableLightingEnvironmentModel getLightingEnvironmentModel()
     {
-        return environmentModel;
+        return lightingEnvironmentModel;
     }
 
-    ExtendedLightingModel getLightingModel()
-    {
-        return lightingModel;
-    }
-
-    ExtendedObjectModel getObjectModel()
+    ManipulableObjectPoseModel getObjectModel()
     {
         return objectModel;
     }
@@ -106,7 +80,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return sceneViewportModel;
     }
 
-    SettingsModel getSettingsModel()
+    GlobalSettingsModel getSettingsModel()
     {
         return settingsModel;
     }

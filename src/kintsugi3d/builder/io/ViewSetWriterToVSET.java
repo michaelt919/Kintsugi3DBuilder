@@ -12,7 +12,7 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
@@ -96,7 +96,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("r %s%n", viewSet.getOrientationViewRotationDegrees());
 
         boolean firstSetting = true;
-        for (ReadonlySettingsModel.Setting setting : viewSet.getProjectSettings())
+        for (ReadonlyGlobalSettingsModel.Setting setting : viewSet.getProjectSettings())
         {
             if (firstSetting) // print only for the first setting; do not print at all if no settings
             {

@@ -14,7 +14,7 @@ package kintsugi3d.builder.export.general;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
-import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.GlobalSettingsModel;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
@@ -137,7 +137,7 @@ abstract class RenderRequestBase implements ObservableProjectGraphicsRequest
     protected <ContextType extends Context<ContextType>> ProgramObject<ContextType> createProgram(
         GraphicsResourcesImageSpace<ContextType> resources) throws IOException
     {
-        SettingsModel settingsModel = Global.state().getSettingsModel();
+        GlobalSettingsModel settingsModel = Global.state().getSettingsModel();
 
         ProgramObject<ContextType> program =
             resources.getShaderProgramBuilder()

@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.internal;//Created by alexk on 8/1/2017.
+package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;

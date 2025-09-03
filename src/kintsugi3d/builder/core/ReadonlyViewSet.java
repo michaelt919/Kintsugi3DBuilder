@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.core.metrics.ViewRMSE;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.ReadonlyGlobalSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -308,7 +308,7 @@ public interface ReadonlyViewSet
      * Gets additional settings associated with this view set
      * @return A model containing the settings for this view set.
      */
-    ReadonlySettingsModel getProjectSettings();
+    ReadonlyGlobalSettingsModel getProjectSettings();
 
     Map<String, File> getResourceMap();
 

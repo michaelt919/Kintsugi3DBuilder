@@ -11,17 +11,102 @@
 
 package kintsugi3d.builder.state;
 
-public interface LightWidgetModel extends ReadonlyLightWidgetModel
+public class LightWidgetModel implements ReadonlyLightWidgetModel
 {
-    void setAzimuthWidgetVisible(boolean azimuthWidgetVisible);
-    void setAzimuthWidgetSelected(boolean azimuthWidgetSelected);
+    private boolean azimuthWidgetVisible = true;
+    private boolean azimuthWidgetSelected = false;
+    private boolean inclinationWidgetVisible = true;
+    private boolean inclinationWidgetSelected = false;
+    private boolean distanceWidgetVisible = true;
+    private boolean distanceWidgetSelected = false;
+    private boolean centerWidgetVisible = true;
+    private boolean centerWidgetSelected = false;
 
-    void setInclinationWidgetVisible(boolean inclinationWidgetVisible);
-    void setInclinationWidgetSelected(boolean inclinationWidgetSelected);
+    @Override
+    public boolean isAzimuthWidgetVisible()
+    {
+        return azimuthWidgetVisible;
+    }
 
-    void setDistanceWidgetVisible(boolean distanceWidgetVisible);
-    void setDistanceWidgetSelected(boolean distanceWidgetSelected);
+    @Override
+    public boolean isAzimuthWidgetSelected()
+    {
+        return azimuthWidgetSelected;
+    }
 
-    void setCenterWidgetVisible(boolean centerWidgetVisible);
-    void setCenterWidgetSelected(boolean centerWidgetSelected);
+    @Override
+    public boolean isInclinationWidgetVisible()
+    {
+        return inclinationWidgetVisible;
+    }
+
+    @Override
+    public boolean isInclinationWidgetSelected()
+    {
+        return inclinationWidgetSelected;
+    }
+
+    @Override
+    public boolean isDistanceWidgetVisible()
+    {
+        return distanceWidgetVisible;
+    }
+
+    @Override
+    public boolean isDistanceWidgetSelected()
+    {
+        return distanceWidgetSelected;
+    }
+
+    @Override
+    public boolean isCenterWidgetVisible()
+    {
+        return centerWidgetVisible;
+    }
+
+    @Override
+    public boolean isCenterWidgetSelected()
+    {
+        return centerWidgetSelected;
+    }
+
+    public void setAzimuthWidgetVisible(boolean azimuthWidgetVisible)
+    {
+        this.azimuthWidgetVisible = azimuthWidgetVisible;
+    }
+
+    public void setAzimuthWidgetSelected(boolean azimuthWidgetSelected)
+    {
+        this.azimuthWidgetSelected = azimuthWidgetSelected;
+    }
+
+    public void setInclinationWidgetVisible(boolean inclinationWidgetVisible)
+    {
+        this.inclinationWidgetVisible = inclinationWidgetVisible;
+    }
+
+    public void setInclinationWidgetSelected(boolean inclinationWidgetSelected)
+    {
+        this.inclinationWidgetSelected = inclinationWidgetSelected;
+    }
+
+    public void setDistanceWidgetVisible(boolean distanceWidgetVisible)
+    {
+        this.distanceWidgetVisible = distanceWidgetVisible;
+    }
+
+    public void setDistanceWidgetSelected(boolean distanceWidgetSelected)
+    {
+        this.distanceWidgetSelected = distanceWidgetSelected;
+    }
+
+    public void setCenterWidgetVisible(boolean centerWidgetVisible)
+    {
+        this.centerWidgetVisible = centerWidgetVisible;
+    }
+
+    public void setCenterWidgetSelected(boolean centerWidgetSelected)
+    {
+        this.centerWidgetSelected = centerWidgetSelected;
+    }
 }

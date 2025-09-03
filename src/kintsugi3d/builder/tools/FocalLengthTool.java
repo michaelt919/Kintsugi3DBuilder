@@ -9,9 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
+package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.ExtendedViewpointModel;
+import kintsugi3d.builder.state.ManipulableViewpointModel;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
 
@@ -24,7 +24,7 @@ final class FocalLengthTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final ExtendedViewpointModel cameraModel;
+    private final ManipulableViewpointModel cameraModel;
 
     private static class Builder extends ToolBuilderBase<FocalLengthTool>
     {
@@ -40,7 +40,7 @@ final class FocalLengthTool implements DragTool
         return new Builder();
     }
 
-    private FocalLengthTool(ExtendedViewpointModel cameraModel)
+    private FocalLengthTool(ManipulableViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }

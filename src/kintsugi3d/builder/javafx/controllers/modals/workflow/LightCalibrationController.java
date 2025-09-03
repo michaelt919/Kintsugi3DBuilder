@@ -20,7 +20,7 @@ import javafx.scene.layout.Region;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.internal.ObservableSettingsModel;
+import kintsugi3d.builder.javafx.internal.ObservableGlobalSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -36,7 +36,7 @@ public class LightCalibrationController extends NonDataPageControllerBase
 
     private ChangeListener<Vector2> settingsListener;
 
-    private ObservableSettingsModel settingsModel;
+    private ObservableGlobalSettingsModel settingsModel;
 
     @Override
     public Region getRootNode()

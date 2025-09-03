@@ -16,7 +16,7 @@ import kintsugi3d.util.ShadingParameterMode;
 
 public final class DefaultSettings
 {
-    public static void applyGlobalDefaults(SettingsModel settingsModel)
+    public static void applyGlobalDefaults(GlobalSettingsModel settingsModel)
     {
         // Application state
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
@@ -52,7 +52,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
     }
 
-    public static void applyProjectDefaults(SettingsModel settingsModel)
+    public static void applyProjectDefaults(GlobalSettingsModel settingsModel)
     {
         // Mask / feathering settings
         settingsModel.createBooleanSetting("occlusionEnabled", true);

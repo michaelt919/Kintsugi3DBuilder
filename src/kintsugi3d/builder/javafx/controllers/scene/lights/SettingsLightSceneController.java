@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
+package kintsugi3d.builder.javafx.controllers.scene.lights;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -97,7 +97,7 @@ public class SettingsLightSceneController implements Initializable
     private final SafeNumberStringConverter numberStringConverter = new SafeNumberStringConverter(0);
     private final SafeLogScaleNumberStringConverter logScaleNumberStringConverter = new SafeLogScaleNumberStringConverter(1);
 
-    public final ChangeListener<ObservableLightInstanceSetting> changeListener = (observable, oldValue, newValue) ->
+    public final ChangeListener<ObservableLightSettings> changeListener = (observable, oldValue, newValue) ->
     {
         if (oldValue != null)
         {
@@ -120,7 +120,7 @@ public class SettingsLightSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    private void bind(ObservableLightInstanceSetting setting)
+    private void bind(ObservableLightSettings setting)
     {
         xCenterTextField.textProperty().bindBidirectional(setting.targetX(), numberStringConverter);
         yCenterTextField.textProperty().bindBidirectional(setting.targetY(), numberStringConverter);
@@ -143,7 +143,7 @@ public class SettingsLightSceneController implements Initializable
         colorPicker.valueProperty().bindBidirectional(setting.color());
     }
 
-    private void unbind(ObservableLightInstanceSetting setting)
+    private void unbind(ObservableLightSettings setting)
     {
         xCenterTextField.textProperty().unbindBidirectional(setting.targetX());
         yCenterTextField.textProperty().unbindBidirectional(setting.targetY());
