@@ -222,7 +222,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
         try(Scanner scanner = new Scanner(getSampleLocationsFile(), StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
 
             // Loop over columns
             for (int i = 0; i < settings.getSampledSize(); i++)

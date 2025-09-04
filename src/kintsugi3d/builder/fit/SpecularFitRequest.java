@@ -92,10 +92,9 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
         settings.getReconstructionSettings().setReconstructAll(false);
 
         // glTF export settings
-        settings.getExportSettings().setGlTFEnabled(true);
-        settings.getExportSettings().setGlTFPackTextures(false);
-        settings.getExportSettings().setCombineWeights(true);
-        settings.getExportSettings().setOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnProcessingComplete"));
+        settings.getExportSettings().setShouldSaveModel(true);
+        settings.getExportSettings().setShouldCombineWeights(true);
+        settings.getExportSettings().setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnProcessingComplete"));
 
         // Image cache settings
         settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
@@ -138,12 +137,12 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
             // Perform reconstruction
             //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
 
-            if (settings.getExportSettings().isGlTFEnabled())
+            if (settings.getExportSettings().shouldSaveModel())
             {
-                renderable.saveGlTF(settings.getOutputDirectory(), settings.getExportSettings());
+                renderable.saveGLTF(settings.getOutputDirectory(), settings.getExportSettings());
             }
 
-            if (settings.getExportSettings().isOpenViewerOnceComplete())
+            if (settings.getExportSettings().shouldOpenViewerOnceComplete())
             {
                 Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
             }

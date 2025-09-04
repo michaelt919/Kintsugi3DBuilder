@@ -17,8 +17,9 @@ import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.IntFunction;
 
-public class WeightImageCreator<ContextType extends Context<ContextType>> implements Resource
+public class WeightImageWriter<ContextType extends Context<ContextType>> implements Resource
 {
 
     private final int weightsPerImage;
@@ -28,7 +29,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
     private final Drawable<ContextType> drawable;
     private final FramebufferObject<ContextType> framebuffer;
 
-    public WeightImageCreator(ContextType context, TextureResolution resolution, int weightsPerImage) throws IOException
+    public WeightImageWriter(ContextType context, TextureResolution resolution, int weightsPerImage) throws IOException
     {
         this.weightsPerImage = weightsPerImage;
 
@@ -48,7 +49,8 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularMaterialResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void saveImages(SpecularMaterialResources<ContextType> specularFit, String format,
+        File outputDirectory, IntFunction<String> filenameOverrides) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
         drawable.program().setUniform("weightStride", weightsPerImage);
@@ -56,12 +58,13 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
         int basisCount = specularFit.getBasisResources().getBasisCount();
 
         // Loop over the index of each final image to export
-        for (int i = 0; i < basisCount; i += weightsPerImage)
+        for (int i = 0; i * weightsPerImage < basisCount; i++)
         {
             drawable.program().setUniform("weightIndex", i);
             drawable.draw(framebuffer);
-            String filename = SpecularFitSerializer.getWeightFileName(i / weightsPerImage, weightsPerImage);
-            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, filename));
+            String filename = filenameOverrides != null ? filenameOverrides.apply(i)
+                : SpecularFitSerializer.getWeightFileName(i, weightsPerImage, format);
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile(format, new File(outputDirectory, filename));
         }
     }
 

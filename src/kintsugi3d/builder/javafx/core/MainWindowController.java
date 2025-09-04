@@ -206,7 +206,7 @@ public class MainWindowController
                 }
                 else if (projectModel.isProjectOpen())
                 {
-                    return " [Loading]";
+                    return " [Loading...]";
                 }
                 else
                 {

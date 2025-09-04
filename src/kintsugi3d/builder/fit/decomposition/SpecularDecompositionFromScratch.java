@@ -17,8 +17,6 @@ import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Arrays;
@@ -27,8 +25,6 @@ import java.util.List;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);
-
     private final DoubleVector3[] diffuseAlbedos;
     private final SimpleMatrix specularRed;
     private final SimpleMatrix specularGreen;
@@ -110,9 +106,9 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             }
 
             @Override
-            public void save(File outputDirectory)
+            public void save(File outputDirectory, String filenameOverride)
             {
-                SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory);
+                SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory, filenameOverride);
             }
         };
     }

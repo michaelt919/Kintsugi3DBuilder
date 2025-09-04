@@ -580,39 +580,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
-    {
-        if (projectInstance == null || projectInstance.getResources() == null
-            || projectInstance.getResources().getSpecularMaterialResources() == null)
-        {
-            if (finishedCallback != null)
-            {
-                finishedCallback.run();
-            }
-        }
-        else
-        {
-            SpecularMaterialResources<ContextType> material
-                = projectInstance.getResources().getSpecularMaterialResources();
-
-            Rendering.runLater(() ->
-            {
-                material.saveEssential(materialDirectory);
-
-                if (finishedCallback != null)
-                {
-                    finishedCallback.run();
-                }
-            });
-        }
-    }
-
-    @Override
-    public void saveGlTF(File outputDirectory, ExportSettings settings)
+    public void saveGLTF(File outputDirectory, ExportSettings settings)
     {
         if (projectInstance != null)
         {
-            projectInstance.saveGlTF(outputDirectory, settings);
+            projectInstance.saveGLTF(outputDirectory, settings);
         }
     }
 

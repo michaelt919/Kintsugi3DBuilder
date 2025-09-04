@@ -129,11 +129,11 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
      * @param stream The stream to load.
      * @throws FileNotFoundException Thrown if any File I/O errors occur.
      */
-    public static VertexGeometry createFromOBJStream(InputStream stream) throws FileNotFoundException
+    public static VertexGeometry createFromOBJStream(InputStream stream)
     {
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
             return createFromOBJ(null, scanner);
         }
     }
@@ -147,7 +147,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     {
         try(Scanner scanner = new Scanner(file, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
             return createFromOBJ(file, scanner);
         }
     }
@@ -224,7 +224,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                 case "f":
                     for (int i = 0; i < 3; i++) // Only support triangles
                     {
-                        String[] parts = scanner.next().split("\\/");
+                        String[] parts = scanner.next().split("/");
 
                         // Process vertex position
                         int vertexIndex = Integer.parseInt(parts[0]);
@@ -349,7 +349,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         return createFromPLY(file, PLY.loadFromZip(zipStream, targetFileName));
     }
 
-    private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException
+    private static VertexGeometry createFromPLY(File file, PLY ply)
     {
         PLYElementList vertex = ply.elements("vertex");
         boolean hasNormals = false, hasTexCoords = false;

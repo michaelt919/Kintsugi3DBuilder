@@ -78,7 +78,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
             
             List<Matrix4> unorderedCameraPoseList = new ArrayList<>(128);
 

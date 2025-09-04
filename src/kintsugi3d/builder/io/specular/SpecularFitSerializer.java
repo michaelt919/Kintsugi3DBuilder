@@ -85,34 +85,42 @@ public final class SpecularFitSerializer
         }
     }
 
-    public static String getCombinedWeightFilename(int imageIndex)
+    public static String getCombinedWeightFilename(int imageIndex, String format)
     {
-        return getWeightFileName(imageIndex, 4);
+        return getWeightFileName(imageIndex, 4, format);
     }
 
     public static String getWeightFileName(int weightMapIndex)
     {
-        return getWeightFileName(weightMapIndex, 1);
+        return getWeightFileName(weightMapIndex, 1, "PNG");
     }
 
-    public static String getWeightFileName(int weightMapIndex, int weightsPerChannel)
+    public static String getWeightFileName(int weightMapIndex, String format)
+    {
+        return getWeightFileName(weightMapIndex, 1, format);
+    }
+
+    public static String getWeightFileName(int weightMapIndex, int weightsPerChannel, String format)
     {
         int scaledWeightMapIndex = weightMapIndex;
         if (weightsPerChannel <= 1)
         {
-            return String.format("weights%02d.png", scaledWeightMapIndex);
+            return String.format("weights%02d.%s", scaledWeightMapIndex, format.toLowerCase(Locale.ROOT));
         }
         else
         {
             scaledWeightMapIndex *= weightsPerChannel;
-            return String.format("weights%02d%02d.png", scaledWeightMapIndex, scaledWeightMapIndex + (weightsPerChannel - 1));
+            return String.format("weights%02d%02d.%s", scaledWeightMapIndex,
+                scaledWeightMapIndex + (weightsPerChannel - 1), format.toLowerCase(Locale.ROOT));
         }
     }
 
-    public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory)
+    public static void serializeBasisFunctions(
+        int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
     {
         // Text file format
-        try (PrintStream out = new PrintStream(new File(outputDirectory, getBasisFunctionsFilename()), StandardCharsets.UTF_8))
+        try (PrintStream out = new PrintStream(new File(outputDirectory,
+            filenameOverride != null ? filenameOverride : getBasisFunctionsFilename()), StandardCharsets.UTF_8))
         {
             for (int b = 0; b < basisCount; b++)
             {
@@ -176,7 +184,7 @@ public final class SpecularFitSerializer
             int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere
             try (Scanner in = new Scanner(basisFile, StandardCharsets.UTF_8))
             {
-                in.useLocale(Locale.US);
+                in.useLocale(Locale.ROOT);
                 String testLine = in.nextLine();
                 String[] elements = CSV_PATTERN.split(testLine);
                 if (elements[elements.length - 1].isBlank()) // detect trailing comma
@@ -194,7 +202,7 @@ public final class SpecularFitSerializer
             // Now actually parse the file
             try (Scanner in = new Scanner(basisFile, StandardCharsets.UTF_8))
             {
-                in.useLocale(Locale.US);
+                in.useLocale(Locale.ROOT);
 
                 List<double[]> specularRedBasis = new ArrayList<>(8);
                 List<double[]> specularGreenBasis = new ArrayList<>(8);

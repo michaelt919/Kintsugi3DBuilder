@@ -252,7 +252,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     @Override
     public void saveBasisFunctions(File outputDirectory)
     {
-        getMaterialBasis().save(outputDirectory);
+        getMaterialBasis().save(outputDirectory, null);
     }
 
     @Override

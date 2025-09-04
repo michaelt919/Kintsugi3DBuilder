@@ -385,7 +385,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         if (debugDirectory != null)
         {
-            saveNormalMap(debugDirectory);
+            saveNormalMap("PNG", debugDirectory, "normal.png");
         }
 
         if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())

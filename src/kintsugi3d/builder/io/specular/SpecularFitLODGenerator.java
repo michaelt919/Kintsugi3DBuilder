@@ -18,35 +18,39 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class SpecularFitTextureRescaler
+public class SpecularFitLODGenerator
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitTextureRescaler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitLODGenerator.class);
     private final ExportSettings settings;
 
-    public SpecularFitTextureRescaler(ExportSettings settings)
+    public SpecularFitLODGenerator(ExportSettings settings)
     {
         this.settings = settings;
     }
 
-    public void rescaleAll(File outputDirectory, int basisCount)
+    public void generateAllLODs(File outputDirectory, String prefix, String format, int basisCount)
     {
-        List<String> files = new ArrayList<>(List.of(new String[]{"albedo.png", "diffuse.png", "specular.png", "orm.png", "normal.png"}));
+        List<String> files = Stream.of("albedo", "diffuse", "specular", "orm", "normal")
+            .map(base -> String.format("%s%s.%s", prefix, base, format.toLowerCase(Locale.ROOT)))
+            .collect(Collectors.toList());
 
-        if (settings.isCombineWeights())
+        if (settings.shouldCombineWeights())
         {
             for (int i = 0; i < (basisCount + 3) / 4; i++)
             {
-                files.add(SpecularFitSerializer.getCombinedWeightFilename(i));
+                files.add(SpecularFitSerializer.getCombinedWeightFilename(i, format));
             }
         }
         else
         {
             for (int i = 0; i < basisCount; i++)
             {
-                files.add(SpecularFitSerializer.getWeightFileName(i));
+                files.add(SpecularFitSerializer.getWeightFileName(i, format));
             }
         }
 
@@ -54,7 +58,7 @@ public class SpecularFitTextureRescaler
         {
             try
             {
-                generateLodsFor(new File(outputDirectory, file));
+                generateLODsFor(new File(outputDirectory, file));
             }
             catch (IOException e)
             {
@@ -63,7 +67,7 @@ public class SpecularFitTextureRescaler
         }
     }
 
-    public void generateLodsFor(File file) throws IOException
+    public void generateLODsFor(File file) throws IOException
     {
         int minSize = settings.getMinimumTextureResolution();
 

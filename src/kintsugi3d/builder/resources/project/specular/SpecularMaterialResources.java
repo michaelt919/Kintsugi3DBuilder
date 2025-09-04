@@ -17,6 +17,7 @@ import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.util.Map;
+import java.util.function.IntFunction;
 
 public interface SpecularMaterialResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularMaterialResources<ContextType>>
@@ -245,90 +246,101 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
             }
 
             @Override
-            public void saveDiffuseMap(File outputDirectory)
+            public void saveDiffuseMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveNormalMap(File outputDirectory)
+            public void saveNormalMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveSpecularReflectivityMap(File outputDirectory)
+            public void saveSpecularReflectivityMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveSpecularRoughnessMap(File outputDirectory)
+            public void saveSpecularRoughnessMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveConstantMap(File outputDirectory)
+            public void saveConstantMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveOcclusionMap(File outputDirectory)
+            public void saveOcclusionMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveAlbedoMap(File outputDirectory)
+            public void saveAlbedoMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void saveORMMap(File outputDirectory)
+            public void saveORMMap(String format, File outputDirectory, String filename)
             {
             }
 
             @Override
-            public void savePackedWeightMaps(File outputDirectory)
+            public void savePackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides)
             {
             }
 
             @Override
-            public void saveUnpackedWeightMaps(File outputDirectory)
+            public void saveUnpackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides)
             {
             }
 
             @Override
-            public void saveBasisFunctions(File outputDirectory)
+            public void saveBasisFunctions(File outputDirectory, String filenamePrefix)
             {
             }
 
             @Override
-            public void saveMetadataMaps(File outputDirectory)
+            public void saveMetadataMaps(String format, File outputDirectory, String filename)
             {
             }
         };
     }
 
-    void saveDiffuseMap(File outputDirectory);
+    void saveDiffuseMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveNormalMap(File outputDirectory);
+    void saveNormalMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveSpecularReflectivityMap(File outputDirectory);
+    void saveSpecularReflectivityMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveSpecularRoughnessMap(File outputDirectory);
+    void saveSpecularRoughnessMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveConstantMap(File outputDirectory);
+    void saveConstantMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveOcclusionMap(File outputDirectory);
+    void saveOcclusionMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveAlbedoMap(File outputDirectory);
+    void saveAlbedoMap(String format, File outputDirectory, String filenameOverride);
 
-    void saveORMMap(File outputDirectory);
+    void saveORMMap(String format, File outputDirectory, String filenameOverride);
 
-    void savePackedWeightMaps(File outputDirectory);
+    void savePackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides);
 
-    void saveUnpackedWeightMaps(File outputDirectory);
+    void saveUnpackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides);
 
-    void saveBasisFunctions(File outputDirectory);
+    void saveBasisFunctions(File outputDirectory, String filenameOverride);
 
-    void saveMetadataMaps(File outputDirectory);
+    void saveMetadataMaps(String format, File outputDirectory, String filenamePrefix);
+
+    /**
+     * Saves all resources to the specified output directory
+     * @param outputDirectory
+     */
+    default void saveAll(String format, File outputDirectory)
+    {
+        saveEssential(format, outputDirectory);
+        saveOcclusionMap(format, outputDirectory, null);
+        saveUnpackedWeightMaps(format, outputDirectory, null);
+    }
 
     /**
      * Saves all resources to the specified output directory
@@ -336,9 +348,7 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
      */
     default void saveAll(File outputDirectory)
     {
-        saveEssential(outputDirectory);
-        saveOcclusionMap(outputDirectory);
-        saveUnpackedWeightMaps(outputDirectory);
+        saveAll("PNG", outputDirectory);
     }
 
     /**
@@ -347,17 +357,17 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
      * Includes standalone roughness map for more convenient Blender / Sketchfab access.
      * @param outputDirectory
      */
-    default void saveEssential(File outputDirectory)
+    default void saveEssential(String format, File outputDirectory)
     {
-        saveDiffuseMap(outputDirectory);
-        saveNormalMap(outputDirectory);
-        saveConstantMap(outputDirectory);
-        saveAlbedoMap(outputDirectory);
-        saveORMMap(outputDirectory);
-        saveSpecularReflectivityMap(outputDirectory);
-        saveSpecularRoughnessMap(outputDirectory);
-        savePackedWeightMaps(outputDirectory);
-        saveBasisFunctions(outputDirectory);
-        saveMetadataMaps(outputDirectory);
+        saveDiffuseMap(format, outputDirectory, null);
+        saveNormalMap(format, outputDirectory, null);
+        saveConstantMap(format, outputDirectory, null);
+        saveAlbedoMap(format, outputDirectory, null);
+        saveORMMap(format, outputDirectory, null);
+        saveSpecularReflectivityMap(format, outputDirectory, null);
+        saveSpecularRoughnessMap(format, outputDirectory, null);
+        savePackedWeightMaps(format, outputDirectory, null);
+        saveBasisFunctions(outputDirectory, null);
+        saveMetadataMaps(format, outputDirectory, "");
     }
 }

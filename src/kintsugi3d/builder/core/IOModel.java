@@ -254,19 +254,14 @@ public class IOModel
         this.handler.saveAllMaterialFiles(materialDirectory, finishedCallback);
     }
 
-    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    public void saveGLTF(File outputDirectory, ExportSettings settings)
     {
-        this.handler.saveEssentialMaterialFiles(materialDirectory, finishedCallback);
+        this.handler.saveGLTF(outputDirectory, settings);
     }
 
-    public void saveGlTF(File outputDirectory, ExportSettings settings)
+    public void saveGLTF(File outputDirectory)
     {
-        this.handler.saveGlTF(outputDirectory, settings);
-    }
-
-    public void saveGlTF(File outputDirectory)
-    {
-        this.handler.saveGlTF(outputDirectory, new ExportSettings() /* defaults */);
+        this.handler.saveGLTF(outputDirectory, new ExportSettings() /* defaults */);
     }
 
 

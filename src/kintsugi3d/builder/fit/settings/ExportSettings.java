@@ -15,49 +15,71 @@ public class ExportSettings
 {
     private boolean combineWeights = true;
 
+    private boolean exportTextures = false; // by default assume that textures are being handled elsewhere
+    private boolean appendModelNameToTextures = false;
+    private String textureFormat = "PNG";
     private boolean generateLowResTextures = false;
     private int minimumTextureResolution = 128;
 
-    private boolean glTFEnabled = true;
-    private boolean glTFPackTextures = false;
+    private boolean saveModel = true;
     private boolean openViewerOnceComplete = false;
 
-    public boolean isGlTFEnabled()
+    public boolean shouldSaveModel()
     {
-        return glTFEnabled;
+        return saveModel;
     }
 
-    public void setGlTFEnabled(boolean glTFEnabled)
+    public void setShouldSaveModel(boolean saveModel)
     {
-        this.glTFEnabled = glTFEnabled;
+        this.saveModel = saveModel;
     }
 
-    public boolean isGlTFPackTextures()
+    public boolean shouldSaveTextures()
     {
-        return glTFPackTextures;
+        return exportTextures;
     }
 
-    public void setGlTFPackTextures(boolean glTFPackTextures)
+    public void setShouldSaveTextures(boolean exportTextures)
     {
-        this.glTFPackTextures = glTFPackTextures;
+        this.exportTextures = exportTextures;
     }
 
-    public boolean isCombineWeights()
+    public boolean shouldAppendModelNameToTextures()
+    {
+        return appendModelNameToTextures;
+    }
+
+    public void setShouldAppendModelNameToTextures(boolean appendModelNameToTextures)
+    {
+        this.appendModelNameToTextures = appendModelNameToTextures;
+    }
+
+    public String getTextureFormat()
+    {
+        return textureFormat;
+    }
+
+    public void setTextureFormat(String textureFormat)
+    {
+        this.textureFormat = textureFormat;
+    }
+
+    public boolean shouldCombineWeights()
     {
         return combineWeights;
     }
 
-    public void setCombineWeights(boolean combineWeights)
+    public void setShouldCombineWeights(boolean combineWeights)
     {
         this.combineWeights = combineWeights;
     }
 
-    public boolean isGenerateLowResTextures()
+    public boolean shouldGenerateLowResTextures()
     {
         return generateLowResTextures;
     }
 
-    public void setGenerateLowResTextures(boolean generateLowResTextures)
+    public void setShouldGenerateLowResTextures(boolean generateLowResTextures)
     {
         this.generateLowResTextures = generateLowResTextures;
     }
@@ -72,12 +94,12 @@ public class ExportSettings
         this.minimumTextureResolution = minimumTextureResolution;
     }
 
-    public boolean isOpenViewerOnceComplete()
+    public boolean shouldOpenViewerOnceComplete()
     {
         return openViewerOnceComplete;
     }
 
-    public void setOpenViewerOnceComplete(boolean openViewerOnceComplete)
+    public void setShouldOpenViewerOnceComplete(boolean openViewerOnceComplete)
     {
         this.openViewerOnceComplete = openViewerOnceComplete;
     }

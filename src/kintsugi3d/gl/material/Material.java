@@ -84,7 +84,7 @@ public class Material implements ReadonlyMaterial
         {
             try(Scanner scanner = new Scanner(mtlFile, StandardCharsets.UTF_8))
             {
-                scanner.useLocale(Locale.US);
+                scanner.useLocale(Locale.ROOT);
 
                 while(scanner.hasNext())
                 {

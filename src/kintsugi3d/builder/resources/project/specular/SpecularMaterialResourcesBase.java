@@ -12,7 +12,7 @@
 package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.io.specular.WeightImageCreator;
+import kintsugi3d.builder.io.specular.WeightImageWriter;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.SamplerType;
@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
+import java.util.function.IntFunction;
 
 public abstract class SpecularMaterialResourcesBase<ContextType extends Context<ContextType>>
     implements SpecularMaterialResources<ContextType>
@@ -70,13 +72,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveDiffuseMap(File outputDirectory)
+    public void saveDiffuseMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getDiffuseMap() != null)
             {
-                getDiffuseMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "diffuse.png"));
+                getDiffuseMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("diffuse.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -86,13 +89,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveNormalMap(File outputDirectory)
+    public void saveNormalMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getNormalMap() != null)
             {
-                getNormalMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "normal.png"));
+                getNormalMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("normal.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -102,13 +106,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveSpecularReflectivityMap(File outputDirectory)
+    public void saveSpecularReflectivityMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getSpecularReflectivityMap() != null)
             {
-                getSpecularReflectivityMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "specular.png"));
+                getSpecularReflectivityMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("specular.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -118,13 +123,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveSpecularRoughnessMap(File outputDirectory)
+    public void saveSpecularRoughnessMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getSpecularRoughnessMap() != null)
             {
-                getSpecularRoughnessMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "roughness.png"));
+                getSpecularRoughnessMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("roughness.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -134,13 +140,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveConstantMap(File outputDirectory)
+    public void saveConstantMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getConstantMap() != null)
             {
-                getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "constant.png"));
+                getConstantMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("constant.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -149,29 +156,15 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
-//    public void saveQuadraticMap(File outputDirectory)
-//    {
-//        try
-//        {
-//            if (getQuadraticMap() != null)
-//            {
-//                getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
-//            }
-//        }
-//        catch (IOException e)
-//        {
-//            log.error("An error occurred saving quadratic map:", e);
-//        }
-//    }
-
     @Override
-    public void saveOcclusionMap(File outputDirectory)
+    public void saveOcclusionMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getOcclusionMap() != null)
             {
-                getOcclusionMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "occlusion.png"));
+                getOcclusionMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("occlusion.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -181,13 +174,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveAlbedoMap(File outputDirectory)
+    public void saveAlbedoMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getAlbedoMap() != null)
             {
-                getAlbedoMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "albedo.png"));
+                getAlbedoMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("albedo.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -197,13 +191,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveORMMap(File outputDirectory)
+    public void saveORMMap(String format, File outputDirectory, String filenameOverride)
     {
         try
         {
             if (getORMMap() != null)
             {
-                getORMMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "orm.png"));
+                getORMMap().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    filenameOverride != null ? filenameOverride : String.format("orm.%s", format.toLowerCase(Locale.ROOT))));
             }
         }
         catch (IOException e)
@@ -213,15 +208,15 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void savePackedWeightMaps(File outputDirectory)
+    public void savePackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides)
     {
         if (getBasisWeightResources() != null)
         {
             // Save the packed weight maps for opening in viewer
-            try (WeightImageCreator<ContextType> weightImageCreator =
-                     new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 4))
+            try (WeightImageWriter<ContextType> weightImageWriter =
+                     new WeightImageWriter<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 4))
             {
-                weightImageCreator.createImages(this, outputDirectory);
+                weightImageWriter.saveImages(this, format, outputDirectory, filenameOverrides);
             }
             catch (IOException e)
             {
@@ -231,15 +226,15 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveUnpackedWeightMaps(File outputDirectory)
+    public void saveUnpackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides)
     {
         if (getBasisWeightResources() != null)
         {
             // Save the unpacked weight maps for reloading the project in the future
-            try (WeightImageCreator<ContextType> weightImageCreator =
-                     new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 1))
+            try (WeightImageWriter<ContextType> weightImageWriter =
+                     new WeightImageWriter<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 1))
             {
-                weightImageCreator.createImages(this, outputDirectory);
+                weightImageWriter.saveImages(this, format, outputDirectory, filenameOverrides);
             }
             catch (IOException e)
             {
@@ -249,23 +244,24 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     }
 
     @Override
-    public void saveBasisFunctions(File outputDirectory)
+    public void saveBasisFunctions(File outputDirectory, String filenameOverride)
     {
         if (getBasisResources() != null)
         {
-            getBasisResources().getSpecularBasis().save(outputDirectory);
+            getBasisResources().getSpecularBasis().save(outputDirectory, filenameOverride);
         }
     }
 
     @Override
-    public void saveMetadataMaps(File outputDirectory)
+    public void saveMetadataMaps(String format, File outputDirectory, String filenamePrefix)
     {
         var metadataMaps = getMetadataMaps();
         for (var entry : metadataMaps.entrySet())
         {
             try
             {
-                entry.getValue().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, entry.getKey() + ".png"));
+                entry.getValue().getColorTextureReader().saveToFile(format, new File(outputDirectory,
+                    String.format("%s%s.%s", filenamePrefix, entry.getKey(), format.toLowerCase(Locale.ROOT))));
             }
             catch (IOException e)
             {

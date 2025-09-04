@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.io.specular.SpecularFitTextureRescaler;
+import kintsugi3d.builder.io.specular.SpecularFitLODGenerator;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
@@ -149,7 +149,7 @@ public class SpecularFitProcess
             }
         }
 
-        rescaleTextures();
+        generateLods();
     }
 
     public <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> optimizeFit(
@@ -580,18 +580,19 @@ public class SpecularFitProcess
             new File("shaders/specularfit/extractReflectance.frag"));
     }
 
-    public void rescaleTextures()
+    public void generateLods()
     {
-        if (settings.getExportSettings().isGenerateLowResTextures() && settings.getOutputDirectory() != null)
+        if (settings.getExportSettings().shouldGenerateLowResTextures() && settings.getOutputDirectory() != null)
         {
-            SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings.getExportSettings());
-            rescaler.rescaleAll(settings.getOutputDirectory(), settings.getSpecularBasisSettings().getBasisCount());
+            SpecularFitLODGenerator rescaler = new SpecularFitLODGenerator(settings.getExportSettings());
+            rescaler.generateAllLODs(settings.getOutputDirectory(), "", "PNG",
+                settings.getSpecularBasisSettings().getBasisCount());
 
             if (settings.shouldIncludeConstantTerm())
             {
                 try
                 {
-                    rescaler.generateLodsFor(new File(settings.getOutputDirectory(), "constant.png"));
+                    rescaler.generateLODsFor(new File(settings.getOutputDirectory(), "constant.png"));
                 }
                 catch (IOException e)
                 {

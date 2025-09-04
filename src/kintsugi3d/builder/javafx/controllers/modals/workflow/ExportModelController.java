@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
@@ -24,7 +24,7 @@ import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.experience.Modal;
+import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -32,19 +32,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
-public class ExportModelController implements Initializable
+public class ExportModelController extends NonDataPageControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
     //Initialize all the variables in the FXML file
-    //    @FXML private CheckBox combineWeightsCheckBox;
     @FXML private Pane root;
+
+    @FXML private ComboBox<String> formatComboBox;
     @FXML private CheckBox generateLowResolutionCheckBox;
-    //    @FXML private CheckBox glTFEnabledCheckBox;
-    @FXML private CheckBox glTFPackTexturesCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
 
@@ -54,15 +51,28 @@ public class ExportModelController implements Initializable
     private ExportSettings settings;
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
+    public Region getRootNode()
+    {
+        return root;
+    }
+
+    @Override
+    public void initPage()
     {
         settings = new ExportSettings();
+        settings.setShouldSaveTextures(true);
+        settings.setShouldAppendModelNameToTextures(true); // Give textures better filenames for export
 
         //Calls a function to set settings to defaults
         setAllVariables();
 
         objFileChooser.setTitle("Save project");
         objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
+    }
+
+    @Override
+    public void refresh()
+    {
     }
 
     public void run()
@@ -84,19 +94,42 @@ public class ExportModelController implements Initializable
                 {
                     @Override
                     public <ContextType extends Context<ContextType>> void executeRequest(
-                        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+                        ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
                     {
-                        if (settings.isGlTFEnabled())
+                        if (settings.shouldSaveModel())
                         {
-                            renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
-                            Global.state().getIOModel().saveEssentialMaterialFiles(exportLocationFile.getParentFile(), null);
-                            // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
-                            // and unpacked weight maps for the user export as those are only intended to be used internally.
-                        }
+                            // Includes textures is shouldSaveTextures is true
+                            renderable.saveGLTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings,
+                                () ->
+                                {
+                                    if (settings.shouldOpenViewerOnceComplete())
+                                    {
+                                        try
+                                        {
+                                            Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
+                                        }
+                                        catch (IOException e)
+                                        {
+                                            LOG.error("Error launching Kintsugi 3D Viewer", e);
+                                        }
 
-                        if (settings.isOpenViewerOnceComplete())
+                                        // Display message when all textures have been saved on graphics thread.
+                                        //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                                        Platform.runLater(() ->
+                                        {
+                                            Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
+                                                "Export Complete!");
+                                            saveInfo.setTitle("Export successful");
+                                            saveInfo.setHeaderText(exportLocationFile.getName());
+                                            saveInfo.show();
+                                        });
+                                    }
+                                });
+                        }
+                        else if (settings.shouldSaveTextures())
                         {
-                            Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
+                            renderable.getResources().getSpecularMaterialResources()
+                                .saveEssential(settings.getTextureFormat(), exportLocationFile.getParentFile());
                         }
                     }
                 });
@@ -108,36 +141,21 @@ public class ExportModelController implements Initializable
         }
     }
 
-    @FXML //closes the stage
-    public void cancel()
-    {
-        Modal.requestClose(root);
-    }
-
     //Sets all the settings values on the widget to equal what they are currently
     public void setAllVariables()
     {
-//        combineWeightsCheckBox.setSelected(settings.isCombineWeights());
-        generateLowResolutionCheckBox.setSelected(settings.isGenerateLowResTextures());
-//        glTFEnabledCheckBox.setSelected(settings.isGlTFEnabled());
-        glTFPackTexturesCheckBox.setSelected(settings.isGlTFPackTextures());
-        openViewerOnceCheckBox.setSelected(settings.isOpenViewerOnceComplete());
-        int getMinimumTexRes = settings.getMinimumTextureResolution();
+        generateLowResolutionCheckBox.setSelected(settings.shouldGenerateLowResTextures());
         minimumTextureResolutionComboBox.setItems(FXCollections.observableArrayList(256));
-        minimumTextureResolutionComboBox.setValue(getMinimumTexRes);
+        minimumTextureResolutionComboBox.setValue(settings.getMinimumTextureResolution());
+        openViewerOnceCheckBox.setSelected(settings.shouldOpenViewerOnceComplete());
     }
 
     //sets the settings to what the values are set on the widget
     public void saveAllVariables()
     {
-//        settings.setCombineWeights(combineWeightsCheckBox.isSelected());
-        settings.setGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
-//        settings.setGlTFEnabled(glTFEnabledCheckBox.isSelected());
-        settings.setGlTFPackTextures(glTFPackTexturesCheckBox.isSelected());
-        settings.setOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
+        settings.setShouldGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
         settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
-        System.out.println(minimumTextureResolutionComboBox.getValue());
-
+        settings.setShouldOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
     }
 
     public void setCurrentDirectoryFile(File currentDirectoryFile)

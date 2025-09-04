@@ -111,7 +111,7 @@ class OpenGLShader implements Shader<OpenGLContext>
 
         try(Scanner scanner = new Scanner(file, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
 
             while (scanner.hasNextLine())
             {

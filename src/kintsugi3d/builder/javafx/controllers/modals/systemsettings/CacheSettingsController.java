@@ -109,7 +109,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                     // Extra check due to danger of this operation
                     String imgName = image.toString();
                     assert imgName.startsWith(directory.toString());
-                    assert imgName.toLowerCase(Locale.US).endsWith(".png");
+                    assert imgName.toLowerCase(Locale.ROOT).endsWith(".png");
                     image.delete();
                 }
 
@@ -161,7 +161,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                         // Extra check due to danger of this operation
                         String imgName = image.toString();
                         assert imgName.startsWith(directory.toString());
-                        assert imgName.toLowerCase(Locale.US).endsWith(".png");
+                        assert imgName.toLowerCase(Locale.ROOT).endsWith(".png");
                         image.delete();
                     }
 

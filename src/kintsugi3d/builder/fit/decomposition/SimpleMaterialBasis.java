@@ -86,9 +86,9 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
-    public void save(File outputDirectory)
+    public void save(File outputDirectory, String filenameOverride)
     {
-        SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory);
+        SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory, filenameOverride);
     }
 
     /**

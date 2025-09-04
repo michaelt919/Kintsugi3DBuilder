@@ -39,7 +39,7 @@ public final class Kintsugi3DBuilder
     public static void main(String... args) throws IOException, InitializationException
     {
         // TODO: temp fix to make file I/O work as expected in an internationalized context
-        Locale.setDefault(Locale.US);
+        Locale.setDefault(Locale.ROOT);
 
         // Dynamically set the log directory based on the OS before instantiating a logger
         if (System.getProperty("Kintsugi3D.logDir") == null)

@@ -45,9 +45,8 @@ public interface IOHandler
 
     void saveToVSETFile(File vsetFile) throws IOException;
     void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
-    void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback);
 
-    void saveGlTF(File outputDirectory, ExportSettings settings);
+    void saveGLTF(File outputDirectory, ExportSettings settings);
 
     void unload();
 

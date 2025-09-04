@@ -11,9 +11,10 @@
 
 package kintsugi3d.builder.rendering;
 
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.specular.gltf.SpecularFitGltfExporter;
+import kintsugi3d.builder.io.specular.gltf.SpecularFitGLTFExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -43,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
 {
@@ -453,13 +455,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void saveGlTF(File outputDirectory, ExportSettings settings)
-    {
-        saveGlTF(outputDirectory, "model.glb", settings);
-    }
-
-    @Override
-    public void saveGlTF(File outputDirectory, String filename, ExportSettings settings)
+    public void saveGLTF(File outputDirectory, String filename, ExportSettings settings, Runnable finishedCallback)
     {
         if (outputDirectory != null)
         {
@@ -483,14 +479,30 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
                 transform = getSceneModel().getObjectModel() == null ? Matrix4.IDENTITY : getSceneModel().getObjectModel().getTransformationMatrix().times(transform);
 
-                SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                SpecularFitGLTFExporter exporter = SpecularFitGLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
+
+                if (settings.shouldAppendModelNameToTextures())
+                {
+                    String baseName = filename;
+                    if (baseName.toLowerCase(Locale.ROOT).endsWith(".gltf"))
+                    {
+                        baseName = baseName.substring(0, baseName.length() - 5);
+                    }
+                    else if (baseName.toLowerCase(Locale.ROOT).endsWith(".glb"))
+                    {
+                        baseName = baseName.substring(0, baseName.length() - 4);
+                    }
+
+                    exporter.setTextureFilePrefix(baseName + "_");
+                }
+
                 exporter.setDefaultNames();
 
-                SpecularMaterialResources<ContextType> material = getResources().getSpecularMaterialResources();
+                SpecularMaterialResources<ContextType> material = resources.getSpecularMaterialResources();
 
                 if (material.getBasisResources() != null)
                 {
-                    exporter.addWeightImages(material.getBasisResources().getBasisCount(), settings.isCombineWeights());
+                    exporter.addWeightImages(material.getBasisResources().getBasisCount(), settings.shouldCombineWeights());
                 }
 
                 // Add diffuse constant if requested
@@ -503,7 +515,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                 }
 
                 // Deal with LODs if enabled
-                if (settings.isGenerateLowResTextures())
+                if (settings.shouldGenerateLowResTextures())
                 {
                     exporter.addAllDefaultLods(material.getHeight(), settings.getMinimumTextureResolution());
 
@@ -521,6 +533,51 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                 }
 
                 exporter.write(new File(outputDirectory, filename));
+
+                if (settings.shouldSaveTextures() && resources.getSpecularMaterialResources() != null)
+                {
+                    Rendering.runLater(() ->
+                    {
+                        SpecularMaterialResources<ContextType> materialResources = resources.getSpecularMaterialResources();
+                        String textureFormat = settings.getTextureFormat();
+                        String textureFilePrefix = exporter.getTextureFilePrefix();
+
+                        materialResources.saveDiffuseMap(textureFormat, outputDirectory, exporter.getDiffuseTextureFilename());
+                        materialResources.saveNormalMap(textureFormat, outputDirectory, exporter.getNormalTextureFilename());
+                        materialResources.saveConstantMap(textureFormat, outputDirectory, exporter.getDiffuseConstantTextureFilename());
+                        materialResources.saveAlbedoMap(textureFormat, outputDirectory, exporter.getBaseColorTextureFilename());
+                        materialResources.saveORMMap(textureFormat, outputDirectory, exporter.getRoughnessMetallicTextureFilename());
+                        materialResources.saveSpecularReflectivityMap(textureFormat, outputDirectory, exporter.getSpecularTextureFilename());
+                        materialResources.saveSpecularRoughnessMap(textureFormat, outputDirectory,
+                            String.format("%sroughness%s", textureFilePrefix, textureFormat.toLowerCase(Locale.ROOT)));
+
+                        // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
+
+                        if (settings.shouldCombineWeights())
+                        {
+                            materialResources.savePackedWeightMaps(textureFormat, outputDirectory,
+                                index -> exporter.getWeightTextureFilename(index, 4));
+                        }
+                        else
+                        {
+                            materialResources.saveUnpackedWeightMaps(textureFormat, outputDirectory,
+                                index -> exporter.getWeightTextureFilename(index, 1));
+                        }
+
+                        materialResources.saveBasisFunctions(outputDirectory, exporter.getBasisFunctionsFilename());
+                        materialResources.saveMetadataMaps(textureFormat, outputDirectory, textureFilePrefix);
+
+                        if (finishedCallback != null)
+                        {
+                            finishedCallback.run();
+                        }
+                    });
+                }
+                else if (finishedCallback != null) // not saving textures
+                {
+                    finishedCallback.run();
+                }
+
                 LOG.info("DONE!");
             }
             catch (IOException e)

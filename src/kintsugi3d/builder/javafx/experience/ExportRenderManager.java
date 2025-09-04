@@ -46,7 +46,7 @@ public class ExportRenderManager
         {
             try (Scanner scanner = new Scanner(EXPORT_CLASS_DEFINITION_FILE, StandardCharsets.UTF_8))
             {
-                scanner.useLocale(Locale.US);
+                scanner.useLocale(Locale.ROOT);
 
                 while (scanner.hasNext())
                 {

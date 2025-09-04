@@ -119,7 +119,15 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
      */
     DynamicResourceManager getDynamicResourceManager();
 
-    void saveGlTF(File outputDirectory, ExportSettings settings);
+    default void saveGLTF(File outputDirectory, ExportSettings settings)
+    {
+        saveGLTF(outputDirectory, "model.glb", settings);
+    }
 
-    void saveGlTF(File outputDirectory, String filename, ExportSettings settings);
+    default void saveGLTF(File outputDirectory, String filename, ExportSettings settings)
+    {
+        saveGLTF(outputDirectory, filename, settings, null);
+    }
+
+    void saveGLTF(File outputDirectory, String filename, ExportSettings settings, Runnable finishedCallback);
 }

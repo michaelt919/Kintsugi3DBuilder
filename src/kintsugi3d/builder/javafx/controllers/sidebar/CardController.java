@@ -175,7 +175,7 @@ public class CardController
 
     public boolean titleContainsString(String str)
     {
-        return cardTitle.getText().toLowerCase(Locale.US).contains(str.toLowerCase(Locale.US));
+        return cardTitle.getText().toLowerCase(Locale.ROOT).contains(str.toLowerCase(Locale.ROOT));
     }
 
     @FXML

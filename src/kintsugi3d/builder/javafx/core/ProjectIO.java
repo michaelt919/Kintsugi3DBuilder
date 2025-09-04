@@ -400,7 +400,9 @@ public final class ProjectIO
                     Global.state().getProjectModel().setProjectName(projectFile.getName());
                 }
 
-                ioModel.saveGlTF(filesDirectory);
+                // TODO: ensure that GLTF texture filenames match default material texture names;
+                //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
+                ioModel.saveGLTF(filesDirectory);
 
                 // Save textures and basis funtions (will be deferred to graphics thread).
                 ioModel.saveAllMaterialFiles(filesDirectory, () ->
