@@ -74,19 +74,19 @@
 
 
 .kintsugi-3D-Wireframe-1{
-    fx-fill: #CECECE; /* off-white */
+    -fx-fill: #CECECE; /* off-white */
 }
 .kintsugi-3D-Wireframe-2{
-    fx-fill: #ADADAD; /* light gray */
+    -fx-fill: #ADADAD; /* light gray */
 }
 .kintsugi-3D-Wireframe-3{
-    fx-fill: #383838; /* med gray */
+    -fx-fill: #383838; /* med gray */
 }
 .kintsugi-3D-Wireframe-4{
-    fx-fill: #202020; /* dark gray */
+    -fx-fill: #202020; /* dark gray */
 }
 .kintsugi-3D-Wireframe-5{
-    fx-fill: #030303; /* off-black */
+    -fx-fill: #030303; /* off-black */
 }
 
 /********************************************************************************/
@@ -133,7 +133,7 @@
     -fx-padding: 8 16 8 16; /* top right bottom left */
  }
 
-.cachesettingsanchorepane{
+.cache-settings-root{
       -fx-background-color: #383838;
  }
 
@@ -251,7 +251,7 @@ dialog-pane{
     -fx-background-color: #262626;
     -fx-background-radius: 0 0 0 0;
 }
-.menuebaranchorpane{
+.menubar-root{
      -fx-background-color: #383838;
  }
 

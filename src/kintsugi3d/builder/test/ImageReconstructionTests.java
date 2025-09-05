@@ -969,7 +969,7 @@ class ImageReconstructionTests
                             try
                             {
                                 view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                                    new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithFormat(
+                                    new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
                                         resources.getViewSet().getImageFileName(view.getIndex()), "png")),
                                     // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                     // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
@@ -1059,7 +1059,7 @@ class ImageReconstructionTests
                     try
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                            new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithFormat(
+                            new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
                                 resources.getViewSet().getImageFileName(view.getIndex()), "png")),
                             // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                             // Tonemapper parameter taken by saveToFile assumes both are [0, 255]

@@ -18,9 +18,9 @@
 <VBox fx:id="rootPane" alignment="CENTER" minWidth="400.0" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MetashapeImportController">
       <Text fx:id="loadMetashapeObject" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER">
       </Text>
-      <Button mnemonicParsing="false" onAction="#psxFileSelect" styleClass="wireframeBodyLarge, button" text="Load">
+      <Button mnemonicParsing="false" onAction="#psxFileSelect" styleClass="wireframeBodyLarge" text="Load">
       </Button>
-      <Text fx:id="fileNameTxtField" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Metashape File (.psx)" textAlignment="CENTER" wrappingWidth="820.0">
+      <Text fx:id="fileNameTxtField" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Metashape File (.psx)" textAlignment="CENTER" wrappingWidth="820.0">
       </Text>
       <GridPane alignment="TOP_CENTER" hgap="16.0" vgap="16.0">
          <columnConstraints>
@@ -31,9 +31,9 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Chunk: " textAlignment="RIGHT" GridPane.halignment="RIGHT">
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Chunk: " textAlignment="RIGHT" GridPane.halignment="RIGHT">
          </Text>
-         <Text layoutX="10.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Model ID &amp; Name: " textAlignment="RIGHT" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+         <Text layoutX="10.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Model ID &amp; Name: " textAlignment="RIGHT" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
          </Text>
          <ChoiceBox fx:id="chunkSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" />
          <ChoiceBox fx:id="modelSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" GridPane.rowIndex="1" />

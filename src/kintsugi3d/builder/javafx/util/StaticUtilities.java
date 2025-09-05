@@ -13,6 +13,8 @@ package kintsugi3d.builder.javafx.util;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
+import javafx.collections.FXCollections;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 
@@ -147,6 +149,14 @@ public final class StaticUtilities
     {
         logScaleProperty.addListener((b, o, n) -> linearScaleProperty.set(Math.pow(10, n.doubleValue())));
         linearScaleProperty.addListener((b, o, n) -> logScaleProperty.set(Math.log10(n.doubleValue())));
+    }
+
+    public static void makeSquareResolutionComboBox(ComboBox<SquareResolution> comboBox)
+    {
+        comboBox.setItems(FXCollections.observableArrayList(
+            new SquareResolution(256), new SquareResolution(512), new SquareResolution(1024),
+            new SquareResolution(2048), new SquareResolution(4096), new SquareResolution(8192)));
+        comboBox.getSelectionModel().select(3); // 2048x2048
     }
 
     private static double wrapAround(double min, double max, double value)

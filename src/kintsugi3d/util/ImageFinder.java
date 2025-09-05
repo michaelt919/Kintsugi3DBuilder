@@ -47,20 +47,20 @@ public final class ImageFinder
 
     /**
      * Gets a modified copy of the name of an image file with a specific file extension (i.e. PNG, JPEG, etc.)
-     * -- which may not match the format originally specified in the original filename.
-     * If the original file format is one of the formats returned by getSupportedImgFormats(),
+     * -- which may not match the extension originally specified in the original filename.
+     * If the original file extension is one of the formats returned by getSupportedImgFormats(),
      * the old file extension will be replaced by the new one.
      * Otherwise, the file extension will be appended to avoid corrupting file names that include dots/periods
      * separating parts of the filename other than the file extension (a common practice in some naming conventions).
      * @param  imageFileName The original filename
-     * @param format The desired format
-     * @return The image file's name with the requested format.
+     * @param extension The desired extension
+     * @return The image file's name with the requested extension.
      */
-    public String getImageFileNameWithFormat(String imageFileName, String format)
+    public String getImageFileNameWithExtension(String imageFileName, String extension)
     {
-        if (imageFileName.endsWith(format))
+        if (imageFileName.endsWith(extension))
         {
-            // Filename already is in the requested format.
+            // Filename already is in the requested extension.
             return imageFileName;
         }
         else
@@ -70,14 +70,14 @@ public final class ImageFinder
             if(IMG_FORMATS.contains(parts[parts.length - 1]))
             {
                 // Replace the old file extension with the new one if recognized.
-                return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
+                return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(extension))
                     .collect(Collectors.joining("."));
             }
             else
             {
                 // Otherwise just append the  new file extension to the end (even if the filename appears to have an extension,
                 // it may just be a name with dots in it that already had the standard extension stripped).
-                return String.format("%s.%s", imageFileName, format);
+                return String.format("%s.%s", imageFileName, extension);
             }
         }
     }

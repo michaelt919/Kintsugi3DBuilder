@@ -129,5 +129,31 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
         saveGLTF(outputDirectory, filename, settings, null);
     }
 
+    /**
+     * Saves the glTF file.
+     * Various export settings are available, including the ability to toggle whether textures are saved automatically.
+     * Typically, there are three scenarios in which this might be called.<br/><br/>
+     * 1) When specular fit / process textures finishes, export the glTF model so that it can be previewed in Kintsugi 3D Viewer.
+     *      In this scenario, typically it should be configured to not re-export the textures
+     *      since the specular fit process saves textures automatically as it processes them.<br/><br/>
+     * 2) When the project is saved, similarly export the glTF model so that it can be previewed in Kintsugi 3D Viewer.
+     *      In this scenario, texture saving should be the responsibility of the code module that also handles loading
+     *      so that projects can successfully find the texture files.
+     *      Ideally this matches the texture filenames specified in the glTF model
+     *      so that the Kintsugi 3D Viewer can load them successfully --
+     *      but this is a lower priority than ensuring that Kintsugi 3D Builder projects open correctly.<br/><br/>
+     * 3) When exporting the project, save the glTF model for use in Kintsugi 3D Viewer, Sketchfab, etc.
+     *      This is the one scenario in which the glTF model export should also handle texture export --
+     *      since the primary purpose is for transmission to Kintsugi 3D Viewer, Sketchfab and so on,
+     *      so it is critical that the textures can be found by the glTF model
+     *      (more so than the convenience feature of opening in Kintsugi 3D Viewer;
+     *      this is the primary export mechanism and must work correctly.)
+     *      This also the only scenario in which exporting LODs is relevant since they aren't really needed
+     *      or desirable for the Kintsugi 3D Viewer preview, or used by Builder itself.
+     * @param outputDirectory
+     * @param filename
+     * @param settings
+     * @param finishedCallback
+     */
     void saveGLTF(File outputDirectory, String filename, ExportSettings settings, Runnable finishedCallback);
 }

@@ -19,27 +19,21 @@
         <padding>
             <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
         </padding>
-      <HBox alignment="CENTER_LEFT" spacing="10.0">
-         <padding>
-            <Insets right="5.0" />
-         </padding>
-         <children>
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <padding>
+                <Insets right="5.0"/>
+            </padding>
             <HBox alignment="CENTER_LEFT">
-               <children>
-                  <Label styleClass="label" text="Preview Image Width: " />
-                  <TextField fx:id="previewWidthTxtField" prefWidth="50.0" />
-               </children>
+                <Label styleClass="label" text="Preview Image Width: "/>
+                <TextField fx:id="previewWidthTxtField" prefWidth="50.0"/>
             </HBox>
             <HBox alignment="CENTER_LEFT">
-               <children>
-                  <Label styleClass="label" text="Height: " />
-                  <TextField fx:id="previewHeightTxtField" prefWidth="50.0" />
-               </children>
+                <Label styleClass="label" text="Height: "/>
+                <TextField fx:id="previewHeightTxtField" prefWidth="50.0"/>
             </HBox>
-         </children>
-      </HBox>
-        <CheckBox fx:id="imageCompressionCheckBox" mnemonicParsing="false" styleClass="checkbox" text="Image Compression" />
-        <CheckBox fx:id="preloadVisibilityEtcCheckBox" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" styleClass="checkbox" text="Preload Visibility and Shadow Testing" />
+        </HBox>
+        <CheckBox fx:id="imageCompressionCheckBox" mnemonicParsing="false" text="Image Compression" />
+        <CheckBox fx:id="preloadVisibilityEtcCheckBox" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Preload Visibility and Shadow Testing" />
         <HBox alignment="CENTER_LEFT" spacing="10.0">
             <padding>
                 <Insets right="5.0" />
@@ -55,7 +49,7 @@
                 <TextField fx:id="depthHeightTxtField" prefWidth="50.0" />
             </HBox>
         </HBox>
-        <CheckBox fx:id="mipmapCheckBox" layoutX="17.0" layoutY="45.0" mnemonicParsing="false" styleClass="checkbox" text="Mipmaps" />
-        <CheckBox fx:id="reduceViewportResCheckBox" layoutX="17.0" layoutY="107.0" mnemonicParsing="false" styleClass="checkbox" text="Reduce Viewport Resolution" />
+        <CheckBox fx:id="mipmapCheckBox" layoutX="17.0" layoutY="45.0" mnemonicParsing="false" text="Mipmaps" />
+        <CheckBox fx:id="reduceViewportResCheckBox" layoutX="17.0" layoutY="107.0" mnemonicParsing="false"  text="Reduce Viewport Resolution" />
     </VBox>
 </AnchorPane>

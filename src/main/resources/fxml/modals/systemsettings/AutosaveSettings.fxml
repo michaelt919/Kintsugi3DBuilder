@@ -22,7 +22,7 @@
         <padding>
             <Insets bottom="7.0" left="7.0" right="7.0" top="7.0"/>
         </padding>
-        <CheckBox mnemonicParsing="false" styleClass="checkbox" selected="true" text="Autosave (UNFINISHED)"/>
+        <CheckBox mnemonicParsing="false" selected="true" text="Autosave (UNFINISHED)"/>
         <ChoiceBox fx:id="autosaveOptionsChoiceBox" prefHeight="25.0" prefWidth="447.0"/>
     </VBox>
 </AnchorPane>

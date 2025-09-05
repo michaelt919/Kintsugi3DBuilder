@@ -31,12 +31,12 @@
         <rowConstraints>
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
         </rowConstraints>
-        <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevPage" styleClass="wireframeBodyLarge, button" text="Back" GridPane.rowIndex="0">
+        <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevPage" styleClass="wireframeBodyLarge" text="Back" GridPane.rowIndex="0">
             <GridPane.margin>
               <Insets />
             </GridPane.margin>
         </Button>
-        <Button fx:id="nextButton" mnemonicParsing="false" onAction="#advancePage" styleClass="wireframeBodyLarge, button" text="Next" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="0">
+        <Button fx:id="nextButton" mnemonicParsing="false" onAction="#advancePage" styleClass="wireframeBodyLarge" text="Next" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="0">
             <GridPane.margin>
               <Insets />
             </GridPane.margin>

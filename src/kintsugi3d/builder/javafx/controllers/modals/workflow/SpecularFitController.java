@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.CheckBox;
@@ -104,10 +103,7 @@ public class SpecularFitController extends NonDataPageControllerBase
     {
         DefaultSettings.applyProjectDefaults(localSettingsModel);
 
-        resolutionComboBox.setItems(FXCollections.observableArrayList(
-            new SquareResolution(256), new SquareResolution(512), new SquareResolution(1024),
-            new SquareResolution(2048), new SquareResolution(4096), new SquareResolution(8192)));
-        resolutionComboBox.getSelectionModel().select(3); // 2048x2048
+        StaticUtilities.makeSquareResolutionComboBox(resolutionComboBox);
 
         advancedAccordion.expandedPaneProperty().addListener(
             (observable, oldValue, newValue) ->

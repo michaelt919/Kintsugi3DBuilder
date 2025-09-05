@@ -1030,18 +1030,30 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public File getPreviewImageFile(int poseIndex, String extension)
+    {
+        return new File(this.getPreviewImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithExtension(this.getImageFileName(poseIndex), extension));
+    }
+
+    @Override
     public File getPreviewImageFile(int poseIndex)
     {
         // Use PNG for preview images (TODO: make this a configurable setting?)
-        return new File(this.getPreviewImageFilePath(),
-            ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
+        return getPreviewImageFile(poseIndex, "png");
+    }
+
+    @Override
+    public File getThumbnailImageFile(int poseIndex, String extension)
+    {
+        return new File(this.getThumbnailImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithExtension(String.valueOf(poseIndex), extension));
     }
 
     @Override
     public File getThumbnailImageFile(int poseIndex)
     {
-        return new File(this.getThumbnailImageFilePath(),
-            ImageFinder.getInstance().getImageFileNameWithFormat(String.valueOf(poseIndex), "PNG"));
+        return getThumbnailImageFile(poseIndex, "png");
     }
 
     public int getPreviewWidth()

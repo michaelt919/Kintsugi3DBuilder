@@ -38,7 +38,7 @@
             </padding>
          </ToggleButton>
       </AnchorPane>
-      <Label fx:id="selectImageFileLabel" styleClass="wireframeBody, text"/>
+      <Label fx:id="selectImageFileLabel" styleClass="wireframeBody"/>
       <padding>
          <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
       </padding>

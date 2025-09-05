@@ -48,8 +48,8 @@
                <Label styleClass="wireframeBodyLarge" text="Fix orientation:" />
             </StackPane>
             <AnchorPane>
-               <Button mnemonicParsing="false" onAction="#rotateLeft" styleClass="wireframeBodyLarge, button" text="Left" AnchorPane.leftAnchor="0.0" />
-               <Button mnemonicParsing="false" onAction="#rotateRight" styleClass="wireframeBodyLarge, button" text="Right" AnchorPane.rightAnchor="0.0" />
+               <Button mnemonicParsing="false" onAction="#rotateLeft" styleClass="wireframeBodyLarge" text="Left" AnchorPane.leftAnchor="0.0" />
+               <Button mnemonicParsing="false" onAction="#rotateRight" styleClass="wireframeBodyLarge" text="Right" AnchorPane.rightAnchor="0.0" />
             </AnchorPane>
          </VBox>
       </VBox>

@@ -292,7 +292,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     texSpaceDrawable.draw(fbo);
 
                     // Force PNG format for lossless encoding
-                    String pngFilename = ImageFinder.getInstance().getImageFileNameWithFormat(
+                    String pngFilename = ImageFinder.getInstance().getImageFileNameWithExtension(
                         resources.getViewSet().getImageFileName(k), "png");
 
                     // "Sampled" image to store randomly selected pixels for preliminary optimization at a lower resolution.

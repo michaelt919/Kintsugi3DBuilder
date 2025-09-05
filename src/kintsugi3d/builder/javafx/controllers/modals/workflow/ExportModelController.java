@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -25,6 +24,8 @@ import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
+import kintsugi3d.builder.javafx.util.SquareResolution;
+import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -43,7 +44,7 @@ public class ExportModelController extends NonDataPageControllerBase
     @FXML private ComboBox<String> formatComboBox;
     @FXML private CheckBox generateLowResolutionCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
-    @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
+    @FXML private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
 
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
@@ -66,8 +67,23 @@ public class ExportModelController extends NonDataPageControllerBase
         //Calls a function to set settings to defaults
         setAllVariables();
 
+        StaticUtilities.makeSquareResolutionComboBox(minimumTextureResolutionComboBox);
+
         objFileChooser.setTitle("Save project");
         objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
+
+        // Enable min. texture resolution combo box when LODs are enabled.
+        minimumTextureResolutionComboBox.disableProperty()
+            .bind(generateLowResolutionCheckBox.selectedProperty().not());
+
+        File loadedProjectFile = Global.state().getIOModel().getLoadedProjectFile();
+        if (loadedProjectFile != null)
+        {
+            setCurrentDirectoryFile(loadedProjectFile.getParentFile());
+        }
+
+        setCanAdvance(true);
+        setCanConfirm(true);
     }
 
     @Override
@@ -75,14 +91,16 @@ public class ExportModelController extends NonDataPageControllerBase
     {
     }
 
-    public void run()
+    @Override
+    public boolean confirm()
     {
         //Updates settings to equal what widget is displaying
         saveAllVariables();
 
         if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
-            return;
+            error("Failed to export model", "Another process is already running.");
+            return false;
         }
 
         try
@@ -133,32 +151,40 @@ public class ExportModelController extends NonDataPageControllerBase
                         }
                     }
                 });
+
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
-        catch (Exception ex)
+        catch (RuntimeException ex)
         {
             LOG.error("Project didn't save correctly", ex);
+            return false;
         }
     }
 
     //Sets all the settings values on the widget to equal what they are currently
-    public void setAllVariables()
+    private void setAllVariables()
     {
         generateLowResolutionCheckBox.setSelected(settings.shouldGenerateLowResTextures());
-        minimumTextureResolutionComboBox.setItems(FXCollections.observableArrayList(256));
-        minimumTextureResolutionComboBox.setValue(settings.getMinimumTextureResolution());
+        minimumTextureResolutionComboBox.setValue(new SquareResolution(settings.getMinimumTextureResolution()));
         openViewerOnceCheckBox.setSelected(settings.shouldOpenViewerOnceComplete());
+        formatComboBox.setValue(settings.getTextureFormat());
     }
 
     //sets the settings to what the values are set on the widget
-    public void saveAllVariables()
+    private void saveAllVariables()
     {
         settings.setShouldGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
-        settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
+        settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue().getSize());
         settings.setShouldOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
+        settings.setTextureFormat(formatComboBox.getValue());
     }
 
-    public void setCurrentDirectoryFile(File currentDirectoryFile)
+    private void setCurrentDirectoryFile(File currentDirectoryFile)
     {
         // Sets FileChooser defaults
         if (currentDirectoryFile != null)

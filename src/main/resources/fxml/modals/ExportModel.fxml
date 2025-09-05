@@ -13,27 +13,27 @@
 
 <?import javafx.collections.FXCollections?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <?import java.lang.String?>
-<VBox fx:id="root" prefWidth="270.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ExportModelController">
-    <HBox>
-        <Label text="Texture format: " />
-        <ComboBox fx:id="formatComboBox" promptText="Select format...">
-            <items>
-                <FXCollections fx:factory="observableArrayList">
-                    <String fx:value="PNG" />
-                    <String fx:value="JPEG" />
-                    <String fx:value="TIFF" />
-                </FXCollections>
-            </items>
-        </ComboBox>
-    </HBox>
-    <CheckBox fx:id="generateLowResolutionCheckBox" disable="true" mnemonicParsing="false" text="Generate Low Resolution" />
-    <HBox>
-        <Label disable="true" text="Minimum Texture Resolution:" />
-        <ComboBox fx:id="minimumTextureResolutionComboBox" disable="true" HBox.hgrow="ALWAYS" />
-    </HBox>
-    <CheckBox fx:id="openViewerOnceCheckBox" mnemonicParsing="false" text="Open in Kintsugi 3D Viewer" />
-
+<VBox fx:id="root" alignment="CENTER" fillWidth="false" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ExportModelController">
+    <VBox spacing="16.0">
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeBody" text="Texture format: " />
+            <ComboBox fx:id="formatComboBox" styleClass="wireframeBody" promptText="Select format...">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="PNG" />
+                        <String fx:value="JPEG" />
+                        <String fx:value="TIFF" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
+        </HBox>
+        <CheckBox fx:id="generateLowResolutionCheckBox" styleClass="wireframeBody" mnemonicParsing="false" text="Export lower resolution copies" />
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeBody" disable="true" text="Minimum texture resolution:" />
+            <ComboBox styleClass="wireframeBody" fx:id="minimumTextureResolutionComboBox" HBox.hgrow="ALWAYS" />
+        </HBox>
+        <CheckBox fx:id="openViewerOnceCheckBox" styleClass="wireframeBody" mnemonicParsing="false" text="Open in Kintsugi 3D Viewer" />
+    </VBox>
 </VBox>

@@ -160,7 +160,7 @@ class PreviewImages
                     if (missingThumbnail)
                     {
                         // Thumbnail doesn't need undistortion.
-                        fullResImage.saveAtResolution(viewSet.getThumbnailImageFile(viewIndex),
+                        fullResImage.saveAtResolution("PNG", viewSet.getThumbnailImageFile(viewIndex),
                             viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
                         logFinished(viewSet.getThumbnailImageFile(viewIndex));
                     }
@@ -185,16 +185,17 @@ class PreviewImages
         try
         {
             // Fallback to simply resizing without undistorting
+            // Use PNG to ensure losslessness
             if (missingPreview)
             {
-                fullResImage.saveAtResolution(viewSet.getPreviewImageFile(viewIndex),
+                fullResImage.saveAtResolution("PNG", viewSet.getPreviewImageFile(viewIndex, "png"),
                     viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
                 logFinished(viewSet.getPreviewImageFile(viewIndex));
             }
 
             if (missingThumbnail)
             {
-                fullResImage.saveAtResolution(viewSet.getThumbnailImageFile(viewIndex),
+                fullResImage.saveAtResolution("PNG", viewSet.getThumbnailImageFile(viewIndex, "png"),
                     viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
                 logFinished(viewSet.getThumbnailImageFile(viewIndex));
             }

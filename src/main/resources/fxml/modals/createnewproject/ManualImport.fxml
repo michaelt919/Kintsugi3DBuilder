@@ -27,17 +27,17 @@
          <RowConstraints />
          <RowConstraints />
       </rowConstraints>
-      <Text fx:id="camPositionsTxt" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Camera Positions&#10;(Agisoft Metashape XML or RealityCapture CSV file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text fx:id="camPositionsTxt" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Camera Positions&#10;(Agisoft Metashape XML or RealityCapture CSV file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
       </Text>
-      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Mesh&#10;(Wavefront OBJ or &#10;Stanford PLY file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Mesh&#10;(Wavefront OBJ or &#10;Stanford PLY file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
       </Text>
-      <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody, text" text="Images&#10;(Directory containing images:&#10;PNG, JPEG, or TIFF)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Images&#10;(Directory containing images:&#10;PNG, JPEG, or TIFF)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
       </Text>
-      <Button mnemonicParsing="false" onAction="#camFileSelect" styleClass="wireframeBodyLarge, button" text="Load" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+      <Button mnemonicParsing="false" onAction="#camFileSelect" styleClass="wireframeBodyLarge" text="Load" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
       </Button>
-      <Button mnemonicParsing="false" onAction="#objFileSelect" styleClass="wireframeBodyLarge, button" text="Load" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+      <Button mnemonicParsing="false" onAction="#objFileSelect" styleClass="wireframeBodyLarge" text="Load" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
       </Button>
-      <Button mnemonicParsing="false" onAction="#photoDirectorySelect" styleClass="wireframeBodyLarge, button" text="Load" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+      <Button mnemonicParsing="false" onAction="#photoDirectorySelect" styleClass="wireframeBodyLarge" text="Load" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
       </Button>
       <Text fx:id="loadCheckCameras" fill="RED" layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
       </Text>
@@ -47,6 +47,6 @@
       </Text>
    </GridPane>
    <AnchorPane>
-      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody, checkbox" text="Undistort images" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Undistort images" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
    </AnchorPane>
 </VBox>

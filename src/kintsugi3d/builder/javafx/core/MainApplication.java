@@ -149,7 +149,7 @@ public class MainApplication extends Application
     {
         if (icon == null)
         {
-            icon = new Image(new File(ICON_PATH).toURI().toURL().toString());
+            icon = new Image(new File(ICON_PATH).toURI().toURL().toExternalForm());
         }
 
         primaryStage.getIcons().add(icon);

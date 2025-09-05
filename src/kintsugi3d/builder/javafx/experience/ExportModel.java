@@ -1,9 +1,7 @@
 package kintsugi3d.builder.javafx.experience;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.modals.workflow.ExportModelController;
 
-import java.io.File;
 import java.io.IOException;
 
 public class ExportModel extends ExperienceBase
@@ -17,12 +15,6 @@ public class ExportModel extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        ExportModelController exportRequest = openModal("/fxml/modals/ExportModel.fxml");
-
-        File loadedProjectFile = Global.state().getIOModel().getLoadedProjectFile();
-        if (loadedProjectFile != null)
-        {
-            exportRequest.setCurrentDirectoryFile(loadedProjectFile.getParentFile());
-        }
+        this.<ExportModelController>openPagedModel("/fxml/modals/ExportModel.fxml");
     }
 }

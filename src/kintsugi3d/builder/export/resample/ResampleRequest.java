@@ -71,7 +71,7 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
                         .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 
                 File exportFile = new File(resampleExportPath,
-                    ImageFinder.getInstance().getImageFileNameWithFormat(targetViewSet.getImageFileName(i), "png"));
+                    ImageFinder.getInstance().getImageFileNameWithExtension(targetViewSet.getImageFileName(i), "png"));
 
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);

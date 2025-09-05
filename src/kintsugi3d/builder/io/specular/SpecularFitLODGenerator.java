@@ -11,81 +11,62 @@
 
 package kintsugi3d.builder.io.specular;
 
-import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.gl.util.ImageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class SpecularFitLODGenerator
+public final class SpecularFitLODGenerator
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitLODGenerator.class);
-    private final ExportSettings settings;
 
-    public SpecularFitLODGenerator(ExportSettings settings)
+    private static final SpecularFitLODGenerator INSTANCE = new SpecularFitLODGenerator();
+
+    public static SpecularFitLODGenerator getInstance()
     {
-        this.settings = settings;
+        return INSTANCE;
     }
 
-    public void generateAllLODs(File outputDirectory, String prefix, String format, int basisCount)
+    private SpecularFitLODGenerator()
     {
-        List<String> files = Stream.of("albedo", "diffuse", "specular", "orm", "normal")
-            .map(base -> String.format("%s%s.%s", prefix, base, format.toLowerCase(Locale.ROOT)))
-            .collect(Collectors.toList());
+    }
 
-        if (settings.shouldCombineWeights())
+    public void generateLODs(String format, int minResolution, File... originalImageFiles)
+    {
+        for (File file : originalImageFiles)
         {
-            for (int i = 0; i < (basisCount + 3) / 4; i++)
-            {
-                files.add(SpecularFitSerializer.getCombinedWeightFilename(i, format));
-            }
-        }
-        else
-        {
-            for (int i = 0; i < basisCount; i++)
-            {
-                files.add(SpecularFitSerializer.getWeightFileName(i, format));
-            }
-        }
-
-        for (String file : files)
-        {
-            try
-            {
-                generateLODsFor(new File(outputDirectory, file));
-            }
-            catch (IOException e)
-            {
-                LOG.error("Error generating LODs for file '{}':", file, e);
-            }
+            generateLODs(format, minResolution, file);
         }
     }
 
-    public void generateLODsFor(File file) throws IOException
+    public void generateLODs(String format, int minResolution, File originalImageFile)
     {
-        int minSize = settings.getMinimumTextureResolution();
-
-        String filename = file.getName();
-        String extension = "";
-        int i = filename.lastIndexOf('.'); //Strip file extension
-        if (i > 0)
+        try
         {
-            extension = filename.substring(i);
-            filename = filename.substring(0, i);
+            if (originalImageFile.exists()) // Among other things, should catch when constant.png doesn't exist.
+            {
+                String filename = originalImageFile.getName();
+                String extension = "";
+                int i = filename.lastIndexOf('.'); //Strip file extension
+                if (i > 0)
+                {
+                    extension = filename.substring(i);
+                    filename = filename.substring(0, i);
+                }
+
+                ImageHelper imageHelper = ImageHelper.read(originalImageFile);
+
+                for (int size = imageHelper.getBufferedImage().getHeight() / 2; size >= minResolution; size /= 2)
+                {
+                    imageHelper.saveAtResolution(format, new File(originalImageFile.getParent(), filename + "-" + size + extension), size);
+                }
+            }
         }
-
-        ImageHelper imageHelper = ImageHelper.read(file);
-
-        for (int size = imageHelper.getBufferedImage().getHeight() / 2; size >= minSize; size /= 2)
+        catch (IOException e)
         {
-            imageHelper.saveAtResolution(new File(file.getParent(), filename + "-" + size + extension), size);
+            LOG.error("Error generating LODs for file '{}':", originalImageFile, e);
         }
     }
-
 }

@@ -25,12 +25,12 @@
                 <Pane onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased">
                     <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
                 </Pane>
-                <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge, button" text="Choose Image...">
+                <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge" text="Choose Image...">
                 </Button>
             </StackPane>
-            <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge, button" text="Choose New Image..." visible="false">
+            <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge" text="Choose New Image..." visible="false">
             </Button>
-            <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" styleClass="wireframeBodyLarge, button" text="Crop" visible="false">
+            <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" styleClass="wireframeBodyLarge" text="Crop" visible="false">
             </Button>
         </VBox>
         <VBox alignment="TOP_CENTER" spacing="16.0">
@@ -66,24 +66,24 @@
                 <Label layoutX="311.0" layoutY="177.0" styleClass="wireframeBody" text="59.1" GridPane.halignment="RIGHT" GridPane.rowIndex="5" />
                 <Label layoutX="307.0" layoutY="203.0" styleClass="wireframeBody" text="90.0 (White)" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
                 </Label>
-                <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody, text-field" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+                <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                 </TextField>
-                <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody, text-field" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+                <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                 </TextField>
-                <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody, text-field" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+                <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
                 </TextField>
-                <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody, text-field" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+                <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
                 </TextField>
-                <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody, text-field" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+                <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
                 </TextField>
-                <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody, text-field" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
+                <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" styleClass="wireframeBody" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
                 </TextField>
-                <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody, button" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-                <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody, button" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-                <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody, button" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-                <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody, button" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-                <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody, button" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
-                <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody, button" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+                <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+                <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+                <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" styleClass="wireframeBody" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
                 <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                 <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                 <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />

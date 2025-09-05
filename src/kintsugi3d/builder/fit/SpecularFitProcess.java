@@ -18,7 +18,6 @@ import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.io.specular.SpecularFitLODGenerator;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
@@ -148,8 +147,6 @@ public class SpecularFitProcess
                 reconstructionCallback.accept(view, rmse);
             }
         }
-
-        generateLods();
     }
 
     public <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> optimizeFit(
@@ -578,28 +575,5 @@ public class SpecularFitProcess
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/specularfit/extractReflectance.frag"));
-    }
-
-    public void generateLods()
-    {
-        if (settings.getExportSettings().shouldGenerateLowResTextures() && settings.getOutputDirectory() != null)
-        {
-            SpecularFitLODGenerator rescaler = new SpecularFitLODGenerator(settings.getExportSettings());
-            rescaler.generateAllLODs(settings.getOutputDirectory(), "", "PNG",
-                settings.getSpecularBasisSettings().getBasisCount());
-
-            if (settings.shouldIncludeConstantTerm())
-            {
-                try
-                {
-                    rescaler.generateLODsFor(new File(settings.getOutputDirectory(), "constant.png"));
-                }
-                catch (IOException e)
-                {
-                    LOG.error("Failed to resize diffuse constant texture", e);
-                    throw new RuntimeException(e);
-                }
-            }
-        }
     }
 }

@@ -32,9 +32,9 @@
                <RowConstraints vgrow="ALWAYS" />
             </rowConstraints>
             <Label styleClass="wireframeBodyLarge" text="X: " textOverrun="CLIP" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <TextField styleClass="wireframeBodyLarge, text-field" GridPane.columnIndex="2" GridPane.rowIndex="1" fx:id="xTextField" />
+            <TextField styleClass="wireframeBodyLarge" GridPane.columnIndex="2" GridPane.rowIndex="1" fx:id="xTextField" />
             <Label styleClass="wireframeBodyLarge" text="Y: " textOverrun="CLIP" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <TextField fx:id="yTextField" styleClass="wireframeBodyLarge, text-field" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <TextField fx:id="yTextField" styleClass="wireframeBodyLarge" GridPane.columnIndex="2" GridPane.rowIndex="2" />
          </GridPane>
       </StackPane>
    </AnchorPane>

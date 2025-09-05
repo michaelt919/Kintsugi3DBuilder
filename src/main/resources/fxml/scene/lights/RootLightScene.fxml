@@ -20,7 +20,7 @@
             <TableView fx:id="tableView" prefHeight="257.0" prefWidth="185.0" />
             <Separator orientation="VERTICAL" prefHeight="200.0" visible="false" />
             <VBox fx:id="groupControls" alignment="CENTER" prefHeight="137.0" prefWidth="75.0" spacing="5.0" HBox.hgrow="ALWAYS">
-                <Text styleClass="text" strokeType="OUTSIDE" strokeWidth="0.0" text="Group" />
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Group" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newGroup" text="New">
                     <tooltip>
                         <Tooltip text="Create a new light group." />
@@ -52,7 +52,7 @@
             </VBox>
             <Separator orientation="VERTICAL" prefHeight="200.0" />
             <VBox fx:id="lightControls" alignment="TOP_CENTER" prefHeight="136.0" prefWidth="75.0" spacing="5.0" HBox.hgrow="ALWAYS">
-                <Text styleClass="text" strokeType="OUTSIDE" strokeWidth="0.0" text="Light" />
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Light" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newLight" text="New">
                     <tooltip>
                         <Tooltip text="Create a new light with default settings." />

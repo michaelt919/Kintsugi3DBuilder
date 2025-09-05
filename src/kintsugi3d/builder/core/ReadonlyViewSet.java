@@ -140,9 +140,25 @@ public interface ReadonlyViewSet
     /**
      * Gets the downscaled "preview" image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.
+     * @param extension The file extension without the dot (i.e. "png", "jpeg", "tiff") to use for the file.
+     * @return The image file.
+     */
+    File getPreviewImageFile(int poseIndex, String extension);
+
+    /**
+     * Gets the downscaled "preview" image file corresponding to a particular view.
+     * @param poseIndex The index of the image file to retrieve.
      * @return The image file.
      */
     File getPreviewImageFile(int poseIndex);
+
+    /**
+     * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @param extension The file extension without the dot (i.e. "png", "jpeg", "tiff") to use for the file.
+     * @return The image file.
+     */
+    File getThumbnailImageFile(int poseIndex, String extension);
 
     /**
      * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.

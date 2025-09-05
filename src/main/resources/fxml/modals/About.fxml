@@ -27,7 +27,7 @@
    <ScrollPane fx:id="scrollPane" layoutY="38.0" prefHeight="424.0" prefWidth="553.0">
       <StackPane>
          <Rectangle fx:id="backgroundRectangle" arcHeight="5.0" arcWidth="5.0" height="353.0" stroke="BLACK" strokeType="INSIDE" width="432.0" />
-         <Text fx:id="aboutText" styleClass="text" text="Could not load info for about section." wrappingWidth="206.0" StackPane.alignment="TOP_LEFT">
+         <Text fx:id="aboutText" text="Could not load info for about section." wrappingWidth="206.0" StackPane.alignment="TOP_LEFT">
             <StackPane.margin>
                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
             </StackPane.margin>

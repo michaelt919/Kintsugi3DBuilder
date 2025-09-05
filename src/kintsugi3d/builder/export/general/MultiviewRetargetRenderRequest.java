@@ -84,7 +84,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 render(drawable, framebuffer);
 
-                String fileName = ImageFinder.getInstance().getImageFileNameWithFormat(
+                String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
                     renderable.getActiveViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);

@@ -284,28 +284,22 @@ public class ImageHelper
         }
     }
 
-    public ImageHelper saveAtResolution(File scaledFile, int width, int height) throws IOException
+    public ImageHelper saveAtResolution(String format, File scaledFile, int width, int height) throws IOException
     {
         BufferedImage scaled = scaledToResolution(width, height).image;
-        ImageIO.write(scaled, getFormatFor(scaledFile), scaledFile);
+        ImageIO.write(scaled, format, scaledFile);
         return this;
     }
 
-    public ImageHelper saveAtScale(File file, double factor) throws IOException
+    public ImageHelper saveAtScale(String format, File file, double factor) throws IOException
     {
-        saveAtResolution(file, (int)(image.getWidth() * factor), (int)(image.getHeight() * factor));
+        saveAtResolution(format, file, (int)(image.getWidth() * factor), (int)(image.getHeight() * factor));
         return this;
     }
 
-    public ImageHelper saveAtResolution(File file, int height) throws IOException
+    public ImageHelper saveAtResolution(String format, File file, int height) throws IOException
     {
-        saveAtScale(file, (double) height / image.getHeight());
+        saveAtScale(format, file, (double) height / image.getHeight());
         return this;
-    }
-
-    private static String getFormatFor(File file)
-    {
-        int i = file.getName().lastIndexOf('.');
-        return file.getName().substring(i + 1).toUpperCase();
     }
 }

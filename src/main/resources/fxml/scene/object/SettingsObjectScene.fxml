@@ -16,12 +16,12 @@
 <?import javafx.scene.layout.*?>
 <VBox fx:id="root" prefWidth="400.0" styleClass="vbox" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController">
    <StackPane>
-      <children>
-         <Button mnemonicParsing="false" onAction="#onUpdateOrientationView" styleClass="wireframeBodyLarge, button" text="Select orientation reference view...">Select orientation reference view</Button>
-      </children>
       <padding>
-         <Insets bottom="8.0" top="8.0" />
+         <Insets bottom="8.0" top="8.0"/>
       </padding>
+      <Button mnemonicParsing="false" onAction="#onUpdateOrientationView" styleClass="wireframeBodyLarge"
+              text="Select orientation reference view...">Select orientation reference view
+      </Button>
    </StackPane>
    <TitledPane animated="false" styleClass="titled-pane" text="Center">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" styleClass="grid-pane" vgap="10.0">

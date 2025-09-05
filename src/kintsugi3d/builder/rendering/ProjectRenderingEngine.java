@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.specular.SpecularFitLODGenerator;
 import kintsugi3d.builder.io.specular.gltf.SpecularFitGLTFExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
@@ -45,6 +46,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
 {
@@ -536,42 +539,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
                 if (settings.shouldSaveTextures() && resources.getSpecularMaterialResources() != null)
                 {
-                    Rendering.runLater(() ->
-                    {
-                        SpecularMaterialResources<ContextType> materialResources = resources.getSpecularMaterialResources();
-                        String textureFormat = settings.getTextureFormat();
-                        String textureFilePrefix = exporter.getTextureFilePrefix();
-
-                        materialResources.saveDiffuseMap(textureFormat, outputDirectory, exporter.getDiffuseTextureFilename());
-                        materialResources.saveNormalMap(textureFormat, outputDirectory, exporter.getNormalTextureFilename());
-                        materialResources.saveConstantMap(textureFormat, outputDirectory, exporter.getDiffuseConstantTextureFilename());
-                        materialResources.saveAlbedoMap(textureFormat, outputDirectory, exporter.getBaseColorTextureFilename());
-                        materialResources.saveORMMap(textureFormat, outputDirectory, exporter.getRoughnessMetallicTextureFilename());
-                        materialResources.saveSpecularReflectivityMap(textureFormat, outputDirectory, exporter.getSpecularTextureFilename());
-                        materialResources.saveSpecularRoughnessMap(textureFormat, outputDirectory,
-                            String.format("%sroughness%s", textureFilePrefix, textureFormat.toLowerCase(Locale.ROOT)));
-
-                        // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
-
-                        if (settings.shouldCombineWeights())
-                        {
-                            materialResources.savePackedWeightMaps(textureFormat, outputDirectory,
-                                index -> exporter.getWeightTextureFilename(index, 4));
-                        }
-                        else
-                        {
-                            materialResources.saveUnpackedWeightMaps(textureFormat, outputDirectory,
-                                index -> exporter.getWeightTextureFilename(index, 1));
-                        }
-
-                        materialResources.saveBasisFunctions(outputDirectory, exporter.getBasisFunctionsFilename());
-                        materialResources.saveMetadataMaps(textureFormat, outputDirectory, textureFilePrefix);
-
-                        if (finishedCallback != null)
-                        {
-                            finishedCallback.run();
-                        }
-                    });
+                    Rendering.runLater(() -> exportTextures(outputDirectory, exporter, settings, finishedCallback));
                 }
                 else if (finishedCallback != null) // not saving textures
                 {
@@ -584,6 +552,60 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
             {
                 LOG.error("Error occurred during glTF export:", e);
             }
+        }
+    }
+
+    private void exportTextures(File outputDirectory, SpecularFitGLTFExporter exporter, ExportSettings settings, Runnable finishedCallback)
+    {
+        SpecularMaterialResources<ContextType> materialResources = resources.getSpecularMaterialResources();
+        String textureFormat = settings.getTextureFormat();
+        String textureFilePrefix = exporter.getTextureFilePrefix();
+
+        materialResources.saveDiffuseMap(textureFormat, outputDirectory, exporter.getDiffuseTextureFilename());
+        materialResources.saveNormalMap(textureFormat, outputDirectory, exporter.getNormalTextureFilename());
+        materialResources.saveConstantMap(textureFormat, outputDirectory, exporter.getDiffuseConstantTextureFilename());
+        materialResources.saveAlbedoMap(textureFormat, outputDirectory, exporter.getBaseColorTextureFilename());
+        materialResources.saveORMMap(textureFormat, outputDirectory, exporter.getRoughnessMetallicTextureFilename());
+        materialResources.saveSpecularReflectivityMap(textureFormat, outputDirectory, exporter.getSpecularTextureFilename());
+        materialResources.saveSpecularRoughnessMap(textureFormat, outputDirectory,
+            String.format("%sroughness%s", textureFilePrefix, textureFormat.toLowerCase(Locale.ROOT)));
+
+        // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
+
+        if (settings.shouldCombineWeights())
+        {
+            materialResources.savePackedWeightMaps(textureFormat, outputDirectory,
+                index -> exporter.getWeightTextureFilename(index, 4));
+        }
+        else
+        {
+            materialResources.saveUnpackedWeightMaps(textureFormat, outputDirectory,
+                index -> exporter.getWeightTextureFilename(index, 1));
+        }
+
+        materialResources.saveBasisFunctions(outputDirectory, exporter.getBasisFunctionsFilename());
+        materialResources.saveMetadataMaps(textureFormat, outputDirectory, textureFilePrefix);
+
+        if (settings.shouldGenerateLowResTextures())
+        {
+            int basisCount = materialResources.getBasisResources().getBasisCount();
+            SpecularFitLODGenerator.getInstance().generateLODs(settings.getTextureFormat(), settings.getMinimumTextureResolution(),
+                Stream.concat(Stream.of(
+                        exporter.getDiffuseTextureFilename(),
+                        exporter.getNormalTextureFilename(),
+                        exporter.getDiffuseConstantTextureFilename(),
+                        exporter.getBaseColorTextureFilename(),
+                        exporter.getRoughnessMetallicTextureFilename(),
+                        exporter.getSpecularTextureFilename()),
+                        IntStream.range(0, settings.shouldCombineWeights() ? (basisCount + 3) / 4 : basisCount)
+                            .mapToObj(index -> exporter.getWeightTextureFilename(index, settings.shouldCombineWeights() ? 4 : 1)))
+                    .map(filename -> new File(outputDirectory, filename))
+                    .toArray(File[]::new));
+        }
+
+        if (finishedCallback != null)
+        {
+            finishedCallback.run();
         }
     }
 
