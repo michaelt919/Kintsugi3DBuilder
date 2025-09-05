@@ -107,7 +107,7 @@
     -fx-background-color: #262626;
 }
 
-.button {
+.button, .toggle-button {
     -fx-background-color: #CECECE;
     -fx-padding: 8 16 8 16; /* top right bottom left */
 }
