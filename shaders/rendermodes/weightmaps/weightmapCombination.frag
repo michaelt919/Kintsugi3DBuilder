@@ -14,7 +14,6 @@
 
 #include <colorappearance/material.glsl>
 #include <specularfit/evaluateBRDF.glsl>
-#include "weightmapCommon.glsl"
 
 layout(location = 0) out vec4 fragColor;
 
@@ -26,9 +25,37 @@ layout(location = 0) out vec4 fragColor;
 #define WEIGHTMAP_COUNT 8
 #endif
 
+#define WEIGHTMAP_COLOR_COUNT 8
+
+const vec3 WEIGHTMAP_COLORS[8] = vec3[](
+    vec3(0.2,0.2,1),
+    vec3(1,1,0),
+    vec3(1,0,0),
+    vec3(0,1,1),
+    vec3(0.5,0.25,1),
+    vec3(0,0.5,0),
+    vec3(1,0.5,0),
+    vec3(1,1,1)
+);
+
+//const vec3 WEIGHTMAP_COLORS[WEIGHTMAP_COLOR_COUNT] = vec3[](
+//vec3(0.9, 0.1, 0.1),
+//vec3(0.0, 0.6, 0.2),
+//vec3(0.0, 0.45, 0.85),
+//vec3(0.95, 0.9, 0.25),
+//vec3(0.6, 0.2, 0.7),
+//vec3(0.95, 0.55, 0.0),
+//vec3(0.0, 0.8, 0.8)
+//);
+
+vec4 getWeightmapColor(int index)
+{
+    return vec4(WEIGHTMAP_COLORS[index], 1);
+}
+
 void main() {
     fragColor = vec4(0);
-    for (int i = WEIGHTMAP_INDEX; i < WEIGHTMAP_COUNT; i++)
+    for (int i = WEIGHTMAP_INDEX; i < min(WEIGHTMAP_COLOR_COUNT, WEIGHTMAP_COUNT); i++)
     {
         fragColor += texture(weightMaps, vec3(fTexCoord, i)).r * getWeightmapColor(i);
     }
