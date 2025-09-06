@@ -112,20 +112,22 @@
     -fx-padding: 8 16 8 16; /* top right bottom left */
 }
 
+.toggleButtonLarge {
+    -fx-padding: 16 16 16 16; /* top right bottom left */
+}
+
 .button .text{
     -fx-fill:#030303;
 }
 
 .button:hover{
     -fx-background-color: #D4AA00;
+    -fx-text-fill: #000000
 }
 
 .button:pressed {
     -fx-background-color: #262626;
-}
-
-.button:pressed .text{
-    -fx-fill: #CECECE;
+    -fx-text-fill: #CECECE;
 }
 
 .button-selected{
@@ -193,6 +195,14 @@ dialog-pane{
 
 .label{
     -fx-text-fill: #FFFFFF;
+}
+
+.card-background .label {
+    -fx-text-fill: #000000;
+}
+
+.card-background .text {
+    -fx-fill: #000000;
 }
 
 .slider .axis {
@@ -354,7 +364,6 @@ dialog-pane{
     -fx-fill:#ffffff;
 }
 
-
 .toggle-button{
     -fx-background-color: #CECECE;
 }
@@ -449,11 +458,9 @@ dialog-pane{
 .card-button {
     -fx-background-color: #383838;
     -fx-background-radius: 0;
-    -fx-text-fill: #CECECE;
     -fx-min-width: 184;
     -fx-pref-width: 330;
     -fx-min-height: 32;
-
 }
 
 .card-button .text {

@@ -19,6 +19,11 @@ public class SquareResolution
         this.size.set(size);
     }
 
+    public SquareResolution(Number size)
+    {
+        this.size.set(size.intValue());
+    }
+
     public int getSize()
     {
         return size.get();

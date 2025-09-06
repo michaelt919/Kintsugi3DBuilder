@@ -80,5 +80,11 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("normalSmoothIterations", 0);
         settingsModel.createNumericSetting("unsuccessfulLMIterationsAllowed", 8);
         settingsModel.createBooleanSetting("openViewerOnProcessingComplete", false);
+
+        // Export options
+        settingsModel.createObjectSetting("textureFormat", "PNG");
+        settingsModel.createBooleanSetting("exportLODEnabled", false);
+        settingsModel.createNumericSetting("minimumLODSize", 256);
+        settingsModel.createBooleanSetting("openViewerOnExportComplete", false);
     }
 }

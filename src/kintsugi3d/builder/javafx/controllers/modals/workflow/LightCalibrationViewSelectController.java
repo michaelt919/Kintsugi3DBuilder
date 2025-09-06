@@ -30,7 +30,7 @@ public class LightCalibrationViewSelectController extends ViewSelectController
     @Override
     public boolean advance()
     {
-        ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+        ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
 
         int viewIndex = viewSet.findIndexOfView(getSelectedViewName());
         if (viewIndex == viewSet.getPrimaryViewIndex())

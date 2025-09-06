@@ -13,14 +13,14 @@
         <HBox alignment="CENTER_LEFT" prefHeight="13.0" stylesheets="@../../kintsugiStyling.css">
             <ImageView fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
             </ImageView>
-            <Text id="texture_title" fx:id="cardTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
+            <Label id="texture_title" fx:id="cardTitle" styleClass="cardLabel" text="Texture Type">
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0"/>
                 </font>
                 <HBox.margin>
                     <Insets left="8.0"/>
                 </HBox.margin>
-            </Text>
+            </Label>
             <Region maxWidth="1.7976931348623157E308" prefHeight="13.0" prefWidth="200.0" HBox.hgrow="ALWAYS"/>
             <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#expansionToggleClicked" stroke="BLACK"
                        strokeType="INSIDE" visible="false" width="24.0"/>
@@ -31,67 +31,67 @@
         <VBox fx:id="cardBody" prefHeight="275">
             <HBox spacing="5.0">
                 <VBox fx:id="textContent" HBox.hgrow="ALWAYS">
-                    <Text text="File Name:">
+                    <Label styleClass="cardLabel" text="File Name:">
                         <font>
                             <Font name="Segoe UI Semibold" size="12.0"/>
                         </font>
-                    </Text>
+                    </Label>
 
-                    <Text id="file_name" styleClass="wireframeCaption" text="name_goes_here.jpg">
+                    <Label id="file_name" styleClass="wireframeCaption, cardLabel" text="name_goes_here.jpg">
                         <VBox.margin>
                             <Insets bottom="4.0" left="5.0"/>
                         </VBox.margin>
-                    </Text>
+                    </Label>
 
-                    <Text text="Resolution:">
-                        <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
-                        </font>
-                        <VBox.margin>
-                            <Insets/>
-                        </VBox.margin>
-                    </Text>
-                    <Text id="resolution" styleClass="wireframeCaption" text="2048 x 2048">
-                        <VBox.margin>
-                            <Insets bottom="4.0" left="5.0"/>
-                        </VBox.margin>
-                    </Text>
-
-                    <Text text="Size:">
+                    <Label styleClass="cardLabel" text="Resolution:">
                         <font>
                             <Font name="Segoe UI Semibold" size="12.0"/>
                         </font>
                         <VBox.margin>
                             <Insets/>
                         </VBox.margin>
-                    </Text>
-
-                    <Text id="file_size" styleClass="wireframeCaption" text="331 KB">
+                    </Label>
+                    <Label id="resolution" styleClass="wireframeCaption, cardLabel" text="2048 x 2048">
                         <VBox.margin>
                             <Insets bottom="4.0" left="5.0"/>
                         </VBox.margin>
-                    </Text>
+                    </Label>
 
-                    <Text text="Purpose:">
+                    <Label styleClass="cardLabel" text="Size:">
+                        <font>
+                            <Font name="Segoe UI Semibold" size="12.0"/>
+                        </font>
+                        <VBox.margin>
+                            <Insets/>
+                        </VBox.margin>
+                    </Label>
+
+                    <Label id="file_size" styleClass="wireframeCaption, cardLabel" text="331 KB">
+                        <VBox.margin>
+                            <Insets bottom="4.0" left="5.0"/>
+                        </VBox.margin>
+                    </Label>
+
+                    <Label styleClass="cardLabel" text="Purpose:">
                         <font>
                             <Font name="Segoe UI Semibold" size="12.0"/>
                         </font>
                         <VBox.margin>
                             <Insets top="4.0"/>
                         </VBox.margin>
-                    </Text>
+                    </Label>
                     <TextFlow prefWidth="200.0">
-                        <Text id="description" styleClass="wireframeCaption"
+                        <Label id="description" styleClass="wireframeCaption"
                               text="Description of what this texture type contributes to the material."/>
                     </TextFlow>
-                    <Text text="Labels:">
+                    <Label styleClass="cardLabel" text="Labels:">
                         <font>
                             <Font name="Segoe UI Semibold" size="12.0"/>
                         </font>
                         <VBox.margin>
                             <Insets top="4.0"/>
                         </VBox.margin>
-                    </Text>
+                    </Label>
 
                     <HBox.margin>
                         <Insets left="3.0"/>

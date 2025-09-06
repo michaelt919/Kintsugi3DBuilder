@@ -37,19 +37,19 @@
                                                 shortcut="UP"/>
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#saveProject" text="Save">
+                    <MenuItem fx:id="saveMenuItem" mnemonicParsing="false" onAction="#saveProject" text="Save">
                         <accelerator>
                             <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP"
                                                 shortcut="UP"/>
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#saveProjectAs" text="Save As">
+                    <MenuItem fx:id="saveAsMenuItem" mnemonicParsing="false" onAction="#saveProjectAs" text="Save As">
                         <accelerator>
                             <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP"
                                                 shortcut="UP"/>
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#closeProject" text="Close Project">
+                    <MenuItem fx:id="closeProjectMenuItem" mnemonicParsing="false" onAction="#closeProject" text="Close Project">
                         <accelerator>
                             <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP"
                                                 shortcut="UP"/>
@@ -94,7 +94,7 @@
                     <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling"
                                    visible="false"/>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Workflow">
+                <Menu fx:id="workflowMenu" mnemonicParsing="false" text="Workflow">
                     <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ObjectOrientation"
                               text="Object Orientation..."/>
                     <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ToneCalibration"
@@ -160,12 +160,10 @@
                                    text="Image-based with textures" toggleGroup="$renderGroup">
                         <userData>rendermodes/ibrTextured.frag</userData>
                     </RadioMenuItem>
-                    <!--                            Testing-->
                     <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false"
                                    text="Weight maps (combined)" toggleGroup="$renderGroup">
                         <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                     </RadioMenuItem>
-                    <!--                            Individual weight map visualizations (without existing texture colors)-->
                     <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
                         <userData>rendermodes/weightmaps/weightmapSingle.frag</userData>
                     </Menu>
@@ -186,22 +184,22 @@
                         <RadioMenuItem mnemonicParsing="false" text="Albedo map" toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/albedoMap.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
+                        <RadioMenuItem fx:id="roughnessTexture" mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/roughnessMap.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Metallicity map"
+                        <RadioMenuItem fx:id="metallicityTexture" mnemonicParsing="false" text="Metallicity map"
                                        toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/metallicMap.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Diffuse color map"
+                        <RadioMenuItem fx:id="diffuseTexture" mnemonicParsing="false" text="Diffuse color map"
                                        toggleGroup="$renderGroup">
                             <userData>rendermodes/diffuseColor.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Specular color map"
+                        <RadioMenuItem fx:id="specularTexture" mnemonicParsing="false" text="Specular color map"
                                        toggleGroup="$renderGroup">
                             <userData>rendermodes/specularColor.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
+                        <RadioMenuItem fx:id="errorTexture" mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/errorMap.frag</userData>
                         </RadioMenuItem>
                     </Menu>

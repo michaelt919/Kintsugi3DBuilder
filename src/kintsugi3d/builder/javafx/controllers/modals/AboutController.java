@@ -13,9 +13,9 @@ package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class AboutController implements Initializable
     @FXML
     private Rectangle backgroundRectangle;
     @FXML
-    private Text aboutText;
+    private Label aboutText;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -46,7 +46,7 @@ public class AboutController implements Initializable
             String contentText = String.join(System.lineSeparator(), lines);
 
             aboutText.setText(contentText);
-            aboutText.setWrappingWidth(scrollPane.getWidth() - 20);
+            aboutText.setPrefWidth(scrollPane.getWidth() - 20);
             backgroundRectangle.setWidth(scrollPane.getWidth());
             backgroundRectangle.setHeight(aboutText.getLayoutBounds().getHeight() + 20); // +20 to account for margins
         }

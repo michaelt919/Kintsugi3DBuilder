@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,7 +30,7 @@ public class CardController
     @FXML private VBox cardBody;
     @FXML private VBox borderBox;
 
-    @FXML private Text cardTitle;
+    @FXML private Label cardTitle;
     @FXML private VBox textContent;
 
     @FXML private ImageView cardIcon;

@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.experience;
 
+import javafx.beans.binding.BooleanExpression;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.controllers.paged.*;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
@@ -25,6 +26,16 @@ public abstract class ExperienceBase implements Experience
         this.parentWindow = parentWindow;
         this.modal = new Modal(parentWindow);
         this.state = state;
+
+        // Close modal window when project is closed.
+        BooleanExpression projectLoadedProperty = state.getProjectModel().getProjectLoadedProperty();
+        projectLoadedProperty.addListener(obs ->
+        {
+            if (!projectLoadedProperty.get())
+            {
+                modal.requestClose();
+            }
+        });
     }
 
     @Override

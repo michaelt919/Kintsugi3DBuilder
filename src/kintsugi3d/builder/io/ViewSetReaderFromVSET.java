@@ -291,7 +291,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     case "z":
                         String name = scanner.next();
                         Class<?> type = settings.getType(name);
-                        if (type.isAssignableFrom(Boolean.class))
+                        if (type.isAssignableFrom(String.class))
+                        {
+                            settings.set(name, scanner.next());
+                        }
+                        else if (type.isAssignableFrom(Boolean.class))
                         {
                             // boolean setting
                             settings.set(name, Boolean.parseBoolean(scanner.next()));

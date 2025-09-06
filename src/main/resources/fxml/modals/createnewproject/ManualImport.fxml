@@ -11,10 +11,9 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.scene.text.Text?>
 <VBox fx:id="root" alignment="CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.ManualImportController">
    <GridPane alignment="CENTER" hgap="16.0" styleClass="grid-pane" vgap="32.0" VBox.vgrow="ALWAYS">
       <columnConstraints>
@@ -27,23 +26,23 @@
          <RowConstraints />
          <RowConstraints />
       </rowConstraints>
-      <Text fx:id="camPositionsTxt" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Camera Positions&#10;(Agisoft Metashape XML or RealityCapture CSV file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-      </Text>
-      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Mesh&#10;(Wavefront OBJ or &#10;Stanford PLY file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-      </Text>
-      <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeBody" text="Images&#10;(Directory containing images:&#10;PNG, JPEG, or TIFF)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-      </Text>
+      <Label fx:id="camPositionsTxt" alignment="CENTER" prefWidth="236.0" styleClass="wireframeBody" text="Camera Positions&#10;(Agisoft Metashape XML or &#10;RealityCapture CSV file)" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      </Label>
+      <Label alignment="CENTER" layoutX="76.0" layoutY="264.0" prefWidth="236.0" styleClass="wireframeBody" text="Mesh&#10;(Wavefront OBJ or &#10;Stanford PLY file)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      </Label>
+      <Label alignment="CENTER" layoutX="272.0" layoutY="264.0" prefWidth="236.0" styleClass="wireframeBody" text="Images&#10;(Directory containing images:&#10;PNG, JPEG, or TIFF)" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      </Label>
       <Button mnemonicParsing="false" onAction="#camFileSelect" styleClass="wireframeBodyLarge" text="Load" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
       </Button>
       <Button mnemonicParsing="false" onAction="#objFileSelect" styleClass="wireframeBodyLarge" text="Load" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
       </Button>
       <Button mnemonicParsing="false" onAction="#photoDirectorySelect" styleClass="wireframeBodyLarge" text="Load" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
       </Button>
-      <Text fx:id="loadCheckCameras" fill="RED" layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+      <Text fx:id="loadCheckCameras" fill="RED" layoutX="76.0" layoutY="264.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
       </Text>
-      <Text fx:id="loadCheckObj" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+      <Text fx:id="loadCheckObj" fill="RED" layoutX="10.0" layoutY="64.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
       </Text>
-      <Text fx:id="loadCheckImages" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+      <Text fx:id="loadCheckImages" fill="RED" layoutX="10.0" layoutY="64.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
       </Text>
    </GridPane>
    <AnchorPane>

@@ -9,19 +9,19 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.specular.gltf;
+package kintsugi3d.builder.io.gltf;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class GltfMaterialSpecularWeights
+public class GLTFMaterialSpecularWeights
 {
 
     private int stride = 4;
 
-    private List<TextureInfo> textures = new ArrayList<>();
+    private final List<TextureInfo> textures = new ArrayList<>();
 
     public List<TextureInfo> getTextures()
     {

@@ -62,14 +62,11 @@ public class LightCalibrationController extends NonDataPageControllerBase
         // Bind controller to settings model to synchronize with "currentLightCalibration".
         bind();
 
-        if (Global.state().getIOModel().hasValidHandler())
-        {
-            // Set the "currentLightCalibration" to the existing calibration values in the view set.
-            ViewSet loadedViewSet = Global.state().getIOModel().getLoadedViewSet();
+        // Set the "currentLightCalibration" to the existing calibration values in the view set.
+        ViewSet loadedViewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
 
-            settingsModel.set("currentLightCalibration",
-                loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
-        }
+        settingsModel.set("currentLightCalibration",
+            loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
 
         // Enables light calibration mode when the window is opened.
         settingsModel.set("lightCalibrationMode", true);

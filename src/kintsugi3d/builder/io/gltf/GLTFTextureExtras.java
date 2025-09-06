@@ -9,17 +9,17 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.specular.gltf;
+package kintsugi3d.builder.io.gltf;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class GltfTextureExtras
+public class GLTFTextureExtras
 {
 
     private Integer baseRes = null;
 
-    private Map<Integer, Integer> lods = new HashMap<Integer, Integer>();
+    private final Map<Integer, Integer> lods = new HashMap<>();
 
     public void setLodImageIndex(int resolution, int index)
     {

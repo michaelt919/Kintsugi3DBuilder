@@ -93,7 +93,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         File imageFile = null;
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
         {
-            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
             imageFile = viewSet.getFullResImageFile(primaryViewIndex);
         }
@@ -104,7 +104,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
         if (imageFile != null)
         {
-            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
             if (viewSet.hasCustomLuminanceEncoding())
             {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration image? This will clear any previous tone calibration values!");
@@ -140,7 +140,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         }
         else
         {
-            ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
 
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());
         }

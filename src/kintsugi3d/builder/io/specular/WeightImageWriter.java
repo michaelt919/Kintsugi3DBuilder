@@ -53,7 +53,6 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
         File outputDirectory, IntFunction<String> filenameOverrides) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
-        drawable.program().setUniform("weightStride", weightsPerImage);
 
         int basisCount = specularFit.getBasisResources().getBasisCount();
 
@@ -61,6 +60,7 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
         for (int i = 0; i * weightsPerImage < basisCount; i++)
         {
             drawable.program().setUniform("weightIndex", i);
+            drawable.program().setUniform("weightStride", Math.min(weightsPerImage, basisCount - i * weightsPerImage));
             drawable.draw(framebuffer);
             String filename = filenameOverrides != null ? filenameOverrides.apply(i)
                 : SpecularFitSerializer.getWeightFileName(i, weightsPerImage, format);

@@ -72,6 +72,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, getWidth(), getHeight())
             .flipVertical()
             .create();
@@ -83,6 +84,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, getWidth(), getHeight())
             .tonemap(tonemapper)
             .flipVertical()
@@ -95,6 +97,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, getWidth(), getHeight())
             .tonemap(tonemapper)
             .flipVertical()
@@ -107,6 +110,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, width, height)
             .flipVertical()
             .create();
@@ -118,6 +122,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, width, height)
             .tonemap(tonemapper)
             .flipVertical()
@@ -130,6 +135,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, width, height)
             .tonemap(tonemapper)
             .flipVertical()

@@ -30,7 +30,7 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
     @Override
     public void loadForViewSelection(Consumer<ViewSelectionModel> onLoadComplete)
     {
-        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
         setViewSelectionModel(new GenericViewSelectionModel("Current Project", currentViewSet));
 
         if (currentViewSet.getOrientationViewIndex() >= 0)

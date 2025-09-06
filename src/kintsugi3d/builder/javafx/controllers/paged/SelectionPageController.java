@@ -13,7 +13,7 @@ import javafx.scene.layout.VBox;
 public class SelectionPageController<T> extends PageControllerBase<T, SelectionPage<T>>
 {
     private static final double BUTTON_MIN_WIDTH = 400.0;
-    private static final String BUTTON_STYLE_CLASS = "wireframeSubtitle";
+    private static final String[] BUTTON_STYLE_CLASSES = { "wireframeSubtitle", "toggleButtonLarge" };
     private static final Insets BUTTON_INSETS = new Insets(16.0);
 
     private final ToggleGroup buttons = new ToggleGroup();
@@ -56,7 +56,7 @@ public class SelectionPageController<T> extends PageControllerBase<T, SelectionP
             ToggleButton button = new ToggleButton();
             button.setText(choice.getKey());
             button.setMinWidth(BUTTON_MIN_WIDTH);
-            button.getStyleClass().add(BUTTON_STYLE_CLASS);
+            button.getStyleClass().addAll(BUTTON_STYLE_CLASSES);
             button.setPadding(BUTTON_INSETS);
             button.setOnAction(e -> onButtonAction(button, choice.getValue()));
 

@@ -205,7 +205,7 @@ public class ImageHelper
         {
             // Just use java.awt graphics for simple scaling
             // drawImage is more lightweight and possibly higher quality than AffineTransform.
-            BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage resized = new BufferedImage(width, height, image.getType());
             Graphics resizedGraphics = resized.createGraphics();
             resizedGraphics.drawImage(image.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null);
             resizedGraphics.dispose();
@@ -277,7 +277,8 @@ public class ImageHelper
                 float[] destMaxVal = new float[nc];
                 Arrays.fill(destMaxVal, 1.0f);
 
-                BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+                BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(),
+                    image.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
                 this2srgb.colorConvert(image.getRaster(), result.getRaster(), minVal, maxVal, destMinVal, destMaxVal);
                 return new ImageHelper(result);
             }

@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.specular.gltf;
+package kintsugi3d.builder.io.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
@@ -35,9 +35,9 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.Locale;
 
-public class SpecularFitGLTFExporter
+public class GLTFExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitGLTFExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GLTFExporter.class);
 
     private final GltfAssetV2 asset;
 
@@ -46,12 +46,12 @@ public class SpecularFitGLTFExporter
     private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture, diffuseTexture,
         diffuseConstantTexture, specularTexture;
 
-    GltfMaterialExtras extraData = new GltfMaterialExtras();
+    GLTFMaterialExtras extraData = new GLTFMaterialExtras();
 
     private String textureFilePrefix;
     private String textureFileFormat;
 
-    public SpecularFitGLTFExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
+    public GLTFExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
     {
         this.asset = glTfAsset;
         this.modelNodeIndex = modelNodeIndex;
@@ -83,7 +83,7 @@ public class SpecularFitGLTFExporter
         Texture tex = getTexForInfo(textureInfo);
         GlTF gltf = asset.getGltf();
 
-        GltfTextureExtras extras = new GltfTextureExtras();
+        GLTFTextureExtras extras = new GLTFTextureExtras();
 
         extras.setBaseRes(baseRes);
 
@@ -221,7 +221,7 @@ public class SpecularFitGLTFExporter
 
     public void addWeightImages(int basisCount, boolean combined)
     {
-        GltfMaterialSpecularWeights weights = new GltfMaterialSpecularWeights();
+        GLTFMaterialSpecularWeights weights = new GLTFMaterialSpecularWeights();
         weights.setStride(combined ? 4 : 1);
         for (int b = 0; b * weights.getStride() < basisCount; b++)
         {
@@ -339,16 +339,21 @@ public class SpecularFitGLTFExporter
     public String getWeightTextureFilename(int weightMapIndex, int weightsPerChannel)
     {
         int scaledWeightMapIndex = weightMapIndex;
+        String extension = textureFileFormat.toLowerCase(Locale.ROOT);
+
+        // If user requested JPEG, force PNG since JPEG doensn't support alpha.
+        extension = "jpeg".equals(extension) || "jpg".equals(extension) ? "PNG" : extension;
+
         if (weightsPerChannel <= 1)
         {
             return String.format("%sweights%02d.%s",
-                textureFilePrefix, scaledWeightMapIndex, textureFileFormat.toLowerCase(Locale.ROOT));
+                textureFilePrefix, scaledWeightMapIndex, extension);
         }
         else
         {
             scaledWeightMapIndex *= weightsPerChannel;
             return String.format("%sweights%02d%02d.%s", textureFilePrefix, scaledWeightMapIndex,
-                scaledWeightMapIndex + (weightsPerChannel - 1), textureFileFormat.toLowerCase(Locale.ROOT));
+                scaledWeightMapIndex + (weightsPerChannel - 1), extension);
         }
     }
 
@@ -426,12 +431,12 @@ public class SpecularFitGLTFExporter
         return createRelativeTexture(uri, null);
     }
 
-    public static SpecularFitGLTFExporter fromVertexGeometry(ReadonlyVertexGeometry geometry) throws IOException
+    public static GLTFExporter fromVertexGeometry(ReadonlyVertexGeometry geometry) throws IOException
     {
         return fromVertexGeometry(geometry, Matrix4.IDENTITY);
     }
 
-    public static SpecularFitGLTFExporter fromVertexGeometry(ReadonlyVertexGeometry geometry, Matrix4 transformation) throws IOException
+    public static GLTFExporter fromVertexGeometry(ReadonlyVertexGeometry geometry, Matrix4 transformation) throws IOException
     {
         GltfModelBuilder builder = GltfModelBuilder.create();
 
@@ -541,7 +546,7 @@ public class SpecularFitGLTFExporter
         // Build model and convert to embedded asset
         GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(builder.build());
 
-        return new SpecularFitGLTFExporter(gltfAsset, scene.getNodeModels().size() - 1);
+        return new GLTFExporter(gltfAsset, scene.getNodeModels().size() - 1);
     }
 
     public String getTextureFilePrefix()

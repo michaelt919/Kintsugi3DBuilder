@@ -85,6 +85,8 @@ public class MainWindowController
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
+    @FXML private Menu workflowMenu;
+
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
@@ -102,12 +104,23 @@ public class MainWindowController
         //and the loaded project's appearance might not match the selected shader
     @FXML private RadioMenuItem imageBased;
 
+    // Menu items which should only be enabled when a project is loaded.
+    @FXML private MenuItem saveMenuItem;
+    @FXML private MenuItem saveAsMenuItem;
+    @FXML private MenuItem closeProjectMenuItem;
+
     //shaders which should only be enabled after processing textures
     @FXML private RadioMenuItem materialMetallicity;
     @FXML private RadioMenuItem materialReflectivity;
     @FXML private RadioMenuItem materialBasis;
     @FXML private RadioMenuItem imgBasedWithTextures;
     @FXML private RadioMenuItem weightmapCombination;
+    @FXML private RadioMenuItem roughnessTexture;
+    @FXML private RadioMenuItem metallicityTexture;
+    @FXML private RadioMenuItem diffuseTexture;
+    @FXML private RadioMenuItem specularTexture;
+    @FXML private RadioMenuItem errorTexture;
+
 
     private final List<Menu> shaderMenuFlyouts = new ArrayList<>(4);
 
@@ -120,6 +133,8 @@ public class MainWindowController
     @FXML private SideBarController leftBarController;
 
     @FXML private Label shaderName;
+
+    private ObservableProjectModel projectModel;
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -173,13 +188,18 @@ public class MainWindowController
         toggleableShaders.add(imgBasedWithTextures);
         toggleableShaders.add(weightmapCombination);
         toggleableShaders.addAll(shaderMenuFlyouts);
+        toggleableShaders.add(roughnessTexture);
+        toggleableShaders.add(metallicityTexture);
+        toggleableShaders.add(diffuseTexture);
+        toggleableShaders.add(specularTexture);
+        toggleableShaders.add(errorTexture);
 
         updateShaderList();
 
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
             ((RadioMenuItem) renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
 
-        ObservableProjectModel projectModel = javaFXState.getProjectModel();
+        projectModel = javaFXState.getProjectModel();
 
         projectModel.getProjectOpenProperty().addListener(obs ->
         {
@@ -224,8 +244,16 @@ public class MainWindowController
                 .concat(StringExpression.stringExpression(resolutionFormatted)));
 
         // Enable shaders which only work after processing textures
-        toggleableShaders.forEach(shader -> shader.disableProperty().bind(
-            projectModel.getProjectLoadedProperty().not().or(projectModel.getProjectProcessedProperty().not())));
+        toggleableShaders.forEach(this::bindEnabledToProjectProcessed);
+
+        // Disable workflow menu options when a project isn't loaded.
+        workflowMenu.getItems().forEach(this::bindEnabledToProjectLoaded);
+        exportMenu.getItems().forEach(this::bindEnabledToProjectLoaded);
+
+        // Disable save / close if a project isn't loaded
+        bindEnabledToProjectLoaded(saveMenuItem);
+        bindEnabledToProjectLoaded(saveAsMenuItem);
+        bindEnabledToProjectLoaded(closeProjectMenuItem);
 
         // Refresh shaders after processing
         projectModel.getProjectProcessedProperty()
@@ -246,9 +274,11 @@ public class MainWindowController
             });
 
         // For re-processing a second time, we still want to switch to the material basis shader (?)
-        // even though the "processed" state technically hasn't changed.
+        // and refresh the number of basis materials, even though the "processed" state technically hasn't changed.
         projectModel.setOnProcessingComplete(event ->
         {
+            MainWindowController.getInstance().updateShaderList();
+
             // Automatically select material basis shader after processing textures
             materialBasis.setSelected(true);
         });
@@ -299,6 +329,17 @@ public class MainWindowController
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
+
+    private void bindEnabledToProjectProcessed(MenuItem shader)
+    {
+        shader.disableProperty().bind(
+            projectModel.getProjectLoadedProperty().not().or(projectModel.getProjectProcessedProperty().not()));
+    }
+
+    private void bindEnabledToProjectLoaded(MenuItem menuItem)
+    {
+        menuItem.disableProperty().bind(projectModel.getProjectLoadedProperty().not());
     }
 
     private void initExportRenderMenu()

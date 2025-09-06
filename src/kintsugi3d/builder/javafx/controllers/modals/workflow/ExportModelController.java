@@ -19,22 +19,15 @@ import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
+import kintsugi3d.builder.io.ExportTexturesRequest;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 
-public class ExportModelController extends NonDataPageControllerBase
+public class ExportModelController extends DeferredProjectSettingsControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
@@ -49,8 +42,6 @@ public class ExportModelController extends NonDataPageControllerBase
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
 
-    private ExportSettings settings;
-
     @Override
     public Region getRootNode()
     {
@@ -60,13 +51,6 @@ public class ExportModelController extends NonDataPageControllerBase
     @Override
     public void initPage()
     {
-        settings = new ExportSettings();
-        settings.setShouldSaveTextures(true);
-        settings.setShouldAppendModelNameToTextures(true); // Give textures better filenames for export
-
-        //Calls a function to set settings to defaults
-        setAllVariables();
-
         StaticUtilities.makeSquareResolutionComboBox(minimumTextureResolutionComboBox);
 
         objFileChooser.setTitle("Save project");
@@ -76,7 +60,14 @@ public class ExportModelController extends NonDataPageControllerBase
         minimumTextureResolutionComboBox.disableProperty()
             .bind(generateLowResolutionCheckBox.selectedProperty().not());
 
-        File loadedProjectFile = Global.state().getIOModel().getLoadedProjectFile();
+        // Bind settings
+        getLocalSettingsModel().bindTextComboBox(formatComboBox, "textureFormat");
+        getLocalSettingsModel().bindBooleanSetting(generateLowResolutionCheckBox, "exportLODEnabled");
+        getLocalSettingsModel().bindNumericComboBox(minimumTextureResolutionComboBox, "minimumLODSize",
+            SquareResolution::new, SquareResolution::getSize);
+        getLocalSettingsModel().bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
+
+        File loadedProjectFile = Global.state().getIOModel().validateHandler().getLoadedProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());
@@ -87,15 +78,12 @@ public class ExportModelController extends NonDataPageControllerBase
     }
 
     @Override
-    public void refresh()
-    {
-    }
-
-    @Override
     public boolean confirm()
     {
-        //Updates settings to equal what widget is displaying
-        saveAllVariables();
+        if (!applySettings())
+        {
+            return false;
+        }
 
         if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
@@ -108,49 +96,21 @@ public class ExportModelController extends NonDataPageControllerBase
             exportLocationFile = objFileChooser.showSaveDialog(root.getScene().getWindow());
             if (exportLocationFile != null)
             {
-                Rendering.getRequestQueue().addGraphicsRequest(new ObservableProjectGraphicsRequest()
-                {
-                    @Override
-                    public <ContextType extends Context<ContextType>> void executeRequest(
-                        ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
+                Rendering.getRequestQueue().addGraphicsRequest(new ExportTexturesRequest(
+                    exportLocationFile,
+                    () ->
                     {
-                        if (settings.shouldSaveModel())
+                        // Display message when all textures have been saved on graphics thread.
+                        //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                        Platform.runLater(() ->
                         {
-                            // Includes textures is shouldSaveTextures is true
-                            renderable.saveGLTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings,
-                                () ->
-                                {
-                                    if (settings.shouldOpenViewerOnceComplete())
-                                    {
-                                        try
-                                        {
-                                            Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
-                                        }
-                                        catch (IOException e)
-                                        {
-                                            LOG.error("Error launching Kintsugi 3D Viewer", e);
-                                        }
-
-                                        // Display message when all textures have been saved on graphics thread.
-                                        //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
-                                        Platform.runLater(() ->
-                                        {
-                                            Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
-                                                "Export Complete!");
-                                            saveInfo.setTitle("Export successful");
-                                            saveInfo.setHeaderText(exportLocationFile.getName());
-                                            saveInfo.show();
-                                        });
-                                    }
-                                });
-                        }
-                        else if (settings.shouldSaveTextures())
-                        {
-                            renderable.getResources().getSpecularMaterialResources()
-                                .saveEssential(settings.getTextureFormat(), exportLocationFile.getParentFile());
-                        }
-                    }
-                });
+                            Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
+                                "Export Complete!");
+                            saveInfo.setTitle("Export successful");
+                            saveInfo.setHeaderText(exportLocationFile.getName());
+                            saveInfo.show();
+                        });
+                    }));
 
                 return true;
             }
@@ -161,27 +121,10 @@ public class ExportModelController extends NonDataPageControllerBase
         }
         catch (RuntimeException ex)
         {
-            LOG.error("Project didn't save correctly", ex);
+            LOG.error("Failed to save project", ex);
+            error("Failed to save project", "An unknown error occurred.");
             return false;
         }
-    }
-
-    //Sets all the settings values on the widget to equal what they are currently
-    private void setAllVariables()
-    {
-        generateLowResolutionCheckBox.setSelected(settings.shouldGenerateLowResTextures());
-        minimumTextureResolutionComboBox.setValue(new SquareResolution(settings.getMinimumTextureResolution()));
-        openViewerOnceCheckBox.setSelected(settings.shouldOpenViewerOnceComplete());
-        formatComboBox.setValue(settings.getTextureFormat());
-    }
-
-    //sets the settings to what the values are set on the widget
-    private void saveAllVariables()
-    {
-        settings.setShouldGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
-        settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue().getSize());
-        settings.setShouldOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
-        settings.setTextureFormat(formatComboBox.getValue());
     }
 
     private void setCurrentDirectoryFile(File currentDirectoryFile)

@@ -18,21 +18,21 @@
    <Label alignment="CENTER" styleClass="wireframeTitle" text="What image do you want to use for tone calibration?" textAlignment="CENTER" />
    <VBox alignment="TOP_CENTER" fillWidth="false" spacing="32.0">
       <AnchorPane>
-         <ToggleButton fx:id="primaryViewImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle" text="Use calibrated reference view" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <ToggleButton fx:id="primaryViewImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Use calibrated reference view" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
             </padding>
          </ToggleButton>
       </AnchorPane>
       <AnchorPane>
-         <ToggleButton fx:id="previousImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle" text="Use previously chosen image" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <ToggleButton fx:id="previousImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Use previously chosen image" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
             </padding>
          </ToggleButton>
       </AnchorPane>
       <AnchorPane>
-         <ToggleButton fx:id="selectImageFileButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle" text="Select image from file..." AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <ToggleButton fx:id="selectImageFileButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Select image from file..." AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
             </padding>

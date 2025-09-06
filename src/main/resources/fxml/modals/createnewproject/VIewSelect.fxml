@@ -38,7 +38,7 @@
       </VBox>
       <VBox spacing="8.0">
          <AnchorPane minHeight="48.0">
-            <Text fx:id="imgViewText" fill="WHITE" fontSmoothingType="LCD" styleClass="wireframeBodyLarge" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="300" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+            <Text fx:id="imgViewText" fill="WHITE" fontSmoothingType="LCD" styleClass="wireframeBodyLarge, text" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="300" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
          </AnchorPane>
          <StackPane VBox.vgrow="ALWAYS">
             <ImageView fx:id="primaryImgView" fitHeight="300.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />

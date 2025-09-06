@@ -21,16 +21,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.fit.SpecularFitRequest;
-import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
-import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.DefaultSettings;
 
-public class SpecularFitController extends NonDataPageControllerBase
+public class SpecularFitController extends DeferredProjectSettingsControllerBase
 {
     @FXML private Pane root;
 
@@ -53,56 +48,15 @@ public class SpecularFitController extends NonDataPageControllerBase
 
     @FXML private CheckBox openViewerOnComplete;
 
-    private final ObservableGeneralSettingsModel localSettingsModel = new ObservableGeneralSettingsModel();
-
     @Override
     public Region getRootNode()
     {
         return root;
     }
 
-    private void bindEpsilonSetting(TextField textField, String settingName)
-    {
-        StaticUtilities.makeClampedNumeric(0, 1, textField);
-        SafeNumberStringConverter converter = new SafeNumberStringConverter(localSettingsModel.getFloat(settingName), "0.###E0");
-        textField.setText(converter.toString(localSettingsModel.getFloat(settingName)));
-        textField.textProperty().bindBidirectional(
-            localSettingsModel.getNumericProperty(settingName),
-            converter);
-    }
-
-    private void bindNormalizedSetting(TextField textField, String settingName)
-    {
-        StaticUtilities.makeClampedNumeric(0, 1, textField);
-        SafeNumberStringConverter converter = new SafeNumberStringConverter(localSettingsModel.getFloat(settingName));
-        textField.setText(converter.toString(localSettingsModel.getFloat(settingName)));
-        textField.textProperty().bindBidirectional(
-            localSettingsModel.getNumericProperty(settingName),
-            converter);
-    }
-
-    private void bindNonNegativeIntegerSetting(TextField textField, String settingName, int maxValue)
-    {
-        StaticUtilities.makeClampedInteger(0, maxValue, textField);
-        SafeNumberStringConverter converter = new SafeNumberStringConverter(localSettingsModel.getInt(settingName));
-        textField.setText(converter.toString(localSettingsModel.getInt(settingName)));
-        textField.textProperty().bindBidirectional(
-            localSettingsModel.getNumericProperty(settingName),
-            converter);
-    }
-
-    private void bindBooleanSetting(CheckBox checkBox, String settingName)
-    {
-        checkBox.setSelected(localSettingsModel.getBoolean(settingName));
-        checkBox.selectedProperty().bindBidirectional(
-            localSettingsModel.getBooleanProperty(settingName));
-    }
-
     @Override
     public void initPage()
     {
-        DefaultSettings.applyProjectDefaults(localSettingsModel);
-
         StaticUtilities.makeSquareResolutionComboBox(resolutionComboBox);
 
         advancedAccordion.expandedPaneProperty().addListener(
@@ -110,64 +64,34 @@ public class SpecularFitController extends NonDataPageControllerBase
                 // Use Platform.runLater since the scene layout seems to not be updated yet at this point.
                 Platform.runLater(root.getScene().getWindow()::sizeToScene));
 
+        // Bind settings
+        getLocalSettingsModel().bindNumericComboBox(resolutionComboBox, "textureSize", SquareResolution::new, SquareResolution::getSize);
+        getLocalSettingsModel().bindNonNegativeIntegerSetting(basisCountTextField, "basisCount", 256);
+        getLocalSettingsModel().bindNormalizedSetting(specularMinWidthTextField, "specularMinWidthFrac");
+        getLocalSettingsModel().bindNormalizedSetting(specularSmoothnessTextField, "specularMaxWidthFrac");
+        getLocalSettingsModel().bindBooleanSetting(translucencyCheckBox, "constantTermEnabled");
+        getLocalSettingsModel().bindNonNegativeIntegerSetting(mfdResolutionTextField, "basisResolution", 8192);
+        getLocalSettingsModel().bindNormalizedSetting(specularComplexityTextField, "basisComplexityFrac");
+        getLocalSettingsModel().bindNormalizedSetting(metallicityTextField, "metallicity");
+        getLocalSettingsModel().bindBooleanSetting(smithCheckBox, "smithMaskingShadowingEnabled");
+        getLocalSettingsModel().bindEpsilonSetting(convergenceToleranceTextField, "convergenceTolerance");
+        getLocalSettingsModel().bindBooleanSetting(normalRefinementCheckBox, "normalOptimizationEnabled");
+        getLocalSettingsModel().bindNormalizedSetting(minNormalDampingTextField, "minNormalDamping");
+        getLocalSettingsModel().bindNonNegativeIntegerSetting(normalSmoothingIterationsTextField, "normalSmoothIterations", 8192);
+        getLocalSettingsModel().bindNonNegativeIntegerSetting(unsuccessfulLMIterationsTextField, "unsuccessfulLMIterationsAllowed", Integer.MAX_VALUE);
+        getLocalSettingsModel().bindBooleanSetting(openViewerOnComplete, "openViewerOnProcessingComplete");
+
         setCanAdvance(true);
         setCanConfirm(true);
-    }
-
-    @Override
-    public void refresh()
-    {
-        // Populate local model with the current project settings.
-        IOModel ioModel = Global.state().getIOModel();
-        if (ioModel.hasValidHandler())
-        {
-            localSettingsModel.copyFrom(ioModel.getLoadedViewSet().getProjectSettings());
-        }
-
-        // Manually bind resolution both ways as a combo box.
-        resolutionComboBox.valueProperty().addListener(
-            (obs, oldValue, newValue) ->
-                localSettingsModel.set("textureSize", newValue.getSize()));
-        localSettingsModel.getNumericProperty("textureSize").addListener(
-            (obs, oldValue, newValue) ->
-                resolutionComboBox.setValue(new SquareResolution(newValue.intValue())));
-        resolutionComboBox.setValue(new SquareResolution(localSettingsModel.getInt("textureSize")));
-
-        // Bind everything else.
-        bindNonNegativeIntegerSetting(basisCountTextField, "basisCount", 256);
-        bindNormalizedSetting(specularMinWidthTextField, "specularMinWidthFrac");
-        bindNormalizedSetting(specularSmoothnessTextField, "specularMaxWidthFrac");
-        bindBooleanSetting(translucencyCheckBox, "constantTermEnabled");
-        bindNonNegativeIntegerSetting(mfdResolutionTextField, "basisResolution", 8192);
-        bindNormalizedSetting(specularComplexityTextField, "basisComplexityFrac");
-        bindNormalizedSetting(metallicityTextField, "metallicity");
-        bindBooleanSetting(smithCheckBox, "smithMaskingShadowingEnabled");
-        bindEpsilonSetting(convergenceToleranceTextField, "convergenceTolerance");
-        bindBooleanSetting(normalRefinementCheckBox, "normalOptimizationEnabled");
-        bindNormalizedSetting(minNormalDampingTextField, "minNormalDamping");
-        bindNonNegativeIntegerSetting(normalSmoothingIterationsTextField, "normalSmoothIterations", 8192);
-        bindNonNegativeIntegerSetting(unsuccessfulLMIterationsTextField, "unsuccessfulLMIterationsAllowed", Integer.MAX_VALUE);
-        bindBooleanSetting(openViewerOnComplete, "openViewerOnProcessingComplete");
-    }
-
-    @FXML
-    public boolean cancel()
-    {
-        return true;
     }
 
     @FXML
     public boolean confirm()
     {
-        IOModel ioModel = Global.state().getIOModel();
-        if (!ioModel.hasValidHandler())
+        if (!applySettings())
         {
-            error("Failed to start process", "No project is loaded.");
             return false;
         }
-
-        // Apply settings so they're seen by the SpecularFitRequest and also remembered for later.
-        ioModel.getLoadedViewSet().getProjectSettings().copyFrom(localSettingsModel);
 
         if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
@@ -181,4 +105,5 @@ public class SpecularFitController extends NonDataPageControllerBase
 
         return true;
     }
+
 }

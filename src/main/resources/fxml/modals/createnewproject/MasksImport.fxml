@@ -21,7 +21,7 @@
    <VBox spacing="32.0">
       <AnchorPane>
          <ToggleButton fx:id="useProjectMasksButton" minWidth="400.0" mnemonicParsing="false"
-                       styleClass="wireframeSubtitle" text="Use imported project masks" AnchorPane.bottomAnchor="0.0"
+                       styleClass="wireframeSubtitle, toggleButtonLarge" text="Use imported project masks" AnchorPane.bottomAnchor="0.0"
                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
@@ -30,7 +30,7 @@
       </AnchorPane>
       <AnchorPane>
          <ToggleButton fx:id="customMasksDirButton" minWidth="400.0" mnemonicParsing="false"
-                       styleClass="wireframeSubtitle" text="Choose masks directory" AnchorPane.bottomAnchor="0.0"
+                       styleClass="wireframeSubtitle, toggleButtonLarge" text="Choose masks directory" AnchorPane.bottomAnchor="0.0"
                        AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
@@ -38,7 +38,7 @@
          </ToggleButton>
       </AnchorPane>
       <AnchorPane>
-         <ToggleButton fx:id="noMasksButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle"
+         <ToggleButton fx:id="noMasksButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge"
                        text="Do not use masks" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                        AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>

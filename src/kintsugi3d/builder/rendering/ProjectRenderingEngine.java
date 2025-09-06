@@ -14,8 +14,8 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.specular.SpecularFitLODGenerator;
-import kintsugi3d.builder.io.specular.gltf.SpecularFitGLTFExporter;
+import kintsugi3d.builder.io.LODGenerator;
+import kintsugi3d.builder.io.gltf.GLTFExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
 {
@@ -482,7 +481,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
                 transform = getSceneModel().getObjectModel() == null ? Matrix4.IDENTITY : getSceneModel().getObjectModel().getTransformationMatrix().times(transform);
 
-                SpecularFitGLTFExporter exporter = SpecularFitGLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                GLTFExporter exporter = GLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
 
                 if (settings.shouldAppendModelNameToTextures())
                 {
@@ -498,6 +497,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
                     exporter.setTextureFilePrefix(baseName + "_");
                 }
+
+                exporter.setTextureFileFormat(settings.getTextureFormat());
 
                 exporter.setDefaultNames();
 
@@ -555,7 +556,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         }
     }
 
-    private void exportTextures(File outputDirectory, SpecularFitGLTFExporter exporter, ExportSettings settings, Runnable finishedCallback)
+    private void exportTextures(File outputDirectory, GLTFExporter exporter, ExportSettings settings, Runnable finishedCallback)
     {
         SpecularMaterialResources<ContextType> materialResources = resources.getSpecularMaterialResources();
         String textureFormat = settings.getTextureFormat();
@@ -568,18 +569,21 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         materialResources.saveORMMap(textureFormat, outputDirectory, exporter.getRoughnessMetallicTextureFilename());
         materialResources.saveSpecularReflectivityMap(textureFormat, outputDirectory, exporter.getSpecularTextureFilename());
         materialResources.saveSpecularRoughnessMap(textureFormat, outputDirectory,
-            String.format("%sroughness%s", textureFilePrefix, textureFormat.toLowerCase(Locale.ROOT)));
+            String.format("%sroughness.%s", textureFilePrefix, textureFormat.toLowerCase(Locale.ROOT)));
 
         // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
 
+        // If user requested JPEG, force PNG since JPEG doensn't support alpha.
+        String weightmapFormat = "JPEG".equals(textureFormat) ? "PNG" : textureFormat;
+
         if (settings.shouldCombineWeights())
         {
-            materialResources.savePackedWeightMaps(textureFormat, outputDirectory,
+            materialResources.savePackedWeightMaps(weightmapFormat, outputDirectory,
                 index -> exporter.getWeightTextureFilename(index, 4));
         }
         else
         {
-            materialResources.saveUnpackedWeightMaps(textureFormat, outputDirectory,
+            materialResources.saveUnpackedWeightMaps(weightmapFormat, outputDirectory,
                 index -> exporter.getWeightTextureFilename(index, 1));
         }
 
@@ -588,19 +592,25 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
         if (settings.shouldGenerateLowResTextures())
         {
+            LODGenerator lodGenerator = LODGenerator.getInstance();
+
+            // Everything except weight textures
+            lodGenerator.generateLODs(textureFormat, settings.getMinimumTextureResolution(), outputDirectory,
+                exporter.getDiffuseTextureFilename(),
+                exporter.getNormalTextureFilename(),
+                exporter.getDiffuseConstantTextureFilename(),
+                exporter.getBaseColorTextureFilename(),
+                exporter.getRoughnessMetallicTextureFilename(),
+                exporter.getSpecularTextureFilename());
+
+            // Weight textures
+            // If user requested JPEG, force PNG since JPEG doesn't support alpha.
             int basisCount = materialResources.getBasisResources().getBasisCount();
-            SpecularFitLODGenerator.getInstance().generateLODs(settings.getTextureFormat(), settings.getMinimumTextureResolution(),
-                Stream.concat(Stream.of(
-                        exporter.getDiffuseTextureFilename(),
-                        exporter.getNormalTextureFilename(),
-                        exporter.getDiffuseConstantTextureFilename(),
-                        exporter.getBaseColorTextureFilename(),
-                        exporter.getRoughnessMetallicTextureFilename(),
-                        exporter.getSpecularTextureFilename()),
-                        IntStream.range(0, settings.shouldCombineWeights() ? (basisCount + 3) / 4 : basisCount)
-                            .mapToObj(index -> exporter.getWeightTextureFilename(index, settings.shouldCombineWeights() ? 4 : 1)))
-                    .map(filename -> new File(outputDirectory, filename))
-                    .toArray(File[]::new));
+            lodGenerator.generateLODs("JPEG".equals(textureFormat) ? "PNG" : textureFormat,
+                settings.getMinimumTextureResolution(), outputDirectory,
+                IntStream.range(0, settings.shouldCombineWeights() ? (basisCount + 3) / 4 : basisCount)
+                    .mapToObj(index -> exporter.getWeightTextureFilename(index, settings.shouldCombineWeights() ? 4 : 1))
+                    .toArray(String[]::new));
         }
 
         if (finishedCallback != null)

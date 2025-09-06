@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.specular;
+package kintsugi3d.builder.io;
 
 import kintsugi3d.gl.util.ImageHelper;
 import org.slf4j.Logger;
@@ -18,31 +18,33 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public final class SpecularFitLODGenerator
+public final class LODGenerator
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitLODGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LODGenerator.class);
 
-    private static final SpecularFitLODGenerator INSTANCE = new SpecularFitLODGenerator();
+    private static final LODGenerator INSTANCE = new LODGenerator();
 
-    public static SpecularFitLODGenerator getInstance()
+    public static LODGenerator getInstance()
     {
         return INSTANCE;
     }
 
-    private SpecularFitLODGenerator()
+    private LODGenerator()
     {
     }
 
-    public void generateLODs(String format, int minResolution, File... originalImageFiles)
+    public void generateLODs(String format, int minResolution, File directory, String... originalImageFilenames)
     {
-        for (File file : originalImageFiles)
+        for (String filename : originalImageFilenames)
         {
-            generateLODs(format, minResolution, file);
+            generateLODs(format, minResolution, directory, filename);
         }
     }
 
-    public void generateLODs(String format, int minResolution, File originalImageFile)
+    public void generateLODs(String format, int minResolution, File directory, String originalImageFilename)
     {
+        File originalImageFile = new File(directory, originalImageFilename);
+
         try
         {
             if (originalImageFile.exists()) // Among other things, should catch when constant.png doesn't exist.

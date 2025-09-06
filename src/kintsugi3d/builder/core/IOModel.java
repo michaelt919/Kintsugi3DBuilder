@@ -264,7 +264,6 @@ public class IOModel
         this.handler.saveGLTF(outputDirectory, new ExportSettings() /* defaults */);
     }
 
-
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
         return this.handler.getLuminanceEncodingFunction();
@@ -288,5 +287,19 @@ public class IOModel
     public boolean hasValidHandler()
     {
         return this.handler != null && this.handler.isInstanceLoaded();
+    }
+
+    /**
+     * Checks if this has a valid project instance loaded.  Otherwise, throws an IllegalStateException.
+     * @return This model if it has a valid project instance.
+     */
+    public IOModel validateHandler()
+    {
+        if (!hasValidHandler())
+        {
+            throw new IllegalStateException("No project loaded.");
+        }
+
+        return this;
     }
 }

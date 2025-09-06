@@ -32,12 +32,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, ObservableGraphicsRequest
+public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
 
     private static final boolean DEBUG_IMAGES = false;
+
+    public SpecularFitRequest(SpecularFitRequestParams settings)
+    {
+        this.settings = settings;
+    }
 
     /**
      * Default constructor for CLI args requests
@@ -58,7 +63,9 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
 
     private static SpecularFitRequestParams getSettingsFromProject()
     {
-        GeneralSettingsModel projectSettings = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
+        GeneralSettingsModel projectSettings = Global.state().getIOModel()
+            .validateHandler()
+            .getLoadedViewSet().getProjectSettings();
 
         // Start with texture size
         int textureSize = projectSettings.getInt("textureSize");
@@ -100,11 +107,6 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest //, 
         settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
 
         return settings;
-    }
-
-    public SpecularFitRequest(SpecularFitRequestParams settings)
-    {
-        this.settings = settings;
     }
 
     /**

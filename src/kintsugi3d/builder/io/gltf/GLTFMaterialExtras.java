@@ -9,11 +9,11 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.specular.gltf;
+package kintsugi3d.builder.io.gltf;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
 
-public class GltfMaterialExtras
+public class GLTFMaterialExtras
 {
 
     private TextureInfo diffuseTexture = null;
@@ -24,7 +24,7 @@ public class GltfMaterialExtras
 
     private String basisFunctionsUri = null;
 
-    private GltfMaterialSpecularWeights specularWeights = null;
+    private GLTFMaterialSpecularWeights specularWeights = null;
 
     public TextureInfo getSpecularTexture()
     {
@@ -46,12 +46,12 @@ public class GltfMaterialExtras
         this.basisFunctionsUri = basisFunctionsUri;
     }
 
-    public GltfMaterialSpecularWeights getSpecularWeights()
+    public GLTFMaterialSpecularWeights getSpecularWeights()
     {
         return specularWeights;
     }
 
-    public void setSpecularWeights(GltfMaterialSpecularWeights specularWeights)
+    public void setSpecularWeights(GLTFMaterialSpecularWeights specularWeights)
     {
         this.specularWeights = specularWeights;
     }

@@ -13,6 +13,7 @@ package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
@@ -34,7 +35,7 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
-    @FXML private Text camPositionsTxt;
+    @FXML private Label camPositionsTxt;
     @FXML private CheckBox undistortImagesCheckBox;
 
     private Stage thisStage;

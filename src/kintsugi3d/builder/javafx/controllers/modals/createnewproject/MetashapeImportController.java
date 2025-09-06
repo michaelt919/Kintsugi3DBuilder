@@ -17,6 +17,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
@@ -37,7 +38,7 @@ import java.util.Optional;
 
 public class MetashapeImportController extends DataSourcePageControllerBase<InputSource>
 {
-    @FXML private Text fileNameTxtField;
+    @FXML private Label fileNameTxtField;
     @FXML private Pane rootPane;
     @FXML private Text loadMetashapeObject;
 
