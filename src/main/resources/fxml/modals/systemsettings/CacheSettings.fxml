@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.layout.VBox?>
-<VBox alignment="TOP_CENTER" spacing="32.0" styleClass="modal-root"
+<VBox alignment="TOP_CENTER" spacing="32.0" styleClass="content-root"
       stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">

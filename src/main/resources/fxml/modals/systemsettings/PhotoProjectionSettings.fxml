@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<GridPane hgap="16.0" styleClass="modal-root" stylesheets="@../../kintsugiStyling.css" vgap="16.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController">
+<GridPane alignment="TOP_CENTER" hgap="16.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" vgap="16.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.AdvPhotoViewController">
     <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Limit blended views per pixel:" GridPane.columnSpan="3" GridPane.rowIndex="0">
     </CheckBox>
     <TextField fx:id="buehlerTextField" maxWidth="100.0" prefHeight="0.0" prefWidth="99.0" styleClass="wireframeBody" GridPane.columnIndex="2" GridPane.rowIndex="0">

@@ -13,34 +13,25 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<AnchorPane styleClass="modal-root" fx:id="root" prefHeight="151.0" prefWidth="200.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemMemoryController">
-   <FlowPane hgap="10.0" prefWidth="200.0" vgap="10.0">
-      <padding>
-         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-      </padding>
-      <VBox spacing="10.0">
-         <CheckBox fx:id="maxMemCheckbox" maxWidth="-Infinity" mnemonicParsing="false" prefHeight="25.0" prefWidth="142.0" text="Limit Memory Usage" />
-         <HBox>
-            <Spinner fx:id="maxMemSpinner" editable="true" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="97.0">
-               <valueFactory>
-                  <SpinnerValueFactory.IntegerSpinnerValueFactory max="10" min="0" />
-               </valueFactory>
-            </Spinner>
-            <Label prefHeight="25.0" prefWidth="47.0" text="MB">
-               <padding>
-                  <Insets left="10.0" />
-               </padding>
-            </Label>
-         </HBox>
-      </VBox>
-   </FlowPane>
-   <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" prefHeight="0.0" prefWidth="200.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-      <children>
-         <Button fx:id="applyButton" mnemonicParsing="false" onAction="#button_Apply" text="Apply" />
-      </children>
-      <padding>
-         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-      </padding>
-   </HBox>
-</AnchorPane>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox alignment="TOP_CENTER" fillWidth="false" spacing="16.0" styleClass="content-root"
+      stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemMemoryController">
+    <CheckBox fx:id="maxMemCheckbox" mnemonicParsing="false" styleClass="wireframeBody" text="Limit Memory Usage"/>
+    <HBox alignment="CENTER_LEFT" spacing="16.0">
+        <Spinner fx:id="maxMemSpinner" editable="true" maxWidth="80.0" styleClass="wireframeBody">
+            <valueFactory>
+                <SpinnerValueFactory.IntegerSpinnerValueFactory max="10" min="0"/>
+            </valueFactory>
+        </Spinner>
+        <Label styleClass="wireframeBody" text="MB"/>
+        <padding>
+            <Insets left="16.0"/>
+        </padding>
+    </HBox>
+    <HBox alignment="CENTER_RIGHT">
+        <Button mnemonicParsing="false" onAction="#button_Apply" styleClass="wireframeBodyLarge" text="Apply"/>
+    </HBox>
+</VBox>

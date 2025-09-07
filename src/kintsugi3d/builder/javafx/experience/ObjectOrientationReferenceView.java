@@ -11,7 +11,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     public void initialize(Window parentWindow)
     {
         // State isn't used so we can initialize with just the parentWindow.
-        initialize(parentWindow, null);
+        initialize(parentWindow, getState());
     }
 
     @Override
@@ -24,7 +24,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     protected void open() throws IOException
     {
         buildPagedModal(new CurrentProjectViewSelectable())
-            .<OrientationViewSelectController>then("/fxml/modals/createnewproject/VIewSelect.fxml")
+            .<OrientationViewSelectController>then("/fxml/modals/createnewproject/ViewSelect.fxml")
             .finish();
     }
 }

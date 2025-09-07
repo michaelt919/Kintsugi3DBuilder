@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.util.Launch4jConfiguration;
@@ -33,9 +32,6 @@ public class SystemMemoryController implements SystemSettingsControllerBase
 
     @FXML private CheckBox maxMemCheckbox;
     @FXML private Spinner<Integer> maxMemSpinner;
-    @FXML private Button okButton;
-    @FXML private Button applyButton;
-    @FXML private AnchorPane root;
 
     private Launch4jConfiguration configuration;
 
@@ -53,6 +49,9 @@ public class SystemMemoryController implements SystemSettingsControllerBase
             configuration = Launch4jConfiguration.empty();
         }
 
+        // Disable spinner if limit memory usage is unchecked.
+        maxMemSpinner.disableProperty().bind(maxMemCheckbox.selectedProperty().not());
+
         maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
         maxMemSpinner.setValueFactory(
             new IntegerSpinnerValueFactory(MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
@@ -61,7 +60,7 @@ public class SystemMemoryController implements SystemSettingsControllerBase
     public void button_Apply()
     {
         configuration.setEnableMaxMemory(maxMemCheckbox.isSelected());
-        configuration.setMaxMemoryMb((Integer)maxMemSpinner.getValue());
+        configuration.setMaxMemoryMb(maxMemSpinner.getValue());
 
         ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
         try

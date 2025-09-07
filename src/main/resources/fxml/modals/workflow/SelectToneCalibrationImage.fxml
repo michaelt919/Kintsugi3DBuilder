@@ -14,7 +14,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SelectToneCalibrationImageController">
+<VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SelectToneCalibrationImageController">
    <Label alignment="CENTER" styleClass="wireframeTitle" text="What image do you want to use for tone calibration?" textAlignment="CENTER" />
    <VBox alignment="TOP_CENTER" fillWidth="false" spacing="32.0">
       <AnchorPane>

@@ -13,6 +13,6 @@ public class SpecularFit extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        openPagedModel("/fxml/modals/SpecularFit.fxml");
+        openPagedModel("/fxml/modals/workflow/SpecularFit.fxml");
     }
 }

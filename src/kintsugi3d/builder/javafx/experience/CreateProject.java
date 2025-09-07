@@ -13,7 +13,7 @@ public class CreateProject extends ExperienceBase
     private static final String METASHAPE_IMPORT = "/fxml/modals/createnewproject/MetashapeImport.fxml";
     public static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
     private static final String MASKS_IMPORT = "/fxml/modals/createnewproject/MasksImport.fxml";
-    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/VIewSelect.fxml";
+    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
 
     private Runnable confirmCallback;
 

@@ -15,7 +15,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
@@ -35,9 +34,7 @@ public class ObjectVisualsController implements SystemSettingsControllerBase
 
     @FXML private CheckBox imageCompressionCheckBox;
     @FXML private CheckBox preloadVisibilityEtcCheckBox;
-    @FXML private Label widthLabel;
     @FXML private TextField depthWidthTxtField;
-    @FXML private Label heightLabel;
     @FXML private TextField depthHeightTxtField;
     @FXML private CheckBox mipmapCheckBox;
     @FXML private CheckBox reduceViewportResCheckBox;
@@ -45,6 +42,10 @@ public class ObjectVisualsController implements SystemSettingsControllerBase
     @Override
     public void initializeSettingsPage(Window parentWindow, JavaFXState state)
     {
+        // Disable width / height fields for depth maps if they are disabled.
+        depthWidthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
+        depthHeightTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
+
         imageCompressionCheckBox.selectedProperty().bindBidirectional(
             state.getLoadOptionsModel().compression);
 

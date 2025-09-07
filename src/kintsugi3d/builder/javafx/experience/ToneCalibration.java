@@ -12,9 +12,9 @@ import java.io.IOException;
 public class ToneCalibration extends ExperienceBase
 {
 
-    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/VIewSelect.fxml";
-    public static final String SELECT_TONE_CALIBRATION_IMAGE = "/fxml/modals/SelectToneCalibrationImage.fxml";
-    public static final String EYEDROPPER = "/fxml/modals/EyedropperColorChecker.fxml";
+    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
+    public static final String SELECT_TONE_CALIBRATION_IMAGE = "/fxml/modals/workflow/SelectToneCalibrationImage.fxml";
+    public static final String EYEDROPPER = "/fxml/modals/workflow/EyedropperColorChecker.fxml";
 
     @Override
     public String getName()

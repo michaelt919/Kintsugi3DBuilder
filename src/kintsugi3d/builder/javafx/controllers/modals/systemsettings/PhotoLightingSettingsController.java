@@ -15,7 +15,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.core.JavaFXState;
-import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 
 public class PhotoLightingSettingsController implements SystemSettingsControllerBase
 {
@@ -24,11 +23,13 @@ public class PhotoLightingSettingsController implements SystemSettingsController
     @FXML private CheckBox phyMaskingCheckBox;
     @FXML private CheckBox relightingCheckBox;
     @FXML private CheckBox visibleLightWidgetsCheckBox;
-    private final SafeNumberStringConverter numberStringConverter = new SafeNumberStringConverter(0);
 
     @Override
     public void initializeSettingsPage(Window parentWindow, JavaFXState state)
     {
+        // Disable option for light widgets if relighting is disabled.
+        visibleLightWidgetsCheckBox.disableProperty().bind(relightingCheckBox.selectedProperty().not());
+
         fresnelEffectCheckBox.selectedProperty().bindBidirectional(
             state.getSettingsModel().getBooleanProperty("fresnelEnabled"));
         phyMaskingCheckBox.selectedProperty().bindBidirectional(
