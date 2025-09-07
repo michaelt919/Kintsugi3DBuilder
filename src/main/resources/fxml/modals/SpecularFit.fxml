@@ -21,16 +21,16 @@
          <ComboBox fx:id="resolutionComboBox" promptText="Select a resolution..." styleClass="wireframeBody" />
         </HBox>
         <HBox alignment="CENTER_LEFT" spacing="16.0">
-            <Label styleClass="wireframeBody" text="Specular count:" />
+            <Label styleClass="wireframeBody" text="Specular material count:" />
             <TextField fx:id="basisCountTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="8" />
         </HBox>
         <HBox alignment="CENTER_LEFT" spacing="16.0">
-            <Label styleClass="wireframeBody" text="Min specular width:" />
+            <Label styleClass="wireframeBody" text="Sharp highlight suppression:" />
             <TextField fx:id="specularMinWidthTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="0.2" />
         </HBox>
-      <CheckBox fx:id="normalRefinementCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Normal refinement" />
-        <CheckBox fx:id="translucencyCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Fit translucency" />
-        <CheckBox fx:id="openViewerOnComplete" mnemonicParsing="false" styleClass="wireframeBody" text="Open Viewer once complete" />
+      <CheckBox fx:id="normalRefinementCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Optimize normal map" />
+        <CheckBox fx:id="translucencyCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Use translucency texture&#10;(not supported by Sketchfab or Blender)" />
+        <CheckBox fx:id="openViewerOnComplete" mnemonicParsing="false" styleClass="wireframeBody" text="Open Kintsugi 3D Viewer once complete" />
       <Accordion fx:id="advancedAccordion" minWidth="360.0">
         <panes>
           <TitledPane animated="false" expanded="false" text="Advanced">
