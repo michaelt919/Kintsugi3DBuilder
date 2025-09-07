@@ -84,6 +84,7 @@ public class MainWindowController
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
+    @FXML private MenuItem file_exportGLTFModel;
 
     @FXML private Menu workflowMenu;
 
@@ -168,6 +169,7 @@ public class MainWindowController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         this.leftBarController.init(javaFXState.getTabModels());
+
 
         initExportRenderMenu();
         initToggleGroups();
@@ -254,6 +256,7 @@ public class MainWindowController
         bindEnabledToProjectLoaded(saveMenuItem);
         bindEnabledToProjectLoaded(saveAsMenuItem);
         bindEnabledToProjectLoaded(closeProjectMenuItem);
+        bindEnabledToProjectLoaded(file_exportGLTFModel);
 
         // Refresh shaders after processing
         projectModel.getProjectProcessedProperty()

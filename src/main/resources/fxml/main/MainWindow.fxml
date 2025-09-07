@@ -56,7 +56,7 @@
                         </accelerator>
                     </MenuItem>
                     <SeparatorMenuItem mnemonicParsing="false"/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ExportModel" text="Export glTF..."/>
+                    <MenuItem fx:id="file_exportGLTFModel" mnemonicParsing="false" onAction="#openExperience" userData="ExportModel" text="Export glTF Model..."/>
                     <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export"/>
                     <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false"/>
                     <SeparatorMenuItem/>
@@ -112,7 +112,7 @@
                                                 shortcut="UP"/>
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ExportModel" text="Export glTF..."/>
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ExportModel" text="Export glTF Model..."/>
                     <MenuItem mnemonicParsing="false" onAction="#launchViewerApp"
                               text="Launch Kintsugi 3D Viewer"/>
                 </Menu>
