@@ -14,46 +14,38 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.Cursor?>
-<?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="196.0" prefWidth="260.0" styleClass="modal-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
-    <VBox spacing="10.0">
-        <padding>
-            <Insets bottom="7.0" left="7.0" right="7.0" top="7.0"/>
-        </padding>
-        <Button mnemonicParsing="false" onAction="#clearCache" text="Clear Cache"/>
-        <!--            <CheckBox mnemonicParsing="false" selected="true" text="Auto Cache Clearing (UNFINISHED)" />-->
-        <Accordion styleClass="accordion">
-            <panes>
-                <TitledPane prefWidth="500.0" styleClass="titled-pane" text="Cache Path">
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="200.0" styleClass="cache-settings-root">
-                        <VBox spacing="7.0">
-                            <padding>
-                                <Insets bottom="7.0" left="7.0" right="7.0" top="7.0"/>
-                            </padding>
-                            <Label text="  Current Cache Paths: "/>
-                            <Label fx:id="previewImageCacheLabel" onMouseClicked="#openDirectory"
-                                   text="No Path Set">
-                                <VBox.margin>
-                                    <Insets left="16.0"/>
-                                </VBox.margin>
-                                <cursor>
-                                    <Cursor fx:constant="HAND"/>
-                                </cursor>
-                            </Label>
-                            <Label fx:id="specularFitCacheLabel" onMouseClicked="#openDirectory"
-                                   text="No Path Set">
-                                <VBox.margin>
-                                    <Insets left="16.0"/>
-                                </VBox.margin>
-                                <cursor>
-                                    <Cursor fx:constant="HAND"/>
-                                </cursor>
-                            </Label>
-                            <Button disable="true" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Set Cache Path"/>
-                        </VBox>
-                    </AnchorPane>
-                </TitledPane>
-            </panes>
-        </Accordion>
-    </VBox>
-</AnchorPane>
+<?import javafx.scene.layout.VBox?>
+<VBox alignment="TOP_CENTER" spacing="32.0" styleClass="modal-root"
+      stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
+    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Clear Cache"/>
+    <TitledPane styleClass="titled-pane, wireframeBody" text="Cache Path">
+        <VBox spacing="8.0" styleClass="cache-settings-root">
+            <padding>
+                <Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/>
+            </padding>
+            <Label styleClass="wireframeBody" text="  Current Cache Paths: "/>
+            <Label fx:id="previewImageCacheLabel" onMouseClicked="#openDirectory" styleClass="wireframeBody"
+                   text="No Path Set">
+                <VBox.margin>
+                    <Insets left="16.0"/>
+                </VBox.margin>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </Label>
+            <Label fx:id="specularFitCacheLabel" onMouseClicked="#openDirectory" styleClass="wireframeBody"
+                   text="No Path Set">
+                <VBox.margin>
+                    <Insets left="16.0"/>
+                </VBox.margin>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </Label>
+            <Button disable="true" layoutX="10.0" layoutY="10.0" managed="false" mnemonicParsing="false"
+                    text="Set Cache Path" visible="false"/>
+        </VBox>
+    </TitledPane>
+</VBox>

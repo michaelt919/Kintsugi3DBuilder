@@ -12,20 +12,9 @@
   -->
 
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.layout.*?>
-<GridPane prefHeight="600.0" prefWidth="800.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css"
-          xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController">
-    <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" maxWidth="250.0" minWidth="10.0" prefWidth="250"/>
-        <ColumnConstraints hgrow="SOMETIMES" maxWidth="250.0" minWidth="0.0" prefWidth="250"/>
-    </columnConstraints>
-    <rowConstraints>
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-    </rowConstraints>
-    <ListView fx:id="settingsListView" styleClass="list-view" GridPane.rowSpan="3"/>
-    <fx:include fx:id="settingsFxmlHost" styleClass="modal-root" source="Dummy.fxml" GridPane.rowSpan="2"
-                GridPane.columnIndex="1"/>
-</GridPane>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<HBox prefWidth="800.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.SystemSettingsController">
+    <ListView fx:id="settingsListView" styleClass="list-view" />
+    <StackPane fx:id="settingsFxmlHost" styleClass="modal-root" HBox.hgrow="ALWAYS" />
+</HBox>

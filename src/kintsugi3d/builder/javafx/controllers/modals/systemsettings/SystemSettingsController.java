@@ -15,7 +15,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.ListView;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ public class SystemSettingsController
 {
     private static final Logger LOG = LoggerFactory.getLogger(SystemSettingsController.class);
 
-    @FXML private AnchorPane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
+    @FXML private Pane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
     //TODO: NEED TO REAPPLY ALL DEFAULT CHECKBOX SETTINGS
     @FXML private ListView<String> settingsListView;
 
@@ -56,8 +56,6 @@ public class SystemSettingsController
         //initialize listeners for cell items
         settingsListView.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) ->
         {
-            String selectedItem = settingsListView.getSelectionModel().getSelectedItem();
-
             //remove spaces from string and append ".fxml"
             String fileName = SETTINGS_PAGES.get(observableValue.getValue());
 
@@ -90,11 +88,6 @@ public class SystemSettingsController
     {
         settingsListView.getItems().clear();
         settingsListView.getItems().addAll(SETTINGS_PAGES.keySet());
-    }
-
-    public Window getHostWindow()
-    {
-        return settingsFxmlHost.getScene().getWindow();
     }
 }
 
