@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import kintsugi3d.builder.preferences.serialization.SettingsModelDeserializer;
 import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 
+import java.util.Collection;
+
 @JsonSerialize(as = GeneralSettingsModel.class, using = SettingsModelSerializer.class)
 @JsonDeserialize(as = GeneralSettingsModel.class, using = SettingsModelDeserializer.class)
 public interface GeneralSettingsModel extends ReadonlyGeneralSettingsModel
@@ -51,5 +53,14 @@ public interface GeneralSettingsModel extends ReadonlyGeneralSettingsModel
     default void createObjectSetting(String name, Object initialValue, boolean serialize)
     {
         createSetting(name, initialValue == null ? Object.class : initialValue.getClass(), initialValue, serialize);
+    }
+
+    void copyFrom(ReadonlyGeneralSettingsModel other, Collection<String> settingNames);
+
+    void copyFrom(ReadonlyGeneralSettingsModel other, String... settingNames);
+
+    default boolean existsForSet(String name, Class<?> settingType)
+    {
+        return exists(name) && getType(name).isAssignableFrom(settingType);
     }
 }

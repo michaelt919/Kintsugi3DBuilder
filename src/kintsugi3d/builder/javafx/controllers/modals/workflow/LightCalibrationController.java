@@ -21,7 +21,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
-import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
+import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -118,7 +118,7 @@ public class LightCalibrationController extends NonDataPageControllerBase
         double origScale = Math.max(bounds.x, Math.max(bounds.y, bounds.z));
         double finalScale = roundToLeadingDecimal(0.5 * origScale);
 
-        SafeDecimalNumberStringConverter converter = new SafeDecimalNumberStringConverter(0.0f);
+        SafeFloatStringConverter converter = new SafeFloatStringConverter(0.0f);
 
         // Bind text fields to sliders and ensure that the range adapts to values entered in text fields.
         xTextField.textProperty().addListener((observable, oldValue, newValue) ->

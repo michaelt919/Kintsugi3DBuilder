@@ -40,7 +40,7 @@ public class SafeNumberStringConverter extends StringConverter<Number>
     @Override
     public Number fromString(String string)
     {
-        if (string != null && string.isEmpty())
+        if ("".equals(string))
         {
             return defaultValue;
         }

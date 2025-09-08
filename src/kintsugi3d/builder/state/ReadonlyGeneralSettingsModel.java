@@ -41,11 +41,6 @@ public interface ReadonlyGeneralSettingsModel extends Iterable<ReadonlyGeneralSe
         return exists(name) && settingType.isAssignableFrom(getType(name));
     }
 
-    default boolean existsForSet(String name, Class<?> settingType)
-    {
-        return exists(name) && getType(name).isAssignableFrom(settingType);
-    }
-
     default boolean getBoolean(String name)
     {
         return get(name, Boolean.class);

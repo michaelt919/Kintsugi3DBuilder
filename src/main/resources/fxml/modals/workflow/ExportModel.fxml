@@ -35,5 +35,8 @@
             <ComboBox styleClass="wireframeBody" fx:id="minimumTextureResolutionComboBox" HBox.hgrow="ALWAYS" />
         </HBox>
         <CheckBox fx:id="openViewerOnceCheckBox" styleClass="wireframeBody" mnemonicParsing="false" text="Open in Kintsugi 3D Viewer" />
+        <StackPane>
+            <Button styleClass="wireframeBody" mnemonicParsing="false" text="Reset to Defaults" onAction="#resetSettingsToDefaults"/>
+        </StackPane>
     </VBox>
 </VBox>

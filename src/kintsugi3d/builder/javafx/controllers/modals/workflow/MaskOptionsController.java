@@ -11,25 +11,15 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
-import javafx.beans.property.Property;
-import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.util.StringConverter;
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
-import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
-import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.GeneralSettingsModel;
-import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
+import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsControllerBase;
 
-public class MaskOptionsController extends NonDataPageControllerBase
+public class MaskOptionsController extends LiveProjectSettingsControllerBase
 {
     @FXML private Pane rootNode;
     
@@ -43,10 +33,6 @@ public class MaskOptionsController extends NonDataPageControllerBase
     @FXML private TextField edgeProximityCutoffTextField;
     @FXML private Slider edgeProximityCutoffSlider;
 
-    private GeneralSettingsModel projectSettingsModel;
-    private final ObservableGeneralSettingsModel revertSettingsModel = new ObservableGeneralSettingsModel();
-    private final ObservableGeneralSettingsModel localSettingsModel = new ObservableGeneralSettingsModel();
-
     @Override
     public Region getRootNode()
     {
@@ -56,77 +42,29 @@ public class MaskOptionsController extends NonDataPageControllerBase
     @Override
     public void initPage()
     {
-        // Local instance that contains properties
-        DefaultSettings.applyProjectDefaults(localSettingsModel);
-        
-        // Remember what to set back to if the user cancels
-        DefaultSettings.applyProjectDefaults(revertSettingsModel);
+        // bind text fields
+        bindFloatSetting(occlusionBiasTextField, "occlusionBias", 0, 1);
+        bindBooleanSetting(occlusionCheckBox, "occlusionEnabled");
+        bindBooleanSetting(edgeProximityWeightCheckBox, "edgeProximityWeightEnabled");
+        bindNormalizedSetting(edgeProximityMarginTextField, "edgeProximityMargin");
+        bindNormalizedSetting(edgeProximityCutoffTextField, "edgeProximityCutoff");
 
-        StaticUtilities.makeClampedNumeric(0, Float.MAX_VALUE, occlusionBiasTextField);
-        StaticUtilities.makeClampedNumeric(0, 1, edgeProximityMarginTextField);
-        StaticUtilities.makeClampedNumeric(0, 1, edgeProximityCutoffTextField);
+        // bind sliders
+        bindNumericSetting(occlusionBiasSlider, "occlusionBias");
+        bindNumericSetting(edgeProximityMarginSlider, "edgeProximityMargin");
+        bindNumericSetting(edgeProximityCutoffSlider, "edgeProximityCutoff");
+
+        // Disable occlusion bias setting when occlusion itself is disabled.
+        occlusionBiasTextField.disableProperty().bind(occlusionCheckBox.selectedProperty().not());
+        occlusionBiasSlider.disableProperty().bind(occlusionCheckBox.selectedProperty().not());
+
+        // Disable margin / cutoff settings when edge proximity weight / feathering is disabled.
+        edgeProximityMarginTextField.disableProperty().bind(edgeProximityWeightCheckBox.selectedProperty().not());
+        edgeProximityMarginSlider.disableProperty().bind(edgeProximityWeightCheckBox.selectedProperty().not());
+        edgeProximityCutoffTextField.disableProperty().bind(edgeProximityWeightCheckBox.selectedProperty().not());
+        edgeProximityCutoffSlider.disableProperty().bind(edgeProximityWeightCheckBox.selectedProperty().not());
 
         setCanAdvance(true);
         setCanConfirm(true);
-    }
-
-    private <T> void bind(Property<T> uiProperty, Property<T> settingsProperty)
-    {
-        // Local model automatically updates when the UI is change
-        // Add a listener to automatically push to the project settings model.
-        uiProperty.setValue(settingsProperty.getValue());
-        uiProperty.bindBidirectional(settingsProperty);
-        settingsProperty.addListener(obs ->
-            projectSettingsModel.copyFrom(localSettingsModel));
-    }
-
-    private <T> void bind(StringProperty uiProperty, Property<T> settingsProperty, StringConverter<T> converter)
-    {
-        // Local model automatically updates when the UI is change
-        // Add a listener to automatically push to the project settings model.
-        uiProperty.setValue(converter.toString(settingsProperty.getValue()));
-        uiProperty.bindBidirectional(settingsProperty, converter);
-        settingsProperty.addListener(obs ->
-            projectSettingsModel.copyFrom(localSettingsModel));
-    }
-
-    @Override
-    public void refresh()
-    {
-        if (Global.state().getIOModel().hasValidHandler())
-        {
-            this.projectSettingsModel = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
-        }
-        else
-        {
-            this.projectSettingsModel = new SimpleGeneralSettingsModel();
-            DefaultSettings.applyProjectDefaults(projectSettingsModel);
-        }
-
-        // Need to copy first so that it doesn't start syncing bound properties before we're initialized.
-        this.localSettingsModel.copyFrom(projectSettingsModel);
-        this.revertSettingsModel.copyFrom(localSettingsModel); // Remember what to set back to if the user cancels
-
-        bind(occlusionCheckBox.selectedProperty(), localSettingsModel.getBooleanProperty("occlusionEnabled"));
-        bind(occlusionBiasTextField.textProperty(), localSettingsModel.getNumericProperty("occlusionBias"),
-            new SafeDecimalNumberStringConverter(projectSettingsModel.getFloat("occlusionBias")));
-
-        bind(edgeProximityWeightCheckBox.selectedProperty(), localSettingsModel.getBooleanProperty("edgeProximityWeightEnabled"));
-        bind(edgeProximityMarginTextField.textProperty(), localSettingsModel.getNumericProperty("edgeProximityMargin"),
-            new SafeDecimalNumberStringConverter(projectSettingsModel.getFloat("edgeProximityMargin")));
-        bind(edgeProximityCutoffTextField.textProperty(), localSettingsModel.getNumericProperty("edgeProximityCutoff"),
-            new SafeDecimalNumberStringConverter(projectSettingsModel.getFloat("edgeProximityCutoff")));
-
-        occlusionBiasSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("occlusionBias"));
-        edgeProximityMarginSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityMargin"));
-        edgeProximityCutoffSlider.valueProperty().bindBidirectional(localSettingsModel.getNumericProperty("edgeProximityCutoff"));
-    }
-    
-    @Override
-    public boolean cancel()
-    {
-        // Revert back to the settings when the window was opened.
-        projectSettingsModel.copyFrom(revertSettingsModel);
-        return true;
     }
 }

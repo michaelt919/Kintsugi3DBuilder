@@ -22,10 +22,11 @@ import javafx.scene.layout.Region;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.SpecularFitRequest;
+import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 
-public class SpecularFitController extends DeferredProjectSettingsControllerBase
+public class SpecularFitController extends ProjectSettingsControllerBase
 {
     @FXML private Pane root;
 
@@ -65,21 +66,21 @@ public class SpecularFitController extends DeferredProjectSettingsControllerBase
                 Platform.runLater(root.getScene().getWindow()::sizeToScene));
 
         // Bind settings
-        getLocalSettingsModel().bindNumericComboBox(resolutionComboBox, "textureSize", SquareResolution::new, SquareResolution::getSize);
-        getLocalSettingsModel().bindNonNegativeIntegerSetting(basisCountTextField, "basisCount", 256);
-        getLocalSettingsModel().bindNormalizedSetting(specularMinWidthTextField, "specularMinWidthFrac");
-        getLocalSettingsModel().bindNormalizedSetting(specularSmoothnessTextField, "specularMaxWidthFrac");
-        getLocalSettingsModel().bindBooleanSetting(translucencyCheckBox, "constantTermEnabled");
-        getLocalSettingsModel().bindNonNegativeIntegerSetting(mfdResolutionTextField, "basisResolution", 8192);
-        getLocalSettingsModel().bindNormalizedSetting(specularComplexityTextField, "basisComplexityFrac");
-        getLocalSettingsModel().bindNormalizedSetting(metallicityTextField, "metallicity");
-        getLocalSettingsModel().bindBooleanSetting(smithCheckBox, "smithMaskingShadowingEnabled");
-        getLocalSettingsModel().bindEpsilonSetting(convergenceToleranceTextField, "convergenceTolerance");
-        getLocalSettingsModel().bindBooleanSetting(normalRefinementCheckBox, "normalOptimizationEnabled");
-        getLocalSettingsModel().bindNormalizedSetting(minNormalDampingTextField, "minNormalDamping");
-        getLocalSettingsModel().bindNonNegativeIntegerSetting(normalSmoothingIterationsTextField, "normalSmoothIterations", 8192);
-        getLocalSettingsModel().bindNonNegativeIntegerSetting(unsuccessfulLMIterationsTextField, "unsuccessfulLMIterationsAllowed", Integer.MAX_VALUE);
-        getLocalSettingsModel().bindBooleanSetting(openViewerOnComplete, "openViewerOnProcessingComplete");
+        bindNumericComboBox(resolutionComboBox, "textureSize", SquareResolution::new, SquareResolution::getSize);
+        bindIntegerSetting(basisCountTextField, "basisCount", 0, 256);
+        bindNormalizedSetting(specularMinWidthTextField, "specularMinWidthFrac");
+        bindNormalizedSetting(specularSmoothnessTextField, "specularMaxWidthFrac");
+        bindBooleanSetting(translucencyCheckBox, "constantTermEnabled");
+        bindIntegerSetting(mfdResolutionTextField, "basisResolution", 0, 8192);
+        bindNormalizedSetting(specularComplexityTextField, "basisComplexityFrac");
+        bindNormalizedSetting(metallicityTextField, "metallicity");
+        bindBooleanSetting(smithCheckBox, "smithMaskingShadowingEnabled");
+        bindFloatSetting(convergenceToleranceTextField, "convergenceTolerance", 0, 1);
+        bindBooleanSetting(normalRefinementCheckBox, "normalOptimizationEnabled");
+        bindNormalizedSetting(minNormalDampingTextField, "minNormalDamping");
+        bindIntegerSetting(normalSmoothingIterationsTextField, "normalSmoothIterations", 0, 8192);
+        bindIntegerSetting(unsuccessfulLMIterationsTextField, "unsuccessfulLMIterationsAllowed", 0, Integer.MAX_VALUE);
+        bindBooleanSetting(openViewerOnComplete, "openViewerOnProcessingComplete");
 
         setCanAdvance(true);
         setCanConfirm(true);
@@ -88,10 +89,8 @@ public class SpecularFitController extends DeferredProjectSettingsControllerBase
     @FXML
     public boolean confirm()
     {
-        if (!applySettings())
-        {
-            return false;
-        }
+        // Apply settings so they're seen by the SpecularFitRequest and also remembered for later.
+        applySettings();
 
         if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
@@ -105,5 +104,4 @@ public class SpecularFitController extends DeferredProjectSettingsControllerBase
 
         return true;
     }
-
 }

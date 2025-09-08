@@ -20,7 +20,7 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
-import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
+import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
@@ -80,11 +80,11 @@ public class AdvPhotoViewController implements SystemSettingsControllerBase
 
         weightExponentSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("weightExponent"));
         weightExponentTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("weightExponent"),
-            new SafeDecimalNumberStringConverter(16.0f));
+            new SafeFloatStringConverter(16.0f));
 
         isotropyFactorSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("isotropyFactor"));
         isotropyFactorTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("isotropyFactor"),
-            new SafeDecimalNumberStringConverter(0.0f));
+            new SafeFloatStringConverter(0.0f));
 
         this.settingsModel = injectedSettingsModel;
 

@@ -31,6 +31,9 @@
       <CheckBox fx:id="normalRefinementCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Optimize normal map" />
         <CheckBox fx:id="translucencyCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Use translucency texture&#10;(not supported by Sketchfab or Blender)" />
         <CheckBox fx:id="openViewerOnComplete" mnemonicParsing="false" styleClass="wireframeBody" text="Open Kintsugi 3D Viewer once complete" />
+        <StackPane>
+            <Button styleClass="wireframeBody" mnemonicParsing="false" text="Reset to Defaults" onAction="#resetSettingsToDefaults"/>
+        </StackPane>
       <Accordion fx:id="advancedAccordion" minWidth="360.0">
         <panes>
           <TitledPane animated="false" expanded="false" text="Advanced">

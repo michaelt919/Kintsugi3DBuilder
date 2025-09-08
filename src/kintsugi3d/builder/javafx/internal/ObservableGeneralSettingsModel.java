@@ -12,23 +12,21 @@
 package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
-import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
-import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.state.GeneralSettingsModelBase;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
+import java.util.NoSuchElementException;
 
-public class ObservableGeneralSettingsModel extends GeneralSettingsModelBase
+public class ObservableGeneralSettingsModel extends GeneralSettingsModelBase implements ReadonlyObservableGeneralSettingsModel
 {
     private static class TypedProperty implements Property<Object>
     {
@@ -233,23 +231,32 @@ public class ObservableGeneralSettingsModel extends GeneralSettingsModelBase
         };
     }
 
+    @Override
+    public Observable getObservable(String name)
+    {
+        return getObjectProperty(name, Object.class);
+    }
+
+    @Override
     public Property<Boolean> getBooleanProperty(String name)
     {
         return getObjectProperty(name, Boolean.class);
     }
 
+    @Override
     public Property<Number> getNumericProperty(String name)
     {
         return getObjectProperty(name, Number.class);
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public <T> Property<T> getObjectProperty(String name, Class<T> settingType)
     {
         if (settingsMap.containsKey(name))
         {
             TypedProperty entry = settingsMap.get(name);
-            if (Objects.equals(settingType, entry.getType()))
+            if (settingType.isAssignableFrom(entry.getType()))
             {
                 return (Property<T>) entry;
             }
@@ -266,7 +273,7 @@ public class ObservableGeneralSettingsModel extends GeneralSettingsModelBase
             // Set value to new initialValue if it already exists.
             // Note: this will not change whether serialize was set.
             TypedProperty entry = settingsMap.get(name);
-            if (Objects.equals(settingType, entry.getType()))
+            if (settingType.isAssignableFrom(entry.getType()))
             {
                 setUnchecked(name, initialValue);
             }
@@ -275,73 +282,5 @@ public class ObservableGeneralSettingsModel extends GeneralSettingsModelBase
         {
             settingsMap.put(name, new TypedProperty(initialValue, settingType, serialize));
         }
-    }
-
-    public void bindEpsilonSetting(TextField textField, String settingName)
-    {
-        StaticUtilities.makeClampedNumeric(0, 1, textField);
-        SafeNumberStringConverter converter = new SafeNumberStringConverter(getFloat(settingName), "0.###E0");
-        textField.setText(converter.toString(getFloat(settingName)));
-        textField.textProperty().bindBidirectional(
-            getNumericProperty(settingName),
-            converter);
-    }
-
-    public void bindNormalizedSetting(TextField textField, String settingName)
-    {
-        StaticUtilities.makeClampedNumeric(0, 1, textField);
-        SafeNumberStringConverter converter = new SafeNumberStringConverter(getFloat(settingName));
-        textField.setText(converter.toString(getFloat(settingName)));
-        textField.textProperty().bindBidirectional(
-            getNumericProperty(settingName),
-            converter);
-    }
-
-    public void bindNonNegativeIntegerSetting(TextField textField, String settingName, int maxValue)
-    {
-        StaticUtilities.makeClampedInteger(0, maxValue, textField);
-        SafeNumberStringConverter converter = new SafeNumberStringConverter(getInt(settingName));
-        textField.setText(converter.toString(getInt(settingName)));
-        textField.textProperty().bindBidirectional(
-            getNumericProperty(settingName),
-            converter);
-    }
-
-    public void bindBooleanSetting(CheckBox checkBox, String settingName)
-    {
-        checkBox.setSelected(getBoolean(settingName));
-        checkBox.selectedProperty().bindBidirectional(
-            getBooleanProperty(settingName));
-    }
-
-    public <T> void bindNumericComboBox(ComboBox<T> comboBox, String settingName,
-        Function<Number, T> choiceConstructor, Function<T, Number> extractNumeric)
-    {
-        // Manually bind resolution both ways as a combo box.
-        comboBox.valueProperty().addListener(
-            (obs, oldValue, newValue) ->
-                set(settingName, extractNumeric.apply(newValue)));
-        getNumericProperty(settingName).addListener(
-            (obs, oldValue, newValue) ->
-                comboBox.setValue(choiceConstructor.apply(newValue)));
-        comboBox.setValue(choiceConstructor.apply(get(settingName, Number.class)));
-    }
-
-    public <T> void bindTextComboBox(ComboBox<T> comboBox, String settingName,
-        Function<String, T> choiceConstructor, Function<T, String> extractText)
-    {
-        // Manually bind resolution both ways as a combo box.
-        comboBox.valueProperty().addListener(
-            (obs, oldValue, newValue) ->
-                set(settingName, extractText.apply(newValue)));
-        getObjectProperty(settingName, String.class).addListener(
-            (obs, oldValue, newValue) ->
-                comboBox.setValue(choiceConstructor.apply(newValue)));
-        comboBox.setValue(choiceConstructor.apply(settingName));
-    }
-
-    public void bindTextComboBox(ComboBox<String> comboBox, String settingName)
-    {
-        bindTextComboBox(comboBox, settingName, Function.identity(), Function.identity());
     }
 }

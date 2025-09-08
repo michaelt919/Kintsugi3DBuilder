@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state;
 
+import java.util.Collection;
 import java.util.NoSuchElementException;
 
 public abstract class GeneralSettingsModelBase implements GeneralSettingsModel
@@ -75,6 +76,30 @@ public abstract class GeneralSettingsModelBase implements GeneralSettingsModel
             if (exists(s.getName()))
             {
                 set(s.getName(), s.getValue());
+            }
+        }
+    }
+
+    @Override
+    public void copyFrom(ReadonlyGeneralSettingsModel other, Collection<String> settingNames)
+    {
+        for (String name : settingNames)
+        {
+            if (exists(name))
+            {
+                set(name, other.getObject(name));
+            }
+        }
+    }
+
+    @Override
+    public void copyFrom(ReadonlyGeneralSettingsModel other, String... settingNames)
+    {
+        for (String name : settingNames)
+        {
+            if (exists(name))
+            {
+                set(name, other.getObject(name));
             }
         }
     }

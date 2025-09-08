@@ -14,12 +14,12 @@ package kintsugi3d.builder.javafx.util;
 import javafx.util.StringConverter;
 import javafx.util.converter.FloatStringConverter;
 
-public class SafeDecimalNumberStringConverter extends StringConverter<Number>
+public class SafeFloatStringConverter extends StringConverter<Number>
 {
+    private final FloatStringConverter base = new FloatStringConverter();
     private final Float defaultValue;
-    private final FloatStringConverter fsc = new FloatStringConverter();
 
-    public SafeDecimalNumberStringConverter(Float defaultValue)
+    public SafeFloatStringConverter(Float defaultValue)
     {
         this.defaultValue = defaultValue;
     }
@@ -27,7 +27,7 @@ public class SafeDecimalNumberStringConverter extends StringConverter<Number>
     @Override
     public String toString(Number object)
     {
-        return fsc.toString(object.floatValue());
+        return base.toString(object.floatValue());
     }
 
     @Override
@@ -39,7 +39,7 @@ public class SafeDecimalNumberStringConverter extends StringConverter<Number>
         }
         try
         {
-            return fsc.fromString(string);
+            return base.fromString(string);
         }
         catch (RuntimeException re)
         {

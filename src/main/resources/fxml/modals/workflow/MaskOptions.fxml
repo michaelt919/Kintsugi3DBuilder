@@ -54,5 +54,8 @@
             </TextField>
             <Slider fx:id="edgeProximityCutoffSlider" majorTickUnit="0.05" max="0.1" minorTickCount="4" showTickLabels="true" showTickMarks="true" styleClass="slider" value="0.01" GridPane.columnIndex="2" GridPane.rowIndex="1" />
         </GridPane>
+        <StackPane>
+            <Button styleClass="wireframeBody" mnemonicParsing="false" text="Reset to Defaults" onAction="#resetSettingsToDefaults"/>
+        </StackPane>
     </VBox>
 </VBox>

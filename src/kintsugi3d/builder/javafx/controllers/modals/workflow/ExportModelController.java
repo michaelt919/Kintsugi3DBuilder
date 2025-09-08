@@ -20,6 +20,7 @@ import javafx.stage.FileChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
+import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
-public class ExportModelController extends DeferredProjectSettingsControllerBase
+public class ExportModelController extends ProjectSettingsControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
@@ -61,11 +62,11 @@ public class ExportModelController extends DeferredProjectSettingsControllerBase
             .bind(generateLowResolutionCheckBox.selectedProperty().not());
 
         // Bind settings
-        getLocalSettingsModel().bindTextComboBox(formatComboBox, "textureFormat");
-        getLocalSettingsModel().bindBooleanSetting(generateLowResolutionCheckBox, "exportLODEnabled");
-        getLocalSettingsModel().bindNumericComboBox(minimumTextureResolutionComboBox, "minimumLODSize",
+        bindTextComboBox(formatComboBox, "textureFormat");
+        bindBooleanSetting(generateLowResolutionCheckBox, "exportLODEnabled");
+        bindNumericComboBox(minimumTextureResolutionComboBox, "minimumLODSize",
             SquareResolution::new, SquareResolution::getSize);
-        getLocalSettingsModel().bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
+        bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
 
         File loadedProjectFile = Global.state().getIOModel().validateHandler().getLoadedProjectFile();
         if (loadedProjectFile != null)
@@ -80,10 +81,7 @@ public class ExportModelController extends DeferredProjectSettingsControllerBase
     @Override
     public boolean confirm()
     {
-        if (!applySettings())
-        {
-            return false;
-        }
+        applySettings();
 
         if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
         {
