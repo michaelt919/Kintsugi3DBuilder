@@ -115,8 +115,6 @@ public class LightCalibrationController extends NonDataPageControllerBase
         settingsModel.getObjectProperty("currentLightCalibration", Vector2.class).addListener(settingsListener);
 
         Vector3 bounds = getState().getProjectModel().getModelSize();
-        double origScale = Math.max(bounds.x, Math.max(bounds.y, bounds.z));
-        double finalScale = roundToLeadingDecimal(0.5 * origScale);
 
         SafeFloatStringConverter converter = new SafeFloatStringConverter(0.0f);
 
@@ -190,22 +188,30 @@ public class LightCalibrationController extends NonDataPageControllerBase
         // Set initial value to start out synchronized.
         Vector2 originalLightCalibration = settingsModel.get("currentLightCalibration", Vector2.class);
 
+        setDefaultLimits(bounds, originalLightCalibration);
+
+        xSlider.setValue(originalLightCalibration.x);
+        ySlider.setValue(originalLightCalibration.y);
+        xTextField.setText(converter.toString(xSlider.getValue()));
+        yTextField.setText(converter.toString(ySlider.getValue()));
+    }
+
+    private void setDefaultLimits(Vector3 bounds, Vector2 lightCalibration)
+    {
+        double origScale = Math.max(bounds.x, Math.max(bounds.y, bounds.z));
+        double finalScale = roundToLeadingDecimal(0.5 * origScale);
+
         // Set initial bounds based on original calibration.
-        double xMax = Math.max(finalScale, roundToLeadingDecimal(2 * Math.max(originalLightCalibration.x, -originalLightCalibration.x)));
-        double yMax = Math.max(finalScale, roundToLeadingDecimal(2 * Math.max(originalLightCalibration.y, -originalLightCalibration.y)));
+        double xMax = Math.max(finalScale, roundToLeadingDecimal(2 * Math.max(lightCalibration.x, -lightCalibration.x)));
+        double yMax = Math.max(finalScale, roundToLeadingDecimal(2 * Math.max(lightCalibration.y, -lightCalibration.y)));
 
         xSlider.setMax(xMax);
         xSlider.setMin(-xMax);
-        xSlider.setValue(originalLightCalibration.x);
         xSlider.setMajorTickUnit(xSlider.getMax() / 2.0);
 
         ySlider.setMax(yMax);
         ySlider.setMin(-yMax);
-        ySlider.setValue(originalLightCalibration.y);
         ySlider.setMajorTickUnit(ySlider.getMax() / 2.0);
-
-        xTextField.setText(converter.toString(xSlider.getValue()));
-        yTextField.setText(converter.toString(ySlider.getValue()));
     }
 
     private static double roundToLeadingDecimal(double value)
@@ -219,5 +225,12 @@ public class LightCalibrationController extends NonDataPageControllerBase
     public void unbind()
     {
         settingsModel.getObjectProperty("currentLightCalibration", Vector2.class).removeListener(settingsListener);
+    }
+
+    public void reset()
+    {
+        xSlider.setValue(0.0);
+        ySlider.setValue(0.0);
+        setDefaultLimits(getState().getProjectModel().getModelSize(), Vector2.ZERO);
     }
 }
