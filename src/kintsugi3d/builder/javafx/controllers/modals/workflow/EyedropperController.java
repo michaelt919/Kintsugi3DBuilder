@@ -35,6 +35,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
@@ -171,9 +172,7 @@ public class EyedropperController extends NonDataPageControllerBase
     @Override
     public boolean cancel()
     {
-        Alert alert = new Alert(AlertType.CONFIRMATION, "Discard tone calibration changes?");
-        var result = alert.showAndWait();
-        if (result.isPresent() && result.get().equals(ButtonType.OK))
+        if (StaticUtilities.confirmCancel())
         {
             // revert the tone calibration to what it was when the page was opened.
             if (ioModel != null && prevEncodedLuminanceValues != null)

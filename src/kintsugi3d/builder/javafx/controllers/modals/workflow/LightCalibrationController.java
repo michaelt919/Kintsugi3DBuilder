@@ -80,9 +80,16 @@ public class LightCalibrationController extends NonDataPageControllerBase
     @Override
     public boolean cancel()
     {
-        settingsModel.set("lightCalibrationMode", false);
-        unbind();
-        return true;
+        if (StaticUtilities.confirmCancel())
+        {
+            settingsModel.set("lightCalibrationMode", false);
+            unbind();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public boolean confirm()

@@ -13,6 +13,7 @@ package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.util.StaticUtilities;
 
 /**
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
@@ -56,6 +57,12 @@ public class OrientationViewSelectController extends ViewSelectController
         data.confirm();
 
         return true;
+    }
+
+    @Override
+    public boolean cancel()
+    {
+        return StaticUtilities.confirmCancel();
     }
 
     @Override

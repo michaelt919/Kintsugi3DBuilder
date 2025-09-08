@@ -28,8 +28,15 @@ public abstract class LiveProjectSettingsControllerBase extends ProjectSettingsC
     @Override
     public boolean cancel()
     {
-        // Revert back to the settings when the window was opened.
-        getProjectSettingsModel().copyFrom(revertSettingsModel, getTrackedSettings());
-        return true;
+        if (super.cancel())
+        {
+            // Revert back to the settings when the window was opened.
+            getProjectSettingsModel().copyFrom(revertSettingsModel, getTrackedSettings());
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
