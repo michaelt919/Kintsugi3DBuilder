@@ -21,7 +21,9 @@ import kintsugi3d.builder.state.CardsModel;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class CardController
 {
@@ -38,19 +40,26 @@ public class CardController
     @FXML private VBox buttonBox;
 
     private UUID cardId;
-    private CardsModel cameraCardsModel;
+    private CardsModel cardsModel;
     private Image preview;
 
-    public void init(CardsModel cameraCardsModel, ProjectDataCard dataCard)
+    public void init(CardsModel cardsModel, ProjectDataCard dataCard)
     {
-        this.cameraCardsModel = cameraCardsModel;
+        this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();
         this.setCardVisibility(false);
 
         cardTitle.setText(dataCard.getTitle());
 
-        BooleanBinding expanded = cameraCardsModel.isExpandedProperty(cardId);
-        BooleanBinding selected = cameraCardsModel.isSelectedProperty(cardId);
+        if (dataCard.getActions().stream().allMatch(Map::isEmpty))
+        {
+            // Hide button box if no actions are available.
+            buttonBox.setVisible(false);
+            buttonBox.setManaged(false);
+        }
+
+        BooleanBinding expanded = cardsModel.isExpandedProperty(cardId);
+        BooleanBinding selected = cardsModel.isSelectedProperty(cardId);
 
         cardBody.visibleProperty().bind(expanded);
         cardBody.managedProperty().bind(expanded);
@@ -190,26 +199,26 @@ public class CardController
 //            cameraCardsModel.selectCard(cardId);
 //        }
 
-        if (cameraCardsModel.isExpanded(cardId))
+        if (cardsModel.isExpanded(cardId))
         {
-            cameraCardsModel.collapseCard(cardId);
+            cardsModel.collapseCard(cardId);
         }
         else
         {
-            cameraCardsModel.expandCard(cardId);
+            cardsModel.expandCard(cardId);
         }
     }
 
     @FXML
     public void expansionToggleClicked(MouseEvent e)
     {
-        if (cameraCardsModel.isExpanded(cardId))
+        if (cardsModel.isExpanded(cardId))
         {
-            cameraCardsModel.collapseCard(cardId);
+            cardsModel.collapseCard(cardId);
         }
         else
         {
-            cameraCardsModel.expandCard(cardId);
+            cardsModel.expandCard(cardId);
         }
         e.consume();
     }
@@ -217,7 +226,7 @@ public class CardController
     @FXML
     public void delete()
     {
-        cameraCardsModel.deleteCard(cardId);
+        cardsModel.deleteCard(cardId);
     }
 
     public VBox getCard()
