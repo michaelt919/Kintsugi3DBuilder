@@ -32,7 +32,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final CanvasModel canvasModel;
     private final IOModel ioModel;
 
-    private final TabModels tabModels;
+    private final TabsModel tabsModel;
 
     private static final MultithreadState INSTANCE = new MultithreadState();
 
@@ -54,7 +54,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         canvasModel = new CanvasModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        tabModels = JavaFXState.getInstance().getTabModels();
+        tabsModel = JavaFXState.getInstance().getTabModels();
     }
 
     @Override
@@ -82,8 +82,8 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public TabModels getTabModels() {
-        return tabModels;
+    public TabsModel getTabModels() {
+        return tabsModel;
     }
 
     @Override

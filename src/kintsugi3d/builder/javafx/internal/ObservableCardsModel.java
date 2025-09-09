@@ -37,7 +37,7 @@ public class ObservableCardsModel implements CardsModel {
     public void setViewSet(ViewSet vset) {
         Platform.runLater(()-> {
             this.viewSet = vset;
-            CardsModel model = Global.state().getTabModels().getCardsModel("Cameras");
+            CardsModel model = Global.state().getTabModels().getTab("Cameras");
             List<ProjectDataCard> dataCards = new ArrayList<>();
             for (int i = 0; i < viewSet.getCameraMetadata().size(); i++) {
                 String thumbnailPath;

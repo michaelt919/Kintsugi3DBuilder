@@ -14,14 +14,16 @@ import javafx.scene.layout.VBox;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 
-public class CardTabController {
-
-    @FXML private VBox card_tab;
-    @FXML private TextField card_searchbar;
-    @FXML private VBox card_vbox;
+public class CardTabController
+{
+    @FXML private VBox tab;
+    @FXML private TextField searchbar;
+    @FXML private VBox vbox;
     @FXML private ScrollPane scrollpane;
 
     private double scrollPosition = 0;
@@ -34,134 +36,161 @@ public class CardTabController {
     public void init(CardsModel cardsModel)
     {
         this.cardsModel = cardsModel;
-        Collection<VBox> displayCards = new ArrayList<>();
-        for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
+        Collection<VBox> displayCards = new ArrayList<>(cardsModel.getObservableCardsList().size());
+        for (ProjectDataCard card : cardsModel.getObservableCardsList())
+        {
             displayCards.add(createDataCard(card).getCard());
         }
         // Add all at once to avoid repeated listener triggers.
-        card_vbox.getChildren().addAll(displayCards);
+        vbox.getChildren().addAll(displayCards);
         createListeners();
     }
 
-    private CardController createDataCard(ProjectDataCard card) {
-        CardController newCardController;
+    private CardController createDataCard(ProjectDataCard card)
+    {
         FXMLLoader loader = new FXMLLoader();
-        try {
+        try
+        {
             loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
             loader.load();
-            newCardController = loader.getController();
+            CardController newCardController = loader.getController();
             newCardController.init(cardsModel, card);
             cardControllers.add(newCardController);
-        } catch (Exception e) {
-            throw new RuntimeException("Could not load DataCard.fxml!",e);
+            return newCardController;
         }
-        return newCardController;
+        catch (IOException e)
+        {
+            throw new RuntimeException("Could not load DataCard.fxml!", e);
+        }
     }
+
     // For replace operations
-    private CardController createDataCard(ProjectDataCard card, int index) {
-        CardController newCardController = null;
+    private CardController createDataCard(ProjectDataCard card, int index)
+    {
         FXMLLoader loader = new FXMLLoader();
-        try {
+        try
+        {
             loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
             loader.load();
-            newCardController = loader.getController();
+            CardController newCardController = loader.getController();
             newCardController.setCardVisibility(false);
             newCardController.init(cardsModel, card);
             cardControllers.set(index, newCardController);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load DataCard.fxml",e);
+            return newCardController;
         }
-        return newCardController;
+        catch (IOException e)
+        {
+            throw new RuntimeException("Failed to load DataCard.fxml", e);
+        }
     }
 
-    public void setVisible(boolean visibility) {
-        card_tab.setVisible(visibility);
-        card_tab.setManaged(visibility);
+    public void setVisible(boolean visibility)
+    {
+        tab.setVisible(visibility);
+        tab.setManaged(visibility);
     }
 
     //Does not recreate the listener!!!
-    public void refreshCardList() {
-        card_vbox.getChildren().clear();
+    public void refreshCardList()
+    {
+        vbox.getChildren().clear();
         cardControllers.clear();
-        for (ProjectDataCard card : cardsModel.getObservableCardsList()) {
-            card_vbox.getChildren().add(createDataCard(card).getCard());
+        for (ProjectDataCard card : cardsModel.getObservableCardsList())
+        {
+            vbox.getChildren().add(createDataCard(card).getCard());
         }
     }
 
-    private void createListeners() {
-        cardsModel.getObservableCardsList().addListener((ListChangeListener<ProjectDataCard>) change -> {
-            while(change.next()) {
-                if (change.wasRemoved()) {
-                    for (int i = 0; i < change.getRemovedSize(); i++) {
+    private void createListeners()
+    {
+        cardsModel.getObservableCardsList().addListener((ListChangeListener<ProjectDataCard>) change ->
+        {
+            while (change.next())
+            {
+                if (change.wasRemoved())
+                {
+                    for (int i = 0; i < change.getRemovedSize(); i++)
+                    {
                         cardControllers.remove(change.getFrom());
                     }
                 }
-                if (change.wasAdded()) {
-                    for (int i = change.getFrom(); i < change.getTo(); i++) {
+                if (change.wasAdded())
+                {
+                    for (int i = change.getFrom(); i < change.getTo(); i++)
+                    {
                         createDataCard(cardsModel.getObservableCardsList().get(i));
                     }
                 }
-                if(change.wasReplaced()) {
-                    for (int i = change.getFrom(); i < change.getTo(); i++) {
+                if (change.wasReplaced())
+                {
+                    for (int i = change.getFrom(); i < change.getTo(); i++)
+                    {
                         createDataCard(cardsModel.getObservableCardsList().get(i), i);
                     }
                 }
             }
         });
 
-        searchList.addListener((ListChangeListener<CardController>) change -> {
-            while(change.next()) {
-                if (change.wasRemoved()) {
-                    for (int i = 0; i < change.getRemovedSize(); i++) {
-                        card_vbox.getChildren().remove(change.getFrom());
+        searchList.addListener((ListChangeListener<CardController>) change ->
+        {
+            while (change.next())
+            {
+                if (change.wasRemoved())
+                {
+                    for (int i = 0; i < change.getRemovedSize(); i++)
+                    {
+                        vbox.getChildren().remove(change.getFrom());
                     }
                 }
-                if (change.wasAdded()) {
-                    for (int i = change.getFrom(); i < change.getTo(); i++) {
+                if (change.wasAdded())
+                {
+                    for (int i = change.getFrom(); i < change.getTo(); i++)
+                    {
                         CardController cardController = change.getList().get(i);
-                        card_vbox.getChildren().add(i, cardController.getCard());
+                        vbox.getChildren().add(i, cardController.getCard());
                     }
                 }
-                if(change.wasReplaced()) {
-                    for (int i = change.getFrom(); i < change.getTo(); i++) {
-                        card_vbox.getChildren().set(i, change.getList().get(i).getCard());
+                if (change.wasReplaced())
+                {
+                    for (int i = change.getFrom(); i < change.getTo(); i++)
+                    {
+                        vbox.getChildren().set(i, change.getList().get(i).getCard());
                     }
                 }
             }
         });
 
         // Fires when scrolling. Updates Viewport Visibility
-        scrollpane.vvalueProperty().addListener((ChangeListener<? super Number>) (observableValue, oldValue, newValue) -> {
+        scrollpane.vvalueProperty().addListener((ChangeListener<? super Number>) (observableValue, oldValue, newValue) ->
+        {
             scrollPosition = newValue.doubleValue();
             updateViewportVisibility();
         });
 
         // Search Bar Listener
-        card_searchbar.textProperty().addListener((observable, oldValue, newValue) -> {
-            searchList.setPredicate(controller -> {
+        searchbar.textProperty().addListener((observable, oldValue, newValue) ->
+            searchList.setPredicate(controller ->
+            {
                 // If search text is empty, display all items
-                return controller.titleContainsString(newValue.toLowerCase());
-            });
-        });
+                return controller.titleContainsString(newValue.toLowerCase(Locale.ROOT));
+            }));
 
         // Updates the scrollpane after a datacard is added, removed, collapsed, etc.
-        card_vbox.heightProperty().addListener((change)->{
-            updateViewportVisibility();
-        });
+        vbox.heightProperty().addListener(change -> updateViewportVisibility());
 
         // Fires when the viewport is resized
-        scrollpane.viewportBoundsProperty().addListener((change)-> {
-            updateViewportVisibility();
-        });
+        scrollpane.viewportBoundsProperty().addListener(change -> updateViewportVisibility());
     }
 
-    public void updateViewportVisibility() {
+    public void updateViewportVisibility()
+    {
         double viewportHeight = scrollpane.getViewportBounds().getHeight();
-        double contentHeight = card_vbox.getHeight();
+        double contentHeight = vbox.getHeight();
         double scrollPointer = scrollPosition * contentHeight;
-        for (int i = 0; i < searchList.size(); i++) {
-            Bounds cardY = card_vbox.getChildren().get(i).getBoundsInParent();
-            boolean inScrollRange = (cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight);
+        for (int i = 0; i < searchList.size(); i++)
+        {
+            Bounds cardY = vbox.getChildren().get(i).getBoundsInParent();
+            boolean inScrollRange = cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight;
             searchList.get(i).setCardVisibility(inScrollRange);
         }
 

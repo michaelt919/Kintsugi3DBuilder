@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.core;
 
 import kintsugi3d.builder.javafx.internal.*;
-import kintsugi3d.builder.state.TabModels;
 
 public final class JavaFXState
 {
@@ -66,7 +65,7 @@ public final class JavaFXState
         return cameraViewListModel;
     }
 
-    public TabModels getTabModels() { return tabModels; }
+    public ObservableTabsModel getTabModels() { return tabModels; }
 
     public ObservableLoadOptionsModel getLoadOptionsModel()
     {

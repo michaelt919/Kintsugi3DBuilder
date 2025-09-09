@@ -22,6 +22,7 @@ import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.gl.core.Context;
@@ -34,6 +35,7 @@ import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -60,10 +62,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private CameraViewListModel cameraViewListModel;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
-        = Collections.synchronizedList(new ArrayList<>());
+        = Collections.synchronizedList(new ArrayList<>(4));
 
     private final List<Consumer<ProjectInstance<ContextType>>> instanceLoadCallbacks
-        = Collections.synchronizedList(new ArrayList<>());
+        = Collections.synchronizedList(new ArrayList<>(4));
 
     private File loadedProjectFile;
 
@@ -162,16 +164,16 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     {
         loadedViewSet = builder.getViewSet();
         List<File> imgFiles = loadedViewSet.getImageFiles();
-        List<String> imgFileNames = new ArrayList<>();
+        List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
-        imgFiles.forEach(file->imgFileNames.add(file.getName()));
+        imgFiles.forEach(file -> imgFileNames.add(file.getName()));
 
         Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
 
-        if(progressMonitor != null)
+        if (progressMonitor != null)
         {
             progressMonitor.setStageCount(2);
             progressMonitor.setStage(0, "Generating preview-resolution images...");
@@ -188,7 +190,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
 
         loadedViewSet.generateCameraMetadata();
-        Platform.runLater(()->Global.state().getTabModels().getCardsModel("Cameras").setViewSet(loadedViewSet));
+        Platform.runLater(() ->
+        {
+            TabsModel tabsModel = Global.state().getTabModels();
+            tabsModel.addTab("Cameras");
+            tabsModel.getTab("Cameras").setViewSet(loadedViewSet);
+        });
 
         // Create the instance (will be initialized on the graphics thread)
         ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
@@ -229,7 +236,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             }
 
             @Override
-            public void setProcessName(String processName) {
+            public void setProcessName(String processName)
+            {
                 if (progressMonitor != null)
                 {
                     progressMonitor.setProcessName(processName);
@@ -321,8 +329,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             }
 
             @Override
-            public boolean isConflictingProcess() {
-                if (progressMonitor == null){
+            public boolean isConflictingProcess()
+            {
+                if (progressMonitor == null)
+                {
                     return false;
                 }
                 return progressMonitor.isConflictingProcess();
@@ -334,7 +344,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
-        if(this.progressMonitor.isConflictingProcess()){
+        if (this.progressMonitor.isConflictingProcess())
+        {
             return;
         }
 
@@ -350,7 +361,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
             loadInstance(id, contextTypeBuilder);
         }
-        catch(UserCancellationException e)
+        catch (UserCancellationException e)
         {
             handleUserCancellation(e);
         }
@@ -361,33 +372,37 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptions) {
+    public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
+    {
 
-        if(this.progressMonitor.isConflictingProcess()){
+        if (this.progressMonitor.isConflictingProcess())
+        {
             return;
         }
 
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
 
-        try {
+        try
+        {
             MetashapeChunk parentChunk = model.getChunk();
             String orientationView = model.getLoadPreferences().orientationViewName;
             double rotation = model.getLoadPreferences().orientationViewRotateDegrees;
 
             Builder<ContextType> builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                    .setProgressMonitor(this.progressMonitor)
-                    .setImageLoadOptions(loadOptions)
-                    .loadFromMetashapeModel(model)
-                    .setOrientationView(orientationView, rotation);
+                .setProgressMonitor(this.progressMonitor)
+                .setImageLoadOptions(loadOptionsModel)
+                .loadFromMetashapeModel(model)
+                .setOrientationView(orientationView, rotation);
 
             loadInstance(parentChunk.getFramePath(), builder);
         }
-        catch(UserCancellationException e)
+        catch (UserCancellationException e)
         {
             handleUserCancellation(e);
         }
-        catch (Exception e) {
+        catch (MissingImagesException | IOException | XMLStreamException e)
+        {
             handleMissingFiles(e);
         }
     }
@@ -395,7 +410,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     @Override
     public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
     {
-        if(this.progressMonitor.isConflictingProcess()){
+        if (this.progressMonitor.isConflictingProcess())
+        {
             return;
         }
         this.progressMonitor.start();
@@ -411,11 +427,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);
         }
-        catch(UserCancellationException e)
+        catch (UserCancellationException e)
         {
             handleUserCancellation(e);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             handleMissingFiles(e);
         }

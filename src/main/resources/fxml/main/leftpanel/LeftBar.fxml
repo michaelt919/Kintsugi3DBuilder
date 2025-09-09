@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.geometry.Rectangle2D?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<VBox fx:id="main_box" maxWidth="500.0" prefWidth="494.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.SideBarController">
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="mainBox" maxWidth="500.0" prefWidth="494.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.SideBarController">
     <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox alignment="TOP_RIGHT" maxWidth="500.0" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
             <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>
+      <StackPane alignment="CENTER_LEFT" prefHeight="150.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+         <children>
+            <Label text="Workspace" />
+         </children>
+      </StackPane>
         <ImageView fitHeight="16.0" fitWidth="12.0" pickOnBounds="true" preserveRatio="true">
         <viewport>
            <Rectangle2D height="16.0" minX="12.0" minY="16.0" width="12.0" />
@@ -19,6 +23,6 @@
         </ImageView>
     </HBox>
     <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-   <HBox fx:id="button_box" stylesheets="@../../kintsugiStyling.css" maxWidth="500.0" prefHeight="31.0" prefWidth="462.0">
+   <HBox fx:id="buttonBox" maxWidth="500.0" prefHeight="31.0" prefWidth="462.0" stylesheets="@../../kintsugiStyling.css">
    </HBox>
 </VBox>

@@ -20,7 +20,7 @@ public interface Kintsugi3DBuilderState
     ReadonlyLightingEnvironmentModel getLightingModel();
     ReadonlyObjectPoseModel getObjectModel();
     CameraViewListModel getCameraViewListModel();
-    TabModels getTabModels();
+    TabsModel getTabModels();
 
     /**
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
