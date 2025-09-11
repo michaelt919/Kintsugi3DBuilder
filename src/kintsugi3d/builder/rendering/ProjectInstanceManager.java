@@ -635,6 +635,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 Global.state().getProjectModel().setProjectProcessed(false);
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
+
+                // Empty sidebar; will be repopulated when another project is opened.
+                Platform.runLater(Global.state().getTabModels()::clearTabs);
             }
 
             unloadRequested = false;

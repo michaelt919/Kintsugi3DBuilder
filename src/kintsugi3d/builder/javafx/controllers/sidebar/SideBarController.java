@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 import kintsugi3d.builder.state.CardsModel;
@@ -15,9 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class SideBarController
 {
@@ -25,6 +24,10 @@ public class SideBarController
 
     @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
+
+    // needed to remove tabs
+    private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
+    private final Map<String, Pane> tabMap = new HashMap<>(8);
 
     private final ToggleGroup tabToggleGroup = new ToggleGroup();
     private final List<RadioButton> buttons = new ArrayList<>(8);
@@ -45,6 +48,9 @@ public class SideBarController
             buttonBox.getChildren().add(newButton);
             mainBox.getChildren().add(newTab);
 
+            buttonMap.put(model.getModelLabel(), newButton);
+            tabMap.put(model.getModelLabel(), newTab);
+
             newTab.visibleProperty().bind(newButton.selectedProperty());
             newTab.managedProperty().bind(newButton.selectedProperty());
         });
@@ -60,13 +66,27 @@ public class SideBarController
                 buttonBox.getChildren().add(newButton);
                 mainBox.getChildren().add(newTab);
 
+                buttonMap.put(model.getModelLabel(), newButton);
+                tabMap.put(model.getModelLabel(), newTab);
+
                 newTab.visibleProperty().bind(newButton.selectedProperty());
                 newTab.managedProperty().bind(newButton.selectedProperty());
             }
 
             if (change.wasRemoved())
             {
-                LOG.warn("Removing tabs is not currently supported.  Unexpected behavior may occur.");
+                String key = change.getValueRemoved().getModelLabel();
+
+                // Remove button and the tab itself from the maps and their actual containers..
+                RadioButton button = buttonMap.remove(key);
+                buttonBox.getChildren().remove(button);
+                mainBox.getChildren().remove(tabMap.remove(key));
+
+                if (!tabModels.getAllTabs().isEmpty() && Objects.equals(tabToggleGroup.getSelectedToggle(), button))
+                {
+                    // Select a tab if we deleted the selected one.
+                    buttons.get(0).setSelected(true);
+                }
             }
 
             // Refresh whether tabs are visible any time the tabs model is updated.

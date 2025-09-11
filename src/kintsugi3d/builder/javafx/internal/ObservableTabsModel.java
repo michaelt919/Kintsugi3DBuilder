@@ -24,6 +24,12 @@ public class ObservableTabsModel implements TabsModel
     }
 
     @Override
+    public void clearTabs()
+    {
+        tabs.clear();
+    }
+
+    @Override
     public CardsModel getTab(String label)
     {
         return tabs.get(label);

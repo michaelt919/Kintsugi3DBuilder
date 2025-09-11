@@ -90,7 +90,9 @@ public class CardTabController
         tab.setManaged(visibility);
     }
 
-    //Does not recreate the listener!!!
+    /**
+     * Does not recreate the listener!!!
+     */
     public void refreshCardList()
     {
         vbox.getChildren().clear();
@@ -193,7 +195,6 @@ public class CardTabController
             boolean inScrollRange = cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight;
             searchList.get(i).setCardVisibility(inScrollRange);
         }
-
     }
 }
 
