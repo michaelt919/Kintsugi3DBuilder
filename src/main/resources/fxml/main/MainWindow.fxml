@@ -228,9 +228,6 @@
             </MenuBar>
         </AnchorPane>
         <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">
-            <VBox.margin>
-                <Insets top="-2.0"/>
-            </VBox.margin>
             <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS"/>
             <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml"/>
             <VBox HBox.hgrow="ALWAYS">
@@ -265,5 +262,5 @@
             </VBox>
         </HBox>
     </VBox>
-    <Label fx:id="shaderName" style="-fx-border-color: #efcb5c; -fx-label-padding: 10; -fx-border-radius: 30; -fx-opacity: 50;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="44.0" />
+    <Label fx:id="shaderName" style="-fx-border-color: #d4aa00; -fx-label-padding: 10; -fx-border-radius: 30; -fx-opacity: 50;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="44.0" />
 </AnchorPane>

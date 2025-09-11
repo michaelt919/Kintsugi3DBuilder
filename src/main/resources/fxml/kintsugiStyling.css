@@ -73,6 +73,9 @@
 }
 
 
+.kintsugi-3D-Wireframe-0{
+    -fx-fill: #EEEEEE; /* near-white */
+}
 .kintsugi-3D-Wireframe-1{
     -fx-fill: #CECECE; /* off-white */
 }
@@ -113,6 +116,7 @@
 
 .button, .toggle-button {
     -fx-background-color: #CECECE;
+    -fx-text-fill: #202020;
     -fx-padding: 8 16 8 16; /* top right bottom left */
 }
 
@@ -120,24 +124,35 @@
     -fx-padding: 16 16 16 16; /* top right bottom left */
 }
 
-.button .text{
-    -fx-fill:#030303;
-}
-
 .button:hover{
-    -fx-background-color: #D4AA00;
-    -fx-text-fill: #000000
+    -fx-background-color: #EEEEEE;
 }
 
 .button:pressed {
-    -fx-background-color: #262626;
-    -fx-text-fill: #CECECE;
+    -fx-background-color: #ADADAD;
+    -fx-text-fill: #202020;
 }
 
-.button-selected{
-    -fx-background-color: #D4AA00;
-    -fx-padding: 8 16 8 16; /* top right bottom left */
+.button:selected{
+    -fx-background-color: #EEEEEE;
+    -fx-text-fill: #202020;
+    -fx-font-weight:bold;
  }
+
+.toggle-button:hover{
+    -fx-background-color: #EEEEEE;
+}
+
+.toggle-button:pressed {
+    -fx-background-color: #ADADAD;
+    -fx-text-fill: #202020;
+}
+
+.toggle-button:selected{
+    -fx-background-color: #EEEEEE;
+    -fx-text-fill: #202020;
+    -fx-font-weight:bold;
+}
 
 .cache-settings-root{
       -fx-background-color: #383838;
@@ -160,21 +175,6 @@
 .color-picker{
     -fx-background-color: #383838;
     -fx-border-color: #383838;
-}
-
-.color-picker .text{
-    -fx-fill: #000000;
-}
-
-.combo-box .menu-item .text{
-    -fx-fill:#ffffff;
-}
-
-/*TODO: change the color of combo box dropdown arrow*/
-
-.combo-box .text{
-    -fx-fill: #ffffff; /*TODO: trying to change the color of the item
-                            which is presented in the dropdown before it is unrolled*/
 }
 
 .choice-box{
@@ -205,10 +205,6 @@ dialog-pane{
     -fx-text-fill: #000000;
 }
 
-.card-background .text {
-    -fx-fill: #000000;
-}
-
 .slider .axis {
     -fx-tick-label-fill: #FFFFFF;
 }
@@ -218,53 +214,62 @@ dialog-pane{
  }
 
 .list-view{
-    -fx-background-color: #262626;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #202020;
+    -fx-text-fill: #CECECE;
 }
 
 .list-cell:even {
-    -fx-background-color: #333333;
+    -fx-background-color: #383838;
+    -fx-text-fill: #CECECE;
 }
 
 .list-cell:odd {
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
+    -fx-text-fill: #CECECE;
 }
 
 .list-cell:selected{
-    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
-}
-
-.list-cell:selected .text{
-    -fx-fill: #000001; /*doesn't change the color of the view log/console.fxml cell text if it's #000000*/
-                       /*yes it's strange but it works*/
+    -fx-background-color:#EEEEEE;
+    -fx-text-fill: #202020;
 }
 
 .menu{
-    -fx-background-color: #262626;
+    -fx-background-color: #383838;
     -fx-background-radius: 0 0 0 0;
-    /*-fx-background-color: #383838; brought in from main - Nathan merge
-    -fx-background-radius: 30 30 30 30;*/
 }
+
+.menu .label{
+    -fx-text-fill: #CECECE
+}
+
 .menu:hover{
-    -fx-background-color: #D4AA00;
+    -fx-background-color: #EEEEEE;
+}
+
+.menu:hover .label{
+    -fx-text-fill: #383838;
 }
 
 .menu-bar{
-    -fx-background-color: #262626
-}
-.menu-item:hover{
-    -fx-background-color: #D4AA00;
+    -fx-background-color: #383838;
 }
 
 .menu-item{
-    -fx-background-color:#262626;
-    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #262626;
 }
 
-.menubarbuttons{
-    -fx-background-color: #262626;
-    -fx-background-radius: 0 0 0 0;
+.menu-item .label{
+    -fx-text-fill: #CECECE !important;
 }
+
+.menu-item:hover{
+    -fx-background-color: #EEEEEE;
+}
+
+.menu-item:hover .label{
+    -fx-text-fill: #383838 !important;
+}
+
 .mainwindow-root{
      -fx-background-color: #202020;
  }
@@ -282,23 +287,18 @@ dialog-pane{
 }
 
 .split-button:hover{
-    -fx-background-color: #D4AA00;
+    -fx-background-color: #EEEEEE;
+    -fx-text-fill: #202020;
 }
 
 .split-menu-button {
     -fx-background-color: #CECECE;
-}
-
-.split-menu-button .text{
-    -fx-fill:#030303;
+    -fx-text-fill: #202020;
 }
 
 .split-menu-button:hover{
-    -fx-base: #D4AA00;
-}
-
-.split-menu-button .menu-item .text{
-    -fx-fill:#CECECE;
+    -fx-background-color: #EEEEEE;
+    -fx-text-fill: #202020;
 }
 
 .scroll-pane{
@@ -313,13 +313,13 @@ dialog-pane{
     -fx-background-color: #383838;
 }
 .tab:selected{
-    -fx-background-color: #D4AA00;
+    -fx-background-color: #EEEEEE;
     -fx-font-weight:bold;
 }
 
 .tab:hover{
  /*   -fx-background-color: #222255;*/
-    -fx-background-color: #D4AA00;
+    -fx-background-color: #EEEEEE;
 }
 
 .tab-pane .tab-header-area .tab-header-background {
@@ -346,11 +346,6 @@ dialog-pane{
     -fx-background-color: #222230;
 }
 
-.text{
-    -fx-fill: #ffFFFF;
-    -fx-base: #000000;
-}
-
 .text-field{
     -fx-background-color: #383838;
     -fx-text-fill: #ffffff;
@@ -368,31 +363,6 @@ dialog-pane{
     -fx-fill:#ffffff;
 }
 
-.toggle-button{
-    -fx-background-color: #CECECE;
-}
-
-.toggle-button .text{
-    -fx-fill:#030303;
-}
-
-.toggle-button:selected{
-    -fx-background-color: #D4AA00;
-    -fx-font-weight:bold;
-}
-
-.toggle-button:selected .text{
-    -fx-fill: #000000;
-}
-
-.toggle-button:hover{
-    -fx-background-color: #D4AA00;
-}
-
-.toggle-button:pressed {
-    -fx-background-color: #383838;
-}
-
 .tool-bar{
     -fx-background-color: #262626;
 }
@@ -403,10 +373,6 @@ dialog-pane{
 
 .tooltip {
     -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
-}
-
-.tooltip .text{
-    -fx-fill: #CECECE;
 }
 
 /*Tree cell styling stolen from stack overflow --> https://stackoverflow.com/questions/30684308/javafx-treeview-css */
@@ -465,10 +431,6 @@ dialog-pane{
     -fx-min-width: 184;
     -fx-pref-width: 330;
     -fx-min-height: 32;
-}
-
-.card-button .text {
-    -fx-text-fill: #CECECE;
 }
 
 .card-separator .line {
