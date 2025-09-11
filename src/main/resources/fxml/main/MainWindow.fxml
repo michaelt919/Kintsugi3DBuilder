@@ -16,7 +16,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="720.0" styleClass="menubar-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.MainWindowController">
+<AnchorPane prefHeight="720.0" styleClass="mainwindow-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.MainWindowController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
           AnchorPane.topAnchor="0.0">
         <AnchorPane>
@@ -231,40 +231,39 @@
             <VBox.margin>
                 <Insets top="-2.0"/>
             </VBox.margin>
-            <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml"/>
             <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS"/>
-            <fx:include fx:id="framebufferView" source="FramebufferView.fxml" HBox.hgrow="ALWAYS"
-                        VBox.vgrow="ALWAYS"/>
+            <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml"/>
+            <VBox HBox.hgrow="ALWAYS">
+                <fx:include fx:id="framebufferView" source="FramebufferView.fxml" VBox.vgrow="ALWAYS"/>
+                <AnchorPane fx:id="miniProgressPane" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false">
+                    <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar"
+                          onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar"
+                          spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
+                        <cursor>
+                            <Cursor fx:constant="HAND"/>
+                        </cursor>
+                        <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
+                            <padding>
+                                <Insets bottom="8.0" left="8.0" top="8.0"/>
+                            </padding>
+                            <HBox.margin>
+                                <Insets/>
+                            </HBox.margin>
+                        </Label>
+                        <StackPane fx:id="swapControlsStackPane">
+                            <padding>
+                                <Insets left="8.0" right="8.0"/>
+                            </padding>
+                            <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBarAsync"
+                                    style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss"
+                                    visible="false"/>
+                            <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0"
+                                         prefWidth="60.0" progress="0.0"/>
+                        </StackPane>
+                    </HBox>
+                </AnchorPane>
+            </VBox>
         </HBox>
     </VBox>
     <Label fx:id="shaderName" style="-fx-border-color: #efcb5c; -fx-label-padding: 10; -fx-border-radius: 30; -fx-opacity: 50;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="44.0" />
-    <AnchorPane fx:id="miniProgressPane" layoutY="688.6666870117188" prefHeight="24.0"
-                style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0"
-                AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-        <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar"
-              onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar"
-              spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
-            <cursor>
-                <Cursor fx:constant="HAND"/>
-            </cursor>
-            <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
-                <padding>
-                    <Insets bottom="8.0" left="8.0" top="8.0"/>
-                </padding>
-                <HBox.margin>
-                    <Insets/>
-                </HBox.margin>
-            </Label>
-            <StackPane fx:id="swapControlsStackPane">
-                <padding>
-                    <Insets left="8.0" right="8.0"/>
-                </padding>
-                <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBarAsync"
-                        style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss"
-                        visible="false"/>
-                <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0"
-                             prefWidth="60.0" progress="0.0"/>
-            </StackPane>
-        </HBox>
-    </AnchorPane>
 </AnchorPane>

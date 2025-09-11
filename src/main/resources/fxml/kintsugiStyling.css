@@ -103,6 +103,10 @@
     -fx-padding: 48 24 52 24; /* top right bottom left */
 }
 
+.sidebar-root{
+    -fx-background-color: #383838;
+}
+
 .accordion .content {
     -fx-background-color: #262626;
 }
@@ -261,8 +265,8 @@ dialog-pane{
     -fx-background-color: #262626;
     -fx-background-radius: 0 0 0 0;
 }
-.menubar-root{
-     -fx-background-color: #383838;
+.mainwindow-root{
+     -fx-background-color: #202020;
  }
 
 .progress-bar{

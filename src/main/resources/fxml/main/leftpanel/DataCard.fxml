@@ -2,30 +2,28 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
-<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked"
-      styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
-      xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
+
+<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
     <VBox id="border_box" fx:id="borderBox">
         <HBox alignment="CENTER_LEFT" prefHeight="13.0" stylesheets="@../../kintsugiStyling.css">
             <ImageView fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
             </ImageView>
             <Label id="texture_title" fx:id="cardTitle" styleClass="cardLabel" text="Texture Type">
                 <font>
-                    <Font name="Segoe UI Semibold" size="12.0"/>
+                    <Font name="Segoe UI Semibold" size="12.0" />
                 </font>
                 <HBox.margin>
-                    <Insets left="8.0"/>
+                    <Insets left="8.0" />
                 </HBox.margin>
             </Label>
-            <Region maxWidth="1.7976931348623157E308" prefHeight="13.0" prefWidth="200.0" HBox.hgrow="ALWAYS"/>
-            <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#expansionToggleClicked" stroke="BLACK"
-                       strokeType="INSIDE" visible="false" width="24.0"/>
+            <Region maxWidth="1.7976931348623157E308" prefHeight="13.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+            <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#expansionToggleClicked" stroke="BLACK" strokeType="INSIDE" visible="false" width="24.0" />
             <padding>
-                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
         </HBox>
         <VBox fx:id="cardBody" prefHeight="275">
@@ -33,75 +31,73 @@
                 <VBox fx:id="textContent" HBox.hgrow="ALWAYS">
                     <Label styleClass="cardLabel" text="File Name:">
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                     </Label>
 
                     <Label id="file_name" styleClass="wireframeCaption, cardLabel" text="name_goes_here.jpg">
                         <VBox.margin>
-                            <Insets bottom="4.0" left="5.0"/>
+                            <Insets bottom="4.0" left="5.0" />
                         </VBox.margin>
                     </Label>
 
                     <Label styleClass="cardLabel" text="Resolution:">
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <VBox.margin>
-                            <Insets/>
+                            <Insets />
                         </VBox.margin>
                     </Label>
                     <Label id="resolution" styleClass="wireframeCaption, cardLabel" text="2048 x 2048">
                         <VBox.margin>
-                            <Insets bottom="4.0" left="5.0"/>
+                            <Insets bottom="4.0" left="5.0" />
                         </VBox.margin>
                     </Label>
 
                     <Label styleClass="cardLabel" text="Size:">
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <VBox.margin>
-                            <Insets/>
+                            <Insets />
                         </VBox.margin>
                     </Label>
 
                     <Label id="file_size" styleClass="wireframeCaption, cardLabel" text="331 KB">
                         <VBox.margin>
-                            <Insets bottom="4.0" left="5.0"/>
+                            <Insets bottom="4.0" left="5.0" />
                         </VBox.margin>
                     </Label>
 
                     <Label styleClass="cardLabel" text="Purpose:">
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <VBox.margin>
-                            <Insets top="4.0"/>
+                            <Insets top="4.0" />
                         </VBox.margin>
                     </Label>
                     <TextFlow prefWidth="200.0">
-                        <Label id="description" styleClass="wireframeCaption"
-                              text="Description of what this texture type contributes to the material."/>
+                        <Label id="description" styleClass="wireframeCaption" text="Description of what this texture type contributes to the material." />
                     </TextFlow>
                     <Label styleClass="cardLabel" text="Labels:">
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <VBox.margin>
-                            <Insets top="4.0"/>
+                            <Insets top="4.0" />
                         </VBox.margin>
                     </Label>
 
                     <HBox.margin>
-                        <Insets left="3.0"/>
+                        <Insets left="3.0" />
                     </HBox.margin>
 
                 </VBox>
-                <ImageView fx:id="mainImage" fitHeight="212.0" fitWidth="212.0" layoutX="100.0" layoutY="100.0"
-                           pickOnBounds="true" preserveRatio="true">
+                <ImageView fx:id="mainImage" fitHeight="212.0" fitWidth="212.0" layoutX="100.0" layoutY="100.0" pickOnBounds="true" preserveRatio="true">
                     <HBox.margin>
-                        <Insets right="3.0"/>
+                        <Insets right="3.0" />
                     </HBox.margin>
                 </ImageView>
             </HBox>
@@ -110,111 +106,108 @@
                 <!-- Separator -->
                 <Separator prefWidth="200.0" styleClass="card-separator">
                     <padding>
-                        <Insets left="8.0" right="8.0" top="16.0"/>
+                        <Insets left="8.0" right="8.0" top="16.0" />
                     </padding>
                 </Separator>
 
                 <!-- Button Section -->
                 <HBox alignment="TOP_CENTER">
-                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;"
-                            styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Replace">
+                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Replace">
                         <!--          <graphic>-->
                         <!--             <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
                         <!--             </ImageView>-->
                         <!--          </graphic>-->
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <HBox.margin>
-                            <Insets bottom="36.0" top="16.0"/>
+                            <Insets bottom="36.0" top="16.0" />
                         </HBox.margin>
                     </Button>
                     <padding>
-                        <Insets left="40.0" right="40.0"/>
+                        <Insets left="40.0" right="40.0" />
                     </padding>
                 </HBox>
 
                 <!-- Separator -->
                 <Separator prefWidth="200.0" styleClass="card-separator">
                     <padding>
-                        <Insets left="8.0" right="8.0"/>
+                        <Insets left="8.0" right="8.0" />
                     </padding>
                 </Separator>
 
                 <!-- Other Buttons -->
 
                 <HBox alignment="TOP_CENTER">
-                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;"
-                            styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Refresh"
-                            textFill="WHITE">
+                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Refresh" textFill="WHITE">
                         <!--                <graphic>-->
                         <!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
                         <!--                    </ImageView>-->
                         <!--                </graphic>-->
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <HBox.margin>
-                            <Insets bottom="8.0" top="16.0"/>
+                            <Insets bottom="8.0" top="16.0" />
                         </HBox.margin>
                     </Button>
                     <padding>
-                        <Insets left="40.0" right="40.0"/>
+                        <Insets left="40.0" right="40.0" />
                     </padding>
                 </HBox>
 
                 <HBox alignment="TOP_CENTER">
-                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;"
-                            styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Disable">
+                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Disable">
                         <!--                <graphic>-->
                         <!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
                         <!--                    </ImageView>-->
                         <!--                </graphic>-->
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <HBox.margin>
-                            <Insets bottom="8.0"/>
+                            <Insets bottom="8.0" />
                         </HBox.margin>
                     </Button>
                     <padding>
-                        <Insets left="40.0" right="40.0"/>
+                        <Insets left="40.0" right="40.0" />
                     </padding>
                 </HBox>
 
                 <HBox alignment="TOP_CENTER">
-                    <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#delete"
-                            style="-fx-text-fill: #CECECE;" styleClass="card-button"
-                            stylesheets="@../../kintsugiStyling.css" text="Delete ">
+                    <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#delete" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
                         <!--                <graphic>-->
                         <!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
                         <!--                    </ImageView>-->
                         <!--                </graphic>-->
                         <font>
-                            <Font name="Segoe UI Semibold" size="12.0"/>
+                            <Font name="Segoe UI Semibold" size="12.0" />
                         </font>
                         <HBox.margin>
-                            <Insets bottom="36.0"/>
+                            <Insets />
                         </HBox.margin>
                     </Button>
                     <padding>
-                        <Insets left="40.0" right="40.0"/>
+                        <Insets left="40.0" right="40.0" />
                     </padding>
                 </HBox>
                 <padding>
-                    <Insets bottom="24"/>
+                    <Insets bottom="36.0" />
                 </padding>
+            <VBox.margin>
+               <Insets />
+            </VBox.margin>
             </VBox>
 
             <padding>
-                <Insets left="5.0" right="5.0"/>
+                <Insets bottom="24.0" left="5.0" right="5.0" />
             </padding>
         </VBox>
         <VBox.margin>
-            <Insets/>
+            <Insets />
         </VBox.margin>
     </VBox>
     <padding>
-        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0"/>
+        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
     </padding>
 </VBox>
