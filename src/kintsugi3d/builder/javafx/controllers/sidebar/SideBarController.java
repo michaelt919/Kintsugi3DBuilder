@@ -12,16 +12,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 
 public class SideBarController
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SideBarController.class);
-
     @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
 

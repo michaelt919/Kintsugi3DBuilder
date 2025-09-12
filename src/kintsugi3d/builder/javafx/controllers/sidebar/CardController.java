@@ -167,7 +167,7 @@ public class CardController
     }
 
     @FXML
-    public void cardClicked(MouseEvent e)
+    public void cardClicked()
     {
 //        if (cameraCardsModel.isSelected(cardId))
 //        {

@@ -5,7 +5,6 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import kintsugi3d.builder.state.CardSelectionModel;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.ProjectDataCard;
 
@@ -17,8 +16,8 @@ public class ObservableCardsModel implements CardsModel
 {
     private final String label;
 
-    private final CardSelectionModel selectedCardsModel;
-    private final CardSelectionModel expandedCardsModel;
+    private final UUIDSelectionModel selectedCardsModel;
+    private final UUIDSelectionModel expandedCardsModel;
     private final ObservableList<ProjectDataCard> cardsList;
 
     public ObservableCardsModel(String label)
@@ -26,8 +25,8 @@ public class ObservableCardsModel implements CardsModel
         this.label = label;
 
         cardsList = FXCollections.observableList(new ArrayList<>());
-        selectedCardsModel = new CardSelectionModel(cardsList);
-        expandedCardsModel = new CardSelectionModel(cardsList);
+        selectedCardsModel = new UUIDSelectionModel();
+        expandedCardsModel = new UUIDSelectionModel();
 
         cardsList.addListener((ListChangeListener<? super ProjectDataCard>) change ->
         {
@@ -101,8 +100,8 @@ public class ObservableCardsModel implements CardsModel
         {
             cardsList.clear();
             cardsList.addAll(cards);
-            selectedCardsModel.setCardsList(cardsList);
-            expandedCardsModel.setCardsList(cardsList);
+            selectedCardsModel.clearSelection();
+            expandedCardsModel.clearSelection();
         });
     }
 
@@ -111,7 +110,6 @@ public class ObservableCardsModel implements CardsModel
     {
         for (int i = 0; i < cardsList.size(); i++)
         {
-            UUID uuid = cardsList.get(i).getCardId();
             if (cardsList.get(i).getCardId() == id)
             {
                 return i;
