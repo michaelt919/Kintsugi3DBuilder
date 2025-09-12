@@ -157,33 +157,34 @@ public class ProgressBarsController
         {
             overallStopwatch.start();
             localStopwatch.start();
-        });
 
-        new Thread(() ->
-        {
-            while (isProcessing())
+            // Don't start the thread until the stopwatches have started or it will stop right away.
+            new Thread(() ->
             {
-                try
+                while (isProcessing())
                 {
-                    Thread.sleep(200);
-
-                    if (isProcessing())
+                    try
                     {
-                        updateElapsedTime();
+                        Thread.sleep(200);
+
+                        if (isProcessing())
+                        {
+                            updateElapsedTime();
+                        }
+
+                        Thread.sleep(800);
+
+                        tickDownRemainingTime();
                     }
-
-                    Thread.sleep(800);
-
-                    tickDownRemainingTime();
+                    catch (InterruptedException e)
+                    {
+                        break;
+                    }
                 }
-                catch (InterruptedException e)
-                {
-                    break;
-                }
-            }
-        }).start();
+            }).start();
 
-        saturateProgressBars();
+            saturateProgressBars();
+        });
     }
 
     private void tickDownRemainingTime()
