@@ -3,12 +3,11 @@ package kintsugi3d.builder.javafx.internal;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import kintsugi3d.builder.state.CardsModel;
+import kintsugi3d.builder.state.ProjectDataCard;
 import kintsugi3d.builder.state.TabsModel;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 public class ObservableTabsModel implements TabsModel
 {
@@ -21,11 +20,12 @@ public class ObservableTabsModel implements TabsModel
     }
 
     @Override
-    public ObservableCardsModel addTab(String tabName)
+    public void addTab(String tabName, Function<CardsModel, List<ProjectDataCard>> cardFactory)
     {
         ObservableCardsModel newTab = new ObservableCardsModel(tabName);
+        List<ProjectDataCard> dataCards = cardFactory.apply(newTab);
+        newTab.setCardList(dataCards);
         tabs.put(tabName, newTab);
-        return newTab;
     }
 
     @Override
@@ -40,7 +40,6 @@ public class ObservableTabsModel implements TabsModel
         return tabs.get(label);
     }
 
-    @Override
     public Collection<ObservableCardsModel> getAllTabs()
     {
         return Collections.unmodifiableCollection(tabs.values());

@@ -90,31 +90,20 @@ public class ObservableCardsModel implements CardsModel
     @Override
     public ObservableList<ProjectDataCard> getCardList()
     {
-        return cardsList;
+        return FXCollections.unmodifiableObservableList(cardsList);
     }
 
-    @Override
     public void setCardList(List<ProjectDataCard> cards)
     {
-        Platform.runLater(() ->
-        {
-            cardsList.clear();
-            cardsList.addAll(cards);
-            selectedCardsModel.clearSelection();
-            expandedCardsModel.clearSelection();
-        });
+        cardsList.clear();
+        cardsList.addAll(cards);
+        selectedCardsModel.clearSelection();
+        expandedCardsModel.clearSelection();
     }
 
     @Override
-    public int findIndexByCardUUID(UUID id)
+    public void deleteCard(ProjectDataCard card)
     {
-        for (int i = 0; i < cardsList.size(); i++)
-        {
-            if (cardsList.get(i).getCardId() == id)
-            {
-                return i;
-            }
-        }
-        return -1;
+        cardsList.removeIf(other -> other.getCardId().equals(card.getCardId()));
     }
 }

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -42,6 +41,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ProjectInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -190,19 +191,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
 
         loadedViewSet.generateCameraMetadata();
-        Platform.runLater(() ->
-        {
-            TabsModel tabsModel = Global.state().getTabModels();
-            CardsModel model = tabsModel.addTab("Cameras");
-            List<ProjectDataCard> dataCards = new ArrayList<>();
-
-            for (int i = 0; i < loadedViewSet.getCameraMetadata().size(); i++)
-            {
-                dataCards.add(ProjectDataCardFactory.createCameraCard(model, loadedViewSet, i));
-            }
-
-            model.setCardList(dataCards);
-        });
+        TabsModel tabsModel = Global.state().getTabModels();
+        tabsModel.addTab("Cameras",
+            model -> IntStream.range(0, loadedViewSet.getCameraPoseCount())
+                .mapToObj(i -> ProjectDataCardFactory.createCameraCard(model, loadedViewSet, i))
+                .collect(Collectors.toUnmodifiableList()));
 
         // Create the instance (will be initialized on the graphics thread)
         ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
@@ -227,6 +220,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             @Override
             public void cancelComplete(UserCancellationException e)
             {
+                Global.state().getTabModels().clearTabs(); // Loading cancelled; clear the tabs of the sidebar
+
                 if (progressMonitor != null)
                 {
                     progressMonitor.cancelComplete(e);
@@ -644,7 +639,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
 
                 // Empty sidebar; will be repopulated when another project is opened.
-                Platform.runLater(Global.state().getTabModels()::clearTabs);
+                Global.state().getTabModels().clearTabs();
             }
 
             unloadRequested = false;

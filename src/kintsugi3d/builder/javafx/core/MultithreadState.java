@@ -49,12 +49,12 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
         settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
+        tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        tabsModel = JavaFXState.getInstance().getTabModels();
     }
 
     @Override

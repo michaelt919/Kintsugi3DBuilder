@@ -4,6 +4,7 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.UUID;
 
 public final class ProjectDataCardFactory
@@ -34,20 +35,32 @@ public final class ProjectDataCardFactory
         return card;
     }
 
+    private static int findIndexByCardUUID(List<ProjectDataCard> cardsList, UUID id)
+    {
+        for (int i = 0; i < cardsList.size(); i++)
+        {
+            if (cardsList.get(i).getCardId() == id)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private static void addDeleteButton(CardsModel cardsModel, ProjectDataCard card, int buttonGroup, ViewSet viewSet)
     {
         Runnable run = () ->
         {
             UUID id = card.getCardId();
-            int index = cardsModel.findIndexByCardUUID(id);
+            int index = findIndexByCardUUID(cardsModel.getCardList(), id);
             if (index != -1 && viewSet != null)
             {
                 viewSet.deleteCamera(index);
             }
 
-            cardsModel.getCardList().removeIf(other -> other.getCardId().equals(id));
+            cardsModel.deleteCard(card);
         };
-        card.addButton(buttonGroup, "Delete ", run);
+        card.addButton(buttonGroup, "Delete", run);
     }
 
     private static void addDisableButton(CardsModel cardsModel, ProjectDataCard card, int buttonGroup)
