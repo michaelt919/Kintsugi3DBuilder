@@ -711,6 +711,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         {
             projectInstance.close();
 
+            Global.state().getProjectModel().setProjectOpen(false);
+            Global.state().getProjectModel().clearProjectName();
             Global.state().getProjectModel().setProjectLoaded(false);
             Global.state().getProjectModel().setProjectProcessed(false);
             Global.state().getProjectModel().setProcessedTextureResolution(0);

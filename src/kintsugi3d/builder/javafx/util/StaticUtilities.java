@@ -15,6 +15,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
+import kintsugi3d.builder.core.Global;
 
 import java.util.Objects;
 
@@ -196,8 +197,15 @@ public final class StaticUtilities
 
     public static boolean confirmCancel()
     {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Discard changes?  Settings will be reverted to their previous values.");
-        var result = alert.showAndWait();
-        return result.isPresent() && result.get().equals(ButtonType.OK);
+        if (Global.state().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
+        {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Discard changes?  Settings will be reverted to their previous values.");
+            var result = alert.showAndWait();
+            return result.isPresent() && result.get().equals(ButtonType.OK);
+        }
+        else
+        {
+            return true;
+        }
     }
 }
