@@ -16,14 +16,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kintsugi3d.builder.javafx.core.MainApplication;
-import kintsugi3d.builder.resources.ProjectDataCard;
-import kintsugi3d.builder.state.CardsModel;
+import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
+import kintsugi3d.builder.state.ProjectDataCard;
 
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 public class CardController
 {
@@ -40,10 +39,10 @@ public class CardController
     @FXML private VBox buttonBox;
 
     private UUID cardId;
-    private CardsModel cardsModel;
+    private ObservableCardsModel cardsModel;
     private Image preview;
 
-    public void init(CardsModel cardsModel, ProjectDataCard dataCard)
+    public void init(ObservableCardsModel cardsModel, ProjectDataCard dataCard)
     {
         this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();
@@ -162,26 +161,6 @@ public class CardController
         dataCardPane.setVisible(visibility);
     }
 
-    public void setCardId(UUID uuid)
-    {
-        this.cardId = uuid;
-    }
-
-    public void setCardTitle(String title)
-    {
-        this.cardTitle.setText(title);
-    }
-
-    public String getCardTitle()
-    {
-        return this.cardTitle.getText();
-    }
-
-    public UUID getCardId()
-    {
-        return this.cardId;
-    }
-
     public boolean titleContainsString(String str)
     {
         return cardTitle.getText().toLowerCase(Locale.ROOT).contains(str.toLowerCase(Locale.ROOT));
@@ -221,12 +200,6 @@ public class CardController
             cardsModel.expandCard(cardId);
         }
         e.consume();
-    }
-
-    @FXML
-    public void delete()
-    {
-        cardsModel.deleteCard(cardId);
     }
 
     public VBox getCard()

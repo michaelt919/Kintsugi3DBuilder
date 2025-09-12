@@ -20,6 +20,8 @@ class PreviewImages
 {
     private static final Logger LOG = LoggerFactory.getLogger(PreviewImages.class);
 
+    private static final int MAX_THUMBNAIL_SIZE = 450;
+
     private final ViewSet viewSet;
     private final int viewIndex;
     private final ProgressMonitor progressMonitor;
@@ -159,9 +161,11 @@ class PreviewImages
 
                     if (missingThumbnail)
                     {
+                        Resolution thumbnailResolution = getThumbnailResolution();
+
                         // Thumbnail doesn't need undistortion.
                         fullResImage.saveAtResolution("PNG", viewSet.getThumbnailImageFile(viewIndex),
-                            viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
+                            thumbnailResolution.width, thumbnailResolution.height);
                         logFinished(viewSet.getThumbnailImageFile(viewIndex));
                     }
 
@@ -180,6 +184,39 @@ class PreviewImages
         }
     }
 
+    private static class Resolution
+    {
+        public final int width;
+        public final int height;
+
+        public Resolution(int width, int height)
+        {
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    private Resolution getThumbnailResolution()
+    {
+        int fullWidth = fullResImage.getBufferedImage().getWidth();
+        int fullHeight = fullResImage.getBufferedImage().getHeight();
+
+        int thumbnailWidth, thumbnailHeight;
+        if (fullWidth > fullHeight)
+        {
+            // Landscape: thumbnail size limited by width
+            thumbnailWidth = MAX_THUMBNAIL_SIZE;
+            thumbnailHeight = Math.round((float)MAX_THUMBNAIL_SIZE * (float)fullHeight / (float)fullWidth);
+        }
+        else
+        {
+            // Portrait: thumbnail size limited by height
+            thumbnailHeight = MAX_THUMBNAIL_SIZE;
+            thumbnailWidth = Math.round((float)MAX_THUMBNAIL_SIZE * (float)fullWidth / (float)fullHeight);
+        }
+        return new Resolution(thumbnailWidth, thumbnailHeight);
+    }
+
     void tryCreateMissingFilesNoUndistortion()
     {
         try
@@ -195,8 +232,9 @@ class PreviewImages
 
             if (missingThumbnail)
             {
+                Resolution thumbnailResolution = getThumbnailResolution();
                 fullResImage.saveAtResolution("PNG", viewSet.getThumbnailImageFile(viewIndex, "png"),
-                    viewSet.getThumbnailWidth(), viewSet.getThumbnailHeight());
+                    thumbnailResolution.width, thumbnailResolution.height);
                 logFinished(viewSet.getThumbnailImageFile(viewIndex));
             }
 

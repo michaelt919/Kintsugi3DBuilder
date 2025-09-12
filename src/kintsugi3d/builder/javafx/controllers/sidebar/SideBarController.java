@@ -10,8 +10,8 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
-import kintsugi3d.builder.state.CardsModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +33,8 @@ public class SideBarController
     private final List<RadioButton> buttons = new ArrayList<>(8);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
+    private ObservableTabsModel tabModels;
+
     public Node getRootNode()
     {
         return mainBox;
@@ -40,53 +42,20 @@ public class SideBarController
 
     public void init(ObservableTabsModel tabModels)
     {
-        tabModels.getAllTabs().forEach(model ->
-        {
-            RadioButton newButton = createButton(model.getModelLabel());
-            VBox newTab = createTab(model);
+        this.tabModels = tabModels;
 
-            buttonBox.getChildren().add(newButton);
-            mainBox.getChildren().add(newTab);
+        tabModels.getAllTabs().forEach(this::addTab);
 
-            buttonMap.put(model.getModelLabel(), newButton);
-            tabMap.put(model.getModelLabel(), newTab);
-
-            newTab.visibleProperty().bind(newButton.selectedProperty());
-            newTab.managedProperty().bind(newButton.selectedProperty());
-        });
-
-        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, CardsModel>) change ->
+        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel>) change ->
         {
             if (change.wasAdded())
             {
-                CardsModel model = change.getValueAdded();
-                RadioButton newButton = createButton(model.getModelLabel());
-                VBox newTab = createTab(model);
-
-                buttonBox.getChildren().add(newButton);
-                mainBox.getChildren().add(newTab);
-
-                buttonMap.put(model.getModelLabel(), newButton);
-                tabMap.put(model.getModelLabel(), newTab);
-
-                newTab.visibleProperty().bind(newButton.selectedProperty());
-                newTab.managedProperty().bind(newButton.selectedProperty());
+                addTab(change.getValueAdded());
             }
 
             if (change.wasRemoved())
             {
-                String key = change.getValueRemoved().getModelLabel();
-
-                // Remove button and the tab itself from the maps and their actual containers..
-                RadioButton button = buttonMap.remove(key);
-                buttonBox.getChildren().remove(button);
-                mainBox.getChildren().remove(tabMap.remove(key));
-
-                if (!tabModels.getAllTabs().isEmpty() && Objects.equals(tabToggleGroup.getSelectedToggle(), button))
-                {
-                    // Select a tab if we deleted the selected one.
-                    buttons.get(0).setSelected(true);
-                }
+                removeTab(change.getValueRemoved().getModelLabel());
             }
 
             // Refresh whether tabs are visible any time the tabs model is updated.
@@ -107,6 +76,44 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
+    }
+
+    private void removeTab(String key)
+    {
+        // Remove button and the tab itself from the maps and their actual containers.
+        RadioButton button = buttonMap.remove(key);
+        buttonBox.getChildren().remove(button);
+        mainBox.getChildren().remove(tabMap.remove(key));
+        buttons.remove(button);
+
+        if (Objects.equals(tabToggleGroup.getSelectedToggle(), button))
+        {
+            if (this.tabModels.getAllTabs().isEmpty())
+            {
+                // Deselect if no tabs remain.
+                tabToggleGroup.selectToggle(null);
+            }
+            else
+            {
+                // Select a tab if we deleted the selected one.
+                buttons.get(0).setSelected(true);
+            }
+        }
+    }
+
+    private void addTab(ObservableCardsModel model)
+    {
+        RadioButton newButton = createButton(model.getModelLabel());
+        VBox newTab = createTab(model);
+
+        buttonBox.getChildren().add(newButton);
+        mainBox.getChildren().add(newTab);
+
+        buttonMap.put(model.getModelLabel(), newButton);
+        tabMap.put(model.getModelLabel(), newTab);
+
+        newTab.visibleProperty().bind(newButton.selectedProperty());
+        newTab.managedProperty().bind(newButton.selectedProperty());
     }
 
     private RadioButton createButton(String name)
@@ -137,7 +144,7 @@ public class SideBarController
         return button;
     }
 
-    private VBox createTab(CardsModel model)
+    private VBox createTab(ObservableCardsModel model)
     {
         VBox newTab = null;
         FXMLLoader loader = new FXMLLoader();
@@ -172,5 +179,4 @@ public class SideBarController
     {
         tabControllers.forEach(CardTabController::refreshCardList);
     }
-
 }

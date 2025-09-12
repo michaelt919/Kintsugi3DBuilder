@@ -193,8 +193,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         Platform.runLater(() ->
         {
             TabsModel tabsModel = Global.state().getTabModels();
-            tabsModel.addTab("Cameras");
-            tabsModel.getTab("Cameras").setViewSet(loadedViewSet);
+            CardsModel model = tabsModel.addTab("Cameras");
+            List<ProjectDataCard> dataCards = new ArrayList<>();
+
+            for (int i = 0; i < loadedViewSet.getCameraMetadata().size(); i++)
+            {
+                dataCards.add(ProjectDataCardFactory.createCameraCard(model, loadedViewSet, i));
+            }
+
+            model.setCardList(dataCards);
         });
 
         // Create the instance (will be initialized on the graphics thread)

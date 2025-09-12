@@ -2,16 +2,14 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.shape.*?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.*?>
-
 <VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
     <VBox id="border_box" fx:id="borderBox">
         <HBox alignment="CENTER_LEFT" prefHeight="13.0" stylesheets="@../../kintsugiStyling.css">
-            <ImageView fx:id="cardIcon" fitHeight="24.0" fitWidth="24.0">
-            </ImageView>
+            <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="24.0" preserveRatio="true" />
             <Label id="texture_title" fx:id="cardTitle" styleClass="cardLabel" text="Texture Type">
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
@@ -175,7 +173,7 @@
                 </HBox>
 
                 <HBox alignment="TOP_CENTER">
-                    <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#delete" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
+                    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="card-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
                         <!--                <graphic>-->
                         <!--                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">-->
                         <!--                    </ImageView>-->

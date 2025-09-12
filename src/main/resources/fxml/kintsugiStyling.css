@@ -286,19 +286,20 @@ dialog-pane{
     -fx-accent: #383838; /*color of completed portion*/
 }
 
-.split-button:hover{
-    -fx-background-color: #EEEEEE;
+.split-menu-button {
+    -fx-background-color: #CECECE;
+}
+
+.split-menu-button .label {
     -fx-text-fill: #202020;
 }
 
-.split-menu-button {
-    -fx-background-color: #CECECE;
-    -fx-text-fill: #202020;
+.split-button:hover{
+    -fx-background-color: #EEEEEE;
 }
 
 .split-menu-button:hover{
     -fx-background-color: #EEEEEE;
-    -fx-text-fill: #202020;
 }
 
 .scroll-pane{

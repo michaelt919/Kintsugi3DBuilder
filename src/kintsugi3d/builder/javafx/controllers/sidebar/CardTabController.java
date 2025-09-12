@@ -11,8 +11,8 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.resources.ProjectDataCard;
-import kintsugi3d.builder.state.CardsModel;
+import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
+import kintsugi3d.builder.state.ProjectDataCard;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,13 +31,13 @@ public class CardTabController
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
 
-    private CardsModel cardsModel;
+    private ObservableCardsModel cardsModel;
 
-    public void init(CardsModel cardsModel)
+    public void init(ObservableCardsModel cardsModel)
     {
         this.cardsModel = cardsModel;
-        Collection<VBox> displayCards = new ArrayList<>(cardsModel.getObservableCardsList().size());
-        for (ProjectDataCard card : cardsModel.getObservableCardsList())
+        Collection<VBox> displayCards = new ArrayList<>(cardsModel.getCardList().size());
+        for (ProjectDataCard card : cardsModel.getCardList())
         {
             displayCards.add(createDataCard(card).getCard());
         }
@@ -97,7 +97,7 @@ public class CardTabController
     {
         vbox.getChildren().clear();
         cardControllers.clear();
-        for (ProjectDataCard card : cardsModel.getObservableCardsList())
+        for (ProjectDataCard card : cardsModel.getCardList())
         {
             vbox.getChildren().add(createDataCard(card).getCard());
         }
@@ -105,7 +105,7 @@ public class CardTabController
 
     private void createListeners()
     {
-        cardsModel.getObservableCardsList().addListener((ListChangeListener<ProjectDataCard>) change ->
+        cardsModel.getCardList().addListener((ListChangeListener<ProjectDataCard>) change ->
         {
             while (change.next())
             {
@@ -120,14 +120,14 @@ public class CardTabController
                 {
                     for (int i = change.getFrom(); i < change.getTo(); i++)
                     {
-                        createDataCard(cardsModel.getObservableCardsList().get(i));
+                        createDataCard(cardsModel.getCardList().get(i));
                     }
                 }
                 if (change.wasReplaced())
                 {
                     for (int i = change.getFrom(); i < change.getTo(); i++)
                     {
-                        createDataCard(cardsModel.getObservableCardsList().get(i), i);
+                        createDataCard(cardsModel.getCardList().get(i), i);
                     }
                 }
             }

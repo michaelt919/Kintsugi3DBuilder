@@ -122,7 +122,19 @@ public interface ReadonlyViewSet
     String getRelativePreviewImagePathName();
 
     /**
-     * Gets the relative name of the image file corresponding to a particular view.
+     * Gets the image file corresponding to a particular view, relative to the full res image directory.
+     * This method should be used to retrieve a filename representing the actual location of the full-res image file.
+     * In contexts when the relative path is unwanted, use getImageFileName() instead.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file's relative name.
+     */
+    File getImageFile(int poseIndex);
+
+    /**
+     * Gets the name of the image file corresponding to a particular view.
+     * This method should be used to retrieve the filename in contexts when the relative path is unwanted.
+     * (i.e. for creating or finding images with the same name as the full-res image file, but which are in a different directory).
+     * To retrieve a filename representing the actual location of the full-res image file, use getImageFile() instead.
      * @param poseIndex The index of the image file to retrieve.
      * @return The image file's relative name.
      */

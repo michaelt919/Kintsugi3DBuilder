@@ -4,8 +4,8 @@ import java.util.Collection;
 
 public interface TabsModel
 {
-    void addTab(String tabName);
+    CardsModel addTab(String tabName);
     void clearTabs();
     CardsModel getTab(String label);
-    Collection<CardsModel> getAllTabs();
+    Collection<? extends CardsModel> getAllTabs();
 }

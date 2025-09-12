@@ -218,7 +218,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         {
             if (id != viewSet.getPrimaryViewIndex())
             {
-                out.printf("v\t%d\t%d\t%d\t%s", id, viewSet.getCameraProjectionIndex(id), viewSet.getLightIndex(id), viewSet.getImageFileName(id));
+                out.printf("v\t%d\t%d\t%d\t%s", id, viewSet.getCameraProjectionIndex(id), viewSet.getLightIndex(id), viewSet.getImageFile(id));
                 out.println();
             }
         }
