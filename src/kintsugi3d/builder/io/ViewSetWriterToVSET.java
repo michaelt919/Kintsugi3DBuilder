@@ -211,7 +211,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("v\t%d\t%d\t%d\t%s", viewSet.getPrimaryViewIndex(),
             viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()),
             viewSet.getLightIndex(viewSet.getPrimaryViewIndex()),
-            viewSet.getImageFileName(viewSet.getPrimaryViewIndex()));
+            viewSet.getImageFile(viewSet.getPrimaryViewIndex()));
         out.println();
 
         for (int id = 0; id < viewSet.getCameraPoseCount(); id++)
