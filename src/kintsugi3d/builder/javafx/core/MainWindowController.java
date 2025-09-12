@@ -567,10 +567,16 @@ public class MainWindowController
         ExperienceManager.getInstance().getExperience("LightCalibration").tryOpen();
     }
 
+    private void setMiniProgressPaneVisible(boolean value)
+    {
+        miniProgressPane.setVisible(value);
+        miniProgressPane.setManaged(value);
+    }
+
     public void showProgressBars()
     {
         ProgressBarsController.getInstance().showStage();
-        miniProgressPane.setVisible(false);
+        setMiniProgressPaneVisible(false);
     }
 
     public void launchViewerApp()
@@ -632,7 +638,7 @@ public class MainWindowController
 
     public void resetMiniProgressBar(DoubleExpression progressProperty, StringExpression labelProperty)
     {
-        miniProgressPane.setVisible(false);
+        setMiniProgressPaneVisible(false);
         miniProgressBar.setVisible(true);
         dismissButton.setVisible(false);
         setDarkestMiniBar();
@@ -721,7 +727,7 @@ public class MainWindowController
 
     public void showMiniProgressBar()
     {
-        this.miniProgressPane.setVisible(true);
+        setMiniProgressPaneVisible(true);
     }
 
     public void setReadyToDismissMiniProgBar()
@@ -733,7 +739,7 @@ public class MainWindowController
 
     public void dismissMiniProgressBarAsync()
     {
-        Platform.runLater(() -> miniProgressPane.setVisible(false));
+        Platform.runLater(() -> setMiniProgressPaneVisible(false));
     }
 
     public void hotSwap()
