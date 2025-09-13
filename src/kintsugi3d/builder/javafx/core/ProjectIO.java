@@ -153,7 +153,8 @@ public final class ProjectIO
             ProgressMonitor monitor = Global.state().getIOModel().getProgressMonitor();
             if (monitor != null)
             {
-                monitor.setStage(0, ProgressMonitor.PREPARING_PROJECT);
+                monitor.setStage(0, "Preparing project...");
+                monitor.setFinishingUpText("This shouldn't take long...");
             }
 
             viewSet.copyMasks();

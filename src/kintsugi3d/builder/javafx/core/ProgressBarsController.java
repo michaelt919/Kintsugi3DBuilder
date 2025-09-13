@@ -321,15 +321,6 @@ public class ProgressBarsController
         return processingProperty.getValue();
     }
 
-    public void beginNewStage()
-    {
-        Platform.runLater(() ->
-        {
-            localStopwatch = new Stopwatch();
-            localStopwatch.start();
-        });
-    }
-
     public ReadOnlyBooleanProperty getProcessingProperty()
     {
         return processingProperty;
@@ -352,11 +343,11 @@ public class ProgressBarsController
         private double maximum;
         private double localProgress;
 
-        private double overallProgress;
         private final IntegerProperty stageCountProperty;
         private final IntegerProperty currentStageProperty;
 
-        private String revertText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
+        private String localText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
+        private String finishingUpText;
 
         public Monitor(AtomicBoolean cancelRequested, ProgressBar localProgressBar, ProgressBar overallProgressBar, Label overallTextLabel, Label localTextLabel, Button cancelButton)
         {
@@ -368,7 +359,6 @@ public class ProgressBarsController
             this.cancelButton = cancelButton;
             maximum = 0.0;
             localProgress = 0.0;
-            overallProgress = 0.0;
             stageCountProperty = new SimpleIntegerProperty(0);
             currentStageProperty = new SimpleIntegerProperty(0);
         }
@@ -406,7 +396,6 @@ public class ProgressBarsController
             currentStageProperty.setValue(0);
 
             localProgress = 0.0;
-            overallProgress = 0.0;
             Platform.runLater(() ->
             {
                 localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
@@ -448,14 +437,17 @@ public class ProgressBarsController
         @Override
         public void setProcessName(String processName)
         {
-            Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
-            Platform.runLater(() -> progressStage.setTitle(processName));
+            Platform.runLater(() ->  ((Stage) overallProgressBar.getScene().getWindow()).setTitle(processName));
         }
 
         @Override
         public void setStageCount(int count)
         {
-            Platform.runLater(() -> stageCountProperty.setValue(count));
+            Platform.runLater(() ->
+            {
+                stageCountProperty.setValue(count);
+                refreshOverallProgress();
+            });
         }
 
         @Override
@@ -463,64 +455,90 @@ public class ProgressBarsController
         {
             this.localProgress = 0.0;
             int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
-            Platform.runLater(() -> this.currentStageProperty.setValue(currentStage));
-
-            Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
-
-            //index current stage from 0 in this instance
-            overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
-            Platform.runLater(() -> overallProgressBar.setProgress(overallProgress));
 
             LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
-            Platform.runLater(() -> overallTextLabel.setText(message));
+            // Reset text that displays when finishing up for a new stage
+            finishingUpText = ProgressMonitor.FINISHING_UP;
 
-            if(currentStage > stageCountProperty.getValue())
+            Platform.runLater(() ->
             {
-                if (message.equals(ProgressMonitor.PREPARING_PROJECT))
+                this.currentStageProperty.setValue(currentStage);
+                localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+                overallTextLabel.setText(message);
+                localTextLabel.setText(DEFAULT_MESSAGE);
+
+                refreshOverallProgress();
+
+                if(currentStage <= stageCountProperty.getValue())
                 {
-                    Platform.runLater(()-> localTextLabel.setText(ProgressMonitor.ALMOST_READY));
+                    // begin new stage
+                    localStopwatch = new Stopwatch();
+                    localStopwatch.start();
                 }
-                else
-                {
-                    Platform.runLater(()-> localTextLabel.setText(FINISHING_UP));
-                }
-            }
-            else
+            });
+        }
+
+        @Override
+        public void setFinishingUpText(String finishingUpText)
+        {
+            this.finishingUpText = finishingUpText;
+            Platform.runLater(this::refreshLocalText);
+        }
+
+        private void refreshLocalText()
+        {
+            if(currentStageProperty.get() > stageCountProperty.get())
             {
-                beginNewStage();
+                localTextLabel.setText(this.finishingUpText);
             }
+        }
+
+        private void refreshOverallProgress()
+        {
+            //index current stage from 0 in this instance
+            double overallProgress = (double) (currentStageProperty.get() - 1) / stageCountProperty.getValue();
+            overallProgressBar.setProgress(overallProgress);
+            refreshLocalText();
         }
 
         @Override
         public void setMaxProgress(double maxProgress)
         {
             this.maximum = maxProgress;
-            Platform.runLater(() -> localProgressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress / maxProgress));
+            Platform.runLater(this::refreshLocalProgress);
         }
 
         @Override
         public void setProgress(double progress, String message)
         {
-            this.localProgress = progress / maximum;
-            Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress));
+            this.localProgress = progress;
 
-            //index current stage from 0 in this instance
-            double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
-            this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
-            Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
-
-            LOG.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
+            LOG.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress / maximum * 100), message);
 
             //remove stage/stageCount from txt if it wouldn't make sense for it to be there (ex. Stage 0/0)
             //useful for simple exports like orbit animation
             boolean removeStageNums = stageCountProperty.getValue() <= 1 || currentStageProperty.getValue() == 0;
-            revertText = removeStageNums ? message :
+            this.localText = removeStageNums ? message :
                 String.format("Stage %s/%s — %s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
 
-            Platform.runLater(() -> localTextLabel.setText(revertText));
+            Platform.runLater(() ->
+            {
+                refreshLocalProgress();
+                localTextLabel.setText(localText);
+            });
 
             clickStopwatches(progress, maximum);
+        }
+
+        private void refreshLocalProgress()
+        {
+            localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress / maximum);
+
+            //index current stage from 0 in this instance
+            double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
+            double overallProgress = offset + (localProgress / (maximum * stageCountProperty.getValue()));
+            overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress);
         }
 
         @Override
@@ -537,23 +555,26 @@ public class ProgressBarsController
                 mainWindow.showMiniProgressBar();
             }
 
-            if (overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
+            Platform.runLater(() ->
             {
-                Platform.runLater(() -> overallProgressBar.setProgress(1.0));
-            }
+                if (overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
+                {
+                    overallProgressBar.setProgress(1.0);
+                }
 
-            if (localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
-            {
-                Platform.runLater(() -> localProgressBar.setProgress(1.0));
-            }
+                if (localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS)
+                {
+                    localProgressBar.setProgress(1.0);
+                }
 
-            //only revert text for processes which are not lightweight
-            if (localTextLabel.getText().equals(FINISHING_UP))
-            {
-                Platform.runLater(() -> localTextLabel.setText(revertText));
-            }
+                //only revert text for processes which are not lightweight
+                if (localTextLabel.getText().equals(FINISHING_UP))
+                {
+                    localTextLabel.setText(localText);
+                }
 
-            Platform.runLater(() -> cancelButton.setText("Cancel"));
+                cancelButton.setText("Cancel");
+            });
         }
 
         @Override
