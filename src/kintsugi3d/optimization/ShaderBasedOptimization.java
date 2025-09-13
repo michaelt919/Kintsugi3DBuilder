@@ -188,6 +188,12 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
             if (report.getPreviousError() - report.getError() <= convergenceTolerance)
             {
                 unsuccessfulIterations++;
+
+                if (report.getPreviousError() < report.getError())
+                {
+                    // Prevent infinite loop if the error cycles around the same average value.
+                    report.reject();
+                }
             }
             else
             {
