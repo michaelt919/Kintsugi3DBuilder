@@ -290,49 +290,52 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     }
                     case "z":
                         String name = scanner.next();
-                        Class<?> type = settings.getType(name);
-                        if (type.isAssignableFrom(String.class))
+                        if (settings.exists(name))
                         {
-                            settings.set(name, scanner.next());
-                        }
-                        else if (type.isAssignableFrom(Boolean.class))
-                        {
-                            // boolean setting
-                            settings.set(name, Boolean.parseBoolean(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
-                        }
-                        else if (type.isAssignableFrom(Double.class))
-                        {
-                            // integer setting
-                            settings.set(name, Double.parseDouble(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
-                        }
-                        else if (type.isAssignableFrom(Float.class))
-                        {
-                            // integer setting
-                            settings.set(name, Float.parseFloat(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
-                        }
-                        else if (type.isAssignableFrom(Long.class))
-                        {
-                            // integer setting
-                            settings.set(name, Long.parseLong(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
-                        }
-                        else if (type.isAssignableFrom(Integer.class))
-                        {
-                            settings.set(name, Integer.parseInt(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
-                        }
-                        else if (type.isAssignableFrom(Short.class))
-                        {
-                            settings.set(name, Short.parseShort(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
-                        }
-                        else if (type.isAssignableFrom(Byte.class))
-                        {
-                            settings.set(name, Byte.parseByte(scanner.next()));
-                            scanner.nextLine(); // Ignore rest of line
+                            Class<?> type = settings.getType(name);
+                            if (type.isAssignableFrom(String.class))
+                            {
+                                settings.set(name, scanner.next());
+                            }
+                            else if (type.isAssignableFrom(Boolean.class))
+                            {
+                                // boolean setting
+                                settings.set(name, Boolean.parseBoolean(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Double.class))
+                            {
+                                // integer setting
+                                settings.set(name, Double.parseDouble(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Float.class))
+                            {
+                                // integer setting
+                                settings.set(name, Float.parseFloat(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Long.class))
+                            {
+                                // integer setting
+                                settings.set(name, Long.parseLong(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Integer.class))
+                            {
+                                settings.set(name, Integer.parseInt(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Short.class))
+                            {
+                                settings.set(name, Short.parseShort(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Byte.class))
+                            {
+                                settings.set(name, Byte.parseByte(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
                         }
                         break;
                     case "zr":
