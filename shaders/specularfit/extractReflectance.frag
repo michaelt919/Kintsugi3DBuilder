@@ -23,8 +23,8 @@ void main()
 {
     vec3 position = getPosition();
     vec4 imgColor = getLinearColor();
-    vec3 lightDisplacement = getLightVector(position);
-    vec3 light = normalize(lightDisplacement);
+    LightInfo lightInfo = getLightInfo();
+    vec3 light = lightInfo.normalizedDirection;
     vec3 view = normalize(getViewVector(position));
     vec3 halfway = normalize(light + view);
 
@@ -45,7 +45,7 @@ void main()
         float hDotV = max(0.0, dot(halfway, view));
 
         // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-        vec3 irradiance = nDotL * PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+        vec3 irradiance = nDotL * PI * lightInfo.attenuatedIntensity;
 
         float roughness = texture(roughnessMap, fTexCoord)[0];
         float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);

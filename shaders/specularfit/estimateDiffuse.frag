@@ -41,15 +41,15 @@ void main()
 
         if (imgColor.a > 0.0 && triangleNDotV > 0.0)
         {
-            vec3 lightDisplacement = getLightVector(k, position);
-            vec3 light = normalize(lightDisplacement);
+            LightInfo lightInfo = getLightInfo(k);
+            vec3 light = lightInfo.normalizedDirection;
             vec3 halfway = normalize(light + view);
             float nDotH = max(0.0, dot(fittedNormal, halfway));
             float nDotL = max(0.0, dot(fittedNormal, light));
             float nDotV = max(0.0, dot(fittedNormal, view));
 
             // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-            vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
+            vec3 incidentRadiance = PI * lightInfo.attenuatedIntensity;
 
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
 

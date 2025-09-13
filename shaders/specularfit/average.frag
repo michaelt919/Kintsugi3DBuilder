@@ -30,10 +30,10 @@ void main()
 
         if (imgColor.a > 0 && dot(normal, getViewVector(k, position)) > 0)
         {
-            vec3 lightDisplacement = getLightVector(k, position);
+            LightInfo lightInfo = getLightInfo(k);
 
             // Cancel out incident radiance, but don't divide out the cosine factor (so this will be essentially cosine-weighted reflectance).
-            vec3 rgb = imgColor.rgb * dot(lightDisplacement, lightDisplacement) / getLightIntensity(k).rgb;
+            vec3 rgb = imgColor.rgb / lightInfo.attenuatedIntensity;
 
             // Only a simple RGB to L*a*b* is necessary, since this is just for the purposes of initial clustering.
             sum += vec4(xyzToLab(rgbToXYZ(rgb)), 1.0);
