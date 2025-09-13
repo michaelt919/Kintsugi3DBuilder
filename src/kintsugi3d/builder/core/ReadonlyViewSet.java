@@ -295,8 +295,6 @@ public interface ReadonlyViewSet
     double[] getLinearLuminanceValues();
     byte[] getEncodedLuminanceValues();
 
-    boolean areLightSourcesInfinite();
-
     /**
      * Finds the image file for a particular view index.
      * @param index The index of the view to find.

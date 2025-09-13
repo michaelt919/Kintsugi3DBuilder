@@ -287,7 +287,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             @Override
             public void complete()
             {
-                newItem.getResources().calibrateLightIntensities(false);
+                newItem.getResources().calibrateLightIntensities();
                 newItem.reloadShaders();
 
                 Global.state().getProjectModel().setProjectLoaded(true);
@@ -488,6 +488,24 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         if (projectInstance != null)
         {
             projectInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        }
+    }
+
+    @Override
+    public void clearTonemapping()
+    {
+        if (projectInstance != null)
+        {
+            projectInstance.getDynamicResourceManager().clearTonemapping();
+        }
+    }
+
+    @Override
+    public void requestLightIntensityCalibration()
+    {
+        if (projectInstance != null)
+        {
+            Rendering.runLater(() -> projectInstance.getResources().calibrateLightIntensities());
         }
     }
 

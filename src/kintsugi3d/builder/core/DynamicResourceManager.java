@@ -49,6 +49,11 @@ public interface DynamicResourceManager
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
 
     /**
+     * Clears the tonemapping curve used to interpret the photographic data.
+     */
+    void clearTonemapping();
+
+    /**
      * Accept the current light calibration (intended to be used only by the application, when in light calibration mode).
      */
     void setLightCalibration(Vector3 lightCalibration);

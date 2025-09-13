@@ -19,7 +19,7 @@ import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectControl
 
 import java.util.Optional;
 
-public class LightCalibrationViewSelectController extends ViewSelectController
+public class ToneCalibrationViewSelectController extends ViewSelectController
 {
     @Override
     public boolean confirm()
@@ -41,7 +41,7 @@ public class LightCalibrationViewSelectController extends ViewSelectController
 
         if (viewSet.hasCustomLuminanceEncoding())
         {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change light calibration view? This will clear any previous tone calibration values!");
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration view? This will clear any previous tone calibration values!");
             Optional<ButtonType> confirmResult = alert.showAndWait();
             if (confirmResult.isEmpty() || !confirmResult.get().equals(ButtonType.OK))
             {
@@ -58,7 +58,7 @@ public class LightCalibrationViewSelectController extends ViewSelectController
     @Override
     protected String getHintText()
     {
-        return "Select light calibration view";
+        return "Select tone calibration view";
     }
 
     @Override

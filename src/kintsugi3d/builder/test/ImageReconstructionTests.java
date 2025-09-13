@@ -1010,7 +1010,7 @@ class ImageReconstructionTests
                 .loadLooseFiles(new File(classLoader.getResource("test/" + cameras).toURI()), viewSetLoadOptions)
                 .create())
         {
-            resources.calibrateLightIntensities(false);
+            resources.calibrateLightIntensities();
             testFit(resources, validation, testName);
         }
     }
@@ -1025,7 +1025,7 @@ class ImageReconstructionTests
             .loadVSETFile(viewSetFile, viewSetFile.getParentFile())
             .create())
         {
-            resources.calibrateLightIntensities(false);
+            resources.calibrateLightIntensities();
             testFit(resources, validation, testName);
         }
         catch (UserCancellationException | IOException e)

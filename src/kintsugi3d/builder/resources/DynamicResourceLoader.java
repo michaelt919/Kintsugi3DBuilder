@@ -208,7 +208,15 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLuminanceEncodingDataAvailable)
         {
-            this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+            if (this.newLinearLuminanceValues != null && this.newEncodedLuminanceValues != null)
+            {
+                this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+            }
+            else
+            {
+                this.resources.clearLuminanceMap();
+            }
+
             this.newLuminanceEncodingDataAvailable = false;
         }
 
@@ -362,6 +370,14 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     {
         this.newLinearLuminanceValues = linearLuminanceValues;
         this.newEncodedLuminanceValues = encodedLuminanceValues;
+        this.newLuminanceEncodingDataAvailable = true;
+    }
+
+    @Override
+    public void clearTonemapping()
+    {
+        this.newLinearLuminanceValues = null;
+        this.newEncodedLuminanceValues = null;
         this.newLuminanceEncodingDataAvailable = true;
     }
 

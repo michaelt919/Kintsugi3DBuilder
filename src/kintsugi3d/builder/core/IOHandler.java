@@ -54,5 +54,8 @@ public interface IOHandler
 
     DoubleUnaryOperator getLuminanceEncodingFunction();
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
+    void clearTonemapping();
+    void requestLightIntensityCalibration();
+
     void applyLightCalibration();
 }

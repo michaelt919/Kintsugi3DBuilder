@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,13 +20,11 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -33,6 +33,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.core.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -41,7 +44,6 @@ import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +60,9 @@ public class EyedropperController extends NonDataPageControllerBase
     private static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
+
+    @FXML private VBox eydropperImageRoot;
+    @FXML private GridPane curveValuesRoot;
 
     @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
     @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
@@ -86,7 +91,13 @@ public class EyedropperController extends NonDataPageControllerBase
 
     @FXML private VBox outerVbox;
 
-    private IOModel ioModel = new IOModel();
+    @FXML private CheckBox useCurveCheckbox;
+    @FXML private CheckBox distanceCompensationCheckbox; // inverse-square attenuation
+    private final BooleanProperty infiniteLightSources = new SimpleBooleanProperty(); // opposite of distance compensation
+    @FXML private CheckBox flatfieldCheckbox;
+
+    // For flatfield setting
+    private final LiveProjectSettingsManager projectSettingsManager = new LiveProjectSettingsManager();
 
     // Use short to avoid sign issues
     private byte[] prevEncodedLuminanceValues;
@@ -149,6 +160,27 @@ public class EyedropperController extends NonDataPageControllerBase
 
         autoApply();
 
+        eydropperImageRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
+        curveValuesRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
+        flatfieldCheckbox.disableProperty().bind(distanceCompensationCheckbox.selectedProperty().not());
+
+        useCurveCheckbox.selectedProperty().addListener(obs -> autoApply());
+        distanceCompensationCheckbox.selectedProperty().addListener(obs -> autoApply());
+
+        projectSettingsManager.bindBooleanSetting(flatfieldCheckbox, "flatfieldCorrected");
+
+        // Set up inverse relationship
+        infiniteLightSources.addListener((obs, oldVal, newVal) ->
+            distanceCompensationCheckbox.setSelected(!newVal));
+        distanceCompensationCheckbox.selectedProperty().addListener((obs, oldVal, newVal) ->
+            infiniteLightSources.set(!newVal));
+        projectSettingsManager.bindBooleanSetting(infiniteLightSources, "infiniteLightSources");
+        distanceCompensationCheckbox.setSelected(!infiniteLightSources.get());
+
+        // Initialize from loaded view set (projectSettingsManager will handle flatfieldCorrected)
+        ViewSet loadedViewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
+        useCurveCheckbox.setSelected(loadedViewSet.hasCustomLuminanceEncoding());
+
         setCanAdvance(true);
         setCanConfirm(true);
     }
@@ -156,7 +188,40 @@ public class EyedropperController extends NonDataPageControllerBase
     @Override
     public void refresh()
     {
-        setIOModel(Global.state().getIOModel());
+        projectSettingsManager.refresh(); // for flatfield setting
+
+        IOModel ioModel = Global.state().getIOModel();
+
+        // First time opening the page -- get the old values and use them as the starting values.
+        if (prevEncodedLuminanceValues == null)
+        {
+            //initialize txtFields with their respective values
+            if (hasGoodLoadingModel())
+            {
+                refreshToneValueTextFields(ioModel.getLuminanceEncodingFunction());
+
+                for (Rectangle rect : finalSelectRectangles)
+                {
+                    rect.setVisible(true);
+                    updateFinalSelectRect(rect);
+                }
+
+                autoApply();
+            }
+            else
+            {
+                //TODO: WHAT TO DO IF NO MODEL FOUND?
+                LOG.error("Could not bring in luminance encodings: no model found");
+            }
+        }
+        else
+        {
+            // Navigated to the page again after pressing Back and then Next
+            // Keep the values the same but try to auto-apply them as a preview.
+            autoApply();
+        }
+
+        // Set color checker image
         setImage(getState().getProjectModel().getColorCheckerFile());
 
         autoApply();
@@ -174,10 +239,12 @@ public class EyedropperController extends NonDataPageControllerBase
     {
         if (StaticUtilities.confirmCancel())
         {
+            projectSettingsManager.cancel(); // for flatfield setting
+
             // revert the tone calibration to what it was when the page was opened.
-            if (ioModel != null && prevEncodedLuminanceValues != null)
+            if (prevEncodedLuminanceValues != null)
             {
-                ioModel.setTonemapping(LINEAR_LUMINANCE_VALUES, prevEncodedLuminanceValues);
+                Global.state().getIOModel().setTonemapping(LINEAR_LUMINANCE_VALUES, prevEncodedLuminanceValues);
             }
 
             return true;
@@ -454,11 +521,7 @@ public class EyedropperController extends NonDataPageControllerBase
     //returns false if the color is null or has already been added
     private void addSelectedColor(Color newColor)
     {
-        if (sourceButton == null)
-        {
-            Toolkit.getDefaultToolkit().beep();
-        }
-        else
+        if (sourceButton != null)
         {
             // modify appropriate text field to average greyscale value
             TextField partnerTxtField = textFieldForButton.get(sourceButton);
@@ -548,8 +611,17 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void apply()
     {
-        // check to see if all text fields contain valid input, and model is loaded
-        if (areAllFieldsValid() && hasGoodLoadingModel())
+        IOModel ioModel = Global.state().getIOModel();
+
+        // light intensities depend on whether inverse-square attenuation is enabled
+        ioModel.requestLightIntensityCalibration();
+
+        if (!useCurveCheckbox.selectedProperty().get())
+        {
+            // tone curve is disabled
+            ioModel.clearTonemapping();
+        }
+        else if (areAllFieldsValid() && hasGoodLoadingModel()) // check to see if all text fields contain valid input, and model is loaded
         {
             ioModel.setTonemapping(
                 LINEAR_LUMINANCE_VALUES,
@@ -565,7 +637,7 @@ public class EyedropperController extends NonDataPageControllerBase
         }
         else
         {
-            Toolkit.getDefaultToolkit().beep();
+//            Toolkit.getDefaultToolkit().beep();
             //TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
             LOG.error("Please fill all fields and load a model before performing tone calibration.");
         }
@@ -622,65 +694,33 @@ public class EyedropperController extends NonDataPageControllerBase
 //                sourceButton = button;
 //            }
 
-    /// /            button.setText(DEFAULT_BUTTON_TEXT);
-//        }
-//
-//        return sourceButton;
-//    }
+    //        }
+    //
+    //        return sourceButton;
+    //    }
 
-    private void setIOModel(IOModel ioModel)
+    private void refreshToneValueTextFields(DoubleUnaryOperator luminanceEncoding)
     {
-        this.ioModel = ioModel;
-
-        // First time opening the page -- get the old values and use them as the starting values.
-        if (prevEncodedLuminanceValues == null)
+        // Calculate starting encoded luminance values and remember them so we can cancel.
+        prevEncodedLuminanceValues = new byte[LINEAR_LUMINANCE_VALUES.length];
+        for (int i = 0; i < LINEAR_LUMINANCE_VALUES.length; i++)
         {
-            //initialize txtFields with their respective values
-            if (hasGoodLoadingModel())
-            {
-                DoubleUnaryOperator luminanceEncoding = ioModel.getLuminanceEncodingFunction();
-
-                // Calculate starting encoded luminance values and remember them so we can cancel.
-                prevEncodedLuminanceValues = new byte[LINEAR_LUMINANCE_VALUES.length];
-                for (int i = 0; i < LINEAR_LUMINANCE_VALUES.length; i++)
-                {
-                    prevEncodedLuminanceValues[i] = (byte) Math.round(luminanceEncoding.applyAsDouble(LINEAR_LUMINANCE_VALUES[i]));
-                }
-
-                // Put values into text fields.
-                // encoded luminance values are essentially unsigned bytes but will be interpreted as signed unless we're explicit about it.
-                txtField1.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[0]));
-                txtField2.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[1]));
-                txtField3.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[2]));
-                txtField4.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[3]));
-                txtField5.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[4]));
-                txtField6.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[5]));
-
-                for (Rectangle rect : finalSelectRectangles)
-                {
-                    rect.setVisible(true);
-                    updateFinalSelectRect(rect);
-                }
-
-                autoApply();
-            }
-            else
-            {
-                //TODO: WHAT TO DO IF NO MODEL FOUND?
-                LOG.error("Could not bring in luminance encodings: no model found");
-            }
+            prevEncodedLuminanceValues[i] = (byte) Math.round(luminanceEncoding.applyAsDouble(LINEAR_LUMINANCE_VALUES[i]));
         }
-        else
-        {
-            // Navigated to the page again after pressing Back and then Next
-            // Keep the values the same but try to auto-apply them as a preview.
-            autoApply();
-        }
+
+        // Put values into text fields.
+        // encoded luminance values are essentially unsigned bytes but will be interpreted as signed unless we're explicit about it.
+        txtField1.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[0]));
+        txtField2.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[1]));
+        txtField3.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[2]));
+        txtField4.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[3]));
+        txtField5.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[4]));
+        txtField6.setText(Integer.toString(0x00FF & prevEncodedLuminanceValues[5]));
     }
 
     private boolean hasGoodLoadingModel()
     {
-        return ioModel.hasValidHandler();
+        return Global.state().getIOModel().hasValidHandler();
     }
 
 //    public void ExitEyeDropper(){
@@ -720,7 +760,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
         try
         {
-            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(0).getParentFile());
+            fileChooser.setInitialDirectory(Global.state().getIOModel().getLoadedViewSet().getFullResImageFile(0).getParentFile());
         }
         catch (NullPointerException e)
         {
@@ -786,5 +826,22 @@ public class EyedropperController extends NonDataPageControllerBase
             //reset viewport and crop button text
             resetCrop();
         }
+    }
+
+    public void reset()
+    {
+        IOModel ioModel = Global.state().getIOModel();
+
+        // Clear tonemapping and reset text fields to a standard curve
+        ioModel.clearTonemapping();
+        refreshToneValueTextFields(new SampledLuminanceEncoding().encodeFunction);
+
+        // Disable curve
+        useCurveCheckbox.setSelected(false);
+
+        // Enable distance compensation (i.e. disable "infinite light sources") by default
+        distanceCompensationCheckbox.setSelected(true);
+
+        projectSettingsManager.resetSettingsToDefaults(); // reset flatfield setting
     }
 }

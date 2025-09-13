@@ -1291,17 +1291,6 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public boolean areLightSourcesInfinite()
-    {
-        return infiniteLightSources;
-    }
-
-    public void setInfiniteLightSources(boolean infiniteLightSources)
-    {
-        this.infiniteLightSources = infiniteLightSources;
-    }
-
-    @Override
     public File findFullResImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getFullResImageFile(index));
@@ -1646,7 +1635,7 @@ public final class ViewSet implements ReadonlyViewSet
             .define("CAMERA_POSE_COUNT", getCameraPoseCount())
             .define("CAMERA_PROJECTION_COUNT", getCameraProjectionCount())
             .define("LIGHT_COUNT", getLightCount())
-            .define("INFINITE_LIGHT_SOURCES", areLightSourcesInfinite())
+            .define("INFINITE_LIGHT_SOURCES", projectSettings.getBoolean("infiniteLightSources"))
             .define("FLATFIELD_CORRECTED", projectSettings.getBoolean("flatfieldCorrected"))
             .define("LUMINANCE_MAP_ENABLED", hasCustomLuminanceEncoding())
             .define("INVERSE_LUMINANCE_MAP_ENABLED", hasCustomLuminanceEncoding())

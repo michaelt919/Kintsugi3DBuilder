@@ -241,7 +241,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             // Light intensity depends on distance to centroid using the subject's model matrix (regardless of what we're drawing right now)
             float lightDistance = sceneModel.getLightModelViewMatrix(lightIndex).times(sceneModel.getCentroid().asPosition()).getXYZ().length();
 
-            float lightScale = resources.getViewSet().areLightSourcesInfinite() ? 1.0f :
+            float lightScale = resources.getViewSet().getProjectSettings().getBoolean("infiniteLightSources") ? 1.0f :
                 resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
                     .times(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                     .getXYZ().length();

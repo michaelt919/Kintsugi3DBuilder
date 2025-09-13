@@ -688,16 +688,22 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         return primaryViewDistance;
     }
 
-    public void calibrateLightIntensities(boolean infiniteLightSources)
+    public void calibrateLightIntensities()
     {
-        if (primaryViewDistance > 0)
+        if (getViewSet().getProjectSettings().getBoolean("infiniteLightSources"))
+        {
+            // Use unit light intensity if light sources don't have inverse-square falloff.
+            initializeLightIntensities(new Vector3(1.0f));
+        }
+        else if (primaryViewDistance > 0)
         {
             Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
-            initializeLightIntensities(lightIntensity, infiniteLightSources);
+            initializeLightIntensities(lightIntensity);
         }
         else
         {
-            LOG.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?)");
+            initializeLightIntensities(new Vector3(1.0f));
+            LOG.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?).");
         }
     }
 

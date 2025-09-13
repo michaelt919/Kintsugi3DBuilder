@@ -147,7 +147,7 @@ LightInfo getLightInfo(int virtualIndex)
 {
     LightInfo result;
 
-#if FLATFIELD_CORRECTED
+#if FLATFIELD_CORRECTED && !INFINITE_LIGHT_SOURCES
     // Just use normalize() since we won't actually be needing a true lightDistSquared.
     result.normalizedDirection = normalize(getLightVector(virtualIndex));
 

@@ -18,8 +18,8 @@
 <?import javafx.scene.shape.*?>
 <VBox fx:id="outerVbox" alignment="TOP_CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.EyedropperController">
     <HBox alignment="TOP_CENTER" spacing="32.0">
-        <VBox alignment="TOP_CENTER" spacing="16.0">
-            <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No Tone Selected" />
+        <VBox fx:id="eydropperImageRoot" alignment="TOP_CENTER" spacing="16.0">
+            <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No tone selected" />
             <StackPane maxHeight="350.0" maxWidth="350.0" minHeight="350.0" minWidth="350.0" prefHeight="350.0" prefWidth="350.0">
                 <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
                 <Pane onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased">
@@ -33,11 +33,12 @@
             <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" styleClass="wireframeBodyLarge" text="Crop" visible="false">
             </Button>
         </VBox>
-        <VBox alignment="TOP_CENTER" spacing="16.0">
+        <VBox spacing="16.0">
             <HBox.margin>
                 <Insets />
             </HBox.margin>
-            <GridPane hgap="8.0" vgap="8.0">
+         <CheckBox fx:id="useCurveCheckbox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Use calibrated tone curve" />
+            <GridPane fx:id="curveValuesRoot" hgap="8.0" vgap="8.0">
                 <columnConstraints>
                     <ColumnConstraints />
                     <ColumnConstraints />
@@ -45,8 +46,6 @@
                     <ColumnConstraints />
                 </columnConstraints>
                 <rowConstraints>
-                    <RowConstraints />
-                    <RowConstraints />
                     <RowConstraints />
                     <RowConstraints />
                     <RowConstraints />
@@ -91,7 +90,11 @@
                 <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
                 <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
             </GridPane>
-            <VBox alignment="CENTER" spacing="16.0" />
+         <CheckBox fx:id="distanceCompensationCheckbox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Compensate for object - light distance" />
+         <CheckBox fx:id="flatfieldCheckbox" mnemonicParsing="false" styleClass="wireframeBody" text="Assume flatfield corrected images" />
+            <StackPane prefHeight="0.0">
+                <Button onAction="#reset" mnemonicParsing="false" styleClass="wireframeBody" text="Reset"/>
+            </StackPane>
         </VBox>
     </HBox>
 </VBox>

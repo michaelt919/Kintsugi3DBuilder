@@ -1,28 +1,18 @@
 package kintsugi3d.builder.javafx.controllers.modals;
 
-import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
-
 public abstract class LiveProjectSettingsControllerBase extends ProjectSettingsControllerBase
 {
-    private final ObservableGeneralSettingsModel revertSettingsModel = getDefaultSettingsModel();
+    private final LiveProjectSettingsManager projectSettingsManager;
 
-    @Override
-    protected void trackSetting(String settingName)
+    protected LiveProjectSettingsControllerBase(LiveProjectSettingsManager projectSettingsManager)
     {
-        // Local model automatically updates when the UI is changed
-        // Add a listener to automatically push to the project settings model.
-        super.trackSetting(settingName);
-        getLocalSettingsModel().getObservable(settingName).addListener(obs ->
-            getProjectSettingsModel().copyFrom(getLocalSettingsModel(), settingName));
+        super(projectSettingsManager);
+        this.projectSettingsManager = projectSettingsManager;
     }
 
-    @Override
-    public void refresh()
+    protected LiveProjectSettingsControllerBase()
     {
-        super.refresh();
-
-        // Remember what to set back to if the user cancels
-        this.revertSettingsModel.copyFrom(getProjectSettingsModel());
+        this(new LiveProjectSettingsManager());
     }
 
     @Override
@@ -30,8 +20,7 @@ public abstract class LiveProjectSettingsControllerBase extends ProjectSettingsC
     {
         if (super.cancel())
         {
-            // Revert back to the settings when the window was opened.
-            getProjectSettingsModel().copyFrom(revertSettingsModel, getTrackedSettings());
+            projectSettingsManager.cancel();
             return true;
         }
         else

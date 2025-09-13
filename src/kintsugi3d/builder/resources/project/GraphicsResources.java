@@ -65,6 +65,11 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
 
 
     /**
+     * Clear the luminance map in the view set and free its corresponding textures.
+     */
+    void clearLuminanceMap();
+
+    /**
      * Refresh the light calibration in the view set and its corresponding uniform buffer data
      * @param lightCalibration
      */
@@ -79,11 +84,9 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
     /**
      * Initialize any light intensities currently set to zero with the provided light intensity.
      * Non-zero light intensities (i.e. loaded from a file) will remain unchanged.
-     * @param lightIntensity The default light intensity to apply to lights with an intensity of zero.
-     * @param infiniteLightSources If true, light attenuation will be disabled; otherwise, light intensity will be
-     *                             scaled by the square reciprocal of distance from light.
+     * @param lightIntensity The default light intensity to apply to lights with an intensity of zero
      */
-    void initializeLightIntensities(Vector3 lightIntensity, boolean infiniteLightSources);
+    void initializeLightIntensities(Vector3 lightIntensity);
 
     @Override
     default GraphicsStreamFactory<ContextType> streamFactory()

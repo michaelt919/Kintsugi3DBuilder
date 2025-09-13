@@ -62,6 +62,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("edgeProximityCutoff", 0.01f);
 
         // Tone calibration settings
+        settingsModel.createBooleanSetting("infiniteLightSources", false);
         settingsModel.createBooleanSetting("flatfieldCorrected", false);
 
         // Specular fit settings

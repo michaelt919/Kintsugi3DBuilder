@@ -274,6 +274,16 @@ public class IOModel
         this.handler.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
+    public void clearTonemapping()
+    {
+        this.handler.clearTonemapping();
+    }
+
+    public void requestLightIntensityCalibration()
+    {
+        this.handler.requestLightIntensityCalibration();
+    }
+
     public void applyLightCalibration()
     {
         this.handler.applyLightCalibration();

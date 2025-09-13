@@ -27,15 +27,18 @@ public abstract class ExperienceBase implements Experience
         this.modal = new Modal(parentWindow);
         this.state = state;
 
-        // Close modal window when project is closed.
-        BooleanExpression projectLoadedProperty = state.getProjectModel().getProjectLoadedProperty();
-        projectLoadedProperty.addListener(obs ->
+        if (state != null)
         {
-            if (!projectLoadedProperty.get())
+            // Close modal window when project is closed.
+            BooleanExpression projectLoadedProperty = state.getProjectModel().getProjectLoadedProperty();
+            projectLoadedProperty.addListener(obs ->
             {
-                modal.requestClose();
-            }
-        });
+                if (!projectLoadedProperty.get())
+                {
+                    modal.requestClose();
+                }
+            });
+        }
     }
 
     @Override
