@@ -14,12 +14,12 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<VBox fx:id="rootPane" alignment="CENTER" minWidth="400.0" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MetashapeImportController">
+<VBox fx:id="rootPane" alignment="CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MetashapeImportController">
       <Text fx:id="loadMetashapeObject" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER">
       </Text>
       <Button mnemonicParsing="false" onAction="#psxFileSelect" styleClass="wireframeBodyLarge" text="Load">
       </Button>
-      <Label fx:id="fileNameTxtField" alignment="CENTER" prefWidth="820.0" styleClass="wireframeBody" text="Metashape File (.psx)" textAlignment="CENTER">
+      <Label fx:id="fileNameTxtField" alignment="CENTER" styleClass="wireframeBody" text="Metashape File (.psx)" textAlignment="CENTER">
       </Label>
       <GridPane alignment="TOP_CENTER" hgap="16.0" vgap="16.0">
          <columnConstraints>

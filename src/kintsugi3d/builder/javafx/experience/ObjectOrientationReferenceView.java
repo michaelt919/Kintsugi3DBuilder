@@ -25,6 +25,7 @@ public class ObjectOrientationReferenceView extends ExperienceBase
     {
         buildPagedModal(new CurrentProjectViewSelectable())
             .<OrientationViewSelectController>then("/fxml/modals/createnewproject/ViewSelect.fxml")
-            .finish();
+            .finish()
+            .setMinContentWidth(800);
     }
 }

@@ -45,7 +45,7 @@
       <VBox.margin>
          <Insets left="28.0" right="28.0" top="48.0" />
       </VBox.margin>
-      <Label fx:id="localTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="...">
+      <Label fx:id="localTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="Please wait...">
          <VBox.margin>
             <Insets />
          </VBox.margin>

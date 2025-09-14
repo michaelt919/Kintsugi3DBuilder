@@ -31,6 +31,8 @@ public class ToneCalibration extends ExperienceBase
                 ToneCalibrationViewSelectController::new)
             .<SelectToneCalibrationImageController>thenNonData(SELECT_TONE_CALIBRATION_IMAGE)
             .<EyedropperController>then(EYEDROPPER)
-            .finish();
+            .finish()
+            .setMinContentWidth(800)
+            .setMinContentHeight(512);
     }
 }

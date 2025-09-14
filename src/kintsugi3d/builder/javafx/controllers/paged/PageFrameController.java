@@ -103,6 +103,18 @@ public class PageFrameController
         setButtonShortcuts(currentPage.get().getController());
     }
 
+    public PageFrameController setMinContentWidth(double width)
+    {
+        hostPane.setMinWidth(width);
+        return this;
+    }
+
+    public PageFrameController setMinContentHeight(double height)
+    {
+        hostPane.setMinHeight(height);
+        return this;
+    }
+
     private void setButtonShortcuts(PageController<?> pageController)
     {
         KeyCombination leftKeyCode = new KeyCodeCombination(KeyCode.A);

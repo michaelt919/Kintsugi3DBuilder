@@ -17,7 +17,7 @@
 .wireframeBodyStrong {
     -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 600;
+    -fx-font-weight: 700;
     -fx-font-size: 12px;
 }
 
@@ -181,10 +181,6 @@
     -fx-background-color:#222230;
 }
 
-dialog-pane{
-    -fx-background-color:#ff0000; /*TODO:Should change this*/
-}
-
 .grayscalebuttons{
     -fx-background-radius: 0 0 0 0;
  }
@@ -202,7 +198,7 @@ dialog-pane{
 }
 
 .card-background .label {
-    -fx-text-fill: #000000;
+    -fx-text-fill: #202020;
 }
 
 .slider .axis {

@@ -14,9 +14,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="rootPane" alignment="TOP_CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SelectToneCalibrationImageController">
+<VBox fx:id="rootPane" alignment="CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SelectToneCalibrationImageController">
    <Label alignment="CENTER" styleClass="wireframeTitle" text="What image do you want to use for tone calibration?" textAlignment="CENTER" />
-   <VBox alignment="TOP_CENTER" fillWidth="false" spacing="32.0">
+   <VBox alignment="CENTER" fillWidth="false" spacing="32.0">
       <AnchorPane>
          <ToggleButton fx:id="primaryViewImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Use calibrated reference view" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding>
@@ -38,9 +38,9 @@
             </padding>
          </ToggleButton>
       </AnchorPane>
-      <Label fx:id="selectImageFileLabel" styleClass="wireframeBody"/>
+      <Label fx:id="selectImageFileLabel" styleClass="wireframeBody" />
       <padding>
-         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+         <Insets left="16.0" right="16.0" top="16.0" />
       </padding>
    </VBox>
 </VBox>

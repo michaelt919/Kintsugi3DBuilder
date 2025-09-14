@@ -13,8 +13,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.ProjectDataCard;
@@ -79,17 +77,17 @@ public class CardController
         textContent.getChildren().clear();
         dataCard.getTextContent().forEach((key, value) ->
         {
-            Text label = new Text(String.format("%s:", key));
-            label.setFont(Font.font("Segoe UI Semibold", 12));
+            Label label = new Label(String.format("%s:", key));
+            label.getStyleClass().add("wireframeBodyStrong");
 
-            Text caption = new Text(value);
+            Label caption = new Label(value);
             caption.getStyleClass().add("wireframeCaption");
-            TextFlow flow = new TextFlow(caption);
-            flow.setPrefWidth(200);
+            caption.setWrapText(true);
+            caption.setPrefWidth(200);
 
             textContent.getChildren().add(label);
-            textContent.getChildren().add(flow);
-            VBox.setMargin(flow, new Insets(0, 0, 4, 5));
+            textContent.getChildren().add(caption);
+            VBox.setMargin(caption, new Insets(0, 0, 8, 4));
         });
 
         buttonBox.getChildren().clear();

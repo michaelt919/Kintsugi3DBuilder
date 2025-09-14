@@ -24,7 +24,7 @@
    </StackPane>
    <HBox spacing="40.0">
       <padding>
-         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         <Insets top="20.0" />
       </padding>
       <VBox spacing="20.0" HBox.hgrow="ALWAYS">
          <HBox alignment="CENTER_LEFT" spacing="64.0">
@@ -43,7 +43,7 @@
          <StackPane VBox.vgrow="ALWAYS">
             <ImageView fx:id="primaryImgView" fitHeight="300.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
          </StackPane>
-         <VBox spacing="8.0" fx:id="orientationControls">
+         <VBox fx:id="orientationControls" spacing="8.0">
             <StackPane>
                <Label styleClass="wireframeBodyLarge" text="Fix orientation:" />
             </StackPane>

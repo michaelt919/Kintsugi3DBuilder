@@ -16,9 +16,9 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<VBox fx:id="outerVbox" alignment="TOP_CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.EyedropperController">
-    <HBox alignment="TOP_CENTER" spacing="32.0">
-        <VBox fx:id="eydropperImageRoot" alignment="TOP_CENTER" spacing="16.0">
+<VBox fx:id="outerVbox" alignment="CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.EyedropperController">
+    <HBox alignment="CENTER" prefWidth="774.0" spacing="32.0">
+        <VBox fx:id="eydropperImageRoot" alignment="CENTER" spacing="16.0">
             <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No tone selected" />
             <StackPane maxHeight="350.0" maxWidth="350.0" minHeight="350.0" minWidth="350.0" prefHeight="350.0" prefWidth="350.0">
                 <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
@@ -33,7 +33,7 @@
             <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" styleClass="wireframeBodyLarge" text="Crop" visible="false">
             </Button>
         </VBox>
-        <VBox spacing="16.0">
+        <VBox spacing="16.0" alignment="CENTER_LEFT" >
             <HBox.margin>
                 <Insets />
             </HBox.margin>
@@ -93,7 +93,7 @@
          <CheckBox fx:id="distanceCompensationCheckbox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Compensate for object - light distance" />
          <CheckBox fx:id="flatfieldCheckbox" mnemonicParsing="false" styleClass="wireframeBody" text="Assume flatfield corrected images" />
             <StackPane prefHeight="0.0">
-                <Button onAction="#reset" mnemonicParsing="false" styleClass="wireframeBody" text="Reset"/>
+                <Button mnemonicParsing="false" onAction="#reset" styleClass="wireframeBody" text="Reset" />
             </StackPane>
         </VBox>
     </HBox>

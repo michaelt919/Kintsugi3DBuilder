@@ -26,12 +26,15 @@ public class CreateProject extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
+        // selection and Metashape import
         var metashape = buildPagedModal()
             .thenSelect("How are you importing your project?")
             .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<InputSource, MetashapeImportController>::new);
 
+        // Masks import linked from Metashape import
         var masks = metashape.<MasksImportController>then(MASKS_IMPORT);
 
+        // Reality capture and manual import options also link to masks import
         var manual =
             masks.<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
                 .finish()
@@ -40,10 +43,14 @@ public class CreateProject extends ExperienceBase
                 .join(masks.getPage())
             .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, ManualImportController>::new);
 
+        // finish manual import link to masks and wrap up
         manual.join(masks.getPage())
             .finish()
-            .setConfirmCallback(confirmCallback);
+            .setConfirmCallback(confirmCallback)
+            .setMinContentWidth(800)
+            .setMinContentHeight(512);
 
+        // link back to manual import in case of error
         metashape.joinFallback("Manual Import", manual.getPage());
     }
 

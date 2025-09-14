@@ -90,7 +90,6 @@ public class ProgressBarsController
         localProgressBar.getScene().getWindow().setOnCloseRequest(
             event -> MainWindowController.getInstance().showMiniProgressBar());
 
-
         // Keep track of whether cancellation was requested.
         AtomicBoolean cancelRequested = new AtomicBoolean(false);
         cancelButton.setOnAction(event ->
@@ -117,30 +116,27 @@ public class ProgressBarsController
 
     public void resetText()
     {
-        Platform.runLater(() ->
-        {
-            localTextLabel.setText(defaultLocalText);
-            overallTextLabel.setText(defaultOverallText);
+        localTextLabel.setText(defaultLocalText);
+        overallTextLabel.setText(defaultOverallText);
 
-            totalElapsedTimeLabel.setText(defaultTotalTimeElapsedText);
-            localElapsedTimeLabel.setText(defaultOverallElapsedTimeTxt);
+        totalElapsedTimeLabel.setText(defaultTotalTimeElapsedText);
+        localElapsedTimeLabel.setText(defaultOverallElapsedTimeTxt);
 
-            localEstimTimeRemainingLabel.setText(defaultEstimLocalTimeRemainingTxt);
+        localEstimTimeRemainingLabel.setText(defaultEstimLocalTimeRemainingTxt);
 
-            stage.setTitle(defaultTitle);
-        });
+        stage.setTitle(defaultTitle);
     }
 
     public void showStage()
     {
-        Platform.runLater(stage::show);
+        stage.show();
     }
 
     private void reset()
     {
-        resetText();
         Platform.runLater(() ->
         {
+            resetText();
             overallProgressBar.setProgress(0.0);
             localProgressBar.setProgress(0.0);
         });
@@ -153,38 +149,35 @@ public class ProgressBarsController
 
     public void startStopwatches()
     {
-        Platform.runLater(() ->
+        overallStopwatch.start();
+        localStopwatch.start();
+
+        // Don't start the thread until the stopwatches have started or it will stop right away.
+        new Thread(() ->
         {
-            overallStopwatch.start();
-            localStopwatch.start();
-
-            // Don't start the thread until the stopwatches have started or it will stop right away.
-            new Thread(() ->
+            while (isProcessing())
             {
-                while (isProcessing())
+                try
                 {
-                    try
+                    Thread.sleep(200);
+
+                    if (isProcessing())
                     {
-                        Thread.sleep(200);
-
-                        if (isProcessing())
-                        {
-                            updateElapsedTime();
-                        }
-
-                        Thread.sleep(800);
-
-                        tickDownRemainingTime();
+                        updateElapsedTime();
                     }
-                    catch (InterruptedException e)
-                    {
-                        break;
-                    }
+
+                    Thread.sleep(800);
+
+                    tickDownRemainingTime();
                 }
-            }).start();
+                catch (InterruptedException e)
+                {
+                    break;
+                }
+            }
+        }).start();
 
-            saturateProgressBars();
-        });
+        saturateProgressBars();
     }
 
     private void tickDownRemainingTime()
@@ -392,46 +385,43 @@ public class ProgressBarsController
         {
             cancelRequested.set(false);
 
-            stageCountProperty.setValue(0);
-            currentStageProperty.setValue(0);
-
             localProgress = 0.0;
             Platform.runLater(() ->
             {
+                stageCountProperty.setValue(0);
+                currentStageProperty.setValue(0);
                 localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
+
+                resetText();
+                showStage();
+                startStopwatches();
+
+                MainWindowController mainWindow = MainWindowController.getInstance();
+                mainWindow.resetMiniProgressBar(overallProgressBar.progressProperty(),
+                    Bindings.createStringBinding(() ->
+                        {
+                            String currProcessTxt = overallTextLabel.textProperty().getValue();
+
+                            // Display "Finishing up..." or something similar
+                            if (currentStageProperty.getValue() > stageCountProperty.getValue() && isProcessing())
+                            {
+                                return localTextLabel.getText();
+                            }
+
+                            // Display "Loading..." or some end message (ex. "Finished loading images")
+                            // or just remove redundant "Stage 1/1"
+                            if (!isProcessing() || stageCountProperty.getValue() <= 1)
+                            {
+                                return currProcessTxt;
+                            }
+
+                            return String.format("%s (Stage %s/%s)",
+                                currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
+                        },
+                        overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
+                        localTextLabel.textProperty())); // pass localTextLabel text property so this binding updates more often
             });
-
-            resetText();
-            showStage();
-            startStopwatches();
-
-            MainWindowController mainWindow = MainWindowController.getInstance();
-            mainWindow.resetMiniProgressBar(overallProgressBar.progressProperty(),
-            Bindings.createStringBinding(() ->
-                {
-                    String currProcessTxt = overallTextLabel.textProperty().getValue();
-
-                    //Display "Finishing up..." or something similar
-                    if (currentStageProperty.getValue() > stageCountProperty.getValue() &&
-                        isProcessing())
-                    {
-                        return localTextLabel.getText();
-                    }
-
-                    //Display "Loading..." or some end message (ex. "Finished loading images")
-                    // or just remove redundant "Stage 1/1"
-                    if (!isProcessing() ||
-                        stageCountProperty.getValue() <= 1)
-                    {
-                        return currProcessTxt;
-                    }
-
-                    return String.format("%s (Stage %s/%s)",
-                        currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
-                },
-                overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
-                localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
         }
 
         @Override

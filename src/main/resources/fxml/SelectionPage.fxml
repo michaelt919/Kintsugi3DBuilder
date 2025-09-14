@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<VBox fx:id="rootNode" alignment="TOP_CENTER" fillWidth="false" spacing="32.0" styleClass="content-root" stylesheets="@kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.paged.SelectionPageController">
+<VBox fx:id="rootNode" alignment="CENTER" fillWidth="false" spacing="32.0" styleClass="content-root" stylesheets="@kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.paged.SelectionPageController">
    <Label fx:id="promptLabel" alignment="CENTER" styleClass="wireframeTitle" textAlignment="CENTER" />
    <VBox fx:id="optionsRoot" spacing="32.0" />
 </VBox>
