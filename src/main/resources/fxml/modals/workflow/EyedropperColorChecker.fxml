@@ -16,7 +16,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<VBox fx:id="outerVbox" alignment="CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.EyedropperController">
+<VBox fx:id="outerVbox" alignment="CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration.EyedropperController">
     <HBox alignment="CENTER" prefWidth="774.0" spacing="32.0">
         <VBox fx:id="eydropperImageRoot" alignment="CENTER" spacing="16.0">
             <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No tone selected" />
@@ -90,7 +90,7 @@
                 <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
                 <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
             </GridPane>
-         <CheckBox fx:id="distanceCompensationCheckbox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Compensate for object - light distance" />
+         <CheckBox fx:id="distanceCompensationCheckbox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Compensate for surface - light distance" />
          <CheckBox fx:id="flatfieldCheckbox" mnemonicParsing="false" styleClass="wireframeBody" text="Assume flatfield corrected images" />
             <StackPane prefHeight="0.0">
                 <Button mnemonicParsing="false" onAction="#reset" styleClass="wireframeBody" text="Reset" />

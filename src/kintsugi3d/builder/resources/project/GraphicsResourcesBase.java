@@ -84,7 +84,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     @Override
     public void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        this.getViewSet().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        this.getViewSet().setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 
         sharedResources.updateLuminanceMap();
     }
@@ -92,7 +92,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     @Override
     public void clearLuminanceMap()
     {
-        this.getViewSet().clearTonemapping();
+        this.getViewSet().clearLuminanceEncoding();
 
         sharedResources.updateLuminanceMap();
     }

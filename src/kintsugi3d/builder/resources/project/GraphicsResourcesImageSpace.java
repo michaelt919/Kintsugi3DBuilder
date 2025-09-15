@@ -287,7 +287,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         {
             if ((linearLuminanceValues != null) && (encodedLuminanceValues != null))
             {
-                viewSet.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+                viewSet.setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
             }
 
             if (imageDirectoryOverride != null)

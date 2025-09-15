@@ -155,7 +155,7 @@ class ImageReconstructionTests
         potatoViewSetTonemapped = potatoViewSet.copy();
 
         // Using tonemapping from the Guan Yu dataset
-        potatoViewSetTonemapped.setTonemapping(new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
+        potatoViewSetTonemapped.setLuminanceEncoding(new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
             new byte [] { 50, 105, (byte)140, (byte)167, (byte)176, (byte)185 });
 
         context = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder Tests", 1, 1).create().getContext();

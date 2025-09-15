@@ -306,7 +306,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         public Builder setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
         {
-            result.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+            result.setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
             return this;
         }
 
@@ -712,7 +712,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(
+            result.setLuminanceEncoding(
                 Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
                 Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
@@ -757,7 +757,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(
+            result.setLuminanceEncoding(
                 Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
                 Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
@@ -1278,13 +1278,18 @@ public final class ViewSet implements ReadonlyViewSet
         return Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
     }
 
-    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    public void setLuminanceEncoding(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
+        if (linearLuminanceValues.length != encodedLuminanceValues.length)
+        {
+            throw new IllegalArgumentException("Arrays must be of equal length.");
+        }
+
         this.linearLuminanceValues = linearLuminanceValues.clone();
         this.encodedLuminanceValues = encodedLuminanceValues.clone();
     }
 
-    public void clearTonemapping()
+    public void clearLuminanceEncoding()
     {
         this.linearLuminanceValues = null;
         this.encodedLuminanceValues = null;

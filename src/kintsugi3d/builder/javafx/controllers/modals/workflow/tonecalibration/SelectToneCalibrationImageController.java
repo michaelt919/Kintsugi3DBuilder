@@ -9,8 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.workflow;
+package kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -39,7 +41,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @FXML private Label selectImageFileLabel;
 
     private final FileChooser imageFileChooser;
-    private File selectedImageFile = null;
+    private final ObjectProperty<File> selectedImageFile = new SimpleObjectProperty<>(null);
 
     private final ToggleGroup buttonGroup = new ToggleGroup();
 
@@ -65,8 +67,21 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         buttonGroup.selectToggle(primaryViewImageButton);
 
         selectImageFileButton.setOnAction(this::selectImageFileAction);
+        previousImageButton.setOnAction(e ->
+        {
+            if (hasPreviousColorCheckerImage())
+            {
+                selectedImageFile.set(getState().getProjectModel().getColorCheckerFile());
+                refreshImageLabel();
+            }
+            else
+            {
+                selectedImageFile.set(null);
+            }
+        });
 
-        selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
+        selectImageFileLabel.visibleProperty().bind(selectImageFileButton.selectedProperty()
+            .or(previousImageButton.selectedProperty().and(selectedImageFile.isNotNull())));
         buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
             selectImageFileLabel.setVisible(selectImageFileButton.isSelected()));
 
@@ -76,35 +91,48 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @Override
     public void refresh()
     {
-        ObservableProjectModel project = getState().getProjectModel();
-
-        boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && project.getColorCheckerFile().exists();
-        previousImageButton.setDisable(!hasPreviousColorCheckerImage);
-
-        if (hasPreviousColorCheckerImage)
+        if (hasPreviousColorCheckerImage())
         {
+            previousImageButton.setText("Use previously chosen image");
+            selectedImageFile.set(getState().getProjectModel().getColorCheckerFile());
+            refreshImageLabel();
+        }
+        else
+        {
+            previousImageButton.setText("Skip (no tone curve)");
+        }
+
+        if (hasPreviousColorCheckerImage() || Global.state().getIOModel().getLoadedViewSet().hasCustomLuminanceEncoding())
+        {
+            // Default unless the user has never selected a calibration image nor saved a luminance encoding.
             buttonGroup.selectToggle(previousImageButton);
         }
+    }
+
+    private boolean hasPreviousColorCheckerImage()
+    {
+        ObservableProjectModel project = getState().getProjectModel();
+        return project.getColorCheckerFile() != null && project.getColorCheckerFile().exists();
     }
 
     @Override
     public boolean advance()
     {
+        ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
+
         File imageFile = null;
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
         {
-            ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
             imageFile = viewSet.getFullResImageFile(primaryViewIndex);
         }
         else if (buttonGroup.getSelectedToggle() == selectImageFileButton)
         {
-            imageFile = selectedImageFile;
+            imageFile = selectedImageFile.get();
         }
 
         if (imageFile != null)
         {
-            ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
             if (viewSet.hasCustomLuminanceEncoding())
             {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration image? This will clear any previous tone calibration values!");
@@ -115,10 +143,20 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
                 }
             }
 
-            viewSet.clearTonemapping();
+            viewSet.clearLuminanceEncoding();
 
             LOG.debug("Setting new color calibration image: {}", imageFile);
             getState().getProjectModel().setColorCheckerFile(imageFile);
+        }
+
+        // Skip is selected if and only if there is no previous image (i.e. button is actually labelled "Skip")
+        // and the button itself is selected.
+        // Thus is there is a previous image or the button is not selected, some image has been selected.
+        if ((buttonGroup.getSelectedToggle() != previousImageButton || hasPreviousColorCheckerImage()) && !viewSet.hasCustomLuminanceEncoding())
+        {
+            // Skip was not selected and view set doesn't currently have a luminance encoding:
+            // Give it a "dummy" encoding so that the checkbox is selected by default on the next page.
+            viewSet.setLuminanceEncoding(new double[] { 1.0 }, new byte[] { (byte)0xFF });
         }
 
         return true;
@@ -141,14 +179,18 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         else
         {
             ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
-
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());
         }
         File temp = imageFileChooser.showOpenDialog(rootPane.getScene().getWindow());
         if (temp != null)
         {
-            selectedImageFile = temp;
-            selectImageFileLabel.setText("Selected: " + temp.getName());
+            selectedImageFile.set(temp);
+            refreshImageLabel();
         }
+    }
+
+    private void refreshImageLabel()
+    {
+        selectImageFileLabel.setText("Selected: " + selectedImageFile.get().getName());
     }
 }

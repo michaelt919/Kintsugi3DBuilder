@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.workflow;
+package kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -50,7 +50,7 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
             }
         }
 
-        viewSet.clearTonemapping();
+        viewSet.clearLuminanceEncoding();
         viewSet.setPrimaryViewIndex(viewIndex);
         return true;
     }
