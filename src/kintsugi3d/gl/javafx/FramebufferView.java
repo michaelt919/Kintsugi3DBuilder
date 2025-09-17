@@ -102,6 +102,11 @@ public final class FramebufferView extends Region
     public FramebufferView()
     {
         this.imageView = new ImageView();
+
+        // Allows the image view to be the default focused element.
+        // This prevents something that we don't want to be default-focused from taking it, like the search box, etc.
+        this.imageView.setFocusTraversable(true);
+
         this.getChildren().add(imageView);
         this.widthProperty().addListener(width -> imageView.setFitWidth(this.getWidth()));
         this.heightProperty().addListener(height -> imageView.setFitHeight(this.getHeight()));
@@ -136,6 +141,8 @@ public final class FramebufferView extends Region
 
         imageView.setOnMousePressed(event ->
         {
+            imageView.requestFocus(); // remove focus from other UI elements while interacting with the 3D view
+
             if (canvas != null)
             {
                 getButtonIndex(event.getButton()).ifPresent(
