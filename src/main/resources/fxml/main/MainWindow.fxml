@@ -17,120 +17,101 @@
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
 <AnchorPane prefHeight="720.0" styleClass="mainwindow-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.MainWindowController">
-    <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-          AnchorPane.topAnchor="0.0">
+    <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <AnchorPane>
-            <MenuBar fx:id="mainMenubar" styleClass="menu-bar" useSystemMenuBar="true" AnchorPane.leftAnchor="0.0"
-                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <MenuBar fx:id="mainMenubar" styleClass="menu-bar" useSystemMenuBar="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                 <Menu mnemonicParsing="false" text="File">
                     <MenuItem mnemonicParsing="false" onAction="#createProject" text="Create New Project">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
                     <MenuItem mnemonicParsing="false" onAction="#hotSwap" text="Hot Swap..." visible="false">
                     </MenuItem>
                     <MenuItem mnemonicParsing="false" onAction="#openProject" text="Open Project">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
                     <MenuItem fx:id="saveMenuItem" mnemonicParsing="false" onAction="#saveProject" text="Save">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
                     <MenuItem fx:id="saveAsMenuItem" mnemonicParsing="false" onAction="#saveProjectAs" text="Save As">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
                     <MenuItem fx:id="closeProjectMenuItem" mnemonicParsing="false" onAction="#closeProject" text="Close Project">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="W" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
-                    <SeparatorMenuItem mnemonicParsing="false"/>
-                    <MenuItem fx:id="file_exportGLTFModel" mnemonicParsing="false" onAction="#openExperience" userData="ExportModel" text="Export glTF Model..."/>
-                    <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export"/>
-                    <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false"/>
-                    <SeparatorMenuItem/>
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem fx:id="file_exportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
+                    <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export" />
+                    <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false" />
+                    <SeparatorMenuItem />
                     <Menu fx:id="recentProjectsMenu" mnemonicParsing="false" text="Recent Projects">
-                        <MenuItem mnemonicParsing="false" text="Action 1"/>
+                        <MenuItem mnemonicParsing="false" text="Action 1" />
                     </Menu>
                     <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
                         <CustomMenuItem fx:id="removeSomeRefsCustMenuItem" onAction="#removeInvalidReferences">
                             <content>
-                                <Label text="Clear Missing Projects"/>
+                                <Label text="Clear Missing Projects" />
                             </content>
                         </CustomMenuItem>
                         <CustomMenuItem fx:id="removeAllRefsCustMenuItem" onAction="#removeAllReferences">
                             <content>
-                                <Label text="Clear All Projects"/>
+                                <Label text="Clear All Projects" />
                             </content>
                         </CustomMenuItem>
                     </Menu>
 
-                    <SeparatorMenuItem mnemonicParsing="false"/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="SystemSettings" text="Settings..."/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="About" text="About Kintsugi 3D Builder..."/>
-                    <SeparatorMenuItem/>
-                    <MenuItem mnemonicParsing="false" onAction="#exit" text="Exit"/>
-                    <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST"
-                              visible="false"/>
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Settings..." userData="SystemSettings" />
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="About Kintsugi 3D Builder..." userData="About" />
+                    <SeparatorMenuItem />
+                    <MenuItem mnemonicParsing="false" onAction="#exit" text="Exit" />
+                    <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" visible="false" />
                 </Menu>
                 <Menu mnemonicParsing="false" text="View">
-                    <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid"
-                                   visible="false"/>
-                    <CheckMenuItem fx:id="isCameraVisualCheckMenuItem" mnemonicParsing="false"
-                                   text="Camera Positions"/>
-                    <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass"
-                                   visible="false"/>
-                    <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling"
-                                   visible="false"/>
+                    <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
+                    <CheckMenuItem fx:id="isCameraVisualCheckMenuItem" mnemonicParsing="false" text="Camera Positions" />
+                    <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
+                    <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
                 </Menu>
                 <Menu fx:id="workflowMenu" mnemonicParsing="false" text="Workflow">
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ObjectOrientation"
-                              text="Object Orientation..."/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ToneCalibration"
-                              text="Tone Calibration...">
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Object Orientation..." userData="ObjectOrientation" />
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Tone Calibration..." userData="ToneCalibration">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="B" control="DOWN" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="B" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..."/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="MaskOptions" text="Mask / Feather Options..."/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="SpecularFit" text="Process Textures...">
+                    <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Mask / Feather Options..." userData="MaskOptions" />
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Process Textures..." userData="SpecularFit">
                         <accelerator>
-                            <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP"
-                                                shortcut="UP"/>
+                            <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="ExportModel" text="Export glTF Model..."/>
-                    <MenuItem mnemonicParsing="false" onAction="#launchViewerApp"
-                              text="Launch Kintsugi 3D Viewer"/>
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
+                    <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
                 </Menu>
                 <Menu mnemonicParsing="false" text="Environment">
-                    <SeparatorMenuItem mnemonicParsing="false" visible="false"/>
+                    <SeparatorMenuItem mnemonicParsing="false" visible="false" />
                     <SeparatorMenuItem mnemonicParsing="false" visible="false">
                     </SeparatorMenuItem>
-                    <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true"
-                                   text="Relighting"/>
-                    <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" selected="true"
-                                   text="Show light widgets"/>
-                    <SeparatorMenuItem mnemonicParsing="false"/>
-                    <CheckMenuItem fx:id="sceneWindowCheckMenuItem" mnemonicParsing="false" text="Scene Window"/>
+                    <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
+                    <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light widgets" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <CheckMenuItem fx:id="sceneWindowCheckMenuItem" mnemonicParsing="false" text="Scene Window" />
                 </Menu>
                 <Menu fx:id="shadingMenu" mnemonicParsing="false" text="Shading">
                     <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
                         <toggleGroup>
-                            <ToggleGroup fx:id="renderGroup"/>
+                            <ToggleGroup fx:id="renderGroup" />
                         </toggleGroup>
                         <userData>rendermodes/simpleSpecular.frag</userData>
                     </RadioMenuItem>
@@ -140,28 +121,22 @@
                     <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
                         <userData>rendermodes/texturedLambertian.frag</userData>
                     </RadioMenuItem>
-                    <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)"
-                                   toggleGroup="$renderGroup">
+                    <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup">
                         <userData>rendermodes/texturedORMMaterial.frag</userData>
                     </RadioMenuItem>
-                    <RadioMenuItem fx:id="materialReflectivity" mnemonicParsing="false"
-                                   text="Material (reflectivity)" toggleGroup="$renderGroup">
+                    <RadioMenuItem fx:id="materialReflectivity" mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
                         <userData>rendermodes/texturedMaterial.frag</userData>
                     </RadioMenuItem>
-                    <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)"
-                                   toggleGroup="$renderGroup">
+                    <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup">
                         <userData>rendermodes/basisMaterial.frag</userData>
                     </RadioMenuItem>
-                    <RadioMenuItem fx:id="imageBased" mnemonicParsing="false" selected="true" text="Image-based"
-                                   toggleGroup="$renderGroup">
+                    <RadioMenuItem fx:id="imageBased" mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
                         <userData>rendermodes/ibrUntextured.frag</userData>
                     </RadioMenuItem>
-                    <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false"
-                                   text="Image-based with textures" toggleGroup="$renderGroup">
+                    <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
                         <userData>rendermodes/ibrTextured.frag</userData>
                     </RadioMenuItem>
-                    <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false"
-                                   text="Weight maps (combined)" toggleGroup="$renderGroup">
+                    <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false" text="Weight maps (combined)" toggleGroup="$renderGroup">
                         <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                     </RadioMenuItem>
                     <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
@@ -173,8 +148,7 @@
                     <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
                         <userData>rendermodes/basisMaterialSingle.frag</userData>
                     </Menu>
-                    <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false"
-                          text="Basis material x weights">
+                    <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material x weights">
                         <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                     </Menu>
                     <Menu mnemonicParsing="false" text="Texture Visualizations">
@@ -187,16 +161,13 @@
                         <RadioMenuItem fx:id="roughnessTexture" mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/roughnessMap.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem fx:id="metallicityTexture" mnemonicParsing="false" text="Metallicity map"
-                                       toggleGroup="$renderGroup">
+                        <RadioMenuItem fx:id="metallicityTexture" mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/metallicMap.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem fx:id="diffuseTexture" mnemonicParsing="false" text="Diffuse color map"
-                                       toggleGroup="$renderGroup">
+                        <RadioMenuItem fx:id="diffuseTexture" mnemonicParsing="false" text="Diffuse color map" toggleGroup="$renderGroup">
                             <userData>rendermodes/diffuseColor.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem fx:id="specularTexture" mnemonicParsing="false" text="Specular color map"
-                                       toggleGroup="$renderGroup">
+                        <RadioMenuItem fx:id="specularTexture" mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
                             <userData>rendermodes/specularColor.frag</userData>
                         </RadioMenuItem>
                         <RadioMenuItem fx:id="errorTexture" mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
@@ -205,61 +176,52 @@
                     </Menu>
                 </Menu>
                 <Menu text="Help">
-                    <MenuItem mnemonicParsing="false" onAction="#userManual" text="Documentation"/>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" userData="Log" text="View Log"/>
-                    <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" visible="false"/>
+                    <MenuItem mnemonicParsing="false" onAction="#userManual" text="Documentation" />
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="View Log" userData="Log" />
+                    <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" visible="false" />
                 </Menu>
                 <Menu mnemonicParsing="false" text="Lighting" visible="false">
-                    <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true"
-                                   text="Environment mapping" visible="false"/>
-                    <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true"
-                                   text="Show light sources"/>
-                    <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false"
-                                   text="Show camera poses for photographs" visible="false"/>
-                    <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false"
-                                   text="Show saved camera poses" visible="false"/>
+                    <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" visible="false" />
+                    <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources" />
+                    <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false" />
+                    <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
                 </Menu>
                 <Menu mnemonicParsing="false" text="Windows" visible="false">
-                    <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene"/>
-                    <CheckMenuItem mnemonicParsing="false" selected="true" text="Library"/>
-                    <CheckMenuItem mnemonicParsing="false" text="Full-screen render"/>
-                    <CheckMenuItem mnemonicParsing="false" text="Separate render window"/>
+                    <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />
+                    <CheckMenuItem mnemonicParsing="false" selected="true" text="Library" />
+                    <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
+                    <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
                 </Menu>
             </MenuBar>
         </AnchorPane>
-        <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">
-            <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS"/>
-            <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml"/>
-            <VBox HBox.hgrow="ALWAYS">
-                <fx:include fx:id="framebufferView" source="FramebufferView.fxml" VBox.vgrow="ALWAYS"/>
-                <AnchorPane fx:id="miniProgressPane" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false">
-                    <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar"
-                          onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar"
-                          spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
+        <HBox VBox.vgrow="ALWAYS">
+            <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
+            <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml" />
+            <AnchorPane HBox.hgrow="ALWAYS">
+                <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                <AnchorPane fx:id="miniProgressPane" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                    <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
                         <cursor>
-                            <Cursor fx:constant="HAND"/>
+                            <Cursor fx:constant="HAND" />
                         </cursor>
                         <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
                             <padding>
-                                <Insets bottom="8.0" left="8.0" top="8.0"/>
+                                <Insets bottom="8.0" left="8.0" top="8.0" />
                             </padding>
                             <HBox.margin>
-                                <Insets/>
+                                <Insets />
                             </HBox.margin>
                         </Label>
                         <StackPane fx:id="swapControlsStackPane">
                             <padding>
-                                <Insets left="8.0" right="8.0"/>
+                                <Insets left="8.0" right="8.0" />
                             </padding>
-                            <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBarAsync"
-                                    style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss"
-                                    visible="false"/>
-                            <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0"
-                                         prefWidth="60.0" progress="0.0"/>
+                            <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBarAsync" style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss" visible="false" />
+                            <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
                         </StackPane>
                     </HBox>
                 </AnchorPane>
-            </VBox>
+            </AnchorPane>
         </HBox>
     </VBox>
     <Label fx:id="shaderName" style="-fx-border-color: #d4aa00; -fx-label-padding: 10; -fx-border-radius: 30; -fx-opacity: 50;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="44.0" />

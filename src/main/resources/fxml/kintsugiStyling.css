@@ -72,7 +72,6 @@
     -fx-fill: #030305; /* off-black.*/
 }
 
-
 .kintsugi-3D-Wireframe-0{
     -fx-fill: #EEEEEE; /* near-white */
 }
@@ -93,17 +92,18 @@
 }
 
 /********************************************************************************/
-.accordion{
-    -fx-background-color: #262626;
-}
 
 .content-root{
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
+    -fx-padding: 48 24 52 24; /* top right bottom left */
+}
+
+.accordion .content-root {
+    -fx-padding: 24 24 16 24; /* top right bottom left */
 }
 
 .modal-root{
-    -fx-background-color: #262626;
-    -fx-padding: 48 24 52 24; /* top right bottom left */
+    -fx-background-color: #202020;
 }
 
 .sidebar-root{
@@ -111,10 +111,20 @@
 }
 
 .accordion .content {
-    -fx-background-color: #262626;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: #383838;
 }
 
 .button, .toggle-button {
+    -fx-background-radius: 0;
     -fx-background-color: #CECECE;
     -fx-text-fill: #202020;
     -fx-padding: 8 16 8 16; /* top right bottom left */
@@ -159,17 +169,16 @@
  }
 
 .cameraviewlist{
-    -fx-background-color: #262626;
-    -fx-border-color: #262626;
+    -fx-background-color: #202020;
+    -fx-border-color: #202020;
 }
 
 .context-menu {
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
 }
 
 .check-box{
-    -fx-text-fill: #FFFFFF;
-    -fx-background-color: #262626;
+    -fx-text-fill: #CECECE;
 }
 
 .color-picker{
@@ -185,16 +194,8 @@
     -fx-background-radius: 0 0 0 0;
  }
 
-.grid-pane{
-    -fx-background-color: #262626;
-}
-
-.hbox{
-    -fx-background-color: #262626;
-}
-
 .label{
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: #CECECE;
 }
 
 .card-background .label {
@@ -202,7 +203,7 @@
 }
 
 .slider .axis {
-    -fx-tick-label-fill: #FFFFFF;
+    -fx-tick-label-fill: #CECECE;
 }
 
 .specularfitcheckbox{
@@ -251,7 +252,7 @@
 }
 
 .menu-item{
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
 }
 
 .menu-item .label{
@@ -284,6 +285,7 @@
 
 .split-menu-button {
     -fx-background-color: #CECECE;
+    -fx-background-radius: 0;
 }
 
 .split-menu-button .label {
@@ -296,10 +298,6 @@
 
 .split-menu-button:hover{
     -fx-background-color: #EEEEEE;
-}
-
-.scroll-pane{
-    -fx-background-color: #000000;
 }
 
 .slider .thumb .thumb-label .label{
@@ -320,15 +318,15 @@
 }
 
 .tab-pane .tab-header-area .tab-header-background {
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
 }
 
 .table-row-cell:even{
-    -fx-background-color: #333333; /* Even cell background color */
+    -fx-background-color: #383838; /* Even cell background color */
 }
 
 .table-row-cell: odd{
-    -fx-background-color: #262626; /* Odd cell background color */
+    -fx-background-color: #202020; /* Odd cell background color */
 }
 
 .table-view .column-header{
@@ -345,11 +343,7 @@
 
 .text-field{
     -fx-background-color: #383838;
-    -fx-text-fill: #ffffff;
-}
-
-.titled-pane{
-    -fx-background-color: #262626;
+    -fx-text-fill: #CECECE;
 }
 
 .titled-pane > .title{ /*only applies to the dropdown bar, not the text or content within*/
@@ -357,11 +351,11 @@
 }
 
 .titled-pane > .title > *.text{
-    -fx-fill:#ffffff;
+    -fx-fill: #CECECE;
 }
 
 .tool-bar{
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
 }
 
 .tool-bar .button{
@@ -378,11 +372,11 @@
 }
 
 .tree-cell:even {
-    -fx-background-color: #333333;
+    -fx-background-color: #383838;
 }
 
 .tree-cell:odd {
-    -fx-background-color: #262626;
+    -fx-background-color: #202020;
 }
 
 .tree-cell:empty{
@@ -407,10 +401,6 @@
 }
 .tree-cell:expanded > .tree-disclosure-node > .arrow {
     -fx-background-color: none;
-}
-
-.vbox{
-    -fx-background-color: #262626;
 }
 
 /* Card Component */

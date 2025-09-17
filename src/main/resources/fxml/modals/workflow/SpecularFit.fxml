@@ -14,8 +14,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" alignment="CENTER" fillWidth="false" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SpecularFitController">
-    <VBox spacing="16.0">
+<VBox fx:id="root" alignment="CENTER" fillWidth="false" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.SpecularFitController">
+    <VBox spacing="16.0" styleClass="content-root">
         <HBox alignment="CENTER_LEFT" spacing="16.0">
             <Label styleClass="wireframeBody" text="Texture resolution:" />
          <ComboBox fx:id="resolutionComboBox" promptText="Select a resolution..." styleClass="wireframeBody" />
@@ -32,51 +32,51 @@
         <CheckBox fx:id="translucencyCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Use translucency texture&#10;(not supported by Sketchfab or Blender)" />
         <CheckBox fx:id="openViewerOnComplete" mnemonicParsing="false" styleClass="wireframeBody" text="Open Kintsugi 3D Viewer once complete" />
         <StackPane>
-            <Button styleClass="wireframeBody" mnemonicParsing="false" text="Reset to Defaults" onAction="#resetSettingsToDefaults"/>
+            <Button mnemonicParsing="false" onAction="#resetSettingsToDefaults" styleClass="wireframeBody" text="Reset to Defaults" />
         </StackPane>
-      <Accordion fx:id="advancedAccordion" minWidth="360.0">
-        <panes>
-          <TitledPane animated="false" expanded="false" text="Advanced">
-              <VBox spacing="16.0">
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Specular resolution:" />
-                      <TextField fx:id="mfdResolutionTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="90" />
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Specular complexity:" />
-                      <TextField fx:id="specularComplexityTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="1.0" />
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Metallicity:" />
-                      <TextField fx:id="metallicityTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="0.0" />
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Specular smoothness:" />
-                      <TextField fx:id="specularSmoothnessTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="1.0" />
-                  </HBox>
-                  <CheckBox fx:id="smithCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Smith masking/shadowing" />
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Convergence tolerance:" />
-                      <TextField fx:id="convergenceToleranceTextField" prefHeight="25.0" prefWidth="76.0" styleClass="wireframeBody" text="0.00001" />
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Min. normal damping:" />
-                      <TextField fx:id="minNormalDampingTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="1.0" />
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Unsuccessful normal iterations allowed:" />
-                      <TextField fx:id="unsuccessfulLMIterationsTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="8" />
-                  </HBox>
-                  <HBox alignment="CENTER_LEFT" spacing="16.0">
-                      <Label styleClass="wireframeBody" text="Normal smooth iterations:" />
-                      <TextField fx:id="normalSmoothingIterationsTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="0" />
-                  </HBox>
-              </VBox>
-               <padding>
-                  <Insets bottom="4.0" />
-               </padding>
-          </TitledPane>
-        </panes>
-      </Accordion>
     </VBox>
+   <Accordion fx:id="advancedAccordion" minWidth="360.0">
+     <panes>
+       <TitledPane animated="false" expanded="false" text="Advanced">
+           <VBox spacing="16.0" styleClass="content-root">
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Specular resolution:" />
+                   <TextField fx:id="mfdResolutionTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="90" />
+               </HBox>
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Specular complexity:" />
+                   <TextField fx:id="specularComplexityTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="1.0" />
+               </HBox>
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Metallicity:" />
+                   <TextField fx:id="metallicityTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="0.0" />
+               </HBox>
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Specular smoothness:" />
+                   <TextField fx:id="specularSmoothnessTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="1.0" />
+               </HBox>
+               <CheckBox fx:id="smithCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Smith masking/shadowing" />
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Convergence tolerance:" />
+                   <TextField fx:id="convergenceToleranceTextField" prefHeight="25.0" prefWidth="76.0" styleClass="wireframeBody" text="0.00001" />
+               </HBox>
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Min. normal damping:" />
+                   <TextField fx:id="minNormalDampingTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="1.0" />
+               </HBox>
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Unsuccessful normal iterations allowed:" />
+                   <TextField fx:id="unsuccessfulLMIterationsTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="8" />
+               </HBox>
+               <HBox alignment="CENTER_LEFT" spacing="16.0">
+                   <Label styleClass="wireframeBody" text="Normal smooth iterations:" />
+                   <TextField fx:id="normalSmoothingIterationsTextField" prefHeight="25.0" prefWidth="56.0" styleClass="wireframeBody" text="0" />
+               </HBox>
+           </VBox>
+       </TitledPane>
+     </panes>
+      <VBox.margin>
+         <Insets bottom="36.0" />
+      </VBox.margin>
+   </Accordion>
 </VBox>

@@ -14,8 +14,6 @@ package kintsugi3d.builder.javafx.controllers.modals;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,10 +27,7 @@ import java.util.ResourceBundle;
 public class AboutController implements Initializable
 {
     private static final Logger LOG = LoggerFactory.getLogger(AboutController.class);
-    @FXML
-    private ScrollPane scrollPane;
-    @FXML
-    private Rectangle backgroundRectangle;
+
     @FXML
     private Label aboutText;
 
@@ -44,11 +39,7 @@ public class AboutController implements Initializable
             //TODO: text appears a little blurry, also needs some beautification
             List<String> lines = Files.readAllLines(new File("kintsugi3d-builder-about.txt").toPath());
             String contentText = String.join(System.lineSeparator(), lines);
-
             aboutText.setText(contentText);
-            aboutText.setPrefWidth(scrollPane.getWidth() - 20);
-            backgroundRectangle.setWidth(scrollPane.getWidth());
-            backgroundRectangle.setHeight(aboutText.getLayoutBounds().getHeight() + 20); // +20 to account for margins
         }
         catch (IOException e)
         {

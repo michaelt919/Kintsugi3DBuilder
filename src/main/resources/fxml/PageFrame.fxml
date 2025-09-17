@@ -17,32 +17,33 @@
 <?import javafx.scene.layout.*?>
 <VBox fx:id="outerRoot" alignment="CENTER" styleClass="modal-root" stylesheets="@kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.paged.PageFrameController">
     <StackPane fx:id="hostPane" />
-    <Separator>
-        <VBox.margin>
-            <Insets top="80.0" />
-        </VBox.margin>
-    </Separator>
-    <GridPane>
-        <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" />
-            <ColumnConstraints hgrow="SOMETIMES" />
-            <ColumnConstraints hgrow="SOMETIMES" />
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-        </rowConstraints>
-        <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevPage" styleClass="wireframeBodyLarge" text="Back" GridPane.rowIndex="0">
-            <GridPane.margin>
-              <Insets />
-            </GridPane.margin>
-        </Button>
-        <Button fx:id="nextButton" mnemonicParsing="false" onAction="#advancePage" styleClass="wireframeBodyLarge" text="Next" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="0">
-            <GridPane.margin>
-              <Insets />
-            </GridPane.margin>
-        </Button>
+    <VBox>
+        <Separator/>
+        <GridPane>
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" />
+                <ColumnConstraints hgrow="SOMETIMES" />
+                <ColumnConstraints hgrow="SOMETIMES" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevPage" styleClass="wireframeBodyLarge" text="Back" GridPane.rowIndex="0">
+                <GridPane.margin>
+                  <Insets />
+                </GridPane.margin>
+            </Button>
+            <Button fx:id="nextButton" mnemonicParsing="false" onAction="#advancePage" styleClass="wireframeBodyLarge" text="Next" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="0">
+                <GridPane.margin>
+                  <Insets />
+                </GridPane.margin>
+            </Button>
+          <VBox.margin>
+              <Insets top="36.0" />
+          </VBox.margin>
+        </GridPane>
       <VBox.margin>
-         <Insets top="36.0" />
+         <Insets bottom="52.0" left="24.0" right="24.0" />
       </VBox.margin>
-    </GridPane>
+    </VBox>
 </VBox>

@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Line?>
-<VBox prefWidth="924.0" styleClass="modal-root" stylesheets="@kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.ProgressBarsController">
+<VBox prefWidth="924.0" styleClass="content-root" stylesheets="@kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.ProgressBarsController">
    <GridPane.margin>
       <Insets left="24.0" top="48.0" />
    </GridPane.margin>
