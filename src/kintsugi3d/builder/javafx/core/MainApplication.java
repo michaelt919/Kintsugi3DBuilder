@@ -221,7 +221,7 @@ public class MainApplication extends Application
 
         primaryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 430);
+        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 460);
         sceneStage.setY(primaryScreenBounds.getMinY() + 10);
         sceneStage.initOwner(primaryStage.getScene().getWindow());
 

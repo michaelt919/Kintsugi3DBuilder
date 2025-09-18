@@ -15,18 +15,17 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<VBox styleClass="vbox" fx:id="root" prefWidth="370.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.environment.SettingsEnvironmentSceneController">
+<VBox stylesheets="@../../kintsugiStyling.css" fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.environment.SettingsEnvironmentSceneController">
    <Accordion expandedPane="$lightingPane">
      <panes>
-         <TitledPane styleClass="titled-pane" fx:id="lightingPane" animated="false" text="Lighting">
-             <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+         <TitledPane fx:id="lightingPane" animated="false" text="Lighting">
+             <GridPane  alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
                  <padding>
                      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
                  </padding>
                  <columnConstraints>
                      <ColumnConstraints maxWidth="80.0"/>
-                     <ColumnConstraints maxWidth="90.0"/>
-                     <ColumnConstraints/>
+                     <ColumnConstraints hgrow="ALWAYS"/>
                  </columnConstraints>
                  <rowConstraints>
                      <RowConstraints/>
@@ -42,7 +41,7 @@
                            GridPane.halignment="CENTER" GridPane.valignment="CENTER"/>
                  <Label fx:id="envFileNameText" prefHeight="17.0" prefWidth="180.0" text="Filename" visible="false"
                         GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.valignment="CENTER"/>
-                 <Button onAction="#pickEnvImageFile" prefWidth="91.0" text="Choose file..."
+                 <Button onAction="#pickEnvImageFile" text="Choose file..."
                          GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER"/>
                  <Separator GridPane.columnSpan="3" GridPane.rowIndex="4"/>
                  <ColorPicker fx:id="envColorPicker" prefHeight="25.0" prefWidth="285.0" GridPane.columnIndex="1"
@@ -71,53 +70,50 @@
                          GridPane.rowIndex="1"/>
              </GridPane>
          </TitledPane>
-         <TitledPane styleClass="titled-pane" fx:id="backgroundPane" animated="false" expanded="false"
+         <TitledPane fx:id="backgroundPane" animated="false" expanded="false"
                      text="Background">
-             <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+             <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
                  <padding>
                      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
                  </padding>
-                 <children>
-                     <Label text="Intensity:" GridPane.halignment="RIGHT"/>
-                     <TextField fx:id="backgroundIntensityTextField" prefHeight="25.0" prefWidth="50.0"
-                                GridPane.columnIndex="1" GridPane.halignment="LEFT"/>
-                     <Slider fx:id="backgroundIntensitySlider" blockIncrement="0.5" majorTickUnit="1.0" max="2.0"
-                             min="-2.0" minorTickCount="1" prefHeight="38.0" showTickLabels="true" showTickMarks="true"
-                             GridPane.columnIndex="2"/>
-                     <CheckBox fx:id="bpUseImageCheckBox" text="Use image" GridPane.halignment="CENTER"
-                               GridPane.rowIndex="1" GridPane.valignment="CENTER"/>
-                     <Label fx:id="bpFileNameText" prefHeight="17.0" prefWidth="180.0" text="Filename" visible="false"
-                            GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="1"
-                            GridPane.valignment="CENTER"/>
-                     <Button onAction="#pickBPImageFile" prefHeight="25.0" prefWidth="90.0" text="Choose file..."
-                             GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1"
-                             GridPane.valignment="CENTER"/>
-                     <ColorPicker fx:id="bpColorPicker" prefHeight="25.0" prefWidth="285.0" GridPane.columnIndex="1"
-                                  GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="4"
-                                  GridPane.valignment="CENTER"/>
-                     <CheckBox fx:id="bpUseColorCheckBox" mnemonicParsing="false" text="Use color"
-                               GridPane.rowIndex="4"/>
-                     <ImageView fx:id="bpImageView" fitHeight="180.0" fitWidth="360.0" pickOnBounds="true"
-                                smooth="false" GridPane.columnSpan="3" GridPane.rowIndex="3"/>
-                <Button fx:id="bpRefreshButton" mnemonicParsing="false" onAction="#refreshBackplate" text="Refresh"
-                        GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="2"/>
-                 </children>
                  <columnConstraints>
                      <ColumnConstraints prefWidth="80.0"/>
-                     <ColumnConstraints prefWidth="90.0"/>
-                     <ColumnConstraints/>
+                     <ColumnConstraints hgrow="ALWAYS"/>
                  </columnConstraints>
                  <rowConstraints>
                      <RowConstraints/>
                      <RowConstraints/>
                      <RowConstraints/>
                      <RowConstraints/>
-                <RowConstraints/>
+                     <RowConstraints/>
                  </rowConstraints>
+                 <Label text="Intensity:" GridPane.halignment="RIGHT"/>
+                 <TextField fx:id="backgroundIntensityTextField" prefHeight="25.0" prefWidth="50.0"
+                            GridPane.columnIndex="1" GridPane.halignment="LEFT"/>
+                 <Slider fx:id="backgroundIntensitySlider" blockIncrement="0.5" majorTickUnit="1.0" max="2.0"
+                         min="-2.0" minorTickCount="1" prefHeight="38.0" showTickLabels="true" showTickMarks="true"
+                         GridPane.columnIndex="2"/>
+                 <CheckBox fx:id="bpUseImageCheckBox" text="Use image" GridPane.halignment="CENTER"
+                           GridPane.rowIndex="1" GridPane.valignment="CENTER"/>
+                 <Label fx:id="bpFileNameText" prefHeight="17.0" prefWidth="180.0" text="Filename" visible="false"
+                        GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="1"
+                        GridPane.valignment="CENTER"/>
+                 <Button onAction="#pickBPImageFile" prefHeight="25.0" text="Choose file..."
+                         GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1"
+                         GridPane.valignment="CENTER"/>
+                 <ColorPicker fx:id="bpColorPicker" prefHeight="25.0" prefWidth="285.0" GridPane.columnIndex="1"
+                              GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.rowIndex="4"
+                              GridPane.valignment="CENTER"/>
+                 <CheckBox fx:id="bpUseColorCheckBox" mnemonicParsing="false" text="Use color"
+                           GridPane.rowIndex="4"/>
+                 <ImageView fx:id="bpImageView" fitHeight="180.0" fitWidth="360.0" pickOnBounds="true"
+                            smooth="false" GridPane.columnSpan="3" GridPane.rowIndex="3"/>
+                 <Button fx:id="bpRefreshButton" mnemonicParsing="false" onAction="#refreshBackplate" text="Refresh"
+                         GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="2"/>
              </GridPane>
          </TitledPane>
-         <TitledPane styleClass="titled-pane" animated="false" text="Ground Plane">
-             <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+         <TitledPane animated="false" text="Ground Plane">
+             <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
                  <columnConstraints>
                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="131.0" minWidth="10.0" prefWidth="59.0"/>
                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="140.0" minWidth="10.0" prefWidth="85.0"/>

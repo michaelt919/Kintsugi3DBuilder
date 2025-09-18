@@ -14,9 +14,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.camera.SettingsCameraSceneController">
+<VBox stylesheets="@../../kintsugiStyling.css" fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.camera.SettingsCameraSceneController">
    <TitledPane animated="false" text="Look at point">
-      <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -32,7 +32,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />
@@ -41,8 +41,8 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane styleClass="titled-pane" animated="false" text="Position and orientation">
-      <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+   <TitledPane animated="false" text="Position and orientation">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -61,7 +61,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />
@@ -71,8 +71,8 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane styleClass="titled-pane" animated="false" text="Intrinsic properties">
-      <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+   <TitledPane animated="false" text="Intrinsic properties">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -86,7 +86,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />

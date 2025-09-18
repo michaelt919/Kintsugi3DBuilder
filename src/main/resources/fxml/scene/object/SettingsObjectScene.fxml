@@ -14,7 +14,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" prefWidth="400.0" styleClass="vbox" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController">
+<VBox stylesheets="@../../kintsugiStyling.css" fx:id="root" prefWidth="400.0" styleClass="vbox" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController">
    <StackPane>
       <padding>
          <Insets bottom="8.0" top="8.0"/>
@@ -23,8 +23,8 @@
               text="Select orientation reference view...">Select orientation reference view
       </Button>
    </StackPane>
-   <TitledPane animated="false" styleClass="titled-pane" text="Center">
-      <GridPane alignment="CENTER_LEFT" hgap="5.0" styleClass="grid-pane" vgap="10.0">
+   <TitledPane animated="false" text="Center">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -45,7 +45,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />
@@ -55,8 +55,8 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane animated="false" styleClass="titled-pane" text="Rotation">
-      <GridPane alignment="CENTER_LEFT" hgap="5.0" styleClass="grid-pane" vgap="10.0">
+   <TitledPane animated="false" text="Rotation">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -72,7 +72,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />
@@ -81,12 +81,12 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane animated="false" styleClass="titled-pane" text="Scale">
-      <GridPane prefHeight="77.0" prefWidth="398.0" styleClass="grid-pane" vgap="10.0">
+   <TitledPane animated="false" text="Scale">
+      <GridPane prefHeight="77.0" prefWidth="398.0" vgap="10.0">
          <columnConstraints>
             <ColumnConstraints hgrow="SOMETIMES" maxWidth="83.0" minWidth="10.0" prefWidth="41.66667048136393" />
             <ColumnConstraints hgrow="SOMETIMES" maxWidth="106.99999618530273" minWidth="10.0" prefWidth="47.999992370605476" />
-            <ColumnConstraints maxWidth="289.66667429606116" minWidth="230.0" prefWidth="289.66667429606116" />
+            <ColumnConstraints hgrow="ALWAYS" maxWidth="289.66667429606116" minWidth="230.0" prefWidth="289.66667429606116" />
          </columnConstraints>
          <Label text="Scale:" GridPane.halignment="LEFT" GridPane.rowIndex="0" />
          <TextField fx:id="scaleTxtField" prefHeight="25.0" prefWidth="56.0" GridPane.columnIndex="1" />
