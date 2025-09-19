@@ -24,7 +24,7 @@
                      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
                  </padding>
                  <columnConstraints>
-                     <ColumnConstraints maxWidth="80.0"/>
+                     <ColumnConstraints/>
                      <ColumnConstraints hgrow="ALWAYS"/>
                  </columnConstraints>
                  <rowConstraints>
@@ -37,7 +37,7 @@
                      <RowConstraints/>
                      <RowConstraints/>
                  </rowConstraints>
-                 <CheckBox fx:id="envUseImageCheckBox" prefWidth="144.0" text="Use image"
+                 <CheckBox fx:id="envUseImageCheckBox" text="Use image"
                            GridPane.halignment="CENTER" GridPane.valignment="CENTER"/>
                  <Label fx:id="envFileNameText" prefHeight="17.0" prefWidth="180.0" text="Filename" visible="false"
                         GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.valignment="CENTER"/>
@@ -77,7 +77,7 @@
                      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
                  </padding>
                  <columnConstraints>
-                     <ColumnConstraints prefWidth="80.0"/>
+                     <ColumnConstraints />
                      <ColumnConstraints hgrow="ALWAYS"/>
                  </columnConstraints>
                  <rowConstraints>
@@ -126,7 +126,7 @@
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                  </rowConstraints>
                  <Label text="Color: " GridPane.halignment="RIGHT" GridPane.rowIndex="1"/>
-                 <CheckBox fx:id="gpEnabledCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="121.0"
+                 <CheckBox fx:id="gpEnabledCheckBox" mnemonicParsing="false" prefHeight="17.0"
                            text="Use Ground Plane" GridPane.columnSpan="2"/>
                  <ColorPicker fx:id="gpColorPicker" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1"
                               GridPane.columnSpan="2" GridPane.rowIndex="1"/>

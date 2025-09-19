@@ -11,11 +11,14 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.core.JavaFXState;
+import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
+import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.util.Launch4jConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +34,8 @@ public class SystemMemoryController implements SystemSettingsControllerBase
     private static final int MAX_VALUE = 1048576;
 
     @FXML private CheckBox maxMemCheckbox;
-    @FXML private Spinner<Integer> maxMemSpinner;
+    @FXML private TextField maxMemTextField;
+    private final IntegerProperty maxMemory = new SimpleIntegerProperty();
 
     private Launch4jConfiguration configuration;
 
@@ -50,17 +54,20 @@ public class SystemMemoryController implements SystemSettingsControllerBase
         }
 
         // Disable spinner if limit memory usage is unchecked.
-        maxMemSpinner.disableProperty().bind(maxMemCheckbox.selectedProperty().not());
+        maxMemTextField.disableProperty().bind(maxMemCheckbox.selectedProperty().not());
 
         maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
-        maxMemSpinner.setValueFactory(
-            new IntegerSpinnerValueFactory(MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
+        StaticUtilities.makeClampedInteger(MIN_VALUE, MAX_VALUE, maxMemTextField);
+        SafeNumberStringConverter converter = new SafeNumberStringConverter(configuration.getMaxMemoryMb());
+        maxMemory.set(configuration.getMaxMemoryMb());
+        maxMemTextField.setText(String.valueOf(configuration.getMaxMemoryMb()));
+        maxMemTextField.textProperty().bindBidirectional(maxMemory, converter);
     }
 
     public void button_Apply()
     {
         configuration.setEnableMaxMemory(maxMemCheckbox.isSelected());
-        configuration.setMaxMemoryMb(maxMemSpinner.getValue());
+        configuration.setMaxMemoryMb(maxMemory.get());
 
         ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
         try
