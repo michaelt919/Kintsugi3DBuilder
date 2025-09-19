@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
 public class SelectToneCalibrationImageController extends NonDataPageControllerBase
@@ -124,7 +125,15 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
         {
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
-            imageFile = viewSet.getFullResImageFile(primaryViewIndex);
+            try
+            {
+                imageFile = viewSet.findFullResImageFile(primaryViewIndex);
+            }
+            catch (FileNotFoundException e)
+            {
+                error("File not found", String.format("Could not find file: %s", viewSet.getFullResImageFile(primaryViewIndex)));
+                return false;
+            }
         }
         else if (buttonGroup.getSelectedToggle() == selectImageFileButton)
         {
