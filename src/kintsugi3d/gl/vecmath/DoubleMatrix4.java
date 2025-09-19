@@ -11,9 +11,9 @@
 
 package kintsugi3d.gl.vecmath;
 
-import java.nio.DoubleBuffer;
+import org.lwjgl.BufferUtils;
 
-import org.lwjgl.*;
+import java.nio.DoubleBuffer;
 
 public final class DoubleMatrix4
 {

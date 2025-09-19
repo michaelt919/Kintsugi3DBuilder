@@ -21,14 +21,6 @@ public interface ColorTextureBuilder<ContextType extends Context<ContextType>, T
     ColorTextureBuilder<ContextType, TextureType> setInternalFormat(ColorFormat format);
     ColorTextureBuilder<ContextType, TextureType> setInternalFormat(CompressionFormat format);
 
-    /**
-     * Whether or not to use (transform to sRGB) or ignore (reinterpret as sRGB) any ICC transformation
-     * specified in images loaded from file or input stream
-     * @param iccTransformationRequested true if any ICC profile in the file should be used, false if it should be ignored.
-     * @return The builder for chained method calls
-     */
-    ColorTextureBuilder<ContextType, TextureType> setICCTransformationRequested(boolean iccTransformationRequested);
-
     @Override
     ColorTextureBuilder<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations);
     @Override

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<StackPane fx:id="root" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.LightCalibrationController">
+   <AnchorPane maxHeight="400.0" maxWidth="400.0" prefHeight="400.0" prefWidth="400.0" StackPane.alignment="CENTER">
+      <Slider layoutX="128.0" layoutY="331.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" fx:id="xSlider" />
+      <Slider fx:id="ySlider" layoutX="54.0" layoutY="48.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" orientation="VERTICAL" showTickLabels="true" showTickMarks="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="40.0" />
+      <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
+         <VBox maxHeight="-Infinity" maxWidth="-Infinity" spacing="16.0">
+            <GridPane hgap="8.0" maxHeight="-Infinity" maxWidth="-Infinity" vgap="8.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="NEVER" />
+                  <ColumnConstraints hgrow="NEVER" prefWidth="200.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints vgrow="NEVER" />
+                  <RowConstraints vgrow="NEVER" />
+               </rowConstraints>
+               <Label styleClass="wireframeBodyLarge" text="X: " textOverrun="CLIP" />
+               <TextField styleClass="wireframeBodyLarge" GridPane.columnIndex="1" fx:id="xTextField" />
+               <Label styleClass="wireframeBodyLarge" text="Y: " textOverrun="CLIP" GridPane.rowIndex="1" />
+               <TextField fx:id="yTextField" styleClass="wireframeBodyLarge" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            </GridPane>
+            <StackPane>
+               <Button mnemonicParsing="false" onAction="#reset" styleClass="wireframeBody" text="Reset" />
+            </StackPane>
+         </VBox>
+      </StackPane>
+   </AnchorPane>
+</StackPane>

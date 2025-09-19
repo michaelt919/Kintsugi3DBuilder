@@ -11,19 +11,20 @@
 
 package kintsugi3d.builder.app;
 
+import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.ReadOnlyDirectoryPreferencesModel;
-import org.lwjgl.system.*;
+import kintsugi3d.gl.interactive.InitializationException;
+import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.javafx.MainApplication;
-import kintsugi3d.gl.interactive.InitializationException;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
@@ -38,7 +39,7 @@ public final class Kintsugi3DBuilder
     public static void main(String... args) throws IOException, InitializationException
     {
         // TODO: temp fix to make file I/O work as expected in an internationalized context
-        Locale.setDefault(Locale.US);
+        Locale.setDefault(Locale.ROOT);
 
         // Dynamically set the log directory based on the OS before instantiating a logger
         if (System.getProperty("Kintsugi3D.logDir") == null)
@@ -69,7 +70,6 @@ public final class Kintsugi3DBuilder
         log.info("Application installation directory: {}", ApplicationFolders.getInstallationDirectory());
         log.info("Preview images root directory: {}", ApplicationFolders.getPreviewImagesRootDirectory());
         log.info("Fit cache root directory: {}", ApplicationFolders.getFitCacheRootDirectory());
-        log.info("Masks directory: {}", ApplicationFolders.getMasksDirectory());
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");
@@ -83,10 +83,13 @@ public final class Kintsugi3DBuilder
 
         MainApplication.setArgs(args);
 
+        File stderrFileName = new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(),
+            String.format("Kintsugi3DBuilder-%s-standard-error.log",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss").format(LocalDateTime.now())));
+
         if (GRAPHICS_WINDOW_ENABLED)
         {
-            try (FileOutputStream standardErr = new FileOutputStream(
-                new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
+            try (FileOutputStream standardErr = new FileOutputStream(stderrFileName);
                 PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
@@ -101,8 +104,7 @@ public final class Kintsugi3DBuilder
         }
         else
         {
-            try (FileOutputStream standardErr = new FileOutputStream(
-                    new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
+            try (FileOutputStream standardErr = new FileOutputStream(stderrFileName);
                  PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);

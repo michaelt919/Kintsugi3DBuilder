@@ -11,6 +11,17 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.DoubleVector4;
+import kintsugi3d.util.SRGB;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -20,21 +31,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.gl.vecmath.DoubleVector4;
-import kintsugi3d.util.SRGB;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionBase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularDecompositionBase.class);
+
     private final SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
     private final TextureResolution textureResolution;
@@ -136,7 +137,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     {
         // Fill holes
         // TODO Quick hack; should be replaced with something more robust.
-        log.info("Filling holes...");
+        LOG.info("Filling holes...");
 
         int texelCount = textureResolution.width * textureResolution.height;
 
@@ -202,7 +203,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
             }
         }
 
-        log.info("DONE!");
+        LOG.info("DONE!");
     }
 
     @Override
@@ -244,14 +245,14 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
         }
         catch (IOException e)
         {
-            log.error("An error occurred while saving diffuse map:", e);
+            LOG.error("An error occurred while saving diffuse map:", e);
         }
     }
 
     @Override
     public void saveBasisFunctions(File outputDirectory)
     {
-        getMaterialBasis().save(outputDirectory);
+        getMaterialBasis().save(outputDirectory, null);
     }
 
     @Override

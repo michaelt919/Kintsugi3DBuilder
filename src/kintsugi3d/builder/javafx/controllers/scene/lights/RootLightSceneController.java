@@ -9,13 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
-
-import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
+package kintsugi3d.builder.javafx.controllers.scene.lights;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
@@ -32,26 +26,32 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.layout.VBox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.builder.javafx.internal.ObservableLightingEnvironmentModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.javafx.internal.LightingModelImpl;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.util.Collections;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 public class RootLightSceneController implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(RootLightSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootLightSceneController.class);
     @FXML private VBox settings;
     @FXML private SettingsLightSceneController settingsController;
-    @FXML private TableView<LightGroupSetting> tableView;
+    @FXML private TableView<ObservableLightGroupSettings> tableView;
     @FXML private VBox groupControls;
     @FXML private VBox lightControls;
     @FXML private Button renameButton;
 
-    private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
+    private final Property<ObservableLightSettings> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
 
     private ObservableProjectModel projectModel;
@@ -62,7 +62,7 @@ public class RootLightSceneController implements Initializable
     public void initialize(URL location, ResourceBundle resources)
     {
         //columns
-        TableColumn<LightGroupSetting, String> nameCol = new TableColumn<>("Name");
+        TableColumn<ObservableLightGroupSettings, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(param ->
         {
             if (param.getValue().isLocked())
@@ -77,10 +77,10 @@ public class RootLightSceneController implements Initializable
         nameCol.setPrefWidth(90);
         tableView.getColumns().add(nameCol);
 
-        for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+        for (int i = 0; i < ObservableLightGroupSettings.LIGHT_LIMIT; i++)
         {
             int currentIndex = i;
-            TableColumn<LightGroupSetting, LightInstanceSetting> newCol = new TableColumn<>(String.valueOf(currentIndex + 1));
+            TableColumn<ObservableLightGroupSettings, ObservableLightSettings> newCol = new TableColumn<>(String.valueOf(currentIndex + 1));
             newCol.setCellValueFactory(param -> param.getValue().lightListProperty().valueAt(currentIndex));
             newCol.setPrefWidth(20);
             tableView.getColumns().add(newCol);
@@ -100,11 +100,11 @@ public class RootLightSceneController implements Initializable
                 assert change.next() && change.getAddedSize() == 1;
                 TablePosition<?, ?> tablePosition = tableView.getSelectionModel().getSelectedCells().get(0);
                 ObservableValue<?> selectedCell = tablePosition.getTableColumn().getCellObservableValue(tablePosition.getRow());
-                LightGroupSetting selectedLightGroup = getSelectedLightGroup();
+                ObservableLightGroupSettings selectedLightGroup = getSelectedLightGroup();
 
-                if (selectedCell != null && selectedCell.getValue() instanceof LightInstanceSetting)
+                if (selectedCell != null && selectedCell.getValue() instanceof ObservableLightSettings)
                 {
-                    selectedLight.setValue((LightInstanceSetting) selectedCell.getValue());
+                    selectedLight.setValue((ObservableLightSettings) selectedCell.getValue());
                     lastSelectedIndex = tablePosition.getColumn() - 1;
                     if (selectedLightGroup != null)
                     {
@@ -138,13 +138,13 @@ public class RootLightSceneController implements Initializable
         selectedLight.addListener(settingsController.changeListener);
     }
 
-    private InvalidationListener generateLightChangeListener(LightGroupSetting lightGroup)
+    private InvalidationListener generateLightChangeListener(ObservableLightGroupSettings lightGroup)
     {
         return observable ->
         {
-            TableViewSelectionModel<LightGroupSetting> selectionModel = tableView.getSelectionModel();
+            TableViewSelectionModel<ObservableLightGroupSettings> selectionModel = tableView.getSelectionModel();
             int groupIndex = tableView.getItems().indexOf(lightGroup);
-            TableColumn<LightGroupSetting, ?> selectedColumn = tableView.getColumns().get(lightGroup.getSelectedLightIndex() + 1);
+            TableColumn<ObservableLightGroupSettings, ?> selectedColumn = tableView.getColumns().get(lightGroup.getSelectedLightIndex() + 1);
             if (selectionModel.getSelectedIndex() == groupIndex && !selectionModel.isSelected(groupIndex, selectedColumn))
             {
                 selectionModel.clearAndSelect(groupIndex, selectedColumn);
@@ -152,17 +152,17 @@ public class RootLightSceneController implements Initializable
         };
     }
 
-    public void init(LightingModelImpl lightingModel, ObservableProjectModel injectedProjectModel, SceneViewportModel injectedSceneViewportModel)
+    public void init(ObservableLightingEnvironmentModel lightingModel, ObservableProjectModel injectedProjectModel, SceneViewportModel injectedSceneViewportModel)
     {
         this.projectModel = injectedProjectModel;
         this.sceneViewportModel = injectedSceneViewportModel;
 
-        ObservableList<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
+        ObservableList<ObservableLightGroupSettings> lightGroupList = projectModel.getLightGroupList();
         tableView.setItems(lightGroupList);
 
         //lightGroupList.add(new LightGroupSetting("Free Lights"));
 
-        lightGroupList.addListener((ListChangeListener<? super LightGroupSetting>) change ->
+        lightGroupList.addListener((ListChangeListener<? super ObservableLightGroupSettings>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == lightGroupList.size())
@@ -171,23 +171,23 @@ public class RootLightSceneController implements Initializable
             }
         });
 
-        for (LightGroupSetting lightGroup : lightGroupList)
+        for (ObservableLightGroupSettings lightGroup : lightGroupList)
         {
             lightGroup.selectedLightIndexProperty().addListener(generateLightChangeListener(lightGroup));
         }
 
-        lightGroupList.addListener((ListChangeListener<? super LightGroupSetting>) change ->
+        lightGroupList.addListener((ListChangeListener<? super ObservableLightGroupSettings>) change ->
         {
             while(change.next())
             {
-                for (LightGroupSetting newLightGroup : change.getAddedSubList())
+                for (ObservableLightGroupSettings newLightGroup : change.getAddedSubList())
                 {
                     newLightGroup.selectedLightIndexProperty().addListener(generateLightChangeListener(newLightGroup));
                 }
             }
         });
 
-        ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
+        ObservableValue<ObservableLightGroupSettings> observableValue = tableView.getSelectionModel().selectedItemProperty();
         lightingModel.setSelectedLightGroupSetting(observableValue );
 
         // Setup an initial light group with a single light source.
@@ -201,8 +201,8 @@ public class RootLightSceneController implements Initializable
     {
         //for now we will create a blank group
         //in the future we may want to duplicate the previous group instead
-        LightGroupSetting newGroup = new LightGroupSetting("New Group");
-        List<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
+        ObservableLightGroupSettings newGroup = new ObservableLightGroupSettings();
+        List<ObservableLightGroupSettings> lightGroupList = projectModel.getLightGroupList();
         lightGroupList.add(newGroup);
 
         int newRowIndex = lightGroupList.size() - 1;
@@ -212,7 +212,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void saveGroup()
     {
-        log.debug("TODO saveGroup");//TODO
+        LOG.debug("TODO saveGroup");//TODO
     }
 
     @FXML
@@ -285,7 +285,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void moveDOWNGroup()
     {
-        List<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
+        List<ObservableLightGroupSettings> lightGroupList = projectModel.getLightGroupList();
         if (getSelectedLightGroupIndex() < lightGroupList.size() - 1)
         {
             Collections.swap(lightGroupList, getSelectedLightGroupIndex(), getSelectedLightGroupIndex() + 1);
@@ -311,13 +311,13 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void keyframeGroup()
     {
-        log.debug("TODO keyframeGroup");//TODO
+        LOG.debug("TODO keyframeGroup");//TODO
     }
 
     @FXML
     private void deleteGroup()
     {
-        List<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
+        List<ObservableLightGroupSettings> lightGroupList = projectModel.getLightGroupList();
         int selectedRow = getSelectedLightGroupIndex();
 
         if (lightGroupList.size() > selectedRow && selectedRow >= 0)
@@ -336,14 +336,14 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void newLight()
     {
-        LightGroupSetting selectedLightGroup = getSelectedLightGroup();
+        ObservableLightGroupSettings selectedLightGroup = getSelectedLightGroup();
         if (selectedLightGroup != null)
         {
             SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
 
             if (lastSelectedIndex >= 0 && lastSelectedIndex < selectedLightGroup.getLightCount())
             {
-                LightInstanceSetting lastSelectedLight = selectedLightGroup.lightListProperty().get(lastSelectedIndex);
+                ObservableLightSettings lastSelectedLight = selectedLightGroup.lightListProperty().get(lastSelectedIndex);
                 Vector3 currentLightTarget =
                     new Vector3((float) lastSelectedLight.targetX().get(), (float) lastSelectedLight.targetY().get(), (float) lastSelectedLight.targetZ().get());
                 Vector2 windowPosition = sceneViewport.projectPoint(currentLightTarget);
@@ -389,7 +389,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void saveLight()
     {
-        log.debug("TODO saveLight");//TODO
+        LOG.debug("TODO saveLight");//TODO
     }
 
     @FXML
@@ -415,7 +415,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void deleteLight()
     {
-        LightGroupSetting selectedLightGroup = getSelectedLightGroup();
+        ObservableLightGroupSettings selectedLightGroup = getSelectedLightGroup();
         if (selectedLightGroup != null && lastSelectedIndex >= 0 && lastSelectedIndex < selectedLightGroup.getLightCount())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
@@ -439,7 +439,7 @@ public class RootLightSceneController implements Initializable
         return tableView.getSelectionModel().getSelectedIndex();
     }
 
-    private LightGroupSetting getSelectedLightGroup()
+    private ObservableLightGroupSettings getSelectedLightGroup()
     {
         return tableView.getSelectionModel().getSelectedItem();
     }

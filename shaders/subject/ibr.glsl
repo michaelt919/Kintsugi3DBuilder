@@ -150,10 +150,22 @@ LightingParameters getCameraSpaceLightingForSample(int virtualSampleIndex, vec3 
 {
     // All in camera space
     vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    return buildLightingParameters(virtualSampleIndex,
+    LightingParameters l = buildLightingParameters(virtualSampleIndex,
     /* normal: */ normalize((cameraPose * vec4(worldSpaceNormalDir, 0.0)).xyz),
     /* view: */ -fragmentPos,
     /* light: */ lightPositions[getLightIndex(virtualSampleIndex)].xyz - fragmentPos);
+
+#if INFINITE_LIGHT_SOURCES
+    // disable inverse-square falloff
+    l.lightDistSquared = 1.0;
+#elif FLATFIELD_CORRECTED
+    // See colorappearance.glsl for detailed analysis.
+    // In this case, we're in camera space already so it's easy:
+    // the camera axis distance is just the the z-coordinate of the view vector.
+    l.lightDistSquared = l.viewDirUnnorm.z * l.viewDirUnnorm.z;
+#endif
+
+    return l;
 }
 
 LightingParameters getCameraSpaceLightingForSample(int virtualSampleIndex, vec3 worldSpaceNormalDir)

@@ -11,14 +11,6 @@
 
 package kintsugi3d.gl.geometry;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.Map.Entry;
-
 import javafx.util.Pair;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.material.Material;
@@ -34,6 +26,14 @@ import org.jengineering.sjmply.PLYElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
+
 import static org.jengineering.sjmply.PLYType.*;
 
 /**
@@ -43,7 +43,7 @@ import static org.jengineering.sjmply.PLYType.*;
  */
 public final class VertexGeometry implements ReadonlyVertexGeometry
 {
-    private static final Logger log = LoggerFactory.getLogger(VertexGeometry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VertexGeometry.class);
     private static File geometryFile;
     private File filename;
 
@@ -129,11 +129,11 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
      * @param stream The stream to load.
      * @throws FileNotFoundException Thrown if any File I/O errors occur.
      */
-    public static VertexGeometry createFromOBJStream(InputStream stream) throws FileNotFoundException
+    public static VertexGeometry createFromOBJStream(InputStream stream)
     {
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
             return createFromOBJ(null, scanner);
         }
     }
@@ -147,7 +147,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     {
         try(Scanner scanner = new Scanner(file, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
             return createFromOBJ(file, scanner);
         }
     }
@@ -224,7 +224,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                 case "f":
                     for (int i = 0; i < 3; i++) // Only support triangles
                     {
-                        String[] parts = scanner.next().split("\\/");
+                        String[] parts = scanner.next().split("/");
 
                         // Process vertex position
                         int vertexIndex = Integer.parseInt(parts[0]);
@@ -307,7 +307,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             }
             catch(IOException e)
             {
-                log.error("IO Exception while loading material:", e);
+                LOG.error("IO Exception while loading material:", e);
                 inst.material = null;
             }
         }
@@ -316,7 +316,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             inst.material = null;
         }
 
-        log.info("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return inst;
     }
@@ -349,7 +349,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         return createFromPLY(file, PLY.loadFromZip(zipStream, targetFileName));
     }
 
-    private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException
+    private static VertexGeometry createFromPLY(File file, PLY ply)
     {
         PLYElementList vertex = ply.elements("vertex");
         boolean hasNormals = false, hasTexCoords = false;

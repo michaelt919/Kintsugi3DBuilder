@@ -11,16 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.function.Function;
-
 import kintsugi3d.gl.builders.*;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
@@ -32,8 +22,16 @@ import kintsugi3d.gl.opengl.OpenGLTexture3D.DepthStencilBuilder;
 import kintsugi3d.gl.opengl.OpenGLTexture3D.StencilBuilder;
 import kintsugi3d.gl.types.AbstractDataType;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.function.Function;
+
 import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLTextureFactory implements TextureFactory<OpenGLContext>

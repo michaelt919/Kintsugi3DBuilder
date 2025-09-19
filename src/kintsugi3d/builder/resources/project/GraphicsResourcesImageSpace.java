@@ -1,0 +1,929 @@
+/*
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.resources.project;
+
+import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.io.*;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.gl.builders.ColorTextureBuilder;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.geometry.GeometryMode;
+import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.material.TextureLoadOptions;
+import kintsugi3d.gl.nativebuffer.NativeDataType;
+import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.IntVector2;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
+
+/**
+ * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
+ * project instance and provides helper methods for applying these resources in typical use cases.
+ *
+ * @param <ContextType>
+ */
+public final class GraphicsResourcesImageSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+    implements GraphicsResourcesCacheable<ContextType>
+{
+    private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
+
+    private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesImageSpace.class);
+    /**
+     * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
+     */
+    public final UniformBuffer<ContextType> cameraProjectionBuffer;
+
+    /**
+     * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
+     */
+    public final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+
+    /**
+     * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
+     */
+    public final Texture3D<ContextType> colorTextures;
+
+    /**
+     * A depth texture array containing a depth image for every view.
+     */
+    public final Texture3D<ContextType> depthTextures;
+
+    /**
+     * A depth texture array containing a shadow map for every view.
+     */
+    public final Texture3D<ContextType> shadowTextures;
+
+    /**
+     * A GPU buffer containing the matrices that were used for each shadow map in the shadowTextures array.
+     */
+    public final UniformBuffer<ContextType> shadowMatrixBuffer;
+
+    private final double primaryViewDistance;
+
+    public static final class Builder<ContextType extends Context<ContextType>>
+    {
+        private final ContextType context;
+        private ViewSet viewSet;
+        private VertexGeometry geometry;
+        private File imageDirectoryOverride;
+        private ReadonlyLoadOptionsModel imageLoadOptions;
+        private ProgressMonitor progressMonitor;
+        private double[] linearLuminanceValues;
+        private byte[] encodedLuminanceValues;
+        private String orientationViewName;
+
+        private Builder(ContextType context)
+        {
+            this.context = context;
+        }
+
+        private void updateViewSetFromImageLoadOptions()
+        {
+            if (this.imageLoadOptions != null)
+            {
+                this.viewSet.setPreviewImageResolution(imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
+                String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
+
+                this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
+            }
+        }
+
+        public Builder<ContextType> setOrientationView(String orientationViewName, double rotation)
+        {
+            this.orientationViewName = orientationViewName;
+
+            if (orientationViewName == null)
+            {
+                this.viewSet.setOrientationViewIndex(-1);
+            }
+
+            this.viewSet.setOrientationViewRotationDegrees(rotation);
+            return this;
+        }
+
+        public Builder<ContextType> setImageLoadOptions(ReadonlyLoadOptionsModel imageLoadOptions)
+        {
+            this.imageLoadOptions = imageLoadOptions;
+
+            if (this.viewSet != null)
+            {
+                updateViewSetFromImageLoadOptions();
+            }
+
+            return this;
+        }
+
+        public Builder<ContextType> setProgressMonitor(ProgressMonitor progressMonitor)
+        {
+            this.progressMonitor = progressMonitor;
+            return this;
+        }
+
+        public Builder<ContextType> setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+        {
+            this.linearLuminanceValues = Arrays.copyOf(linearLuminanceValues, linearLuminanceValues.length);
+            this.encodedLuminanceValues = Arrays.copyOf(encodedLuminanceValues, encodedLuminanceValues.length);
+            return this;
+        }
+
+        public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
+        {
+            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory).finish();
+            updateViewSetFromImageLoadOptions();
+            loadAndValidateGeometry();
+            return this;
+        }
+
+        private static ViewSetReader getReaderForFile(File cameraFile)
+        {
+            if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
+            {
+                return ViewSetReaderFromAgisoftXML.getInstance();
+            }
+            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
+            {
+                return ViewSetReaderFromRealityCaptureCSV.getInstance();
+            }
+            else
+            {
+                throw new IllegalArgumentException(MessageFormat.format("Unrecognized file extension for camera calibration: {0}", cameraFile));
+            }
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(File cameraFile, ViewSetLoadOptions viewSetLoadOptions) throws Exception
+        {
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, viewSetLoadOptions);
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, ViewSetLoadOptions viewSetLoadOptions) throws Exception
+        {
+            // Load view set
+            this.viewSet = reader.readFromFile(cameraFile, viewSetLoadOptions)
+                .finish();
+
+            updateViewSetFromImageLoadOptions();
+            loadAndValidateGeometry();
+            return this;
+        }
+
+        /**
+         * @param model
+         * @return
+         * @throws IOException
+         */
+        public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
+            throws IOException, XMLStreamException, MissingImagesException
+        {
+            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk()).finish();
+            updateViewSetFromImageLoadOptions();
+            loadAndValidateGeometry();
+            return this;
+        }
+
+        private void loadAndValidateGeometry() throws IOException
+        {
+            if (viewSet.getGeometryFile() != null)
+            {
+                this.geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
+
+                if (this.geometry == null)
+                {
+                    throw new IllegalArgumentException(MessageFormat.format("Unsupported geometry file: {0}", viewSet.getGeometryFile()));
+                }
+
+                if (!this.geometry.hasNormals())
+                {
+                    throw new MeshImportException("Imported Object has no Normals");
+                }
+
+                if (!this.geometry.hasTexCoords())
+                {
+                    throw new MeshImportException("Imported Object has no Texture Coordinates");
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException("Geometry file may not be null.");
+            }
+        }
+
+        public ViewSet getViewSet()
+        {
+            return viewSet;
+        }
+
+        public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
+        {
+            this.viewSet = existingViewSet;
+
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
+            return this;
+        }
+
+        public Builder<ContextType> useExistingGeometry(VertexGeometry existingGeometry)
+        {
+            this.geometry = existingGeometry;
+
+            if (viewSet != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
+            return this;
+        }
+
+        public Builder<ContextType> overrideImageDirectory(File imageDirectory)
+        {
+            this.imageDirectoryOverride = imageDirectory;
+            return this;
+        }
+
+        public Builder<ContextType> generateAllPreviewImages() throws IOException, UserCancellationException
+        {
+            if (this.viewSet != null)
+            {
+                GraphicsResourcesImageSpace.generateAllPreviewImages(
+                    this.viewSet, this.progressMonitor, this.imageLoadOptions.getMaxLoadingThreads());
+            }
+
+            return this;
+        }
+
+        public GraphicsResourcesImageSpace<ContextType> create() throws IOException, UserCancellationException
+        {
+            if ((linearLuminanceValues != null) && (encodedLuminanceValues != null))
+            {
+                viewSet.setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+            }
+
+            if (imageDirectoryOverride != null)
+            {
+                viewSet.setFullResImageDirectory(imageDirectoryOverride);
+            }
+
+            if (orientationViewName != null)
+            {
+                viewSet.setOrientationView(orientationViewName);
+            }
+
+            if ((geometry == null) && (viewSet.getGeometryFile() != null))
+            {
+                // Load geometry if it wasn't specified but a view set was.
+                geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
+            }
+
+            return new GraphicsResourcesImageSpace<>(context, viewSet, geometry, imageLoadOptions, progressMonitor);
+        }
+    }
+
+    public static <ContextType extends Context<ContextType>> Builder<ContextType> getBuilderForContext(ContextType context)
+    {
+        return new Builder<>(context);
+    }
+
+    private GraphicsResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
+        ReadonlyLoadOptionsModel loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
+    {
+        // IAN: This super call should be creating the geometry
+        super(new GraphicsResourcesCommon<>(context, viewSet, geometry,
+                (loadOptions != null) ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
+            true);
+
+        // Read the images from a file
+        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageFilePath() != null) && (viewSet.getCameraPoseCount() > 0))
+        {
+            Date timestamp = new Date();
+
+            int width;
+            int height;
+
+            // Use preview-resolution images for the texture array due to VRAM limitations
+            try
+            {
+                File imageFile = viewSet.findPreviewPrimaryImageFile();
+                IntVector2 dimensions = ImageHelper.dimensionsOf(imageFile);
+
+                width = dimensions.x;
+                height = dimensions.y;
+            }
+            catch (FileNotFoundException e)
+            {
+                // Need to regenerate preview-resolution images
+                width = loadOptions.getPreviewImageWidth();
+                height = loadOptions.getPreviewImageHeight();
+            }
+
+            ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
+                context.getTextureFactory().build2DColorTextureArray(width, height, viewSet.getCameraPoseCount());
+            loadOptions.configureColorTextureBuilder(textureArrayBuilder);
+            colorTextures = textureArrayBuilder.createTexture();
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.setStage(0, "Loading preview-resolution images...");
+                progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
+            }
+
+            for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+            {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i + 1, viewSet.getCameraPoseCount()));
+                    progressMonitor.allowUserCancellation();
+                }
+
+                try
+                {
+                    File imageFile = findOrGeneratePreviewImageFile(i);
+
+                    this.colorTextures.loadLayer(i, imageFile, true);
+                }
+                catch (FileNotFoundException e)
+                {
+                    // If the file is not found, continue and try to load other images.
+                    LOG.error("Failed to load image.", e);
+                }
+            }
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.setProgress(viewSet.getCameraPoseCount(), "All images loaded.");
+            }
+
+            LOG.info("View Set textures loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
+        }
+        else
+        {
+            this.colorTextures = null;
+        }
+
+        if (progressMonitor != null)
+        {
+            progressMonitor.setStage(1, "Finished loading images.");
+        }
+
+        // Store the camera projections in a uniform buffer
+        if ((viewSet != null) && (viewSet.getCameraProjectionData() != null))
+        {
+            // Create the uniform buffer
+            cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
+        }
+        else
+        {
+            cameraProjectionBuffer = null;
+        }
+
+        // Store the camera projection indices in a uniform buffer
+        if ((viewSet != null) && (viewSet.getCameraProjectionIndexData() != null))
+        {
+            cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
+        }
+        else
+        {
+            cameraProjectionIndexBuffer = null;
+        }
+
+        if (getGeometryResources() != null)
+        {
+            if ((viewSet != null) && (loadOptions != null) && (loadOptions.getDepthImageWidth() != 0) && (loadOptions.getDepthImageHeight() != 0))
+            {
+                try
+                    (
+                        // Don't automatically generate any texture attachments for this framebuffer object
+                        FramebufferObject<ContextType> depthRenderingFBO =
+                            context.buildFramebufferObject(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                                .createFramebufferObject();
+
+                        // Create a depth map generator -- includes the depth map program and drawable
+                        DepthMapGenerator<ContextType> depthMapGenerator =
+                            DepthMapGenerator.createFromGeometryResources(getGeometryResources())
+                    )
+                {
+                    double minDepth = viewSet.getRecommendedFarPlane();
+
+                    if (loadOptions.areDepthImagesRequested())
+                    {
+                        // Build depth textures for each view
+                        this.depthTextures =
+                            context.getTextureFactory().build2DDepthTextureArray(
+                                    loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+                                .createTexture();
+
+                        // Render each depth texture
+                        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                        {
+                            depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
+                            depthMapGenerator.generateDepthMap(viewSet, i, depthRenderingFBO);
+
+                            if (i == viewSet.getPrimaryViewIndex())
+                            {
+                                minDepth = getMinDepthFromFBO(depthRenderingFBO, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        this.depthTextures = null;
+
+                        try (Texture2D<ContextType> depthAttachment = context.getTextureFactory()
+                            .build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                            .createTexture())
+                        {
+                            depthRenderingFBO.setDepthAttachment(depthAttachment);
+                            depthMapGenerator.generateDepthMap(viewSet, viewSet.getPrimaryViewIndex(), depthRenderingFBO);
+                            minDepth = getMinDepthFromFBO(depthRenderingFBO, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
+                        }
+                    }
+
+                    primaryViewDistance = minDepth;
+                }
+            }
+            else
+            {
+                this.depthTextures = null;
+                primaryViewDistance = 0.0;
+            }
+        }
+        else
+        {
+            this.depthTextures = null;
+            primaryViewDistance = 0.0;
+        }
+
+        if (this.depthTextures != null)
+        {
+            shadowTextures =
+                context.getTextureFactory()
+                    .build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.getViewSet().getCameraPoseCount())
+                    .createTexture();
+            shadowMatrixBuffer = context.createUniformBuffer();
+
+            updateShadowTextures();
+        }
+        else
+        {
+            shadowTextures = null;
+            shadowMatrixBuffer = null;
+        }
+    }
+
+    private static <ContextType extends Context<ContextType>> double getMinDepthFromFBO(Framebuffer<ContextType> depthFramebuffer, double nearPlane, double farPlane)
+    {
+        double minDepth = farPlane;
+
+        short[] depthBufferData = depthFramebuffer.getTextureReaderForDepthAttachment().read();
+        for (short encodedDepth : depthBufferData)
+        {
+            int nonlinearDepth = 0xFFFF & (int) encodedDepth;
+            minDepth = Math.min(minDepth, getLinearDepth(((2.0 * nonlinearDepth) / 0xFFFF) - 1.0, nearPlane, farPlane));
+        }
+        return minDepth;
+    }
+
+    static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getDepthMapProgramBuilder(ContextType context)
+    {
+        return context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"));
+    }
+
+
+    private void updateShadowTextures() throws IOException
+    {
+        if (this.shadowTextures != null)
+        {
+            try
+                (
+                    // Don't automatically generate any texture attachments for this framebuffer object
+                    FramebufferObject<ContextType> depthRenderingFBO =
+                        getContext().buildFramebufferObject(this.shadowTextures.getWidth(), this.shadowTextures.getHeight())
+                            .createFramebufferObject();
+
+                    // Load the program
+                    DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(getGeometryResources())
+                )
+            {
+                // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+                NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.getViewSet().getCameraPoseCount());
+
+                // Render each depth texture
+                for (int i = 0; i < this.getViewSet().getCameraPoseCount(); i++)
+                {
+                    depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
+                    Matrix4 shadowMatrix = depthMapGenerator.generateShadowMap(getViewSet(), i, depthRenderingFBO);
+
+                    int d = 0;
+                    for (int col = 0; col < 4; col++) // column
+                    {
+                        for (int row = 0; row < 4; row++) // row
+                        {
+                            flattenedShadowMatrices.set(i, d, shadowMatrix.get(row, col));
+                            d++;
+                        }
+                    }
+                }
+
+                // Create the uniform buffer
+                shadowMatrixBuffer.setData(flattenedShadowMatrices);
+            }
+        }
+    }
+
+    private static double getLinearDepth(double nonLinearDepth, double nearPlane, double farPlane)
+    {
+        return (2 * nearPlane * farPlane) / ((farPlane + nearPlane) - (nonLinearDepth * (farPlane - nearPlane)));
+    }
+
+    /**
+     * Refresh the light data in the uniform buffers using the current values in the view set,
+     * and also update the shadow textures.
+     */
+    @Override
+    public void updateLightCalibration(Vector3 lightCalibration)
+    {
+        super.updateLightCalibration(lightCalibration);
+
+        try
+        {
+            updateShadowTextures();
+        }
+        catch (IOException e)
+        {
+            LOG.error("Error updating light calibration:", e);
+        }
+    }
+
+    /**
+     * Gets a shader program builder with the following preprocessor defines automatically injected based on the
+     * characteristics of this instance:
+     * <ul>
+     *     <li>CAMERA_POSE_COUNT</li>
+     *     <li>LIGHT_COUNT</li>
+     *     <li>CAMERA_PROJECTION_COUNT</li>
+     *     <li>LUMINANCE_MAP_ENABLED</li>
+     *     <li>INVERSE_LUMINANCE_MAP_ENABLED</li>
+     *     <li>INFINITE_LIGHT_SOURCES</li>
+     *     <li>VISIBILITY_TEST_ENABLED</li>
+     *     <li>SHADOW_TEST_ENABLED</li>
+     *     <li>IMAGE_BASED_RENDERING_ENABLED</li>
+     *     <li>DIFFUSE_TEXTURE_ENABLED</li>
+     *     <li>SPECULAR_TEXTURE_ENABLED</li>
+     *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
+     *     <li>NORMAL_TEXTURE_ENABLED</li>
+     * </ul>
+     *
+     * @return A program builder with all of the above preprocessor defines specified, ready to have the
+     * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
+     */
+    @Override
+    public ProgramBuilder<ContextType> getShaderProgramBuilder()
+    {
+        // Determine shader defines here that should apply globally as defaults, but only for image-space source photos.
+        // The shader will not reload automatically when these change.
+        // The defines can be overridden by the actual shader.
+        ProgramBuilder<ContextType> builder = getSharedResources().getShaderProgramBuilder()
+            .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
+            .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
+            .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE); // should default to this, but just in case
+
+        if (this.depthTextures == null)
+        {
+            // Override to disable visibility test if no depth textures exist
+            builder.define("VISIBILITY_TEST_ENABLED", false);
+        }
+
+        if (this.shadowTextures == null)
+        {
+            // Override to disable shadow test if no shadow textures exist
+            builder.define("SHADOW_TEST_ENABLED", false);
+        }
+
+        return builder;
+    }
+
+    @Override
+    public void setupShaderProgram(Program<ContextType> program)
+    {
+        getSharedResources().setupShaderProgram(program);
+
+        if (this.colorTextures != null)
+        {
+            program.setTexture("viewImages", this.colorTextures);
+        }
+
+        if ((this.cameraProjectionBuffer != null) && (this.cameraProjectionIndexBuffer != null))
+        {
+            program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
+            program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
+        }
+
+        if (this.depthTextures == null)
+        {
+            program.setTexture("depthImages", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
+        }
+        else
+        {
+            program.setTexture("depthImages", this.depthTextures);
+        }
+
+        if ((this.shadowMatrixBuffer == null) || (this.shadowTextures == null))
+        {
+            program.setTexture("shadowImages", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
+        }
+        else
+        {
+            program.setUniformBuffer("ShadowMatrices", this.shadowMatrixBuffer);
+            program.setTexture("shadowImages", this.shadowTextures);
+        }
+    }
+
+    @Override
+    public Drawable<ContextType> createDrawable(Program<ContextType> program)
+    {
+        return getGeometryResources().createDrawable(program);
+    }
+
+    /**
+     * Gets the distance from the camera to the centroid in the primary view.
+     * This is frequently used to calibrate scale in Kintsugi 3D Builder.
+     *
+     * @return The camera distance in the primary view.
+     */
+    public double getPrimaryViewDistance()
+    {
+        return primaryViewDistance;
+    }
+
+    public void calibrateLightIntensities()
+    {
+        if (getViewSet().getProjectSettings().getBoolean("infiniteLightSources"))
+        {
+            // Use unit light intensity if light sources don't have inverse-square falloff.
+            initializeLightIntensities(new Vector3(1.0f));
+        }
+        else if (primaryViewDistance > 0)
+        {
+            Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
+            initializeLightIntensities(lightIntensity);
+        }
+        else
+        {
+            initializeLightIntensities(new Vector3(1.0f));
+            LOG.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?).");
+        }
+    }
+
+    /**
+     * Creates a resource for just a single view, using the default image for that view but with custom load options
+     *
+     * @param viewIndex
+     * @param loadOptions
+     * @return
+     * @throws IOException
+     */
+    public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
+        throws IOException
+    {
+        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex,
+            getViewSet().findFullResImageFile(viewIndex), getGeometry(), loadOptions);
+    }
+
+    @Override
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
+    {
+        settings.setCacheFolderName(getViewSet().getUUID().toString());
+
+        ImageCache<ContextType> cache = new ImageCache<>(this, settings);
+
+        if (!cache.isInitialized())
+        {
+            cache.initialize(monitor);
+        }
+
+        return cache;
+    }
+
+    /**
+     * Used to generate all preview and thumbnail images in bulk
+     *
+     * @param viewSet
+     * @throws IOException
+     */
+    private static void generateAllPreviewImages(ViewSet viewSet, ProgressMonitor progressMonitor, int maxLoadingThreads)
+        throws IOException, UserCancellationException
+    {
+        if (viewSet.getPreviewWidth() == 0 || viewSet.getPreviewHeight() == 0)
+        {
+            LOG.warn("Preview width or preview height are 0; skipping preview images");
+        }
+        else
+        {
+            LOG.info("Generating preview and thumbnail images...");
+            Date timestamp = new Date();
+
+            PreviewImageGenerator previewImageGenerator = PreviewImageGenerator.start(viewSet, progressMonitor);
+
+            if (MULTITHREAD_PREVIEW_IMAGE_GENERATION && maxLoadingThreads > 1)
+            {
+                LOG.info("Using {} threads...", maxLoadingThreads);
+                generateAllPreviewImagesMultithread(previewImageGenerator, maxLoadingThreads);
+            }
+            else // sequential mode
+            {
+                generateAllPreviewImagesSequential(previewImageGenerator);
+            }
+
+            previewImageGenerator.waitAndFinish();
+
+            LOG.info("Undistorted preview images generated in {} milliseconds.", new Date().getTime() - timestamp.getTime());
+        }
+    }
+
+    private static void generateAllPreviewImagesSequential(
+        PreviewImageGenerator previewImageGenerator)
+    {
+        // Do the undistortion on the rendering thread
+        Rendering.runLater(new GraphicsRequest()
+        {
+            @Override
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws UserCancellationException
+            {
+                for (int i = 0; i < previewImageGenerator.getViewCount(); i++)
+                {
+                    previewImageGenerator.allowUserCancellation();
+                    PreviewImages previewImages = previewImageGenerator.forView(i);
+                    if (previewImages.fullResImageExists() && previewImages.hasMissingFiles())
+                    {
+                        previewImages.tryCreateMissingFiles(context);
+                    }
+                }
+            }
+        });
+
+        LOG.info("Waiting for undistortion to finish on rendering thread");
+    }
+
+    private static void generateAllPreviewImagesMultithread(PreviewImageGenerator previewImageGenerator, int maxLoadingThreads)
+    {
+        // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
+        ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
+
+        customThreadPool.submit(() -> IntStream.range(0, previewImageGenerator.getViewCount())
+            .parallel() // allow images to be processed in parallel; especially important for ICC transformation if present
+            .forEach(i ->
+            {
+                PreviewImages previewImages = previewImageGenerator.forView(i);
+                if (previewImages.fullResImageExists() && previewImages.hasMissingFiles())
+                {
+                    if (previewImages.needsUndistortion())
+                    {
+                        // Do the undistortion on the rendering thread
+                        Rendering.runLater(new GraphicsRequest()
+                        {
+                            @Override
+                            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+                            {
+                                previewImages.tryGenerateUndistortedPreviewImage(context);
+
+                                // Write to a file on another thread so as not to block the rendering thread
+                                new Thread(previewImages::tryCreateMissingFiles).start();
+                            }
+                        });
+                    }
+                    else
+                    {
+                        // Fallback to simply resizing without undistorting
+                        // Does not require graphics context, so threading is simple.
+                        previewImages.tryCreateMissingFilesNoUndistortion();
+                    }
+                }
+            }));
+
+        LOG.info("Finished reading all images; waiting for undistortion to finish on other threads");
+    }
+
+    /**
+     * Used to generate a single preview image if one is missing
+     *
+     * @param poseIndex
+     * @throws IOException
+     */
+    private boolean generatePreviewImages(int poseIndex)
+    {
+        PreviewImageGenerator previewImageGenerator = PreviewImageGenerator.start(getViewSet());
+        PreviewImages previewImages = previewImageGenerator.forView(poseIndex);
+
+        if (previewImages.hasMissingFiles())
+        {
+            if (previewImages.needsUndistortion())
+            {
+                // Distortion exists; undistort
+                LOG.info("Undistorting image {}/{}", poseIndex, getViewSet().getCameraPoseCount());
+            }
+            else if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
+            {
+                LOG.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCameraPoseCount());
+            }
+            else
+            {
+                // No distortion or preview dimensions, just use the original image
+                LOG.warn("Using full resolution image {}/{} : No distortion and preview width and/or preview height are 0",
+                    poseIndex, getViewSet().getCameraPoseCount());
+            }
+
+            previewImages.tryCreateMissingFiles(getContext());
+        }
+
+        return previewImages.needsUndistortion() || (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0);
+    }
+
+    private File findOrGeneratePreviewImageFile(int index) throws IOException
+    {
+        try
+        {
+            // See if the preview image is already there
+            return ImageFinder.getInstance().findImageFile(getViewSet().getPreviewImageFile(index));
+        }
+        catch (FileNotFoundException e)
+        {
+            if (generatePreviewImages(index)) // Generate file if necessary
+            {
+                return ImageFinder.getInstance().findImageFile(getViewSet().getPreviewImageFile(index));
+            }
+            else // File was not generated: no distortion and preview dimensions are zero.
+            {
+                return ImageFinder.getInstance().findImageFile(getViewSet().getFullResImageFile(index));
+            }
+        }
+    }
+
+    @Override
+    public void close()
+    {
+        super.close();
+
+        if (this.cameraProjectionBuffer != null)
+        {
+            this.cameraProjectionBuffer.close();
+        }
+
+        if (this.cameraProjectionIndexBuffer != null)
+        {
+            this.cameraProjectionIndexBuffer.close();
+        }
+
+        if (this.colorTextures != null)
+        {
+            this.colorTextures.close();
+        }
+
+        if (this.depthTextures != null)
+        {
+            this.depthTextures.close();
+        }
+
+        if (this.shadowTextures != null)
+        {
+            this.shadowTextures.close();
+        }
+
+        if (this.shadowMatrixBuffer != null)
+        {
+            this.shadowMatrixBuffer.close();
+        }
+    }
+}

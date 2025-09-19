@@ -11,29 +11,28 @@
 
 package kintsugi3d.builder.export.general;
 
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.util.ImageFinder;
+
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.function.Consumer;
-
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.util.ImageFinder;
 
 class MultiviewRetargetRenderRequest extends RenderRequestBase
 {
     private final File targetViewSetFile;
 
-    MultiviewRetargetRenderRequest(int width, int height, ReadonlySettingsModel settingsModel,
+    MultiviewRetargetRenderRequest(int width, int height,
         Consumer<Program<? extends Context<?>>> shaderSetupCallback,
         File targetViewSet, File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.targetViewSetFile = targetViewSet;
     }
 
@@ -41,27 +40,27 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
     {
         private final File targetViewSet;
 
-        Builder(File targetViewSet, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(File targetViewSet, File fragmentShader, File outputDirectory)
         {
-            super(settingsModel, fragmentShader, outputDirectory);
+            super(fragmentShader, outputDirectory);
             this.targetViewSet = targetViewSet;
         }
 
         @Override
-        public ObservableIBRRequest create()
+        public ObservableProjectGraphicsRequest create()
         {
-            return new MultiviewRetargetRenderRequest(getWidth(), getHeight(), getSettingsModel(), getShaderSetupCallback(),
+            return new MultiviewRetargetRenderRequest(getWidth(), getHeight(), getShaderSetupCallback(),
                 targetViewSet, getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile).finish();
 
-        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (
@@ -85,7 +84,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 render(drawable, framebuffer);
 
-                String fileName = ImageFinder.getInstance().getImageFileNameWithFormat(
+                String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
                     renderable.getActiveViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);

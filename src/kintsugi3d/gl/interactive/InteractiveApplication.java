@@ -21,7 +21,7 @@ import java.util.List;
 
 public class InteractiveApplication
 {
-    private static final Logger log = LoggerFactory.getLogger(InteractiveApplication.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InteractiveApplication.class);
     private final List<EventPollable> pollables;
     private final List<Refreshable> refreshables;
 
@@ -55,7 +55,7 @@ public class InteractiveApplication
         }
         Date startTimestamp = new Date();
         Date timestampA = startTimestamp;
-        log.info("Main loop started.");
+        LOG.info("Main loop started.");
         boolean shouldTerminate = false;
         int refreshTime = 0;
         int pollingTime = 0;
@@ -75,11 +75,11 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    log.error("Runtime error occurred", e);
+                    LOG.error("Runtime error occurred", e);
                 }
                 catch (Error e)
                 {
-                    log.error("Runtime error occurred", e);
+                    LOG.error("Runtime error occurred", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -96,11 +96,11 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    log.error("An error occurred while polling events", e);
+                    LOG.error("An error occurred while polling events", e);
                 }
                 catch (Error e)
                 {
-                    log.error("An error occurred while polling events", e);
+                    LOG.error("An error occurred while polling events", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -113,7 +113,7 @@ public class InteractiveApplication
             {
                 if (timestampA.getTime() - lastSecond > 1000)
                 {
-                    log.info("FPS: " + frames);
+                    LOG.info("FPS: " + frames);
                     lastSecond = timestampA.getTime();
                     frames = 0;
                 }
@@ -133,15 +133,15 @@ public class InteractiveApplication
                 }
                 catch (InterruptedException e)
                 {
-                    log.warn("Interrupted while waiting for min frame delta", e);
+                    LOG.warn("Interrupted while waiting for min frame delta", e);
                 }
             }
         }
 
-        log.info("Main loop terminated.");
-        log.info("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
-        log.info("Time spent polling for events: " + pollingTime + " milliseconds");
-        log.info("Time spent on refreshes: " + refreshTime + " milliseconds");
+        LOG.info("Main loop terminated.");
+        LOG.info("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
+        LOG.info("Time spent polling for events: " + pollingTime + " milliseconds");
+        LOG.info("Time spent on refreshes: " + refreshTime + " milliseconds");
 
         for (Refreshable refreshable : this.refreshables)
         {
@@ -151,11 +151,11 @@ public class InteractiveApplication
             }
             catch(RuntimeException e)
             {
-                log.error("Error terminating refreshable", e);
+                LOG.error("Error terminating refreshable", e);
             }
             catch (Error e)
             {
-                log.error("Error terminating refreshable", e);
+                LOG.error("Error terminating refreshable", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -188,11 +188,11 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error occurred", e);
+                        LOG.error("An error occurred", e);
                     }
                     catch (Error e)
                     {
-                        log.error("An error occurred", e);
+                        LOG.error("An error occurred", e);
                         //noinspection ProhibitedExceptionThrown
                         throw e;
                     }
@@ -213,11 +213,11 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error has occurred", e);
+                        LOG.error("An error has occurred", e);
                     }
                     catch (Error e)
                     {
-                        log.error("An error has occurred", e);
+                        LOG.error("An error has occurred", e);
                         //noinspection ProhibitedExceptionThrown
                         throw e;
                     }
@@ -235,11 +235,11 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error has occurred", e);
+                        LOG.error("An error has occurred", e);
                     }
                     catch (Error e)
                     {
-                        log.error("An error has occurred", e);
+                        LOG.error("An error has occurred", e);
                         //noinspection ProhibitedExceptionThrown
                         throw e;
                     }
@@ -256,11 +256,11 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error has occurred", e);
+                        LOG.error("An error has occurred", e);
                     }
                     catch (Error e)
                     {
-                        log.error("An error has occurred", e);
+                        LOG.error("An error has occurred", e);
                         //noinspection ProhibitedExceptionThrown
                         throw e;
                     }

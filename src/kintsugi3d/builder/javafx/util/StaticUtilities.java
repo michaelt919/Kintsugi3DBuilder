@@ -9,22 +9,22 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.util;//Created by alexk on 7/20/2017.
-
-import java.util.Objects;
-import java.util.regex.Pattern;
+package kintsugi3d.builder.javafx.util;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
+import javafx.collections.FXCollections;
+import javafx.scene.control.*;
+import kintsugi3d.builder.core.Global;
+
+import java.util.Objects;
 
 /*
 I general utilities class.
  */
 public final class StaticUtilities
 {
-    private static final Pattern NUMERIC_REGEX = Pattern.compile("-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?");
+//    private static final Pattern NUMERIC_REGEX = Pattern.compile("-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?");
 
     private StaticUtilities()
     {
@@ -65,9 +65,8 @@ public final class StaticUtilities
             {
                 try
                 {
-                    double value = Double.valueOf(textField.getText());
+                    double value = Double.parseDouble(textField.getText());
                     textField.setText(Double.toString(wrapAround(min, max, value)));
-//                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -86,9 +85,8 @@ public final class StaticUtilities
             {
                 try
                 {
-                    double value = Double.valueOf(textField.getText());
+                    double value = Double.parseDouble(textField.getText());
                     textField.setText(Double.toString(clamp(min, max, value)));
-//                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -107,21 +105,57 @@ public final class StaticUtilities
                 return change;
             }
             String text = change.getControlNewText();
-            if (text.isEmpty() || Objects.equals("-", text) || NUMERIC_REGEX.matcher(text).matches())
+            if (text.isEmpty() || Objects.equals("-", text))
             {
                 return change;
             }
             else
             {
-                return null;
+                try
+                {
+                    Double.parseDouble(text);
+                    return change;
+                }
+                catch (NumberFormatException e)
+                {
+                    return null;
+                }
             }
         }));
+    }
+
+    public static void makeClampedInteger(double min, double max, TextField textField)
+    {
+        makeNumeric(textField);
+        textField.focusedProperty().addListener((ob, o, n) ->
+        {
+            if (o && !n)
+            {
+                try
+                {
+                    double value = Double.parseDouble(textField.getText());
+                    textField.setText(Long.toString(Math.round(clamp(min, max, value))));
+                }
+                catch (NumberFormatException nfe)
+                {
+                    //do nothing
+                }
+            }
+        });
     }
 
     public static void bindLogScaleToLinear(DoubleProperty logScaleProperty, DoubleProperty linearScaleProperty)
     {
         logScaleProperty.addListener((b, o, n) -> linearScaleProperty.set(Math.pow(10, n.doubleValue())));
         linearScaleProperty.addListener((b, o, n) -> logScaleProperty.set(Math.log10(n.doubleValue())));
+    }
+
+    public static void makeSquareResolutionComboBox(ComboBox<SquareResolution> comboBox)
+    {
+        comboBox.setItems(FXCollections.observableArrayList(
+            new SquareResolution(256), new SquareResolution(512), new SquareResolution(1024),
+            new SquareResolution(2048), new SquareResolution(4096), new SquareResolution(8192)));
+        comboBox.getSelectionModel().select(3); // 2048x2048
     }
 
     private static double wrapAround(double min, double max, double value)
@@ -158,6 +192,20 @@ public final class StaticUtilities
         else
         {
             return value;
+        }
+    }
+
+    public static boolean confirmCancel()
+    {
+        if (Global.state().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
+        {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Discard changes?  Settings will be reverted to their previous values.");
+            var result = alert.showAndWait();
+            return result.isPresent() && result.get().equals(ButtonType.OK);
+        }
+        else
+        {
+            return true;
         }
     }
 }

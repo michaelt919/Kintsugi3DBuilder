@@ -41,12 +41,6 @@
             <fileMode>0755</fileMode>
         </file>
         <file>
-            <source>target/classes/fxml-index.txt</source>
-            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
-            <fileMode>0755</fileMode>
-            <lineEnding>unix</lineEnding>
-        </file>
-        <file>
             <source>target/classes/Info.plist</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents</outputDirectory>
             <fileMode>0755</fileMode>

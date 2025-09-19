@@ -11,16 +11,16 @@
 
 package kintsugi3d.util;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.gl.vecmath.Vector3;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.io.ViewSetWriterToVSET;
 
 public final class MakeViewSet
 {

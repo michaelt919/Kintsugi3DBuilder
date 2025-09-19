@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LightVisualsGroup<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(LightVisualsGroup.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LightVisualsGroup.class);
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;

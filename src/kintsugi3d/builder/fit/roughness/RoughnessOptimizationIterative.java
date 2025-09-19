@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -28,6 +22,12 @@ import kintsugi3d.optimization.ShaderBasedOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
+
 /**
  * TODO: sketched out but not fully functional; may not be needed
  * @param <ContextType>
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class RoughnessOptimizationIterative<ContextType extends Context<ContextType>>
         extends RoughnessOptimizationBase<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationIterative.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoughnessOptimizationIterative.class);
     private final TextureResolution settings;
 
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
@@ -98,7 +98,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
             backFramebuffer.clearColorBuffer(2, 1.0f /* damping */, Float.MAX_VALUE /* error */, 0.0f, 0.0f);
 
-            log.debug("Optimizing roughness...");
+            LOG.debug("Optimizing roughness...");
         });
     }
 

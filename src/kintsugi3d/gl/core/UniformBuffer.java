@@ -11,9 +11,9 @@
 
 package kintsugi3d.gl.core;
 
-import java.nio.ByteBuffer;
-
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+
+import java.nio.ByteBuffer;
 
 /**
  * An interface for a uniform buffer object that can provide data to be used in conjunction with a shader program.

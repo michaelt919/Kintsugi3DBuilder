@@ -11,50 +11,43 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.ShaderType;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
-    private final ReadonlySettingsModel ibrSettings;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitProgramFactory(ReadonlySettingsModel ibrSettings, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitProgramFactory(SpecularBasisSettings specularBasisSettings)
     {
-        this.ibrSettings = ibrSettings;
         this.specularBasisSettings = specularBasisSettings;
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources, File vertexShader,
-        File fragmentShader, boolean visibilityAndShadowTests)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
+        File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
         ProgramBuilder<ContextType> builder = resources.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, vertexShader)
             .addShader(ShaderType.FRAGMENT, fragmentShader);
 
         // Disable occlusion / shadow culling if requested (may do nothing if already operating in texture space)
-        // getIBRShaderProgramBuilder() will enable by default if depth / shadow maps are available
-        if (!visibilityAndShadowTests || !ibrSettings.getBoolean("occlusionEnabled"))
+        // getShaderProgramBuilder() will enable by default if depth / shadow maps are available
+        if (!visibilityAndShadowTests)
         {
-            builder.define("VISIBILITY_TEST_ENABLED", false);
-        }
-
-        if (!visibilityAndShadowTests || !ibrSettings.getBoolean("shadowsEnabled"))
-        {
-            builder.define("SHADOW_TEST_ENABLED", false);
+            builder
+                .define("VISIBILITY_TEST_ENABLED", false)
+                .define("SHADOW_TEST_ENABLED", false);
         }
 
         // Common definitions for all specular fitting related shaders.
@@ -65,17 +58,19 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
                 .define("BASIS_RESOLUTION", specularBasisSettings.getBasisResolution());
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
+        File vertexShader, File fragmentShader)
     {
         return getShaderProgramBuilder(resources, vertexShader, fragmentShader, true);
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader,
-        boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
+        File vertexShader, File fragmentShader, boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
         throws IOException
     {
         // Common definitions for all specular fitting related shaders.
-        ProgramBuilder<ContextType> programBuilder = getShaderProgramBuilder(resources, vertexShader, fragmentShader, visibilityAndShadowTests);
+        ProgramBuilder<ContextType> programBuilder =
+            getShaderProgramBuilder(resources, vertexShader, fragmentShader, visibilityAndShadowTests);
 
         // Add additional defines provided to the function.
         for (Entry<String, Object> definition : additionalDefines.entrySet())
@@ -92,25 +87,27 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         return program;
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, Map<String, Object> additionalDefines)
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
+        File vertexShader, File fragmentShader, Map<String, Object> additionalDefines)
         throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, true, additionalDefines);
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws IOException
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
+        File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader) throws IOException
+    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
+        File vertexShader, File fragmentShader) throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, true);
     }
 
-    public void setupShaderProgram(ReadonlyIBRResources<ContextType> resources, Program<ContextType> program)
+    public void setupShaderProgram(ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> program)
     {
         resources.setupShaderProgram(program);
-        program.setUniform("occlusionBias", ibrSettings.getFloat("occlusionBias"));
     }
 }

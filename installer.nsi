@@ -52,7 +52,6 @@ Section "Kintsugi 3D Builder (required)" SectionApp
     File "Kintsugi3D.ico"
     File "Kintsugi3D-icon.png"
     File "target\classes\kintsugi3d-builder-about.txt"
-    File "target\classes\fxml-index.txt"
     File "target\classes\export-classes.txt"
 
     ; Include shaders

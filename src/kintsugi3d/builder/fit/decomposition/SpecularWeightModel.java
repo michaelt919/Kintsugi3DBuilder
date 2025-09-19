@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.util.function.IntFunction;
-
 import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.LeastSquaresModel;
+
+import java.util.function.IntFunction;
 
 import static java.lang.Math.PI;
 

@@ -11,6 +11,11 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.vecmath.IntVector4;
+import kintsugi3d.util.BufferedImageBuilder;
+import org.lwjgl.BufferUtils;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -19,11 +24,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.gl.vecmath.IntVector4;
-import kintsugi3d.util.BufferedImageBuilder;
-import org.lwjgl.*;
 
 /**
  * Base class for texture readers that contains commonly used implementations for transferring native buffer data to a
@@ -72,6 +72,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, getWidth(), getHeight())
             .flipVertical()
             .create();
@@ -83,6 +84,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, getWidth(), getHeight())
             .tonemap(tonemapper)
             .flipVertical()
@@ -95,6 +97,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, getWidth(), getHeight())
             .tonemap(tonemapper)
             .flipVertical()
@@ -107,6 +110,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, width, height)
             .flipVertical()
             .create();
@@ -118,6 +122,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, width, height)
             .tonemap(tonemapper)
             .flipVertical()
@@ -130,6 +135,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
     {
         int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
+            .setBufferedImageType("JPEG".equals(fileFormat) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB)
             .setDataFromArray(pixels, width, height)
             .tonemap(tonemapper)
             .flipVertical()

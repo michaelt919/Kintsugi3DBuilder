@@ -9,30 +9,29 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
+package kintsugi3d.builder.tools;
+
+import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.tools.MultiplierTool.Type;
+import kintsugi3d.gl.window.Canvas3D;
+import kintsugi3d.gl.window.CursorPosition;
+import kintsugi3d.gl.window.Key;
+import kintsugi3d.gl.window.ModifierKeys;
+import kintsugi3d.gl.window.listeners.ScrollListener;
+import kintsugi3d.util.CanvasListener;
+import kintsugi3d.util.KeyPress;
+import kintsugi3d.util.MouseMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-import kintsugi3d.gl.window.Canvas3D;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.window.CursorPosition;
-import kintsugi3d.gl.window.Key;
-import kintsugi3d.gl.window.ModifierKeys;
-import kintsugi3d.gl.window.listeners.*;
-import kintsugi3d.builder.tools.MultiplierTool.Type;
-import kintsugi3d.builder.state.*;
-import kintsugi3d.util.CanvasInputController;
-import kintsugi3d.util.KeyPress;
-import kintsugi3d.util.MouseMode;
-
-public final class ToolBox
-    implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, CanvasInputController
+public final class ToolBox implements CanvasListener
 {
-    private static final Logger log = LoggerFactory.getLogger(ToolBox.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ToolBox.class);
     private MouseMode currentMode;
     private final ToolBindingModel toolBindingModel;
 
@@ -41,17 +40,6 @@ public final class ToolBox
     private final LightTool lightTool;
 
     private final ScrollListener scrollTool;
-
-    //window listener
-    @Override
-    public void addAsCanvasListener(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas)
-    {
-        canvas.addCursorPositionListener(this);
-        canvas.addMouseButtonPressListener(this);
-        canvas.addMouseButtonReleaseListener(this);
-        canvas.addScrollListener(this);
-        canvas.addKeyPressListener(this);
-    }
 
     private DragTool getSelectedDragTool()
     {
@@ -79,11 +67,11 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("An error occurred handling scroll event", e);
+            LOG.error("An error occurred handling scroll event", e);
         }
         catch (Error e)
         {
-            log.error("An error occurred handling scroll event", e);
+            LOG.error("An error occurred handling scroll event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -105,11 +93,11 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
         }
         catch (Error e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -128,11 +116,11 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
         }
         catch (Error e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
@@ -157,11 +145,11 @@ public final class ToolBox
             }
             catch (RuntimeException e)
             {
-                log.error("Error handling event", e);
+                LOG.error("Error handling event", e);
             }
             catch (Error e)
             {
-                log.error("Error handling event", e);
+                LOG.error("Error handling event", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -190,19 +178,20 @@ public final class ToolBox
         }
         catch (RuntimeException e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
         }
         catch (Error e)
         {
-            log.error("Error handling event", e);
+            LOG.error("Error handling event", e);
             //noinspection ProhibitedExceptionThrown
             throw e;
         }
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentModel environmentModel, ExtendedLightingModel lightingModel,
-                    ExtendedObjectModel objectModel, SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
+    private ToolBox(ManipulableViewpointModel cameraModel, ManipulableLightingEnvironmentModel lightingModel,
+                    ManipulableObjectPoseModel objectModel, GeneralSettingsModel settingsModel,
+                    ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
 
@@ -228,12 +217,10 @@ public final class ToolBox
             {
                 return builder
                     .setCameraModel(cameraModel)
-                    .setEnvironmentMapModel(environmentModel)
-                    .setLightingModel(lightingModel)
+                    .setLightingEnvironmentModel(lightingModel)
                     .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
-                    .setSceneViewportModel(sceneViewportModel)
-                    .setToolBindingModel(toolBindingModel);
+                    .setSceneViewportModel(sceneViewportModel);
             }
         };
 
@@ -245,37 +232,37 @@ public final class ToolBox
         Map<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> keyPressToolBuilders = new EnumMap<>(KeyPressToolType.class);
 
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_LARGE, MultiplierTool.getBuilder(
-            environmentModel::getBackgroundIntensity,
-            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            lightingModel::getBackgroundIntensity,
+            intensity -> lightingModel.setBackgroundIntensity((float)intensity),
             Type.UP_LARGE));
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_LARGE, MultiplierTool.getBuilder(
-            environmentModel::getBackgroundIntensity,
-            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            lightingModel::getBackgroundIntensity,
+            intensity -> lightingModel.setBackgroundIntensity((float)intensity),
             Type.DOWN_LARGE));
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_SMALL, MultiplierTool.getBuilder(
-            environmentModel::getBackgroundIntensity,
-            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            lightingModel::getBackgroundIntensity,
+            intensity -> lightingModel.setBackgroundIntensity((float)intensity),
             Type.UP_SMALL));
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_SMALL, MultiplierTool.getBuilder(
-            environmentModel::getBackgroundIntensity,
-            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            lightingModel::getBackgroundIntensity,
+            intensity -> lightingModel.setBackgroundIntensity((float)intensity),
             Type.DOWN_SMALL));
 
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE, MultiplierTool.getBuilder(
-            environmentModel::getEnvironmentIntensity,
-            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            lightingModel::getAmbientLightIntensity,
+            intensity -> lightingModel.setAmbientLightIntensity((float)intensity),
             Type.UP_LARGE));
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE, MultiplierTool.getBuilder(
-            environmentModel::getEnvironmentIntensity,
-            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            lightingModel::getAmbientLightIntensity,
+            intensity -> lightingModel.setAmbientLightIntensity((float)intensity),
             Type.DOWN_LARGE));
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL, MultiplierTool.getBuilder(
-            environmentModel::getEnvironmentIntensity,
-            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            lightingModel::getAmbientLightIntensity,
+            intensity -> lightingModel.setAmbientLightIntensity((float)intensity),
             Type.UP_SMALL));
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL, MultiplierTool.getBuilder(
-            environmentModel::getEnvironmentIntensity,
-            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            lightingModel::getAmbientLightIntensity,
+            intensity -> lightingModel.setAmbientLightIntensity((float)intensity),
             Type.DOWN_SMALL));
 
         keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHTS, ToggleSettingTool.getBuilder("visibleLightsEnabled"));
@@ -294,11 +281,10 @@ public final class ToolBox
     public static final class Builder
     {
         private ToolBindingModel toolBindingModel;
-        private ExtendedCameraModel cameraModel;
-        private EnvironmentModel environmentModel;
-        private SettingsModel settingsModel;
-        private ExtendedLightingModel lightingModel;
-        private ExtendedObjectModel objectModel;
+        private ManipulableViewpointModel cameraModel;
+        private GeneralSettingsModel settingsModel;
+        private ManipulableLightingEnvironmentModel lightingModel;
+        private ManipulableObjectPoseModel objectModel;
         private SceneViewportModel sceneViewportModel;
 
         public static Builder create()
@@ -316,31 +302,25 @@ public final class ToolBox
             return this;
         }
 
-        public Builder setCameraModel(ExtendedCameraModel cameraModel)
+        public Builder setCameraModel(ManipulableViewpointModel cameraModel)
         {
             this.cameraModel = cameraModel;
             return this;
         }
 
-        public Builder setEnvironmentModel(EnvironmentModel environmentModel)
-        {
-            this.environmentModel = environmentModel;
-            return this;
-        }
-
-        public Builder setObjectModel(ExtendedObjectModel objectModel)
+        public Builder setObjectModel(ManipulableObjectPoseModel objectModel)
         {
             this.objectModel = objectModel;
             return this;
         }
 
-        public Builder setSettingsModel(SettingsModel settingsModel)
+        public Builder setSettingsModel(GeneralSettingsModel settingsModel)
         {
             this.settingsModel = settingsModel;
             return this;
         }
 
-        public Builder setLightingModel(ExtendedLightingModel lightingModel)
+        public Builder setLightingModel(ManipulableLightingEnvironmentModel lightingModel)
         {
             this.lightingModel = lightingModel;
             return this;
@@ -352,9 +332,9 @@ public final class ToolBox
             return this;
         }
 
-        public CanvasInputController build()
+        public CanvasListener build()
         {
-            return new ToolBox(cameraModel, environmentModel, lightingModel, objectModel, settingsModel, toolBindingModel, sceneViewportModel);
+            return new ToolBox(cameraModel, lightingModel, objectModel, settingsModel, toolBindingModel, sceneViewportModel);
         }
     }
 }

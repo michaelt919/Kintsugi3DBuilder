@@ -9,13 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
+package kintsugi3d.builder.tools;
 
+import kintsugi3d.builder.state.ManipulableObjectPoseModel;
+import kintsugi3d.builder.state.ManipulableViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
-import kintsugi3d.builder.state.ExtendedCameraModel;
-import kintsugi3d.builder.state.ExtendedObjectModel;
 
 final class ObjectTwistTool implements DragTool
 {
@@ -27,8 +27,8 @@ final class ObjectTwistTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final ExtendedCameraModel cameraModel;
-    private final ExtendedObjectModel objectModel;
+    private final ManipulableViewpointModel cameraModel;
+    private final ManipulableObjectPoseModel objectModel;
 
     private static class Builder extends ToolBuilderBase<ObjectTwistTool>
     {
@@ -44,7 +44,7 @@ final class ObjectTwistTool implements DragTool
         return new Builder();
     }
 
-    private ObjectTwistTool(ExtendedCameraModel cameraModel, ExtendedObjectModel objectModel)
+    private ObjectTwistTool(ManipulableViewpointModel cameraModel, ManipulableObjectPoseModel objectModel)
     {
         this.cameraModel = cameraModel;
         this.objectModel = objectModel;

@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.camera;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -27,6 +24,9 @@ import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class SettingsCameraSceneController implements Initializable
 {
@@ -79,7 +79,7 @@ public class SettingsCameraSceneController implements Initializable
         fov.addListener(change -> focalLength.setValue(18 / Math.tan(fov.getValue() * Math.PI / 360 /* convert and divide by 2 */)));
         focalLength.addListener(change -> fov.setValue(360 / Math.PI /* convert and multiply by 2) */ * Math.atan(18 / focalLength.getValue())));
 
-        distanceSlider.setLabelFormatter(new StringConverter<Double>()
+        distanceSlider.setLabelFormatter(new StringConverter<>()
         {
             @Override
             public String toString(Double object)
@@ -103,7 +103,7 @@ public class SettingsCameraSceneController implements Initializable
         });
     }
 
-    public final ChangeListener<CameraSetting> changeListener =
+    public final ChangeListener<ObservableCameraSettings> changeListener =
         (observable, oldValue, newValue) ->
         {
             if (oldValue != null)
@@ -127,7 +127,7 @@ public class SettingsCameraSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    private void bind(CameraSetting camera)
+    private void bind(ObservableCameraSettings camera)
     {
 
         xCenterTextField.textProperty().bindBidirectional(camera.xCenterProperty(), n);
@@ -156,7 +156,7 @@ public class SettingsCameraSceneController implements Initializable
         focalLength.bindBidirectional(camera.focalLengthProperty());
     }
 
-    private void unbind(CameraSetting camera)
+    private void unbind(ObservableCameraSettings camera)
     {
 
         xCenterTextField.textProperty().unbindBidirectional(camera.xCenterProperty());

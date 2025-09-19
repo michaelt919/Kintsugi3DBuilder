@@ -11,7 +11,10 @@
 
 package kintsugi3d.optimization;
 
-import java.io.FileNotFoundException;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.core.*;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -19,10 +22,6 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.core.*;
 
 /**
  * A class for optimization where the entirety of the solving happens on the graphics card (typically useful for optimizing 4 parameters or less).
@@ -182,15 +181,19 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
     {
         int unsuccessfulIterations = 0;
 
-        ReadonlyErrorReport report;
-
         do
         {
-            report = runOnce(errorCalculator);
+            ReadonlyErrorReport report = runOnce(errorCalculator);
 
             if (report.getPreviousError() - report.getError() <= convergenceTolerance)
             {
                 unsuccessfulIterations++;
+
+                if (report.getPreviousError() < report.getError())
+                {
+                    // Prevent infinite loop if the error cycles around the same average value.
+                    report.reject();
+                }
             }
             else
             {

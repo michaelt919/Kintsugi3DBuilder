@@ -11,48 +11,47 @@
 
 package kintsugi3d.builder.export.general;
 
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.util.ImageFinder;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.function.Consumer;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.util.ImageFinder;
-
 class MultiviewRenderRequest extends RenderRequestBase
 {
-    MultiviewRenderRequest(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
+    MultiviewRenderRequest(int width, int height, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
                            File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
     }
 
     static class Builder extends BuilderBase
     {
-        Builder(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(File fragmentShader, File outputDirectory)
         {
-            super(settingsModel, fragmentShader, outputDirectory);
+            super(fragmentShader, outputDirectory);
         }
 
         @Override
-        public ObservableIBRRequest create()
+        public ObservableProjectGraphicsRequest create()
         {
-            return new MultiviewRenderRequest(getWidth(), getHeight(), getSettingsModel(), getShaderSetupCallback(),
+            return new MultiviewRenderRequest(getWidth(), getHeight(), getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }
 
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+        ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
             throws IOException, UserCancellationException
     {
-        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (
@@ -70,14 +69,13 @@ class MultiviewRenderRequest extends RenderRequestBase
                 program.setUniform("viewIndex", i);
                 program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(i));
                 program.setUniform("projection",
-                    renderable.getActiveViewSet().getCameraProjection(
-                        renderable.getActiveViewSet().getCameraProjectionIndex(i))
+                    renderable.getActiveViewSet().getCameraProjectionForViewIndex(i)
                         .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
                             renderable.getActiveViewSet().getRecommendedFarPlane()));
 
                 render(drawable, framebuffer);
 
-                String fileName = ImageFinder.getInstance().getImageFileNameWithFormat(
+                String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
                     renderable.getActiveViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);

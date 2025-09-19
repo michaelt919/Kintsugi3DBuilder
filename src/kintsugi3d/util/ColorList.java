@@ -11,9 +11,9 @@
 
 package kintsugi3d.util;
 
-import java.util.List;
-
 import kintsugi3d.gl.vecmath.Vector4;
+
+import java.util.List;
 
 public interface ColorList extends List<Vector4>
 {

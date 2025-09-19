@@ -13,21 +13,15 @@ package kintsugi3d.builder.export.general;
 
 import java.io.File;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-
 public final class RequestFactoryImplementation implements RequestFactory
 {
-    private final ReadonlySettingsModel settingsModel;
-
-    private RequestFactoryImplementation(ReadonlySettingsModel settingsModel)
+    private RequestFactoryImplementation()
     {
-        this.settingsModel = settingsModel;
     }
 
-    public static RequestFactoryImplementation create(ReadonlySettingsModel settingsModel)
+    public static RequestFactoryImplementation create()
     {
-        return new RequestFactoryImplementation(settingsModel);
+        return new RequestFactoryImplementation();
     }
 
     @Override
@@ -35,7 +29,7 @@ public final class RequestFactoryImplementation implements RequestFactory
             File fragmentShader, File outputDirectory, String outputImageName)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new SingleFrameRenderRequest.Builder(outputImageName, settingsModel, fragmentShader, outputDirectory);
+        return new SingleFrameRenderRequest.Builder(outputImageName, fragmentShader, outputDirectory);
     }
 
     @Override
@@ -43,7 +37,7 @@ public final class RequestFactoryImplementation implements RequestFactory
             File fragmentShader, File outputDirectory, int frameCount)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new MultiframeRenderRequest.Builder(frameCount, settingsModel, fragmentShader, outputDirectory);
+        return new MultiframeRenderRequest.Builder(frameCount, fragmentShader, outputDirectory);
     }
 
     @Override
@@ -51,7 +45,7 @@ public final class RequestFactoryImplementation implements RequestFactory
             File fragmentShader, File outputDirectory)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new MultiviewRenderRequest.Builder(settingsModel, fragmentShader, outputDirectory);
+        return new MultiviewRenderRequest.Builder(fragmentShader, outputDirectory);
     }
 
     @Override
@@ -59,6 +53,6 @@ public final class RequestFactoryImplementation implements RequestFactory
             File fragmentShader, File outputDirectory, File retargetViewSet)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new MultiviewRetargetRenderRequest.Builder(retargetViewSet, settingsModel, fragmentShader, outputDirectory);
+        return new MultiviewRetargetRenderRequest.Builder(retargetViewSet, fragmentShader, outputDirectory);
     }
 }

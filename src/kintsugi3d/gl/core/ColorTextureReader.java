@@ -11,6 +11,10 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.vecmath.IntVector4;
+import kintsugi3d.util.ColorList;
+import kintsugi3d.util.ColorNativeBufferList;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -18,10 +22,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
-import kintsugi3d.gl.vecmath.IntVector4;
-import kintsugi3d.util.ColorList;
-import kintsugi3d.util.ColorNativeBufferList;
 
 public interface ColorTextureReader
 {

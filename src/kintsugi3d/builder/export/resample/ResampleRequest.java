@@ -11,24 +11,21 @@
 
 package kintsugi3d.builder.export.resample;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.util.ImageFinder;
 
-public class ResampleRequest implements ObservableIBRRequest
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.text.MessageFormat;
+
+public class ResampleRequest implements ObservableProjectGraphicsRequest
 {
     private final int resampleWidth;
     private final int resampleHeight;
@@ -44,13 +41,13 @@ public class ResampleRequest implements ObservableIBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile).finish();
 
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(resampleWidth, resampleHeight)
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().getContext().buildFramebufferObject(resampleWidth, resampleHeight)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()
@@ -74,7 +71,7 @@ public class ResampleRequest implements ObservableIBRRequest
                         .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 
                 File exportFile = new File(resampleExportPath,
-                    ImageFinder.getInstance().getImageFileNameWithFormat(targetViewSet.getImageFileName(i), "png"));
+                    ImageFinder.getInstance().getImageFileNameWithExtension(targetViewSet.getImageFileName(i), "png"));
 
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);

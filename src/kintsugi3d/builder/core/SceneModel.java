@@ -12,8 +12,6 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.state.*;
-import kintsugi3d.builder.state.impl.DefaultSettingsModel;
-import kintsugi3d.builder.state.impl.SafeSettingsModelWrapperFactory;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -21,10 +19,10 @@ import kintsugi3d.gl.vecmath.Vector3;
 
 public class SceneModel
 {
-    private ReadonlyObjectModel objectModel;
-    private ReadonlyCameraModel cameraModel;
-    private ReadonlyLightingModel lightingModel;
-    private SafeReadonlySettingsModel settingsModel = new DefaultSettingsModel();
+    private ReadonlyObjectPoseModel objectModel;
+    private ReadonlyViewpointModel cameraModel;
+    private ReadonlyLightingEnvironmentModel lightingModel;
+    private SafeReadonlyGlobalSettingsModel settingsModel = new DefaultGlobalSettingsModel();
     private CameraViewListModel cameraViewListModel;
 
     private Vector3 centroid = Vector3.ZERO;
@@ -33,22 +31,22 @@ public class SceneModel
 
     private Vector3 clearColor = Vector3.ZERO;
 
-    public ReadonlyObjectModel getObjectModel()
+    public ReadonlyObjectPoseModel getObjectModel()
     {
         return objectModel;
     }
 
-    public ReadonlyCameraModel getCameraModel()
+    public ReadonlyViewpointModel getCameraModel()
     {
         return cameraModel;
     }
 
-    public ReadonlyLightingModel getLightingModel()
+    public ReadonlyLightingEnvironmentModel getLightingModel()
     {
         return lightingModel;
     }
 
-    public SafeReadonlySettingsModel getSettingsModel()
+    public SafeReadonlyGlobalSettingsModel getSettingsModel()
     {
         return this.settingsModel;
     }
@@ -78,22 +76,22 @@ public class SceneModel
     {
         return clearColor;
     }
-    public void setObjectModel(ReadonlyObjectModel objectModel)
+    public void setObjectModel(ReadonlyObjectPoseModel objectModel)
     {
         this.objectModel = objectModel;
     }
 
-    public void setCameraModel(ReadonlyCameraModel cameraModel)
+    public void setCameraModel(ReadonlyViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }
 
-    public void setLightingModel(ReadonlyLightingModel lightingModel)
+    public void setLightingModel(ReadonlyLightingEnvironmentModel lightingModel)
     {
         this.lightingModel = lightingModel;
     }
 
-    public void setSettingsModel(ReadonlySettingsModel settingsModel)
+    public void setSettingsModel(ReadonlyGeneralSettingsModel settingsModel)
     {
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
     }

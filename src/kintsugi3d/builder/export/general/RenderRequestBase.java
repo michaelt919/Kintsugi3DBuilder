@@ -11,17 +11,18 @@
 
 package kintsugi3d.builder.export.general;
 
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.gl.core.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.gl.core.*;
-
-abstract class RenderRequestBase implements ObservableIBRRequest
+abstract class RenderRequestBase implements ObservableProjectGraphicsRequest
 {
     private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();
@@ -30,16 +31,14 @@ abstract class RenderRequestBase implements ObservableIBRRequest
     private final int height;
     private final File vertexShader;
     private final File fragmentShader;
-    private final ReadonlySettingsModel settingsModel;
     private final Consumer<Program<? extends Context<?>>> shaderSetupCallback;
     private final File outputDirectory;
 
-    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
+    RenderRequestBase(int width, int height, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
                       File vertexShader, File fragmentShader, File outputDirectory)
     {
         this.width = width;
         this.height = height;
-        this.settingsModel = settingsModel;
         this.shaderSetupCallback = shaderSetupCallback;
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
@@ -48,7 +47,6 @@ abstract class RenderRequestBase implements ObservableIBRRequest
 
     abstract static class BuilderBase implements RenderRequestBuilder
     {
-        private final ReadonlySettingsModel settingsModel;
         private final File fragmentShader;
         private final File outputDirectory;
 
@@ -57,9 +55,8 @@ abstract class RenderRequestBase implements ObservableIBRRequest
         private File vertexShader = TEX_SPACE_VERTEX_SHADER;
         private Consumer<Program<? extends Context<?>>> shaderSetupCallback = null;
 
-        BuilderBase(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        BuilderBase( File fragmentShader, File outputDirectory)
         {
-            this.settingsModel = settingsModel;
             this.fragmentShader = fragmentShader;
             this.outputDirectory = outputDirectory;
         }
@@ -72,11 +69,6 @@ abstract class RenderRequestBase implements ObservableIBRRequest
         protected int getHeight()
         {
             return height;
-        }
-
-        protected ReadonlySettingsModel getSettingsModel()
-        {
-            return settingsModel;
         }
 
         protected Consumer<Program<? extends Context<?>>> getShaderSetupCallback()
@@ -143,23 +135,22 @@ abstract class RenderRequestBase implements ObservableIBRRequest
     }
 
     protected <ContextType extends Context<ContextType>> ProgramObject<ContextType> createProgram(
-        IBRResourcesImageSpace<ContextType> resources) throws IOException
+        GraphicsResourcesImageSpace<ContextType> resources) throws IOException
     {
+        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
+
         ProgramObject<ContextType> program =
             resources.getShaderProgramBuilder()
-                .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
-                .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
-                .define("PHYSICALLY_BASED_MASKING_SHADOWING", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"))
-                .define("FRESNEL_EFFECT_ENABLED", this.settingsModel.getBoolean("fresnelEnabled"))
+                .define("PHYSICALLY_BASED_MASKING_SHADOWING", settingsModel.getBoolean("pbrGeometricAttenuationEnabled"))
+                .define("FRESNEL_EFFECT_ENABLED", settingsModel.getBoolean("fresnelEnabled"))
                 .addShader(ShaderType.VERTEX, vertexShader)
                 .addShader(ShaderType.FRAGMENT, fragmentShader)
                 .createProgram();
 
         resources.setupShaderProgram(program);
 
-        program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
-        program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
-        program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+        program.setUniform("weightExponent", settingsModel.getFloat("weightExponent"));
+        program.setUniform("isotropyFactor", settingsModel.getFloat("isotropyFactor"));
 
         return program;
     }
@@ -173,7 +164,7 @@ abstract class RenderRequestBase implements ObservableIBRRequest
     }
 
     protected static <ContextType extends Context<ContextType>> Drawable<ContextType>
-        createDrawable(Program<ContextType> program, IBRResourcesImageSpace<ContextType> resources)
+        createDrawable(Program<ContextType> program, GraphicsResourcesImageSpace<ContextType> resources)
     {
         return resources.createDrawable(program);
     }

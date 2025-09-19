@@ -11,18 +11,22 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.core.metrics.ViewRMSE;
+import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-
-import kintsugi3d.builder.metrics.ViewRMSE;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -42,6 +46,7 @@ public interface ReadonlyViewSet
 
     ViewSet copy();
 
+    UUID getUUID();
     /**
      * Gets the camera pose defining the transformation from object space to camera space for a particular view.
      * @param poseIndex The index of the camera pose to retrieve.
@@ -105,13 +110,31 @@ public interface ReadonlyViewSet
     File getPreviewImageFilePath();
 
     /**
+     * Gets the image file path for the downscaled "thumbnail" images for display.
+     * @return The image file path
+     */
+    File getThumbnailImageFilePath();
+
+    /**
      * Gets the image file path string for downscaled "preview" images for real-time rendering, relative to the root directory.
      * @return The image file path.
      */
     String getRelativePreviewImagePathName();
 
     /**
-     * Gets the relative name of the image file corresponding to a particular view.
+     * Gets the image file corresponding to a particular view, relative to the full res image directory.
+     * This method should be used to retrieve a filename representing the actual location of the full-res image file.
+     * In contexts when the relative path is unwanted, use getImageFileName() instead.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file's relative name.
+     */
+    File getImageFile(int poseIndex);
+
+    /**
+     * Gets the name of the image file corresponding to a particular view.
+     * This method should be used to retrieve the filename in contexts when the relative path is unwanted.
+     * (i.e. for creating or finding images with the same name as the full-res image file, but which are in a different directory).
+     * To retrieve a filename representing the actual location of the full-res image file, use getImageFile() instead.
      * @param poseIndex The index of the image file to retrieve.
      * @return The image file's relative name.
      */
@@ -129,9 +152,32 @@ public interface ReadonlyViewSet
     /**
      * Gets the downscaled "preview" image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.
+     * @param extension The file extension without the dot (i.e. "png", "jpeg", "tiff") to use for the file.
+     * @return The image file.
+     */
+    File getPreviewImageFile(int poseIndex, String extension);
+
+    /**
+     * Gets the downscaled "preview" image file corresponding to a particular view.
+     * @param poseIndex The index of the image file to retrieve.
      * @return The image file.
      */
     File getPreviewImageFile(int poseIndex);
+
+    /**
+     * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @param extension The file extension without the dot (i.e. "png", "jpeg", "tiff") to use for the file.
+     * @return The image file.
+     */
+    File getThumbnailImageFile(int poseIndex, String extension);
+
+    /**
+     * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getThumbnailImageFile(int poseIndex);
 
     /**
      * Gets the mask of a particular view, if it exists
@@ -160,11 +206,19 @@ public interface ReadonlyViewSet
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.
-     * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
+     * @param projectionIndex The index of the projection transformation to retrieve.
      * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
      * @return The projection transformation.
      */
     Projection getCameraProjection(int projectionIndex);
+
+    /**
+     * Gets the projection transformation defining the intrinsic properties for a specific view.
+     * @param viewIndex The index of the view whose projection transformation should be retrieved.
+     * This works by first finding the camera projection index for the view and then looking up the projection itself by that index.
+     * @return The projection transformation.
+     */
+    Projection getCameraProjectionForViewIndex(int viewIndex);
 
     /**
      * Gets the index of the projection transformation to be used for a particular view,
@@ -241,8 +295,6 @@ public interface ReadonlyViewSet
     double[] getLinearLuminanceValues();
     byte[] getEncodedLuminanceValues();
 
-    boolean areLightSourcesInfinite();
-
     /**
      * Finds the image file for a particular view index.
      * @param index The index of the view to find.
@@ -257,10 +309,18 @@ public interface ReadonlyViewSet
      * @throws FileNotFoundException if the image file cannot be found.
      */
     File findFullResPrimaryImageFile() throws FileNotFoundException;
-    File findPreviewImageFile(int index) throws FileNotFoundException;
-    File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
-    UUID getUUID();
+    File findPreviewImageFile(int index) throws FileNotFoundException;
+
+    File findThumbnailImageFile(int index) throws FileNotFoundException;
+
+    File tryFindFullResImageFile(int index);
+
+    File tryFindPreviewImageFile(int index);
+
+    File tryFindThumbnailImageFile(int index);
+
+    File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
     boolean hasMasks();
 
@@ -268,9 +328,17 @@ public interface ReadonlyViewSet
 
     Map<Integer, File> getMasksMap();
 
+    ImageHelper loadFullResMaskedImage(int index) throws IOException;
+
     /**
      * Gets additional settings associated with this view set
      * @return A model containing the settings for this view set.
      */
-    ReadonlySettingsModel getViewSetSettings();
+    ReadonlyGeneralSettingsModel getProjectSettings();
+
+    Map<String, File> getResourceMap();
+
+    <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getShaderProgramBuilder(ContextType context);
+
+    <ContextType extends Context<ContextType>> void setupShaderProgram(Program<ContextType> program);
 }

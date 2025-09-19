@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox alignment="TOP_CENTER" fillWidth="false" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.ObjectVisualsController">
+    <VBox spacing="16.0">
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <HBox alignment="CENTER_LEFT">
+                <Label styleClass="wireframeBody" text="Preview image Width: " />
+                <TextField fx:id="previewWidthTxtField" prefWidth="64.0" styleClass="wireframeBody" />
+            </HBox>
+            <HBox alignment="CENTER_LEFT">
+                <Label styleClass="wireframeBody" text="Height: " />
+                <TextField fx:id="previewHeightTxtField" prefWidth="64.0" styleClass="wireframeBody" />
+            </HBox>
+        </HBox>
+        <CheckBox fx:id="imageCompressionCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Image compression" />
+        <CheckBox fx:id="preloadVisibilityEtcCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Generate depth maps for visibility / shadow testing" />
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <HBox alignment="CENTER_LEFT">
+                <Label styleClass="wireframeBody" text="Width: " />
+                <TextField fx:id="depthWidthTxtField" prefWidth="64.0" styleClass="wireframeBody" />
+            </HBox>
+            <HBox alignment="CENTER_LEFT">
+                <Label styleClass="wireframeBody" text="Height: " />
+                <TextField fx:id="depthHeightTxtField" prefWidth="64.0" styleClass="wireframeBody" />
+            </HBox>
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+         <padding>
+            <Insets left="16.0" />
+         </padding>
+        </HBox>
+        <CheckBox fx:id="mipmapCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Mipmaps" />
+        <CheckBox fx:id="reduceViewportResCheckBox" mnemonicParsing="false" styleClass="wireframeBody" text="Reduce viewport resolution" />
+    </VBox>
+</VBox>

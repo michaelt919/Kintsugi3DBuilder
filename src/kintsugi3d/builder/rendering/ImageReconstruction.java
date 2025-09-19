@@ -11,6 +11,19 @@
 
 package kintsugi3d.builder.rendering;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.util.BufferedImageColorList;
+import kintsugi3d.util.ColorImage;
+import kintsugi3d.util.SRGB;
+import org.lwjgl.BufferUtils;
+
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -19,19 +32,6 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.util.BufferedImageColorList;
-import kintsugi3d.util.ColorImage;
-import kintsugi3d.util.SRGB;
-import org.lwjgl.*;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {
@@ -54,7 +54,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments,
         Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
         ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-        ReadonlyIBRResources<ContextType> resources)
+        ReadonlyGraphicsResources<ContextType> resources)
         throws IOException
     {
         this(viewSet, buildFramebufferAttachments, buildIncidentRadianceFramebufferAttachments, incidentRadianceProgramBuilder, resources,
@@ -63,7 +63,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 // load new ground truth
                 try
                 {
-                    BufferedImage groundTruthImage = ImageIO.read(viewSet.findFullResImageFile(viewIndex));
+                    BufferedImage groundTruthImage = ImageHelper.read(viewSet.findFullResImageFile(viewIndex)).getBufferedImage();
                     return new BufferedImageColorList(groundTruthImage);
                 }
                 catch (IOException e)
@@ -80,7 +80,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments,
             Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-            ReadonlyIBRResources<ContextType> resources,
+            ReadonlyGraphicsResources<ContextType> resources,
             IntFunction<ColorImage> groundTruthLoader)
         throws IOException
     {

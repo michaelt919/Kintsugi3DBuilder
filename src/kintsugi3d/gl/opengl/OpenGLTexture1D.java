@@ -11,8 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import java.nio.ByteBuffer;
-
 import kintsugi3d.gl.builders.base.ColorTextureBuilderBase;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.ColorFormat.DataType;
@@ -20,11 +18,9 @@ import kintsugi3d.gl.core.CompressionFormat;
 import kintsugi3d.gl.core.Texture1D;
 import kintsugi3d.gl.core.TextureWrapMode;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
+import java.nio.ByteBuffer;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
 import static org.lwjgl.opengl.GL44.*;
 
 // mipmaps

@@ -14,7 +14,7 @@ package kintsugi3d.builder.fit.decomposition;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.MatrixSystem;
 import kintsugi3d.optimization.function.BasisFunctions;
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public class BRDFReconstruction
 {
-    private static final Logger log = LoggerFactory.getLogger(BRDFReconstruction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BRDFReconstruction.class);
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
     private final BasisFunctions stepBasis;
     private final int matrixSize;
@@ -41,14 +41,14 @@ public class BRDFReconstruction
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution, ProgressMonitor monitor)
     {
-        log.info("Building reflectance fitting matrix...");
+        LOG.info("Building reflectance fitting matrix...");
         MatrixSystem system = buildReflectanceMatrix(viewStream, solution, monitor);
 
-        log.info("Finished building matrix; solving now...");
+        LOG.info("Finished building matrix; solving now...");
 
         OptimizedFunctions brdfSolution = OptimizedFunctions.solveSystemNonNegative(stepBasis, system, NNLS_TOLERANCE_SCALE);
 
-        log.info("DONE!");
+        LOG.info("DONE!");
 
         for (int b = 0; b < settings.getBasisCount(); b++)
         {
@@ -138,7 +138,7 @@ public class BRDFReconstruction
 
                 synchronized (counter)
                 {
-                    log.info("Finished view " + counter.get() + '.');
+                    LOG.info("Finished view " + counter.get() + '.');
                     counter.increment();
                 }
 
@@ -177,7 +177,7 @@ public class BRDFReconstruction
                 sb.append(", ");
                 sb.append(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));
             }
-            log.debug(sb.toString());
+            LOG.debug(sb.toString());
         }
 
         return system;

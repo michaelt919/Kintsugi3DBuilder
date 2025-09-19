@@ -13,14 +13,13 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Text?>
-<VBox styleClass="vbox" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.lights.RootLightSceneController">
-    <TitledPane styleClass="titled-pane" animated="false" text="Light Groups" VBox.vgrow="ALWAYS">
-        <HBox styleClass="hbox" prefHeight="0.0" spacing="2.0">
+<VBox stylesheets="@../../kintsugiStyling.css" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.lights.RootLightSceneController">
+    <TitledPane animated="false" text="Light Groups" VBox.vgrow="ALWAYS">
+        <HBox prefHeight="0.0" spacing="2.0">
             <TableView fx:id="tableView" prefHeight="257.0" prefWidth="185.0" />
             <Separator orientation="VERTICAL" prefHeight="200.0" visible="false" />
             <VBox fx:id="groupControls" alignment="CENTER" prefHeight="137.0" prefWidth="75.0" spacing="5.0" HBox.hgrow="ALWAYS">
-                <Text styleClass="text" strokeType="OUTSIDE" strokeWidth="0.0" text="Group" />
+                <Label text="Group" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newGroup" text="New">
                     <tooltip>
                         <Tooltip text="Create a new light group." />
@@ -52,7 +51,7 @@
             </VBox>
             <Separator orientation="VERTICAL" prefHeight="200.0" />
             <VBox fx:id="lightControls" alignment="TOP_CENTER" prefHeight="136.0" prefWidth="75.0" spacing="5.0" HBox.hgrow="ALWAYS">
-                <Text styleClass="text" strokeType="OUTSIDE" strokeWidth="0.0" text="Light" />
+                <Label text="Light" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newLight" text="New">
                     <tooltip>
                         <Tooltip text="Create a new light with default settings." />

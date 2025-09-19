@@ -11,15 +11,14 @@
 
 package kintsugi3d.util;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector4;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class ImageUndistorter<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -71,12 +70,11 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public BufferedImage undistort(BufferedImage inputImage, BufferedImage inputMask, boolean mipmapsEnabled, DistortionProjection distortion)
+    public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion)
     {
         try(Texture2D<ContextType> inTex = context.getTextureFactory()
-            .build2DColorTextureFromImageWithMask(inputImage, inputMask, true)
+            .build2DColorTextureFromImage(inputImage, true)
             .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(mipmapsEnabled)
             .createTexture();
             Texture2D<ContextType> outTex = undistort(inTex, distortion))
         {
@@ -87,12 +85,20 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public void undistortFile(File inputImage, File maskImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
+    public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion, boolean mipmapsEnabled)
     {
-        BufferedImage imageIn = ImageIO.read(inputImage);
-        BufferedImage maskIn = maskImage != null ? ImageIO.read(maskImage) : null;
-        BufferedImage imageOut = undistort(imageIn, maskIn, mipmapsEnabled, distortion);
-        ImageIO.write(imageOut, "PNG", outputImage);
+        try(Texture2D<ContextType> inTex = context.getTextureFactory()
+            .build2DColorTextureFromImage(inputImage, true)
+            .setLinearFilteringEnabled(true)
+            .setMipmapsEnabled(mipmapsEnabled)
+            .createTexture();
+            Texture2D<ContextType> outTex = undistort(inTex, distortion))
+        {
+            return BufferedImageBuilder.build()
+                .setDataFromArray(outTex.getColorTextureReader().readARGB(), outTex.getWidth(), outTex.getHeight())
+                .flipVertical()
+                .create();
+        }
     }
 
     @Override

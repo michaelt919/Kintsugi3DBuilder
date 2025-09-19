@@ -11,28 +11,27 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Map;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final IBRResources<ContextType> resources;
+    private final GraphicsResources<ContextType> resources;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(IBRResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraVisual(GraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
     {
         super(resources.getContext(), sceneViewportModel, "CameraVisual");
         this.resources = resources;
@@ -56,9 +55,9 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof IBRResourcesImageSpace)
+        if (resources instanceof GraphicsResourcesImageSpace)
         {
-            IBRResourcesImageSpace<ContextType> resourcesImgSpace = (IBRResourcesImageSpace<ContextType>)resources;
+            GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>)resources;
 
             FramebufferSize size = framebuffer.getSize();
 

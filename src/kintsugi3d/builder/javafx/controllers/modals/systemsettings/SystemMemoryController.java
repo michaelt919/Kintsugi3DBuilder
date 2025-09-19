@@ -1,0 +1,102 @@
+/*
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
+
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.stage.Window;
+import kintsugi3d.builder.javafx.core.JavaFXState;
+import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
+import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.util.Launch4jConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+
+public class SystemMemoryController implements SystemSettingsControllerBase
+{
+    private static final Logger LOG = LoggerFactory.getLogger(SystemMemoryController.class);
+
+    private static final int MIN_VALUE = 1;
+    private static final int MAX_VALUE = 1048576;
+
+    @FXML private CheckBox maxMemCheckbox;
+    @FXML private TextField maxMemTextField;
+    private final IntegerProperty maxMemory = new SimpleIntegerProperty();
+
+    private Launch4jConfiguration configuration;
+
+    @Override
+    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    {
+        try
+        {
+            configuration = Launch4jConfiguration.read();
+        }
+        catch (IOException e)
+        {
+            LOG.error("Failed to read jvm configuration:", e);
+            LOG.error("Using default configuration");
+            configuration = Launch4jConfiguration.empty();
+        }
+
+        // Disable spinner if limit memory usage is unchecked.
+        maxMemTextField.disableProperty().bind(maxMemCheckbox.selectedProperty().not());
+
+        maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
+        StaticUtilities.makeClampedInteger(MIN_VALUE, MAX_VALUE, maxMemTextField);
+        SafeNumberStringConverter converter = new SafeNumberStringConverter(configuration.getMaxMemoryMb());
+        maxMemory.set(configuration.getMaxMemoryMb());
+        maxMemTextField.setText(String.valueOf(configuration.getMaxMemoryMb()));
+        maxMemTextField.textProperty().bindBidirectional(maxMemory, converter);
+    }
+
+    public void button_Apply()
+    {
+        configuration.setEnableMaxMemory(maxMemCheckbox.isSelected());
+        configuration.setMaxMemoryMb(maxMemory.get());
+
+        ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+        try
+        {
+            try
+            {
+                configuration.write();
+            }
+            catch (AccessDeniedException e)
+            {
+                LOG.warn("The current user does not have sufficient privileges to write to launch4j configuration file", e);
+                LOG.warn("Attempting to write as superuser, this will prompt for UAC!");
+                configuration.writeAsSuperuser();
+            }
+        }
+        catch (IOException e)
+        {
+            LOG.error("Failed to write to launch4j configuration file", e);
+            Alert alert = new Alert(Alert.AlertType.NONE, "", ok);
+            alert.setTitle("Kintsugi 3D Builder");
+            alert.setHeaderText("Writing failed");
+            alert.setContentText("Kintsugi 3D Builder failed to write to the configuration file. Try restarting Kintsugi 3D Builder as administrator and try again.");
+            alert.show();
+        }
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "", ok);
+        alert.setTitle("Kintsugi 3D Builder");
+        alert.setHeaderText("Restart Required");
+        alert.setContentText("A restart of Kintsugi 3D Builder is needed for changes to take effect.");
+        alert.show();
+    }
+}

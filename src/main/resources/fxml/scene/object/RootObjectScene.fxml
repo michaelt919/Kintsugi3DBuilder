@@ -13,9 +13,9 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox styleClass="vbox" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.RootObjectSceneController">
-   <TitledPane styleClass="titled-pane" animated="false" prefWidth="400.0" text="Poses" VBox.vgrow="ALWAYS">
-      <HBox styleClass="hbox" prefHeight="0.0">
+<VBox stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.RootObjectSceneController">
+   <TitledPane animated="false" prefWidth="400.0" text="Poses" VBox.vgrow="ALWAYS">
+      <HBox prefHeight="0.0">
          <ListView fx:id="objectPoseListView" HBox.hgrow="ALWAYS" />
          <Separator orientation="VERTICAL" visible="false" />
          <VBox fx:id="listControls" alignment="CENTER_LEFT" spacing="5.0">

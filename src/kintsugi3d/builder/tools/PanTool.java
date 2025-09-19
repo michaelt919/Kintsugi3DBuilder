@@ -9,10 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
+package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.ExtendedCameraModel;
-import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.ManipulableViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -32,15 +31,14 @@ final class PanTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final ExtendedCameraModel cameraModel;
-    private final SettingsModel settingsModel;
+    private final ManipulableViewpointModel cameraModel;
 
     private static class Builder extends ToolBuilderBase<PanTool>
     {
         @Override
         public PanTool create()
         {
-            return new PanTool(getCameraModel(), getSettingsModel());
+            return new PanTool(getCameraModel());
         }
     }
 
@@ -49,10 +47,9 @@ final class PanTool implements DragTool
         return new Builder();
     }
 
-    private PanTool(ExtendedCameraModel cameraModel, SettingsModel settingsModel)
+    private PanTool(ManipulableViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
-        this.settingsModel = settingsModel;
     }
 
     @Override

@@ -14,9 +14,9 @@ package kintsugi3d.builder.rendering.components.lightcalibration;
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.IBRSubject;
+import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.UniformBuffer;
@@ -28,13 +28,13 @@ import kintsugi3d.gl.vecmath.Vector3;
 public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
 {
     private final ContextType context;
-    private final IBRResourcesImageSpace<ContextType> resources;
+    private final GraphicsResourcesImageSpace<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;
 
-    private IBRSubject<ContextType> ibrSubject;
+    private RenderingSubject<ContextType> renderingSubject;
 
-    public LightCalibrationContent(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationContent(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();
@@ -48,21 +48,21 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     {
         // the actual subject for image-based rendering
         // No lighting resources since light calibration is effectively unlit shading
-        ibrSubject = new IBRSubject<>(resources, sceneViewportModel, sceneModel, null);
-        ibrSubject.initialize();
-        ibrSubject.setLightCalibrationMode(true);
+        renderingSubject = new RenderingSubject<>(resources, sceneViewportModel, sceneModel, null);
+        renderingSubject.initialize();
+        renderingSubject.setLightCalibrationMode(true);
     }
 
     @Override
     public void reloadShaders()
     {
-        ibrSubject.reloadShaders();
+        renderingSubject.reloadShaders();
     }
 
     @Override
     public void update()
     {
-        ibrSubject.update();
+        renderingSubject.update();
     }
 
     @Override
@@ -71,10 +71,10 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
         Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3();
         Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
 
-        // Only draw the IBR subject for light calibration, no other components like backplate, grid, ground plane, etc.
+        // Only draw the rendering subject for light calibration, no other components like backplate, grid, ground plane, etc.
 
         // Hole fill color depends on whether in light calibration mode or not.
-        ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.5f));
+        renderingSubject.getProgram().setUniform("holeFillColor", new Vector3(0.5f));
 
         Matrix4 lightView = lightTransform.times(cameraViewport.getView());
         Vector3 lightPosWorldSpace = lightView.getUpperLeft3x3().transpose().times(lightView.getColumn(3).getXYZ().negated());
@@ -94,25 +94,25 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
             viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance()
                 .createFromIntArray(false, 4, 1,
                     selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex));
-            ibrSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
+            renderingSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
 
             // Draw the actual object, without model transformation for light calibration
-            ibrSubject.draw(framebuffer, cameraViewport.copyForView(lookAt));
+            renderingSubject.draw(framebuffer, cameraViewport.copyForView(lookAt));
         }
 
         context.flush();
 
-        // Read buffers after rendering just the IBR subject
+        // Read buffers after rendering just the project's subject
         sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
     }
 
     @Override
     public void close()
     {
-        if (ibrSubject != null)
+        if (renderingSubject != null)
         {
-            ibrSubject.close();
-            ibrSubject = null;
+            renderingSubject.close();
+            renderingSubject = null;
         }
     }
 }

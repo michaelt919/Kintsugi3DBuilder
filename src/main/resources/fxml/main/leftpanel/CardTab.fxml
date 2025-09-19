@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<VBox fx:id="tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS">
+    <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="200.0">
+        <padding>
+            <Insets left="16.0" right="16.0" top="8.0" />
+        </padding>
+        <TextField fx:id="searchbar" maxWidth="1.7976931348623157E308" promptText="Search" style="-fx-border-width: 0 0 1 0; -fx-border-color: #d9d9d9;" stylesheets="@../../kintsugiStyling.css" HBox.hgrow="ALWAYS" />
+        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+            <HBox.margin>
+                <Insets left="12.0" right="8.0" />
+            </HBox.margin>
+        </ImageView>
+        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+            <HBox.margin>
+                <Insets left="8.0" />
+            </HBox.margin>
+        </ImageView>
+        <VBox.margin>
+            <Insets />
+        </VBox.margin>
+    </HBox>
+    <ScrollPane fx:id="scrollpane" maxHeight="1.7976931348623157E308" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
+        <VBox fx:id="vbox" spacing="5.0" style="-fx-background-color: #202020">
+
+        </VBox>
+        <VBox.margin>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+        </VBox.margin>
+        <padding>
+            <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+        </padding>
+    </ScrollPane>
+</VBox>

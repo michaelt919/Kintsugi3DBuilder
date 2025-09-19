@@ -11,11 +11,11 @@
 
 package kintsugi3d.util;
 
+import kintsugi3d.gl.exceptions.NoAvailableTextureUnitsException;
+
 import java.util.AbstractList;
 import java.util.List;
 import java.util.Optional;
-
-import kintsugi3d.gl.exceptions.NoAvailableTextureUnitsException;
 
 public class ResourceManager<ResourceType>
 {

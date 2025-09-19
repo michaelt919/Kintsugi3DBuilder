@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<VBox fx:id="hostPane" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController">
+   <StackPane>
+      <Label fx:id="hintTextLabel" alignment="CENTER" styleClass="wireframeTitle" textAlignment="CENTER">
+         Select model orientation view
+      </Label>
+   </StackPane>
+   <HBox spacing="40.0">
+      <padding>
+         <Insets top="20.0" />
+      </padding>
+      <VBox spacing="20.0" HBox.hgrow="ALWAYS">
+         <HBox alignment="CENTER_LEFT" spacing="64.0">
+            <VBox.margin>
+               <Insets />
+            </VBox.margin>
+            <TextField fx:id="imgSearchTxtField" prefColumnCount="25" prefHeight="25.0" promptText="Enter image name" HBox.hgrow="ALWAYS" />
+            <!--                        <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" visible="false" />-->
+         </HBox>
+         <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" VBox.vgrow="ALWAYS" />
+      </VBox>
+      <VBox spacing="8.0">
+         <AnchorPane minHeight="48.0">
+            <Text fx:id="imgViewText" fill="WHITE" fontSmoothingType="LCD" styleClass="wireframeBodyLarge, text" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="300" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+         </AnchorPane>
+         <StackPane VBox.vgrow="ALWAYS">
+            <ImageView fx:id="primaryImgView" fitHeight="300.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
+         </StackPane>
+         <VBox fx:id="orientationControls" spacing="8.0">
+            <StackPane>
+               <Label styleClass="wireframeBodyLarge" text="Fix orientation:" />
+            </StackPane>
+            <AnchorPane>
+               <Button mnemonicParsing="false" onAction="#rotateLeft" styleClass="wireframeBodyLarge" text="Left" AnchorPane.leftAnchor="0.0" />
+               <Button mnemonicParsing="false" onAction="#rotateRight" styleClass="wireframeBodyLarge" text="Right" AnchorPane.rightAnchor="0.0" />
+            </AnchorPane>
+         </VBox>
+      </VBox>
+   </HBox>
+</VBox>

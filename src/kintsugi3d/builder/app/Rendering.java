@@ -9,26 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.app;//Created by alexk on 7/19/2017.
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
+package kintsugi3d.builder.app;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.rendering.IBRInstanceManager;
+import kintsugi3d.builder.javafx.core.MultithreadState;
+import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.tools.DragToolType;
 import kintsugi3d.builder.tools.KeyPressToolType;
@@ -45,16 +32,29 @@ import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.*;
-import kintsugi3d.util.CanvasInputController;
+import kintsugi3d.util.CanvasListener;
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
+import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 public final class Rendering
 {
-    private static final Logger log = LoggerFactory.getLogger(Rendering.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Rendering.class);
     private Rendering()
     {
     }
@@ -69,16 +69,16 @@ public final class Rendering
         requestQueue.addBackgroundGraphicsRequest(new GraphicsRequest()
         {
             @Override
-            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws Exception
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
             {
                 runnable.run();
             }
         });
     }
 
-    private static IBRRequestManager<OpenGLContext> requestQueue = null;
+    private static GraphicsRequestManager<OpenGLContext> requestQueue = null;
 
-    public static IBRRequestManager<OpenGLContext> getRequestQueue()
+    public static GraphicsRequestManager<OpenGLContext> getRequestQueue()
     {
         return requestQueue;
     }
@@ -119,7 +119,7 @@ public final class Rendering
                     .create();
 
                 FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
-                MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);
+                Global.state().getCanvasModel().setCanvas(canvas);
                 runProgram(stage, canvas, args);
             }
         }
@@ -174,17 +174,16 @@ public final class Rendering
         OpenGLContext context = canvas.getContext();
 
         // Start the request queue as soon as we have a graphics context.
-        requestQueue = new IBRRequestManager<>(context);
+        requestQueue = new GraphicsRequestManager<>(context);
 
         context.getState().enableDepthTest();
 
-        ExtendedLightingModel lightingModel = MultithreadModels.getInstance().getLightingModel();
-        EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
-        ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
-        ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
-        SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
-        CameraViewListModel cameraViewListModel = MultithreadModels.getInstance().getCameraViewListModel();
-        IOModel ioModel = MultithreadModels.getInstance().getIOModel();
+        ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
+        ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
+        ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
+        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
+        CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
+        IOModel ioModel = Global.state().getIOModel();
 
         // Bind tools
         ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
@@ -216,9 +215,9 @@ public final class Rendering
         toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
         toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
-        IBRInstanceManager<OpenGLContext> instanceManager = new IBRInstanceManager<>(context);
+        ProjectInstanceManager<OpenGLContext> instanceManager = new ProjectInstanceManager<>(context);
 
-        SceneViewportModel sceneViewportModel = MultithreadModels.getInstance().getSceneViewportModel();
+        SceneViewportModel sceneViewportModel = Global.state().getSceneViewportModel();
 
         sceneViewportModel.setSceneViewport(new SceneViewport()
         {
@@ -301,9 +300,8 @@ public final class Rendering
             }
         });
 
-        CanvasInputController canvasInputController = Builder.create()
+        CanvasListener canvasListener = Builder.create()
             .setCameraModel(cameraModel)
-            .setEnvironmentModel(environmentModel)
             .setLightingModel(lightingModel)
             .setObjectModel(objectModel)
             .setSettingsModel(settingsModel)
@@ -311,7 +309,7 @@ public final class Rendering
             .setSceneViewportModel(sceneViewportModel)
             .build();
 
-        canvasInputController.addAsCanvasListener(canvas);
+        canvasListener.addToCanvas(canvas);
 
         ioModel.setLoadingHandler(instanceManager);
 
@@ -325,7 +323,7 @@ public final class Rendering
         {
             if (key == Key.F11)
             {
-                log.info("Reloading program...");
+                LOG.info("Reloading program...");
 
                 try
                 {
@@ -334,11 +332,11 @@ public final class Rendering
                 }
                 catch (RuntimeException e)
                 {
-                    log.error("Error occurred while reloading application:", e);
+                    LOG.error("Error occurred while reloading application:", e);
                 }
                 catch(Error e)
                 {
-                    log.error("Error occurred while reloading application:", e);
+                    LOG.error("Error occurred while reloading application:", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -501,21 +499,21 @@ public final class Rendering
             if (args[0].endsWith(".vset"))
             {
                 File vsetFile = new File(args[0]);
-                new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
+                new Thread(() -> Global.state().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
             }
             else
             {
-                // Using Platform.runLater since full IBR projects include stuff that's managed by JavaFX (cameras, lights, etc.)
+                // Using Platform.runLater since full projects include stuff that's managed by JavaFX (cameras, lights, etc.)
                 Platform.runLater(() ->
                 {
                     try
                     {
-                        File vsetFile = MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
-                        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
+                        File vsetFile = Global.state().getProjectModel().openProjectFile(new File(args[0]));
+                        new Thread(() -> Global.state().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
-                        log.error("Error occurred processing arguments:", e);
+                        LOG.error("Error occurred processing arguments:", e);
                     }
                 });
             }
@@ -527,20 +525,20 @@ public final class Rendering
             try
             {
                 Class<?> requestClass = Class.forName(args[1]);
-                Method createMethod = requestClass.getDeclaredMethod("create", Kintsugi3DBuilderState.class, String[].class);
-                if (ObservableIBRRequest.class.isAssignableFrom(createMethod.getReturnType())
+                Method createMethod = requestClass.getDeclaredMethod("create", String[].class);
+                if (ObservableProjectGraphicsRequest.class.isAssignableFrom(createMethod.getReturnType())
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {
                     // Add request to the queue
-                    requestQueue.addIBRRequest((ObservableIBRRequest) createMethod.invoke(null, MultithreadModels.getInstance(), args));
+                    requestQueue.addGraphicsRequest((ObservableProjectGraphicsRequest) createMethod.invoke(null, (Object[]) args));
 
                     // Quit after the request finishes
-                    // Use IBRRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
+                    // Use ProjectGraphicsRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
                     // once the project has finished loading
-                    requestQueue.addBackgroundIBRRequest(new IBRRequest()
+                    requestQueue.addBackgroundGraphicsRequest(new ProjectGraphicsRequest()
                     {
                         @Override
-                        public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable)
+                        public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> instance)
                         {
                             WindowSynchronization.getInstance().quitWithoutConfirmation();
                         }
@@ -549,7 +547,7 @@ public final class Rendering
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
             {
-                log.error("Reflection error occurred processing arguments:", e);
+                LOG.error("Reflection error occurred processing arguments:", e);
             }
         }
     }
@@ -563,6 +561,6 @@ public final class Rendering
             .map(String::toLowerCase)
             .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
-        log.info("Supported image formats: " + set);
+        LOG.info("Supported image formats: " + set);
     }
 }

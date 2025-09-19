@@ -50,7 +50,7 @@ void main()
     vec2 uvOut = (uvd * focalLength + opticalCenter + vec2(uvd.y * skew, 0)) / viewportSize;
     if (uvOut.x > 1.0 || uvOut.x < 0.0 || uvOut.y > 1.0 || uvOut.y < 0.0)
     {
-        fragColor = vec4(0,0,0,1);
+        fragColor = vec4(0.0);
     }
     else
     {

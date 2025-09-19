@@ -11,19 +11,19 @@
 
 package kintsugi3d.gl.material;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 public class Material implements ReadonlyMaterial
 {
-    private static final Logger log = LoggerFactory.getLogger(Material.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Material.class);
     private String name;
 
     private Vector3 ambient;
@@ -84,7 +84,7 @@ public class Material implements ReadonlyMaterial
         {
             try(Scanner scanner = new Scanner(mtlFile, StandardCharsets.UTF_8))
             {
-                scanner.useLocale(Locale.US);
+                scanner.useLocale(Locale.ROOT);
 
                 while(scanner.hasNext())
                 {
@@ -260,12 +260,12 @@ public class Material implements ReadonlyMaterial
                         }
                         catch(InputMismatchException e)
                         {
-                            log.error("Error parsing MTL file:", e);
+                            LOG.error("Error parsing MTL file:", e);
                             scanner.nextLine();
                         }
                         catch(NoSuchElementException e)
                         {
-                            log.error("Error parsing MTL file:", e);
+                            LOG.error("Error parsing MTL file:", e);
                         }
                     }
 
@@ -368,7 +368,7 @@ public class Material implements ReadonlyMaterial
         }
         catch(InputMismatchException e)
         {
-            log.error("Input error:", e);
+            LOG.error("Input error:", e);
             scanner.next();
         }
     }

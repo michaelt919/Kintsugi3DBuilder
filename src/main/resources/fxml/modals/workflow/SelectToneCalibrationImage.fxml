@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox fx:id="rootPane" alignment="CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration.SelectToneCalibrationImageController">
+   <Label alignment="CENTER" styleClass="wireframeTitle" text="What image do you want to use for tone calibration?" textAlignment="CENTER" />
+   <VBox alignment="CENTER" fillWidth="false" spacing="32.0">
+      <AnchorPane>
+         <ToggleButton fx:id="primaryViewImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Use calibrated reference view" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+       <AnchorPane>
+           <ToggleButton fx:id="selectImageFileButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Select image from file..." AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <padding>
+                   <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+               </padding>
+           </ToggleButton>
+       </AnchorPane>
+      <AnchorPane>
+         <ToggleButton fx:id="previousImageButton" minWidth="400.0" mnemonicParsing="false" styleClass="wireframeSubtitle, toggleButtonLarge" text="Use previously chosen image" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+               <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+         </ToggleButton>
+      </AnchorPane>
+      <Label fx:id="selectImageFileLabel" styleClass="wireframeBody" />
+      <padding>
+         <Insets left="16.0" right="16.0" top="16.0" />
+      </padding>
+   </VBox>
+</VBox>

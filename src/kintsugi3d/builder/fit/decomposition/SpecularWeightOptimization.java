@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.util.Collections;
-
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.ReflectanceData;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import kintsugi3d.optimization.NonNegativeWeightOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
-import kintsugi3d.optimization.NonNegativeWeightOptimization;
+
+import java.util.Collections;
 
 public class SpecularWeightOptimization
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularWeightOptimization.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularWeightOptimization.class);
     private final NonNegativeWeightOptimization base;
     private final TextureResolution textureResolution;
     private final SpecularBasisSettings specularBasisSettings;
@@ -53,7 +53,7 @@ public class SpecularWeightOptimization
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution, int pStart)
     {
-        log.info("Building weight fitting matrices...");
+        LOG.info("Building weight fitting matrices...");
 
         // Setup all the matrices for fitting weights (one per texel)
         base.buildMatrices(viewStream, new SpecularWeightModel(solution, this.specularBasisSettings),
@@ -65,7 +65,7 @@ public class SpecularWeightOptimization
         // TODO expose the damping factor as a setting.
 //        base.dampenWithPreviousSolution(1.0, p -> b -> solution.getWeights(pStart + p).get(b));
 
-        log.info("Finished building matrices; solving now...");
+        LOG.info("Finished building matrices; solving now...");
 
         // Optimize the weights and store the result in the SpecularDecomposition.
         if (pStart + weightBlockSize > textureResolution.width * textureResolution.height)
@@ -92,7 +92,7 @@ public class SpecularWeightOptimization
                 });
         }
 
-        log.info("DONE!");
+        LOG.info("DONE!");
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)

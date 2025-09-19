@@ -11,6 +11,18 @@
 
 package kintsugi3d.builder.fit.debug;
 
+import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.DoubleVector2;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.optimization.ShaderBasedErrorCalculator;
+import org.lwjgl.BufferUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,25 +30,13 @@ import java.io.PrintStream;
 import java.nio.FloatBuffer;
 import java.util.stream.IntStream;
 
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.DoubleVector2;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.optimization.ShaderBasedErrorCalculator;
-import org.lwjgl.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.
  * TODO this class doesn't have a well defined identity; should probably be refactored.
  */
 public final class FinalErrorCalculaton
 {
-    private static final Logger log = LoggerFactory.getLogger(FinalErrorCalculaton.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FinalErrorCalculaton.class);
     private static final FinalErrorCalculaton INSTANCE = new FinalErrorCalculaton();
 
     public static FinalErrorCalculaton getInstance()
@@ -58,7 +58,7 @@ public final class FinalErrorCalculaton
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        IBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
+        GraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
     {
         if (CALCULATE_NORMAL_RMSE && resources.getSpecularMaterialResources().getNormalMap() != null)
         {
@@ -95,20 +95,20 @@ public final class FinalErrorCalculaton
                         })
                         .average().orElse(0.0)); // mean
 
-                log.info("Normal map ground truth RMSE: " + rmse);
+                LOG.info("Normal map ground truth RMSE: " + rmse);
 
                 // Print out RMSE for normal map ground truth
                 rmseOut.println("Normal map ground truth RMSE: " + rmse);
             }
             catch (IOException e)
             {
-                log.error("An error occurred while validating normal map:", e);
+                LOG.error("An error occurred while validating normal map:", e);
             }
         }
     }
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
         SpecularMaterialResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
@@ -154,7 +154,7 @@ public final class FinalErrorCalculaton
         }
         catch (IOException e)
         {
-            log.error("An error occurred while calculating error metrics:", e);
+            LOG.error("An error occurred while calculating error metrics:", e);
         }
     }
 
@@ -169,7 +169,7 @@ public final class FinalErrorCalculaton
      * @throws FileNotFoundException
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
-            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
             SpecularMaterialResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws IOException
     {
@@ -259,7 +259,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createFinalErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
@@ -269,7 +269,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createGGXErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),

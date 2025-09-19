@@ -19,13 +19,10 @@ import java.nio.file.Path;
 @JsonSerialize(as = DirectoryPreferencesModel.class)
 public interface ReadOnlyDirectoryPreferencesModel
 {
-    Path getPreviewImagesDirectory();
-
     Path getLogFileDirectory();
-
-    Path getCacheDirectory();
-
-    Path getMasksDirectory();
+    Path getPreviewImagesDirectory();
+    Path getFitCacheDirectory();
+    Path getExtensionDirectory();
 
     @JsonIgnore
     Path getPreferencesFileLocation();

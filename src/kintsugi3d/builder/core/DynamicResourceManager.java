@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.EncodableColorImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Optional;
-
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.EncodableColorImage;
 
 public interface DynamicResourceManager
 {
@@ -47,6 +47,11 @@ public interface DynamicResourceManager
      *                               that might be found in the photographs.
      */
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
+
+    /**
+     * Clears the tonemapping curve used to interpret the photographic data.
+     */
+    void clearTonemapping();
 
     /**
      * Accept the current light calibration (intended to be used only by the application, when in light calibration mode).

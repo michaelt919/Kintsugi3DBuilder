@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Map;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
@@ -23,6 +18,10 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector4;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 public class Grid<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {

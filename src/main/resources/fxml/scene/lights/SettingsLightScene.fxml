@@ -11,13 +11,12 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<VBox styleClass="vbox" fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.lights.SettingsLightSceneController">
-    <TitledPane styleClass="titled-pane" animated="false" text="Target point">
-        <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+<VBox stylesheets="@../../kintsugiStyling.css" fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.lights.SettingsLightSceneController">
+    <TitledPane animated="false" text="Target point">
+        <GridPane  alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
@@ -34,7 +33,7 @@
             <ColumnConstraints />
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />
@@ -43,8 +42,8 @@
          </rowConstraints>
         </GridPane>
     </TitledPane>
-    <TitledPane styleClass="titled-pane" animated="false" text="Position">
-        <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+    <TitledPane animated="false" text="Position">
+        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
@@ -60,7 +59,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />
@@ -69,8 +68,8 @@
          </rowConstraints>
         </GridPane>
     </TitledPane>
-    <TitledPane styleClass="titled-pane" animated="false" text="Light properties">
-        <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+    <TitledPane animated="false" text="Light properties">
+        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
@@ -78,7 +77,7 @@
             <TextField fx:id="intensityTextField" prefHeight="25.0" prefWidth="70.0" GridPane.columnIndex="1" />
             <Slider fx:id="intensitySlider" blockIncrement="0.1" majorTickUnit="1.0" max="2.0" min="-2.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Label text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <ColorPicker styleClass="color-picker" fx:id="colorPicker" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+            <ColorPicker fx:id="colorPicker" prefHeight="25.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
             <ChoiceBox fx:id="lightTypeChoiceBox" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
             <Label text="Spot Size:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
             <TextField fx:id="spotSizeTextField" prefHeight="25.0" prefWidth="70.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -89,7 +88,7 @@
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
-            <ColumnConstraints />
+            <ColumnConstraints hgrow="ALWAYS" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints />

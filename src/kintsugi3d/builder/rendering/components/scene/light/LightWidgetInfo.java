@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.rendering.components.scene.light;
 
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
@@ -20,6 +18,8 @@ import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
+
+import java.util.stream.IntStream;
 
 public final class LightWidgetInfo
 {

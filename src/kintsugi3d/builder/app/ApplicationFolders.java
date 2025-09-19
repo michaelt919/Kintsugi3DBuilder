@@ -11,13 +11,11 @@
 
 package kintsugi3d.builder.app;
 
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 public class ApplicationFolders
 {
@@ -146,35 +144,51 @@ public class ApplicationFolders
     {
         Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getPreviewImagesDirectory();
         if (preferred != null)
+        {
             return preferred;
-
+        }
+        else
+        {
         return getUserCacheDirectory().resolve("preview");
+        }
     }
 
     public static Path getFitCacheRootDirectory()
     {
-        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getCacheDirectory();
+        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getFitCacheDirectory();
         if (preferred != null)
+        {
             return preferred;
-
-        return getUserCacheDirectory().resolve("fit");
+        }
+        else
+        {
+            return getUserCacheDirectory().resolve("fit");
+        }
     }
 
-    public static Path getMasksDirectory()
+    public static Path getExtensionDirectory()
     {
-        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getMasksDirectory();
+        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getExtensionDirectory();
         if (preferred != null)
+        {
             return preferred;
-
-        return getUserCacheDirectory().resolve("masks");
+        }
+        else
+        {
+            return getUserCacheDirectory().resolve("ext");
+        }
     }
 
     public static Path getLogFileDirectory()
     {
         Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getLogFileDirectory();
         if (preferred != null)
+        {
             return preferred;
-
-        return getUserAppDirectory().resolve("logs");
+        }
+        else
+        {
+            return getUserAppDirectory().resolve("logs");
+        }
     }
 }

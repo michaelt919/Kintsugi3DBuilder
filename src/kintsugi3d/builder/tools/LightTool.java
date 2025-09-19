@@ -11,16 +11,16 @@
 
 package kintsugi3d.builder.tools;
 
-import java.util.function.Consumer;
-
+import kintsugi3d.builder.state.LightWidgetModel;
+import kintsugi3d.builder.state.ManipulableLightingEnvironmentModel;
+import kintsugi3d.builder.state.SceneViewport;
+import kintsugi3d.builder.state.SceneViewportModel;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.*;
-import kintsugi3d.builder.state.ExtendedLightingModel;
-import kintsugi3d.builder.state.LightWidgetModel;
-import kintsugi3d.builder.state.SceneViewport;
-import kintsugi3d.builder.state.SceneViewportModel;
+
+import java.util.function.Consumer;
 
 final class LightTool implements PickerTool
 {
@@ -31,7 +31,7 @@ final class LightTool implements PickerTool
     private Consumer<DoubleVector2> updateFunction;
     private int lightIndex;
 
-    private final ExtendedLightingModel lightingModel;
+    private final ManipulableLightingEnvironmentModel lightingModel;
     private final SceneViewportModel sceneViewportModel;
 
     private static class Builder extends ToolBuilderBase<LightTool>
@@ -39,7 +39,7 @@ final class LightTool implements PickerTool
         @Override
         public LightTool create()
         {
-            return new LightTool(getLightingModel(), getSceneViewportModel());
+            return new LightTool(getLightingEnvironmentModel(), getSceneViewportModel());
         }
     }
 
@@ -48,7 +48,7 @@ final class LightTool implements PickerTool
         return new Builder();
     }
 
-    private LightTool(ExtendedLightingModel lightingModel, SceneViewportModel sceneViewportModel)
+    private LightTool(ManipulableLightingEnvironmentModel lightingModel, SceneViewportModel sceneViewportModel)
     {
         this.lightingModel = lightingModel;
         this.sceneViewportModel = sceneViewportModel;
@@ -293,7 +293,7 @@ final class LightTool implements PickerTool
     private void updateCenter(DoubleVector2 normalizedPosition)
     {
         SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
-        if ("IBRObject".equals(sceneViewport.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
+        if ("RenderingSubject".equals(sceneViewport.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
         {
             lightingModel.setLightCenter(lightIndex, sceneViewport.get3DPositionAtCoordinates(normalizedPosition.x, normalizedPosition.y));
         }

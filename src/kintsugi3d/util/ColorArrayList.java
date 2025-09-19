@@ -11,10 +11,10 @@
 
 package kintsugi3d.util;
 
-import java.util.AbstractList;
-
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
+
+import java.util.AbstractList;
 
 public class ColorArrayList extends AbstractList<Vector4> implements ColorList
 {

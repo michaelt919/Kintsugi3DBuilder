@@ -9,17 +9,17 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.tools;//Created by alexk on 8/8/2017.
+package kintsugi3d.builder.tools;
 
-import kintsugi3d.gl.window.CanvasSize;
-import kintsugi3d.gl.window.CursorPosition;
-import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.ManipulableViewpointModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.gl.window.CanvasSize;
+import kintsugi3d.gl.window.CursorPosition;
 
 final class LookAtPointTool implements DragTool
 {
-    private final ExtendedCameraModel cameraModel;
+    private final ManipulableViewpointModel cameraModel;
     private final SceneViewportModel sceneViewportModel;
 
     private static class Builder extends ToolBuilderBase<LookAtPointTool>
@@ -36,7 +36,7 @@ final class LookAtPointTool implements DragTool
         return new Builder();
     }
 
-    private LookAtPointTool(ExtendedCameraModel cameraModel, SceneViewportModel sceneViewportModel)
+    private LookAtPointTool(ManipulableViewpointModel cameraModel, SceneViewportModel sceneViewportModel)
     {
         this.cameraModel = cameraModel;
         this.sceneViewportModel = sceneViewportModel;
@@ -50,7 +50,7 @@ final class LookAtPointTool implements DragTool
 
         SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         Object clickedObject = sceneViewport.getObjectAtCoordinates(normalizedX, normalizedY);
-        if (clickedObject instanceof String && "IBRObject".equals(clickedObject))
+        if ("RenderingSubject".equals(clickedObject))
         {
             cameraModel.setTarget(sceneViewport.get3DPositionAtCoordinates(normalizedX, normalizedY));
         }

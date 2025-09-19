@@ -42,9 +42,11 @@ uniform vec3 lightPosVirtual[VIRTUAL_LIGHT_COUNT];
 #endif // VIRTUAL_LIGHT_COUNT > 0
 
 #if !RELIGHTING_ENABLED
-#include <colorappearance/colorappearance.glsl> // Need if relighting is not enabled to infer light direction
-#line 47 3001
+// Need if relighting is not enabled to infer light direction
+#include <colorappearance/colorappearance.glsl>
 #endif
+
+#line 50 3001
 
 vec3 getLightVectorVirtual(int lightIndex)
 {

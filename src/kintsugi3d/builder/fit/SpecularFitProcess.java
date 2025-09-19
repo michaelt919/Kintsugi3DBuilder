@@ -11,7 +11,30 @@
 
 package kintsugi3d.builder.fit;
 
-import java.awt.image.BufferedImage;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.fit.debug.BasisImageCreator;
+import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
+import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
+import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
+import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.rendering.ImageReconstruction;
+import kintsugi3d.builder.rendering.ReconstructionView;
+import kintsugi3d.builder.resources.project.*;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.material.ReadonlyMaterial;
+import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
+import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.util.BufferedImageColorList;
+import kintsugi3d.util.ImageFinder;
+import kintsugi3d.util.ImageUndistorter;
+import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,38 +46,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
 
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
-import kintsugi3d.builder.fit.debug.BasisImageCreator;
-import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
-import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.rendering.ImageReconstruction;
-import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.ibr.*;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.material.ReadonlyMaterial;
-import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
-import kintsugi3d.util.BufferedImageColorList;
-import kintsugi3d.util.ImageFinder;
-import kintsugi3d.util.ImageUndistorter;
-import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static javax.imageio.ImageIO.read;
-
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
  */
 public class SpecularFitProcess
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitProcess.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitProcess.class);
     private static final boolean DEBUG_IMAGES = false;
     private static final boolean TRACE_IMAGES = false;
 
@@ -67,12 +64,11 @@ public class SpecularFitProcess
 
     private <ContextType extends Context<ContextType>> SpecularFitProgramFactory<ContextType> getProgramFactory()
     {
-        return new SpecularFitProgramFactory<>(
-            settings.getIbrSettings(), settings.getSpecularBasisSettings());
+        return new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
     }
 
     public <ContextType extends Context<ContextType>> void optimizeFitWithCache(
-        IBRResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -87,7 +83,7 @@ public class SpecularFitProcess
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), monitor);
 
         Duration duration = Duration.between(start, Instant.now());
-        log.info("Cache found / generated in: " + duration);
+        LOG.info("Cache found / generated in: " + duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
         resources.replaceSpecularMaterialResources(optimizeFitWithCache(cache, resources.getSpecularMaterialResources(), monitor));
@@ -100,11 +96,11 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
-        IBRResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
         throws IOException
     {
         ViewSet viewSet = resources.getViewSet();
-        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getIbrSettings(), settings.getSpecularBasisSettings());
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
         try(ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             viewSet,
             builder -> builder
@@ -119,23 +115,18 @@ public class SpecularFitProcess
             {
                 try
                 {
-                    Projection projection = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(viewIndex));
-                    BufferedImage image = read(viewSet.findFullResImageFile(viewIndex));
-
-                    File maskFile = viewSet.getMask(viewIndex);
-                    BufferedImage mask = maskFile == null ? null : read(maskFile);
+                    Projection projection = resources.getViewSet().getCameraProjectionForViewIndex(viewIndex);
+                    ImageHelper image = viewSet.loadFullResMaskedImage(viewIndex);
 
                     if (projection instanceof DistortionProjection)
                     {
                         // undistort if we have a DistortionProjection.
                         return new BufferedImageColorList(new ImageUndistorter<>(resources.getContext())
-                                .undistort(image, mask, false /* no mipmaps for error estimation */, (DistortionProjection) projection));
+                                .undistort(image.getBufferedImage(), (DistortionProjection) projection, false /* no mipmaps for error estimation */));
                     }
                     else
                     {
-                        return mask != null ?
-                                new BufferedImageColorList(IBRResourcesImageSpace.applyGrayscaleMaskToAlpha(image, mask)) :
-                                new BufferedImageColorList(image);
+                        return new BufferedImageColorList(image.getBufferedImage());
                     }
                 }
                 catch (IOException e)
@@ -156,12 +147,10 @@ public class SpecularFitProcess
                 reconstructionCallback.accept(view, rmse);
             }
         }
-
-        rescaleTextures();
     }
 
     public <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> optimizeFit(
-        IBRResources<ContextType> resources, ProgressMonitor monitor)
+        GraphicsResources<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         SpecularDecompositionFromScratch decomposition =
@@ -170,7 +159,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> optimizeFit(
-        IBRResources<ContextType> resources, SpecularDecompositionFromScratch decomposition, ProgressMonitor monitor)
+        GraphicsResources<ContextType> resources, SpecularDecompositionFromScratch decomposition, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
@@ -195,7 +184,7 @@ public class SpecularFitProcess
                 (stream, monitorLocal) -> specularFit.optimizeFromScratch(
                     decomposition, stream, settings.getPreliminaryConvergenceTolerance(),
                     monitorLocal, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
-                specularFit, monitor);
+                monitor);
 
 //            if (settings.getOutputDirectory() != null)
 //            {
@@ -235,9 +224,7 @@ public class SpecularFitProcess
             monitor.setStage(1, "Performing low-res fit...");
         }
 
-        SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
-
-        try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
+        try (GraphicsResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
                 new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
                 {
                     private double maxProgress = 0.0;
@@ -260,7 +247,7 @@ public class SpecularFitProcess
                     @Override
                     public void setProgress(double progress, String message)
                     {
-                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
+                        LOG.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
                     }
                 }))
         {
@@ -289,6 +276,7 @@ public class SpecularFitProcess
                 {
                     // Basis functions are not spatial, so we want to just copy for future use
                     // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
+                    assert fullResolution.getBasisResources() != null;
                     fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
 
                     File geometryFile = sampled.getViewSet().getGeometryFile();
@@ -310,7 +298,7 @@ public class SpecularFitProcess
             fullResolution.getAlbedoORMOptimization().execute(fullResolution);
 
                     Duration duration = Duration.between(start, Instant.now());
-                    log.info("Total processing time: " + duration);
+                    LOG.info("Total processing time: " + duration);
 
                     if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
                     {
@@ -320,7 +308,7 @@ public class SpecularFitProcess
                         }
                         catch (FileNotFoundException e)
                         {
-                            log.error("An error occurred writing time file:", e);
+                            LOG.error("An error occurred writing time file:", e);
                         }
                     }
 
@@ -393,7 +381,7 @@ public class SpecularFitProcess
                         monitor.allowUserCancellation();
                     }
 
-                    try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j,
+                    try (GraphicsResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j,
                             new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
                             {
                                 private double maxProgress = 0.0;
@@ -416,7 +404,7 @@ public class SpecularFitProcess
                                 @Override
                                 public void setProgress(double progress, String message)
                                 {
-                                    log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
+                                    LOG.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
                                 }
                             }))
                     {
@@ -457,7 +445,6 @@ public class SpecularFitProcess
                                 (stream, monitorLocal) -> blockOptimization.optimizeFromExistingBasis(
                                     blockDecomposition, stream, settings.getConvergenceTolerance(), monitorLocal,
                                     TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
-                                blockOptimization,
                                 new DefaultProgressMonitor() // wrap progress monitor with logic to account for it being just one block out of the whole.
                                 {
                                     private double maxProgress = 0.0;
@@ -510,12 +497,14 @@ public class SpecularFitProcess
                             blockDecomposition.fillHoles();
 
                             // Update the GPU resources with the hole-filled weight maps.
+                            assert blockOptimization.getBasisWeightResources() != null;
                             blockOptimization.getBasisWeightResources().updateFromSolution(blockDecomposition);
 
                             // Calculate final diffuse map without the constraint of basis functions.
                             blockOptimization.getDiffuseOptimization().execute(blockOptimization);
 
                             // Fit specular textures after filling holes
+                            assert blockOptimization.getRoughnessOptimization() != null;
                             blockOptimization.getRoughnessOptimization().execute();
 
                             // Copy partial solution into the full solution.
@@ -528,10 +517,10 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> void optimizeTexSpaceFit(
-        IBRResources<ContextType> resources,
+        GraphicsResources<ContextType> resources,
         TextureResolution resolution,
         OptimizationMethod<ContextType> optimizationMethod,
-        SpecularMaterialResources<ContextType> resultsForErrorCalc, ProgressMonitor monitor) throws IOException, UserCancellationException
+        ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -542,7 +531,7 @@ public class SpecularFitProcess
                 getReflectanceProgramBuilder(resources, programFactory),
                 resources.getContext().buildFramebufferObject(resolution.width, resolution.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
-                    .addColorAttachment(ColorFormat.RGBA32F));
+                    .addColorAttachment(ColorFormat.RGBA32F))
         )
         {
             optimizationMethod.optimize(stream, monitor);
@@ -581,32 +570,10 @@ public class SpecularFitProcess
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectanceProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/specularfit/extractReflectance.frag"));
-    }
-
-    public void rescaleTextures()
-    {
-        if (settings.getExportSettings().isGenerateLowResTextures() && settings.getOutputDirectory() != null)
-        {
-            SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings.getExportSettings());
-            rescaler.rescaleAll(settings.getOutputDirectory(), settings.getSpecularBasisSettings().getBasisCount());
-
-            if (settings.shouldIncludeConstantTerm())
-            {
-                try
-                {
-                    rescaler.generateLodsFor(new File(settings.getOutputDirectory(), "constant.png"));
-                }
-                catch (IOException e)
-                {
-                    log.error("Failed to resize diffuse constant texture", e);
-                    throw new RuntimeException(e);
-                }
-            }
-        }
     }
 }

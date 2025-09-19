@@ -11,10 +11,6 @@
 
 package kintsugi3d.gl.javafx;
 
-import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.util.OptionalInt;
-
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -37,13 +33,17 @@ import javafx.util.converter.CharacterStringConverter;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.window.*;
-import org.lwjgl.*;
+import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.util.OptionalInt;
+
 public final class FramebufferView extends Region
 {
-    private static final Logger log = LoggerFactory.getLogger(FramebufferView.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FramebufferView.class);
     private final ImageView imageView;
     private FramebufferCanvas<?> canvas;
 
@@ -102,6 +102,11 @@ public final class FramebufferView extends Region
     public FramebufferView()
     {
         this.imageView = new ImageView();
+
+        // Allows the image view to be the default focused element.
+        // This prevents something that we don't want to be default-focused from taking it, like the search box, etc.
+        this.imageView.setFocusTraversable(true);
+
         this.getChildren().add(imageView);
         this.widthProperty().addListener(width -> imageView.setFitWidth(this.getWidth()));
         this.heightProperty().addListener(height -> imageView.setFitHeight(this.getHeight()));
@@ -123,11 +128,11 @@ public final class FramebufferView extends Region
                 }
                 catch(RuntimeException e)
                 {
-                    log.error("An error has occurred:", e);
+                    LOG.error("An error has occurred:", e);
                 }
                 catch(Error e)
                 {
-                    log.error("An error has occurred:", e);
+                    LOG.error("An error has occurred:", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -136,6 +141,8 @@ public final class FramebufferView extends Region
 
         imageView.setOnMousePressed(event ->
         {
+            imageView.requestFocus(); // remove focus from other UI elements while interacting with the 3D view
+
             if (canvas != null)
             {
                 getButtonIndex(event.getButton()).ifPresent(
@@ -460,7 +467,7 @@ public final class FramebufferView extends Region
         }
         catch (NonInvertibleTransformException e)
         {
-            log.error("Noninvertible transform", e);
+            LOG.error("Noninvertible transform", e);
             return new CursorPosition(event.getX(), event.getY());
         }
     }

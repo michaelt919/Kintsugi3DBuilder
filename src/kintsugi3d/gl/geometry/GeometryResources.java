@@ -11,16 +11,15 @@
 
 package kintsugi3d.gl.geometry;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
+import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
+
+import java.io.IOException;
 
 public class GeometryResources<ContextType extends Context<ContextType>> implements Resource
 {
-    private static final Logger log = LoggerFactory.getLogger(GeometryResources.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GeometryResources.class);
     public final ContextType context;
 
     /**
@@ -126,7 +125,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         }
         catch (IOException e)
         {
-            log.error("File not found exception while trying to create a geometryFrameBuffer:", e);
+            LOG.error("File not found exception while trying to create a geometryFrameBuffer:", e);
             throw new UnsupportedOperationException(e);
         }
     }

@@ -11,12 +11,12 @@
 
 package kintsugi3d.gl.types;
 
+import kintsugi3d.gl.nativebuffer.NativeDataType;
+
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import kintsugi3d.gl.nativebuffer.NativeDataType;
 
 /**
  * Enumerates standard packed data types where there isn't a one-to-one correspondence between channels and byte groups.

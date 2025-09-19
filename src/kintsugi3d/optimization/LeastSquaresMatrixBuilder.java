@@ -11,16 +11,18 @@
 
 package kintsugi3d.optimization;
 
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import kintsugi3d.util.Counter;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.simple.SimpleMatrix;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.*;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
+import java.util.function.IntToDoubleFunction;
 import java.util.stream.IntStream;
-
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
-import kintsugi3d.util.Counter;
 
 /**
  * When working with image-based data, it is common to need to solve multiple least squares systems in parallel.

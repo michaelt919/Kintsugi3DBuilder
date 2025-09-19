@@ -19,8 +19,7 @@ package kintsugi3d.builder.core;
 public interface ProgressMonitor
 {
     String FINISHING_UP = "Finishing up...";
-    String PREPARING_PROJECT = "Preparing project...";
-    String ALMOST_READY = "This shouldn't take long...";
+    String DEFAULT_MESSAGE = "Please wait...";
 
     /**
      * This method will be called at points when it is possible to cancel the process without unpredictable results.
@@ -63,6 +62,14 @@ public interface ProgressMonitor
      * @param message Text describing the next stage of the process.
      */
     void setStage(int stage, String message);
+
+    /**
+     * May optionally be implemented by UIs that want to display different text during indeterminate progress.
+     * @param finishingUpText
+     */
+    default void setFinishingUpText(String finishingUpText)
+    {
+    }
 
     /**
      * A callback fired when the size of the total workload is determined.

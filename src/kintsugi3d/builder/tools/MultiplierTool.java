@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.tools;
 
+import kintsugi3d.builder.state.*;
+
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
-
-import kintsugi3d.builder.state.*;
 
 public final class MultiplierTool implements KeyPressTool
 {
@@ -51,31 +51,19 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setToolBindingModel(ToolBindingModel toolBindingModel)
+        public ToolBuilder<MultiplierTool> setCameraModel(ManipulableViewpointModel cameraModel)
         {
             return this;
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setCameraModel(ExtendedCameraModel cameraModel)
+        public ToolBuilder<MultiplierTool> setLightingEnvironmentModel(ManipulableLightingEnvironmentModel lightingModel)
         {
             return this;
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setEnvironmentMapModel(EnvironmentModel environmentModel)
-        {
-            return this;
-        }
-
-        @Override
-        public ToolBuilder<MultiplierTool> setLightingModel(ExtendedLightingModel lightingModel)
-        {
-            return this;
-        }
-
-        @Override
-        public ToolBuilder<MultiplierTool> setObjectModel(ExtendedObjectModel lightingModel)
+        public ToolBuilder<MultiplierTool> setObjectModel(ManipulableObjectPoseModel lightingModel)
         {
             return this;
         }
@@ -87,7 +75,7 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setSettingsModel(SettingsModel settingsModel)
+        public ToolBuilder<MultiplierTool> setSettingsModel(GeneralSettingsModel settingsModel)
         {
             return this;
         }

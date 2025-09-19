@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.UserCancellationException;
@@ -27,10 +20,10 @@ import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.normal.NormalOptimization;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.optimization.ReadonlyErrorReport;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
@@ -39,17 +32,24 @@ import kintsugi3d.util.ColorList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+
 /**
  * A class that bundles all of the GPU resources for representing a final specular fit solution.
  * @param <ContextType>
  */
 public final class SpecularFitOptimizable<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitOptimizable.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitOptimizable.class);
 
     private final ContextType context;
 
-    private final ReadonlyIBRResources<ContextType> resources;
+    private final ReadonlyGraphicsResources<ContextType> resources;
     private final TextureResolution textureResolution;
 
     private final SpecularBasisSettings specularBasisSettings;
@@ -63,7 +63,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private final ShaderBasedErrorCalculator<ContextType> errorCalculator;
 
     private SpecularFitOptimizable(
-        ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
+        ReadonlyGraphicsResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
         TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
@@ -103,7 +103,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         try
         {
@@ -113,13 +113,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         }
         catch (IOException e)
         {
-            log.error("An error occurred creating error calculation shader:", e);
+            LOG.error("An error occurred creating error calculation shader:", e);
             return null;
         }
     }
 
     private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-        SpecularMaterialResources<ContextType> specularFit, ReadonlyIBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
+        SpecularMaterialResources<ContextType> specularFit, ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
@@ -131,7 +131,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
         SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {
@@ -140,7 +140,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 true, specularBasisSettings, programFactory, textureResolution, normalOptimizationSettings, includeConstantTerm);
     }
 
-    public ReadonlyIBRResources<ContextType> getResources()
+    public ReadonlyGraphicsResources<ContextType> getResources()
     {
         return resources;
     }
@@ -233,7 +233,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                     }
                     catch (IOException e)
                     {
-                        log.error("Error occurred while creating basis images:", e);
+                        LOG.error("Error occurred while creating basis images:", e);
                     }
 
                     // write out diffuse texture for debugging
@@ -294,7 +294,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private void calculateError()
     {
-        log.debug("Calculating error...");
+        LOG.debug("Calculating error...");
 
         // Calculate the error in preparation for normal estimation.
         errorCalculator.update();
@@ -332,7 +332,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         // Basis functions will have changed.
         getBasisResources().updateFromSolution(specularDecomposition);
 
-        log.debug("Calculating error...");
+        LOG.debug("Calculating error...");
         errorCalculator.update();
         logError(errorCalculator.getReport());
     }
@@ -352,7 +352,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         {
             if (blockCount > 1)
             {
-                log.info("Starting block " + i + "...");
+                LOG.info("Starting block " + i + "...");
             }
 
             weightOptimization.execute(
@@ -372,7 +372,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private void normalOptimizationIteration(double convergenceTolerance, File debugDirectory)
     {
-        log.info("Optimizing normals...");
+        LOG.info("Optimizing normals...");
 
         normalOptimization.execute(normalMap ->
             {
@@ -385,7 +385,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         if (debugDirectory != null)
         {
-            saveNormalMap(debugDirectory);
+            saveNormalMap("PNG", debugDirectory, "normal.png");
         }
 
         if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
@@ -397,7 +397,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private static void logError(ReadonlyErrorReport report)
     {
-        log.debug("Error: " + report.getError() + " (Previous error: " + report.getPreviousError() + ")");
+        LOG.debug("Error: " + report.getError() + " (Previous error: " + report.getPreviousError() + ")");
     }
 
     @Override

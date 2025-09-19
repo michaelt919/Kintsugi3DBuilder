@@ -11,8 +11,14 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.core.Shader;
+import kintsugi3d.gl.exceptions.IllegalShaderDefineException;
+import kintsugi3d.gl.exceptions.ShaderCompileFailureException;
+import kintsugi3d.gl.exceptions.ShaderPreprocessingFailureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -22,20 +28,11 @@ import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-import kintsugi3d.gl.core.Shader;
-import kintsugi3d.gl.exceptions.IllegalShaderDefineException;
-import kintsugi3d.gl.exceptions.ShaderCompileFailureException;
-import kintsugi3d.gl.exceptions.ShaderPreprocessingFailureException;
-import kintsugi3d.gl.material.Material;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 class OpenGLShader implements Shader<OpenGLContext>
 {
-    private static final Logger log = LoggerFactory.getLogger(OpenGLShader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OpenGLShader.class);
     private static final Pattern QUOTATION_MARK_PATTERN = Pattern.compile("['\"]");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
     protected final OpenGLContext context;
@@ -109,12 +106,12 @@ class OpenGLShader implements Shader<OpenGLContext>
         // Sometimes the interrupted flag gets stuck on and needs to be reset or all File IO on the thread will fail.
         if (Thread.interrupted())
         {
-            log.warn("Thread interrupted", new Throwable("Thread interrupted"));
+            LOG.warn("Thread interrupted", new Throwable("Thread interrupted"));
         }
 
         try(Scanner scanner = new Scanner(file, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
 
             while (scanner.hasNextLine())
             {

@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.io.File;
-import java.util.List;
-
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.simple.SimpleMatrix;
+
+import java.io.File;
+import java.util.List;
 
 public interface SpecularDecomposition
 {

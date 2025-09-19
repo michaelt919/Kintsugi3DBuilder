@@ -103,8 +103,8 @@ void main()
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
-        vec3 lightDisplacement = objectToFitting * getLightVector(k, position);
-        vec3 light = normalize(lightDisplacement);
+        LightInfo lightInfo = getLightInfo(k);
+        vec3 light = objectToFitting * lightInfo.normalizedDirection;
         vec3 view = objectToFitting * normalize(getViewVector(k, position));
         vec3 halfway = normalize(light + view);
         float nDotH = max(0.0, halfway.z);
@@ -117,7 +117,7 @@ void main()
             float hDotV = max(0.0, dot(halfway, view));
 
             // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-            vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
+            vec3 incidentRadiance = PI * lightInfo.attenuatedIntensity;
 
             float roughness = texture(roughnessMap, fTexCoord)[0];
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);

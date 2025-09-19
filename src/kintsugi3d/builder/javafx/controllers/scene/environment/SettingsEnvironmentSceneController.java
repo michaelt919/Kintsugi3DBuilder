@@ -26,7 +26,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
 import kintsugi3d.builder.javafx.core.RecentProjects;
-import kintsugi3d.builder.javafx.internal.EnvironmentModelImpl;
+import kintsugi3d.builder.javafx.internal.ObservableEnvironmentModel;
 import kintsugi3d.builder.javafx.util.ImageFactory;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -83,9 +83,9 @@ public class SettingsEnvironmentSceneController implements Initializable
     private final FileChooser envImageFileChooser = new FileChooser();
     private final FileChooser bpImageFileChooser = new FileChooser();
 
-    private EnvironmentModelImpl environmentMapModel;
+    private ObservableEnvironmentModel environmentMapModel;
 
-    final ChangeListener<EnvironmentSetting> changeListener = (observable, oldValue, newValue) ->
+    final ChangeListener<ObservableEnvironmentSettings> changeListener = (observable, oldValue, newValue) ->
     {
         if (oldValue != null)
         {
@@ -108,7 +108,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         root.setDisable(value);
     }
 
-    private void bind(EnvironmentSetting envSetting)
+    private void bind(ObservableEnvironmentSettings envSetting)
     {
         envUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.envUseImageProperty());
         envUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.envUseColorProperty());
@@ -140,7 +140,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         gpSizeTextField.textProperty().bindBidirectional(trueGPSize, numberStringConverter);
     }
 
-    private void unbind(EnvironmentSetting envSetting)
+    private void unbind(ObservableEnvironmentSettings envSetting)
     {
         envUseImageCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseImageProperty());
         envUseColorCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseColorProperty());
@@ -297,7 +297,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         bpImageView.setImage(new Image(localBPImageFile.getValue().toURI().toString()));
     }
 
-    public void setEnvironmentMapModel(EnvironmentModelImpl environmentMapModel)
+    public void setEnvironmentMapModel(ObservableEnvironmentModel environmentMapModel)
     {
         this.environmentMapModel = environmentMapModel;
     }

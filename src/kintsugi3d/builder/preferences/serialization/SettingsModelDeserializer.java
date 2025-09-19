@@ -11,16 +11,14 @@
 
 package kintsugi3d.builder.preferences.serialization;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -29,7 +27,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-public class SettingsModelDeserializer extends StdDeserializer<SettingsModel>
+public class SettingsModelDeserializer extends StdDeserializer<GeneralSettingsModel>
 {
     public SettingsModelDeserializer()
     {
@@ -42,9 +40,9 @@ public class SettingsModelDeserializer extends StdDeserializer<SettingsModel>
     }
 
     @Override
-    public SettingsModel deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException
+    public GeneralSettingsModel deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException
     {
-        SimpleSettingsModel outputModel = new SimpleSettingsModel();
+        SimpleGeneralSettingsModel outputModel = new SimpleGeneralSettingsModel();
         ObjectMapper mapper = new ObjectMapper();
 
         SimpleModule module = new SimpleModule();

@@ -11,14 +11,14 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.builders.*;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.types.AbstractDataType;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.function.Function;
-
-import kintsugi3d.gl.builders.*;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.types.AbstractDataType;
 
 public interface TextureFactory<ContextType extends Context<ContextType>>
 {

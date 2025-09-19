@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.String?>
+<VBox fx:id="root" alignment="CENTER" fillWidth="false" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ExportModelController">
+    <VBox spacing="16.0">
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeBody" text="Texture format: " />
+            <ComboBox fx:id="formatComboBox" styleClass="wireframeBody" promptText="Select format...">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="PNG" />
+                        <String fx:value="JPEG" />
+                        <String fx:value="TIFF" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
+        </HBox>
+        <CheckBox fx:id="generateLowResolutionCheckBox" styleClass="wireframeBody" mnemonicParsing="false" text="Export lower resolution copies" />
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeBody" disable="true" text="Minimum texture resolution:" />
+            <ComboBox styleClass="wireframeBody" fx:id="minimumTextureResolutionComboBox" HBox.hgrow="ALWAYS" />
+        </HBox>
+        <CheckBox fx:id="openViewerOnceCheckBox" styleClass="wireframeBody" mnemonicParsing="false" text="Open in Kintsugi 3D Viewer" />
+        <StackPane>
+            <Button styleClass="wireframeBody" mnemonicParsing="false" text="Reset to Defaults" onAction="#resetSettingsToDefaults"/>
+        </StackPane>
+    </VBox>
+</VBox>

@@ -11,20 +11,22 @@
 
 package kintsugi3d.optimization;
 
-import java.security.SecureRandom;
-import java.util.*;
-import java.util.stream.IntStream;
-
-import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ColorArrayList;
+import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 
 public class KMeansClustering
 {
-    private static final Logger log = LoggerFactory.getLogger(KMeansClustering.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KMeansClustering.class);
     private static final double TOLERANCE = 0.0001;
 
     private final ColorArrayList colorMap;
@@ -121,10 +123,10 @@ public class KMeansClustering
             centers[b] = colorMap.getRGB(index);
         }
 
-        log.info("Initial centers:");
+        LOG.info("Initial centers:");
         for (int b = 0; b < basisCount; b++)
         {
-            log.info(centers[b].toString());
+            LOG.info(centers[b].toString());
         }
 
         // Initialization is done; now it's time to iterate.

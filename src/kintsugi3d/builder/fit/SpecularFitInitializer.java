@@ -11,32 +11,31 @@
 
 package kintsugi3d.builder.fit;
 
+import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.optimization.KMeansClustering;
+import kintsugi3d.util.ColorArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.util.ColorArrayList;
-import kintsugi3d.optimization.KMeansClustering;
 
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitInitializer.class);
-    private final ReadonlyIBRResources<ContextType> resources;
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitInitializer.class);
+    private final ReadonlyGraphicsResources<ContextType> resources;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitInitializer(ReadonlyIBRResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitInitializer(ReadonlyGraphicsResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
     {
         this.resources = resources;
         this.specularBasisSettings = specularBasisSettings;
@@ -59,7 +58,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             Drawable<ContextType> drawable = resources.createDrawable(averageProgram))
         {
 
-            log.info("Clustering to initialize weights...");
+            LOG.info("Clustering to initialize weights...");
 
             // Clear framebuffer
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -89,15 +88,15 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
                 .forEach(p -> solution.setWeightsValidity(p, true));
 
             // Output for debugging
-            log.info("Refined centers:");
+            LOG.info("Refined centers:");
             for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
             {
-                log.info(centers.get(b).toString());
+                LOG.info(centers.get(b).toString());
             }
         }
         catch (IOException e)
         {
-            log.error("Error occurred while initializing specular fit:", e);
+            LOG.error("Error occurred while initializing specular fit:", e);
         }
     }
 
@@ -166,7 +165,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving debug image:", e);
+            LOG.error("An error occurred saving debug image:", e);
         }
     }
 }

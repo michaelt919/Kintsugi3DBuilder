@@ -12,7 +12,6 @@
 package kintsugi3d.builder.util;
 
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.Kintsugi3DBuilder;
 import kintsugi3d.builder.app.OperatingSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,7 @@ import java.util.regex.Pattern;
 
 public class Launch4jConfiguration
 {
-    private static final Logger log = LoggerFactory.getLogger(Launch4jConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Launch4jConfiguration.class);
 
     private static final Path l4jIniFile = Paths.get(ApplicationFolders.APP_FOLDER_NAME + ".l4j.ini");
 
@@ -41,14 +40,14 @@ public class Launch4jConfiguration
 
     public void write() throws IOException
     {
-        log.info("Writing launch4j configuration file to {}", l4jIniFile.toAbsolutePath());
+        LOG.info("Writing launch4j configuration file to {}", l4jIniFile.toAbsolutePath());
         BufferedWriter writer = Files.newBufferedWriter(l4jIniFile);
         writeTo(writer);
     }
 
     public void writeAsSuperuser() throws IOException, IllegalStateException
     {
-        log.info("Writing launch4j configuration file AS ADMINISTRATOR to {}", l4jIniFile.toAbsolutePath());
+        LOG.info("Writing launch4j configuration file AS ADMINISTRATOR to {}", l4jIniFile.toAbsolutePath());
         if (ApplicationFolders.getCurrentOS() != OperatingSystem.WINDOWS)
         {
             throw new IllegalStateException("Writing as superuser not supported for OS");

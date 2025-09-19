@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.tools;
 
+import kintsugi3d.builder.state.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.SimpleCameraModel;
+import kintsugi3d.builder.state.ViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -21,15 +24,12 @@ import kintsugi3d.gl.window.ModifierKeys;
 import kintsugi3d.gl.window.listeners.CursorPositionListener;
 import kintsugi3d.gl.window.listeners.KeyPressListener;
 import kintsugi3d.gl.window.listeners.KeyReleaseListener;
-import kintsugi3d.builder.state.CameraModel;
-import kintsugi3d.builder.state.ReadonlyCameraModel;
-import kintsugi3d.builder.state.impl.SimpleCameraModel;
 
 public class FirstPersonController implements KeyPressListener, KeyReleaseListener, CursorPositionListener
 {
     private boolean enabled;
 
-    private final CameraModel model;
+    private final ViewpointModel model;
 
     private Vector3 velocity;
     private Vector3 position;
@@ -49,7 +49,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
         this(new SimpleCameraModel());
     }
 
-    public FirstPersonController(CameraModel cameraModel)
+    public FirstPersonController(ViewpointModel cameraModel)
     {
         this.model = cameraModel;
 
@@ -86,7 +86,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
         }
     }
 
-    public ReadonlyCameraModel getModel()
+    public ReadonlyViewpointModel getModel()
     {
         return this.model;
     }

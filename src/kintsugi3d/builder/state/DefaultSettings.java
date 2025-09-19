@@ -16,30 +16,76 @@ import kintsugi3d.util.ShadingParameterMode;
 
 public final class DefaultSettings
 {
-    public static void apply(SettingsModel settingsModel)
+    public static void applyGlobalDefaults(GeneralSettingsModel settingsModel)
     {
+        // Application state
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
         settingsModel.createObjectSetting("currentLightCalibration", Vector2.ZERO);
-        settingsModel.createBooleanSetting("occlusionEnabled", true, true);
+        settingsModel.createBooleanSetting("sceneWindowOpen", false);
+
+        // Graphics settings
+        settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
+        settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);
+
+        // Shading options
         settingsModel.createBooleanSetting("fresnelEnabled", false, true);
         settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false, true);
+
+        // Lighting options
         settingsModel.createBooleanSetting("relightingEnabled", false);
         settingsModel.createBooleanSetting("shadowsEnabled", false, true);
+
+        // Visualization options
         settingsModel.createBooleanSetting("visibleLightsEnabled", true);
         settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
         settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
         settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
-        settingsModel.createNumericSetting("weightExponent", 16.0f, true);
-        settingsModel.createNumericSetting("isotropyFactor", 0.0f, true);
-        settingsModel.createNumericSetting("occlusionBias", 0.0025f, true);
-        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
         settingsModel.createBooleanSetting("is3DGridEnabled", true, true);
         settingsModel.createBooleanSetting("isCameraVisualEnabled", false, true);
         settingsModel.createBooleanSetting("compassEnabled", false, true);
-        settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
-        settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);
-        settingsModel.createBooleanSetting("sceneWindowOpen", false);
+
+        // Image-based rendering options
+        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
+        settingsModel.createNumericSetting("weightExponent", 16.0f, true);
+        settingsModel.createNumericSetting("isotropyFactor", 0.0f, true);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
-        settingsModel.createNumericSetting("buehlerViewCount", 5, true);
+        settingsModel.createNumericSetting("buehlerViewCount", 8, true);
+    }
+
+    public static void applyProjectDefaults(GeneralSettingsModel settingsModel)
+    {
+        // Mask / feathering settings
+        settingsModel.createBooleanSetting("occlusionEnabled", true);
+        settingsModel.createNumericSetting("occlusionBias", 0.0025f);
+        settingsModel.createBooleanSetting("edgeProximityWeightEnabled", true);
+        settingsModel.createNumericSetting("edgeProximityMargin", 0.1f);
+        settingsModel.createNumericSetting("edgeProximityCutoff", 0.01f);
+
+        // Tone calibration settings
+        settingsModel.createBooleanSetting("infiniteLightSources", false);
+        settingsModel.createBooleanSetting("flatfieldCorrected", false);
+
+        // Specular fit settings
+        settingsModel.createNumericSetting("textureSize", 2048);
+        settingsModel.createNumericSetting("basisCount", 8);
+        settingsModel.createNumericSetting("specularMinWidthFrac", 0.2f);
+        settingsModel.createNumericSetting("specularMaxWidthFrac", 1.0f);
+        settingsModel.createBooleanSetting("constantTermEnabled", false);
+        settingsModel.createNumericSetting("basisResolution", 90);
+        settingsModel.createNumericSetting("basisComplexityFrac", 1.0f);
+        settingsModel.createNumericSetting("metallicity", 0.0f);
+        settingsModel.createBooleanSetting("smithMaskingShadowingEnabled", true);
+        settingsModel.createNumericSetting("convergenceTolerance", 0.00001f);
+        settingsModel.createBooleanSetting("normalOptimizationEnabled", true);
+        settingsModel.createNumericSetting("minNormalDamping", 1.0f);
+        settingsModel.createNumericSetting("normalSmoothIterations", 0);
+        settingsModel.createNumericSetting("unsuccessfulLMIterationsAllowed", 8);
+        settingsModel.createBooleanSetting("openViewerOnProcessingComplete", false);
+
+        // Export options
+        settingsModel.createObjectSetting("textureFormat", "PNG");
+        settingsModel.createBooleanSetting("exportLODEnabled", false);
+        settingsModel.createNumericSetting("minimumLODSize", 256);
+        settingsModel.createBooleanSetting("openViewerOnExportComplete", false);
     }
 }

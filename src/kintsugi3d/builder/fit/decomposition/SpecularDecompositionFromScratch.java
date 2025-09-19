@@ -11,25 +11,20 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.simple.SimpleMatrix;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.gl.vecmath.Vector3;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);
-
     private final DoubleVector3[] diffuseAlbedos;
     private final SimpleMatrix specularRed;
     private final SimpleMatrix specularGreen;
@@ -111,9 +106,9 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             }
 
             @Override
-            public void save(File outputDirectory)
+            public void save(File outputDirectory, String filenameOverride)
             {
-                SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory);
+                SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory, filenameOverride);
             }
         };
     }

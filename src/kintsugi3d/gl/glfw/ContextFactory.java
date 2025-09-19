@@ -11,9 +11,9 @@
 
 package kintsugi3d.gl.glfw;
 
-import java.util.function.Function;
-
 import kintsugi3d.gl.core.DoubleFramebuffer;
+
+import java.util.function.Function;
 
 public interface ContextFactory<ContextType extends WindowContextBase<ContextType>>
 {

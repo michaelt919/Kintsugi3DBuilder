@@ -11,13 +11,13 @@
 
 package kintsugi3d.optimization;
 
+import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import org.ejml.simple.SimpleMatrix;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.function.*;
 import java.util.stream.IntStream;
-
-import org.ejml.simple.SimpleMatrix;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
 
 public class NonNegativeWeightOptimization
 {

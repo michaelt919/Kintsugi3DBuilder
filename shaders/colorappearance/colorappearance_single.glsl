@@ -22,8 +22,8 @@
 #define PI 3.1415926535897932384626433832795 // For convenience
 #endif
 
-#ifndef INFINITE_LIGHT_SOURCE
-#define INFINITE_LIGHT_SOURCE 0
+#ifndef INFINITE_LIGHT_SOURCES
+#define INFINITE_LIGHT_SOURCES 0
 #endif
 
 uniform mat4 cameraPose;
@@ -67,13 +67,20 @@ struct LightInfo
 LightInfo getLightInfo()
 {
     LightInfo result;
-    result.normalizedDirection = getLightVector();
+
+#if FLATFIELD_CORRECTED && !INFINITE_LIGHT_SOURCES
+    // see colorappearance.glsl
+    result.normalizedDirection = normalize(getLightVector());
+    float cameraAxisDist = (cameraPose * vec4(getPosition(), 1.0)).z;
+    float lightDistSquared = dot(cameraAxisDist, cameraAxisDist);
+#else
+    vec3 unnormalizedDirection = getLightVector();
+    float lightDistSquared = dot(unnormalizedDirection, unnormalizedDirection);
+    result.normalizedDirection = unnormalizedDirection * inversesqrt(lightDistSquared);
+#endif
+
     result.attenuatedIntensity = lightIntensity;
-
-    float lightDistSquared = dot(result.normalizedDirection, result.normalizedDirection);
-    result.normalizedDirection *= inversesqrt(lightDistSquared);
-
-#if !INFINITE_LIGHT_SOURCE
+#if !INFINITE_LIGHT_SOURCES
     result.attenuatedIntensity /= lightDistSquared;
 #endif
 

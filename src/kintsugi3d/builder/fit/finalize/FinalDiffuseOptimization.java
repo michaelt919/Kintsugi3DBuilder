@@ -13,8 +13,8 @@ package kintsugi3d.builder.fit.finalize;
 
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ShaderHoleFill;
@@ -22,13 +22,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private static final Logger log = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
 
     // Graphics context
     private final ContextType context;
@@ -44,7 +43,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private final Drawable<ContextType> drawable;
 
-    public FinalDiffuseOptimization(ReadonlyIBRResources<ContextType> resources,
+    public FinalDiffuseOptimization(ReadonlyGraphicsResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory, TextureResolution settings, boolean includeConstant)
         throws IOException
     {
@@ -107,7 +106,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         }
         catch (IOException e)
         {
-            log.error("An error occurred while filling holes:", e);
+            LOG.error("An error occurred while filling holes:", e);
         }
         finally
         {
@@ -157,14 +156,14 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createDiffuseEstimationProgram(
-            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuse.frag"));
     }
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createDiffuseTranslucentEstimationProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuseTranslucent.frag"));

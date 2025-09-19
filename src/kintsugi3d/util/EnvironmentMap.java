@@ -10,12 +10,12 @@
  */
 package kintsugi3d.util;
 
-import java.io.*;
-import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
-
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.RadianceImageLoader.Image;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import java.io.*;
 
 /**
  *

@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.environment;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Predicate;
-
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -24,14 +19,19 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
+import kintsugi3d.builder.javafx.internal.ObservableEnvironmentModel;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.javafx.internal.EnvironmentModelImpl;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 public class RootEnvironmentSceneController
 {
-    private static final Logger log = LoggerFactory.getLogger(RootEnvironmentSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootEnvironmentSceneController.class);
     @FXML
     private VBox settings;
     @FXML
@@ -39,7 +39,7 @@ public class RootEnvironmentSceneController
     @FXML
     private VBox listControls;
     @FXML
-    private ListView<EnvironmentSetting> environmentListView;
+    private ListView<ObservableEnvironmentSettings> environmentListView;
     @FXML
     private Button theRenameButton;
 
@@ -47,7 +47,7 @@ public class RootEnvironmentSceneController
 
     private ObservableProjectModel projectModel;
 
-    public void init(EnvironmentModelImpl environmentMapModel, ObservableProjectModel injectedProjectModel)
+    public void init(ObservableEnvironmentModel environmentMapModel, ObservableProjectModel injectedProjectModel)
     {
         this.projectModel = injectedProjectModel;
 
@@ -56,13 +56,13 @@ public class RootEnvironmentSceneController
 
         settingsController.setEnvironmentMapModel(environmentMapModel);
 
-        ObservableList<EnvironmentSetting> environmentList = projectModel.getEnvironmentList();
+        ObservableList<ObservableEnvironmentSettings> environmentList = projectModel.getEnvironmentList();
 
-        projectModel.getEnvironmentList().add(EnvironmentSetting.NO_ENVIRONMENT);
+        projectModel.getEnvironmentList().add(projectModel.getNoEnvironment());
 
         if (USE_STARTING_MAP)
         {
-            EnvironmentSetting startingMap = new EnvironmentSetting();
+            ObservableEnvironmentSettings startingMap = new ObservableEnvironmentSettings();
             startingMap.setName("Environment 1");
             projectModel.getEnvironmentList().add(startingMap);
             environmentListView.getSelectionModel().select(1);
@@ -72,7 +72,7 @@ public class RootEnvironmentSceneController
             environmentListView.getSelectionModel().select(0);
         }
 
-        environmentList.addListener((ListChangeListener<? super EnvironmentSetting>) change ->
+        environmentList.addListener((ListChangeListener<? super ObservableEnvironmentSettings>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == environmentList.size())
@@ -90,13 +90,13 @@ public class RootEnvironmentSceneController
     @FXML
     private void newEnvButton()
     {
-        MultipleSelectionModel<EnvironmentSetting> selectionModel = environmentListView.getSelectionModel();
-        EnvironmentSetting selectedEnvironment = selectionModel.getSelectedItem();
-        List<EnvironmentSetting> environmentList = projectModel.getEnvironmentList();
+        MultipleSelectionModel<ObservableEnvironmentSettings> selectionModel = environmentListView.getSelectionModel();
+        ObservableEnvironmentSettings selectedEnvironment = selectionModel.getSelectedItem();
+        List<ObservableEnvironmentSettings> environmentList = projectModel.getEnvironmentList();
 
-        if (selectedEnvironment == null || Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
+        if (selectedEnvironment == null || Objects.equals(selectedEnvironment, projectModel.getNoEnvironment()))
         {
-            environmentList.add(new EnvironmentSetting());
+            environmentList.add(new ObservableEnvironmentSettings());
         }
         else
         {
@@ -110,13 +110,13 @@ public class RootEnvironmentSceneController
     private void saveEnvButton()
     {
         //TODO
-        log.debug("TODO: saved " + environmentListView.getSelectionModel().getSelectedItem() + " to the library.");
+        LOG.debug("TODO: saved " + environmentListView.getSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML
     private void renameEnvButton()
     {
-        if (!Objects.equals(environmentListView.getSelectionModel().getSelectedItem(), EnvironmentSetting.NO_ENVIRONMENT))
+        if (!Objects.equals(environmentListView.getSelectionModel().getSelectedItem(), projectModel.getNoEnvironment()))
         {
             EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
@@ -185,7 +185,7 @@ public class RootEnvironmentSceneController
         int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
         if (selectedIndex != 0)
         {
-            List<EnvironmentSetting> environmentList = projectModel.getEnvironmentList();
+            List<ObservableEnvironmentSettings> environmentList = projectModel.getEnvironmentList();
             if (selectedIndex < environmentList.size() - 1)
             {
                 Collections.swap(environmentList, selectedIndex, selectedIndex + 1);
@@ -197,10 +197,10 @@ public class RootEnvironmentSceneController
     @FXML
     void lockEnvButton()
     {
-        EnvironmentSetting selectedEnvironment = environmentListView.getSelectionModel().getSelectedItem();
-        if (!Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
+        ObservableEnvironmentSettings selectedEnvironment = environmentListView.getSelectionModel().getSelectedItem();
+        if (!Objects.equals(selectedEnvironment, projectModel.getNoEnvironment()))
         {
-            Boolean newValue = !selectedEnvironment.isLocked();
+            boolean newValue = !selectedEnvironment.isLocked();
             selectedEnvironment.setLocked(newValue);
             settingsController.setDisabled(newValue);
             environmentListView.refresh();
@@ -210,10 +210,10 @@ public class RootEnvironmentSceneController
     @FXML
     void deleteEnvButton()
     {
-        MultipleSelectionModel<EnvironmentSetting> selectionModel = environmentListView.getSelectionModel();
-        EnvironmentSetting selectedEnvironment = selectionModel.getSelectedItem();
+        MultipleSelectionModel<ObservableEnvironmentSettings> selectionModel = environmentListView.getSelectionModel();
+        ObservableEnvironmentSettings selectedEnvironment = selectionModel.getSelectedItem();
 
-        if (!Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
+        if (!Objects.equals(selectedEnvironment, projectModel.getNoEnvironment()))
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText("Are you sure you want to delete the following environment: " + selectedEnvironment.getName() + '?');

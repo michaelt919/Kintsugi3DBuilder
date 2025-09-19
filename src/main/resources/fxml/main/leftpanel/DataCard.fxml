@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
+<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
+    <VBox id="border_box" fx:id="borderBox">
+        <HBox alignment="CENTER_LEFT" stylesheets="@../../kintsugiStyling.css">
+            <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="32.0" preserveRatio="true" />
+            <Label id="texture_title" fx:id="cardTitle" styleClass="wireframeBodyStrong" text="Texture Type" HBox.hgrow="ALWAYS">
+                <HBox.margin>
+                    <Insets left="8.0" />
+                </HBox.margin>
+            </Label>
+            <Rectangle height="12.0" onMouseClicked="#expansionToggleClicked" stroke="BLACK" strokeType="INSIDE" visible="false" width="24.0" />
+        </HBox>
+        <VBox fx:id="cardBody">
+            <HBox spacing="4.0">
+                <VBox fx:id="textContent" HBox.hgrow="ALWAYS" />
+                <ImageView fx:id="mainImage" fitHeight="212.0" fitWidth="212.0" pickOnBounds="true" preserveRatio="true">
+                    <HBox.margin>
+                        <Insets right="4.0" />
+                    </HBox.margin>
+                </ImageView>
+            </HBox>
+            <VBox fx:id="buttonBox" />
+            <padding>
+                <Insets bottom="24.0" left="4.0" right="4.0" top="4.0" />
+            </padding>
+        </VBox>
+    </VBox>
+    <padding>
+        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+    </padding>
+</VBox>

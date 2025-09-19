@@ -11,6 +11,11 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.ColorFormat.DataType;
+import kintsugi3d.util.RadianceImageLoader.Image;
+import org.lwjgl.BufferUtils;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
@@ -18,21 +23,11 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.AbstractMap;
 import java.util.Map;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.lwjgl.*;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.core.ColorFormat.DataType;
-import kintsugi3d.util.RadianceImageLoader.Image;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL44.*;
 
 abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment {
@@ -341,66 +336,35 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
     }
 
-    private static int[] getRGBAScanline(BufferedImage colorImg, BufferedImage maskImg, int y)
-    {
-        int[] scanline = colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth());
-        int[] mask = maskImg.getRGB(0, y, maskImg.getWidth(), 1, null, 0, maskImg.getWidth());
-
-        for (int x = 0; x < scanline.length; x++)
-        {
-            scanline[x] = (scanline[x] & 0x00ffffff) | ((mask[x] & 0x0000ff00) << 16);
-        }
-
-        return scanline;
-    }
-
-    private static Stream<Map.Entry<Integer, int[]>> getScanlineStream(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
+    private static Stream<Map.Entry<Integer, int[]>> getScanlineStream(BufferedImage colorImg, boolean flipVertical)
     {
         // Use parallel stream to accelerate image decoding / copy,
         IntStream scanlineRange = IntStream.range(0, colorImg.getHeight()).parallel();
 
         Stream<Map.Entry<Integer, int[]>> scanlineStream;
 
-        if (maskImg == null)
+        if (flipVertical)
         {
-            if (flipVertical)
-            {
-                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
-                    colorImg.getHeight() - 1 - y,
-                    colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
-            }
-            else
-            {
-                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
-                    y,
-                    colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
-            }
+            scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
+                colorImg.getHeight() - 1 - y,
+                colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
         }
         else
         {
-            if (flipVertical)
-            {
-                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
-                    colorImg.getHeight() - 1 - y,
-                    getRGBAScanline(colorImg, maskImg, y)));
-            }
-            else
-            {
-                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
-                    y,
-                    getRGBAScanline(colorImg, maskImg, y)));
-            }
+            scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
+                y,
+                colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
         }
 
         return scanlineStream;
     }
 
-    static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
+    static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, boolean flipVertical)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * 4);
         IntBuffer intBuffer = buffer.asIntBuffer();
 
-        getScanlineStream(colorImg, maskImg, flipVertical).forEach(scanline ->
+        getScanlineStream(colorImg, flipVertical).forEach(scanline ->
         {
             int y = scanline.getKey();
             int[] scanlineData = scanline.getValue();
@@ -414,13 +378,13 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         return buffer;
     }
 
-    static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical,
+    static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, boolean flipVertical,
         Function<ByteBuffer, BiConsumer<Integer, Color>> bufferWrapperFunction, int mappedColorLength)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * mappedColorLength);
         BiConsumer<Integer, Color> wrappedBuffer = bufferWrapperFunction.apply(buffer);
 
-        getScanlineStream(colorImg, maskImg, flipVertical).forEach(scanline ->
+        getScanlineStream(colorImg, flipVertical).forEach(scanline ->
         {
             int y = scanline.getKey();
             int[] scanlineData = scanline.getValue();

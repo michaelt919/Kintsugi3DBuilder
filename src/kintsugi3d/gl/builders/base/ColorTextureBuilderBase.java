@@ -22,12 +22,6 @@ public abstract class ColorTextureBuilderBase<ContextType extends Context<Contex
 {
     private ColorFormat internalColorFormat = ColorFormat.RGBA8;
     private CompressionFormat internalCompressionFormat;
-    private boolean iccTransformationRequested = false;
-
-    protected boolean isICCTransformationRequested()
-    {
-        return iccTransformationRequested;
-    }
 
     protected ColorFormat getInternalColorFormat()
     {
@@ -62,13 +56,6 @@ public abstract class ColorTextureBuilderBase<ContextType extends Context<Contex
     {
         internalColorFormat = null;
         internalCompressionFormat = format;
-        return this;
-    }
-
-    @Override
-    public ColorTextureBuilder<ContextType, TextureType> setICCTransformationRequested(boolean iccTransformationRequested)
-    {
-        this.iccTransformationRequested = iccTransformationRequested;
         return this;
     }
 

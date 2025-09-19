@@ -11,21 +11,21 @@
 
 package kintsugi3d.optimization;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
 import org.ejml.data.SingularMatrixException;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public final class NonNegativeLeastSquares
 {
-    private static final Logger log = LoggerFactory.getLogger(NonNegativeLeastSquares.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NonNegativeLeastSquares.class);
 
     private static SimpleMatrix solvePartial(
         SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, List<Integer> mapping, SimpleMatrix sOut, int constraintCount)
@@ -263,7 +263,7 @@ public final class NonNegativeLeastSquares
                 }
                 catch(SingularMatrixException e)
                 {
-                    log.error("An error occurred:", e);
+                    LOG.error("An error occurred:", e);
 
                     // Roll back and finish.
                     p[k] = false;

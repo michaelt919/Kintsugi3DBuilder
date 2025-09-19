@@ -11,27 +11,26 @@
 
 package kintsugi3d.builder.export.general;
 
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.gl.core.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.function.Consumer;
 
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
-import kintsugi3d.gl.core.*;
-
 class MultiframeRenderRequest extends RenderRequestBase
 {
     private final int frameCount;
 
-    MultiframeRenderRequest(int width, int height, int frameCount, ReadonlySettingsModel settingsModel,
+    MultiframeRenderRequest(int width, int height, int frameCount,
         Consumer<Program<? extends Context<?>>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.frameCount = frameCount;
     }
 
@@ -39,25 +38,25 @@ class MultiframeRenderRequest extends RenderRequestBase
     {
         private final int frameCount;
 
-        Builder(int frameCount, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(int frameCount, File fragmentShader, File outputDirectory)
         {
-            super(settingsModel, fragmentShader, outputDirectory);
+            super(fragmentShader, outputDirectory);
             this.frameCount = frameCount;
         }
 
         @Override
-        public ObservableIBRRequest create()
+        public ObservableProjectGraphicsRequest create()
         {
-            return new MultiframeRenderRequest(getWidth(), getHeight(), frameCount, getSettingsModel(), getShaderSetupCallback(),
+            return new MultiframeRenderRequest(getWidth(), getHeight(), frameCount, getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
-        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (
@@ -80,8 +79,7 @@ class MultiframeRenderRequest extends RenderRequestBase
                 program.setUniform("frameCount", frameCount);
                 program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
                 program.setUniform("projection",
-                    renderable.getActiveViewSet().getCameraProjection(
-                        renderable.getActiveViewSet().getCameraProjectionIndex(0))
+                    renderable.getActiveViewSet().getCameraProjectionForViewIndex(0)
                         .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
                             renderable.getActiveViewSet().getRecommendedFarPlane()));
 

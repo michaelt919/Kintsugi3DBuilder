@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.layout.VBox?>
+<VBox alignment="TOP_CENTER" spacing="32.0" styleClass="content-root"
+      stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
+    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Clear Cache"/>
+    <TitledPane styleClass="titled-pane, wireframeBody" text="Cache Path">
+        <VBox spacing="8.0" styleClass="cache-settings-root">
+            <padding>
+                <Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/>
+            </padding>
+            <Label styleClass="wireframeBody" text="  Current Cache Paths: "/>
+            <Label fx:id="previewImageCacheLabel" onMouseClicked="#openDirectory" styleClass="wireframeBody"
+                   text="No Path Set">
+                <VBox.margin>
+                    <Insets left="16.0"/>
+                </VBox.margin>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </Label>
+            <Label fx:id="specularFitCacheLabel" onMouseClicked="#openDirectory" styleClass="wireframeBody"
+                   text="No Path Set">
+                <VBox.margin>
+                    <Insets left="16.0"/>
+                </VBox.margin>
+                <cursor>
+                    <Cursor fx:constant="HAND"/>
+                </cursor>
+            </Label>
+            <Button disable="true" layoutX="10.0" layoutY="10.0" managed="false" mnemonicParsing="false"
+                    text="Set Cache Path" visible="false"/>
+        </VBox>
+    </TitledPane>
+</VBox>

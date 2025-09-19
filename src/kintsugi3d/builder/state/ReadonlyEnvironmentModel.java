@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;//Created by alexk on 7/21/2017.
+package kintsugi3d.builder.state;
 
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -20,6 +20,9 @@ public interface ReadonlyEnvironmentModel
     float getEnvironmentIntensity();
 
     boolean isEnvironmentMappingEnabled();
+
+    boolean isEnabled();
+
     Vector3 getEnvironmentColor();
     Matrix4 getEnvironmentMapMatrix();
     float getEnvironmentMapFilteringBias();

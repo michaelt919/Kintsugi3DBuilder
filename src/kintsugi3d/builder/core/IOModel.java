@@ -254,21 +254,15 @@ public class IOModel
         this.handler.saveAllMaterialFiles(materialDirectory, finishedCallback);
     }
 
-    public void saveEssentialMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    public void saveGLTF(File outputDirectory, ExportSettings settings)
     {
-        this.handler.saveEssentialMaterialFiles(materialDirectory, finishedCallback);
+        this.handler.saveGLTF(outputDirectory, settings);
     }
 
-    public void saveGlTF(File outputDirectory, ExportSettings settings)
+    public void saveGLTF(File outputDirectory)
     {
-        this.handler.saveGlTF(outputDirectory, settings);
+        this.handler.saveGLTF(outputDirectory, new ExportSettings() /* defaults */);
     }
-
-    public void saveGlTF(File outputDirectory)
-    {
-        this.handler.saveGlTF(outputDirectory, new ExportSettings() /* defaults */);
-    }
-
 
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
@@ -278,6 +272,16 @@ public class IOModel
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
         this.handler.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+    }
+
+    public void clearTonemapping()
+    {
+        this.handler.clearTonemapping();
+    }
+
+    public void requestLightIntensityCalibration()
+    {
+        this.handler.requestLightIntensityCalibration();
     }
 
     public void applyLightCalibration()
@@ -293,5 +297,19 @@ public class IOModel
     public boolean hasValidHandler()
     {
         return this.handler != null && this.handler.isInstanceLoaded();
+    }
+
+    /**
+     * Checks if this has a valid project instance loaded.  Otherwise, throws an IllegalStateException.
+     * @return This model if it has a valid project instance.
+     */
+    public IOModel validateHandler()
+    {
+        if (!hasValidHandler())
+        {
+            throw new IllegalStateException("No project loaded.");
+        }
+
+        return this;
     }
 }

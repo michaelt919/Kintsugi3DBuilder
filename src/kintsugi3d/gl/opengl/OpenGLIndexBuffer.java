@@ -11,12 +11,13 @@
 
 package kintsugi3d.gl.opengl;
 
+import kintsugi3d.gl.core.IndexBuffer;
+import org.lwjgl.BufferUtils;
+
 import java.nio.ByteBuffer;
 
-import org.lwjgl.*;
-import kintsugi3d.gl.core.IndexBuffer;
-
-import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 
 class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContext>
 {

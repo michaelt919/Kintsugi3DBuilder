@@ -11,21 +11,13 @@
 
 package kintsugi3d.builder.resources;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.core.DynamicResourceManager;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.rendering.components.IBRSubject;
-import kintsugi3d.builder.resources.ibr.IBRResources;
+import kintsugi3d.builder.rendering.components.RenderingSubject;
+import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ArrayBackedColorImage;
 import kintsugi3d.util.EncodableColorImage;
@@ -33,14 +25,22 @@ import kintsugi3d.util.EnvironmentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
-    private static final Logger log = LoggerFactory.getLogger(DynamicResourceLoader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DynamicResourceLoader.class);
     private final ProgressMonitor progressMonitor;
     private final ContextType context;
-    private final IBRResources<ContextType> resources;
+    private final GraphicsResources<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
-    private final IBRSubject<ContextType> subject;
+    private final RenderingSubject<ContextType> subject;
 
     private boolean newEnvironmentDataAvailable;
     private EnvironmentMap newEnvironmentData;
@@ -72,8 +72,8 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private EncodableColorImage currentEnvironmentMap;
 
-    public DynamicResourceLoader(ProgressMonitor progressMonitor, IBRResources<ContextType> resources,
-        IBRSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
+    public DynamicResourceLoader(ProgressMonitor progressMonitor, GraphicsResources<ContextType> resources,
+        RenderingSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
     {
         this.progressMonitor = progressMonitor;
         this.context = resources.getContext();
@@ -149,11 +149,11 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
             }
             catch (Error e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -192,11 +192,11 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
             }
             catch (Error e)
             {
-                log.error("An error has occurred", e);
+                LOG.error("An error has occurred", e);
                 //noinspection ProhibitedExceptionThrown
                 throw e;
             }
@@ -208,7 +208,15 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLuminanceEncodingDataAvailable)
         {
-            this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+            if (this.newLinearLuminanceValues != null && this.newEncodedLuminanceValues != null)
+            {
+                this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+            }
+            else
+            {
+                this.resources.clearLuminanceMap();
+            }
+
             this.newLuminanceEncodingDataAvailable = false;
         }
 
@@ -247,7 +255,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         }
         else if (environmentFile.exists())
         {
-            log.info("Loading new environment texture.");
+            LOG.info("Loading new environment texture.");
 
             this.desiredEnvironmentFile = environmentFile;
             long lastModified = environmentFile.lastModified();
@@ -286,7 +294,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                     }
                     catch (IOException e)
                     {
-                        log.error("Error loading environment map:", e);
+                        LOG.error("Error loading environment map:", e);
                     }
                 }
             }
@@ -316,7 +324,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         }
         else if (backplateFile != null && backplateFile.exists())
         {
-            log.info("Loading new backplate texture.");
+            LOG.info("Loading new backplate texture.");
 
             this.desiredBackplateFile = backplateFile;
             long lastModified = backplateFile.lastModified();
@@ -329,7 +337,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                 {
                     try
                     {
-                        this.newBackplateData = ImageIO.read(backplateFile);
+                        this.newBackplateData = ImageHelper.read(backplateFile).getBufferedImage();
                         this.currentBackplateFile = backplateFile;
                         readCompleted = true;
                     }
@@ -339,7 +347,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                     }
                     catch (IOException e)
                     {
-                        log.error("Error loading backplate:", e);
+                        LOG.error("Error loading backplate:", e);
                     }
                 }
             }
@@ -362,6 +370,14 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     {
         this.newLinearLuminanceValues = linearLuminanceValues;
         this.newEncodedLuminanceValues = encodedLuminanceValues;
+        this.newLuminanceEncodingDataAvailable = true;
+    }
+
+    @Override
+    public void clearTonemapping()
+    {
+        this.newLinearLuminanceValues = null;
+        this.newEncodedLuminanceValues = null;
         this.newLuminanceEncodingDataAvailable = true;
     }
 

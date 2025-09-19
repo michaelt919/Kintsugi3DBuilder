@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<VBox fx:id="rootPane" alignment="CENTER" spacing="32.0" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.createnewproject.MetashapeImportController">
+      <Text fx:id="loadMetashapeObject" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="wireframeTitle" text="Unloaded" textAlignment="CENTER">
+      </Text>
+      <Button mnemonicParsing="false" onAction="#psxFileSelect" styleClass="wireframeBodyLarge" text="Load">
+      </Button>
+      <Label fx:id="fileNameTxtField" alignment="CENTER" styleClass="wireframeBody" text="Metashape File (.psx)" textAlignment="CENTER">
+      </Label>
+      <GridPane alignment="TOP_CENTER" hgap="16.0" vgap="16.0">
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+         </rowConstraints>
+         <Label styleClass="wireframeBody, text" text="Chunk: " textAlignment="RIGHT" GridPane.halignment="RIGHT">
+         </Label>
+         <Label layoutX="10.0" layoutY="27.0" styleClass="wireframeBody, text" text="Model ID &amp; Name: " textAlignment="RIGHT" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+         </Label>
+         <ChoiceBox fx:id="chunkSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" />
+         <ChoiceBox fx:id="modelSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      </GridPane>
+</VBox>

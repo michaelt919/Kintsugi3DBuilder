@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.camera;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Predicate;
-
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -23,20 +19,24 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
+import kintsugi3d.builder.javafx.internal.ObservableCameraModel;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.javafx.internal.CameraModelImpl;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Predicate;
 
 public class RootCameraSceneController
 {
-    private static final Logger log = LoggerFactory.getLogger(RootCameraSceneController.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RootCameraSceneController.class);
     @FXML
     private VBox settings;
     @FXML
     private SettingsCameraSceneController settingsController;
     @FXML
-    private ListView<CameraSetting> cameraListView;
+    private ListView<ObservableCameraSettings> cameraListView;
     @FXML
     private VBox listControls;
     @FXML
@@ -44,22 +44,22 @@ public class RootCameraSceneController
 
     private ObservableProjectModel projectModel;
 
-    public void init(CameraModelImpl cameraModel, ObservableProjectModel injectedProjectModel)
+    public void init(ObservableCameraModel cameraModel, ObservableProjectModel injectedProjectModel)
     {
         this.projectModel = injectedProjectModel;
 
         cameraListView.setItems(projectModel.getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        CameraSetting freeCam = new CameraSetting();
+        ObservableCameraSettings freeCam = new ObservableCameraSettings();
         freeCam.setName("Free Camera");
 
-        ObservableList<CameraSetting> cameraList = projectModel.getCameraList();
+        ObservableList<ObservableCameraSettings> cameraList = projectModel.getCameraList();
 
         cameraList.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
 
-        cameraList.addListener((ListChangeListener<? super CameraSetting>) change ->
+        cameraList.addListener((ListChangeListener<? super ObservableCameraSettings>) change ->
         {
             change.next();
             if (change.wasAdded() && change.getAddedSize() == cameraList.size())
@@ -71,7 +71,7 @@ public class RootCameraSceneController
         cameraModel.setSelectedCameraSetting(cameraListView.getSelectionModel().selectedItemProperty());
     }
 
-    private SelectionModel<CameraSetting> getCameraSelectionModel()
+    private SelectionModel<ObservableCameraSettings> getCameraSelectionModel()
     {
         return cameraListView.getSelectionModel();
     }
@@ -86,7 +86,7 @@ public class RootCameraSceneController
     @FXML
     private void saveCameraButton()
     {
-        log.debug("TODO: saved " + getCameraSelectionModel().getSelectedItem() + " to the library.");
+        LOG.debug("TODO: saved " + getCameraSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML
@@ -169,7 +169,7 @@ public class RootCameraSceneController
     void moveDOWNButton()
     {
         int i = getCameraSelectionModel().getSelectedIndex();
-        List<CameraSetting> cameraList = projectModel.getCameraList();
+        List<ObservableCameraSettings> cameraList = projectModel.getCameraList();
         if (i != 0 && i < cameraList.size() - 1)
         {
             Collections.swap(cameraList, i, i + 1);
@@ -180,7 +180,7 @@ public class RootCameraSceneController
     @FXML
     void lockCameraButton()
     {
-        Boolean newValue = !getCameraSelectionModel().getSelectedItem().isLocked();
+        boolean newValue = !getCameraSelectionModel().getSelectedItem().isLocked();
         getCameraSelectionModel().getSelectedItem().setLocked(newValue);
         settingsController.setDisabled(newValue);
         cameraListView.refresh();
@@ -190,7 +190,7 @@ public class RootCameraSceneController
     void keyframeCameraButton()
     {
         //TODO
-        log.debug("TODO: keyframe added for " + getCameraSelectionModel().getSelectedItem());
+        LOG.debug("TODO: keyframe added for " + getCameraSelectionModel().getSelectedItem());
     }
 
     @FXML

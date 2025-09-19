@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
@@ -25,25 +21,29 @@ import kintsugi3d.builder.rendering.components.scene.Environment;
 import kintsugi3d.builder.rendering.components.scene.Grid;
 import kintsugi3d.builder.rendering.components.scene.GroundPlane;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
 public class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(BaseScene.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BaseScene.class);
 
     protected final ContextType context;
     protected final SceneModel sceneModel;
     protected final SceneViewportModel sceneViewportModel;
     protected final List<RenderedComponent<ContextType>> components = new ArrayList<>();
-    protected final IBRResourcesImageSpace<ContextType> resources;
-    private IBRSubject<ContextType> ibrSubject;
+    protected final GraphicsResourcesImageSpace<ContextType> resources;
+    private RenderingSubject<ContextType> renderingSubject;
 
-    public BaseScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+    public BaseScene(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();
         this.sceneModel = sceneModel;
@@ -64,8 +64,8 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
 
         // the actual subject for image-based rendering
         // Draw after "other components", which includes things that ignore the depth test first (environment or backplate)
-        ibrSubject = new IBRSubject<>(resources, sceneViewportModel, sceneModel, lightingResources);
-        components.add(ibrSubject);
+        renderingSubject = new RenderingSubject<>(resources, sceneViewportModel, sceneModel, lightingResources);
+        components.add(renderingSubject);
     }
 
     @Override
@@ -78,9 +78,9 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
         }
     }
 
-    public IBRSubject<ContextType> getSubject()
+    public RenderingSubject<ContextType> getSubject()
     {
-        return ibrSubject;
+        return renderingSubject;
     }
 
     @Override
@@ -104,10 +104,10 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (ibrSubject.getProgram() != null)
+        if (renderingSubject.getProgram() != null)
         {
             // Hole fill color depends on whether in light calibration mode or not.
-            ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
+            renderingSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
 
             // Draw each component
             components.forEach(component -> component.draw(framebuffer, cameraViewport));
@@ -127,9 +127,9 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
     @Override
     public void close()
     {
-        if (ibrSubject != null)
+        if (renderingSubject != null)
         {
-            ibrSubject.close();
+            renderingSubject.close();
         }
 
         for (RenderedComponent<ContextType> otherComponent : components)
@@ -140,7 +140,7 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
             }
             catch (Exception e)
             {
-                log.error("Error occurred while closing scene:", e);
+                LOG.error("Error occurred while closing scene:", e);
             }
         }
 

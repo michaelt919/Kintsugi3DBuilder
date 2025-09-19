@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Map;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
@@ -27,6 +22,10 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.RadialTextureGenerator;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * Class for drawing the 3D light representations and manipulation widgets.

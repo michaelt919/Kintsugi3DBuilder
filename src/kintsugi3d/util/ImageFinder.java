@@ -11,24 +11,22 @@
 
 package kintsugi3d.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Singleton class
  */
 public final class ImageFinder
 {
-    private static final Logger log = LoggerFactory.getLogger(ImageFinder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageFinder.class);
 
     private static final ImageFinder INSTANCE = new ImageFinder();
     private static final Set<String> IMG_FORMATS = Set.of( "png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF");
@@ -49,20 +47,20 @@ public final class ImageFinder
 
     /**
      * Gets a modified copy of the name of an image file with a specific file extension (i.e. PNG, JPEG, etc.)
-     * -- which may not match the format originally specified in the original filename.
-     * If the original file format is one of the formats returned by getSupportedImgFormats(),
+     * -- which may not match the extension originally specified in the original filename.
+     * If the original file extension is one of the formats returned by getSupportedImgFormats(),
      * the old file extension will be replaced by the new one.
      * Otherwise, the file extension will be appended to avoid corrupting file names that include dots/periods
      * separating parts of the filename other than the file extension (a common practice in some naming conventions).
      * @param  imageFileName The original filename
-     * @param format The desired format
-     * @return The image file's name with the requested format.
+     * @param extension The desired extension
+     * @return The image file's name with the requested extension.
      */
-    public String getImageFileNameWithFormat(String imageFileName, String format)
+    public String getImageFileNameWithExtension(String imageFileName, String extension)
     {
-        if (imageFileName.endsWith(format))
+        if (imageFileName.endsWith(extension))
         {
-            // Filename already is in the requested format.
+            // Filename already is in the requested extension.
             return imageFileName;
         }
         else
@@ -72,26 +70,26 @@ public final class ImageFinder
             if(IMG_FORMATS.contains(parts[parts.length - 1]))
             {
                 // Replace the old file extension with the new one if recognized.
-                return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
+                return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(extension))
                     .collect(Collectors.joining("."));
             }
             else
             {
                 // Otherwise just append the  new file extension to the end (even if the filename appears to have an extension,
                 // it may just be a name with dots in it that already had the standard extension stripped).
-                return String.format("%s.%s", imageFileName, format);
+                return String.format("%s.%s", imageFileName, extension);
             }
         }
     }
 
     private static void logFileGuess(File imageFileGuess)
     {
-        log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+        LOG.debug("Trying '{}'", imageFileGuess.getAbsolutePath());
     }
 
     private static void logFound()
     {
-        log.info("Found!!");
+        LOG.debug("Found!!");
     }
 
     public File findImageFile(File requestedFile, String... suffixes) throws FileNotFoundException
@@ -183,7 +181,7 @@ public final class ImageFinder
 
     public File findImageFile(File requestedFile) throws FileNotFoundException
     {
-        return findImageFile(requestedFile, null);
+        return findImageFile(requestedFile, (String[]) null);
     }
 
     public File tryFindImageFile(File requestedFile, String... suffixes)
@@ -200,6 +198,6 @@ public final class ImageFinder
 
     public File tryFindImageFile(File requestedFile)
     {
-        return tryFindImageFile(requestedFile, null);
+        return tryFindImageFile(requestedFile, (String[]) null);
     }
 }

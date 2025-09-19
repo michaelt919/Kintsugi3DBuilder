@@ -11,12 +11,12 @@
 
 package kintsugi3d.gl.window;
 
+import kintsugi3d.gl.core.*;
+
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Consumer;
-
-import kintsugi3d.gl.core.*;
 
 public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     extends CanvasBase<ContextType>

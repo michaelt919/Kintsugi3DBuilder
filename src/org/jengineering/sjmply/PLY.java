@@ -21,8 +21,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.jengineering.sjmply.PLYType.*;
-
 import static java.lang.String.format;
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.Files.newOutputStream;

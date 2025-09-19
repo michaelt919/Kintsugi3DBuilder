@@ -11,16 +11,14 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import java.io.File;
-
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
 
-public final class OrbitAnimationRequest extends SimpleAnimationRequestBase
+import java.io.File;
+
+public final class OrbitAnimationRequest extends AnimationRequest
 {
-    protected static class BuilderImplementation extends BuilderBase
+    protected static class Builder extends BuilderBase
     {
-        @Override
         public OrbitAnimationRequest create()
         {
             return new OrbitAnimationRequest(getWidth(), getHeight(), getFrameCount(), getExportPath());

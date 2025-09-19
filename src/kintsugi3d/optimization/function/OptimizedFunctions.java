@@ -11,8 +11,8 @@
 
 package kintsugi3d.optimization.function;
 
-import org.ejml.simple.SimpleMatrix;
 import kintsugi3d.optimization.MatrixSystem;
+import org.ejml.simple.SimpleMatrix;
 
 import java.util.function.ObjIntConsumer;
 import java.util.stream.IntStream;

@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.app.logging;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -32,6 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
 @Plugin(
         name = "RecentLogMessageAppender",
         category = Core.CATEGORY_NAME,
@@ -39,7 +39,7 @@ import org.slf4j.event.Level;
 )
 public class RecentLogMessageAppender extends AbstractAppender
 {
-    private static final Logger logger = LoggerFactory.getLogger(RecentLogMessageAppender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RecentLogMessageAppender.class);
     private static final int MAX_MESSAGES = 2000;
     private static final int MESSAGE_TRUNC_SIZE = 10;
     private static RecentLogMessageAppender INSTANCE;
@@ -118,7 +118,7 @@ public class RecentLogMessageAppender extends AbstractAppender
 
     public boolean isLevelAvailable(Level level)
     {
-        return logger.isEnabledForLevel(level);
+        return LOG.isEnabledForLevel(level);
     }
 
     private void dispatchEvents(LogMessage message)

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import kintsugi3d.builder.export.general.*?>
+<GridPane fx:id="root" styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" stylesheets="@../../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GenericRenderRequestController">
+    <padding>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+    </padding>
+
+    <Label text="Loop mode:" GridPane.halignment="RIGHT" />
+    <ComboBox fx:id="loopModeComboBox" onAction="#loopModeComboBoxAction" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="4">
+        <items>
+            <FXCollections fx:factory="observableArrayList">
+                <LoopMode fx:value="SINGLE_FRAME" />
+                <LoopMode fx:value="MULTIFRAME" />
+                <LoopMode fx:value="MULTIVIEW" />
+                <LoopMode fx:value="MULTIVIEW_RETARGET" />
+            </FXCollections>
+        </items>
+        <value>
+            <LoopMode fx:value="SINGLE_FRAME" />
+        </value>
+    </ComboBox>
+
+    <Label fx:id="outputImageLabel" text="Output image name:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <TextField fx:id="outputImageName" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="1" />
+
+    <Label fx:id="frameCountLabel" text="Number of frames:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <TextField fx:id="frameCount" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="1" />
+
+    <Label fx:id="targetVSetFileLabel" text="Target view set file:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <TextField fx:id="targetVSetFileField" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="1" />
+    <Button fx:id="targetVsetFileButton" mnemonicParsing="false" onAction="#targetVSetFileButtonAction" text="Choose file..." visible="false" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+
+    <Label text="Vertex Shader:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+    <ComboBox fx:id="vertexShaderModeComboBox" onAction="#vertexShaderModeComboBoxAction" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="2">
+        <items>
+            <FXCollections fx:factory="observableArrayList">
+                <VertexShaderMode fx:value="TEXTURE_SPACE" />
+                <VertexShaderMode fx:value="CAMERA_SPACE" />
+                <VertexShaderMode fx:value="CUSTOM" />
+            </FXCollections>
+        </items>
+        <value>
+            <VertexShaderMode fx:value="TEXTURE_SPACE" />
+        </value>
+    </ComboBox>
+
+    <Label fx:id="customVertexShaderLabel" text="Custom Vertex Shader:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+    <TextField fx:id="customVertexShaderField" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="3" />
+    <Button fx:id="vertexShaderButton" mnemonicParsing="false" onAction="#vertexShaderButtonAction" text="Choose file..." visible="false" GridPane.columnIndex="5" GridPane.rowIndex="3" />
+
+    <Label text="Fragment Shader:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
+    <TextField fx:id="fragmentShaderField" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="4" />
+    <Button mnemonicParsing="false" onAction="#fragmentShaderButtonAction" text="Choose file..." GridPane.columnIndex="5" GridPane.rowIndex="4" />
+
+    <Label text="Output directory:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="5" />
+    <TextField fx:id="exportDirectoryField" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="5" />
+    <Button mnemonicParsing="false" onAction="#exportDirectoryButtonAction" text="Choose directory..." GridPane.columnIndex="5" GridPane.rowIndex="5" />
+
+    <Label text="Width:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="6" />
+    <TextField fx:id="widthTextField" prefWidth="56.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+    <Label text="Height:" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+    <TextField fx:id="heightTextField" prefHeight="25.0" prefWidth="56.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+
+    <Button mnemonicParsing="false" onAction="#run" text="Run" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
+    <Button mnemonicParsing="false" onAction="#cancel" text="Cancel" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+
+    <columnConstraints>
+        <ColumnConstraints />
+        <ColumnConstraints />
+        <ColumnConstraints />
+        <ColumnConstraints />
+        <ColumnConstraints />
+        <ColumnConstraints />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints />
+        <RowConstraints />
+        <RowConstraints />
+        <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+    </rowConstraints>
+</GridPane>

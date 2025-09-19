@@ -12,7 +12,6 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.File;
 
@@ -52,5 +51,5 @@ public interface MaterialBasis // TODO: avoid use of anonymous classes, add copy
     int getMaterialCount();
     int getSpecularResolution();
 
-    void save(File outputDirectory);
+    void save(File outputDirectory, String filenameOverride);
 }

@@ -11,30 +11,31 @@
 
 package kintsugi3d.gl.glfw;
 
-import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
-import java.util.function.Function;
-
-import org.lwjgl.*;
-import org.lwjgl.Version.*;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.exceptions.GLFWException;
 import kintsugi3d.gl.window.*;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.Version;
+import org.lwjgl.Version.BuildType;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
+import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     extends CanvasBase<ContextType> implements PollableWindow, PollableCanvas3D<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(CanvasWindow.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CanvasWindow.class);
     private final long handle;
     private final WindowListenerManager listenerManager;
 
@@ -94,12 +95,12 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         glfwSwapInterval(1);
 
         GL.createCapabilities(); // Make a valid OpenGL Context
-        log.info("OpenGL version: " + glGetString(GL_VERSION));
-        log.info("LWJGL version: " +
+        LOG.info("OpenGL version: " + glGetString(GL_VERSION));
+        LOG.info("LWJGL version: " +
                 Version.VERSION_MAJOR + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
                 (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
-        log.info("GLFW version: " + glfwGetVersionString());
+        LOG.info("GLFW version: " + glfwGetVersionString());
 
         this.context = createDefaultFramebuffer == null ?
             contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);

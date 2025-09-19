@@ -11,35 +11,34 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
-
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalReconstruction.class);
-    private final ReadonlyIBRResources<ContextType> resources;
+    private final ReadonlyGraphicsResources<ContextType> resources;
     private final ReconstructionSettings reconstructionSettings;
 
     private final int imageWidth;
     private final int imageHeight;
 
-    public FinalReconstruction(ReadonlyIBRResources<ContextType> resources, TextureResolution textureResolution, ReconstructionSettings reconstructionSettings)
+    public FinalReconstruction(ReadonlyGraphicsResources<ContextType> resources, TextureResolution textureResolution, ReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
         this.reconstructionSettings = reconstructionSettings;

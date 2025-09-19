@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
@@ -86,9 +86,9 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
-    public void save(File outputDirectory)
+    public void save(File outputDirectory, String filenameOverride)
     {
-        SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory);
+        SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory, filenameOverride);
     }
 
     /**

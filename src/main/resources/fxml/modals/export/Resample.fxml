@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<AnchorPane fx:id="root" styleClass="content-root" prefHeight="155.0" prefWidth="555.0" stylesheets="@../../kintsugiStyling.css"
+            xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="kintsugi3d.builder.export.resample.ResampleRequestController">
+   <Label layoutX="13.0" layoutY="46.0" text="Target view set file:"/>
+   <Label layoutX="14.0" layoutY="14.0" text="Export directory:"/>
+   <TextField fx:id="exportDirectoryField" layoutX="122.0" layoutY="10.0" prefHeight="25.0" prefWidth="300.0"/>
+   <TextField fx:id="targetVSetFileField" layoutX="122.0" layoutY="42.0" prefHeight="25.0" prefWidth="300.0"/>
+   <Button layoutX="428.0" layoutY="10.0" mnemonicParsing="false" onAction="#exportDirectoryButtonAction"
+           text="Choose directory..."/>
+   <Button layoutX="428.0" layoutY="42.0" mnemonicParsing="false" onAction="#targetVSetFileButtonAction"
+           text="Choose file..."/>
+   <Button layoutX="16.0" layoutY="117.0" mnemonicParsing="false" onAction="#run" text="Run"/>
+   <Label layoutX="13.0" layoutY="78.0" text="Width:"/>
+   <TextField fx:id="widthTextField" layoutX="53.0" layoutY="74.0" prefWidth="56.0"/>
+   <Label layoutX="122.0" layoutY="78.0" text="Height:"/>
+   <TextField fx:id="heightTextField" layoutX="167.0" layoutY="74.0" prefHeight="25.0" prefWidth="56.0"/>
+   <Button layoutX="64.0" layoutY="117.0" mnemonicParsing="false" onAction="#cancel" text="Cancel"/>
+</AnchorPane>

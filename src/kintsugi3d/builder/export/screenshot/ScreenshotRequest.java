@@ -11,31 +11,22 @@
 
 package kintsugi3d.builder.export.screenshot;
 
-import java.io.File;
-import java.io.IOException;
-
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
-public class ScreenshotRequest implements ObservableIBRRequest
+import java.io.File;
+import java.io.IOException;
+
+public class ScreenshotRequest implements ObservableProjectGraphicsRequest
 {
     private final int width;
     private final int height;
     private final File exportFile;
 
-    public interface Builder<RequestType extends ScreenshotRequest>
-    {
-        Builder<RequestType> setWidth(int width);
-        Builder<RequestType> setHeight(int height);
-        Builder<RequestType> setExportFile(File exportFile);
-        RequestType create();
-    }
-
-    protected static class BuilderImplementation
-            implements Builder<ScreenshotRequest>
+    protected static class Builder
     {
         private int width;
         private int height;
@@ -56,29 +47,24 @@ public class ScreenshotRequest implements ObservableIBRRequest
             return exportFile;
         }
 
-        @Override
-        public Builder<ScreenshotRequest> setWidth(int width)
+        public Builder setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
-        @Override
-        public Builder<ScreenshotRequest> setHeight(int height)
+        public Builder setHeight(int height)
         {
             this.height = height;
             return this;
         }
 
-        @Override
-        public Builder<ScreenshotRequest> setExportFile(File exportFile)
+        public Builder setExportFile(File exportFile)
         {
             this.exportFile = exportFile;
             return this;
         }
 
-
-        @Override
         public ScreenshotRequest create()
         {
             return new ScreenshotRequest(getWidth(), getHeight(), getExportFile());
@@ -94,11 +80,11 @@ public class ScreenshotRequest implements ObservableIBRRequest
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().getContext().buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

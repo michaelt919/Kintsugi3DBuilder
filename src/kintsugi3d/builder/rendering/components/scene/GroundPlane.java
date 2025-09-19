@@ -11,26 +11,26 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
-import java.io.File;
-import java.util.Map;
-
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.util.Map;
+
 public class GroundPlane<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GroundPlane.class);
 
-    public GroundPlane(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public GroundPlane(GraphicsResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                        SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         super(resources, sceneViewportModel, "SceneObject", sceneModel, lightingResources,

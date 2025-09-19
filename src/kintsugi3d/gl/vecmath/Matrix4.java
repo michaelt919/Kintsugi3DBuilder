@@ -11,9 +11,9 @@
 
 package kintsugi3d.gl.vecmath;
 
-import java.nio.FloatBuffer;
+import org.lwjgl.BufferUtils;
 
-import org.lwjgl.*;
+import java.nio.FloatBuffer;
 
 public final class Matrix4
 {

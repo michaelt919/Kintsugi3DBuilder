@@ -11,15 +11,8 @@
 
 package kintsugi3d.builder.test;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -29,18 +22,17 @@ import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.javafx.internal.LoadOptionsModelImpl;
-import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesAnalytic;
-import kintsugi3d.builder.resources.ibr.IBRResourcesCacheable;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.GraphicsResourcesAnalytic;
+import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
@@ -53,6 +45,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -150,10 +150,12 @@ class ImageReconstructionTests
         ViewSetDirectories directories = new ViewSetDirectories();
         directories.fullResImagesNeedUndistort = true;
         potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), directories).finish();
+        potatoViewSet.getProjectSettings().set("occlusionEnabled", false);
+
         potatoViewSetTonemapped = potatoViewSet.copy();
 
         // Using tonemapping from the Guan Yu dataset
-        potatoViewSetTonemapped.setTonemapping(new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
+        potatoViewSetTonemapped.setLuminanceEncoding(new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
             new byte [] { 50, 105, (byte)140, (byte)167, (byte)176, (byte)185 });
 
         context = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder Tests", 1, 1).create().getContext();
@@ -198,21 +200,19 @@ class ImageReconstructionTests
 
     void saveGroundTruthSyntheticImages(
             ViewSet viewSet,
-            BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+            BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
             String groundTruthName)
         throws IOException
     {
-        SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
-        DefaultSettings.apply(ibrSettings);
-        ibrSettings.set("shadowsEnabled", false);
-        ibrSettings.set("occlusionEnabled", false);
+        SimpleGeneralSettingsModel globalSettings = new SimpleGeneralSettingsModel();
+        DefaultSettings.applyGlobalDefaults(globalSettings);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
         specularBasisSettings.setBasisCount(1);
 
-        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
 
-        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
+        try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
             Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram))
         {
@@ -248,7 +248,7 @@ class ImageReconstructionTests
         return noiseScale / (float) Math.sqrt(12.0f);
     }
 
-    private BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>>
+    private BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>>
         getProgramCreator(String testShaderName, Consumer<Program<OpenGLContext>> setupShader)
     {
         return
@@ -802,7 +802,7 @@ class ImageReconstructionTests
     }
 
     static ProgramObject<OpenGLContext> createGroundTruthProgram(
-        SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
+        SpecularFitProgramFactory<OpenGLContext> programFactory, GraphicsResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
     {
         try
         {
@@ -821,8 +821,8 @@ class ImageReconstructionTests
 
     void multiTest(
         ViewSet viewSet,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
         BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale,
         String testName)  throws IOException
     {
@@ -846,22 +846,20 @@ class ImageReconstructionTests
 
     private void testSynthetic(
         ViewSet viewSet,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
         Consumer<ColorAppearanceRMSE> validation,
         String testName) throws IOException
     {
-        SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
-        DefaultSettings.apply(ibrSettings);
-        ibrSettings.set("shadowsEnabled", false);
-        ibrSettings.set("occlusionEnabled", false);
+        SimpleGeneralSettingsModel globalSettings = new SimpleGeneralSettingsModel();
+        DefaultSettings.applyGlobalDefaults(globalSettings);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
         specularBasisSettings.setBasisCount(1);
 
-        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
 
-        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
+        try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
             Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram))
         {
@@ -939,7 +937,7 @@ class ImageReconstructionTests
     private void testFitSynthetic(ViewSet viewSet, Function<ProgramBuilder<OpenGLContext>, ProgramBuilder<OpenGLContext>> injectDefines,
         Consumer<SpecularMaterialResources<?>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
     {
-        try (IBRResources<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry)
+        try (GraphicsResources<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry)
         {
             @Override
             public ProgramBuilder<OpenGLContext> getShaderProgramBuilder()
@@ -952,9 +950,9 @@ class ImageReconstructionTests
             File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
             outputDirectory.mkdirs();
 
-            SettingsModel settings = new SimpleSettingsModel();
-            DefaultSettings.apply(settings);
-            SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+            GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
+            DefaultSettings.applyGlobalDefaults(settings);
+            SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
             params.setOutputDirectory(outputDirectory);
 
             // Perform the specular fit
@@ -971,7 +969,7 @@ class ImageReconstructionTests
                             try
                             {
                                 view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                                    new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithFormat(
+                                    new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
                                         resources.getViewSet().getImageFileName(view.getIndex()), "png")),
                                     // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                     // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
@@ -998,7 +996,7 @@ class ImageReconstructionTests
         Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new LoadOptionsModelImpl();
+        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
 
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
@@ -1006,28 +1004,28 @@ class ImageReconstructionTests
         viewSetLoadOptions.mainDirectories.fullResImageDirectory = new File(classLoader.getResource("test/" + imageDirectory).toURI());
         viewSetLoadOptions.mainDirectories.fullResImagesNeedUndistort = true;
 
-        try (IBRResourcesImageSpace<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
+        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
                 .setImageLoadOptions(imageLoadOptions)
                 .setProgressMonitor(progressMonitor)
                 .loadLooseFiles(new File(classLoader.getResource("test/" + cameras).toURI()), viewSetLoadOptions)
                 .create())
         {
-            resources.calibrateLightIntensities(false);
+            resources.calibrateLightIntensities();
             testFit(resources, validation, testName);
         }
     }
 
     private void testFitVSET(File viewSetFile, Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
     {
-        LoadOptionsModel loadOptions = new LoadOptionsModelImpl();
+        LoadOptionsModel loadOptions = new ObservableLoadOptionsModel();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        try (IBRResourcesImageSpace<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
+        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
             .setImageLoadOptions(loadOptions)
             .setProgressMonitor(progressMonitor)
             .loadVSETFile(viewSetFile, viewSetFile.getParentFile())
             .create())
         {
-            resources.calibrateLightIntensities(false);
+            resources.calibrateLightIntensities();
             testFit(resources, validation, testName);
         }
         catch (UserCancellationException | IOException e)
@@ -1036,16 +1034,16 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFit(IBRResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
+    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         // TODO not yet tested
         File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
         outputDirectory.mkdirs();
 
-        SettingsModel settings = new SimpleSettingsModel();
-        DefaultSettings.apply(settings);
-        SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+        GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
+        DefaultSettings.applyGlobalDefaults(settings);
+        SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
         params.setOutputDirectory(outputDirectory);
         params.getImageCacheSettings().setCacheParentDirectory(new File (outputDirectory, "cache"));
 
@@ -1061,7 +1059,7 @@ class ImageReconstructionTests
                     try
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                            new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithFormat(
+                            new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
                                 resources.getViewSet().getImageFileName(view.getIndex()), "png")),
                             // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                             // Tonemapper parameter taken by saveToFile assumes both are [0, 255]

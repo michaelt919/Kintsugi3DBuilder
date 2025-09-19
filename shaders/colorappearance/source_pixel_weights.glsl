@@ -19,14 +19,13 @@
 #define EDGE_PROXIMITY_WEIGHT_ENABLED 0
 #endif
 
-#ifndef EDGE_PROXIMITY_MARGIN
-#define EDGE_PROXIMITY_MARGIN 0.1
-#endif
+uniform float edgeProximityMargin;
+uniform float edgeProximityCutoff;
 
 float getSourcePixelWeight(vec2 imageSpaceCoord)
 {
 #if EDGE_PROXIMITY_WEIGHT_ENABLED
-    vec2 weights = clamp((0.5 - abs(imageSpaceCoord - 0.5)) / EDGE_PROXIMITY_MARGIN, 0.0, 1.0);
+    vec2 weights = clamp((0.5 - abs(imageSpaceCoord - 0.5) - edgeProximityCutoff) / (edgeProximityMargin - edgeProximityCutoff), 0.0, 1.0);
     return min(weights.x, weights.y);
 #else
     return 1.0;

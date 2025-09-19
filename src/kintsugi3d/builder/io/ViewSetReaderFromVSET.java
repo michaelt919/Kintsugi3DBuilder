@@ -11,32 +11,32 @@
 
 package kintsugi3d.builder.io;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.builder.state.SettingsModel;
-import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.builder.state.DefaultSettings;
+import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * Handles loading view sets from the VSET text file format
  */
 public final class ViewSetReaderFromVSET implements ViewSetReader
 {
-    private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
 
     private static final ViewSetReaderFromVSET INSTANCE = new ViewSetReaderFromVSET();
 
@@ -72,11 +72,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
 
-        SettingsModel settings = new SimpleSettingsModel();
+        GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
+        DefaultSettings.applyProjectDefaults(settings);
+        Map<String, File> resourceMap = new HashMap<>(32);
 
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
-            scanner.useLocale(Locale.US);
+            scanner.useLocale(Locale.ROOT);
             
             List<Matrix4> unorderedCameraPoseList = new ArrayList<>(128);
 
@@ -286,20 +288,59 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         builder.addMask(cameraId, imgFilename);
                         break;
                     }
-                    case "zb":
-                        // boolean setting
-                        settings.createBooleanSetting(scanner.next(), Boolean.parseBoolean(scanner.next()));
-                        scanner.nextLine(); // Ignore rest of line
+                    case "z":
+                        String name = scanner.next();
+                        if (settings.exists(name))
+                        {
+                            Class<?> type = settings.getType(name);
+                            if (type.isAssignableFrom(String.class))
+                            {
+                                settings.set(name, scanner.next());
+                            }
+                            else if (type.isAssignableFrom(Boolean.class))
+                            {
+                                // boolean setting
+                                settings.set(name, Boolean.parseBoolean(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Double.class))
+                            {
+                                // integer setting
+                                settings.set(name, Double.parseDouble(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Float.class))
+                            {
+                                // integer setting
+                                settings.set(name, Float.parseFloat(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Long.class))
+                            {
+                                // integer setting
+                                settings.set(name, Long.parseLong(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Integer.class))
+                            {
+                                settings.set(name, Integer.parseInt(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Short.class))
+                            {
+                                settings.set(name, Short.parseShort(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                            else if (type.isAssignableFrom(Byte.class))
+                            {
+                                settings.set(name, Byte.parseByte(scanner.next()));
+                                scanner.nextLine(); // Ignore rest of line
+                            }
+                        }
                         break;
-                    case "zi":
-                        // integer setting
-                        settings.createNumericSetting(scanner.next(), Integer.parseInt(scanner.next()));
-                        scanner.nextLine(); // Ignore rest of line
-                        break;
-                    case "zf":
-                        // integer setting
-                        settings.createNumericSetting(scanner.next(), Float.parseFloat(scanner.next()));
-                        scanner.nextLine(); // Ignore rest of line
+                    case "zr":
+                        // resource file
+                        resourceMap.put(scanner.next(), new File(scanner.nextLine().trim()));
                         break;
                     default:
                         // Skip unrecognized line
@@ -309,6 +350,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         builder.applySettings(settings);
+        builder.addResourceFiles(resourceMap);
 
         // Tonemapping
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];
@@ -322,7 +364,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
         builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
-        log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return builder;
     }

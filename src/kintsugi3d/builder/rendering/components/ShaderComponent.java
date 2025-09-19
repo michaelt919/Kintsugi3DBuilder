@@ -11,17 +11,16 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 public abstract class ShaderComponent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {

@@ -56,6 +56,7 @@ struct ViewingParameters
     vec3 normalDir;
     float nDotV;
     vec3 viewDir;
+    vec3 viewDirUnnorm;
 };
 
 struct LightingParameters
@@ -64,6 +65,7 @@ struct LightingParameters
     vec3 normalDir;
     float nDotV;
     vec3 viewDir;
+    vec3 viewDirUnnorm;
     float nDotL;
     vec3 lightDir;
     vec3 lightDirUnnorm;
@@ -103,6 +105,7 @@ LightingParameters buildLightingParameters(int lightIndex, vec3 normalDir, vec3 
     LightingParameters l;
     l.lightIndex = lightIndex;
     l.normalDir = normalDir;
+    l.viewDirUnnorm = viewDirUnnorm;
     l.viewDir = normalize(viewDirUnnorm);
     l.lightDirUnnorm = lightDirUnnorm;
     calculateLightingParameters(l);
@@ -114,6 +117,7 @@ LightingParameters buildLightingParameters(int lightIndex, vec3 lightDirUnnorm, 
     LightingParameters l;
     l.lightIndex = lightIndex;
     l.normalDir = v.normalDir;
+    l.viewDirUnnorm = v.viewDirUnnorm;
     l.viewDir = v.viewDir;
     l.lightDirUnnorm = lightDirUnnorm;
     calculateLightingParameters(l);
@@ -123,6 +127,7 @@ LightingParameters buildLightingParameters(int lightIndex, vec3 lightDirUnnorm, 
 ViewingParameters getViewingParameters(LightingParameters l)
 {
     ViewingParameters v;
+    v.viewDirUnnorm = l.viewDirUnnorm;
     v.viewDir = l.viewDir;
     v.normalDir = l.normalDir;
     v.nDotV = l.nDotV;
