@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.FinalReconstruction;
 import kintsugi3d.builder.fit.ReconstructionShaders;
@@ -25,7 +18,7 @@ import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -33,6 +26,13 @@ import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGraphicsRequest
 {
@@ -103,9 +103,9 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             }
 
             //enable shaders which only work after processing textures
-            MenubarController.getInstance().setToggleableShaderDisable(false);
-            MenubarController.getInstance().updateShaderList();
-            MenubarController.getInstance().selectMaterialBasisShader();
+            MainWindowController.getInstance().setToggleableShaderDisable(false);
+            MainWindowController.getInstance().updateShaderList();
+            MainWindowController.getInstance().selectMaterialBasisShader();
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

@@ -26,7 +26,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsourc
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.RealityCaptureInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.util.RecentProjects;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

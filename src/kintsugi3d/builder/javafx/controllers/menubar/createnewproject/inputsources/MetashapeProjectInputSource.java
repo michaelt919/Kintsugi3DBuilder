@@ -18,13 +18,13 @@ import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.io.metashape.MetashapeChunk;
-import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,7 +164,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
             directoryChooser.setTitle("Choose New Image Directory");
 
-            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
+            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(MainWindowController.getInstance().getWindow());
             try
             {
                 verifyInfo();

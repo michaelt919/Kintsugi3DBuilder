@@ -11,22 +11,15 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
-
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -40,10 +33,12 @@ import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -282,17 +277,17 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 newItem.getIBRResources().calibrateLightIntensities(false);
                 newItem.reloadShaders();
 
-                MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
+                MainWindowController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
 
                 if (hasSpecularMaterials())
                 {
                     // Prior specular fit exists; start with material (basis) shader
-                    MenubarController.getInstance().selectMaterialBasisShader();
+                    MainWindowController.getInstance().selectMaterialBasisShader();
                 }
                 else
                 {
                     // No prior fit; start with image-based shader
-                    MenubarController.getInstance().selectImageBasedShader();
+                    MainWindowController.getInstance().selectImageBasedShader();
                 }
 
                 if (progressMonitor != null)

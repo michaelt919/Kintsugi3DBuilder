@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -46,6 +46,10 @@ import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController;
+import kintsugi3d.builder.javafx.controllers.menubar.LightCalibrationController;
+import kintsugi3d.builder.javafx.controllers.menubar.LoadOptionsController;
+import kintsugi3d.builder.javafx.controllers.menubar.RenderingShaderUserData;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
@@ -62,7 +66,6 @@ import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,11 +85,11 @@ import java.util.stream.Collectors;
 
 import static kintsugi3d.builder.javafx.ProjectIO.handleException;
 
-public class MenubarController
+public class MainWindowController
 {
-    private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
+    private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
 
-    private static MenubarController instance;
+    private static MainWindowController instance;
     private InternalModels internalModels;
 
     //Window open flags
@@ -175,12 +178,12 @@ public class MenubarController
     private Window window;
     private Runnable userDocumentationHandler;
 
-    public MenubarController()
+    public MainWindowController()
     {
         instance = this;
     }
 
-    public static MenubarController getInstance()
+    public static MainWindowController getInstance()
     {
         return instance;
     }
@@ -865,7 +868,7 @@ public class MenubarController
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
+        URL url = MainWindowController.class.getClassLoader().getResource(urlString);
         if (url == null)
         {
             throw new FileNotFoundException(urlString);
@@ -935,7 +938,7 @@ public class MenubarController
 
     private FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
+        URL url = MainWindowController.class.getClassLoader().getResource(urlString);
         if (url == null)
         {
             throw new FileNotFoundException(urlString);

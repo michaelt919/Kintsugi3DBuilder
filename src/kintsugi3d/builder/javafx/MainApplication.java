@@ -11,16 +11,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -35,16 +25,26 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import kintsugi3d.builder.state.DefaultSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class MainApplication extends Application
 {
@@ -152,7 +152,7 @@ public class MainApplication extends Application
         primaryStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
 
         //get FXML URLs
-        String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
+        String menuBarFXMLFileName = "fxml/menubar/MainWindow.fxml";
         URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
         assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
 
@@ -182,7 +182,7 @@ public class MainApplication extends Application
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
-        MenubarController menuBarController = menuBarFXMLLoader.getController();
+        MainWindowController menuBarController = menuBarFXMLLoader.getController();
         WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
         ProgressBarsController progressBarsController = progressBarsFXMLLoader.getController();
 

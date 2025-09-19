@@ -18,7 +18,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.util.Flag;
 
 import java.io.File;
@@ -36,7 +36,7 @@ public class WindowUtilities
     public static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag,
         Function<Parent, Scene> sceneFactory, String urlString) throws IOException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
+        URL url = MainWindowController.class.getClassLoader().getResource(urlString);
         if (url == null)
         {
             throw new FileNotFoundException(urlString);

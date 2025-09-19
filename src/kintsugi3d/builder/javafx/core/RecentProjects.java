@@ -9,19 +9,17 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.util;
+package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,15 +143,15 @@ public class RecentProjects {
     }
 
     public static void updateAllControlStructures() {
-        if (MenubarController.getInstance()!= null){updateRecentProjectsInMenuBar();}
+        if (MainWindowController.getInstance()!= null){updateRecentProjectsInMenuBar();}
 
         if (WelcomeWindowController.getInstance() != null){ updateRecentProjectsInWelcomeWindow();}
     }
 
 
     private static void updateRecentProjectsInMenuBar(){
-        Menu recentProjsList = MenubarController.getInstance().getRecentProjectsMenu();
-        Menu cleanRecentProjectsMenu = MenubarController.getInstance().getCleanRecentProjectsMenu();
+        Menu recentProjsList = MainWindowController.getInstance().getRecentProjectsMenu();
+        Menu cleanRecentProjectsMenu = MainWindowController.getInstance().getCleanRecentProjectsMenu();
 
         recentProjsList.getItems().clear();
 

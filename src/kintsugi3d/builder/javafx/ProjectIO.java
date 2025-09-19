@@ -20,15 +20,15 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.core.MainWindowController;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.util.PageWindow;
 import kintsugi3d.builder.javafx.util.WindowUtilities;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +138,7 @@ public final class ProjectIO
             Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
                 // Use the menubar's console open function to prevent 2 console windows from appearing
-                MenubarController.getInstance().help_console();
+                MainWindowController.getInstance().help_console();
             });
             alert.show();
         });
@@ -359,7 +359,7 @@ public final class ProjectIO
             WelcomeWindowController.getInstance().hide();
 
             // Disable shaders that need processed textures until project load is complete.
-            MenubarController.getInstance().setToggleableShaderDisable(true);
+            MainWindowController.getInstance().setToggleableShaderDisable(true);
         }
     }
 
@@ -548,11 +548,11 @@ public final class ProjectIO
         WelcomeWindowController.getInstance().show();
 
         //TODO: do we want this here?
-        MenubarController.getInstance().dismissMiniProgressBar();
+        MainWindowController.getInstance().dismissMiniProgressBar();
 
-        MenubarController.getInstance().setToggleableShaderDisable(true);
-        MenubarController.getInstance().setShaderNameVisibility(false);
-        MenubarController.getInstance().updateShaderList();
+        MainWindowController.getInstance().setToggleableShaderDisable(true);
+        MainWindowController.getInstance().setShaderNameVisibility(false);
+        MainWindowController.getInstance().updateShaderList();
     }
 
     public void closeProjectAfterConfirmation()
