@@ -64,7 +64,7 @@ public class WelcomeWindowController
 
     @FXML private SplitMenuButton recentProjectsSplitMenuButton;
 
-    private final List<Button> recentButtons = new ArrayList<>();
+    private final List<Button> recentButtons = new ArrayList<>(16);
 
     private Stage window;
     private Window parentWindow;
@@ -131,7 +131,7 @@ public class WelcomeWindowController
     {
         Object source = actionEvent.getSource();
         //user clicks on a menu item
-        if (source.getClass() == MenuItem.class)
+        if (source.getClass().equals(MenuItem.class))
         {
             handleMenuItemSelection((MenuItem) actionEvent.getSource());
         }
@@ -210,7 +210,7 @@ public class WelcomeWindowController
     public void updateRecentProjects()
     {
         List<String> items = RecentProjects.getItemsFromRecentsFile();
-        List<CustomMenuItem> recentItems = RecentProjects.getItemsAsCustomMenuItems(items);
+        List<MenuItem> recentItems = RecentProjects.getMenuItems(items);
 
         recentProjectsSplitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
@@ -225,7 +225,7 @@ public class WelcomeWindowController
         recentProjectsSplitMenuButton.setDisable(true);
 
         int i = 0;
-        for (CustomMenuItem item : recentItems)
+        for (MenuItem item : recentItems)
         {
             //add first few items to quick access buttons
             if (i < recentButtons.size())

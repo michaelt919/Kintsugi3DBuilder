@@ -11,28 +11,27 @@
 
 package kintsugi3d.builder.javafx.core;
 
-import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.app.OperatingSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RecentProjects
+public final class RecentProjects
 {
     public static final File RECENT_PROJECTS_FILE
         = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private static final Logger LOG = LoggerFactory.getLogger(RecentProjects.class);
-    private static File recentDirectory;
+    private static File recentDirectory = null;
 
     private RecentProjects()
     {
@@ -41,17 +40,13 @@ public class RecentProjects
 
     public static List<String> getItemsFromRecentsFile()
     {
-        List<String> projectItems = new ArrayList<>();
+        List<String> projectItems = new ArrayList<>(16);
 
         if (RECENT_PROJECTS_FILE.exists())
         {
             try (BufferedReader reader = new BufferedReader(new FileReader(RECENT_PROJECTS_FILE.getAbsolutePath(), StandardCharsets.UTF_8)))
             {
-                String line;
-                while ((line = reader.readLine()) != null)
-                {
-                    projectItems.add(line);
-                }
+                projectItems = reader.lines().collect(Collectors.toList());
             }
             catch (IOException e)
             {
@@ -63,32 +58,40 @@ public class RecentProjects
         return new ArrayList<>(new LinkedHashSet<>(projectItems));
     }
 
-    public static List<CustomMenuItem> getItemsAsCustomMenuItems()
+    public static List<MenuItem> getMenuItems()
     {
         List<String> items = getItemsFromRecentsFile();
-        return getItemsAsCustomMenuItems(items);
+        return getMenuItems(items);
     }
 
-    public static List<CustomMenuItem> getItemsAsCustomMenuItems(List<String> items)
+    public static List<MenuItem> getMenuItems(Collection<String> items)
     {
-        List<CustomMenuItem> customMenuItems = new ArrayList<>();
+        List<MenuItem> customMenuItems = new ArrayList<>(items.size());
         int i = 0;
 
         //attach tooltips and event handlers
         for (String item : items)
         {
-            customMenuItems.add(new CustomMenuItem(new Label(shortenedPath(item))));
-
-            CustomMenuItem justAdded = customMenuItems.get(i);
-
             String fileName = getItemsFromRecentsFile().get(i);
-            Tooltip tooltip = new Tooltip(fileName);
-            Tooltip.install(justAdded.getContent(), tooltip);
+            String shortPath = shortenedPath(item);
 
-            justAdded.setOnAction(event ->
+            if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
             {
-                ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
-            });
+                // MacOS doesn't support custom menu items
+                MenuItem menuItem = new MenuItem(shortPath);
+                menuItem.setOnAction(event -> onMenuItemAction(fileName));
+                customMenuItems.add(menuItem);
+            }
+            else
+            {
+                CustomMenuItem menuItem = new CustomMenuItem(new Label(shortPath));
+                menuItem.setOnAction(event -> onMenuItemAction(fileName));
+
+                Tooltip tooltip = new Tooltip(fileName);
+                Tooltip.install(menuItem.getContent(), tooltip);
+
+                customMenuItems.add(menuItem);
+            }
 
             ++i;
         }
@@ -96,12 +99,17 @@ public class RecentProjects
         return customMenuItems;
     }
 
+    private static void onMenuItemAction(String fileName)
+    {
+        ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
+    }
+
     public static String shortenedPath(String path)
     {
         File file = new File(path);
         File ancestorFile = getAncestorFile(file);
 
-        return ancestorFile.getAbsolutePath() + "..." + File.separator + file.getName();
+        return String.format("%s...%s%s", ancestorFile.getAbsolutePath(), File.separator, file.getName());
     }
 
     private static File getAncestorFile(File file)
@@ -117,14 +125,10 @@ public class RecentProjects
     public static void addToRecentFiles(String fileName)
     {
         // Read existing file content into a List
-        List<String> existingFileNames = new ArrayList<>();
+        List<String> existingFileNames = new ArrayList<>(16);
         try (BufferedReader reader = new BufferedReader(new FileReader(RECENT_PROJECTS_FILE, StandardCharsets.UTF_8)))
         {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                existingFileNames.add(line);
-            }
+            existingFileNames = reader.lines().collect(Collectors.toList());
         }
         catch (IOException e)
         {
@@ -175,7 +179,7 @@ public class RecentProjects
 
         recentProjsList.getItems().clear();
 
-        List<CustomMenuItem> recentItems = getItemsAsCustomMenuItems();
+        List<MenuItem> recentItems = getMenuItems();
 
         recentProjsList.getItems().addAll(recentItems);
 
@@ -217,7 +221,7 @@ public class RecentProjects
     public static void removeAllReferences()
     {
         //wipe recent projects list
-        try (FileWriter fileWriter = new FileWriter(RECENT_PROJECTS_FILE.getAbsolutePath(), false))
+        try (FileWriter fileWriter = new FileWriter(RECENT_PROJECTS_FILE.getAbsolutePath(), StandardCharsets.UTF_8, false))
         {
             fileWriter.write("");
         }
@@ -242,26 +246,22 @@ public class RecentProjects
 
     public static File getMostRecentDirectory()
     {
-        getMostRecentDirectory:
-        while (true)
+        if ((recentDirectory != null) && recentDirectory.exists())
         {
-            if ((recentDirectory != null) && recentDirectory.exists())
+            return recentDirectory;
+        }
+
+        //loop through recent files and assign/return the first existing one
+        for (String path : getItemsFromRecentsFile())
+        {
+            File file = new File(path);
+            if (file.exists())
             {
+                recentDirectory = file.getParentFile();
                 return recentDirectory;
             }
-
-            //loop through recent files and assign/return the first existing one
-            for (String path : getItemsFromRecentsFile())
-            {
-                File file = new File(path);
-                if (file.exists())
-                {
-                    recentDirectory = file.getParentFile();
-                    continue getMostRecentDirectory;
-                }
-            }
-
-            return new File(System.getProperty("user.home"));
         }
+
+        return new File(System.getProperty("user.home"));
     }
 }

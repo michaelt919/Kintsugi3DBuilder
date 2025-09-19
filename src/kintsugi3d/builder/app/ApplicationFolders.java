@@ -19,33 +19,9 @@ import java.nio.file.Paths;
 
 public class ApplicationFolders
 {
+
+    private static final OperatingSystem OS = OperatingSystem.getCurrentOS();
     public static final String APP_FOLDER_NAME = "Kintsugi3DBuilder";
-    private static final OperatingSystem OS = getCurrentOS();
-
-    public static OperatingSystem getCurrentOS()
-    {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        // Windows
-        if (os.contains("win"))
-        {
-            return OperatingSystem.WINDOWS;
-        }
-
-        // Mac OS
-        if (os.contains("mac"))
-        {
-            return OperatingSystem.MACOS;
-        }
-
-        // Linux and Unix
-        if (os.contains("nix") || os.contains("nux") || os.contains("aix"))
-        {
-            return OperatingSystem.UNIX;
-        }
-
-        return OperatingSystem.UNKNOWN;
-    }
 
     /**
      * Get the long-term application data folder for the current os and user.

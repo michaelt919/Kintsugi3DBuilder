@@ -48,7 +48,7 @@ public class Launch4jConfiguration
     public void writeAsSuperuser() throws IOException, IllegalStateException
     {
         LOG.info("Writing launch4j configuration file AS ADMINISTRATOR to {}", l4jIniFile.toAbsolutePath());
-        if (ApplicationFolders.getCurrentOS() != OperatingSystem.WINDOWS)
+        if (OperatingSystem.getCurrentOS() != OperatingSystem.WINDOWS)
         {
             throw new IllegalStateException("Writing as superuser not supported for OS");
         }

@@ -57,10 +57,10 @@
                         <MenuItem mnemonicParsing="false" text="Action 1" />
                     </Menu>
                     <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
-                        <items>
-                            <MenuItem fx:id="removeSomeRefsCustMenuItem" text="Clear Missing Projects" onAction="#file_removeInvalidReferences" />
-                            <MenuItem fx:id="removeAllRefsCustMenuItem" text="Clear All Projects" onAction="#file_removeAllReferences" />
-                        </items>
+                        <MenuItem fx:id="removeSomeRefsCustMenuItem" text="Clear Missing Projects"
+                                  onAction="#removeInvalidReferences"/>
+                        <MenuItem fx:id="removeAllRefsCustMenuItem" text="Clear All Projects"
+                                  onAction="#removeAllReferences"/>
                     </Menu>
 
                     <SeparatorMenuItem mnemonicParsing="false" />

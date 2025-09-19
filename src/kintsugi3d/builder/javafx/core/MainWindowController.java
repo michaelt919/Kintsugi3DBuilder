@@ -14,9 +14,9 @@ package kintsugi3d.builder.javafx.core;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -32,6 +32,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
@@ -122,10 +123,9 @@ public class MainWindowController
     @FXML private RadioMenuItem specularTexture;
     @FXML private RadioMenuItem errorTexture;
 
+    private final Collection<Menu> shaderMenuFlyouts = new ArrayList<>(4);
 
-    private final List<Menu> shaderMenuFlyouts = new ArrayList<>(4);
-
-    private final List<MenuItem> toggleableShaders = new ArrayList<>();
+    private final Collection<MenuItem> toggleableShaders = new ArrayList<>(8);
 
     @FXML private VBox cameraViewList;
 
@@ -199,7 +199,7 @@ public class MainWindowController
         updateShaderList();
 
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
-            ((RadioMenuItem) renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
+            ((MenuItem) renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
 
         projectModel = javaFXState.getProjectModel();
 
@@ -300,7 +300,7 @@ public class MainWindowController
             int idx = availableShaders.indexOf(curr);
 
             //there's probably a better way to do this but whatever
-            idx = (idx - 1);
+            idx -= 1;
             if (idx < 0)
             {
                 idx = numAvailableShaders - 1;
@@ -325,13 +325,27 @@ public class MainWindowController
         leftBarController.getRootNode().managedProperty().bind(cameraViewList.visibleProperty().not());
         leftBarController.getRootNode().visibleProperty().bind(cameraViewList.visibleProperty().not());
 
-        //add tooltips to recent projects list modifiers
-        Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
-            "Will not modify your file system.");
-//        Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
+        if (OperatingSystem.getCurrentOS() != OperatingSystem.MACOS)
+        {
+            // Remove fallback menu items for MacOS and replace with custom menu items with tooltips.
+            cleanRecentProjectsMenu.getItems().clear();
 
-        tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
-//        Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+            removeSomeRefsCustMenuItem = new CustomMenuItem(new Label("Clear Missing Projects"));
+            removeSomeRefsCustMenuItem.setOnAction(event -> RecentProjects.removeInvalidReferences());
+
+            Tooltip.install(((CustomMenuItem) removeSomeRefsCustMenuItem).getContent(),
+                new Tooltip("Remove references to items not found in file explorer. Will not modify your file system."));
+
+            cleanRecentProjectsMenu.getItems().add(removeSomeRefsCustMenuItem);
+
+            removeAllRefsCustMenuItem = new CustomMenuItem(new Label("Clear Missing Projects"));
+            removeAllRefsCustMenuItem.setOnAction(event -> RecentProjects.removeInvalidReferences());
+
+            Tooltip.install(((CustomMenuItem)removeAllRefsCustMenuItem).getContent(),
+                new Tooltip("Remove references to all recent projects. Will not modify your file system."));
+
+            cleanRecentProjectsMenu.getItems().add(removeAllRefsCustMenuItem);
+        }
     }
 
     private void bindEnabledToProjectProcessed(MenuItem shader)
@@ -388,7 +402,7 @@ public class MainWindowController
 
     private List<RadioMenuItem> getRadioMenuItems(Menu menu)
     {
-        List<RadioMenuItem> list = new ArrayList<>();
+        List<RadioMenuItem> list = new ArrayList<>(menu.getItems().size());
         getRadioMenuItemsHelper(list, menu.getItems());
         return list;
     }
@@ -514,42 +528,42 @@ public class MainWindowController
             javaFXState.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
     }
 
-    public void createProject()
+    @FXML public void createProject()
     {
         ProjectIO.getInstance().createProject(window);
     }
 
-    public void openProject()
+    @FXML public void openProject()
     {
         ProjectIO.getInstance().openProjectWithPrompt(window);
     }
 
-    public void saveProject()
+    @FXML public void saveProject()
     {
         ProjectIO.getInstance().saveProject(window);
     }
 
-    public void saveProjectAs()
+    @FXML public void saveProjectAs()
     {
         ProjectIO.getInstance().saveProjectAs(window);
     }
 
-    public void closeProject()
+    @FXML public void closeProject()
     {
         ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
-    public void exit()
+    @FXML public void exit()
     {
         WindowSynchronization.getInstance().quit();
     }
 
-    public void userManual()
+    @FXML public void userManual()
     {
         userDocumentationHandler.run();
     }
 
-    public void openExperience(ActionEvent event)
+    @FXML public void openExperience(ActionEvent event)
     {
         if (event.getSource() instanceof MenuItem)
         {
@@ -562,7 +576,7 @@ public class MainWindowController
         }
     }
 
-    public void lightCalibration()
+    @FXML public void lightCalibration()
     {
         ExperienceManager.getInstance().getExperience("LightCalibration").tryOpen();
     }
@@ -573,13 +587,13 @@ public class MainWindowController
         miniProgressPane.setManaged(value);
     }
 
-    public void showProgressBars()
+    @FXML public void showProgressBars()
     {
         ProgressBarsController.getInstance().showStage();
         setMiniProgressPaneVisible(false);
     }
 
-    public void launchViewerApp()
+    @FXML public void launchViewerApp()
     {
         try
         {
@@ -589,18 +603,18 @@ public class MainWindowController
         {
             ExceptionHandling.error("Kintsugi 3D Viewer was not found on this computer. Check that it is installed.", e);
         }
-        catch (Exception e)
+        catch (IOException|RuntimeException e)
         {
             ExceptionHandling.error("Failed to launch Kintsugi 3D Viewer", e);
         }
     }
 
-    public void removeInvalidReferences()
+    @FXML public void removeInvalidReferences()
     {
         RecentProjects.removeInvalidReferences();
     }
 
-    public void removeAllReferences()
+    @FXML public void removeAllReferences()
     {
         RecentProjects.removeAllReferences();
     }
@@ -636,7 +650,7 @@ public class MainWindowController
         }
     }
 
-    public void resetMiniProgressBar(DoubleExpression progressProperty, StringExpression labelProperty)
+    public void resetMiniProgressBar(ObservableValue<Number> progressProperty, ObservableValue<String> labelProperty)
     {
         setMiniProgressPaneVisible(false);
         miniProgressBar.setVisible(true);
@@ -652,15 +666,15 @@ public class MainWindowController
         double relX;
         double relY;
 
-        if (!event.getSource().equals(swapControlsStackPane))
-        {
-            relX = event.getX() - swapControlsStackPane.getLayoutX();
-            relY = event.getY() - swapControlsStackPane.getLayoutY();
-        }
-        else
+        if (event.getSource().equals(swapControlsStackPane))
         {
             relX = event.getX();
             relY = event.getY();
+        }
+        else
+        {
+            relX = event.getX() - swapControlsStackPane.getLayoutX();
+            relY = event.getY() - swapControlsStackPane.getLayoutY();
         }
 
         setLightestMiniBar();
@@ -671,18 +685,18 @@ public class MainWindowController
             return;
         }
 
-        if (!swapControlsStackPane.contains(relX, relY))
+        if (swapControlsStackPane.contains(relX, relY))
+        {
+            //highlight dismiss button area if it's hovered over
+            miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
+            swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
+        }
+        else
         {
             //highlight label if it's hovered over
             miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
             swapControlsStackPane.setStyle("-fx-background-color: #ADADAD;");
 
-        }
-        else
-        {
-            //highlight dismiss button area if it's hovered over
-            miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
-            swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
         }
     }
 

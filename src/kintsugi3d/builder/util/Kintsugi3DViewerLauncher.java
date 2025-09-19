@@ -81,7 +81,7 @@ public class Kintsugi3DViewerLauncher
 
     private static Optional<File> getFromRegistry() throws IOException, InterruptedException
     {
-        if (ApplicationFolders.getCurrentOS() != OperatingSystem.WINDOWS)
+        if (OperatingSystem.getCurrentOS() != OperatingSystem.WINDOWS)
             return Optional.empty();
 
         ProcessBuilder builder = new ProcessBuilder("reg", "query",
@@ -151,7 +151,7 @@ public class Kintsugi3DViewerLauncher
             parameter = modelFile.getAbsolutePath();
         }
 
-        if (ApplicationFolders.getCurrentOS() == OperatingSystem.MACOS)
+        if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
         {
             ProcessBuilder pb = new ProcessBuilder("open", "-a", executable.getAbsolutePath(), parameter);
             pb.start();
