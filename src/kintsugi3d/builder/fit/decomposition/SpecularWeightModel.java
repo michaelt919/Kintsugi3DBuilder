@@ -12,7 +12,6 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.LeastSquaresModel;
 
@@ -23,17 +22,14 @@ import static java.lang.Math.PI;
 public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, DoubleVector3>
 {
     private final SpecularDecomposition solution;
-    private final SpecularBasisSettings specularBasisSettings;
 
     /**
      *
      * @param solution
-     * @param settings
      */
-    public SpecularWeightModel(SpecularDecomposition solution, SpecularBasisSettings settings)
+    public SpecularWeightModel(SpecularDecomposition solution)
     {
         this.solution = solution;
-        specularBasisSettings = settings;
     }
 
     @Override
@@ -65,7 +61,8 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
         float geomRatio = sampleData.getGeomRatio(systemIndex);
 
         // Precalculate frequently used values.
-        double mExact = halfwayIndex * specularBasisSettings.getBasisResolution();
+        int specularResolution = solution.getMaterialBasis().getSpecularResolution();
+        double mExact = halfwayIndex * specularResolution;
 
         int m1 = (int)Math.floor(mExact);
         int m2 = m1 + 1;
@@ -76,7 +73,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
             // Evaluate the basis BRDF.
             // This will run a lot of times so write out vector math operations
             // to avoid unnecessary allocation of Vector objects
-            if (m1 < specularBasisSettings.getBasisResolution())
+            if (m1 < specularResolution)
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
@@ -89,19 +86,15 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
                         (solution.getMaterialBasis().evaluateSpecularBlue(b, m1) * (1 - t)
                             + solution.getMaterialBasis().evaluateSpecularBlue(b, m2) * t) * geomRatio);
             }
-            else if (specularBasisSettings.getMetallicity() > 0.0f)
+            else
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
-                        solution.getMaterialBasis().evaluateSpecularRed(b, specularBasisSettings.getBasisResolution()) * geomRatio,
+                        solution.getMaterialBasis().evaluateSpecularRed(b, specularResolution) * geomRatio,
                     solution.getDiffuseAlbedo(b).y / PI +
-                        solution.getMaterialBasis().evaluateSpecularGreen(b, specularBasisSettings.getBasisResolution()) * geomRatio,
+                        solution.getMaterialBasis().evaluateSpecularGreen(b, specularResolution) * geomRatio,
                     solution.getDiffuseAlbedo(b).z / PI +
-                        solution.getMaterialBasis().evaluateSpecularBlue(b, specularBasisSettings.getBasisResolution()) * geomRatio);
-            }
-            else // if metallicity == 0, then the MDF should be 0 here
-            {
-                return solution.getDiffuseAlbedo(b).dividedBy(PI);
+                        solution.getMaterialBasis().evaluateSpecularBlue(b, specularResolution) * geomRatio);
             }
         };
     }
@@ -109,7 +102,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     @Override
     public int getBasisFunctionCount()
     {
-        return specularBasisSettings.getBasisCount();
+        return solution.getMaterialBasis().getMaterialCount();
     }
 
     @Override

@@ -47,6 +47,11 @@ public class DefaultProgressMonitor implements ProgressMonitor
     }
 
     @Override
+    public void advanceStage(String message)
+    {
+    }
+
+    @Override
     public void setMaxProgress(double maxProgress)
     {
     }

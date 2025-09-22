@@ -49,7 +49,7 @@
                         </accelerator>
                     </MenuItem>
                     <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem fx:id="file_exportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
+                    <MenuItem fx:id="fileExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
                     <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export" />
                     <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false" />
                     <SeparatorMenuItem />
@@ -85,12 +85,13 @@
                     </MenuItem>
                     <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
                     <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Mask / Feather Options..." userData="MaskOptions" />
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Process Textures..." userData="SpecularFit">
+                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Process Textures..." userData="SpecularBasisFit">
                         <accelerator>
                             <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                         </accelerator>
                     </MenuItem>
-                    <MenuItem mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
+                    <MenuItem fx:id="reoptimizeTexturesMenuItem" mnemonicParsing="false" onAction="#openExperience" text="Reoptimize Textures..." userData="SpecularTextureFit"/>
+                    <MenuItem fx:id="workflowExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
                     <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
                 </Menu>
                 <Menu mnemonicParsing="false" text="Environment">

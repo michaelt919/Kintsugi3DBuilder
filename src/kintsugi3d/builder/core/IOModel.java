@@ -91,6 +91,15 @@ public class IOModel
         }
 
         @Override
+        public void advanceStage(String message)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.advanceStage(message);
+            }
+        }
+
+        @Override
         public void setMaxProgress(double maxProgress)
         {
             for (ProgressMonitor monitor : subMonitors)

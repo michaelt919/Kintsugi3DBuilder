@@ -17,8 +17,9 @@ import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
@@ -79,6 +80,7 @@ class ImageReconstructionTests
     {
         private double maxProgress;
         private int stageCount;
+        private int stage;
 
         @Override
         public void allowUserCancellation()
@@ -93,6 +95,7 @@ class ImageReconstructionTests
         @Override
         public void start()
         {
+            this.stage = 0;
         }
 
         @Override
@@ -109,7 +112,13 @@ class ImageReconstructionTests
         @Override
         public void setStage(int stage, String message)
         {
+            this.stage = stage;
             System.out.println(MessageFormat.format("[{0}/{1}] {2}", stage, stageCount, message));
+        }
+
+        public void advanceStage(String message)
+        {
+            setStage(stage + 1, message);
         }
 
         @Override
@@ -207,10 +216,10 @@ class ImageReconstructionTests
         SimpleGeneralSettingsModel globalSettings = new SimpleGeneralSettingsModel();
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
-        SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
-        specularBasisSettings.setBasisCount(1);
+        BasisSettings basisSettings = new BasisOptimizationSettings();
+        basisSettings.setBasisCount(1);
 
-        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(basisSettings);
 
         try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
@@ -854,10 +863,10 @@ class ImageReconstructionTests
         SimpleGeneralSettingsModel globalSettings = new SimpleGeneralSettingsModel();
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
-        SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
-        specularBasisSettings.setBasisCount(1);
+        BasisSettings basisSettings = new BasisOptimizationSettings();
+        basisSettings.setBasisCount(1);
 
-        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(specularBasisSettings);
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(basisSettings);
 
         try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry);
             ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
@@ -952,7 +961,7 @@ class ImageReconstructionTests
 
             GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
             DefaultSettings.applyGlobalDefaults(settings);
-            SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
+            SpecularFitSettings params = new SpecularFitSettings(512, 512);
             params.setOutputDirectory(outputDirectory);
 
             // Perform the specular fit
@@ -1043,7 +1052,7 @@ class ImageReconstructionTests
 
         GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
         DefaultSettings.applyGlobalDefaults(settings);
-        SpecularFitRequestParams params = new SpecularFitRequestParams(512, 512);
+        SpecularFitSettings params = new SpecularFitSettings(512, 512);
         params.setOutputDirectory(outputDirectory);
         params.getImageCacheSettings().setCacheParentDirectory(new File (outputDirectory, "cache"));
 

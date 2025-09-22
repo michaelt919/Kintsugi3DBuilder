@@ -54,7 +54,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     {
         return new SpecularBasisWeights()
         {
-            final int count = getSpecularBasisSettings().getBasisCount();
+            final int count = getMaterialBasis().getMaterialCount();
 
             @Override
             public double getWeight(int b, int p)
@@ -155,7 +155,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
 
                     int count = 0;
 
-                    for (int b = 0; b < this.getSpecularBasisSettings().getBasisCount(); b++)
+                    for (int b = 0; b < this.getMaterialBasis().getMaterialCount(); b++)
                     {
                         count = 0;
                         double sum = 0.0;

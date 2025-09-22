@@ -387,6 +387,12 @@ public final class Rendering
             }
 
             @Override
+            public void advanceStage(String message)
+            {
+                ioModel.getProgressMonitor().advanceStage(message);
+            }
+
+            @Override
             public void setMaxProgress(double maxProgress)
             {
                 ioModel.getProgressMonitor().setMaxProgress(maxProgress);

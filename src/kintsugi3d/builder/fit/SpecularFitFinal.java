@@ -13,7 +13,7 @@ package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
@@ -42,15 +42,15 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
         SpecularMaterialResources<ContextType> original, TextureResolution textureResolution,
-        Collection<String> metadataMapNames, SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
+        Collection<String> metadataMapNames, BasisSettings basisSettings, boolean includeConstant) throws IOException
     {
-        return new SpecularFitFinal<>(original, textureResolution, metadataMapNames, specularBasisSettings, includeConstant);
+        return new SpecularFitFinal<>(original, textureResolution, metadataMapNames, basisSettings, includeConstant);
     }
 
     private SpecularFitFinal(SpecularMaterialResources<ContextType> original, TextureResolution textureResolution,
-        Collection<String> metadataMapNames, SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
+        Collection<String> metadataMapNames, BasisSettings basisSettings, boolean includeConstant) throws IOException
     {
-        super(original.getContext(), textureResolution, specularBasisSettings);
+        super(original.getContext(), textureResolution, basisSettings);
 
         ContextType context = original.getContext();
 

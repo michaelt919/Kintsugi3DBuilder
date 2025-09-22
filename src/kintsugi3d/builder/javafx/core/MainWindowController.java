@@ -85,7 +85,6 @@ public class MainWindowController
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
-    @FXML private MenuItem file_exportGLTFModel;
 
     @FXML private Menu workflowMenu;
 
@@ -110,6 +109,11 @@ public class MainWindowController
     @FXML private MenuItem saveMenuItem;
     @FXML private MenuItem saveAsMenuItem;
     @FXML private MenuItem closeProjectMenuItem;
+
+    // Menu items which should only be enabled after processing textures
+    @FXML private MenuItem reoptimizeTexturesMenuItem;
+    @FXML private MenuItem workflowExportGLTFModel;
+    @FXML private MenuItem fileExportGLTFModel;
 
     //shaders which should only be enabled after processing textures
     @FXML private RadioMenuItem materialMetallicity;
@@ -256,7 +260,11 @@ public class MainWindowController
         bindEnabledToProjectLoaded(saveMenuItem);
         bindEnabledToProjectLoaded(saveAsMenuItem);
         bindEnabledToProjectLoaded(closeProjectMenuItem);
-        bindEnabledToProjectLoaded(file_exportGLTFModel);
+
+        // Reoptimization and export are only options once the project has been processed once before
+        bindEnabledToProjectProcessed(fileExportGLTFModel);
+        bindEnabledToProjectProcessed(workflowExportGLTFModel);
+        bindEnabledToProjectProcessed(reoptimizeTexturesMenuItem);
 
         // Refresh shaders after processing
         projectModel.getProjectProcessedProperty()

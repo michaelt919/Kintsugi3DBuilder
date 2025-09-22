@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.debug;
 
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
 
@@ -32,9 +32,9 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
     // Framebuffer for the basis images
     private final FramebufferObject<ContextType> framebuffer;
 
-    private final SpecularBasisSettings settings;
+    private final BasisSettings settings;
 
-    public BasisImageCreator(ContextType context, SpecularBasisSettings settings) throws IOException
+    public BasisImageCreator(ContextType context, BasisSettings settings) throws IOException
     {
         program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

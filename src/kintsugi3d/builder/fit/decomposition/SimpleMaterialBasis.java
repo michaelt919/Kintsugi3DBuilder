@@ -15,6 +15,7 @@ import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
+import java.util.List;
 import java.util.stream.IntStream;
 
 public class SimpleMaterialBasis implements MaterialBasis
@@ -53,6 +54,12 @@ public class SimpleMaterialBasis implements MaterialBasis
     public DoubleVector3 getDiffuseColor(int b)
     {
         return diffuseColors[b];
+    }
+
+    @Override
+    public List<DoubleVector3> getDiffuseColors()
+    {
+        return List.of(diffuseColors);
     }
 
     @Override

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
 import kintsugi3d.optimization.MatrixSystem;
 import kintsugi3d.optimization.function.BasisFunctions;
 import kintsugi3d.optimization.function.MatrixBuilder;
@@ -46,31 +46,31 @@ final class ReflectanceMatrixBuilder
      * Underlying matrix builder utility.
      */
     private final MatrixBuilder matrixBuilder;
-    private final SpecularBasisSettings specularBasisSettings;
+    private final BasisOptimizationSettings basisSettings;
 
     /**
      * Stores both the LHS and RHS of the system to be solved.
      * LHS = A'A
      * RHS = A'y, possibly for multiple channels (i.e. red, green, blue for color).
      */
-    private MatrixSystem contribution;
+    private final MatrixSystem contribution;
 
     /**
      * Construct by accepting matrices where the final results will be stored.
      */
     ReflectanceMatrixBuilder(ReflectanceData reflectanceData, SpecularDecomposition solution,
-                             double metallicity, BasisFunctions stepBasis, MatrixSystem contribution)
+        BasisFunctions stepBasis, MatrixSystem contribution, BasisOptimizationSettings settings)
     {
         this.solution = solution;
 
         //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.reflectanceData = reflectanceData;
-        this.specularBasisSettings = solution.getSpecularBasisSettings();
+        this.basisSettings = settings;
 
         this.contribution = contribution;
 
         // Initialize running totals
-        matrixBuilder = new MatrixBuilder(this.specularBasisSettings.getBasisCount(), 3, metallicity, stepBasis, contribution);
+        matrixBuilder = new MatrixBuilder(this.basisSettings.getBasisCount(), 3, settings.getMetallicity(), stepBasis, contribution);
     }
 
     public void execute()
@@ -79,15 +79,11 @@ final class ReflectanceMatrixBuilder
             IntStream.range(0, reflectanceData.size())
                 .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
                 .mapToObj(p ->
-                {
-                    MatrixBuilderSample sample = new MatrixBuilderSample(
-                        reflectanceData.getHalfwayIndex(p) * specularBasisSettings.getBasisResolution(),
+                    new MatrixBuilderSample(
+                        reflectanceData.getHalfwayIndex(p) * basisSettings.getBasisResolution(),
                         matrixBuilder.getBasisLibrary(), reflectanceData.getGeomRatio(p),
                         reflectanceData.getAdditionalWeight(p), b -> solution.getWeights(p).get(b),
-                        reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p));
-
-                    return sample;
-                }));
+                        reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p))));
         if (VALIDATE)
         {
             validate();
@@ -106,7 +102,7 @@ final class ReflectanceMatrixBuilder
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
         SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(),
-                specularBasisSettings.getBasisCount() * (specularBasisSettings.getBasisComplexity() + 1), DMatrixRMaj.class);
+                basisSettings.getBasisCount() * (basisSettings.getBasisComplexity() + 1), DMatrixRMaj.class);
         SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);
@@ -122,8 +118,8 @@ final class ReflectanceMatrixBuilder
                 float addlWeight = (float)Math.sqrt(reflectanceData.getAdditionalWeight(p));
 
                 // Calculate which discretized MDF element the current sample belongs to.
-                double mExact = halfwayIndex * specularBasisSettings.getBasisResolution();
-                int mFloor = Math.min(specularBasisSettings.getBasisResolution() - 1, (int) Math.floor(mExact));
+                double mExact = halfwayIndex * basisSettings.getBasisResolution();
+                int mFloor = Math.min(basisSettings.getBasisResolution() - 1, (int) Math.floor(mExact));
 
                 yRed.set(p, addlWeight * reflectanceData.getRed(p));
                 yGreen.set(p, addlWeight * reflectanceData.getGreen(p));
@@ -135,13 +131,13 @@ final class ReflectanceMatrixBuilder
 
                 double diffuseFactor = matrixBuilder.getMetallicity() * geomRatio + (1 - matrixBuilder.getMetallicity());
 
-                for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
+                for (int b = 0; b < basisSettings.getBasisCount(); b++)
                 {
                     // diffuse
                     mA.set(p, b, addlWeight * solution.getWeights(p).get(b) * diffuseFactor);
 
                     // specular
-                    if (mExact < specularBasisSettings.getBasisResolution())
+                    if (mExact < basisSettings.getBasisResolution())
                     {
                         // Iterate over the available step functions in the basis.
                         for (int s = 0; s < matrixBuilder.getBasisLibrary().getFunctionCount(); s++)
@@ -156,7 +152,7 @@ final class ReflectanceMatrixBuilder
                             double fInterp = fFloor * t + fCeil * (1 - t);
 
                             // Index of the column where the coefficient will be stored in the big matrix.
-                            int j = specularBasisSettings.getBasisCount() * (s + 1) + b;
+                            int j = basisSettings.getBasisCount() * (s + 1) + b;
 
                             // specular with blending between the two sampled locations.
                             mA.set(p, j, addlWeight * geomRatio * solution.getWeights(p).get(b) * fInterp);

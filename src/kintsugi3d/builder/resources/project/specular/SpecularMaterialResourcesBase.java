@@ -248,7 +248,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     {
         if (getBasisResources() != null)
         {
-            getBasisResources().getSpecularBasis().save(outputDirectory, filenameOverride);
+            getBasisResources().getBasis().save(outputDirectory, filenameOverride);
         }
     }
 

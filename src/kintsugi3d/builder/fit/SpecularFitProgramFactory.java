@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
@@ -27,11 +27,11 @@ import java.util.Map.Entry;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
-    private final SpecularBasisSettings specularBasisSettings;
+    private final BasisSettings basisSettings;
 
-    public SpecularFitProgramFactory(SpecularBasisSettings specularBasisSettings)
+    public SpecularFitProgramFactory(BasisSettings basisSettings)
     {
-        this.specularBasisSettings = specularBasisSettings;
+        this.basisSettings = basisSettings;
     }
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
@@ -53,9 +53,9 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         // Common definitions for all specular fitting related shaders.
         return builder
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-                .define("SMITH_MASKING_SHADOWING", specularBasisSettings.isSmithMaskingShadowingEnabled())
-                .define("BASIS_COUNT", specularBasisSettings.getBasisCount())
-                .define("BASIS_RESOLUTION", specularBasisSettings.getBasisResolution());
+                .define("SMITH_MASKING_SHADOWING", basisSettings.isSmithMaskingShadowingEnabled())
+                .define("BASIS_COUNT", basisSettings.getBasisCount())
+                .define("BASIS_RESOLUTION", basisSettings.getBasisResolution());
     }
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,

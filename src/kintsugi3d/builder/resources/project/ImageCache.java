@@ -11,13 +11,11 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.SimpleLoadOptionsModel;
-import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
 import kintsugi3d.gl.geometry.GeometryTextures;
+import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
@@ -92,6 +90,16 @@ public class ImageCache<ContextType extends Context<ContextType>>
     public ContextType getContext()
     {
         return context;
+    }
+
+    public ReadonlyViewSet getViewSet()
+    {
+        return resources.getViewSet();
+    }
+
+    public ReadonlyVertexGeometry getGeometry()
+    {
+        return resources.getGeometry();
     }
 
     public ImageCacheSettings getSettings()

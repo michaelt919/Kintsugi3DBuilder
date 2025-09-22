@@ -336,6 +336,9 @@ public class ProgressBarsController
         private double maximum;
         private double localProgress;
 
+        // Updated instantly whereas stageCountProperty is updated asynchronously.
+        private int currentStage;
+
         private final IntegerProperty stageCountProperty;
         private final IntegerProperty currentStageProperty;
 
@@ -386,6 +389,8 @@ public class ProgressBarsController
             cancelRequested.set(false);
 
             localProgress = 0.0;
+            currentStage = 0;
+
             Platform.runLater(() ->
             {
                 stageCountProperty.setValue(0);
@@ -444,7 +449,9 @@ public class ProgressBarsController
         public void setStage(int stage, String message)
         {
             this.localProgress = 0.0;
-            int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
+            currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
+
+            LOG.debug("currentStage: " + currentStage);
 
             LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
@@ -467,6 +474,12 @@ public class ProgressBarsController
                     localStopwatch.start();
                 }
             });
+        }
+
+        @Override
+        public void advanceStage(String message)
+        {
+            setStage(currentStage + 1, message);
         }
 
         @Override

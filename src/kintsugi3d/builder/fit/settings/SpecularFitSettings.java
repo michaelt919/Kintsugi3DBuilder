@@ -16,11 +16,11 @@ import kintsugi3d.builder.resources.project.ImageCacheSettings;
 
 import java.io.File;
 
-public class SpecularFitRequestParams
+public class SpecularFitSettings
 {
     private final TextureResolution textureResolution;
     private final NormalOptimizationSettings normalOptimizationSettings = new NormalOptimizationSettings();
-    private final SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
+    private final BasisOptimizationSettings basisSettings = new BasisOptimizationSettings();
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
     private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
     private final ExportSettings exportSettings = new ExportSettings();
@@ -34,13 +34,15 @@ public class SpecularFitRequestParams
     private File priorSolutionDirectory = null;
     private File outputDirectory;
 
+    private boolean shouldOptimizeBasis = true;
+
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
      * @param width The width, in pixels, of the textures to be generated.
      * @param height The height, in pixels, of the textures to be generated.
      */
-    public SpecularFitRequestParams(int width, int height)
+    public SpecularFitSettings(int width, int height)
     {
         this.textureResolution = new TextureResolution(width, height);
 
@@ -56,9 +58,9 @@ public class SpecularFitRequestParams
         return textureResolution;
     }
 
-    public SpecularBasisSettings getSpecularBasisSettings()
+    public BasisOptimizationSettings getSpecularBasisSettings()
     {
-        return specularBasisSettings;
+        return basisSettings;
     }
 
     public NormalOptimizationSettings getNormalOptimizationSettings()
@@ -171,5 +173,15 @@ public class SpecularFitRequestParams
     public void setOutputDirectory(File outputDirectory)
     {
         this.outputDirectory = outputDirectory;
+    }
+
+    public boolean shouldOptimizeBasis()
+    {
+        return shouldOptimizeBasis;
+    }
+
+    public void setShouldOptimizeBasis(boolean optimizeBasis)
+    {
+        this.shouldOptimizeBasis = optimizeBasis;
     }
 }

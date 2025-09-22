@@ -63,6 +63,8 @@ public interface ProgressMonitor
      */
     void setStage(int stage, String message);
 
+    void advanceStage(String message);
+
     /**
      * May optionally be implemented by UIs that want to display different text during indeterminate progress.
      * @param finishingUpText

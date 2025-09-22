@@ -12,7 +12,6 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.util.Collections;
@@ -22,14 +21,12 @@ public class SpecularDecompositionFromExistingBasis extends SpecularDecompositio
 {
     private final List<DoubleVector3> diffuseAlbedos;
     private final MaterialBasis materialBasis;
-    private final SpecularBasisSettings settings;
 
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, SpecularDecomposition existingDecomposition)
+    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
     {
-        super(textureResolution, existingDecomposition.getMaterialBasis().getMaterialCount());
-        this.diffuseAlbedos = existingDecomposition.getDiffuseAlbedos();
-        this.materialBasis = existingDecomposition.getMaterialBasis();
-        this.settings = existingDecomposition.getSpecularBasisSettings();
+        super(textureResolution, materialBasis.getMaterialCount());
+        this.diffuseAlbedos = materialBasis.getDiffuseColors();
+        this.materialBasis = materialBasis;
     }
 
     @Override
@@ -42,11 +39,5 @@ public class SpecularDecompositionFromExistingBasis extends SpecularDecompositio
     public MaterialBasis getMaterialBasis()
     {
         return materialBasis;
-    }
-
-    @Override
-    public SpecularBasisSettings getSpecularBasisSettings()
-    {
-        return settings;
     }
 }

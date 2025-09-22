@@ -16,11 +16,9 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class BasisResources<ContextType extends Context<ContextType>> implements Resource, ContextBound<ContextType>
 {
@@ -30,8 +28,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     private final int basisCount;
     private final int basisResolution;
 
-    private List<DoubleVector3> diffuseAlbedos;
-    private MaterialBasis materialBasis;
+    private MaterialBasis basis;
 
     public BasisResources(ContextType context, int basisCount, int basisResolution)
     {
@@ -56,9 +53,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         return context;
     }
 
-    public MaterialBasis getSpecularBasis()
+    public MaterialBasis getBasis()
     {
-        return materialBasis;
+        return basis;
     }
 
     public int getBasisCount()
@@ -71,10 +68,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         return basisResolution;
     }
 
-    public void updateFromSolution(SpecularDecomposition solution)
+    public void setBasis(MaterialBasis basis)
     {
-        this.materialBasis = solution.getMaterialBasis();
-        this.diffuseAlbedos = solution.getDiffuseAlbedos();
+        this.basis = basis;
 
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
@@ -87,15 +83,15 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             for (int m = 0; m <= basisResolution; m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.materialBasis.evaluateSpecularRed(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.materialBasis.evaluateSpecularGreen(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.materialBasis.evaluateSpecularBlue(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.basis.evaluateSpecularRed(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.basis.evaluateSpecularGreen(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.basis.evaluateSpecularBlue(b, m));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
-            diffuseNativeBuffer.set(b, 0, solution.getDiffuseAlbedo(b).x);
-            diffuseNativeBuffer.set(b, 1, solution.getDiffuseAlbedo(b).y);
-            diffuseNativeBuffer.set(b, 2, solution.getDiffuseAlbedo(b).z);
+            diffuseNativeBuffer.set(b, 0, this.basis.getDiffuseColor(b).x);
+            diffuseNativeBuffer.set(b, 1, this.basis.getDiffuseColor(b).y);
+            diffuseNativeBuffer.set(b, 2, this.basis.getDiffuseColor(b).z);
             diffuseNativeBuffer.set(b, 3, 1.0f);
         }
 
@@ -149,7 +145,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             }
 
             BasisResources<ContextType> resources = new BasisResources<>(context, basis.getMaterialCount(), basis.getSpecularResolution());
-            resources.materialBasis = basis;
+            resources.basis = basis;
 
             // Send the basis functions to the GPU.
             resources.basisMaps.load(basisMapBuffer);

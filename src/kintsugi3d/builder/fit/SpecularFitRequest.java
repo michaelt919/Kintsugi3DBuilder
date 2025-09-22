@@ -14,8 +14,11 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.GeneralSettingsModel;
@@ -35,23 +38,24 @@ import java.util.Map;
 public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
-    private final SpecularFitRequestParams settings;
+    private final SpecularFitSettings settings;
 
     private static final boolean DEBUG_IMAGES = false;
 
-    public SpecularFitRequest(SpecularFitRequestParams settings)
+    public SpecularFitRequest(SpecularFitSettings settings)
     {
         this.settings = settings;
     }
 
     /**
      * Default constructor for CLI args requests
+     *
      * @param args args[0] is the project name; args[1] is the name of this class; args[2] is the output directory
      * @return the request object
      */
     public static SpecularFitRequest create(String... args)
     {
-        SpecularFitRequestParams params = new SpecularFitRequestParams(2048, 2048);
+        SpecularFitSettings params = new SpecularFitSettings(2048, 2048);
         params.setOutputDirectory(new File(args[2]));
         return new SpecularFitRequest(params);
     }
@@ -61,7 +65,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         this(getSettingsFromProject());
     }
 
-    private static SpecularFitRequestParams getSettingsFromProject()
+    private static SpecularFitSettings getSettingsFromProject()
     {
         GeneralSettingsModel projectSettings = Global.state().getIOModel()
             .validateHandler()
@@ -69,7 +73,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
         // Start with texture size
         int textureSize = projectSettings.getInt("textureSize");
-        SpecularFitRequestParams settings = new SpecularFitRequestParams(textureSize, textureSize);
+        SpecularFitSettings settings = new SpecularFitSettings(textureSize, textureSize);
 
         // Basis settings
         int basisResolution = projectSettings.getInt("basisResolution");
@@ -109,13 +113,19 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         return settings;
     }
 
+    public SpecularFitSettings getSettings()
+    {
+        return settings;
+    }
+
     /**
      * This version optimizes from scratch and requires project graphics resources.
+     *
      * @param renderable The implementation of the Kintsugi 3D Builder renderer.
      *                   This can be used to dynamically generate renders of the current view,
      *                   or just to access the GraphicsResources and the graphics Context.
-     * @param monitor A callback that can be fired to update the loading bar.
-     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
+     * @param monitor    A callback that can be fired to update the loading bar.
+     *                   If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
@@ -126,12 +136,28 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             // Set the output directory based on the view set's texture fit file path
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
-            if(monitor !=null){
+            if (monitor != null)
+            {
                 monitor.setProcessName("Process Textures");
             }
 
             // Perform the specular fit
-            new SpecularFitProcess(settings).optimizeFitWithCache(renderable.getResources(), monitor);
+            SpecularFitProcess process = new SpecularFitProcess(settings);
+            GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
+
+            if (settings.shouldOptimizeBasis())
+            {
+                process.optimizeFitWithCache(resources, monitor);
+            }
+            else
+            {
+                BasisSettings basisSettings = settings.getSpecularBasisSettings();
+                BasisResources<ContextType> basisResources = resources.getSpecularMaterialResources().getBasisResources();
+                basisSettings.setBasisCount(basisResources.getBasisCount());
+                basisSettings.setBasisResolution(basisResources.getBasisResolution());
+
+                process.reoptimizeTexturesWithCache(resources, monitor);
+            }
 
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
             renderable.reloadShaders();
@@ -154,7 +180,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
             projectModel.notifyProcessingComplete();
         }
-        catch(IOException e) // thrown by createReflectanceProgram
+        catch (IOException e) // thrown by createReflectanceProgram
         {
             ExceptionHandling.error("Error executing specular fit request:", e);
         }

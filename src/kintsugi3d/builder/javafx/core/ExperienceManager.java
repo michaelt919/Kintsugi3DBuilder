@@ -24,7 +24,8 @@ public final class ExperienceManager
         experiences.put("LightCalibration", new LightCalibration());
         experiences.put("MaskOptions", new MaskOptions());
         experiences.put("ToneCalibration", new ToneCalibration());
-        experiences.put("SpecularFit", new SpecularFit());
+        experiences.put("SpecularBasisFit", new SpecularBasisFit());
+        experiences.put("SpecularTextureFit", new SpecularTextureFit());
         experiences.put("ExportModel", new ExportModel());
         experiences.put("Log", new Log());
         experiences.put("SystemSettings", new SystemSettings());

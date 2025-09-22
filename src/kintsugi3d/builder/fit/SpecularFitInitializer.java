@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -33,12 +33,12 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitInitializer.class);
     private final ReadonlyGraphicsResources<ContextType> resources;
-    private final SpecularBasisSettings specularBasisSettings;
+    private final BasisSettings basisSettings;
 
-    public SpecularFitInitializer(ReadonlyGraphicsResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitInitializer(ReadonlyGraphicsResources<ContextType> resources, BasisSettings basisSettings)
     {
         this.resources = resources;
-        this.specularBasisSettings = specularBasisSettings;
+        this.basisSettings = basisSettings;
     }
 
     private ProgramObject<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws IOException
@@ -89,7 +89,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
             // Output for debugging
             LOG.info("Refined centers:");
-            for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
+            for (int b = 0; b < basisSettings.getBasisCount(); b++)
             {
                 LOG.info(centers.get(b).toString());
             }
@@ -113,7 +113,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             {
                 int bSelect = -1;
 
-                for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
+                for (int b = 0; b < basisSettings.getBasisCount(); b++)
                 {
                     if (solution.getWeights(p).get(b) > 0)
                     {

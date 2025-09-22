@@ -14,10 +14,11 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
+import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
@@ -55,9 +56,9 @@ public class SpecularFitProcess
     private static final boolean DEBUG_IMAGES = false;
     private static final boolean TRACE_IMAGES = false;
 
-    private final SpecularFitRequestParams settings;
+    private final SpecularFitSettings settings;
 
-    public SpecularFitProcess(SpecularFitRequestParams settings)
+    public SpecularFitProcess(SpecularFitSettings settings)
     {
         this.settings = settings;
     }
@@ -83,16 +84,27 @@ public class SpecularFitProcess
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), monitor);
 
         Duration duration = Duration.between(start, Instant.now());
-        LOG.info("Cache found / generated in: " + duration);
+        LOG.info("Cache found / generated in: {}", duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceSpecularMaterialResources(optimizeFitWithCache(cache, resources.getSpecularMaterialResources(), monitor));
+        resources.replaceSpecularMaterialResources(optimizeFitWithCache(cache, monitor));
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
 //        {
 //            basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
 //        }
+    }
+
+    public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(
+        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
+    {
+        // Get cache (should already be generated).
+        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), null);
+
+        // Runs the fit (long process) and then replaces the old material resources / textures
+        resources.replaceSpecularMaterialResources(reoptimizeTexturesWithCache(cache, resources.getSpecularMaterialResources(), monitor));
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
@@ -214,7 +226,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFitWithCache(
-        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, ProgressMonitor monitor)
+        ImageCache<ContextType> cache, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -266,74 +278,113 @@ public class SpecularFitProcess
                     monitor.setStage(2, "Performing high-res fit...");
                 }
 
-                // Create space for the solution.
-                // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-                SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original,
-                    settings.getTextureResolution(), sampledFit.getMetadataMaps().keySet(), /* include all metadata maps supported by SpecularFitOptimizable */
-                    settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
-
-                try
-                {
-                    // Basis functions are not spatial, so we want to just copy for future use
-                    // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
-                    assert fullResolution.getBasisResources() != null;
-                    fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
-
-                    File geometryFile = sampled.getViewSet().getGeometryFile();
-                    ReadonlyMaterial material = sampled.getGeometry().getMaterial();
-                    ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();
-                    File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
-                        ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
-
-                    // Optimize weight maps and normal maps by blocks to fill the full resolution textures
-                    optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, monitor);
-
-                    if (monitor != null)
-                    {
-                        // Go back to indeterminate for wrap-up stuff
-                        monitor.setStage(3, "Texture processing complete.");
-                    }
-
-                    // Generate albedo / ORM maps at full resolution (does not require loaded source images)
-            fullResolution.getAlbedoORMOptimization().execute(fullResolution);
-
-                    Duration duration = Duration.between(start, Instant.now());
-                    LOG.info("Total processing time: " + duration);
-
-                    if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
-                    {
-                        try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt"), StandardCharsets.UTF_8))
-                        {
-                            time.println(duration);
-                        }
-                        catch (FileNotFoundException e)
-                        {
-                            LOG.error("An error occurred writing time file:", e);
-                        }
-                    }
-
-                    if (settings.getOutputDirectory() != null)
-                    {
-                        fullResolution.saveAll(settings.getOutputDirectory());
-                    }
-
-                    return fullResolution;
-                }
-                catch (IOException|RuntimeException e)
-                {
-                    // Prevent memory leak when an exception occurs
-                    fullResolution.close();
-
-                    throw e;
-                }
+                return optimizeFitWithCacheHelper(cache, monitor, sampledFit, sampledDecomposition.getMaterialBasis(), start);
             }
         }
+    }
+
+    private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> reoptimizeTexturesWithCache(
+        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
+    {
+        Instant start = Instant.now();
+
+        ContextType context = cache.getContext();
+
+        // Disable back face culling since we're rendering in texture space
+        // (should be the case already from generating the cache, but good to do just in case)
+        context.getState().disableBackFaceCulling();
+
+        if (monitor != null)
+        {
+            monitor.setStageCount(1);
+            monitor.setStage(0, "Performing high-res fit...");
+        }
+
+        MaterialBasis basis = original.getBasisResources().getBasis();
+        return optimizeFitWithCacheHelper(cache, monitor, original, basis, start);
+    }
+
+    private <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> optimizeFitWithCacheHelper(
+        ImageCache<ContextType> cache, ProgressMonitor monitor, SpecularMaterialResources<ContextType> reference,
+        MaterialBasis basis, Instant start) throws IOException, UserCancellationException
+    {
+        // Create space for the solution.
+        // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
+        SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(reference,
+            settings.getTextureResolution(), reference.getMetadataMaps().keySet(), /* include all metadata maps supported by SpecularFitOptimizable */
+            settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
+
+
+        try
+        {
+            // Basis functions are not spatial, so we want to just copy for future use
+            // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
+            assert fullResolution.getBasisResources() != null;
+            fullResolution.getBasisResources().setBasis(basis);
+
+            // Find the original normal map imported with the geometry
+            // TODO support importing in other ways, such as from Metashape project or manually
+            // If normal map optimization is enabled, this will be used as the starting point.
+            // If disabled, it should revert to this imported normal map
+            File geometryFile = cache.getViewSet().getGeometryFile();
+            ReadonlyMaterial material = cache.getGeometry().getMaterial();
+            ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();
+            File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
+                ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
+
+            // Optimize weight maps and normal maps by blocks to fill the full resolution textures
+            optimizeBlocks(fullResolution, cache, basis, inputNormalMap, monitor);
+
+            if (monitor != null)
+            {
+                // Go back to indeterminate for wrap-up stuff
+                monitor.advanceStage("Texture processing complete.");
+            }
+
+            // Generate albedo / ORM maps at full resolution (does not require loaded source images)
+            fullResolution.getAlbedoORMOptimization().execute(fullResolution);
+
+            Duration duration = Duration.between(start, Instant.now());
+            logProcessingTime(duration);
+
+            if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
+            {
+                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt"), StandardCharsets.UTF_8))
+                {
+                    time.println(duration);
+                }
+                catch (FileNotFoundException e)
+                {
+                    LOG.error("An error occurred writing time file:", e);
+                }
+            }
+
+            if (settings.getOutputDirectory() != null)
+            {
+                fullResolution.saveAll(settings.getOutputDirectory());
+            }
+
+            return fullResolution;
+        }
+        catch (IOException|RuntimeException e)
+        {
+            // Prevent memory leak when an exception occurs
+            fullResolution.close();
+
+            throw e;
+        }
+    }
+
+    private static void logProcessingTime(Duration duration)
+    {
+        LOG.info("Total processing time: {}", duration);
     }
 
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
         Blittable<SpecularMaterialResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
-        SpecularDecompositionFromScratch sampledDecomposition,
+        MaterialBasis basis,
         File inputNormalMapFile,
         ProgressMonitor monitor)
         throws IOException, UserCancellationException
@@ -426,9 +477,9 @@ public class SpecularFitProcess
 
                             // Use basis functions previously optimized at a lower resolution
                             SpecularDecomposition blockDecomposition =
-                                new SpecularDecompositionFromExistingBasis(blockResolution, sampledDecomposition);
+                                new SpecularDecompositionFromExistingBasis(blockResolution, basis);
 
-                            if (sampledDecomposition.getMaterialBasis().getMaterialCount() == 1)
+                            if (basis.getMaterialCount() == 1)
                             {
                                 // special case for a single basis function: pre-fill with default weights so that optimization is unnecesssary.
                                 int weightCount = blockResolution.width * blockResolution.height;

@@ -13,7 +13,7 @@ package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
 import kintsugi3d.builder.resources.project.stream.GraphicsStream;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.MatrixSystem;
@@ -30,9 +30,9 @@ public class BRDFReconstruction
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
     private final BasisFunctions stepBasis;
     private final int matrixSize;
-    private final SpecularBasisSettings settings;
+    private final BasisOptimizationSettings settings;
 
-    public BRDFReconstruction(SpecularBasisSettings settings, BasisFunctions stepBasis)
+    public BRDFReconstruction(BasisOptimizationSettings settings, BasisFunctions stepBasis)
     {
         this.stepBasis = stepBasis;
         this.settings = settings;
@@ -134,11 +134,11 @@ public class BRDFReconstruction
                 MatrixSystem contribution = new MatrixSystem(matrixSize, 3, DMatrixRMaj.class);
 
                 // Get the contributions from the current view.
-                new ReflectanceMatrixBuilder(reflectanceData, solution, settings.getMetallicity(), stepBasis, contribution).execute();
+                new ReflectanceMatrixBuilder(reflectanceData, solution, stepBasis, contribution, settings).execute();
 
                 synchronized (counter)
                 {
-                    LOG.info("Finished view " + counter.get() + '.');
+                    LOG.info("Finished view {}.", counter.get());
                     counter.increment();
                 }
 

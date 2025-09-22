@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
@@ -30,29 +30,29 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     private final SimpleMatrix specularGreen;
     private final SimpleMatrix specularBlue;
 
-    private final SpecularBasisSettings specularBasisSettings;
+    private final BasisSettings basisSettings;
 
-    public SpecularDecompositionFromScratch(TextureResolution textureResolution, SpecularBasisSettings specularBasisSettings)
+    public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
     {
-        super(textureResolution, specularBasisSettings.getBasisCount());
-        this.specularBasisSettings = specularBasisSettings;
+        super(textureResolution, basisSettings.getBasisCount());
+        this.basisSettings = basisSettings;
 
-        diffuseAlbedos = new DoubleVector3[this.specularBasisSettings.getBasisCount()];
+        diffuseAlbedos = new DoubleVector3[this.basisSettings.getBasisCount()];
 
-        for (int i = 0; i < this.specularBasisSettings.getBasisCount(); i++)
+        for (int i = 0; i < this.basisSettings.getBasisCount(); i++)
         {
             diffuseAlbedos[i] = DoubleVector3.ZERO;
         }
 
         specularRed = new SimpleMatrix(
-            this.specularBasisSettings.getBasisResolution() + 1,
-            this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
+            this.basisSettings.getBasisResolution() + 1,
+            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
         specularGreen = new SimpleMatrix(
-            this.specularBasisSettings.getBasisResolution() + 1,
-            this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
+            this.basisSettings.getBasisResolution() + 1,
+            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
         specularBlue = new SimpleMatrix(
-            this.specularBasisSettings.getBasisResolution() + 1,
-            this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
+            this.basisSettings.getBasisResolution() + 1,
+            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
     }
 
     @Override
@@ -66,13 +66,19 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     {
         return new MaterialBasis()
         {
-            final int count = specularBasisSettings.getBasisCount();
-            final int resolution = specularBasisSettings.getBasisResolution();
+            final int count = basisSettings.getBasisCount();
+            final int resolution = basisSettings.getBasisResolution();
 
             @Override
             public DoubleVector3 getDiffuseColor(int b)
             {
                 return diffuseAlbedos[b];
+            }
+
+            @Override
+            public List<DoubleVector3> getDiffuseColors()
+            {
+                return List.of(diffuseAlbedos);
             }
 
             @Override
@@ -131,11 +137,5 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     public SimpleMatrix getSpecularBlue()
     {
         return specularBlue;
-    }
-
-    @Override
-    public SpecularBasisSettings getSpecularBasisSettings()
-    {
-        return specularBasisSettings;
     }
 }

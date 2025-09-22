@@ -14,6 +14,7 @@ package kintsugi3d.builder.fit.decomposition;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
+import java.util.List;
 
 public interface MaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
@@ -23,6 +24,8 @@ public interface MaterialBasis // TODO: avoid use of anonymous classes, add copy
      * @return the diffuse color as a DoubleVector3 for basis function b.
      */
     DoubleVector3 getDiffuseColor (int b);
+
+    List<DoubleVector3> getDiffuseColors();
 
     /**
      * Evaluates a red basis function

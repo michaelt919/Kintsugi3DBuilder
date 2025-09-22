@@ -267,6 +267,16 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             }
 
             @Override
+            public void advanceStage(String message)
+            {
+                if (progressMonitor != null)
+                {
+                    // Add one for the preview image generation step already completed.
+                    progressMonitor.advanceStage(message);
+                }
+            }
+
+            @Override
             public void setMaxProgress(double maxProgress)
             {
                 if (progressMonitor != null)

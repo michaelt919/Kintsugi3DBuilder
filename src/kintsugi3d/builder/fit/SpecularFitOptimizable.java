@@ -18,8 +18,9 @@ import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.normal.NormalOptimization;
+import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
+import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStream;
@@ -52,7 +53,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private final ReadonlyGraphicsResources<ContextType> resources;
     private final TextureResolution textureResolution;
 
-    private final SpecularBasisSettings specularBasisSettings;
+    private final BasisOptimizationSettings basisSettings;
 
     private final Consumer<Program<ContextType>> setupShaderProgram;
 
@@ -64,7 +65,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private SpecularFitOptimizable(
         ReadonlyGraphicsResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
-        SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
+        BasisOptimizationSettings basisSettings, SpecularFitProgramFactory<ContextType> programFactory,
         TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {
@@ -72,7 +73,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         this.context = resources.getContext();
         this.resources = resources;
         this.textureResolution = textureResolution;
-        this.specularBasisSettings = specularBasisSettings;
+        this.basisSettings = basisSettings;
         this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
         // Final diffuse estimation
@@ -132,12 +133,12 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
         ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
-        SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
+        BasisOptimizationSettings basisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {
         return new SpecularFitOptimizable<>(resources,
-            new BasisResources<>(resources.getContext(), specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
-                true, specularBasisSettings, programFactory, textureResolution, normalOptimizationSettings, includeConstantTerm);
+            new BasisResources<>(resources.getContext(), basisSettings.getBasisCount(), basisSettings.getBasisResolution()),
+                true, basisSettings, programFactory, textureResolution, normalOptimizationSettings, includeConstantTerm);
     }
 
     public ReadonlyGraphicsResources<ContextType> getResources()
@@ -150,9 +151,9 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         return textureResolution;
     }
 
-    public SpecularBasisSettings getSpecularBasisSettings()
+    public BasisSettings getBasisSettings()
     {
-        return specularBasisSettings;
+        return basisSettings;
     }
 
     private void optimize(Runnable iteration, double convergenceTolerance, ProgressMonitor monitor)
@@ -175,7 +176,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             minDeltaError = Math.min(minDeltaError, deltaError);
             //monitor.setProgress(1.0 / Math.max(convergenceTolerance, minDeltaError), MessageFormat.format("Delta error: {0}", minDeltaError));
         }
-        while ((specularBasisSettings.getBasisCount() > 1 || normalOptimization.isNormalRefinementEnabled()) &&
+        while ((basisSettings.getBasisCount() > 1 || normalOptimization.isNormalRefinementEnabled()) &&
             // Iteration not necessary if basisCount is 1 and normal refinement is off.
             deltaError > convergenceTolerance);
     }
@@ -187,10 +188,10 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         prepareForOptimization(reflectanceStream);
 
         // Track how the error improves over iterations of the whole algorithm.
-        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, specularBasisSettings);
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, specularDecomposition.getMaterialBasis().getMaterialCount());
 
         // Run once just in case
-        getBasisResources().updateFromSolution(specularDecomposition);
+        getBasisResources().setBasis(specularDecomposition.getMaterialBasis());
 
         optimize(
             () ->
@@ -211,7 +212,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         prepareForOptimization(reflectanceStream);
 
         // Track how the error improves over iterations of the whole algorithm.
-        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, specularBasisSettings);
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, basisSettings.getBasisCount());
 
         // Instantiate once so that the memory buffers can be reused.
         GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
@@ -227,7 +228,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 if (debugDirectory != null)
                 {
                     // Save basis image visualization for reference and debugging
-                    try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, specularBasisSettings))
+                    try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, basisSettings))
                     {
                         basisImageCreator.createImages(this, debugDirectory);
                     }
@@ -240,7 +241,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                     specularDecomposition.saveDiffuseMap(debugDirectory);
                 }
 
-                getBasisResources().updateFromSolution(specularDecomposition);
+                getBasisResources().setBasis(specularDecomposition.getMaterialBasis());
 
                 weightAndNormalIteration(specularDecomposition, reflectanceStream, weightOptimization,
                     convergenceTolerance, debugDirectory);
@@ -251,7 +252,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private void weightAndNormalIteration(SpecularDecomposition specularDecomposition, GraphicsStream<ColorList[]> reflectanceStream,
         SpecularWeightOptimization weightOptimization, double convergenceTolerance, File debugDirectory)
     {
-        if (specularBasisSettings.getBasisCount() > 1)
+        if (basisSettings.getBasisCount() > 1)
         {
             weightOptimizationIteration(specularDecomposition, reflectanceStream, weightOptimization, debugDirectory);
         }
@@ -307,13 +308,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         GraphicsStream<ColorList[]> reflectanceStreamParallel, ProgressMonitor monitor)
     {
         BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
-            specularBasisSettings,
+            basisSettings,
             new GeneralizedSmoothStepBasis(
-                specularBasisSettings.getBasisResolution(),
-                specularBasisSettings.getMetallicity(),
-                specularBasisSettings.getSpecularMinWidth(),
-                specularBasisSettings.getSpecularMaxWidth(),
-                specularBasisSettings.getBasisComplexity(),
+                basisSettings.getBasisResolution(),
+                basisSettings.getMetallicity(),
+                basisSettings.getSpecularMinWidth(),
+                basisSettings.getSpecularMaxWidth(),
+                basisSettings.getBasisComplexity(),
                 x -> 3 * x * x - 2 * x * x * x)
 //                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
         );
@@ -330,7 +331,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         // Prepare for error calculation on the GPU.
         // Basis functions will have changed.
-        getBasisResources().updateFromSolution(specularDecomposition);
+        getBasisResources().setBasis(specularDecomposition.getMaterialBasis());
 
         LOG.debug("Calculating error...");
         errorCalculator.update();
@@ -352,7 +353,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         {
             if (blockCount > 1)
             {
-                LOG.info("Starting block " + i + "...");
+                LOG.info("Starting block {}...", i);
             }
 
             weightOptimization.execute(
@@ -397,7 +398,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private static void logError(ReadonlyErrorReport report)
     {
-        LOG.debug("Error: " + report.getError() + " (Previous error: " + report.getPreviousError() + ")");
+        LOG.debug("Error: {} (Previous error: {})", report.getError(), report.getPreviousError());
     }
 
     @Override
