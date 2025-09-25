@@ -208,6 +208,14 @@ public class MainWindowController
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
             userShaderModel.getUserShader().getFriendlyName(), userShaderModel.getUserShaderProperty()));
 
+        userShaderModel.getUserShaderProperty().addListener((obs, oldValue, newValue) ->
+        {
+            if (!Objects.equals(newValue, renderGroup.getSelectedToggle().getUserData()))
+            {
+                renderGroup.selectToggle(null);
+            }
+        });
+
         projectModel = javaFXState.getProjectModel();
 
         projectModel.getProjectOpenProperty().addListener(obs ->
@@ -491,24 +499,30 @@ public class MainWindowController
     {
         renderGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) ->
         {
-            UserShader shaderData = null;
-            if (newValue != null && newValue.getUserData() instanceof String)
+            if (newValue != null)
             {
-                shaderData = new UserShader(((MenuItem) renderGroup.getSelectedToggle()).getText(), (String) newValue.getUserData());
-            }
+                UserShader shader = null;
 
-            if (newValue != null && newValue.getUserData() instanceof UserShader)
-            {
-                shaderData = (UserShader) newValue.getUserData();
-            }
+                if (newValue.getUserData() instanceof String)
+                {
+                    shader = new UserShader(((MenuItem) renderGroup.getSelectedToggle()).getText(), (String) newValue.getUserData());
+                }
+                else if (newValue.getUserData() instanceof UserShader)
+                {
+                    shader = (UserShader) newValue.getUserData();
+                }
 
-            if (shaderData == null)
-            {
-                ExceptionHandling.error("Failed to parse shader data for rendering option.", new RuntimeException("shaderData is null!"));
-                return;
-            }
+                if (shader != null)
+                {
+                    Global.state().getUserShaderModel().setUserShader(shader);
+                }
 
-            Global.state().getUserShaderModel().setUserShader(shaderData);
+//                if (shader == null)
+//                {
+//                    ExceptionHandling.error("Failed to parse shader data for rendering option.", new RuntimeException("shader is null!"));
+//                    return;
+//                }
+            }
         });
     }
 
