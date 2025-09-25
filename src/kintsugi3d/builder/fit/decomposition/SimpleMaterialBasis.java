@@ -15,69 +15,72 @@ import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class SimpleMaterialBasis implements MaterialBasis
 {
-    private final DoubleVector3[] diffuseColors;
+    private final List<DoubleVector3> diffuseColors;
 
-    private final double[][] redBasis;
-    private final double[][] greenBasis;
-    private final double[][] blueBasis;
+    private final List<double[]> redBasis;
+    private final List<double[]> greenBasis;
+    private final List<double[]> blueBasis;
 
-    private final int materialCount;
+    private int materialCount;
     private final int specularResolution;
 
     public SimpleMaterialBasis(int materialCount, int specularResolution)
     {
-        diffuseColors = IntStream.range(0, materialCount).mapToObj(b -> DoubleVector3.ZERO).toArray(DoubleVector3[]::new);
-        redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).toArray(double[][]::new);
-        greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).toArray(double[][]::new);
-        blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).toArray(double[][]::new);
+        diffuseColors = IntStream.range(0, materialCount).mapToObj(b -> DoubleVector3.ZERO).collect(Collectors.toCollection(ArrayList::new));
+        redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toCollection(ArrayList::new));
+        greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toCollection(ArrayList::new));
+        blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toCollection(ArrayList::new));
         this.materialCount = materialCount;
         this.specularResolution = specularResolution;
     }
 
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    public SimpleMaterialBasis(DoubleVector3[] diffuseColors, double[][] redBasis, double[][] greenBasis, double[][] blueBasis)
+    public SimpleMaterialBasis(DoubleVector3[] diffuseColors, List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis)
     {
-        this.diffuseColors = diffuseColors;
+        this.diffuseColors = new ArrayList<>(List.of(diffuseColors));
         this.redBasis = redBasis;
         this.greenBasis = greenBasis;
         this.blueBasis = blueBasis;
-        this.materialCount = redBasis.length;
-        this.specularResolution = redBasis[0].length - 1;
+        this.materialCount = redBasis.size();
+        this.specularResolution = redBasis.get(0).length - 1;
     }
 
     @Override
     public DoubleVector3 getDiffuseColor(int b)
     {
-        return diffuseColors[b];
+        return diffuseColors.get(b);
     }
 
     @Override
     public List<DoubleVector3> getDiffuseColors()
     {
-        return List.of(diffuseColors);
+        return Collections.unmodifiableList(diffuseColors);
     }
 
     @Override
     public double evaluateSpecularRed(int b, int m)
     {
-        return redBasis[b][m];
+        return redBasis.get(b)[m];
     }
 
     @Override
     public double evaluateSpecularGreen(int b, int m)
     {
-        return greenBasis[b][m];
+        return greenBasis.get(b)[m];
     }
 
     @Override
     public double evaluateSpecularBlue(int b, int m)
     {
-        return blueBasis[b][m];
+        return blueBasis.get(b)[m];
     }
 
     @Override
@@ -90,6 +93,16 @@ public class SimpleMaterialBasis implements MaterialBasis
     public int getSpecularResolution()
     {
         return specularResolution;
+    }
+
+    @Override
+    public void deleteMaterial(int b)
+    {
+        redBasis.remove(b);
+        greenBasis.remove(b);
+        blueBasis.remove(b);
+        diffuseColors.remove(b);
+        materialCount--;
     }
 
     @Override
@@ -106,7 +119,7 @@ public class SimpleMaterialBasis implements MaterialBasis
      */
     public void setRed(int b, int m, double value)
     {
-        redBasis[b][m] = value;
+        redBasis.get(b)[m] = value;
     }
 
     /**
@@ -117,7 +130,7 @@ public class SimpleMaterialBasis implements MaterialBasis
      */
     public void setGreen(int b, int m, double value)
     {
-        greenBasis[b][m] = value;
+        greenBasis.get(b)[m] = value;
     }
 
     /**
@@ -128,6 +141,6 @@ public class SimpleMaterialBasis implements MaterialBasis
      */
     public void setBlue(int b, int m, double value)
     {
-        blueBasis[b][m] = value;
+        blueBasis.get(b)[m] = value;
     }
 }

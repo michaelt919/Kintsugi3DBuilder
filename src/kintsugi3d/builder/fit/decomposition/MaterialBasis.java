@@ -54,5 +54,7 @@ public interface MaterialBasis // TODO: avoid use of anonymous classes, add copy
     int getMaterialCount();
     int getSpecularResolution();
 
+    void deleteMaterial(int b);
+
     void save(File outputDirectory, String filenameOverride);
 }

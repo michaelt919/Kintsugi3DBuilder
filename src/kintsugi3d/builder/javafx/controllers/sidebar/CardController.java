@@ -114,7 +114,6 @@ public class CardController
                 Button button = new Button(label);
                 button.setGraphicTextGap(8.0);
                 button.setMnemonicParsing(false);
-                button.setStyle("-fx-text-fill: #CECECE;");
                 button.getStyleClass().add("card-button");
                 button.getStylesheets().add("file:./kintsugiStyling.css");
                 button.setOnAction(event -> action.run());

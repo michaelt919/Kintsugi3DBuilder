@@ -304,6 +304,11 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
             public void saveMetadataMaps(String format, File outputDirectory, String filename)
             {
             }
+
+            @Override
+            public void deleteBasisMaterial(int materialIndex)
+            {
+            }
         };
     }
 
@@ -370,4 +375,6 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
         saveBasisFunctions(outputDirectory, null);
         saveMetadataMaps(format, outputDirectory, "");
     }
+
+    void deleteBasisMaterial(int materialIndex);
 }

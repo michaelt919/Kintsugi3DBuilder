@@ -23,9 +23,9 @@ import java.io.IOException;
 public class BasisResources<ContextType extends Context<ContextType>> implements Resource, ContextBound<ContextType>
 {
     private final ContextType context;
-    private final Texture2D<ContextType> basisMaps;
+    private Texture2D<ContextType> basisMaps;
     private final UniformBuffer<ContextType> diffuseUniformBuffer;
-    private final int basisCount;
+    private int basisCount;
     private final int basisResolution;
 
     private MaterialBasis basis;
@@ -36,15 +36,22 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         this.basisCount = basisCount;
         this.basisResolution = basisResolution;
 
-        this.basisMaps = context.getTextureFactory().build1DColorTextureArray(
+        basisMaps = createBasisMaps(context, basisCount, basisResolution);
+
+        this.diffuseUniformBuffer = context.createUniformBuffer();
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    Texture2D<ContextType> createBasisMaps(ContextType context, int basisCount, int basisResolution)
+    {
+        Texture2D<ContextType> basisMaps = context.getTextureFactory().build1DColorTextureArray(
                 basisResolution + 1, basisCount)
             .setInternalFormat(ColorFormat.RGB32F)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(false)
             .createTexture();
         basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
-
-        this.diffuseUniformBuffer = context.createUniformBuffer();
+        return basisMaps;
     }
 
     @Override
@@ -71,7 +78,18 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public void setBasis(MaterialBasis basis)
     {
         this.basis = basis;
+        refreshGraphicsResources();
+    }
 
+    public void deleteBasisMaterial(int materialIndex)
+    {
+        basis.deleteMaterial(materialIndex);
+        basisCount--;
+        refreshGraphicsResources();
+    }
+
+    private void refreshGraphicsResources()
+    {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
             basisCount * (basisResolution + 1));
@@ -93,6 +111,12 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             diffuseNativeBuffer.set(b, 1, this.basis.getDiffuseColor(b).y);
             diffuseNativeBuffer.set(b, 2, this.basis.getDiffuseColor(b).z);
             diffuseNativeBuffer.set(b, 3, 1.0f);
+        }
+
+        if (basisCount != basisMaps.getHeight()) // if the number of basis functions has changed, reallocate
+        {
+            basisMaps.close();
+            basisMaps = createBasisMaps(context, basisCount, basisResolution);
         }
 
         // Send the basis functions to the GPU.

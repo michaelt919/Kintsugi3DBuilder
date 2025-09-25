@@ -302,7 +302,7 @@ public final class SpecularFitSerializer
 
                 return new SimpleMaterialBasis(
                     diffuseBasis,
-                    specularRedBasis.toArray(double[][]::new), specularGreenBasis.toArray(double[][]::new), specularBlueBasis.toArray(double[][]::new));
+                    specularRedBasis, specularGreenBasis, specularBlueBasis);
             }
         }
         else

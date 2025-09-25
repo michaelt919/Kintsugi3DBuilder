@@ -269,4 +269,14 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
             }
         }
     }
+
+    @Override
+    public void deleteBasisMaterial(int materialIndex)
+    {
+        if (getBasisResources() != null && getBasisWeightResources() != null)
+        {
+            getBasisResources().deleteBasisMaterial(materialIndex);
+            getBasisWeightResources().deleteWeightMap(materialIndex);
+        }
+    }
 }

@@ -19,13 +19,13 @@ import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private final DoubleVector3[] diffuseAlbedos;
+    private final List<DoubleVector3> diffuseAlbedos;
     private final SimpleMatrix specularRed;
     private final SimpleMatrix specularGreen;
     private final SimpleMatrix specularBlue;
@@ -37,11 +37,11 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         super(textureResolution, basisSettings.getBasisCount());
         this.basisSettings = basisSettings;
 
-        diffuseAlbedos = new DoubleVector3[this.basisSettings.getBasisCount()];
+        diffuseAlbedos = new ArrayList<>(this.basisSettings.getBasisCount());
 
         for (int i = 0; i < this.basisSettings.getBasisCount(); i++)
         {
-            diffuseAlbedos[i] = DoubleVector3.ZERO;
+            diffuseAlbedos.add(DoubleVector3.ZERO);
         }
 
         specularRed = new SimpleMatrix(
@@ -58,7 +58,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     @Override
     public List<DoubleVector3> getDiffuseAlbedos()
     {
-        return Collections.unmodifiableList(Arrays.asList(diffuseAlbedos));
+        return Collections.unmodifiableList(diffuseAlbedos);
     }
 
     @Override
@@ -72,13 +72,13 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public DoubleVector3 getDiffuseColor(int b)
             {
-                return diffuseAlbedos[b];
+                return diffuseAlbedos.get(b);
             }
 
             @Override
             public List<DoubleVector3> getDiffuseColors()
             {
-                return List.of(diffuseAlbedos);
+                return Collections.unmodifiableList(diffuseAlbedos);
             }
 
             @Override
@@ -112,6 +112,30 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             }
 
             @Override
+            public void deleteMaterial(int b)
+            {
+                diffuseAlbedos.remove(b);
+                removeColumn(specularRed, b);
+                removeColumn(specularGreen, b);
+                removeColumn(specularBlue, b);
+            }
+
+            private void removeColumn(SimpleMatrix m, int b)
+            {
+                // Shift the columns over
+                for (int j = b; j < m.numCols() - 1; j++)
+                {
+                    for (int i = 0; i < m.numRows(); i++)
+                    {
+                        m.set(i, j, m.get(i, j + 1));
+                    }
+                }
+
+                // Remove the last column.
+                m.reshape(m.numRows(), m.numCols() - 1);
+            }
+
+            @Override
             public void save(File outputDirectory, String filenameOverride)
             {
                 SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory, filenameOverride);
@@ -121,7 +145,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 
     public void setDiffuseAlbedo(int basisIndex, DoubleVector3 diffuseAlbedo)
     {
-        diffuseAlbedos[basisIndex] = diffuseAlbedo;
+        diffuseAlbedos.set(basisIndex, diffuseAlbedo);
     }
 
     public SimpleMatrix getSpecularRed()

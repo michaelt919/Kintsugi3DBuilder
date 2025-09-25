@@ -513,10 +513,16 @@
 
 .card-button {
     -fx-background-color: #383838;
+    -fx-text-fill: #CECECE;
     -fx-background-radius: 0;
     -fx-min-width: 184;
     -fx-pref-width: 330;
     -fx-min-height: 32;
+}
+
+.card-button:hover,
+.card-button:pressed {
+    -fx-text-fill: #383838;
 }
 
 .card-separator .line {

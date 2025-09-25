@@ -26,7 +26,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 {
     private final ContextType context;
 
-    public final Texture3D<ContextType> weightMaps;
+    public Texture3D<ContextType> weightMaps;
     public final Texture2D<ContextType> weightMask;
 
     private final int width;
@@ -37,15 +37,21 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     {
         this(
             // Weight maps:
-            context.getTextureFactory().build2DColorTextureArray(width, height, basisCount)
-                .setInternalFormat(ColorFormat.R32F)
-                .setLinearFilteringEnabled(true)
-                .createTexture(),
+            createWeightMaps(context, width, height, basisCount),
             // Weight mask:
             context.getTextureFactory().build2DColorTexture(width, height)
                 .setInternalFormat(ColorFormat.R8)
                 .setLinearFilteringEnabled(true)
                 .createTexture());
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    Texture3D<ContextType> createWeightMaps(ContextType context, int width, int height, int basisCount)
+    {
+        return context.getTextureFactory().build2DColorTextureArray(width, height, basisCount)
+            .setInternalFormat(ColorFormat.R32F)
+            .setLinearFilteringEnabled(true)
+            .createTexture();
     }
 
     /**
@@ -132,6 +138,21 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     {
         program.setTexture("weightMaps", weightMaps);
         program.setTexture("weightMask", weightMask);
+    }
+
+    public void deleteWeightMap(int mapIndex)
+    {
+        Texture3D<ContextType> newWeightMaps = createWeightMaps(context, width, height, basisCount - 1);
+
+        // Copy layers before the one removed.
+        newWeightMaps.blitCropped(weightMaps, 0, 0, 0, width, height, mapIndex);
+
+        // Copy layers after the one removed.
+        newWeightMaps.blitCropped(0, 0, mapIndex, weightMaps, 0, 0, mapIndex + 1, width, height, basisCount - mapIndex - 1);
+
+        // Replace
+        weightMaps.close();
+        weightMaps = newWeightMaps;
     }
 
     @Override
