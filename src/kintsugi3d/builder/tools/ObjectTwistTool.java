@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.ManipulableObjectPoseModel;
-import kintsugi3d.builder.state.ManipulableViewpointModel;
+import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
+import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;

@@ -14,8 +14,8 @@ package kintsugi3d.builder.javafx.internal;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightSettings;
-import kintsugi3d.builder.state.DiscreteLightModelFromSettings;
 import kintsugi3d.builder.state.project.SerializableLightSettings;
+import kintsugi3d.builder.state.scene.DiscreteLightModelFromSettings;
 
 public class ObservableDiscreteLightModel extends DiscreteLightModelFromSettings
 {

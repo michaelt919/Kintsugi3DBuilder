@@ -18,7 +18,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import kintsugi3d.builder.state.GeneralSettingsModelBase;
+import kintsugi3d.builder.state.settings.GeneralSettingsModelBase;
 
 import java.util.HashMap;
 import java.util.Iterator;

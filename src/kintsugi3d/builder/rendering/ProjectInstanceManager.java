@@ -13,7 +13,6 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
@@ -23,7 +22,12 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
-import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.cards.TabsManager;
+import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
+import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
@@ -41,8 +45,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ProjectInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -190,13 +192,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             LOG.error("One or more images failed to load", e);
         }
 
-        loadedViewSet.generateCameraMetadata();
-        TabsModel tabsModel = Global.state().getTabModels();
-        tabsModel.addTab("Cameras",
-            model -> IntStream.range(0, loadedViewSet.getCameraPoseCount())
-                .mapToObj(i -> ProjectDataCardFactory.createCameraCard(model, loadedViewSet, i))
-                .collect(Collectors.toUnmodifiableList()));
-
         // Create the instance (will be initialized on the graphics thread)
         ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
 
@@ -206,151 +201,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
 
-        newItem.setProgressMonitor(new ProgressMonitor()
-        {
-            @Override
-            public void allowUserCancellation() throws UserCancellationException
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.allowUserCancellation();
-                }
-            }
-
-            @Override
-            public void cancelComplete(UserCancellationException e)
-            {
-                Global.state().getTabModels().clearTabs(); // Loading cancelled; clear the tabs of the sidebar
-
-                if (progressMonitor != null)
-                {
-                    progressMonitor.cancelComplete(e);
-                }
-            }
-
-            @Override
-            public void start()
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.start();
-                }
-            }
-
-            @Override
-            public void setProcessName(String processName)
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.setProcessName(processName);
-                }
-            }
-
-            @Override
-            public void setStageCount(int count)
-            {
-                if (progressMonitor != null)
-                {
-                    // Add one for the preview image generation step already completed.
-                    progressMonitor.setStageCount(count + 1);
-                }
-            }
-
-            @Override
-            public void setStage(int stage, String message)
-            {
-                if (progressMonitor != null)
-                {
-                    // Add one for the preview image generation step already completed.
-                    progressMonitor.setStage(stage + 1, message);
-                }
-            }
-
-            @Override
-            public void advanceStage(String message)
-            {
-                if (progressMonitor != null)
-                {
-                    // Add one for the preview image generation step already completed.
-                    progressMonitor.advanceStage(message);
-                }
-            }
-
-            @Override
-            public void setMaxProgress(double maxProgress)
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.setMaxProgress(maxProgress);
-                }
-            }
-
-            @Override
-            public void setProgress(double progress, String message)
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.setProgress(progress, message);
-                }
-            }
-
-            @Override
-            public void complete()
-            {
-                newItem.getResources().calibrateLightIntensities();
-                newItem.reloadShaders();
-
-                Global.state().getProjectModel().setProjectLoaded(true);
-                Global.state().getProjectModel().setProjectProcessed(isProcessed());
-                Global.state().getProjectModel().setModelSize(newItem.getActiveGeometry().getBoundingBoxSize());
-
-                if (isProcessed())
-                {
-                    BasisWeightResources<ContextType> basisWeightResources =
-                        projectInstance.getResources().getSpecularMaterialResources().getBasisWeightResources();
-
-                    Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.weightMaps.getWidth());
-                }
-                else
-                {
-                    Global.state().getProjectModel().setProcessedTextureResolution(0);
-                }
-
-                if (progressMonitor != null)
-                {
-                    progressMonitor.complete();
-                }
-            }
-
-            @Override
-            public void fail(Throwable e)
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.fail(e);
-                }
-            }
-
-            @Override
-            public void warn(Throwable e)
-            {
-                if (progressMonitor != null)
-                {
-                    progressMonitor.warn(e);
-                }
-            }
-
-            @Override
-            public boolean isConflictingProcess()
-            {
-                if (progressMonitor == null)
-                {
-                    return false;
-                }
-                return progressMonitor.isConflictingProcess();
-            }
-        });
+        newItem.setProgressMonitor(new BackendProgressMonitor(newItem, progressMonitor));
         newInstance = newItem;
+
+        new TabsManager(loadedViewSet).refreshTabs(Global.state().getTabModels());
     }
 
     @Override
@@ -527,11 +381,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             projectInstance.getDynamicResourceManager().setLightCalibration(
                 projectInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
-    }
-
-    public boolean isProcessed()
-    {
-        return projectInstance.getResources().getSpecularMaterialResources().getBasisWeightResources() != null;
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)

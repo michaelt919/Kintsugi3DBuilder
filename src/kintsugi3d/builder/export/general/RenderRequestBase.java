@@ -14,7 +14,7 @@ package kintsugi3d.builder.export.general;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
-import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;

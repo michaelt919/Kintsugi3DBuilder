@@ -12,9 +12,9 @@ import kintsugi3d.builder.javafx.internal.ReadonlyObservableGeneralSettingsModel
 import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.GeneralSettingsModel;
-import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
+import kintsugi3d.builder.state.settings.DefaultSettings;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 
 import java.util.Collections;
 import java.util.HashSet;

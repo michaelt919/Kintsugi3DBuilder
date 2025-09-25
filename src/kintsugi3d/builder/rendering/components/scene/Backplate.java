@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.state.BackgroundMode;
+import kintsugi3d.builder.state.scene.BackgroundMode;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;

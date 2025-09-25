@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.state.BackgroundMode;
-import kintsugi3d.builder.state.EnvironmentModel;
+import kintsugi3d.builder.state.scene.BackgroundMode;
+import kintsugi3d.builder.state.scene.EnvironmentModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 

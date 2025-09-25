@@ -13,8 +13,8 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSettings;
-import kintsugi3d.builder.state.EnvironmentModel;
-import kintsugi3d.builder.state.LightingEnvironmentModelFromSettings;
+import kintsugi3d.builder.state.scene.EnvironmentModel;
+import kintsugi3d.builder.state.scene.LightingEnvironmentModelFromSettings;
 
 public final class ObservableLightingEnvironmentModel extends LightingEnvironmentModelFromSettings<ObservableDiscreteLightModel>
 {

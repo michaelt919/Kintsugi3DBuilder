@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.state.ManipulableObjectPoseModel;
-import kintsugi3d.builder.state.ObjectPoseModelBase;
+import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
+import kintsugi3d.builder.state.scene.ObjectPoseModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public class SynchronizedObjectPoseModel extends ObjectPoseModelBase

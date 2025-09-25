@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.LightWidgetModel;
-import kintsugi3d.builder.state.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.state.scene.LightWidgetModel;
+import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;

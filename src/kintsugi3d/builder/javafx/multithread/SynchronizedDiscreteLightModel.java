@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.state.DiscreteLightModel;
-import kintsugi3d.builder.state.DiscreteLightModelBase;
+import kintsugi3d.builder.state.scene.DiscreteLightModel;
+import kintsugi3d.builder.state.scene.DiscreteLightModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public class SynchronizedDiscreteLightModel extends DiscreteLightModelBase

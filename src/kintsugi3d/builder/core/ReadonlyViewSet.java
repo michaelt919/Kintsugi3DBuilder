@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.core.metrics.ViewRMSE;
-import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -120,6 +121,14 @@ public interface ReadonlyViewSet
      * @return The image file path.
      */
     String getRelativePreviewImagePathName();
+
+    /**
+     * Gets a list of all image files.
+     * This method should be used to retrieve a filename representing the actual location of the full-res image file.
+     * In contexts when the relative path is unwanted, use getImageFileName() instead.
+     * @return The list of image files
+     */
+    List<File> getImageFiles();
 
     /**
      * Gets the image file corresponding to a particular view, relative to the full res image directory.

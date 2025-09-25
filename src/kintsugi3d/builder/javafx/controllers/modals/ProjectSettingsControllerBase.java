@@ -9,7 +9,7 @@ import javafx.scene.control.TextField;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ReadonlyObservableGeneralSettingsModel;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 import java.util.Set;
 import java.util.function.Function;

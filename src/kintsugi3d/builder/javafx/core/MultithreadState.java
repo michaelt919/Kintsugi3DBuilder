@@ -16,7 +16,12 @@ import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
+import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
 {

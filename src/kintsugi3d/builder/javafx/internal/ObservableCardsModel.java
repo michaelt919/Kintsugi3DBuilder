@@ -5,8 +5,8 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import kintsugi3d.builder.state.CardsModel;
-import kintsugi3d.builder.state.ProjectDataCard;
+import kintsugi3d.builder.state.cards.CardsModel;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.util.ArrayList;
 import java.util.List;

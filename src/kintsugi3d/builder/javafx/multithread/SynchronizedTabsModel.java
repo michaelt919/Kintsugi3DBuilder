@@ -1,12 +1,9 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
-import kintsugi3d.builder.state.CardsModel;
-import kintsugi3d.builder.state.ProjectDataCard;
-import kintsugi3d.builder.state.TabsModel;
-
-import java.util.List;
-import java.util.function.Function;
+import kintsugi3d.builder.state.cards.CardsModel;
+import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
+import kintsugi3d.builder.state.cards.TabsModel;
 
 public class SynchronizedTabsModel implements TabsModel
 {
@@ -18,9 +15,9 @@ public class SynchronizedTabsModel implements TabsModel
     }
 
     @Override
-    public void addTab(String tabName, Function<CardsModel, List<ProjectDataCard>> cardFactory)
+    public void addTab(String tabName, ProjectDataCardFactory cardFactory)
     {
-        Platform.runLater(() -> base.addTab(tabName, model -> cardFactory.apply(new SynchronizedCardsModel(model))));
+        Platform.runLater(() -> base.addTab(tabName, cardFactory));
     }
 
     @Override

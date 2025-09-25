@@ -29,7 +29,7 @@ import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
-import kintsugi3d.builder.state.DefaultSettings;
+import kintsugi3d.builder.state.settings.DefaultSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

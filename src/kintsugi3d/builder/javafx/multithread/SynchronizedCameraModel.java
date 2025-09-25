@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.state.ManipulableViewpointModel;
-import kintsugi3d.builder.state.ViewpointModelBase;
+import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
+import kintsugi3d.builder.state.scene.ViewpointModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public class SynchronizedCameraModel extends ViewpointModelBase

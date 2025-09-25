@@ -11,8 +11,15 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.CanvasModel;
+import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
+import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public interface Kintsugi3DBuilderState
 {

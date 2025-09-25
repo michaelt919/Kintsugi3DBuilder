@@ -13,8 +13,8 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSettings;
-import kintsugi3d.builder.state.CameraModelFromSettings;
 import kintsugi3d.builder.state.project.SerializableCameraSettings;
+import kintsugi3d.builder.state.scene.CameraModelFromSettings;
 
 public class ObservableCameraModel extends CameraModelFromSettings
 {

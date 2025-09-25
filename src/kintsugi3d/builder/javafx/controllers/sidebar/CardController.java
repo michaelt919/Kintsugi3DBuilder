@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.state.ProjectDataCard;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.io.File;
 import java.util.Locale;

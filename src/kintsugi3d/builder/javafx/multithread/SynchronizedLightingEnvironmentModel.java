@@ -12,8 +12,8 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSettings;
-import kintsugi3d.builder.state.LightingEnvironmentModelBase;
-import kintsugi3d.builder.state.ManipulableLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.LightingEnvironmentModelBase;
+import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 
 public class SynchronizedLightingEnvironmentModel extends LightingEnvironmentModelBase<SynchronizedDiscreteLightModel>
 {

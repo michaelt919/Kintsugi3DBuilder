@@ -13,10 +13,10 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
-import kintsugi3d.builder.state.DefaultSettings;
-import kintsugi3d.builder.state.GeneralSettingsModel;
-import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
-import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
+import kintsugi3d.builder.state.settings.DefaultSettings;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -25,7 +25,6 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.util.ImageHelper;
-import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -103,8 +102,6 @@ public final class ViewSet implements ReadonlyViewSet
     private final List<File> imageFiles;
 
     private final Map<Integer, File> maskFiles;
-
-    private final List<LinkedHashMap<String, String>> cameraMetadata;
 
     private final List<ViewRMSE> viewErrorMetrics;
 
@@ -507,7 +504,6 @@ public final class ViewSet implements ReadonlyViewSet
         this.imageFiles = new ArrayList<>(initialCapacity);
         this.maskFiles = new HashMap<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
-        this.cameraMetadata = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
         this.cameraProjectionList = new ArrayList<>(1);
@@ -515,42 +511,10 @@ public final class ViewSet implements ReadonlyViewSet
         this.lightPositionList = new ArrayList<>(1);
     }
 
-    /**
-     * Relative paths from full res image directory
-     *
-     * @return List of relative paths from full res image directory
-     */
+    @Override
     public List<File> getImageFiles()
     {
         return Collections.unmodifiableList(imageFiles);
-    }
-
-    public List<LinkedHashMap<String, String>> getCameraMetadata()
-    {
-        return Collections.unmodifiableList(cameraMetadata);
-    }
-
-    public void generateCameraMetadata()
-    {
-        cameraMetadata.clear();
-        for (int i = 0; i < getCameraPoseCount(); i++)
-        {
-            try
-            {
-                File fullResFile = findFullResImageFile(i);
-                IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
-                String res = dimensions.x + "x" + dimensions.y;
-                cameraMetadata.add(new LinkedHashMap<>()
-                {{
-                    put("Resolution", res);
-                    put("Size", (fullResFile.length() / (1024 * 1024)) + " MB");
-                }});
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     @Override

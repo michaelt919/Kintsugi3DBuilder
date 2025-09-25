@@ -1,8 +1,8 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
-import kintsugi3d.builder.state.CardsModel;
-import kintsugi3d.builder.state.ProjectDataCard;
+import kintsugi3d.builder.state.cards.CardsModel;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.util.List;
 

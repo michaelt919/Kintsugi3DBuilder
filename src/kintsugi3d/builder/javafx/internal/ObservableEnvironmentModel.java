@@ -16,8 +16,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
-import kintsugi3d.builder.state.EnvironmentModelFromSettings;
 import kintsugi3d.builder.state.project.EnvironmentSettings;
+import kintsugi3d.builder.state.scene.EnvironmentModelFromSettings;
 import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;

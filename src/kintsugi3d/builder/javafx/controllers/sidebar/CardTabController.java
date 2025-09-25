@@ -12,7 +12,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.state.ProjectDataCard;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.io.IOException;
 import java.util.ArrayList;

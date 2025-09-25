@@ -15,9 +15,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
-import kintsugi3d.builder.state.GeneralSettingsModel;
-import kintsugi3d.builder.state.ReadonlyGeneralSettingsModel;
-import kintsugi3d.builder.state.SimpleGeneralSettingsModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 
 public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 {

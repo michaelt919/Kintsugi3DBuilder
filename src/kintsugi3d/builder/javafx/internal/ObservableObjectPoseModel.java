@@ -13,9 +13,9 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.value.ObservableValue;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSettings;
-import kintsugi3d.builder.state.ObjectPoseModelFromSettings;
 import kintsugi3d.builder.state.project.ObjectPoseSettings;
 import kintsugi3d.builder.state.project.SerializableObjectPoseSettings;
+import kintsugi3d.builder.state.scene.ObjectPoseModelFromSettings;
 
 public class ObservableObjectPoseModel extends ObjectPoseModelFromSettings
 {

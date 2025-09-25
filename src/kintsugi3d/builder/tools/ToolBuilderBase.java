@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
+import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
 {

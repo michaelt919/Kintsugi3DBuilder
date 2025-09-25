@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.GeneralSettingsModel;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public class ToggleSettingTool implements KeyPressTool
 {
