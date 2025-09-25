@@ -338,7 +338,7 @@ public class MainWindowController
 
             cleanRecentProjectsMenu.getItems().add(removeSomeRefsCustMenuItem);
 
-            removeAllRefsCustMenuItem = new CustomMenuItem(new Label("Clear Missing Projects"));
+            removeAllRefsCustMenuItem = new CustomMenuItem(new Label("Clear All Projects"));
             removeAllRefsCustMenuItem.setOnAction(event -> RecentProjects.removeInvalidReferences());
 
             Tooltip.install(((CustomMenuItem)removeAllRefsCustMenuItem).getContent(),
