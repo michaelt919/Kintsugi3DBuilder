@@ -9,37 +9,47 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.core;
+package kintsugi3d.builder.state.scene;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class RenderingShaderUserData
+public class UserShader
 {
-    private final String shaderName;
+    private final String friendlyName;
 
-    private final Map<String, Optional<Object>> shaderDefines;
+    private final String filename;
 
-    public RenderingShaderUserData(String shaderName)
+    private final Map<String, Optional<Object>> defines;
+
+    public UserShader(String friendlyName, String filename)
     {
-        this.shaderName = shaderName;
-        this.shaderDefines = new HashMap<>(0);
+        this.friendlyName = friendlyName;
+        this.filename = filename;
+        this.defines = new HashMap<>(0);
     }
 
-    public RenderingShaderUserData(String shaderName, Map<String, Optional<Object>> shaderDefines)
+    public UserShader(String friendlyName, String filename, Map<String, Optional<Object>> defines)
     {
-        this.shaderName = shaderName;
-        this.shaderDefines = shaderDefines;
+        this.friendlyName = friendlyName;
+        this.filename = filename;
+        this.defines = defines;
     }
 
-    public String getShaderName()
+    public String getFriendlyName()
     {
-        return shaderName;
+        return friendlyName;
     }
 
-    public Map<String, Optional<Object>> getShaderDefines()
+    public String getFilename()
     {
-        return shaderDefines;
+        return filename;
+    }
+
+    public Map<String, Optional<Object>> getDefines()
+    {
+        return Collections.unmodifiableMap(defines);
     }
 }

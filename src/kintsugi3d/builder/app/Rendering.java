@@ -22,6 +22,7 @@ import kintsugi3d.builder.state.SceneViewportModel;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
+import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.tools.DragToolType;
 import kintsugi3d.builder.tools.KeyPressToolType;
@@ -187,6 +188,7 @@ public final class Rendering
         ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
         ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
         ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
+        UserShaderModel userShaderModel = MultithreadState.getInstance().getUserShaderModel();
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
         CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
         IOModel ioModel = Global.state().getIOModel();
@@ -322,6 +324,7 @@ public final class Rendering
         instanceManager.setObjectModel(objectModel);
         instanceManager.setCameraModel(cameraModel);
         instanceManager.setLightingModel(lightingModel);
+        instanceManager.setUserShaderModel(userShaderModel);
         instanceManager.setCameraViewListModel(cameraViewListModel);
         instanceManager.setSettingsModel(settingsModel);
 

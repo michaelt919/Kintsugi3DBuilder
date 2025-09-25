@@ -19,6 +19,7 @@ import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
 import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public interface Kintsugi3DBuilderState
@@ -26,6 +27,8 @@ public interface Kintsugi3DBuilderState
     ReadonlyViewpointModel getCameraModel();
     ReadonlyLightingEnvironmentModel getLightingModel();
     ReadonlyObjectPoseModel getObjectModel();
+    UserShaderModel getUserShaderModel();
+
     CameraViewListModel getCameraViewListModel();
     TabsModel getTabModels();
 

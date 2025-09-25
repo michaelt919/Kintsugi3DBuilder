@@ -14,6 +14,7 @@ package kintsugi3d.builder.core;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;
@@ -49,6 +50,8 @@ public interface IOHandler
     void saveGLTF(File outputDirectory, ExportSettings settings);
 
     void unload();
+
+    void requestFragmentShader(UserShader userShader);
 
     void setProgressMonitor(ProgressMonitor progressMonitor);
 

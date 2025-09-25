@@ -24,9 +24,7 @@ import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
-import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
-import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
@@ -321,6 +319,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
+    @Override
+    public void requestFragmentShader(UserShader userShader)
+    {
+        requestFragmentShader(new File("shaders", userShader.getFilename()), userShader.getDefines());
+    }
+
     public ProjectInstance<ContextType> getLoadedInstance()
     {
         return projectInstance;
@@ -417,6 +421,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         {
             projectInstance.getSceneModel().setLightingModel(lightingModel);
         }
+    }
+
+    public void setUserShaderModel(ReadonlyUserShaderModel userShaderModel)
+    {
+        userShaderModel.registerHandler(this::requestFragmentShader);
     }
 
     public void setSettingsModel(ReadonlyGeneralSettingsModel settingsModel)

@@ -42,6 +42,8 @@ import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
 import kintsugi3d.builder.javafx.experience.ExportRender;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
+import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
+import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.javafx.FramebufferView;
 import org.slf4j.Logger;
@@ -202,8 +204,9 @@ public class MainWindowController
 
         updateShaderList();
 
+        ObservableUserShaderModel userShaderModel = javaFXState.getUserShaderModel();
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
-            ((MenuItem) renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
+            userShaderModel.getUserShader().getFriendlyName(), userShaderModel.getUserShaderProperty()));
 
         projectModel = javaFXState.getProjectModel();
 
@@ -461,7 +464,8 @@ public class MainWindowController
         Map<String, Optional<Object>> comboDefines = new HashMap<>(2);
         comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
         comboDefines.put("WEIGHTMAP_COUNT", Optional.of(basisCount));
-        weightmapCombination.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
+        weightmapCombination.setUserData(new UserShader(weightmapCombination.getText(),
+            "rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
 
         for (int i = 0; i < basisCount; ++i)
         {
@@ -472,7 +476,7 @@ public class MainWindowController
             {
                 RadioMenuItem item = new RadioMenuItem(String.format("Palette material %d", i));
                 item.setToggleGroup(renderGroup);
-                item.setUserData(new RenderingShaderUserData((String) flyout.getUserData(), defines));
+                item.setUserData(new UserShader(item.getText(), (String) flyout.getUserData(), defines));
                 flyout.getItems().add(i, item);
             }
         }
@@ -487,15 +491,15 @@ public class MainWindowController
     {
         renderGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) ->
         {
-            RenderingShaderUserData shaderData = null;
+            UserShader shaderData = null;
             if (newValue != null && newValue.getUserData() instanceof String)
             {
-                shaderData = new RenderingShaderUserData((String) newValue.getUserData());
+                shaderData = new UserShader(((MenuItem) renderGroup.getSelectedToggle()).getText(), (String) newValue.getUserData());
             }
 
-            if (newValue != null && newValue.getUserData() instanceof RenderingShaderUserData)
+            if (newValue != null && newValue.getUserData() instanceof UserShader)
             {
-                shaderData = (RenderingShaderUserData) newValue.getUserData();
+                shaderData = (UserShader) newValue.getUserData();
             }
 
             if (shaderData == null)
@@ -504,8 +508,7 @@ public class MainWindowController
                 return;
             }
 
-            Global.state().getIOModel()
-                .requestFragmentShader(new File("shaders", shaderData.getShaderName()), shaderData.getShaderDefines());
+            Global.state().getUserShaderModel().setUserShader(shaderData);
         });
     }
 

@@ -233,15 +233,6 @@ public class IOModel
     {
         this.handler.loadFromMetashapeModel(model, imageLoadOptionsModel);
     }
-    public void requestFragmentShader(File shaderFile)
-    {
-        this.handler.requestFragmentShader(shaderFile);
-    }
-
-    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
-    {
-        this.handler.requestFragmentShader(shaderFile, extraDefines);
-    }
 
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {

@@ -21,6 +21,7 @@ import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
+import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
@@ -28,6 +29,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final ManipulableViewpointModel cameraModel;
     private final ManipulableLightingEnvironmentModel lightingModel;
     private final ManipulableObjectPoseModel objectModel;
+    private final UserShaderModel userShaderModel;
     private final CameraViewListModel cameraViewListModel;
     private final ProjectModel projectModel;
 
@@ -51,6 +53,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         cameraModel = new SynchronizedCameraModel(JavaFXState.getInstance().getCameraModel());
         objectModel = new SynchronizedObjectPoseModel(JavaFXState.getInstance().getObjectModel());
         lightingModel = new SynchronizedLightingEnvironmentModel(JavaFXState.getInstance().getLightingModel());
+        userShaderModel = new SynchronizedUserShaderModel(JavaFXState.getInstance().getUserShaderModel());
         cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
         settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
@@ -78,6 +81,12 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     public ManipulableObjectPoseModel getObjectModel()
     {
         return objectModel;
+    }
+
+    @Override
+    public UserShaderModel getUserShaderModel()
+    {
+        return  userShaderModel;
     }
 
     @Override
