@@ -21,6 +21,7 @@ import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -179,6 +180,9 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             projectModel.setProjectProcessed(true);
             projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
             projectModel.notifyProcessingComplete();
+
+            // Refresh tabs
+            new TabsManager(renderable).refreshTab("Materials");
         }
         catch (IOException e) // thrown by createReflectanceProgram
         {

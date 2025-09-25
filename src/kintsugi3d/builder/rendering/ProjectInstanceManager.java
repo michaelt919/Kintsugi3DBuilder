@@ -204,7 +204,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         newItem.setProgressMonitor(new BackendProgressMonitor(newItem, progressMonitor));
         newInstance = newItem;
 
-        new TabsManager(loadedViewSet).refreshTabs(Global.state().getTabModels());
+        new TabsManager(loadedViewSet, newInstance).rebuildTabs();
     }
 
     @Override

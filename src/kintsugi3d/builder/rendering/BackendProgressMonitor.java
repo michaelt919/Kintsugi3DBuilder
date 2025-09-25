@@ -5,6 +5,7 @@ import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.state.cards.TabsManager;
 
 class BackendProgressMonitor implements ProgressMonitor
 {
@@ -124,6 +125,9 @@ class BackendProgressMonitor implements ProgressMonitor
         {
             Global.state().getProjectModel().setProcessedTextureResolution(0);
         }
+
+        // Refresh tabs for materials
+        new TabsManager(instance).refreshTab("Materials");
 
         if (base != null)
         {

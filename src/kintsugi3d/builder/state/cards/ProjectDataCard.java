@@ -31,6 +31,11 @@ public class ProjectDataCard
         this(title, imagePath, textFields, List.of());
     }
 
+    public ProjectDataCard(String title, String imagePath)
+    {
+        this(title, imagePath, Map.of());
+    }
+
     public UUID getCardId()
     {
         return cardId;

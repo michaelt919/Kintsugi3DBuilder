@@ -22,6 +22,12 @@ public class SynchronizedCardsModel implements CardsModel
     }
 
     @Override
+    public void setCardList(List<ProjectDataCard> cards)
+    {
+        Platform.runLater(() -> base.setCardList(cards));
+    }
+
+    @Override
     public void deleteCard(ProjectDataCard card)
     {
         Platform.runLater(() -> base.deleteCard(card));

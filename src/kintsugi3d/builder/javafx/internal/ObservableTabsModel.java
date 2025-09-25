@@ -40,6 +40,12 @@ public class ObservableTabsModel implements TabsModel
         return tabs.get(label);
     }
 
+    @Override
+    public Map<String, CardsModel> getTabsMap()
+    {
+        return Collections.unmodifiableMap(tabs);
+    }
+
     public Collection<ObservableCardsModel> getAllTabs()
     {
         return Collections.unmodifiableCollection(tabs.values());

@@ -19,12 +19,14 @@ public class ObservableCardsModel implements CardsModel
     private final UUIDSelectionModel selectedCardsModel;
     private final UUIDSelectionModel expandedCardsModel;
     private final ObservableList<ProjectDataCard> cardsList;
+    private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
 
     public ObservableCardsModel(String label)
     {
         this.label = label;
 
         cardsList = FXCollections.observableList(new ArrayList<>());
+        unmodifiableCardsList = FXCollections.unmodifiableObservableList(cardsList);
         selectedCardsModel = new UUIDSelectionModel();
         expandedCardsModel = new UUIDSelectionModel();
 
@@ -90,9 +92,10 @@ public class ObservableCardsModel implements CardsModel
     @Override
     public ObservableList<ProjectDataCard> getCardList()
     {
-        return FXCollections.unmodifiableObservableList(cardsList);
+        return unmodifiableCardsList;
     }
 
+    @Override
     public void setCardList(List<ProjectDataCard> cards)
     {
         cardsList.clear();

@@ -5,6 +5,9 @@ import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class SynchronizedTabsModel implements TabsModel
 {
     private final TabsModel base;
@@ -30,5 +33,18 @@ public class SynchronizedTabsModel implements TabsModel
     public CardsModel getTab(String label)
     {
         return new SynchronizedCardsModel(base.getTab(label));
+    }
+
+    @Override
+    public Map<String, CardsModel> getTabsMap()
+    {
+        Map<String, CardsModel> wrapped = new LinkedHashMap<>();
+
+        for (var entry : base.getTabsMap().entrySet())
+        {
+            wrapped.put(entry.getKey(), new SynchronizedCardsModel(entry.getValue()));
+        }
+
+        return wrapped;
     }
 }

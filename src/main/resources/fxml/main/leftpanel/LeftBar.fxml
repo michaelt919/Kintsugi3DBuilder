@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Rectangle2D?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-
 <VBox fx:id="mainBox" styleClass="sidebar-root" maxWidth="500.0" prefWidth="494.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.SideBarController">
     <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox alignment="TOP_RIGHT" maxWidth="500.0" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
@@ -21,6 +22,6 @@
         </ImageView>
     </HBox>
     <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-    <HBox fx:id="buttonBox" maxWidth="500.0" prefHeight="31.0" prefWidth="462.0" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="ALWAYS">
+    <HBox fx:id="buttonBox" styleClass="tabButtonBox" maxWidth="500.0" prefHeight="31.0" prefWidth="462.0" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER">
     </HBox>
 </VBox>

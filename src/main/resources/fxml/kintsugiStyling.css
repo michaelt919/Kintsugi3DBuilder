@@ -167,6 +167,7 @@
 .menu .label,
 .tab,
 .tab .tab-label,
+.stripped-radio-button,
 .text-field
 {
     -fx-text-fill: #CECECE;
@@ -559,11 +560,6 @@
 
 .left-bar .scroll-bar:vertical{
     -fx-background-color:transparent;
-}
-
-.left-bar .increment-button, .decrement-button {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
 }
 
 .left-bar .scroll-bar:vertical .track{
