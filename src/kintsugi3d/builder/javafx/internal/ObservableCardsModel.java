@@ -5,6 +5,8 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 
@@ -108,5 +110,20 @@ public class ObservableCardsModel implements CardsModel
     public void deleteCard(ProjectDataCard card)
     {
         cardsList.removeIf(other -> other.getCardId().equals(card.getCardId()));
+    }
+
+    @Override
+    public void confirm(String title, String header, String message, Runnable onConfirm)
+    {
+        // Temp solution -- will eventually create a custom modal.
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        var result = alert.showAndWait();
+
+        if (result.isPresent() && result.get().equals(ButtonType.OK))
+        {
+            onConfirm.run();
+        }
     }
 }

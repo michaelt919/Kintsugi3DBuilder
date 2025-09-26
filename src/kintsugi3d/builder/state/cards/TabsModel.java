@@ -7,5 +7,5 @@ public interface TabsModel
     void addTab(String tabName, ProjectDataCardFactory cardFactory);
     void clearTabs();
     CardsModel getTab(String label);
-    Map<String, CardsModel> getTabsMap();
+    Map<String, ? extends CardsModel> getTabsMap();
 }

@@ -60,18 +60,19 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex)));
                 }},
                 Map.of("Delete Material", () ->
-                    Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
-                    {
-                        try
+                    cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
+                        () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
                         {
-                            resources.deleteBasisMaterial(cardIndex);
-                        }
-                        finally // even if an exception is thrown, want to make sure we're in sync with the current state.
-                        {
-                            // hard reset of cards list to re-number, etc.
-                            cardsModel.setCardList(createAllCards(cardsModel));
-                        }
-                    }))));
+                            try
+                            {
+                                resources.deleteBasisMaterial(cardIndex);
+                            }
+                            finally // even if an exception is thrown, want to make sure we're in sync with the current state.
+                            {
+                                // hard reset of cards list to re-number, etc.
+                                cardsModel.setCardList(createAllCards(cardsModel));
+                            }
+                        })))));
     }
 
     @Override

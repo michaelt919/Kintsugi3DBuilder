@@ -2,7 +2,6 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
-import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
@@ -35,13 +34,13 @@ public class ObservableTabsModel implements TabsModel
     }
 
     @Override
-    public CardsModel getTab(String label)
+    public ObservableCardsModel getTab(String label)
     {
         return tabs.get(label);
     }
 
     @Override
-    public Map<String, CardsModel> getTabsMap()
+    public Map<String, ObservableCardsModel> getTabsMap()
     {
         return Collections.unmodifiableMap(tabs);
     }

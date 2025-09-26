@@ -12,11 +12,13 @@
 package kintsugi3d.builder.javafx.core;
 
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -35,20 +37,16 @@ import javafx.stage.Window;
 import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
-import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
 import kintsugi3d.builder.javafx.experience.ExportRender;
+import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.javafx.FramebufferView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -56,8 +54,6 @@ import java.util.stream.Collectors;
 
 public class MainWindowController
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MainWindowController.class);
-
     private static MainWindowController instance;
     private JavaFXState javaFXState;
 
@@ -202,7 +198,7 @@ public class MainWindowController
         toggleableShaders.add(specularTexture);
         toggleableShaders.add(errorTexture);
 
-        updateShaderList();
+        updateShaderList(0);
 
         ObservableUserShaderModel userShaderModel = javaFXState.getUserShaderModel();
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
@@ -279,8 +275,6 @@ public class MainWindowController
         projectModel.getProjectProcessedProperty()
             .addListener(obs ->
             {
-                MainWindowController.getInstance().updateShaderList();
-
                 if (projectModel.isProjectProcessed())
                 {
                     // Automatically select material basis shader after processing textures
@@ -297,14 +291,24 @@ public class MainWindowController
         // and refresh the number of basis materials, even though the "processed" state technically hasn't changed.
         projectModel.setOnProcessingComplete(event ->
         {
-            MainWindowController.getInstance().updateShaderList();
-
             // Automatically select material basis shader after processing textures
             materialBasis.setSelected(true);
         });
 
         projectModel.getProjectLoadedProperty().addListener(
             obs -> cameraViewListController.rebindSearchableListView());
+
+        // Update flyout menus if the available materials change (i.e. delete).
+        javaFXState.getTabModels().getObservableTabsMap().addListener(
+            (MapChangeListener<? super String, ? super ObservableCardsModel>) change ->
+            {
+                if (change.wasAdded() && "Materials".equals(change.getKey()))
+                {
+                    ObservableCardsModel materialCardsModel = change.getValueAdded();
+                    materialCardsModel.getCardList().addListener((InvalidationListener)
+                        obs -> updateShaderList(materialCardsModel.getCardList().size()));
+                }
+            });
 
         KeyCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
         instance.window.getScene().getAccelerators().put(ctrlUp, () ->
@@ -447,30 +451,11 @@ public class MainWindowController
     }
 
     // Populate menu based on a given input number
-    private void updateShaderList()
+    private void updateShaderList(int basisCount)
     {
         for (Menu flyout : shaderMenuFlyouts)
         {
             flyout.getItems().clear();
-        }
-
-        int basisCount = 0;
-
-        if (Global.state().getIOModel().hasValidHandler())
-        {
-            try
-            {
-                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
-                MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
-                if (basis != null)
-                {
-                    basisCount = basis.getMaterialCount();
-                }
-            }
-            catch (IOException | NullPointerException e)
-            {
-                LOG.error("Error attempting to load previous solution basis count:", e);
-            }
         }
 
         Map<String, Optional<Object>> comboDefines = new HashMap<>(2);
@@ -533,11 +518,6 @@ public class MainWindowController
         {
             return null;
         }
-    }
-
-    private UserShader getUserShaderFromSelectedToggle()
-    {
-        return getUserShaderFromToggle(renderGroup.getSelectedToggle());
     }
 
     private void bindCheckMenuItems()

@@ -8,4 +8,5 @@ public interface CardsModel
     void setCardList(List<ProjectDataCard> cards);
 
     void deleteCard(ProjectDataCard card);
+    void confirm(String title, String header, String message, Runnable onConfirm);
 }
