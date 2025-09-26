@@ -19,16 +19,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class RecentProjects
 {
     public static final File RECENT_PROJECTS_FILE
         = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
+
+    public static final int MAX_RECENT_PROJECTS = 20;
 
     private static final Logger LOG = LoggerFactory.getLogger(RecentProjects.class);
     private static File recentDirectory = null;
@@ -40,13 +39,13 @@ public final class RecentProjects
 
     public static List<String> getItemsFromRecentsFile()
     {
-        List<String> projectItems = new ArrayList<>(16);
+        List<String> projectItems = List.of();
 
         if (RECENT_PROJECTS_FILE.exists())
         {
             try (BufferedReader reader = new BufferedReader(new FileReader(RECENT_PROJECTS_FILE.getAbsolutePath(), StandardCharsets.UTF_8)))
             {
-                projectItems = reader.lines().collect(Collectors.toList());
+                projectItems = reader.lines().limit(MAX_RECENT_PROJECTS).collect(Collectors.toUnmodifiableList());
             }
             catch (IOException e)
             {
@@ -124,22 +123,16 @@ public final class RecentProjects
 
     public static void addToRecentFiles(String fileName)
     {
-        // Read existing file content into a List
-        List<String> existingFileNames = new ArrayList<>(16);
-        try (BufferedReader reader = new BufferedReader(new FileReader(RECENT_PROJECTS_FILE, StandardCharsets.UTF_8)))
-        {
-            existingFileNames = reader.lines().collect(Collectors.toList());
-        }
-        catch (IOException e)
-        {
-            LOG.error("Failed to update recent files list", e);
-        }
+        List<String> existingFileNames = getItemsFromRecentsFile();
 
         // Check if the fileName is already present
         existingFileNames.remove(fileName); // Remove it from its current position
 
         // Add the fileName to the front of the List
         existingFileNames.add(0, fileName);
+
+        // Drop down to the max number of recent projects.
+        existingFileNames = existingFileNames.subList(0, MAX_RECENT_PROJECTS);
 
         // Write the updated content back to the file
         try (PrintWriter writer = new PrintWriter(new FileWriter(RECENT_PROJECTS_FILE, StandardCharsets.UTF_8)))
@@ -167,7 +160,7 @@ public final class RecentProjects
 
         if (WelcomeWindowController.getInstance() != null)
         {
-            updateRecentProjectsInWelcomeWindow();
+            WelcomeWindowController.getInstance().updateRecentProjects();
         }
     }
 
@@ -187,11 +180,6 @@ public final class RecentProjects
         boolean isListEmpty = recentProjsList.getItems().isEmpty();
         recentProjsList.setDisable(isListEmpty);
         cleanRecentProjectsMenu.setDisable(isListEmpty);
-    }
-
-    private static void updateRecentProjectsInWelcomeWindow()
-    {
-        WelcomeWindowController.getInstance().updateRecentProjects();
     }
 
     public static void removeInvalidReferences()
