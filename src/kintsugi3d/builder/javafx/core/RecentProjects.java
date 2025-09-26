@@ -132,7 +132,7 @@ public final class RecentProjects
         existingFileNames.add(0, fileName);
 
         // Drop down to the max number of recent projects.
-        existingFileNames = existingFileNames.subList(0, MAX_RECENT_PROJECTS);
+        existingFileNames = existingFileNames.subList(0, Math.min(existingFileNames.size(), MAX_RECENT_PROJECTS));
 
         // Write the updated content back to the file
         try (PrintWriter writer = new PrintWriter(new FileWriter(RECENT_PROJECTS_FILE, StandardCharsets.UTF_8)))
