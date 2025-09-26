@@ -11,7 +11,9 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.io.specular.WeightImageWriter;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -277,6 +279,17 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         {
             getBasisResources().deleteBasisMaterial(materialIndex);
             getBasisWeightResources().deleteWeightMap(materialIndex);
+
+            // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
+            try
+            {
+                new BasisImageCreator<>(getContext(), 2 * getBasisResources().getBasisResolution() + 1)
+                    .createImages(this, Global.state().getIOModel().getLoadedViewSet().getSupportingFilesFilePath());
+            }
+            catch (IOException e)
+            {
+                LOG.error("An error occurred saving basis material thumbnails.", e);
+            }
         }
     }
 }

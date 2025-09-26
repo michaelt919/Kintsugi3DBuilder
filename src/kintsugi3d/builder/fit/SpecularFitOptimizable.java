@@ -227,7 +227,8 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 if (debugDirectory != null)
                 {
                     // Save basis image visualization for reference and debugging
-                    try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, basisSettings))
+                    try (BasisImageCreator<ContextType> basisImageCreator =
+                             new BasisImageCreator<>(context, 2 * basisSettings.getBasisResolution() + 1))
                     {
                         basisImageCreator.createImages(this, debugDirectory);
                     }

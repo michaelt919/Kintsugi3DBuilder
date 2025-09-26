@@ -32,9 +32,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
     // Framebuffer for the basis images
     private final FramebufferObject<ContextType> framebuffer;
 
-    private final BasisSettings settings;
-
-    public BasisImageCreator(ContextType context, BasisSettings settings) throws IOException
+    public BasisImageCreator(ContextType context, int resolution) throws IOException
     {
         program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
@@ -47,10 +45,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         drawable.addVertexBuffer("position", rect);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
 
-        this.settings = settings;
-
-        framebuffer = context.buildFramebufferObject(
-            2 * this.settings.getBasisResolution() + 1, 2 * this.settings.getBasisResolution() + 1)
+        framebuffer = context.buildFramebufferObject(resolution, resolution)
             .addColorAttachment(ColorFormat.RGBA8)
             .createFramebufferObject();
     }
@@ -63,7 +58,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         MaterialBasis basis = specularFit.getBasisResources().getBasis();
 
         // Save basis functions in image format.
-        for (int i = 0; i < settings.getBasisCount(); i++)
+        for (int i = 0; i < basis.getMaterialCount(); i++)
         {
             drawable.program().setUniform("basisIndex", i);
             drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
