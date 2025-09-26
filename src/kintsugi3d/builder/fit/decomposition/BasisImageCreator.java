@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.fit.debug;
+package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
@@ -60,13 +60,22 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         specularFit.getBasisResources().useWithShaderProgram(program);
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
 
+        MaterialBasis basis = specularFit.getBasisResources().getBasis();
+
         // Save basis functions in image format.
         for (int i = 0; i < settings.getBasisCount(); i++)
         {
             drawable.program().setUniform("basisIndex", i);
+            drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
             drawable.draw(framebuffer);
-            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, String.format("basis_%02d.png", i)));
+            framebuffer.getTextureReaderForColorAttachment(0)
+                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(i)));
         }
+    }
+
+    public static String getBasisImageFilename(int materialIndex)
+    {
+        return String.format("basis_%02d.png", materialIndex);
     }
 
     @Override

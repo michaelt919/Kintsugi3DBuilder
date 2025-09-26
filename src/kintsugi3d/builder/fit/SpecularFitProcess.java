@@ -13,11 +13,7 @@ package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.fit.debug.BasisImageCreator;
-import kintsugi3d.builder.fit.decomposition.MaterialBasis;
-import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
-import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
+import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
@@ -87,13 +83,14 @@ public class SpecularFitProcess
         LOG.info("Cache found / generated in: {}", duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceSpecularMaterialResources(optimizeFitWithCache(cache, monitor));
+        SpecularMaterialResources<ContextType> result = optimizeFitWithCache(cache, monitor);
+        resources.replaceSpecularMaterialResources(result);
 
-//        // Save basis image visualization for reference and debugging
-//        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
-//        {
-//            basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
-//        }
+        // Save basis image visualization for cards
+        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
+        {
+            basisImageCreator.createImages(result, settings.getOutputDirectory());
+        }
     }
 
     public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(

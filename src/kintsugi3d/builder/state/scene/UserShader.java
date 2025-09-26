@@ -11,10 +11,7 @@
 
 package kintsugi3d.builder.state.scene;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class UserShader
 {
@@ -51,5 +48,21 @@ public class UserShader
     public Map<String, Optional<Object>> getDefines()
     {
         return Collections.unmodifiableMap(defines);
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (other instanceof UserShader)
+        {
+            UserShader otherShader = (UserShader)other;
+            return Objects.equals(this.friendlyName, otherShader.friendlyName)
+                && Objects.equals(this.filename, otherShader.filename)
+                && Objects.equals(this.defines, otherShader.defines);
+        }
+        else
+        {
+            return false;
+        }
     }
 }

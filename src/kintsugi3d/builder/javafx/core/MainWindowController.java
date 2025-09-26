@@ -37,6 +37,7 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
+import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
@@ -49,7 +50,6 @@ import kintsugi3d.gl.javafx.FramebufferView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -209,12 +209,10 @@ public class MainWindowController
             userShaderModel.getUserShader().getFriendlyName(), userShaderModel.getUserShaderProperty()));
 
         userShaderModel.getUserShaderProperty().addListener((obs, oldValue, newValue) ->
-        {
-            if (!Objects.equals(newValue, renderGroup.getSelectedToggle().getUserData()))
-            {
-                renderGroup.selectToggle(null);
-            }
-        });
+            renderGroup.selectToggle(renderGroup.getToggles().stream()
+                .filter(toggle -> Objects.equals(newValue, getUserShaderFromToggle(toggle)))
+                .findFirst()
+                .orElse(null)));
 
         projectModel = javaFXState.getProjectModel();
 
@@ -313,18 +311,20 @@ public class MainWindowController
         {
             List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
                 .filter(item -> !item.isDisable()).collect(Collectors.toList());
-            int numAvailableShaders = availableShaders.size();
 
             RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
-            int idx = availableShaders.indexOf(curr);
+            int index = availableShaders.indexOf(curr);
 
-            //there's probably a better way to do this but whatever
-            idx -= 1;
-            if (idx < 0)
+            if (index >= 0)
             {
-                idx = numAvailableShaders - 1;
+                index -= 1;
+                if (index < 0)
+                {
+                    int numAvailableShaders = availableShaders.size();
+                    index = numAvailableShaders - 1;
+                }
+                availableShaders.get(index).setSelected(true);
             }
-            availableShaders.get(idx).setSelected(true);
         });
 
         KeyCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
@@ -332,12 +332,16 @@ public class MainWindowController
         {
             List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
                 .filter(item -> !item.isDisable()).collect(Collectors.toList());
-            int numAvailableShaders = availableShaders.size();
 
             RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
-            int idx = availableShaders.indexOf(curr);
-            idx = (idx + 1) % numAvailableShaders;
-            availableShaders.get(idx).setSelected(true);
+            int index = availableShaders.indexOf(curr);
+
+            if (index >= 0)
+            {
+                int numAvailableShaders = availableShaders.size();
+                index = (index + 1) % numAvailableShaders;
+                availableShaders.get(index).setSelected(true);
+            }
         });
 
         // hide cards in light calibration mode (for now until we have a better UX solution)
@@ -477,14 +481,12 @@ public class MainWindowController
 
         for (int i = 0; i < basisCount; ++i)
         {
-            Map<String, Optional<Object>> defines = new HashMap<>(1);
-            defines.put("WEIGHTMAP_INDEX", Optional.of(i));
-
             for (Menu flyout : shaderMenuFlyouts)
             {
-                RadioMenuItem item = new RadioMenuItem(String.format("Palette material %d", i));
+                UserShader shader = VisualizationShaders.getForBasisMaterial((String) flyout.getUserData(), i);
+                RadioMenuItem item = new RadioMenuItem(String.format(shader.getFriendlyName(), i));
                 item.setToggleGroup(renderGroup);
-                item.setUserData(new UserShader(item.getText(), (String) flyout.getUserData(), defines));
+                item.setUserData(shader);
                 flyout.getItems().add(i, item);
             }
         }
@@ -501,16 +503,7 @@ public class MainWindowController
         {
             if (newValue != null)
             {
-                UserShader shader = null;
-
-                if (newValue.getUserData() instanceof String)
-                {
-                    shader = new UserShader(((MenuItem) renderGroup.getSelectedToggle()).getText(), (String) newValue.getUserData());
-                }
-                else if (newValue.getUserData() instanceof UserShader)
-                {
-                    shader = (UserShader) newValue.getUserData();
-                }
+                UserShader shader = getUserShaderFromToggle(newValue);
 
                 if (shader != null)
                 {
@@ -524,6 +517,27 @@ public class MainWindowController
 //                }
             }
         });
+    }
+
+    private UserShader getUserShaderFromToggle(Toggle newValue)
+    {
+        if (newValue.getUserData() instanceof String)
+        {
+            return new UserShader(((MenuItem) renderGroup.getSelectedToggle()).getText(), (String) newValue.getUserData());
+        }
+        else if (newValue.getUserData() instanceof UserShader)
+        {
+            return (UserShader) newValue.getUserData();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private UserShader getUserShaderFromSelectedToggle()
+    {
+        return getUserShaderFromToggle(renderGroup.getSelectedToggle());
     }
 
     private void bindCheckMenuItems()

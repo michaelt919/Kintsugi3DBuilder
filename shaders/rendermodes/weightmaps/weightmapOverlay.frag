@@ -25,7 +25,7 @@ uniform vec3 defaultDiffuseColor;
 #define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
 #else
 #define DEFAULT_DIFFUSE_COLOR (defaultDiffuseColor)
-#endif // !SPECULAR_TEXTURE_ENABLED
+#endif // SPECULAR_TEXTURE_ENABLED
 #endif // DEFAULT_DIFFUSE_COLOR
 
 #ifndef DEFAULT_SPECULAR_COLOR
@@ -43,7 +43,7 @@ uniform vec3 defaultDiffuseColor;
 #include <colorappearance/material.glsl>
 #include <specularfit/evaluateBRDF.glsl>
 
-#line 62 3102
+#line 47 0
 
 vec3 global(ViewingParameters v, Material m)
 {
@@ -63,11 +63,11 @@ vec3 specular(LightingParameters l, Material m)
     // but we implicitly do our real-time calculations in a pre-multiplied by pi space (i.e. no division by pi for diffuse).
     vec3 mfdFresnelBase = PI * getMFDEstimate(l.nDotH);
 
-    #if FRESNEL_EFFECT_ENABLED
+#if FRESNEL_EFFECT_ENABLED
     return fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
-    #else // !FRESNEL_EFFECT_ENABLED
+#else // !FRESNEL_EFFECT_ENABLED
     return mfdFresnelBase;
-    #endif // FRESNEL_EFFECT_ENABLED
+#endif // FRESNEL_EFFECT_ENABLED
 }
 
 vec3 diffuse(LightingParameters l, Material m)
@@ -75,5 +75,10 @@ vec3 diffuse(LightingParameters l, Material m)
     return m.diffuseColor;
 }
 
-//#include "subjectMain.glsl"
 #include <subject/subjectMain.glsl>
+
+// Prevents shader link errors when declaration from colorappearance.glsl is not defined
+vec4 getColor(int virtualIndex)
+{
+    return vec4(0);
+}

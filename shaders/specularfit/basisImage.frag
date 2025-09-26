@@ -14,10 +14,19 @@
 
 in vec2 fTexCoord;
 layout(location = 0) out vec4 fragColor;
+uniform vec3 diffuseColor;
 uniform sampler1DArray basisFunctions;
 uniform int basisIndex;
 
+#include <colorappearance/linearize.glsl>
+#line 22 0
+
+#ifndef PI
+#define PI 3.1415926535897932384626433832795
+#endif
+
 void main()
 {
-    fragColor = vec4(vec3(texture(basisFunctions, vec2(length(fTexCoord - vec2(0.5)) * 2.0, basisIndex))), 1.0);
+    fragColor = vec4(linearToSRGB((
+        diffuseColor + texture(basisFunctions, vec2(length(fTexCoord - vec2(0.5)) * 2.0, basisIndex)).rgb) / PI), 1.0);
 }
