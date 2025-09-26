@@ -199,7 +199,8 @@ public final class StaticUtilities
     {
         if (Global.state().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
         {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Discard changes?  Settings will be reverted to their previous values.");
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Settings will be reverted to their previous values.");
+            alert.setHeaderText("Discard changes?");
             var result = alert.showAndWait();
             return result.isPresent() && result.get().equals(ButtonType.OK);
         }

@@ -41,7 +41,8 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
 
         if (viewSet.hasCustomLuminanceEncoding())
         {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration view? This will clear any previous tone calibration values!");
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "This will clear any previous tone calibration values!");
+            alert.setHeaderText("Change tone calibration view?");
             Optional<ButtonType> confirmResult = alert.showAndWait();
             if (confirmResult.isEmpty() || !confirmResult.get().equals(ButtonType.OK))
             {

@@ -144,7 +144,8 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         {
             if (viewSet.hasCustomLuminanceEncoding())
             {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration image? This will clear any previous tone calibration values!");
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "This will clear any previous tone calibration values!");
+                alert.setHeaderText("Change tone calibration image?");
                 Optional<ButtonType> confirmResult = alert.showAndWait();
                 if (confirmResult.isEmpty() || confirmResult.get() != ButtonType.OK)
                 {
