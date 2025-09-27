@@ -249,8 +249,8 @@ public class ProgressBarsController
 
         if (isProcessing())
         {
-            Platform.runLater(() -> totalElapsedTimeLabel.setText(totalTimeTxt + " Lapsed"));
-            Platform.runLater(() -> localElapsedTimeLabel.setText("(" + localTimeTxt + " Lapsed)"));
+            Platform.runLater(() -> totalElapsedTimeLabel.setText(String.format("%s Lapsed", totalTimeTxt)));
+            Platform.runLater(() -> localElapsedTimeLabel.setText(String.format("(%s Lapsed)", localTimeTxt)));
         }
     }
 
@@ -391,8 +391,11 @@ public class ProgressBarsController
             localProgress = 0.0;
             currentStage = 0;
 
+            LOG.debug("start() called on {}", Thread.currentThread());
+
             Platform.runLater(() ->
             {
+                LOG.debug("setting stageCountProperty to zero");
                 stageCountProperty.setValue(0);
                 currentStageProperty.setValue(0);
                 localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
@@ -438,8 +441,11 @@ public class ProgressBarsController
         @Override
         public void setStageCount(int count)
         {
+            LOG.debug("setStageCount() called on {}", Thread.currentThread());
+
             Platform.runLater(() ->
             {
+                LOG.debug("setting stageCountProperty to {}", count);
                 stageCountProperty.setValue(count);
                 refreshOverallProgress();
             });
@@ -451,15 +457,13 @@ public class ProgressBarsController
             this.localProgress = 0.0;
             currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
 
-            LOG.debug("currentStage: " + currentStage);
-
-            LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
-
             // Reset text that displays when finishing up for a new stage
             finishingUpText = ProgressMonitor.FINISHING_UP;
 
             Platform.runLater(() ->
             {
+                LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
+
                 this.currentStageProperty.setValue(currentStage);
                 localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
                 overallTextLabel.setText(message);

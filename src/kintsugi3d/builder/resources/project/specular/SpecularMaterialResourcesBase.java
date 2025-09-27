@@ -13,8 +13,10 @@ package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.io.specular.WeightImageWriter;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.SamplerType;
@@ -251,6 +253,18 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         if (getBasisResources() != null)
         {
             getBasisResources().getBasis().save(outputDirectory, filenameOverride);
+
+            // Save basis image visualization for cards
+            try (BasisImageCreator<ContextType> basisImageCreator =
+                     new BasisImageCreator<>(getContext(), getBasisResources().getBasisResolution()))
+            {
+                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                basisImageCreator.createImages(this, viewSet.getThumbnailImageDirectory());
+            }
+            catch (IOException e)
+            {
+                ExceptionHandling.error("Error saving basis image thumbnails:", e);
+            }
         }
     }
 
@@ -283,11 +297,12 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
 
             try
             {
-                File supportingFilesDir = Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory();
+                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                File supportingFilesDir = viewSet.getSupportingFilesDirectory();
 
                 // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
                 new BasisImageCreator<>(getContext(), 2 * getBasisResources().getBasisResolution() + 1)
-                    .createImages(this, Global.state().getIOModel().getLoadedViewSet().getThumbnailImageDirectory());
+                    .createImages(this, viewSet.getThumbnailImageDirectory());
 
                 // Save basis functions and weight maps to prevent inconsistency with thumbnails if the user forgets to save manually.
                 saveBasisFunctions(supportingFilesDir);

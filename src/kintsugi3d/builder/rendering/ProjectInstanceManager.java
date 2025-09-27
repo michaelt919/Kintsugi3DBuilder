@@ -470,23 +470,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
         else
         {
-            SpecularMaterialResources<ContextType> material
-                = projectInstance.getResources().getSpecularMaterialResources();
-
             Rendering.runLater(() ->
             {
-                material.saveAll(materialDirectory);
-
-                // Save basis image visualization for cards
-                try (BasisImageCreator<ContextType> basisImageCreator =
-                         new BasisImageCreator<>(material.getContext(), material.getBasisResources().getBasisResolution()))
-                {
-                    basisImageCreator.createImages(material, loadedViewSet.getThumbnailImageDirectory());
-                }
-                catch (IOException e)
-                {
-                    ExceptionHandling.error("Error saving basis image thumbnails:", e);
-                }
+                projectInstance.getResources().getSpecularMaterialResources().saveAll(materialDirectory);
 
                 if (finishedCallback != null)
                 {

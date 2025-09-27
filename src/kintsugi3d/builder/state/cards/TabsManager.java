@@ -13,7 +13,7 @@ public class TabsManager
 
     public TabsManager(ViewSet viewSet, ProjectInstance<?> instance)
     {
-        factories.put("Cameras", new CameraCardFactory(viewSet));
+        factories.put("Photos", new CameraCardFactory(viewSet));
         factories.put("Materials", new MaterialCardFactory(instance));
     }
 

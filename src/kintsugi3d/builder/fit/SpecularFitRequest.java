@@ -165,9 +165,19 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
             renderable.reloadShaders();
 
-            // Quietly (no confirmation modal) saves textures
-            // as well as glTF (for Kintsugi 3D Viewer) and project to avoid inconsistency between results and settings
-            Global.state().getIOModel().saveAll();
+            IOModel ioModel = Global.state().getIOModel();
+
+            // Save project to avoid inconsistency between results and settings
+            ioModel.saveProject();
+
+            // Export glTF for Kintsugi 3D Viewer even if not requested
+            // TODO: ensure that GLTF texture filenames match default material texture names;
+            //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
+            ioModel.saveGLTF();
+
+            // Save textures and basis functions
+            // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
+            resources.getSpecularMaterialResources().saveAll(renderable.getActiveViewSet().getSupportingFilesDirectory());
 
             // Perform reconstruction
             //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
