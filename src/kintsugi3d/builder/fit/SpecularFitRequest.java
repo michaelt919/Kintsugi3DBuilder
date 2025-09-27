@@ -29,6 +29,8 @@ import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -135,7 +137,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         try
         {
             // Set the output directory based on the view set's texture fit file path
-            settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
+            settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesDirectory());
 
             if (monitor != null)
             {
@@ -163,13 +165,12 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
             renderable.reloadShaders();
 
+            // Quietly (no confirmation modal) saves textures
+            // as well as glTF (for Kintsugi 3D Viewer) and project to avoid inconsistency between results and settings
+            Global.state().getIOModel().saveAll();
+
             // Perform reconstruction
             //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
-
-            if (settings.getExportSettings().shouldSaveModel())
-            {
-                renderable.saveGLTF(settings.getOutputDirectory(), settings.getExportSettings());
-            }
 
             if (settings.getExportSettings().shouldOpenViewerOnceComplete())
             {
@@ -184,7 +185,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             // Refresh tabs
             new TabsManager(renderable).refreshTab("Materials");
         }
-        catch (IOException e) // thrown by createReflectanceProgram
+        catch (IOException | ParserConfigurationException | TransformerException e)
         {
             ExceptionHandling.error("Error executing specular fit request:", e);
         }

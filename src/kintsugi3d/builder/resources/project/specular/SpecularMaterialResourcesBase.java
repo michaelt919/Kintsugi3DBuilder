@@ -277,18 +277,25 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     {
         if (getBasisResources() != null && getBasisWeightResources() != null)
         {
+            // Delete the basis materials themselves and the corresponding weight maps
             getBasisResources().deleteBasisMaterial(materialIndex);
             getBasisWeightResources().deleteWeightMap(materialIndex);
 
-            // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
             try
             {
+                File supportingFilesDir = Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory();
+
+                // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
                 new BasisImageCreator<>(getContext(), 2 * getBasisResources().getBasisResolution() + 1)
-                    .createImages(this, Global.state().getIOModel().getLoadedViewSet().getSupportingFilesFilePath());
+                    .createImages(this, Global.state().getIOModel().getLoadedViewSet().getThumbnailImageDirectory());
+
+                // Save basis functions and weight maps to prevent inconsistency with thumbnails if the user forgets to save manually.
+                saveBasisFunctions(supportingFilesDir);
+                saveUnpackedWeightMaps("PNG", supportingFilesDir);
             }
             catch (IOException e)
             {
-                LOG.error("An error occurred saving basis material thumbnails.", e);
+                LOG.error("An filesystem error occurred while deleting the basis material.", e);
             }
         }
     }

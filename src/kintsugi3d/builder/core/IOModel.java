@@ -14,15 +14,15 @@ package kintsugi3d.builder.core;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.util.EncodableColorImage;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -30,7 +30,7 @@ public class IOModel
 {
     private static class AggregateProgressMonitor implements ProgressMonitor
     {
-        private final Collection<ProgressMonitor> subMonitors = new ArrayList<>();
+        private final Collection<ProgressMonitor> subMonitors = new ArrayList<>(8);
 
         void addSubMonitor(ProgressMonitor monitor)
         {
@@ -249,9 +249,79 @@ public class IOModel
         this.handler.saveToVSETFile(vsetFile);
     }
 
+    public static File getDefaultSupportingFilesDirectory(File projectFile)
+    {
+        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
+    }
+
+    /**
+     * Saves the project.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
+     * @param projectFile The file path for the project.
+     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws TransformerException
+     */
+    public File saveProject(File projectFile) throws IOException, ParserConfigurationException, TransformerException
+    {
+        RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
+
+        File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
+        filesDirectory.mkdirs();
+
+        ViewSet viewSet = getLoadedViewSet();
+
+        if (projectFile.getName().toLowerCase(Locale.ROOT).endsWith(".vset"))
+        {
+            viewSet.setRootDirectory(projectFile.getParentFile());
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+
+            saveToVSETFile(projectFile);
+            setLoadedProjectFile(projectFile);
+            Global.state().getProjectModel().setProjectName(projectFile.getName());
+
+            return projectFile;
+        }
+        else
+        {
+            viewSet.setRootDirectory(filesDirectory);
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+
+            File vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
+            saveToVSETFile(vsetFile);
+            setLoadedProjectFile(projectFile);
+            Global.state().getProjectModel().saveProjectFile(projectFile, vsetFile);
+
+            return vsetFile;
+        }
+    }
+
+    /**
+     * Saves the project using the current loaded project filename.
+     * If the project file is not a .vset, the .vset will be created in a supporting files directory.
+     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws TransformerException
+     */
+    public File saveProject() throws IOException, ParserConfigurationException, TransformerException
+    {
+        return saveProject(getLoadedProjectFile());
+    }
+
     public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
         this.handler.saveAllMaterialFiles(materialDirectory, finishedCallback);
+    }
+
+    public void saveAllMaterialFiles(Runnable finishedCallback)
+    {
+        this.handler.saveAllMaterialFiles(getLoadedViewSet().getSupportingFilesDirectory(), finishedCallback);
+    }
+
+    public void saveAllMaterialFiles()
+    {
+        this.handler.saveAllMaterialFiles(getLoadedViewSet().getSupportingFilesDirectory(), null);
     }
 
     public void saveGLTF(File outputDirectory, ExportSettings settings)
@@ -261,7 +331,48 @@ public class IOModel
 
     public void saveGLTF(File outputDirectory)
     {
-        this.handler.saveGLTF(outputDirectory, new ExportSettings() /* defaults */);
+        saveGLTF(outputDirectory, new ExportSettings() /* defaults */);
+    }
+
+    public void saveGLTF()
+    {
+        saveGLTF(getLoadedViewSet().getSupportingFilesDirectory());
+    }
+
+    /**
+     * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
+     * @param projectFile The file path for the project.
+     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws TransformerException
+     */
+    public File saveAll(File projectFile, Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
+    {
+        File vsetFile = saveProject(projectFile);
+
+        // Export glTF for Kintsugi 3D Viewer even if not requested
+        // TODO: ensure that GLTF texture filenames match default material texture names;
+        //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
+        saveGLTF();
+
+        // Save textures and basis funtions (will be deferred to graphics thread).
+        saveAllMaterialFiles(finishedCallback);
+
+        return vsetFile;
+    }
+
+    /**
+     * Saves the project, including textures and glTF model, using the current loaded project filename.
+     * If the project file is not a .vset, the .vset will be created in a supporting files directory.
+     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws TransformerException
+     */
+    public void saveAll() throws IOException, ParserConfigurationException, TransformerException
+    {
+        saveAll(getLoadedProjectFile(), null);
     }
 
     public DoubleUnaryOperator getLuminanceEncodingFunction()

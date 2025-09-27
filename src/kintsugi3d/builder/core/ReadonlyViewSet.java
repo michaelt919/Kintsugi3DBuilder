@@ -84,7 +84,7 @@ public interface ReadonlyViewSet
      * Gets the file path of the supporting files (i.e. texture fit results) associated with this view set.
      * @return The absolute file path of the supporting files.
      */
-    File getSupportingFilesFilePath();
+    File getSupportingFilesDirectory();
 
     /**
      * Gets the file path of the supporting files (i.e. texture fit results) associated with this view set, relative to the root directory.
@@ -96,7 +96,7 @@ public interface ReadonlyViewSet
      * Gets the full resolution image file path associated with this view set.
      * @return The image file path.
      */
-    File getFullResImageFilePath();
+    File getFullResImageDirectory();
 
     /**
      * Gets the full resolution image file path string associated with this view set, relative to the root directory.
@@ -108,13 +108,13 @@ public interface ReadonlyViewSet
      * Gets the image file path for downscaled "preview" images for real-time rendering
      * @return The image file path.
      */
-    File getPreviewImageFilePath();
+    File getPreviewImageDirectory();
 
     /**
      * Gets the image file path for the downscaled "thumbnail" images for display.
      * @return The image file path
      */
-    File getThumbnailImageFilePath();
+    File getThumbnailImageDirectory();
 
     /**
      * Gets the image file path string for downscaled "preview" images for real-time rendering, relative to the root directory.

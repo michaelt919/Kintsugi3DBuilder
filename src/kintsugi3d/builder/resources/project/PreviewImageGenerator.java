@@ -32,8 +32,8 @@ public class PreviewImageGenerator
             throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
         }
 
-        viewSet.getPreviewImageFilePath().mkdirs(); // Create preview directory
-        new File(viewSet.getSupportingFilesFilePath(), "thumbnails").mkdirs(); // Create thumbnail directory
+        viewSet.getPreviewImageDirectory().mkdirs(); // Create preview directory
+        new File(viewSet.getSupportingFilesDirectory(), "thumbnails").mkdirs(); // Create thumbnail directory
 
         progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
 

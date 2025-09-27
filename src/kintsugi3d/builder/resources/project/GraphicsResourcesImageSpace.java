@@ -324,7 +324,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             true);
 
         // Read the images from a file
-        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageFilePath() != null) && (viewSet.getCameraPoseCount() > 0))
+        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageDirectory() != null) && (viewSet.getCameraPoseCount() > 0))
         {
             Date timestamp = new Date();
 

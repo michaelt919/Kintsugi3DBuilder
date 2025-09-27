@@ -25,12 +25,12 @@ import java.util.List;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private final List<DoubleVector3> diffuseAlbedos;
-    private final SimpleMatrix specularRed;
-    private final SimpleMatrix specularGreen;
-    private final SimpleMatrix specularBlue;
-
     private final BasisSettings basisSettings;
+
+    private final List<DoubleVector3> diffuseAlbedos;
+    private SimpleMatrix specularRed;
+    private SimpleMatrix specularGreen;
+    private SimpleMatrix specularBlue;
 
     public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
     {
@@ -66,8 +66,8 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     {
         return new MaterialBasis()
         {
-            final int count = basisSettings.getBasisCount();
-            final int resolution = basisSettings.getBasisResolution();
+            private int count = basisSettings.getBasisCount();
+            private final int resolution = basisSettings.getBasisResolution();
 
             @Override
             public DoubleVector3 getDiffuseColor(int b)
@@ -114,25 +114,36 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public void deleteMaterial(int b)
             {
+                specularRed = removeColumn(specularRed, b);
+                specularGreen = removeColumn(specularGreen, b);
+                specularBlue = removeColumn(specularBlue, b);
                 diffuseAlbedos.remove(b);
-                removeColumn(specularRed, b);
-                removeColumn(specularGreen, b);
-                removeColumn(specularBlue, b);
+                count--;
             }
 
-            private void removeColumn(SimpleMatrix m, int b)
+            private SimpleMatrix removeColumn(SimpleMatrix m, int b)
             {
-                // Shift the columns over
-                for (int j = b; j < m.numCols() - 1; j++)
+                SimpleMatrix result = new SimpleMatrix(m.numRows(), m.numCols() - 1, DMatrixRMaj.class);
+
+                // Columns before the one being removed
+                for (int j = 0; j < b; j++)
                 {
                     for (int i = 0; i < m.numRows(); i++)
                     {
-                        m.set(i, j, m.get(i, j + 1));
+                        result.set(i, j, m.get(i, j));
                     }
                 }
 
-                // Remove the last column.
-                m.reshape(m.numRows(), m.numCols() - 1);
+                // Columns after the one being removed
+                for (int j = b; j < result.numCols(); j++)
+                {
+                    for (int i = 0; i < m.numRows(); i++)
+                    {
+                        result.set(i, j, m.get(i, j + 1));
+                    }
+                }
+
+                return result;
             }
 
             @Override

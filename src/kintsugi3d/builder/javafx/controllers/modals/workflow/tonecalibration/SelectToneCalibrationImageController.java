@@ -189,7 +189,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         else
         {
             ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
-            imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());
+            imageFileChooser.setInitialDirectory(viewSet.getFullResImageDirectory());
         }
         File temp = imageFileChooser.showOpenDialog(rootPane.getScene().getWindow());
         if (temp != null)

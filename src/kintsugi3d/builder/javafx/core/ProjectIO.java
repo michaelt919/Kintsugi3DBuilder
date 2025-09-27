@@ -161,31 +161,22 @@ public final class ProjectIO
         });
     }
 
-    public static File getDefaultSupportingFilesDirectory(File projectFile)
-    {
-        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
-    }
-
     private void setViewsetDirectories(ViewSet viewSet)
     {
-        File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
+        File filesDirectory = IOModel.getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
-        // need to use a lambda callback so that this is called after the file location is chosen
-        // but before its actually saved
         if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
         {
-            // Set the root directory first, then the supporting files directory
-            Global.state().getIOModel()
-                .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
-
-            viewSet.setSupportingFilesDirectory(filesDirectory);
+            viewSet.setRootDirectory(projectFile.getParentFile());
         }
         else // Saved as a Kintsugi 3D project
         {
             viewSet.setRootDirectory(filesDirectory);
-            viewSet.setSupportingFilesDirectory(filesDirectory);
         }
+
+        // Requires root directory to be previously assigned
+        viewSet.setSupportingFilesDirectory(filesDirectory);
     }
 
     public void createProject(Window parentWindow)
@@ -243,7 +234,7 @@ public final class ProjectIO
                 try
                 {
                     Global.state().getIOModel()
-                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, getDefaultSupportingFilesDirectory(projectFile));
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, IOModel.getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
                 {
@@ -322,7 +313,7 @@ public final class ProjectIO
             this.vsetFile = newVsetFile;
             Global.state().getProjectModel().setProjectOpen(true);
 
-            startLoad(projectFile, vsetFile);
+            startLoad(projectFile, newVsetFile);
 
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
             Global.state().getIOModel().setLoadedProjectFile(projectFile);
@@ -373,46 +364,15 @@ public final class ProjectIO
         }
         else
         {
-            RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
             try
             {
-                IOModel ioModel = Global.state().getIOModel();
-
-                File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
-                if (projectFile.getName().endsWith(".vset"))
-                {
-                    ioModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
-                    ioModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
-                    ioModel.saveToVSETFile(projectFile);
-                    this.vsetFile = projectFile;
-                    this.projectFile = null;
-                    Global.state().getIOModel().setLoadedProjectFile(vsetFile);
-                    Global.state().getProjectModel().setProjectName(vsetFile.getName());
-                }
-                else
-                {
-                    filesDirectory.mkdirs();
-                    ioModel.getLoadedViewSet().setRootDirectory(filesDirectory);
-                    ioModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
-                    this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
-                    ioModel.saveToVSETFile(vsetFile);
-                    JavaFXState.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
-                    Global.state().getIOModel().setLoadedProjectFile(projectFile);
-                    Global.state().getProjectModel().setProjectName(projectFile.getName());
-                }
-
-                // TODO: ensure that GLTF texture filenames match default material texture names;
-                //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
-                ioModel.saveGLTF(filesDirectory);
-
-                // Save textures and basis funtions (will be deferred to graphics thread).
-                ioModel.saveAllMaterialFiles(filesDirectory, () ->
+                this.vsetFile = Global.state().getIOModel().saveAll(this.projectFile, () ->
                 {
                     // Display message when all textures have been saved on graphics thread.
-                    //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                    // TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
                     Platform.runLater(() ->
                     {
-                        Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
+                        Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
                             "Save Complete!");
                         saveInfo.setTitle("Save successful");
                         saveInfo.setHeaderText(projectFile.getName());
@@ -445,7 +405,7 @@ public final class ProjectIO
             fileChooser.setInitialFileName("");
             fileChooser.setInitialDirectory(defaultDirectory);
         }
-        else if (projectFile != null)
+        else if (projectFile != null && !Objects.equals(projectFile, vsetFile))
         {
             fileChooser.setInitialFileName(projectFile.getName());
             fileChooser.setInitialDirectory(projectFile.getParentFile());

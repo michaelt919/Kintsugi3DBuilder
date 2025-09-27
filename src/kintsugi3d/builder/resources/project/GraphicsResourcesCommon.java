@@ -155,12 +155,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                 Material material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
 
-                if (viewSet.getSupportingFilesFilePath() != null) // Load texture fit from previous session
+                if (viewSet.getSupportingFilesDirectory() != null) // Load texture fit from previous session
                 {
                     SpecularMaterialResources<ContextType> loadedFit;
                     try
                     {
-                        loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesFilePath());
+                        loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesDirectory());
                     }
                     catch (IOException e)
                     {

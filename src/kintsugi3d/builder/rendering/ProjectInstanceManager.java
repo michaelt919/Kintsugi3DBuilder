@@ -13,11 +13,13 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MissingImagesException;
@@ -474,6 +476,17 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
             Rendering.runLater(() ->
             {
                 material.saveAll(materialDirectory);
+
+                // Save basis image visualization for cards
+                try (BasisImageCreator<ContextType> basisImageCreator =
+                         new BasisImageCreator<>(material.getContext(), material.getBasisResources().getBasisResolution()))
+                {
+                    basisImageCreator.createImages(material, loadedViewSet.getThumbnailImageDirectory());
+                }
+                catch (IOException e)
+                {
+                    ExceptionHandling.error("Error saving basis image thumbnails:", e);
+                }
 
                 if (finishedCallback != null)
                 {

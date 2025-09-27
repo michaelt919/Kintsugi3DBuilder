@@ -31,6 +31,7 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
 //    Texture2D<ContextType> getQuadraticMap();
 
     Texture2D<ContextType> getSpecularReflectivityMap();
+
     Texture2D<ContextType> getSpecularRoughnessMap();
 
     Texture2D<ContextType> getAlbedoMap();
@@ -90,15 +91,16 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
     /**
      * Copies pixels from part of a blittable to another.  The copying operation will be start at (x, y) within
      * this blittable, and resize if the requested source and destination rectangles are not the same size.
-     * @param destX The left edge of the rectangle to copy into within this blittable.
-     * @param destY The bottom edge of the rectangle to copy into within this blittable.
-     * @param destWidth The width of the rectangle to copy at the destination resolution.
-     * @param destHeight The height of the rectangle to copy at the destination resolution.
-     * @param readSource The blittable source to copy from.
-     * @param srcX The left edge of the rectangle to copy from within the source.
-     * @param srcY The bottom edge of the rectangle to copy from within the source.
-     * @param srcWidth The width of the rectangle to copy at the source resolution.
-     * @param srcHeight The height of the rectangle to copy at the source resolution.
+     *
+     * @param destX           The left edge of the rectangle to copy into within this blittable.
+     * @param destY           The bottom edge of the rectangle to copy into within this blittable.
+     * @param destWidth       The width of the rectangle to copy at the destination resolution.
+     * @param destHeight      The height of the rectangle to copy at the destination resolution.
+     * @param readSource      The blittable source to copy from.
+     * @param srcX            The left edge of the rectangle to copy from within the source.
+     * @param srcY            The bottom edge of the rectangle to copy from within the source.
+     * @param srcWidth        The width of the rectangle to copy at the source resolution.
+     * @param srcHeight       The height of the rectangle to copy at the source resolution.
      * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
      */
     @Override
@@ -312,32 +314,242 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
         };
     }
 
+    /**
+     * Saves the diffuse texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveDiffuseMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the diffuse texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveDiffuseMap(String format, File outputDirectory)
+    {
+        saveDiffuseMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the normal map texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveNormalMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the normal map texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveNormalMap(String format, File outputDirectory)
+    {
+        saveNormalMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the specular reflectivity texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveSpecularReflectivityMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the specular reflectivity texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveSpecularReflectivityMap(String format, File outputDirectory)
+    {
+        saveSpecularReflectivityMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the specular roughness texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveSpecularRoughnessMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the specular roughness texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveSpecularRoughnessMap(String format, File outputDirectory)
+    {
+        saveSpecularRoughnessMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the constant (translucency) texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveConstantMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the constant (translucency) texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveConstantMap(String format, File outputDirectory)
+    {
+        saveConstantMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the ambient occlusion texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveOcclusionMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the ambient occlusion texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveOcclusionMap(String format, File outputDirectory)
+    {
+        saveOcclusionMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the albedo texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveAlbedoMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the albedo texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveAlbedoMap(String format, File outputDirectory)
+    {
+        saveAlbedoMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the ORM (occlusion/roughness/metallicity) texture to the filesystem in the specified format.
+     *
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveORMMap(String format, File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves the ORM (occlusion/roughness/metallicity) texture to the filesystem in the specified format, with a default filename.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the texture.
+     */
+    default void saveORMMap(String format, File outputDirectory)
+    {
+        saveORMMap(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves weight map textures to the filesystem in the specified format,
+     * with four weight maps packed into a single image in the RGBA channels.
+     *
+     * @param format            The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory   The directory in which to save the textures.
+     * @param filenameOverrides A function that provides the filename as a function of the weight map index.
+     *                          If set to null, default filenames will be provided.
+     */
     void savePackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides);
 
+    /**
+     * Saves packed weight map textures to the filesystem in the specified format
+     * with four weight maps packed into a single image in the RGBA channels, using default filenames.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the textures.
+     */
+    default void savePackedWeightMaps(String format, File outputDirectory)
+    {
+        savePackedWeightMaps(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images.
+     *
+     * @param format            The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory   The directory in which to save the textures.
+     * @param filenameOverrides A function that provides the filename as a function of the weight map index.
+     *                          If set to null, default filenames will be provided.
+     */
     void saveUnpackedWeightMaps(String format, File outputDirectory, IntFunction<String> filenameOverrides);
 
+    /**
+     * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images, using default filenames.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the textures.
+     */
+    default void saveUnpackedWeightMaps(String format, File outputDirectory)
+    {
+        saveUnpackedWeightMaps(format, outputDirectory, null);
+    }
+
+    /**
+     * Saves the basis function to the filesystem as a CSV file.
+     *
+     * @param outputDirectory  The directory in which to save the basis functions.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
     void saveBasisFunctions(File outputDirectory, String filenameOverride);
 
+    /**
+     * Saves basis function textures to the filesystem with a default filename.
+     *
+     * @param outputDirectory The directory in which to save the basis functions.
+     */
+    default void saveBasisFunctions(File outputDirectory)
+    {
+        saveBasisFunctions(outputDirectory, null);
+    }
+
+
+    /**
+     * Saves all metadata maps to the filesystem as images in the specified format.
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the metadata maps.
+     * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
+     *                        This can be set to the empty string "" to use just the base / default names.
+     */
     void saveMetadataMaps(String format, File outputDirectory, String filenamePrefix);
 
     /**
-     * Saves all resources to the specified output directory
+     * Saves all resources to the specified output directory with the specified image format, using default filenames.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
      * @param outputDirectory
      */
     default void saveAll(String format, File outputDirectory)
@@ -348,7 +560,8 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
     }
 
     /**
-     * Saves all resources to the specified output directory
+     * Saves all resources to the specified output directory in PNG format using default filenames.
+     *
      * @param outputDirectory
      */
     default void saveAll(File outputDirectory)
@@ -357,9 +570,10 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
     }
 
     /**
-     * Saves essential resources to the specified output directory
+     * Saves essential resources to the specified output directory using default filenames.
      * Skips standalone occlusion map and unpacked weight maps.
      * Includes standalone roughness map for more convenient Blender / Sketchfab access.
+     *
      * @param outputDirectory
      */
     default void saveEssential(String format, File outputDirectory)
@@ -376,5 +590,12 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
         saveMetadataMaps(format, outputDirectory, "");
     }
 
+
+    /**
+     * Deletes one of the basis materials.
+     * This will cause the basis materials, weight maps, and thumbnail images to be automatically re-saved
+     * to the project's supporting files directory.
+      * @param materialIndex
+     */
     void deleteBasisMaterial(int materialIndex);
 }

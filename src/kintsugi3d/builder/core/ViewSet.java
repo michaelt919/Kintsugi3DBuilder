@@ -432,10 +432,10 @@ public final class ViewSet implements ReadonlyViewSet
                 setGeometryFileName("manifold.obj"); // Used by some really old datasets
             }
 
-            if (result.getSupportingFilesFilePath() != null)
+            if (result.getSupportingFilesDirectory() != null)
             {
                 // Make sure the supporting files directory exists
-                result.getSupportingFilesFilePath().mkdirs();
+                result.getSupportingFilesDirectory().mkdirs();
             }
 
             return result;
@@ -824,7 +824,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getSupportingFilesFilePath()
+    public File getSupportingFilesDirectory()
     {
         // Fallback to root directory if no supporting files defined
         return this.supportingFilesDirectory == null ? this.rootDirectory : this.supportingFilesDirectory;
@@ -833,15 +833,15 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public String getRelativeSupportingFilesPathName()
     {
-        File supportingFilesFilePath = this.getSupportingFilesFilePath();
+        File effectiveSupportingFilesDirectory = this.getSupportingFilesDirectory();
         try
         {
-            return this.rootDirectory.toPath().relativize(supportingFilesFilePath.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(effectiveSupportingFilesDirectory.toPath()).toString();
         }
         catch (IllegalArgumentException |
             NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return supportingFilesFilePath == null ? null : supportingFilesFilePath.toString();
+            return effectiveSupportingFilesDirectory == null ? null : effectiveSupportingFilesDirectory.toString();
         }
     }
 
@@ -857,7 +857,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getFullResImageFilePath()
+    public File getFullResImageDirectory()
     {
         if (this.fullResImageDirectory == null)
         {
@@ -884,16 +884,16 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public String getRelativeFullResImagePathName()
     {
-        File fullResImageFilePath = getFullResImageFilePath();
+        File effectiveFullResImageDirectory = getFullResImageDirectory();
 
         try
         {
-            return this.rootDirectory.toPath().relativize(fullResImageFilePath.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(effectiveFullResImageDirectory.toPath()).toString();
         }
         catch (IllegalArgumentException |
             NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return fullResImageFilePath == null ? null : fullResImageFilePath.toString();
+            return effectiveFullResImageDirectory == null ? null : effectiveFullResImageDirectory.toString();
         }
     }
 
@@ -908,7 +908,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getPreviewImageFilePath()
+    public File getPreviewImageDirectory()
     {
         if (this.previewImageDirectory == null)
         {
@@ -922,7 +922,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getThumbnailImageFilePath()
+    public File getThumbnailImageDirectory()
     {
         if (this.thumbnailImageDirectory == null)
         {
@@ -938,16 +938,16 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public String getRelativePreviewImagePathName()
     {
-        File previewImageFilePath = this.getPreviewImageFilePath();
+        File effectivePreviewImageDirectory = this.getPreviewImageDirectory();
 
         try
         {
-            return this.rootDirectory.toPath().relativize(previewImageFilePath.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(effectivePreviewImageDirectory.toPath()).toString();
         }
         catch (IllegalArgumentException |
             NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return previewImageFilePath == null ? null : previewImageFilePath.toString();
+            return effectivePreviewImageDirectory == null ? null : effectivePreviewImageDirectory.toString();
         }
     }
 
@@ -987,7 +987,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getFullResImageFile(int poseIndex)
     {
-        return new File(this.getFullResImageFilePath(), this.imageFiles.get(poseIndex).getPath());
+        return new File(this.getFullResImageDirectory(), this.imageFiles.get(poseIndex).getPath());
     }
 
     @Override
@@ -999,7 +999,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getPreviewImageFile(int poseIndex, String extension)
     {
-        return new File(this.getPreviewImageFilePath(),
+        return new File(this.getPreviewImageDirectory(),
             ImageFinder.getInstance().getImageFileNameWithExtension(this.getImageFileName(poseIndex), extension));
     }
 
@@ -1013,7 +1013,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getThumbnailImageFile(int poseIndex, String extension)
     {
-        return new File(this.getThumbnailImageFilePath(),
+        return new File(this.getThumbnailImageDirectory(),
             ImageFinder.getInstance().getImageFileNameWithExtension(String.valueOf(poseIndex), extension));
     }
 

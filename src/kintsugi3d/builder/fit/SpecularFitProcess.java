@@ -85,12 +85,6 @@ public class SpecularFitProcess
         // Runs the fit (long process) and then replaces the old material resources / textures
         SpecularMaterialResources<ContextType> result = optimizeFitWithCache(cache, monitor);
         resources.replaceSpecularMaterialResources(result);
-
-        // Save basis image visualization for cards
-        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
-        {
-            basisImageCreator.createImages(result, settings.getOutputDirectory());
-        }
     }
 
     public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(
@@ -207,7 +201,8 @@ public class SpecularFitProcess
                 decomposition.saveDiffuseMap(settings.getOutputDirectory());
 
                 // Save basis image visualization for reference and debugging
-                try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(resources.getContext(), settings.getSpecularBasisSettings()))
+                try (BasisImageCreator<ContextType> basisImageCreator =
+                        new BasisImageCreator<>(resources.getContext(), settings.getSpecularBasisSettings().getBasisResolution()))
                 {
                     basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
                 }

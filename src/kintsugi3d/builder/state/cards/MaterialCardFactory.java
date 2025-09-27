@@ -33,7 +33,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         try
         {
             thumbnailPath = ImageFinder.getInstance().findImageFile(
-                new File(instance.getActiveViewSet().getSupportingFilesFilePath(),
+                new File(instance.getActiveViewSet().getThumbnailImageDirectory(),
                     BasisImageCreator.getBasisImageFilename(cardIndex))).toString();
         }
         catch (FileNotFoundException e)
