@@ -82,14 +82,9 @@ public final class ImageFinder
         }
     }
 
-    private static void logFileGuess(File imageFileGuess)
+    private static void logFound(File requestedFile, File actualFile)
     {
-        LOG.debug("Trying '{}'", imageFileGuess.getAbsolutePath());
-    }
-
-    private static void logFound()
-    {
-        LOG.debug("Found!!");
+        LOG.debug("Search for '{}'; found: {}", requestedFile.getName(), actualFile);
     }
 
     public File findImageFile(File requestedFile, String... suffixes) throws FileNotFoundException
@@ -100,8 +95,6 @@ public final class ImageFinder
         }
         else
         {
-            LOG.debug("Could not find file; searching with alternate extensions: {}", requestedFile);
-
             // Try some alternate file formats/extensions
             // Try appending first (will catch filenames that contain .'s but omit the extension)
             File parentFile = requestedFile.getParentFile();
@@ -111,10 +104,9 @@ public final class ImageFinder
                 String altFileName = String.join(".", requestedFile.getName(), extension);
                 File imageFileGuess = new File(parentFile, altFileName);
 
-//                logFileGuess(imageFileGuess);
                 if (imageFileGuess.exists())
                 {
-                    logFound();
+                    logFound(requestedFile, imageFileGuess);
                     return imageFileGuess;
                 }
 
@@ -125,10 +117,9 @@ public final class ImageFinder
                         altFileName = String.join(".", String.format("%s%s", requestedFile.getName(), suffix), extension);
                         imageFileGuess = new File(parentFile, altFileName);
 
-//                        logFileGuess(imageFileGuess);
                         if (imageFileGuess.exists())
                         {
-                            logFound();
+                            logFound(requestedFile, imageFileGuess);
                             return imageFileGuess;
                         }
                     }
@@ -149,10 +140,9 @@ public final class ImageFinder
 
                     File imageFileGuess = new File(parentFile, altFileName);
 
-//                    logFileGuess(imageFileGuess);
                     if (imageFileGuess.exists())
                     {
-                        logFound();
+                        logFound(requestedFile, imageFileGuess);
                         return imageFileGuess;
                     }
 
@@ -165,10 +155,9 @@ public final class ImageFinder
 
                             imageFileGuess = new File(parentFile, altFileName);
 
-//                            logFileGuess(imageFileGuess);
                             if (imageFileGuess.exists())
                             {
-                                logFound();
+                                logFound(requestedFile, imageFileGuess);
                                 return imageFileGuess;
                             }
                         }
