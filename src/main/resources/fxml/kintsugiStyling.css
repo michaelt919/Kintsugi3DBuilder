@@ -1,58 +1,101 @@
-/*Note: line height is not supported as a native JavaFX CSS feature.*/
+.label,
+.button,
+.text-field,
+.password-field,
+.text-area,
+.text,
+.menu-item,
+.menu-bar,
+.check-box,
+.radio-button,
+.table-view,
+.tree-view,
+.list-view,
+.combo-box,
+.scroll-pane,
+.tab-pane,
+.tooltip,
+.context-menu,
+.wireframeBody,
+.wireframeBodyStrong,
+.wireframeBodyLarge,
+.wireframeCaption,
+.wireframeSubtitle,
+.wireframeTitle,
+.wireframeTitleLarge,
+.wireframeDisplay {
+    -fx-font-family: "Segoe UI";
+}
+
+@platform macos {
+    /* multiple selectors not supported inside @platform */
+    /* Verdana seems to be the best option on MacOS that supports bold font weight */
+    .label { -fx-font-family: "Verdana"; }
+    .button { -fx-font-family: "Verdana"; }
+    .text-field { -fx-font-family: "Verdana"; }
+    .password-field { -fx-font-family: "Verdana"; }
+    .text-area { -fx-font-family: "Verdana"; }
+    .text { -fx-font-family: "Verdana"; }
+    .menu-item { -fx-font-family: "Verdana"; }
+    .menu-bar { -fx-font-family: "Verdana"; }
+    .check-box { -fx-font-family: "Verdana"; }
+    .radio-button { -fx-font-family: "Verdana"; }
+    .table-view { -fx-font-family: "Verdana"; }
+    .tree-view { -fx-font-family: "Verdana"; }
+    .list-view { -fx-font-family: "Verdana"; }
+    .combo-box { -fx-font-family: "Verdana"; }
+    .scroll-pane { -fx-font-family: "Verdana"; }
+    .tab-pane { -fx-font-family: "Verdana"; }
+    .tooltip { -fx-font-family: "Verdana"; }
+    .context-menu { -fx-font-family: "Verdana"; }
+    .wireframeBody { -fx-font-family: "Verdana"; }
+    .wireframeBodyStrong { -fx-font-family: "Verdana"; }
+    .wireframeBodyLarge { -fx-font-family: "Verdana"; }
+    .wireframeCaption { -fx-font-family: "Verdana"; }
+    .wireframeSubtitle { -fx-font-family: "Verdana"; }
+    .wireframeTitle { -fx-font-family: "Verdana"; }
+    .wireframeTitleLarge { -fx-font-family: "Verdana"; }
+    .wireframeDisplay { -fx-font-family: "Verdana"; }
+}
 
 .wireframeCaption {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 400;
     -fx-font-size: 12px;
 }
 
 .wireframeBody {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 400;
     -fx-font-size: 14px;
 }
 
 .wireframeBodyStrong {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 700;
+    -fx-font-weight: bold;
     -fx-font-size: 12px;
 }
 
 .wireframeBodyLarge {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 400;
     -fx-font-size: 18px;
 }
 
 .wireframeSubtitle {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 600;
     -fx-font-size: 20px;
 }
 
 .wireframeTitle {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 600;
     -fx-font-size: 28px;
 }
 
 .wireframeTitleLarge {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight: 600;
     -fx-font-size: 40px;
 }
 
 .wireframeDisplay {
-    -fx-font-family: 'Segoe UI';
     -fx-font-style: normal;
-    -fx-font-weight:600;
     -fx-font-size: 68px;
 }
 
@@ -292,7 +335,8 @@
 .list-cell:selected,
 .table-view .cell:selected,
 .table-row-cell:selected,
-.table-row-cell:selected .cell{
+.table-row-cell:selected .cell,
+.tree-cell:selected {
     -fx-background-color:#EEEEEE;
     -fx-text-fill: #383838;
 }
