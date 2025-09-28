@@ -245,7 +245,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 intVersion *= 10;
                                 intVersion += Integer.parseInt(verComponent);
                             }
-                            LOG.debug("Agisoft XML version {} ({})\n", version, intVersion);
+                            LOG.debug("Agisoft XML version {} ({})", version, intVersion);
                             break;
                         }
                         case "chunk":
@@ -255,7 +255,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             {
                                 chunkLabel = "unnamed";
                             }
-                            LOG.debug("Reading chunk '{}'\n", chunkLabel);
+                            LOG.debug("Reading chunk '{}'", chunkLabel);
 
                             // Commented out; chunk XMLs seem to always be labelled version 1.2.0; regardless of Metashape version or actual format details.
 //                            // chunk XMLs put the version in the chunk tag
@@ -275,14 +275,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         }
                         case "group":
                             groupLabel = reader.getAttributeValue(null, "label");
-                            LOG.debug("Reading group '{}'\n", groupLabel);
+                            LOG.debug("Reading group '{}'", groupLabel);
                             lightIndex = nextLightIndex;
                             nextLightIndex++;
                             LOG.debug("Light index: " + lightIndex);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
-                            LOG.debug("\tAdding sensor '{}'\n", sensorID);
+                            LOG.debug("\tAdding sensor '{}'", sensorID);
                             sensor = new Sensor(sensorID);
                             break;
                         case "camera":
@@ -601,13 +601,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "dense_cloud":
                             if (intVersion < 110)
                             {
-                                LOG.debug("Unexpected tag '{}' for psz version {}\n",
-                                    reader.getLocalName(), version);
+                                LOG.debug("Unexpected tag '{}' for psz version {}", reader.getLocalName(), version);
                             }
                             break;
 
                         default:
-                            LOG.debug("Unexpected tag '{}'\n", reader.getLocalName());
+//                            LOG.debug("Unexpected tag '{}'", reader.getLocalName());
                             break;
                     }
                     break;
@@ -617,11 +616,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     switch (reader.getLocalName())
                     {
                         case "chunk":
-                            LOG.debug("Finished chunk '{}'\n", chunkLabel);
+                            LOG.debug("Finished chunk '{}'", chunkLabel);
                             chunkLabel = "";
                             break;
                         case "group":
-                            LOG.debug("Finished group '{}'\n", groupLabel);
+                            LOG.debug("Finished group '{}'", groupLabel);
                             groupLabel = "";
                             lightIndex = defaultLightIndex;
                             break;
@@ -639,7 +638,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 {
                                     // Only add camera if it has a valid transform
                                     cameraSet.add(camera);
-                                    LOG.debug("\tAdding camera {}, with sensor {} and image {}\n",
+                                    LOG.debug("\tAdding camera {}, with sensor {} and image {}",
                                         cameraID, sensorID, imageFile);
                                 }
                                 camera = null; // Clear the camera regardless

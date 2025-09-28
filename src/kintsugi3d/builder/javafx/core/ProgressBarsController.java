@@ -345,7 +345,7 @@ public class ProgressBarsController
         private String localText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
         private String finishingUpText;
 
-        public Monitor(AtomicBoolean cancelRequested, ProgressBar localProgressBar, ProgressBar overallProgressBar, Label overallTextLabel, Label localTextLabel, Button cancelButton)
+        Monitor(AtomicBoolean cancelRequested, ProgressBar localProgressBar, ProgressBar overallProgressBar, Label overallTextLabel, Label localTextLabel, Button cancelButton)
         {
             this.cancelRequested = cancelRequested;
             this.localProgressBar = localProgressBar;
@@ -391,11 +391,8 @@ public class ProgressBarsController
             localProgress = 0.0;
             currentStage = 0;
 
-            LOG.debug("start() called on {}", Thread.currentThread());
-
             Platform.runLater(() ->
             {
-                LOG.debug("setting stageCountProperty to zero");
                 stageCountProperty.setValue(0);
                 currentStageProperty.setValue(0);
                 localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
@@ -441,11 +438,8 @@ public class ProgressBarsController
         @Override
         public void setStageCount(int count)
         {
-            LOG.debug("setStageCount() called on {}", Thread.currentThread());
-
             Platform.runLater(() ->
             {
-                LOG.debug("setting stageCountProperty to {}", count);
                 stageCountProperty.setValue(count);
                 refreshOverallProgress();
             });
@@ -462,7 +456,14 @@ public class ProgressBarsController
 
             Platform.runLater(() ->
             {
-                LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
+                if (currentStage <= stageCountProperty.getValue())
+                {
+                    LOG.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
+                }
+                else if (currentStage == stageCountProperty.getValue() + 1)
+                {
+                    LOG.info("[Finishing up] {}", message);
+                }
 
                 this.currentStageProperty.setValue(currentStage);
                 localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
@@ -503,10 +504,14 @@ public class ProgressBarsController
 
         private void refreshOverallProgress()
         {
-            //index current stage from 0 in this instance
-            double overallProgress = (double) (currentStageProperty.get() - 1) / stageCountProperty.getValue();
-            overallProgressBar.setProgress(overallProgress);
-            refreshLocalText();
+            if (stageCountProperty.getValue() > 0)
+            {
+                //index current stage from 0 in this instance
+                double overallProgress = (double) (currentStageProperty.get() - 1) / stageCountProperty.getValue();
+                overallProgressBar.setProgress(overallProgress);
+
+                refreshLocalText();
+            }
         }
 
         @Override
