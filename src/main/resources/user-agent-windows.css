@@ -1,0 +1,30 @@
+@import url("com/sun/javafx/scene/control/skin/modena/modena.css");
+
+.label,
+.button,
+.text-field,
+.password-field,
+.text-area,
+.text,
+.menu-item,
+.menu-bar,
+.check-box,
+.radio-button,
+.table-view,
+.tree-view,
+.list-view,
+.combo-box,
+.scroll-pane,
+.tab-pane,
+.tooltip,
+.context-menu,
+.wireframeBody,
+.wireframeBodyStrong,
+.wireframeBodyLarge,
+.wireframeCaption,
+.wireframeSubtitle,
+.wireframeTitle,
+.wireframeTitleLarge,
+.wireframeDisplay {
+    -fx-font-family: "Segoe UI";
+}

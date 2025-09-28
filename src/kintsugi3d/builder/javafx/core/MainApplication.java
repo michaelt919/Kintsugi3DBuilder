@@ -20,9 +20,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.scene.text.Font;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
@@ -148,14 +148,25 @@ public class MainApplication extends Application
     @Override
     public void start(Stage primaryStage) throws IOException
     {
-        for (String f : Font.getFamilies())
-        {
-            LOG.info(f);
-        }
+//        for (String f : Font.getFamilies())
+//        {
+//            LOG.info(f);
+//        }
 
         if (icon == null)
         {
             icon = new Image(new File(ICON_PATH).toURI().toURL().toExternalForm());
+        }
+
+        if (OperatingSystem.MACOS == OperatingSystem.getCurrentOS())
+        {
+            // MacOS compatible fonts
+            setUserAgentStylesheet("user-agent-macos.css");
+        }
+        else
+        {
+            // Windows compatible fonts
+            setUserAgentStylesheet("user-agent-windows.css");
         }
 
         primaryStage.getIcons().add(icon);
