@@ -14,6 +14,9 @@ package kintsugi3d.builder.javafx.core;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -119,6 +122,31 @@ public class WelcomeWindowController
                 shouldBeHidden.removeListener(windowHide);
             }
         });
+    }
+
+    /**
+     * Useful for showing alerts that would otherwise be covered by up the welcome window
+     * (and by extension, the main window as a parent of the welcome window).
+     * @param runnable
+     */
+    public void runOnceWhenShown(Runnable runnable)
+    {
+        ReadOnlyBooleanProperty showing = window.showingProperty();
+
+        ChangeListener<Boolean> runOnce = new ChangeListener<>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean wasShown, Boolean isShown)
+            {
+                if (isShown)
+                {
+                    runnable.run();
+                    showing.removeListener(this);
+                }
+            }
+        };
+
+        showing.addListener(runOnce);
     }
 
     private static void handleMenuItemSelection(MenuItem item)
