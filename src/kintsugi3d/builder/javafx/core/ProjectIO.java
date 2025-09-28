@@ -73,6 +73,7 @@ public final class ProjectIO
                 // We know that the welcome window is going to be shown when the progress modal opens
                 // so wait until that happens so that the welcome window doesn't cover up the alert
                 // (and by extension, the main window as well as a parent of the welcome window)
+                // TODO figure out a less hacky workaround.
                 WelcomeWindowController.getInstance().runOnceWhenShown(() ->
                 {
                     Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
