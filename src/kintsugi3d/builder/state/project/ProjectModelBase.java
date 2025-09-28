@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.state.project;
 
-import kintsugi3d.builder.core.Global;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -251,8 +250,6 @@ public abstract class ProjectModelBase<
         {
             transformer.transform(new DOMSource(document), new StreamResult(out));
         }
-
-        setProjectName(projectFile.getName());
     }
 
     protected abstract CameraType constructCameraSetting();

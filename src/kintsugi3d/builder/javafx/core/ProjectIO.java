@@ -348,11 +348,8 @@ public final class ProjectIO
     }
 
     /**
-     * NOTE: After "Save As", view set will share the same UUID as the original project,
-     * including the preview resolution images and specular fit cache in the user's AppData folder.
-     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
-     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
-     * actual views (add / remove view) later on down the road.
+     * Saves the project.
+     * Does not need to run on the JavaFX thread.
      *
      * @param parentWindow
      */
@@ -387,11 +384,38 @@ public final class ProjectIO
         }
     }
 
+    /**
+     * Prompts the user for a project name and saves the project.
+     * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
+     *
+     * NOTE: After "Save As", view set will share the same UUID as the original project,
+     * including the preview resolution images and specular fit cache in the user's AppData folder.
+     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
+     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
+     * actual views (add / remove view) later on down the road.
+     *
+     * @param parentWindow
+     * @param callback
+     */
     public void saveProjectAs(Window parentWindow, Runnable callback)
     {
         saveProjectAs(parentWindow, callback, null);
     }
 
+    /**
+     * Prompts the user for a project name and saves the project.
+     * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
+     *
+     * NOTE: After "Save As", view set will share the same UUID as the original project,
+     * including the preview resolution images and specular fit cache in the user's AppData folder.
+     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
+     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
+     * actual views (add / remove view) later on down the road.
+     *
+     * @param parentWindow
+     * @param callback
+     * @param defaultDirectory
+     */
     public void saveProjectAs(Window parentWindow, Runnable callback, File defaultDirectory)
     {
         FileChooser fileChooser = getProjectFileChooserSafe();
@@ -452,13 +476,16 @@ public final class ProjectIO
                 callback.run();
             }
 
-            RecentProjects.addToRecentFiles(fileContainer.selectedFile.toString());
             saveProject(parentWindow);
+            Platform.runLater(() -> RecentProjects.addToRecentFiles(fileContainer.selectedFile.toString()));
         }
     }
 
 
     /**
+     * Prompts the user for a project name and saves the project.
+     * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
+     *
      * NOTE: After "Save As", view set will share the same UUID as the original project,
      * including the preview resolution images and specular fit cache in the user's AppData folder.
      * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce

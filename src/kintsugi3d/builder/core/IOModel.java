@@ -15,6 +15,7 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.util.EncodableColorImage;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,7 +23,10 @@ import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -270,6 +274,7 @@ public class IOModel
         filesDirectory.mkdirs();
 
         ViewSet viewSet = getLoadedViewSet();
+        ProjectModel projectModel = Global.state().getProjectModel();
 
         if (projectFile.getName().toLowerCase(Locale.ROOT).endsWith(".vset"))
         {
@@ -278,7 +283,7 @@ public class IOModel
 
             saveToVSETFile(projectFile);
             setLoadedProjectFile(projectFile);
-            Global.state().getProjectModel().setProjectName(projectFile.getName());
+            projectModel.setProjectName(projectFile.getName());
 
             return projectFile;
         }
@@ -290,7 +295,8 @@ public class IOModel
             File vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
             saveToVSETFile(vsetFile);
             setLoadedProjectFile(projectFile);
-            Global.state().getProjectModel().saveProjectFile(projectFile, vsetFile);
+            projectModel.saveProjectFile(projectFile, vsetFile);
+            projectModel.setProjectName(projectFile.getName());
 
             return vsetFile;
         }
