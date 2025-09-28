@@ -115,10 +115,10 @@ public class CardController
                 button.setGraphicTextGap(8.0);
                 button.setMnemonicParsing(false);
                 button.getStyleClass().add("card-button");
+                button.getStyleClass().add("wireframeBodyStrong");
                 button.getStylesheets().add("file:./kintsugiStyling.css");
                 button.setOnAction(event -> action.run());
 
-                button.setFont(new Font("Segoe UI Semibold", 12.0));
                 HBox.setMargin(button, new Insets(0, 0, 8, 0));
                 hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
                 hBox.getChildren().add(button);
