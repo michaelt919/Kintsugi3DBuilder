@@ -502,6 +502,9 @@ public class MainWindowController
 //                }
             }
         });
+
+        // Set default shader
+        Global.state().getUserShaderModel().setUserShader(getUserShaderFromToggle(renderGroup.getSelectedToggle()));
     }
 
     private UserShader getUserShaderFromToggle(Toggle newValue)
