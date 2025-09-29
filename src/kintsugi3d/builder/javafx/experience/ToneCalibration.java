@@ -32,7 +32,7 @@ public class ToneCalibration extends ExperienceBase
             .<SelectToneCalibrationImageController>thenNonData(SELECT_TONE_CALIBRATION_IMAGE)
             .<EyedropperController>then(EYEDROPPER)
             .finish()
-            .setMinContentWidth(800)
-            .setMinContentHeight(512);
+            .setMinContentWidth(840)
+            .setMinContentHeight(640);
     }
 }
