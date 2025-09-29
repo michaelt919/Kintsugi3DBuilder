@@ -48,7 +48,7 @@ public class GLTFExporter
 
     GLTFMaterialExtras extraData = new GLTFMaterialExtras();
 
-    private String textureFilePrefix;
+    private String textureFilePrefix = "";
     private String textureFileFormat;
 
     public GLTFExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
