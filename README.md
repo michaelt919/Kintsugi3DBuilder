@@ -87,7 +87,7 @@ a redistributable Java 11 runtime should be located in the `jre` folder at the r
 but no JRE will be bundled in the distribution zip file.
 For MacOS builds, a MacOS Java (x64) runtime should be located in the `jre-macos-x64` at the repository root 
 (top level within that folder should contain _CodeSignature, Home, info.plist, and MacOS).
-[Note: There is a known issue with OpenJDK 11.0.22+ on MacOS; for the time being, use [11.0.21](https://www.azul.com/core-post-download/?endpoint=zulu&uuid=bde60a67-2538-431c-8004-a576898f1fb3). ]
+[Note: There is a known issue with OpenJDK 11.0.22+ on MacOS; for the time being, use [11.0.21](https://www.azul.com/core-post-download/?endpoint=zulu&uuid=bde60a67-2538-431c-8004-a576898f1fb3).]
 
 ### Install
 There are additional requirements for building the installer executable using the `install` maven lifecycle:
