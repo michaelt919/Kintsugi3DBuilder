@@ -26,6 +26,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,16 +34,11 @@ public class MetashapeDocument
 {
     private static final Logger LOG = LoggerFactory.getLogger(MetashapeDocument.class);
 
-    private String psxFilePath;
+    private final String psxFilePath;
 
     private List<MetashapeChunk> chunks;
 
     private int activeChunkID;
-
-    //hide useless constructor
-    private MetashapeDocument()
-    {
-    }
 
     public MetashapeDocument(String path)
     {
@@ -72,7 +68,7 @@ public class MetashapeDocument
             String documentPathInfo = documentTag.getAttribute("path");
 
             documentPathInfo = documentPathInfo.substring(13);
-            documentPathInfo = getPSXPathBase() + documentPathInfo;
+            documentPathInfo = String.format("%s%s", getPSXPathBase(), documentPathInfo);
 
             //extract project.zip and open the doc.xml
             Document projectZipXML = UnzipHelper.unzipToDocument(new File(documentPathInfo));
@@ -125,7 +121,7 @@ public class MetashapeDocument
 
     private void loadChunks(NodeList chunkList) throws IOException
     {
-        chunks = new ArrayList<>();
+        chunks = new ArrayList<>(chunkList.getLength());
         for (int i = 0; i < chunkList.getLength(); ++i)
         {
             Node chunkNode = chunkList.item(i);
@@ -150,7 +146,7 @@ public class MetashapeDocument
         return activeChunkID;
     }
 
-    private boolean isValidPSXFilePath(String path)
+    private static boolean isValidPSXFilePath(String path)
     {
         File file = new File(path);
         return file.exists() && file.getAbsolutePath().endsWith(".psx");
@@ -168,7 +164,7 @@ public class MetashapeDocument
 
     public List<MetashapeChunk> getChunks()
     {
-        return chunks;
+        return Collections.unmodifiableList(chunks);
     }
 
     public void selectChunk(String selectedChunkLabel)

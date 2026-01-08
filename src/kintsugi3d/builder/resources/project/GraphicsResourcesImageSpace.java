@@ -154,7 +154,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             return this;
         }
 
-        public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
+        public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws IOException, MeshImportException
         {
             this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory).finish();
             updateViewSetFromImageLoadOptions();
@@ -202,15 +202,15 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
          * @throws IOException
          */
         public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
-            throws IOException, XMLStreamException, MissingImagesException
+            throws IOException, MeshImportException, XMLStreamException, MissingImagesException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk()).finish();
+            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles()).finish();
             updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
         }
 
-        private void loadAndValidateGeometry() throws IOException
+        private void loadAndValidateGeometry() throws IOException, MeshImportException
         {
             if (viewSet.getGeometryFile() != null)
             {
@@ -218,7 +218,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
                 if (this.geometry == null)
                 {
-                    throw new IllegalArgumentException(MessageFormat.format("Unsupported geometry file: {0}", viewSet.getGeometryFile()));
+                    throw new MeshImportException(MessageFormat.format("Unsupported geometry file: {0}", viewSet.getGeometryFile()));
                 }
 
                 if (!this.geometry.hasNormals())
@@ -513,14 +513,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
         return minDepth;
     }
-
-    static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getDepthMapProgramBuilder(ContextType context)
-    {
-        return context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"));
-    }
-
 
     private void updateShadowTextures() throws IOException
     {

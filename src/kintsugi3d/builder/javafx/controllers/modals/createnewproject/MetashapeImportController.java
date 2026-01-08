@@ -177,8 +177,8 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
         for (MetashapeModel model : metashapeDocument.getSelectedChunk().getModels())
         {
             String modelID = model.getId().isPresent() ? String.valueOf(model.getId().get()) : NO_MODEL_ID_MSG;
-            String modelName = !model.getLabel().isBlank() ? model.getLabel() : NO_MODEL_NAME_MSG;
-            modelSelectionChoiceBox.getItems().add(modelID + SPACER + modelName);
+            String modelName = model.getLabel().isBlank() ? NO_MODEL_NAME_MSG : model.getLabel();
+            modelSelectionChoiceBox.getItems().add(String.format("%s%s%s", modelID, SPACER, modelName));
         }
 
 
@@ -203,16 +203,14 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
         {
             String obj = modelSelectionChoiceBox.getItems().get(i);
             String modelID = getModelIDFromSelection(obj);
-            if (modelID == null)
+            if (modelID != null)
             {
-                continue;
-            }
-
-            int id = Integer.parseInt(modelID);
-            if (metashapeDocument.getSelectedChunk().getDefaultModelID().get().equals(id))
-            {
-                modelSelectionChoiceBox.setValue(obj);
-                break;
+                int id = Integer.parseInt(modelID);
+                if (metashapeDocument.getSelectedChunk().getDefaultModelID().get().equals(id))
+                {
+                    modelSelectionChoiceBox.setValue(obj);
+                    break;
+                }
             }
         }
     }

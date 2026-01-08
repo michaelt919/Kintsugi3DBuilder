@@ -63,13 +63,13 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
     }
 
     @Override
-    protected boolean allowViewRotation()
+    protected boolean canRotateView()
     {
         return false;
     }
 
     @Override
-    protected boolean allowNullViewSelection()
+    protected boolean canSelectNullView()
     {
         return false;
     }

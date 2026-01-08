@@ -15,10 +15,15 @@ import kintsugi3d.builder.javafx.experience.Modal;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 
 public abstract class InputSourceBase extends ViewSelectableBase implements InputSource
 {
+    private final Collection<File> disabledImages = new ArrayList<>(8);
+
     protected abstract void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete) throws Exception;
 
     @Override
@@ -40,15 +45,15 @@ public abstract class InputSourceBase extends ViewSelectableBase implements Inpu
 
     private void showMissingImagesAlert(MissingImagesException exception, Runnable reattampt, Window modalWindow)
     {
-        int numMissingImgs = exception.getNumMissingImgs();
+        Collection<File> missingImgs = exception.getMissingImgs();
         File prevTriedDirectory = exception.getImgDirectory();
 
         ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
         ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.YES);
-        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.NO);
+        ButtonType skipMissingCams = new ButtonType("Disable Missing Cameras", ButtonBar.ButtonData.NO);
 
         Alert alert = new Alert(Alert.AlertType.NONE,
-            "Imported object is missing " + numMissingImgs + " images.",
+            String.format("Imported object is missing %d images.", missingImgs.size()),
             cancel, newDirectory, skipMissingCams/*, openDirectory*/);
 
         // Force the window back to the correct size in case of race conditions with the OS (esp. on Linux)
@@ -79,10 +84,17 @@ public abstract class InputSourceBase extends ViewSelectableBase implements Inpu
         ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event ->
         {
             overrideFullResImageDirectory(prevTriedDirectory);
+            disabledImages.addAll(exception.getMissingImgs());
             reattampt.run();
         });
 
         alert.setTitle("Project is Missing Images");
         alert.show();
+    }
+
+    @Override
+    public Collection<File> getDisabledImages()
+    {
+        return Collections.unmodifiableCollection(disabledImages);
     }
 }

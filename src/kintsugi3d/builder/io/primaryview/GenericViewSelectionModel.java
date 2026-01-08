@@ -47,10 +47,10 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     }
 
     @Override
-    public Map<Integer, Image> getThumbnails()
+    public Map<Integer, Image> getThumbnailMap()
     {
         // TODO implement thumbnails for generic case
-        return new HashMap<>();
+        return new HashMap<>(16);
     }
 
     @Override

@@ -5,9 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import java.io.File;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class MetashapeModel
 {
@@ -86,13 +84,6 @@ public class MetashapeModel
             //ignore, no path was found
         }
         return "";
-    }
-
-    public static class LoadPreferences
-    {
-        public File fullResOverride;
-        public String orientationViewName;
-        public double orientationViewRotateDegrees = 0;
     }
 
     public LoadPreferences getLoadPreferences()

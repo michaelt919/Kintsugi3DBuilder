@@ -30,10 +30,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -47,10 +44,10 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
     private File fullResSearchDir;
 
     private final Map<Integer, String> cameraIdToFullRes;
-    private final Map<Integer, Image> cameraIdToThumbnails;
+    private final Map<Integer, Image> thumbnailMap;
 
     //custom import path
-    public MetashapeViewSelectionModel(File cameraFile, File fullResSearchDir) throws ParserConfigurationException, IOException, SAXException
+    public MetashapeViewSelectionModel(File cameraFile, File fullResSearchDir, Collection<File> disabledImageFiles) throws ParserConfigurationException, IOException, SAXException
     {
         this.fullResSearchDir = fullResSearchDir;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -79,9 +76,9 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
 
         //prev-res images haven't been generated and no thumbnails are present,
         //so leave thumbnails list empty
-        cameraIdToThumbnails = new HashMap<>();
+        thumbnailMap = new HashMap<>(16);
 
-        cameraIdToFullRes = new HashMap<>();
+        cameraIdToFullRes = new HashMap<>(views.size());
         for (View view : views)
         {
             File imgFile = ImageFinder.getInstance().tryFindImageFile(new File(fullResSearchDir, view.name));
@@ -93,14 +90,14 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
     }
 
     //metashape import path
-    public MetashapeViewSelectionModel(MetashapeModel model) throws MissingImagesException, FileNotFoundException
+    public MetashapeViewSelectionModel(MetashapeModel model, Collection<File> disabledImageFiles) throws MissingImagesException, FileNotFoundException
     {
         MetashapeChunk parentChunk = model.getChunk();
         this.chunkName = parentChunk.getLabel();
-        this.cameras = MetashapeChunk.findEnabledCameras(parentChunk.findChunkXmlCameras());
+        this.cameras = parentChunk.findEnabledCameras();
         this.views = getViews(cameras.stream());
-        this.cameraIdToThumbnails = parentChunk.loadThumbnailImageList();
-        this.cameraIdToFullRes = parentChunk.buildCameraPathsMap(false);
+        this.thumbnailMap = parentChunk.loadThumbnailImageList();
+        this.cameraIdToFullRes = parentChunk.buildCameraPathsMap(false, disabledImageFiles);
     }
 
     @Override
@@ -112,13 +109,13 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
     @Override
     public List<View> getViews()
     {
-        return views;
+        return Collections.unmodifiableList(views);
     }
 
     @Override
-    public Map<Integer, Image> getThumbnails()
+    public Map<Integer, Image> getThumbnailMap()
     {
-        return cameraIdToThumbnails;
+        return Collections.unmodifiableMap(thumbnailMap);
     }
 
     @Override
@@ -176,7 +173,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
         }
         catch (IOException e)
         {
-            LOG.warn("Error retrieving canonical file path for " + imageFile.getPath(), e);
+            LOG.warn("Error retrieving canonical file path for {}", imageFile.getPath(), e);
         }
 
         //throw a hail mary and see if it sticks
@@ -206,7 +203,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
                 Element parent = (Element) camera.getParentNode();
                 String label = camera.getAttribute("label");
                 String id = camera.getAttribute("id");
-                int parsedId = !id.isBlank() ? Integer.parseInt(id) : -1;
+                int parsedId = id.isBlank() ? -1 : Integer.parseInt(id);
 
                 if ("group".equals(parent.getTagName())) // (either a group or the root node)
                 {
@@ -222,15 +219,14 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
 
     private Element findTargetCamera(String imageName)
     {
-        Element selectedItemCam = null;
         for (Element camera : cameras)
         {
             if (camera.getAttribute("label").matches(".*" + imageName + ".*"))
             {
-                selectedItemCam = camera;
-                break;
+                return camera;
             }
         }
-        return selectedItemCam;
+
+        return null;
     }
 }

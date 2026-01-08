@@ -85,7 +85,7 @@ public class ManualInputSource extends InputSourceBase
     {
         if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
         {
-            setViewSelectionModel(new MetashapeViewSelectionModel(cameraFile, photosDir));
+            setViewSelectionModel(new MetashapeViewSelectionModel(cameraFile, photosDir, getDisabledImages()));
             onLoadComplete.accept(getViewSelectionModel());
         }
         else if (cameraFile.getName().endsWith(".csv")) // RealityCapture

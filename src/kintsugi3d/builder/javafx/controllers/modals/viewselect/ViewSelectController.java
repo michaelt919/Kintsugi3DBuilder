@@ -26,10 +26,7 @@ import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
 import kintsugi3d.builder.javafx.util.ImageThreadable;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,32 +38,25 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     private static final int THUMBNAIL_SIZE = 30;
     private static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
 
-    @FXML
-    protected TreeView<String> chunkTreeView;
-    @FXML
-    protected ImageView primaryImgView;
-    @FXML
-    protected Text imgViewText;
-    @FXML
-    protected TextField imgSearchTxtField;
-    @FXML
-    protected CheckBox regexMode;
-    @FXML
-    protected Pane orientationControls;
-    @FXML
-    protected Label hintTextLabel;
-    protected ViewSelectable newData;
-    protected ViewSelectable data;
-    protected HashMap<String, Image> imgCache;
-    @FXML
-    private Pane hostPane;
+    @FXML private TreeView<String> chunkTreeView;
+    @FXML private ImageView primaryImgView;
+    @FXML private Text imgViewText;
+    @FXML private TextField imgSearchTxtField;
+    @FXML private CheckBox regexMode;
+    @FXML private Pane orientationControls;
+    @FXML private Label hintTextLabel;
+    @FXML private Pane hostPane;
+
+    private ViewSelectable newData;
+    private ViewSelectable data;
+    private Map<String, Image> imageCache;
     private ImageSelectionThread loadImgThread;
 
     protected abstract String getHintText();
 
-    protected abstract boolean allowViewRotation();
+    protected abstract boolean canRotateView();
 
-    protected abstract boolean allowNullViewSelection();
+    protected abstract boolean canSelectNullView();
 
     @Override
     public Region getRootNode()
@@ -74,16 +64,21 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         return hostPane;
     }
 
+    protected double getPrimaryViewRotation()
+    {
+        return primaryImgView.getRotate();
+    }
+
     @Override
     public void initPage()
     {
-        this.imgCache = new HashMap<>();
+        this.imageCache = new HashMap<>(16);
 
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
 
         hintTextLabel.setText(getHintText());
-        orientationControls.setVisible(allowViewRotation());
+        orientationControls.setVisible(canRotateView());
 
         chunkTreeView.getSelectionModel().selectedIndexProperty()
             .addListener((a, b, c) -> selectImageInTreeView());
@@ -94,7 +89,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public void refresh()
     {
-        if (newData != null && newData.needsRefresh(data))
+        if (newData != null && newData.needsRefresh(getData()))
         {
             // check if sources are equal so we don't have to unzip images multiple times
             // sometimes this saves processing time, other times it leads to buggy behavior :/
@@ -104,13 +99,13 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
             SearchableTreeView searchableTreeView =
                 SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode);
-            data.setModalWindow(getRootNode().getScene().getWindow());
-            data.loadForViewSelection(viewSelectionModel ->
+            getData().setModalWindow(getRootNode().getScene().getWindow());
+            getData().loadForViewSelection(viewSelectionModel ->
             {
                 addTreeElems(searchableTreeView, viewSelectionModel);
                 searchableTreeView.bind();
 
-                if (data.getViewSelection() == null)
+                if (getData().getViewSelection() == null)
                 {
                     searchableTreeView.getTreeView().getSelectionModel().select(1);
                     setImageRotation(0);
@@ -118,7 +113,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 else
                 {
                     setDefaultSelection(searchableTreeView);
-                    setImageRotation(allowViewRotation() ? data.getViewRotation() : 0);
+                    setImageRotation(canRotateView() ? getData().getViewRotation() : 0);
                 }
             });
         }
@@ -133,7 +128,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     {
         // Set the initial selection to what is currently being used
         TreeItem<String> selectionItem = NONE_ITEM;
-        String viewName = data.getViewSelection();
+        String viewName = getData().getViewSelection();
         if (viewName != null)
         {
             for (int i = 0; i < searchableTreeView.getTreeView().getExpandedItemCount(); i++)
@@ -157,7 +152,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
         List<View> views = viewSelectionModel.getViews();
 
-        if (allowNullViewSelection())
+        if (canSelectNullView())
         {
             rootItem.getChildren().add(NONE_ITEM);
         }
@@ -204,7 +199,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnails(), view);
+            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnailMap(), view);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -212,11 +207,11 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgList, View view)
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, View view)
     {
         ImageView thumbnailImgView;
-        Image img = thumbnailImgList.get(view.id);
-        thumbnailImgView = new ImageView(Objects.requireNonNullElseGet(img, // null if thumbnail not found in thumbnailImgList
+        Image img = thumbnailImgMap.get(view.id);
+        thumbnailImgView = new ImageView(Objects.requireNonNullElseGet(img, // null if thumbnail not found in thumbnailImgMap
             () -> new Image(new File("question-mark.png").toURI().toString())));
         thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
@@ -233,7 +228,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         {
             return;
         }
-        if (selectedItem == chunkTreeView.getRoot())
+        if (selectedItem.equals(chunkTreeView.getRoot()))
         {
             selectedItem.setExpanded(true);
             return;
@@ -253,15 +248,15 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 loadImgThread.stopThread();
             }
 
-            if (selectedItem == NONE_ITEM)
+            if (selectedItem.equals(NONE_ITEM))
             {
                 // Hide orientation controls
                 orientationControls.setVisible(false);
 
-                if (data.getAdvanceLabelOverride() != null)
+                if (getData().getAdvanceLabelOverride() != null)
                 {
                     // Set confirm button text
-                    setAdvanceLabelOverride(data.getAdvanceLabelOverride());
+                    setAdvanceLabelOverride(getData().getAdvanceLabelOverride());
                 }
 
                 imgViewText.setText("Keep model orientation as imported.");
@@ -273,23 +268,23 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             else
             {
                 // Show orientation controls
-                orientationControls.setVisible(allowViewRotation());
+                orientationControls.setVisible(canRotateView());
 
                 // Set confirm button text
                 setAdvanceLabelOverride(null);
             }
 
             String imageName = selectedItem.getValue();
-            imgViewText.setText(imageName + " (preview)");
+            imgViewText.setText(String.format("%s (preview)", imageName));
 
             //set thumbnail as main image, then update to full resolution later
             //don't set thumbnail if img is cached, otherwise would cause a flash
-            if (!imgCache.containsKey(imageName))
+            if (!imageCache.containsKey(imageName))
             {
                 setThumbnailAsFullImage(selectedItem);
             }
 
-            loadImgThread = new ImageSelectionThread(imageName, this, data.getViewSelectionModel());
+            loadImgThread = new ImageSelectionThread(imageName, this, getData().getViewSelectionModel());
             Thread myThread = new Thread(loadImgThread);
             myThread.start();
         }
@@ -343,25 +338,29 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public Map<String, Image> getImageCache()
     {
-        return imgCache;
+        return Collections.unmodifiableMap(imageCache);
     }
 
     protected String getSelectedViewName()
     {
         TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
 
-        String viewName = null;
-        if (selection != NONE_ITEM)
+        if (!Objects.equals(selection, NONE_ITEM))
         {
-            viewName = selection.getValue();
+            return selection.getValue();
         }
 
-        return viewName;
+        return null;
     }
 
     @Override
-    public void receiveData(ViewSelectable data)
+    public void receiveData(ViewSelectable dataReceived)
     {
-        this.newData = data;
+        this.newData = dataReceived;
+    }
+
+    public ViewSelectable getData()
+    {
+        return data;
     }
 }

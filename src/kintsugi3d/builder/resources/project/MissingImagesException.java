@@ -12,37 +12,32 @@
 package kintsugi3d.builder.resources.project;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.List;
 
 public class MissingImagesException extends Exception
 {
-    private final int numMissingImgs;
+    private static final long serialVersionUID = 4726434475341975631L;
+    private final Collection<File> missingImgs;
     private final File imgDirectory;
 
-
-    public MissingImagesException(String message)
+    public MissingImagesException(String message, Collection<File> missingImgs)
     {
         super(message);
-        this.numMissingImgs = -1;
+        this.missingImgs = List.copyOf(missingImgs);
         imgDirectory = null;
     }
 
-    public MissingImagesException(String message, int numMissingImgs)
+    public MissingImagesException(String message, Collection<File> missingImgs, File imgDirectory)
     {
         super(message);
-        this.numMissingImgs = numMissingImgs;
-        imgDirectory = null;
-    }
-
-    public MissingImagesException(String message, int numMissingImgs, File imgDirectory)
-    {
-        super(message);
-        this.numMissingImgs = numMissingImgs;
+        this.missingImgs = List.copyOf(missingImgs);
         this.imgDirectory = imgDirectory;
     }
 
-    public int getNumMissingImgs()
+    public Collection<File> getMissingImgs()
     {
-        return numMissingImgs;
+        return missingImgs;
     }
 
     public File getImgDirectory()

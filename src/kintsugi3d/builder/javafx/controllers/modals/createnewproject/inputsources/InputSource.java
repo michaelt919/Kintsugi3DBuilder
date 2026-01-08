@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsourc
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
 
 import java.io.File;
+import java.util.Collection;
 
 public interface InputSource extends ViewSelectable
 {
@@ -38,4 +39,6 @@ public interface InputSource extends ViewSelectable
     File getInitialPhotosDirectory();
 
     void overrideFullResImageDirectory(File directory);
+
+    Collection<File> getDisabledImages();
 }

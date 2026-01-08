@@ -30,7 +30,7 @@ public class OrientationViewSelectController extends ViewSelectController
     @Override
     public boolean advance()
     {
-        data.selectView(getSelectedViewName(), primaryImgView.getRotate());
+        getData().selectView(getSelectedViewName(), getPrimaryViewRotation());
         return true;
     }
 
@@ -41,20 +41,20 @@ public class OrientationViewSelectController extends ViewSelectController
         ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
         if (currentViewSet != null)
         {
-            if (data.getViewSelection() == null)
+            if (getData().getViewSelection() == null)
             {
                 currentViewSet.setOrientationViewIndex(-1);
             }
             else
             {
-                currentViewSet.setOrientationView(data.getViewSelection());
+                currentViewSet.setOrientationView(getData().getViewSelection());
             }
 
-            currentViewSet.setOrientationViewRotationDegrees(data.getViewRotation());
+            currentViewSet.setOrientationViewRotationDegrees(getData().getViewRotation());
         }
 
         // The input source will handle loading if a view set wasn't already loaded.
-        data.confirm();
+        getData().confirm();
 
         return true;
     }
@@ -72,13 +72,13 @@ public class OrientationViewSelectController extends ViewSelectController
     }
 
     @Override
-    protected boolean allowViewRotation()
+    protected boolean canRotateView()
     {
         return true;
     }
 
     @Override
-    protected boolean allowNullViewSelection()
+    protected boolean canSelectNullView()
     {
         return true;
     }

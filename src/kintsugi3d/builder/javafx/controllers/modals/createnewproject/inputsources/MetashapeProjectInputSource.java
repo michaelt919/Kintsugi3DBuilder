@@ -38,7 +38,7 @@ public class MetashapeProjectInputSource extends InputSourceBase
     {
         File masksDir = model.getChunk().getMasksDirectory();
         //TODO: might change this because it dumps the user deep into metashape project structure
-        return masksDir != null ? masksDir.getParentFile() : model.getChunk().getPsxFile().getParentFile();
+        return (masksDir != null ? masksDir : model.getChunk().getPsxFile()).getParentFile();
     }
 
     @Override
@@ -74,7 +74,7 @@ public class MetashapeProjectInputSource extends InputSourceBase
     protected void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete)
         throws FileNotFoundException, MissingImagesException
     {
-        setViewSelectionModel(new MetashapeViewSelectionModel(model));
+        setViewSelectionModel(new MetashapeViewSelectionModel(model, getDisabledImages()));
         onLoadComplete.accept(getViewSelectionModel());
     }
 
@@ -82,8 +82,9 @@ public class MetashapeProjectInputSource extends InputSourceBase
     @Override
     public void confirm()
     {
-        model.getLoadPreferences().orientationViewName = getViewSelection();
-        model.getLoadPreferences().orientationViewRotateDegrees = getViewRotation();
+        model.getLoadPreferences().setOrientationViewName(getViewSelection());
+        model.getLoadPreferences().setOrientationViewRotateDegrees(getViewRotation());
+        model.getLoadPreferences().setDisabledImageFiles(getDisabledImages());
         new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
     }
 
@@ -102,6 +103,6 @@ public class MetashapeProjectInputSource extends InputSourceBase
     @Override
     public void overrideFullResImageDirectory(File directory)
     {
-        model.getLoadPreferences().fullResOverride = directory;
+        model.getLoadPreferences().setFullResOverride(directory);
     }
 }

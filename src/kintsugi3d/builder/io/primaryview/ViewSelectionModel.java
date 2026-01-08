@@ -21,6 +21,6 @@ public interface ViewSelectionModel
 {
     String getName();
     List<View> getViews();
-    Map<Integer, Image> getThumbnails();
+    Map<Integer, Image> getThumbnailMap();
     Optional<String> findFullResImagePath(String imageName);
 }

@@ -12,11 +12,13 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -24,7 +26,7 @@ import java.io.IOException;
  * Encapsulates the process of generating a depth map for occlusion / shadow culling with image-based rendering
  * @param <ContextType>
  */
-public class DepthMapGenerator<ContextType extends Context<ContextType>> implements Resource
+public final class DepthMapGenerator<ContextType extends Context<ContextType>> implements Resource
 {
     private final ProgramObject<ContextType> depthRenderingProgram;
     private final Drawable<ContextType> depthDrawable;
@@ -45,9 +47,16 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
     private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws IOException
     {
         this.geometryResources = geometryResources;
-        depthRenderingProgram = GraphicsResourcesImageSpace.getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();
+        depthRenderingProgram = getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();
         depthDrawable = depthRenderingProgram.getContext().createDrawable(depthRenderingProgram);
         depthDrawable.addVertexBuffer("position", geometryResources.positionBuffer);
+    }
+
+    static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getDepthMapProgramBuilder(ContextType context)
+    {
+        return context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"));
     }
 
     public void generateDepthMap(ReadonlyViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)

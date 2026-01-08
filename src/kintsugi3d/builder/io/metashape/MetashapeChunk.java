@@ -28,18 +28,18 @@ import java.text.MessageFormat;
 import java.util.*;
 
 
-public class MetashapeChunk
+public final class MetashapeChunk
 {
     private static final Logger LOG = LoggerFactory.getLogger(MetashapeChunk.class);
 
-    private MetashapeDocument metashapeDocument;
-    private String label;
+    private final MetashapeDocument metashapeDocument;
+    private final String label;
     private int id;//TODO: is this optional?
 
     private Document chunkXML;
     private Document frameXML;
 
-    private List<MetashapeModel> models = new ArrayList<>();
+    private List<MetashapeModel> models = new ArrayList<>(8);
     private Optional<Integer> defaultModelID;
     private MetashapeModel currModel;
     private File thumbnailsDir;
@@ -72,7 +72,7 @@ public class MetashapeChunk
         }
         catch (NumberFormatException | NullPointerException e)
         {
-            LOG.warn("Could not find active id for " + document.getPsxFilePath(), e);
+            LOG.warn("Could not find active id for {}", document.getPsxFilePath(), e);
         }
 
         //only one chunk in this inner chunk document, so no need for a for loop
@@ -104,42 +104,40 @@ public class MetashapeChunk
             LOG.error("An error occurred loading frame.xml for Metashape chunk:", e);
         }
 
-        MetashapeChunk returned = new MetashapeChunk()
-            .setParentDocument(document)
+        MetashapeChunk returned = new MetashapeChunk(chunkName.orElse(null), document)
             .setChunkXml(fullChunkDocument)
             .setFrameXml(frameXML)
-            .setLabel(chunkName)
             .setChunkID(chunkID)
             .setDefaultModelID(defaultModelID);
 
-        List<MetashapeModel> models = new ArrayList<>();
         NodeList modelList = fullChunkDocument.getElementsByTagName("model");
+        List<MetashapeModel> models = new ArrayList<>(modelList.getLength());
 
         if (frameXML != null)
         {
             //parse thumbnail info
-            NodeList list = frameXML.getElementsByTagName("thumbnails");
-            if (list.getLength() > 0)
+            NodeList thumbnails = frameXML.getElementsByTagName("thumbnails");
+            if (thumbnails.getLength() > 0)
             {
-                Element thumbnailsElem = (Element) list.item(0);
+                Element thumbnailsElem = (Element) thumbnails.item(0);
                 //thumbnails path is relative to frame.zip's parent directory
                 File thumbnailsDir = new File(new File(frameZipPath).getParent(), thumbnailsElem.getAttribute("path"));
                 if (thumbnailsDir.exists())
                 {
-                    returned.setThumbnailsDir(thumbnailsDir);
+                    returned.thumbnailsDir = thumbnailsDir;
                 }
             }
 
             //parse mask info
-            list = frameXML.getElementsByTagName("masks");
-            if (list.getLength() > 0)
+            NodeList masks = frameXML.getElementsByTagName("masks");
+            if (masks.getLength() > 0)
             {
-                Element masksElem = (Element) list.item(0);
+                Element masksElem = (Element) masks.item(0);
                 //masks path is relative to frame.zip's parent directory
                 File masksDir = new File(new File(frameZipPath).getParent(), masksElem.getAttribute("path"));
                 if (masksDir.exists())
                 {
-                    returned.setMasksDir(masksDir);
+                    returned.masksDir = masksDir;
                 }
             }
 
@@ -152,31 +150,31 @@ public class MetashapeChunk
                 if (modelElem != null)
                 {
                     MetashapeModel model = MetashapeModel.parseFromElement(returned, modelElem);
-                    returned.selectModel(model);
+                    returned.currModel = model;
                     models.add(model);
                 }
             }
         }
 
-        boolean defaultIdFound = false;
+        boolean defaultIdNotFound = true;
         for (int i = 0; i < modelList.getLength(); ++i)
         {
             Element elem = (Element) modelList.item(i);
             MetashapeModel model = MetashapeModel.parseFromElement(returned, elem);
             if (model.getId().isPresent() && model.getId().equals(defaultModelID))
             {
-                returned.selectModel(model);
-                defaultIdFound = true;
+                returned.currModel = model;
+                defaultIdNotFound = false;
             }
             models.add(model);
         }
 
-        if (!defaultIdFound && !models.isEmpty())
+        if (defaultIdNotFound && !models.isEmpty())
         {
-            returned.selectModel(models.get(0));
+            returned.currModel = models.get(0);
         }
 
-        returned.setModels(models);
+        returned.models = models;
 
         return returned;
     }
@@ -219,18 +217,6 @@ public class MetashapeChunk
         return this;
     }
 
-    private MetashapeChunk setParentDocument(MetashapeDocument document)
-    {
-        this.metashapeDocument = document;
-        return this;
-    }
-
-    private MetashapeChunk setLabel(Optional<String> chunkName)
-    {
-        this.label = chunkName.orElse(null);
-        return this;
-    }
-
     private MetashapeChunk setChunkXml(Document doc)
     {
         this.chunkXML = doc;
@@ -265,9 +251,10 @@ public class MetashapeChunk
     }
 
 
-    private MetashapeChunk()
+    private MetashapeChunk(String label, MetashapeDocument parentDocument)
     {
-        //intentionally left blank
+        this.label = label;
+        this.metashapeDocument = parentDocument;
     }
 
     public Integer getID()
@@ -288,7 +275,7 @@ public class MetashapeChunk
     public List<Element> findChunkXmlCameras()
     {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
-        ArrayList<Element> cameras = new ArrayList<>();
+        List<Element> cameras = new ArrayList<>(cams.getLength());
         for (int i = 0; i < cams.getLength(); ++i)
         {
             Node camera = cams.item(i);
@@ -300,16 +287,17 @@ public class MetashapeChunk
         return cameras;
     }
 
-    public static List<Element> findEnabledCameras(List<Element> cams)
+    public List<Element> findEnabledCameras()
     {
-        List<Element> enabledCams = new ArrayList<>();
+        Collection<Element> cams = findChunkXmlCameras();
+        List<Element> enabledCams = new ArrayList<>(cams.size());
 
         for (Element cam : cams)
         {
             String enabled = cam.getAttribute("enabled");
 
-            if (enabled.equals("true") ||
-                enabled.equals("1") ||
+            if ("true".equals(enabled) ||
+                "1".equals(enabled) ||
                 enabled.isEmpty() /*cam is enabled by default*/)
             {
                 enabledCams.add(cam);
@@ -318,7 +306,8 @@ public class MetashapeChunk
         return enabledCams;
     }
 
-    public Map<Integer, String> buildCameraPathsMap(boolean useRelativePaths) throws FileNotFoundException, MissingImagesException
+    public Map<Integer, String> buildCameraPathsMap(boolean useRelativePaths, Collection<File> disabledImageFiles)
+        throws FileNotFoundException, MissingImagesException
     {
         File rootDirectory = new File(getParentDocument().getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists())
@@ -338,12 +327,12 @@ public class MetashapeChunk
         NodeList cameraList = ((Element) frameXML.getElementsByTagName("frame").item(0))
             .getElementsByTagName("camera");
 
-        int numMissingFiles = 0;
-        File modelOverride = this.getSelectedModel().getLoadPreferences().fullResOverride;
-        File fullResSearchDirectory = modelOverride == null ?
+        List<File> missingFiles = new ArrayList<>(8);
+        File fullResOverride = this.getSelectedModel().getLoadPreferences().getFullResOverride();
+        File fullResSearchDirectory = fullResOverride == null ?
             //full res image paths in frame.xml are relative to the frame document itself
             new File(getFramePath()).getParentFile() :
-            modelOverride;
+            fullResOverride;
 
 
         File exceptionFolder = null;
@@ -353,38 +342,49 @@ public class MetashapeChunk
             Element cameraElement = (Element) cameraList.item(i);
             int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
 
+            // TODO: Doesn't work because frame.xml doesn't have enabled/disabled or sensor_id info
+//            String enabled = cameraElement.getAttribute("enabled");
+//            String sensorID = cameraElement.getAttribute("sensor_id");
+
+//            if ((enabled.isEmpty() || "true".equals(enabled) || "1".equals(enabled)) && !sensorID.isEmpty()) // skip disabled or uncalibrated images
+//            {
+
             String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
 
             File imageFile;
             String path;
-            if (modelOverride == null)
-            {
-                imageFile = new File(fullResSearchDirectory, pathAttribute);
-                path = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
-            }
-            else
+            if (fullResOverride != null)
             {
                 String pathAttributeName = new File(pathAttribute).getName();
                 imageFile = new File(fullResSearchDirectory, pathAttributeName);
                 path = imageFile.getName();
             }
-
-            if (imageFile.exists() && !path.isBlank())
-            {
-                // Add pair to the map
-                String finalPath = useRelativePaths ? path : imageFile.getAbsolutePath();
-                cameraPathsMap.put(cameraId, finalPath);
-            }
             else
             {
-                numMissingFiles++;
-                exceptionFolder = imageFile.getParentFile();
+                imageFile = new File(fullResSearchDirectory, pathAttribute);
+                path = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
             }
+
+            if (!disabledImageFiles.contains(imageFile)) // Skip images that were previously disabled (i.e. ignored missing files)
+            {
+                if (imageFile.exists() && !path.isBlank()) // File exists: add to camera map
+                {
+                    // Add pair to the map
+                    String finalPath = useRelativePaths ? path : imageFile.getAbsolutePath();
+                    cameraPathsMap.put(cameraId, finalPath);
+                }
+                else // File does not exist: Add to list of missing files for when exception is thrown
+                {
+                    missingFiles.add(imageFile);
+                    exceptionFolder = imageFile.getParentFile();
+                }
+            }
+//            }
         }
 
-        if (numMissingFiles > 0)
+        if (!missingFiles.isEmpty())
         {
-            throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
+            throw new MissingImagesException("Project is missing images.", missingFiles, exceptionFolder);
         }
 
         return cameraPathsMap;
@@ -397,7 +397,7 @@ public class MetashapeChunk
 
     public List<MetashapeModel> getModels()
     {
-        return models;
+        return Collections.unmodifiableList(models);
     }
 
     public String getLabel()
@@ -436,21 +436,26 @@ public class MetashapeChunk
     }
 
     @Override
-    public boolean equals(Object rhs)
+    public boolean equals(Object obj)
     {
-        if (!(rhs instanceof MetashapeChunk))
+        if (!(obj instanceof MetashapeChunk))
         {
             return false;
         }
 
-        MetashapeChunk other = (MetashapeChunk) rhs;
+        MetashapeChunk other = (MetashapeChunk) obj;
 
         //chunk name is the same
         //psx path is the same
         //selected models are equal
 
         return this.label.equals(other.label) &&
-            this.metashapeDocument.getPsxFilePath().equals(other.metashapeDocument.getPsxFilePath()) &&
-            this.getSelectedModel().equals(other.getSelectedModel());
+            this.metashapeDocument.getPsxFilePath().equals(other.metashapeDocument.getPsxFilePath());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(label, metashapeDocument.getPsxFile());
     }
 }

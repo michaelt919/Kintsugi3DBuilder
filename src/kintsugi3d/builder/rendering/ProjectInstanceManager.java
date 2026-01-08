@@ -13,17 +13,15 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.builder.resources.project.MissingImagesException;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
@@ -104,6 +102,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     public ProjectInstanceManager(ContextType context)
     {
         this.context = context;
+    }
+
+    private void handleMeshImportException(MeshImportException e)
+    {
+        LOG.error("An error occurred loading model: ", e);
+        if (progressMonitor != null)
+        {
+            progressMonitor.fail(e);
+        }
     }
 
     private void handleMissingFiles(Exception e)
@@ -231,7 +238,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         {
             handleUserCancellation(e);
         }
-        catch (Exception e)
+        catch (MeshImportException e)
+        {
+            handleMeshImportException(e);
+        }
+        catch (IOException|RuntimeException e)
         {
             handleMissingFiles(e);
         }
@@ -252,8 +263,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         try
         {
             MetashapeChunk parentChunk = model.getChunk();
-            String orientationView = model.getLoadPreferences().orientationViewName;
-            double rotation = model.getLoadPreferences().orientationViewRotateDegrees;
+            String orientationView = model.getLoadPreferences().getOrientationViewName();
+            double rotation = model.getLoadPreferences().getOrientationViewRotateDegrees();
 
             Builder<ContextType> builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
@@ -266,6 +277,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
+        }
+        catch (MeshImportException e)
+        {
+            handleMeshImportException(e);
         }
         catch (MissingImagesException | IOException | XMLStreamException e)
         {

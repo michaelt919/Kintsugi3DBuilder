@@ -11,8 +11,12 @@
 
 package kintsugi3d.builder.resources.project;
 
-public class MeshImportException extends RuntimeException {
-    public MeshImportException(String message) {
+public class MeshImportException extends Exception
+{
+    private static final long serialVersionUID = -1938128275176131215L;
+
+    public MeshImportException(String message)
+    {
         super(message);
     }
 }

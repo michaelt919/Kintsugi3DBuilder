@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
@@ -93,7 +94,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      */
     private static class Camera
     {
-        String id;
+        final String id;
         String filename;
         Matrix4 transform;
         Sensor sensor;
@@ -127,6 +128,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 return false;
             }
         }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hashCode(id);
+        }
     }
 
     /**
@@ -139,7 +146,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @throws XMLStreamException
      */
     @Override
-    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
+    public Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
     {
         if (directories.supportingFilesDirectory == null)
         {
@@ -161,11 +168,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
+    public static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
         Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
-        Map<String, Sensor> sensorSet = new Hashtable<>();
+        Map<String, Sensor> sensorSet = new HashMap<>(16);
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
         {
             // Attempt to sort the camera IDs which are probably integers but not guaranteed to be.
@@ -307,7 +314,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                             // Set default light index
                                             lightIndex = defaultLightIndex = nextLightIndex;
                                             nextLightIndex++;
-                                            LOG.debug("Using default light index: " + lightIndex);
+                                            LOG.debug("Using default light index: {}", lightIndex);
                                         }
 
                                         camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
@@ -671,7 +678,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         for (int i = 0; i < sensors.length; i++)
         {
             sensors[i].index = i;
-            DistortionProjection distortionProj = new DistortionProjection(
+            Projection distortionProj = new DistortionProjection(
                 sensors[i].width,
                 sensors[i].height,
                 sensors[i].fx,
@@ -730,7 +737,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 builder.setCurrentImageFile(new File(cam.filename));
                 if (imagePathMap != null)
                 {
-                    LOG.error("Camera path override not found for camera: " + camID);
+                    LOG.error("Camera path override not found for camera: {}", camID);
                 }
             }
 
@@ -754,7 +761,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         return builder;
     }
 
-    public static ViewSet.Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk)
+    public static Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk, Collection<File> disabledImageFiles)
         throws IOException, XMLStreamException, MissingImagesException
     {
         // Get reference to the chunk directory
@@ -771,7 +778,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
 
         // 1) Construct camera ID to filename map from frame's ZIP
-        Map<Integer, String> cameraPathsMap = metashapeChunk.buildCameraPathsMap(true);
+        Map<Integer, String> cameraPathsMap = metashapeChunk.buildCameraPathsMap(true, disabledImageFiles);
 
         // Mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
         Map<Integer, String> maskPathsMap = null;
@@ -813,7 +820,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                     // TODO: USING A HARD CODED VERSION VALUE (200)
                     // Create and store ViewSet
-                    ViewSet.Builder viewSetBuilder = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
+                    ViewSet.Builder viewSetBuilder = ViewSetReaderFromAgisoftXML
                         .readFromStream(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
                             cameraPathsMap,
@@ -843,7 +850,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         throw new FileNotFoundException(MessageFormat.format("Unable to find fullResImageDirectory: {0}", fullResImageDirectory));
                     }
 
-                    File override = metashapeChunk.getSelectedModel().getLoadPreferences().fullResOverride;
+                    File override = metashapeChunk.getSelectedModel().getLoadPreferences().getFullResOverride();
                     if (override != null)
                     {
                         viewSetBuilder.setFullResImageDirectory(override);
@@ -864,11 +871,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
     private static Map<Integer, String> extractMaskFilenames(File masksZipFile) throws IOException
     {
-        Map<Integer, String> maskFiles = new HashMap<>();
-
         LOG.info("Unzipping masks folder...");
         Document docXml = UnzipHelper.unzipToDocument(masksZipFile, "doc.xml");
         NodeList maskList = docXml.getElementsByTagName("mask");
+
+        Map<Integer, String> maskFiles = new HashMap<>(maskList.getLength());
 
         for (int i = 0; i < maskList.getLength(); ++i)
         {
