@@ -80,7 +80,8 @@ public abstract class ProjectModelBase<
         Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
         if (vsetNode instanceof Element)
         {
-            File newVsetFile = new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src"));
+            File newVsetFile = new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src")
+                .replace('/', File.separatorChar).replace('\\', File.separatorChar)); // Normalize Windows to Mac/Linux and vice versa
 
             Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
             if (cameraListNode != null)

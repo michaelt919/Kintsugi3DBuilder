@@ -81,10 +81,13 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
         cameraIdToFullRes = new HashMap<>(views.size());
         for (View view : views)
         {
-            File imgFile = ImageFinder.getInstance().tryFindImageFile(new File(fullResSearchDir, view.name));
-            if (imgFile != null && view.id != -1)
+            if (!disabledImageFiles.contains(new File(view.name)))
             {
-                cameraIdToFullRes.put(view.id, imgFile.getPath());
+                File imgFile = ImageFinder.getInstance().tryFindImageFile(new File(fullResSearchDir, view.name));
+                if (imgFile != null && view.id != -1)
+                {
+                    cameraIdToFullRes.put(view.id, imgFile.getPath());
+                }
             }
         }
     }
@@ -178,7 +181,8 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
 
         //throw a hail mary and see if it sticks
         finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getAbsolutePath()
-            .replace("..\\", "")));
+            .replace("..\\", "")
+            .replace("../", "")));
         if (finalImgFile != null)
         {
             return Optional.of(finalImgFile.getPath());
