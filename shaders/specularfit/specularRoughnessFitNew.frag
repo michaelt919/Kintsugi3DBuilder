@@ -149,7 +149,7 @@ void main()
 //    // dot product to average
 //    float roughness = mix(sums.x / sums.y, roughnessEstimateTail, 0.03125);
 
-    float roughness = sums.x / sums.y;
+    float roughness = max(sums.x, 0.001 * 3 * BASIS_RESOLUTION) / max(sums.y, 0.001 * 3 * BASIS_RESOLUTION);
 
     specularColor = vec4(linearToSRGB(fresnelOverPi.rgb * PI), 1.0);
     sqrtRoughness = vec4(vec3(sqrt(roughness)), 1.0);

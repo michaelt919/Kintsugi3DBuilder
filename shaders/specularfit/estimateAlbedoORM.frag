@@ -46,8 +46,16 @@ void main()
 
     vec3 diffuseGamma = texture(diffuseEstimate, fTexCoord).rgb;
     vec3 specularGamma = texture(specularEstimate, fTexCoord).rgb;
-    vec3 diffuseLinear = sRGBToLinear(diffuseGamma);
-    vec3 specularLinear = sRGBToLinear(specularGamma);
+    vec3 diffuseLinearRaw = sRGBToLinear(diffuseGamma);
+    vec3 specularLinearRaw = sRGBToLinear(specularGamma);
+
+    // Enforse a minimum specular value of 0.04 otherwise weird things will happen
+    // Typically diffuse and specular are conflated (leading to <0.04 specular) when a surface is extremely rough
+    // In that scenario, for backscattering observations (i.e. flash-on-camera) specular reflectance is effectively
+    // one quarter of what diffuse reflectance would be for the same albedo color.
+    vec3 diffuseLinear = max(vec3(0.0), diffuseLinearRaw - max(vec3(0.0), 0.01 - 0.25 * specularLinearRaw));
+    vec3 specularLinear = specularLinearRaw + 4 * diffuseLinearRaw - 4 * diffuseLinear;
+    // TODO isn't quite working yet -- need to also impose some constraints on metallicity in these extreme cases
 
     // Weight RGB more towards diffuse for shiny materials; weight more equally for rough materials.
     // Just a heuristic; may need to be tweaked
