@@ -80,13 +80,17 @@ void main()
 //    s*a = 0.04d + a^2 - d*a
 //    a^2 - (d + s) * a + 0.04*d = 0
 //
-//    a = 1/2 * (d + s + sqrt((d + s)^2 - 4 * 0.04*d))
-//      = 0.5 * (d + s) + 0.5 * sqrt((d + s)^2 - 0.16*d)
+//    a = 1/2 * (d + s +/- sqrt((d + s)^2 - 4 * 0.04*d))
+//      = 0.5 * (d + s) +/- 0.5 * sqrt((d + s)^2 - 0.16*d)
 
     // Adjust for dielectic specular (i.e. 0.04 for non-metallic)
     // See derivation above
     // Initially, calculate albedo assuming metallicity could be different for each RGB channel (for simplicity)
-    vec3 albedoLinear = 0.5 * diffusePlusSpecular + 0.5 * sqrt(max(vec3(0.0), diffusePlusSpecular * diffusePlusSpecular - 0.16 * diffuseLinear));
+    // Use greater answer from quadratic formula when diffuse + specular > 0.08 and lower answer when diffuse + specular < 0.08
+    // (need to use lower answer when diffuse + specular < 0.08 to avoid having dark materials come out as metallic)
+    // When diffuse + specular = 0.08, the square root should come out to zero so this is still continuous.
+    vec3 albedoLinear = 0.5 * diffusePlusSpecular
+        + 0.5 * sign (diffusePlusSpecular - 0.08) * sqrt(max(vec3(0.0), diffusePlusSpecular * diffusePlusSpecular - 0.16 * diffuseLinear));
 
     // Then calculate metallicity for all channels
     vec3 metallicity = clamp(1.0 - diffuseLinear / albedoLinear, 0.0, 1.0);
