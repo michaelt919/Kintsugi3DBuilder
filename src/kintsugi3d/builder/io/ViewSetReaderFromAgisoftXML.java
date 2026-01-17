@@ -549,9 +549,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 LOG.debug("\tSetting global translate.");
                                 String[] components = reader.getElementText().split("\\s");
                                 globalTranslate = new Vector3(
-                                    -Float.parseFloat(components[0]),
-                                    -Float.parseFloat(components[1]),
-                                    -Float.parseFloat(components[2]));
+                                    Float.parseFloat(components[0]),
+                                    Float.parseFloat(components[1]),
+                                    Float.parseFloat(components[2]));
                             }
                             break;
 
@@ -717,7 +717,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
             // TODO: Figure out the right way to integrate the global transforms
             cam.transform = m1.times(globalTransform)
-                .times(Matrix4.translate(globalTranslate))
+                .times(Matrix4.translate(globalTranslate.negated()))
                 .times(modelTransform)
             ;//     .times(Matrix4.scale(globalScale));
 

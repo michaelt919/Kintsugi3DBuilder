@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
@@ -217,9 +218,37 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
     {
         if (resources.getGeometry() != null)
         {
-            sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
-            sceneModel.setOrientation(getModelOrientation());
-            sceneModel.setCentroid(resources.getGeometry().getCentroid());
+            ReadonlyViewSet viewSet = getActiveViewSet();
+
+            if (viewSet != null)
+            {
+                int referencePoseIndex = viewSet.getOrientationViewIndex();
+
+                if (referencePoseIndex < 0) // check for override
+                {
+                    // Imported orientation and object center if no override
+                    sceneModel.setOrientation(Objects.requireNonNullElse(viewSet.getOrientationMatrix(), Matrix3.IDENTITY));
+                    sceneModel.setCentroid(Objects.requireNonNullElse(viewSet.getObjectCenter(), Vector3.ZERO));
+                    sceneModel.setScale(viewSet.getObjectScale());
+                }
+                else
+                {
+                    // reference image based override, replaces any imported reference frame
+                    // use centroid and scale based on geometry assuming the imported scale and center is invalid
+                    Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
+                    sceneModel.setOrientation(Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
+                        .times(referenceCameraPose));
+                    sceneModel.setCentroid(resources.getGeometry().getCentroid());
+                    sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
+                }
+            }
+            else
+            {
+                // Defaults if there's no view set for some reason (identity for orientation and geometry-based centroid and scale)
+                sceneModel.setOrientation(Matrix3.IDENTITY);
+                sceneModel.setCentroid(resources.getGeometry().getCentroid());
+                sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
+            }
         }
     }
 
@@ -473,13 +502,38 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
             try
             {
-                Matrix4 rotation = getModelOrientation().asMatrix4();
+                this.updateWorldSpaceDefinition();
 
-                Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
-                Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2),
+                Matrix3 rotation = sceneModel.getOrientation();
+                Vector3 translation = rotation.times(sceneModel.getCentroid()).times(-1.0f);
+
+                // Transformation to Kintsugi's reference frame (either imported or auto-determined)
+                Matrix4 transform = rotation.asMatrix4();
+                transform = Matrix4.fromColumns(transform.getColumn(0), transform.getColumn(1), transform.getColumn(2),
                     translation.asVector4(1.0f));
 
-                transform = getSceneModel().getObjectModel() == null ? Matrix4.IDENTITY : getSceneModel().getObjectModel().getTransformationMatrix().times(transform);
+                // Additional user-specified transformation
+                transform = sceneModel.getObjectModel() == null ? Matrix4.IDENTITY :
+                    sceneModel.getObjectModel().getTransformationMatrix()
+                        .times(Matrix4.scale(1.0f / sceneModel.getScale()))
+                        .times(transform);
+
+                // Scaling in general should behave similar to the "getUnscaledMatrix" function in SceneModel:
+                // 1. first a scaling transformation into Kintsugi's "user space" (1/sceneModel.scale)
+                // 2. then apply user transformation
+                // 3. finally scale back to a canonical space
+                // The one difference here is that any auto-determined scale based on object bounding radius should be ignored.
+                // We'll either export with an imported scale from the photogrammetry project it that exists, otherwise at the original, raw scale
+                ViewSet viewSet = getActiveViewSet();
+                if (viewSet != null)
+                {
+                    // TODO definitely not sure if this is right...
+                    transform = Matrix4.scale(sceneModel.getScale() / viewSet.getObjectScale()).times(transform);
+                }
+                else
+                {
+                    transform = Matrix4.scale(sceneModel.getScale()).times(transform);
+                }
 
                 GLTFExporter exporter = GLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
 
@@ -617,25 +671,5 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         {
             finishedCallback.run();
         }
-    }
-
-    private Matrix3 getModelOrientation()
-    {
-        if (getActiveViewSet() == null)
-        {
-            return Matrix3.IDENTITY;
-        }
-
-        ReadonlyViewSet viewSet = getActiveViewSet();
-        int referencePoseIndex = viewSet.getOrientationViewIndex();
-
-        if (referencePoseIndex < 0)
-        {
-            return Matrix3.IDENTITY;
-        }
-
-        Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
-        return Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
-                .times(referenceCameraPose);
     }
 }

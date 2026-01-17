@@ -18,6 +18,7 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -121,6 +122,24 @@ public interface ReadonlyViewSet
      * @return The image file path.
      */
     String getRelativePreviewImagePathName();
+
+    /**
+     * Gets orientation imported, to be applied to the model
+     * @return Orientation as a 3x3 matrix
+     */
+    Matrix3 getOrientationMatrix();
+
+    /**
+     * Gets object center location imported, to be applied to the model
+     * @return center as a vector
+     */
+    Vector3 getObjectCenter();
+
+    /**
+     * Gets object scale imported, to be applied to the model
+     * @return uniform scale as a scalar value
+     */
+    float getObjectScale();
 
     /**
      * Gets a list of all image files.
