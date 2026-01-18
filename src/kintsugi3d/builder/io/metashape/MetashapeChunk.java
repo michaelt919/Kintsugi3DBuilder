@@ -13,6 +13,7 @@ package kintsugi3d.builder.io.metashape;
 
 import javafx.scene.image.Image;
 import kintsugi3d.builder.resources.project.MissingImagesException;
+import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -351,23 +352,32 @@ public final class MetashapeChunk
 
             String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
 
+            // Resolve directory override if present and search for variant file extensions
             File imageFile;
-            String path;
+            String path = null;
             if (fullResOverride != null)
             {
                 String pathAttributeName = new File(pathAttribute).getName();
                 imageFile = new File(fullResSearchDirectory, pathAttributeName);
-                path = imageFile.getName();
+                File foundImageFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
+                if (foundImageFile != null)
+                {
+                    path = foundImageFile.getName();
+                }
             }
             else
             {
                 imageFile = new File(fullResSearchDirectory, pathAttribute);
-                path = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+                File foundImageFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
+                if (foundImageFile != null)
+                {
+                    path = rootDirectory.toPath().relativize(foundImageFile.toPath()).toString();
+                }
             }
 
             if (!disabledImageFiles.contains(imageFile)) // Skip images that were previously disabled (i.e. ignored missing files)
             {
-                if (imageFile.exists() && !path.isBlank()) // File exists: add to camera map
+                if (path != null && !path.isBlank()) // If file exists: add to camera map
                 {
                     // Add pair to the map
                     String finalPath = useRelativePaths ? path : imageFile.getAbsolutePath();
