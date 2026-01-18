@@ -496,6 +496,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 {
                                     // model transform (nested within a <model> tag)
                                     // This is only expected for PSX import (not exported XML files)
+                                    // See Mia's shishi model for an example of where this is used.
                                     // I don't know if we've actually tested for any models where the upper-left 3x3 was anything other than identity
                                     // -- but I think this is NOT supposed to be inverted
                                     // (previously it was partially inverted where the rotation-scale was transposed,
@@ -542,7 +543,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                                         // Note: for the longest time this translation was not negated,  nor was the scale inverted
                                         // and I'm not sure if 4x4 global transforms actually exist in real Metashape files
-                                        // (typically they're separated as rotation / translation / scale)
+                                        // (typically they're separated as rotation / translation / scale -- going back even to old light field datasets)
                                         // but I'm pretty sure this is basically inverting the matrix
                                         // (transposing the rotation and applying the inverse translation first)
                                         // so these other inverse steps should be necessary.
