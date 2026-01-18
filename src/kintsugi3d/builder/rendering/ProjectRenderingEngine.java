@@ -229,7 +229,12 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                     // Imported orientation and object center if no override
                     sceneModel.setOrientation(Objects.requireNonNullElse(viewSet.getOrientationMatrix(), Matrix3.IDENTITY));
                     sceneModel.setCentroid(Objects.requireNonNullElse(viewSet.getObjectCenter(), Vector3.ZERO));
-                    sceneModel.setScale(viewSet.getObjectScale());
+
+                    // TODO figure out if we can use imported scale for user interaction without breaking things.
+                    //// "Scene scale" is generally taken by the Kintsugi renderer to be world space to model space
+                    //// so we need to invert the imported global scale.
+                    //sceneModel.setScale(1.0f / viewSet.getObjectScale());
+                    sceneModel.setScale((resources.getGeometry().getBoundingRadius() + resources.getGeometry().getCentroid().length()) * 2);
                 }
                 else
                 {
@@ -504,35 +509,14 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
             {
                 this.updateWorldSpaceDefinition();
 
-                Matrix3 rotation = sceneModel.getOrientation();
-                Vector3 translation = rotation.times(sceneModel.getCentroid()).times(-1.0f);
+                Matrix4 transform = sceneModel.getFullModelMatrix();
 
-                // Transformation to Kintsugi's reference frame (either imported or auto-determined)
-                Matrix4 transform = rotation.asMatrix4();
-                transform = Matrix4.fromColumns(transform.getColumn(0), transform.getColumn(1), transform.getColumn(2),
-                    translation.asVector4(1.0f));
-
-                // Additional user-specified transformation
-                transform = sceneModel.getObjectModel() == null ? Matrix4.IDENTITY :
-                    sceneModel.getObjectModel().getTransformationMatrix()
-                        .times(Matrix4.scale(1.0f / sceneModel.getScale()))
-                        .times(transform);
-
-                // Scaling in general should behave similar to the "getUnscaledMatrix" function in SceneModel:
-                // 1. first a scaling transformation into Kintsugi's "user space" (1/sceneModel.scale)
-                // 2. then apply user transformation
-                // 3. finally scale back to a canonical space
-                // The one difference here is that any auto-determined scale based on object bounding radius should be ignored.
-                // We'll either export with an imported scale from the photogrammetry project it that exists, otherwise at the original, raw scale
+                // Scale to imported scale from the photogrammetry project if that exists, otherwise at the original, raw scale
+                // ViewSet should default to scale of 1.0 if nothing was imported.
                 ViewSet viewSet = getActiveViewSet();
                 if (viewSet != null)
                 {
-                    // TODO definitely not sure if this is right...
-                    transform = Matrix4.scale(sceneModel.getScale() / viewSet.getObjectScale()).times(transform);
-                }
-                else
-                {
-                    transform = Matrix4.scale(sceneModel.getScale()).times(transform);
+                    transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
                 }
 
                 GLTFExporter exporter = GLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
