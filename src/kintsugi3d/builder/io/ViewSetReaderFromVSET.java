@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
@@ -58,7 +59,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories)
+    @Override
+    public Builder readFromStream(InputStream stream, ViewSetDirectories directories)
     {
         File root = directories.projectRoot;
         File supportingFilesDirectory = directories.supportingFilesDirectory;
@@ -233,7 +235,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float b1 = scanner.nextFloat(); // fx - fy
                         float b2 = scanner.nextFloat(); // a.k.a. skew
 
-                        DistortionProjection distortionProj = new DistortionProjection(
+                        Projection distortionProj = new DistortionProjection(
                             sensorWidth, sensorHeight,
                             focalLength + b1, focalLength,
                             cx, cy, k1, k2, k3, k4, p1, p2, b2
@@ -398,7 +400,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
         builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
-        LOG.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("View Set file loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
 
         return builder;
     }
