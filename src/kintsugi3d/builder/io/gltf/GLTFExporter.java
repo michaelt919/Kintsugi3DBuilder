@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
+import de.javagl.jgltf.model.MaterialModel;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
 import de.javagl.jgltf.model.creation.MeshPrimitiveBuilder;
 import de.javagl.jgltf.model.impl.DefaultMeshModel;
@@ -23,6 +24,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -43,10 +45,14 @@ public class GLTFExporter
 
     private int modelNodeIndex = 0;
 
-    private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture, diffuseTexture,
-        diffuseConstantTexture, specularTexture;
+    private TextureInfo baseColorTexture;
+    private TextureInfo normalTexture;
+    private TextureInfo roughnessMetallicTexture;
+    private TextureInfo diffuseTexture;
+    private TextureInfo diffuseConstantTexture;
+    private TextureInfo specularTexture;
 
-    GLTFMaterialExtras extraData = new GLTFMaterialExtras();
+    private final GLTFMaterialExtras extraData = new GLTFMaterialExtras();
 
     private String textureFilePrefix = "";
     private String textureFileFormat;
@@ -62,7 +68,8 @@ public class GLTFExporter
         if (baseColorTexture == null)
         {
             baseColorTexture = createRelativeTexture(uri, "baseColor");
-            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setBaseColorTexture(baseColorTexture)));
+            asset.getGltf().getMaterials().forEach(
+                material -> material.getPbrMetallicRoughness().setBaseColorTexture(baseColorTexture));
         }
         else
         {
@@ -72,10 +79,10 @@ public class GLTFExporter
 
     public void addBaseColorLods(String baseUri, int baseRes, int minRes)
     {
-        if (baseColorTexture == null)
-            return;
-
-        addLodsToTexture(baseColorTexture, baseUri, baseRes, minRes);
+        if (baseColorTexture != null)
+        {
+            addLodsToTexture(baseColorTexture, baseUri, baseRes, minRes);
+        }
     }
 
     private void addLodsToTexture(TextureInfo textureInfo, String baseUri, int baseRes, int minRes)
@@ -100,7 +107,7 @@ public class GLTFExporter
         for (int size = baseRes / 2; size >= minRes; size /= 2)
         {
             Image image = new Image();
-            image.setUri(filename + "-" + size + extension);
+            image.setUri(String.format("%s-%d%s", filename, size, extension));
             gltf.addImages(image);
             int imageIndex = gltf.getImages().size() - 1;
             extras.setLodImageIndex(size, imageIndex);
@@ -124,10 +131,10 @@ public class GLTFExporter
 
     public void addDiffuseLods(String baseUri, int baseRes, int minRes)
     {
-        if (diffuseTexture == null)
-            return;
-
-        addLodsToTexture(diffuseTexture, baseUri, baseRes, minRes);
+        if (diffuseTexture != null)
+        {
+            addLodsToTexture(diffuseTexture, baseUri, baseRes, minRes);
+        }
     }
 
     public void setDiffuseConstantUri(String uri)
@@ -145,10 +152,10 @@ public class GLTFExporter
 
     public void addDiffuseConstantLods(String baseUri, int baseRes, int minRes)
     {
-        if (diffuseConstantTexture == null)
-            return;
-
-        addLodsToTexture(diffuseConstantTexture, baseUri, baseRes, minRes);
+        if (diffuseConstantTexture != null)
+        {
+            addLodsToTexture(diffuseConstantTexture, baseUri, baseRes, minRes);
+        }
     }
 
     public void setNormalUri(String uri)
@@ -156,7 +163,7 @@ public class GLTFExporter
         if (normalTexture == null) {
             normalTexture = createRelativeTexture(uri, "normal");
             MaterialNormalTextureInfo matNormInfo = convertTexInfoToNormal(normalTexture);
-            asset.getGltf().getMaterials().forEach((material -> material.setNormalTexture(matNormInfo)));
+            asset.getGltf().getMaterials().forEach(material -> material.setNormalTexture(matNormInfo));
         }
         else
         {
@@ -166,10 +173,10 @@ public class GLTFExporter
 
     public void addNormalLods(String baseUri, int baseRes, int minRes)
     {
-        if (normalTexture == null)
-            return;
-
-        addLodsToTexture(normalTexture, baseUri, baseRes, minRes);
+        if (normalTexture != null)
+        {
+            addLodsToTexture(normalTexture, baseUri, baseRes, minRes);
+        }
     }
 
     public void setRoughnessMetallicUri(String uri)
@@ -177,7 +184,8 @@ public class GLTFExporter
         if (roughnessMetallicTexture == null)
         {
             roughnessMetallicTexture = createRelativeTexture(uri, "roughnessMetallic");
-            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setMetallicRoughnessTexture(roughnessMetallicTexture)));
+            asset.getGltf().getMaterials().forEach(
+                material -> material.getPbrMetallicRoughness().setMetallicRoughnessTexture(roughnessMetallicTexture));
         }
         else
         {
@@ -187,10 +195,10 @@ public class GLTFExporter
 
     public void addRoughnessMetallicLods(String baseUri, int baseRes, int minRes)
     {
-        if (roughnessMetallicTexture == null)
-            return;
-
-        addLodsToTexture(roughnessMetallicTexture, baseUri, baseRes, minRes);
+        if (roughnessMetallicTexture != null)
+        {
+            addLodsToTexture(roughnessMetallicTexture, baseUri, baseRes, minRes);
+        }
     }
 
     public void setSpecularUri(String uri)
@@ -208,10 +216,10 @@ public class GLTFExporter
 
     public void addSpecularLods(String baseUri, int baseRes, int minRes)
     {
-        if (specularTexture == null)
-            return;
-
-        addLodsToTexture(specularTexture, baseUri, baseRes, minRes);
+        if (specularTexture != null)
+        {
+            addLodsToTexture(specularTexture, baseUri, baseRes, minRes);
+        }
     }
 
     public void setBasisFunctionsUri(String uri)
@@ -225,8 +233,7 @@ public class GLTFExporter
         weights.setStride(combined ? 4 : 1);
         for (int b = 0; b * weights.getStride() < basisCount; b++)
         {
-            String weightsFilename = combined ?
-                getWeightTextureFilename(b, 4) : getWeightTextureFilename(b, 1);
+            String weightsFilename = getWeightTextureFilename(b, combined ? 4 : 1);
             String weightName = weightsFilename.split("\\.")[0];
             TextureInfo weightTexInfo = createRelativeTexture(weightsFilename, weightName);
             weights.addTexture(weightTexInfo);
@@ -236,13 +243,13 @@ public class GLTFExporter
 
     public void addWeightImageLods(int basisCount, int baseRes, int minRes)
     {
-        if (extraData.getSpecularWeights() == null)
-            return;
-
-        for (int b = 0; b * extraData.getSpecularWeights().getStride() < basisCount; b++)
+        if (extraData.getSpecularWeights() != null)
         {
-            String weightsFilename = getWeightTextureFilename(b, extraData.getSpecularWeights().getStride());
-            addLodsToTexture(extraData.getSpecularWeights().getTextures().get(b), weightsFilename, baseRes, minRes);
+            for (int b = 0; b * extraData.getSpecularWeights().getStride() < basisCount; b++)
+            {
+                String weightsFilename = getWeightTextureFilename(b, extraData.getSpecularWeights().getStride());
+                addLodsToTexture(extraData.getSpecularWeights().getTextures().get(b), weightsFilename, baseRes, minRes);
+            }
         }
     }
 
@@ -359,7 +366,7 @@ public class GLTFExporter
 
     public String getBasisFunctionsFilename()
     {
-        return textureFilePrefix + "basisFunctions.csv";
+        return String.format("%sbasisFunctions.csv", textureFilePrefix);
     }
 
     public void addAllDefaultLods(int baseRes, int minRes)
@@ -409,12 +416,16 @@ public class GLTFExporter
         GlTF gltf = asset.getGltf();
 
         if (gltf.getTextures().size() <= textureInfo.getIndex())
+        {
             return;
+        }
 
         Texture texture = gltf.getTextures().get(textureInfo.getIndex());
 
         if (gltf.getImages().size() <= texture.getSource())
+        {
             return;
+        }
 
         Image image = gltf.getImages().get(texture.getSource());
         image.setUri(newUri);
@@ -463,6 +474,9 @@ public class GLTFExporter
 
         primitiveBuilder.addPositions3D(posOutBuffer);
 
+        Matrix3 linearTranspose = transformation.getUpperLeft3x3().transpose();
+        Matrix3 inverseTranspose = linearTranspose.inverse();
+
         if (geometry.hasNormals())
         {
             // Copy to a new buffer while applying transformation
@@ -471,11 +485,19 @@ public class GLTFExporter
 
             for (int i = 0; i < normInBuffer.capacity(); i += 3)
             {
-                Vector3 normal = new Vector3(normInBuffer.get(i), normInBuffer.get(i+1), normInBuffer.get(i+2));
+                Vector3 normal;
 
-                // Ignore translation, only rotation and scale, but normalized to cancel uniform scale
-                // Non-uniform scale is unsupported
-                normal = transformation.getUpperLeft3x3().times(normal).normalized();
+                if (linearTranspose.determinant() == 0.0f)
+                {
+                    // Avoid indeterminate edge cases resulting in NaN and breaking
+                    normal = Vector3.ZERO;
+                }
+                else
+                {
+                    // Ignore translation, only rotation and scale, but normalized to cancel scale
+                    // Inverse transpose to support non-linear scale
+                    normal = inverseTranspose.times(new Vector3(normInBuffer.get(i), normInBuffer.get(i+1), normInBuffer.get(i+2))).normalizedSafe();
+                }
 
                 normOutBuffer.put(i, normal.x);
                 normOutBuffer.put(i+1, normal.y);
@@ -492,11 +514,19 @@ public class GLTFExporter
 
                 for (int i = 0; i < tangInBuffer.capacity(); i += 4)
                 {
-                    Vector3 tangent = new Vector3(tangInBuffer.get(i), tangInBuffer.get(i + 1), tangInBuffer.get(i + 2));
+                    Vector3 tangent;
 
-                    // Ignore translation, only rotation and scale, but normalized to cancel uniform scale
-                    // Non-uniform scale is unsupported
-                    tangent = transformation.getUpperLeft3x3().times(tangent).normalized();
+                    if (linearTranspose.determinant() == 0.0f)
+                    {
+                        // Avoid indeterminate edge cases resulting in NaN and breaking glTF which disallows NaN
+                        tangent = Vector3.ZERO;
+                    }
+                    else
+                    {
+                        // Ignore translation, only rotation and scale, but normalized to cancel scale
+                        // Inverse transpose to support non-linear scale
+                        tangent = inverseTranspose.times(new Vector3(tangInBuffer.get(i), tangInBuffer.get(i + 1), tangInBuffer.get(i + 2))).normalizedSafe();
+                    }
 
                     tangOutBuffer.put(i, tangent.x);
                     tangOutBuffer.put(i + 1, tangent.y);
@@ -504,7 +534,7 @@ public class GLTFExporter
                     tangOutBuffer.put(i + 3, tangInBuffer.get(i + 3)); // bitangent sign
                 }
 
-                primitiveBuilder.addTangents3D(tangOutBuffer);
+                primitiveBuilder.addTangents4D(tangOutBuffer);
             }
         }
 
@@ -534,7 +564,7 @@ public class GLTFExporter
         DefaultMeshPrimitiveModel primitive = primitiveBuilder.build();
 
         // Create the material for the mesh
-        MaterialModelV2 material = new MaterialModelV2();
+        MaterialModel material = new MaterialModelV2();
         primitive.setMaterialModel(material);
 
         // Add the primitive to the mesh, to the node, to the scene

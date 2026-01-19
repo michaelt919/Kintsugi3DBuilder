@@ -242,6 +242,23 @@ public class Vector4 implements Iterable<Float>
     {
         return this.times(1.0f / this.length());
     }
+    /**
+     * Create a new vector with the same direction as this one but with unit
+     * magnitude (a length of 1.0).  If this vector has zero length, it will return itself.
+     * @return A new vector equal to this vector divided by it's length except in cases of a zero-length vector.
+     */
+    public Vector4 normalizedSafe()
+    {
+        float l = this.length();
+        if (l == 0.0f)
+        {
+            return this;
+        }
+        else
+        {
+            return this.times(1.0f / l);
+        }
+    }
 
     public Vector4 applyOperator(DoubleUnaryOperator operator)
     {

@@ -25,6 +25,7 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -184,11 +185,59 @@ public final class ViewSet implements ReadonlyViewSet
      */
     private double orientationViewRotationDegrees = 0;
 
+    /**
+     * Orientation imported, to be applied to the model
+     */
+    private Matrix3 orientationMatrix = null;
+
+    /**
+     * Object translation imported, to be applied to the model
+     */
+    private Vector3 objectTranslation = null;
+
+    /**
+     * Object scale imported, to be applied to the model
+     */
+    private float objectScale = 1.0f;
+
     private int previewWidth = 0;
     private int previewHeight = 0;
 
     private final GeneralSettingsModel projectSettings = new SimpleGeneralSettingsModel();
     private final Map<String, File> resourceMap = new HashMap<>(32);
+
+    @Override
+    public Matrix3 getOrientationMatrix()
+    {
+        return orientationMatrix;
+    }
+
+    public void setOrientationMatrix(Matrix3 orientationMatrix)
+    {
+        this.orientationMatrix = orientationMatrix;
+    }
+
+    @Override
+    public Vector3 getObjectTranslation()
+    {
+        return objectTranslation;
+    }
+
+    public void setObjectTranslation(Vector3 objectTranslation)
+    {
+        this.objectTranslation = objectTranslation;
+    }
+
+    @Override
+    public float getObjectScale()
+    {
+        return objectScale;
+    }
+
+    public void setObjectScale(float objectScale)
+    {
+        this.objectScale = objectScale;
+    }
 
     public static final class Builder
     {
@@ -383,6 +432,24 @@ public final class ViewSet implements ReadonlyViewSet
         public Builder setOrientationViewRotation(double rotation)
         {
             result.setOrientationViewRotationDegrees(rotation);
+            return this;
+        }
+
+        public Builder setOrientationMatrix(Matrix3 matrix)
+        {
+            result.setOrientationMatrix(matrix);
+            return this;
+        }
+
+        public Builder setObjectTranslation(Vector3 objectTranslation)
+        {
+            result.setObjectTranslation(objectTranslation);
+            return this;
+        }
+
+        public Builder setObjectScale(float objectScale)
+        {
+            result.setObjectScale(objectScale);
             return this;
         }
 
@@ -695,6 +762,9 @@ public final class ViewSet implements ReadonlyViewSet
         result.primaryViewIndex = this.primaryViewIndex;
         result.orientationViewIndex = this.orientationViewIndex;
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
+        result.orientationMatrix = this.orientationMatrix;
+        result.objectTranslation = this.objectTranslation;
+        result.objectScale = this.objectScale;
 
         result.projectSettings.copyFrom(this.projectSettings);
         result.resourceMap.putAll(this.resourceMap);
@@ -740,6 +810,9 @@ public final class ViewSet implements ReadonlyViewSet
         result.primaryViewIndex = this.primaryViewIndex;
         result.orientationViewIndex = this.orientationViewIndex;
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
+        result.orientationMatrix = this.orientationMatrix;
+        result.objectTranslation = this.objectTranslation;
+        result.objectScale = this.objectScale;
 
         result.previewWidth = this.previewWidth;
         result.previewHeight = this.previewHeight;

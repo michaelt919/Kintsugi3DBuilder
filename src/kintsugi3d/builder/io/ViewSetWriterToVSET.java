@@ -13,6 +13,7 @@ package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -87,10 +88,33 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println();
         out.println("# Reference orientation view index");
         out.printf("O %d%n", correctedOrientationViewIndex);
-
         out.println();
+
         out.println("# Reference View Pose Rotation (degrees)");
         out.printf("r %s%n", viewSet.getOrientationViewRotationDegrees());
+        out.println();
+
+        Matrix3 orientation = viewSet.getOrientationMatrix();
+        if (orientation != null)
+        {
+            out.println("# Orientation matrix");
+            out.printf("or\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+                orientation.get(0, 0), orientation.get(0, 1), orientation.get(0, 2),
+                orientation.get(1, 0), orientation.get(1, 1), orientation.get(1, 2),
+                orientation.get(2, 0), orientation.get(2, 1), orientation.get(2, 2));
+            out.println();
+        }
+
+        Vector3 objectTranslation = viewSet.getObjectTranslation();
+        if (objectTranslation != null)
+        {
+            out.println("# Object translation");
+            out.printf("ot\t%.8f\t%.8f\t%.8f", objectTranslation.x, objectTranslation.y, objectTranslation.z);
+            out.println();
+        }
+
+        out.println("# Object scale");
+        out.printf("os\t%.8f", viewSet.getObjectScale());
 
         boolean firstSetting = true;
         for (ReadonlyGeneralSettingsModel.Setting setting : viewSet.getProjectSettings())

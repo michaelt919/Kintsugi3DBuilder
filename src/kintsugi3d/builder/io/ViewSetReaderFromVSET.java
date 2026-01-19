@@ -12,12 +12,14 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -57,7 +59,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories)
+    @Override
+    public Builder readFromStream(InputStream stream, ViewSetDirectories directories)
     {
         File root = directories.projectRoot;
         File supportingFilesDirectory = directories.supportingFilesDirectory;
@@ -106,6 +109,32 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         builder.setOrientationViewRotation(scanner.nextFloat());
                         scanner.nextLine();
                         break;
+                    case "os":
+                    {
+                        builder.setObjectScale(scanner.nextFloat());
+                        scanner.nextLine();
+                        break;
+                    }
+                    case "ot":
+                    {
+                        float x = scanner.nextFloat();
+                        float y = scanner.nextFloat();
+                        float z = scanner.nextFloat();
+
+                        builder.setObjectTranslation(new Vector3(x, y, z));
+                        scanner.nextLine();
+                        break;
+                    }
+                    case "or":
+                    {
+                        Matrix3 orientation = Matrix3.fromRows(
+                            new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
+                            new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
+                            new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+                        builder.setOrientationMatrix(orientation);
+                        scanner.nextLine();
+                        break;
+                    }
                     case "m":
                     {
                         String original = scanner.nextLine().trim();
@@ -206,7 +235,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float b1 = scanner.nextFloat(); // fx - fy
                         float b2 = scanner.nextFloat(); // a.k.a. skew
 
-                        DistortionProjection distortionProj = new DistortionProjection(
+                        Projection distortionProj = new DistortionProjection(
                             sensorWidth, sensorHeight,
                             focalLength + b1, focalLength,
                             cx, cy, k1, k2, k3, k4, p1, p2, b2
@@ -371,7 +400,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
         builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
-        LOG.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("View Set file loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
 
         return builder;
     }

@@ -177,6 +177,23 @@ public class DoubleVector3 implements Iterable<Double>
     {
         return this.times(1.0 / this.length());
     }
+    /**
+     * Create a new vector with the same direction as this one but with unit
+     * magnitude (a length of 1.0).  If this vector has zero length, it will return itself.
+     * @return A new vector equal to this vector divided by it's length except in cases of a zero-length vector.
+     */
+    public DoubleVector3 normalizedSafe()
+    {
+        double l = this.length();
+        if (l == 0.0f)
+        {
+            return this;
+        }
+        else
+        {
+            return this.times(1.0f / l);
+        }
+    }
 
     public DoubleVector3 applyOperator(DoubleUnaryOperator operator)
     {

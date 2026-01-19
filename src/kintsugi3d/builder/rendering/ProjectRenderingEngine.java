@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
@@ -217,9 +218,52 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
     {
         if (resources.getGeometry() != null)
         {
-            sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
-            sceneModel.setOrientation(getModelOrientation());
-            sceneModel.setCentroid(resources.getGeometry().getCentroid());
+            ReadonlyViewSet viewSet = getActiveViewSet();
+
+            if (viewSet != null)
+            {
+                int referencePoseIndex = viewSet.getOrientationViewIndex();
+
+                if (referencePoseIndex < 0) // check for override
+                {
+                    // Imported orientation and object center if no override
+                    // For now, this is all that we're importing from Metashape;
+                    // everything else should be the same as with a reference image override.
+                    // This might change in the future.
+                    sceneModel.setOrientation(Objects.requireNonNullElse(viewSet.getOrientationMatrix(), Matrix3.IDENTITY));
+
+                    // COMMENTED OUT: Object translation doesn't seem to be that meaningful coming from Metashape.
+//                    sceneModel.setCentroid(sceneModel.getOrientation().transpose()
+//                        .times(Objects.requireNonNullElse(viewSet.getObjectTranslation(), Vector3.ZERO).negated()));
+
+                    // Just use true centroid instead
+                    sceneModel.setCentroid(resources.getGeometry().getCentroid());
+
+                    // TODO figure out if we can use imported scale for user interaction without breaking things.
+//                    // "Scene scale" is generally taken by the Kintsugi renderer to be world space to model space
+//                    // so we need to invert the imported global scale.
+//                    sceneModel.setScale(1.0f / viewSet.getObjectScale());
+//                    sceneModel.setScale((resources.getGeometry().getBoundingRadius() + resources.getGeometry().getCentroid().length()) * 2);
+                    sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
+                }
+                else
+                {
+                    // reference image based override, replaces any imported reference frame
+                    // use centroid and scale based on geometry assuming the imported scale and center is invalid
+                    Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
+                    sceneModel.setOrientation(Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
+                        .times(referenceCameraPose));
+                    sceneModel.setCentroid(resources.getGeometry().getCentroid());
+                    sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
+                }
+            }
+            else
+            {
+                // Defaults if there's no view set for some reason (identity for orientation and geometry-based centroid and scale)
+                sceneModel.setOrientation(Matrix3.IDENTITY);
+                sceneModel.setCentroid(resources.getGeometry().getCentroid());
+                sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
+            }
         }
     }
 
@@ -473,13 +517,17 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
             try
             {
-                Matrix4 rotation = getModelOrientation().asMatrix4();
+                this.updateWorldSpaceDefinition();
 
-                Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
-                Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2),
-                    translation.asVector4(1.0f));
+                Matrix4 transform = sceneModel.getFullModelMatrix();
 
-                transform = getSceneModel().getObjectModel() == null ? Matrix4.IDENTITY : getSceneModel().getObjectModel().getTransformationMatrix().times(transform);
+                // Scale to imported scale from the photogrammetry project if that exists, otherwise at the original, raw scale
+                // ViewSet should default to scale of 1.0 if nothing was imported.
+                ViewSet viewSet = getActiveViewSet();
+                if (viewSet != null)
+                {
+                    transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
+                }
 
                 GLTFExporter exporter = GLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
 
@@ -617,25 +665,5 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         {
             finishedCallback.run();
         }
-    }
-
-    private Matrix3 getModelOrientation()
-    {
-        if (getActiveViewSet() == null)
-        {
-            return Matrix3.IDENTITY;
-        }
-
-        ReadonlyViewSet viewSet = getActiveViewSet();
-        int referencePoseIndex = viewSet.getOrientationViewIndex();
-
-        if (referencePoseIndex < 0)
-        {
-            return Matrix3.IDENTITY;
-        }
-
-        Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
-        return Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
-                .times(referenceCameraPose);
     }
 }
