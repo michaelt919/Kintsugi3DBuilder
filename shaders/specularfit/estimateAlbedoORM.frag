@@ -46,20 +46,21 @@ void main()
 
     vec3 diffuseGamma = texture(diffuseEstimate, fTexCoord).rgb;
     vec3 specularGamma = texture(specularEstimate, fTexCoord).rgb;
-    vec3 diffuseLinear = sRGBToLinear(diffuseGamma);
-    vec3 specularLinear = sRGBToLinear(specularGamma);
+    vec3 diffuseLinearRaw = sRGBToLinear(diffuseGamma);
+    vec3 specularLinearRaw = sRGBToLinear(specularGamma);
 
-    // Weight RGB more towards diffuse for shiny materials; weight more equally for rough materials.
-    // Just a heuristic; may need to be tweaked
-    float m = sqrtRoughness * sqrtRoughness;
-//    float mSq = m*m; // m seems to work better than m^2 here (at least testing on Guan Yu)
-    vec3 combinedRGB = diffuseLinear + m * specularLinear;
+    // Enforse a minimum specular value of 0.04 otherwise weird things will happen
+    // Typically diffuse and specular are conflated (leading to <0.04 specular) when a surface is extremely rough
+    // In that scenario, for backscattering observations (i.e. flash-on-camera) specular reflectance is effectively
+    // one quarter of what diffuse reflectance would be for the same albedo color.
+    vec3 diffuseLinear = max(vec3(0.0), diffuseLinearRaw - max(vec3(0.0), 0.01 - 0.25 * specularLinearRaw));
+    vec3 specularLinear = specularLinearRaw + 4 * diffuseLinearRaw - 4 * diffuseLinear;
 
     // Total reflectivity
     vec3 diffusePlusSpecular = diffuseLinear + specularLinear;
 
-    // Adjust the RGB of the reflectivity based on the weighted RGB estimate above
-    diffusePlusSpecular = getLuminance(diffusePlusSpecular) * combinedRGB / getLuminance(combinedRGB);
+    float diffusePlusSpecularLuminance = getLuminance(diffusePlusSpecular);
+    float diffuseLuminance = getLuminance(diffuseLinear);
 
 
 //    d = (1 - m) * a
@@ -72,22 +73,51 @@ void main()
 //    s*a = 0.04d + a^2 - d*a
 //    a^2 - (d + s) * a + 0.04*d = 0
 //
-//    a = 1/2 * (d + s + sqrt((d + s)^2 - 4 * 0.04*d))
-//      = 0.5 * (d + s) + 0.5 * sqrt((d + s)^2 - 0.16*d)
+//    a = 1/2 * (d + s +/- sqrt((d + s)^2 - 4 * 0.04*d))
+//      = 0.5 * (d + s) +/- 0.5 * sqrt((d + s)^2 - 0.16*d)
 
     // Adjust for dielectic specular (i.e. 0.04 for non-metallic)
     // See derivation above
     // Initially, calculate albedo assuming metallicity could be different for each RGB channel (for simplicity)
-    vec3 albedoLinear = 0.5 * diffusePlusSpecular + 0.5 * sqrt(max(vec3(0.0), diffusePlusSpecular * diffusePlusSpecular - 0.16 * diffuseLinear));
+    // Use greater answer from quadratic formula when diffuse + specular > 0.08 and lower answer when diffuse + specular < 0.08
+    // (need to use lower answer when diffuse + specular < 0.08 to avoid having dark materials come out as metallic)
+    // When diffuse + specular = 0.08, the square root should come out to zero so this is still continuous.
+    float albedoLuminance = 0.5 * diffusePlusSpecularLuminance
+        + 0.5 * sign (diffusePlusSpecularLuminance - 0.08) * sqrt(max(0.0, diffusePlusSpecularLuminance * diffusePlusSpecularLuminance - 0.16 * diffuseLuminance));
 
     // Then calculate metallicity for all channels
-    vec3 metallicity = clamp(1.0 - diffuseLinear / albedoLinear, 0.0, 1.0);
+    float metallicity = clamp(1.0 - diffuseLuminance / albedoLuminance, 0.0, 1.0);
 
-    // Take the highest metallicity of all the color channels (most conservative in terms of preserving color information in specular highlights)
-    float maxMetallicity = max(metallicity.r, max(metallicity.g, metallicity.b));
+    float m = sqrtRoughness * sqrtRoughness;
+    float mSq = m * m;
 
-    // Recalculate albedo now assuming a single metallicity for the R, G, and B channels
-    albedoLinear = diffusePlusSpecular - 0.04 * (1 - maxMetallicity);
+    // TODO expose as parameter in UI (maybe as a new task after processing textures?)
+    float heuristicWeight = 0.125;
+
+    // Using off-specular reflectance as target for RGB hue: 0.25 * m^2 * S
+    // heuristic is a mix of off-specular reflectance (m^2) and mid-to-peak specular (1.0) depending on roughness
+    // (division by PI ignored as consistent with other calculations)
+    float specularHeuristic = mix(0.25 * mSq, 1.0, heuristicWeight);
+
+    vec3 rgbTarget = diffuseLinear + specularHeuristic * specularLinear;
+    rgbTarget /= max(getLuminance(rgbTarget), 0.00001);
+
+
+    // D + h * S
+    // = A * (1 - M) + h * (0.04 * (1 - M) + A * M)
+    // = A * (1 - M) + A * h * M + h * 0.04 * (1 - M)
+    // = A * mix(1, h, M) + 0.04 * h * (1 - M)
+
+    float dielectricHeuristic = 0.04 * specularHeuristic * (1 - metallicity) / mix(1, specularHeuristic, metallicity);
+
+    // Incorporate RGB, accounting for dielectric specular contribution to the final color.
+    vec3 albedoLinear = (albedoLuminance + dielectricHeuristic) * rgbTarget - dielectricHeuristic;
+
+    // Make sure it isn't clipping.
+    albedoLinear /= max(max(1.0, albedoLinear.r), max(albedoLinear.g, albedoLinear.b));
+
+    // Adjust metallicity as needed (could end up less metallic if necessary to maintain same backscattering reflectance without albedo clipping)
+    metallicity = clamp(1.0 - diffuseLuminance / getLuminance(albedoLinear), 0.0, 1.0);
 
     totalAlbedoOut = vec4(linearToSRGB(albedoLinear), 1.0);
 
@@ -97,5 +127,5 @@ void main()
     float occlusion = 1.0;
 #endif
 
-    ormOut = vec4(occlusion, sqrtRoughness, maxMetallicity, 1.0);
+    ormOut = vec4(occlusion, sqrtRoughness, metallicity, 1.0);
 }

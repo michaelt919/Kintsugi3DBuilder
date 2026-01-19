@@ -1,5 +1,6 @@
 #version 330
 #include <colorappearance/material.glsl>
+#line 4 0
 
 layout(location = 0) out vec4 fragColor;
 

@@ -185,8 +185,8 @@ void main()
                 float lightDirCorrelation = max(0.0, dot(l.lightDir, -lightOrientationVirtual[i]));
                 float spotBoundaryDistance = lightSpotSizeVirtual[i] - sqrt(1 - lightDirCorrelation * lightDirCorrelation);
                 incidentRadiance *= clamp(
-                spotBoundaryDistance / max(0.001, max(lightSpotSizeVirtual[i] * lightSpotTaperVirtual[i], spotBoundaryDistance)),
-                0.0, 1.0);
+                    spotBoundaryDistance / max(0.001, max(lightSpotSizeVirtual[i] * lightSpotTaperVirtual[i], spotBoundaryDistance)),
+                    0.0, 1.0);
 #endif // SPOTLIGHTS_ENABLED
 
                 pointRadiance = cosineWeightedReflectance * incidentRadiance;
