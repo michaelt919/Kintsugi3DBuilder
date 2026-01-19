@@ -18,6 +18,7 @@ import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -106,6 +107,32 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         builder.setOrientationViewRotation(scanner.nextFloat());
                         scanner.nextLine();
                         break;
+                    case "os":
+                    {
+                        builder.setObjectScale(scanner.nextFloat());
+                        scanner.nextLine();
+                        break;
+                    }
+                    case "ot":
+                    {
+                        float x = scanner.nextFloat();
+                        float y = scanner.nextFloat();
+                        float z = scanner.nextFloat();
+
+                        builder.setObjectTranslation(new Vector3(x, y, z));
+                        scanner.nextLine();
+                        break;
+                    }
+                    case "or":
+                    {
+                        Matrix3 orientation = Matrix3.fromRows(
+                            new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
+                            new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
+                            new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+                        builder.setOrientationMatrix(orientation);
+                        scanner.nextLine();
+                        break;
+                    }
                     case "m":
                     {
                         String original = scanner.nextLine().trim();
