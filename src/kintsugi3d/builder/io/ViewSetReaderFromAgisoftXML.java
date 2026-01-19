@@ -286,7 +286,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             LOG.debug("Reading group '{}'", groupLabel);
                             lightIndex = nextLightIndex;
                             nextLightIndex++;
-                            LOG.debug("Light index: " + lightIndex);
+                            LOG.debug("Light index: {}", lightIndex);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
@@ -726,30 +726,30 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
         // Try to separate rotation and scale from the model transform
         // Scale based on determinant
-        float modelScale  = modelTransform.getUpperLeft3x3().determinant();
+        float modelScale = modelTransform.getUpperLeft3x3().determinant();
 
         // If non-zero, remove scale from the rest of the model transform
         Matrix4 modelTransformNoScale;
-        if (modelScale != 0.0f)
+        if (modelScale == 0.0f)
         {
-            modelTransformNoScale = Matrix4.scale(1.0f / modelScale).times(modelTransform);
+            modelTransformNoScale = modelTransform;
         }
         else
         {
-            modelTransformNoScale = modelTransform;
+            modelTransformNoScale = Matrix4.scale(1.0f / modelScale).times(modelTransform);
         }
 
         // Do the same to extract global scale from transform
         float globalScaleFromTransform = globalTransform.getUpperLeft3x3().determinant();
 
         Matrix4 globalTransformNoScale;
-        if (globalScaleFromTransform != 0.0f)
+        if (globalScaleFromTransform == 0.0f)
         {
-            globalTransformNoScale = Matrix4.scale(1.0f / globalScaleFromTransform).times(globalTransform);
+            globalTransformNoScale = globalTransform;
         }
         else
         {
-            globalTransformNoScale = globalTransform;
+            globalTransformNoScale = Matrix4.scale(1.0f / globalScaleFromTransform).times(globalTransform);
         }
 
         // "World transform" for projective texture mapping might be based on "global" transform
@@ -786,7 +786,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
             Matrix4 combinedTransformNoScale = globalTransformNoScale.times(modelTransformNoScale);
             builder.setOrientationMatrix(combinedTransformNoScale.getUpperLeft3x3());
-            builder.setObjectTranslation(combinedTransformNoScale.getColumn(3).getXYZ());
+            builder.setObjectTranslation(combinedTransformNoScale.getColumn(3).getXYZ().plus(globalTranslate));
         }
         else
         {
