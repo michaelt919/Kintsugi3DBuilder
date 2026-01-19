@@ -76,6 +76,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
             .setDataFromArray(pixels, getWidth(), getHeight())
             .flipVertical()
             .create();
+        file.getParentFile().mkdirs(); // make sure the directory structure exists
         ImageIO.write(outImg, fileFormat, file);
     }
 
@@ -89,6 +90,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
             .tonemap(tonemapper)
             .flipVertical()
             .create();
+        file.getParentFile().mkdirs(); // make sure the directory structure exists
         ImageIO.write(outImg, fileFormat, file);
     }
 
@@ -102,6 +104,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
             .tonemap(tonemapper)
             .flipVertical()
             .create();
+        file.getParentFile().mkdirs(); // make sure the directory structure exists
         ImageIO.write(outImg, fileFormat, file);
     }
 
@@ -114,6 +117,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
             .setDataFromArray(pixels, width, height)
             .flipVertical()
             .create();
+        file.getParentFile().mkdirs(); // make sure the directory structure exists
         ImageIO.write(outImg, fileFormat, file);
     }
 
@@ -127,6 +131,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
             .tonemap(tonemapper)
             .flipVertical()
             .create();
+        file.getParentFile().mkdirs(); // make sure the directory structure exists
         ImageIO.write(outImg, fileFormat, file);
     }
 
@@ -140,6 +145,7 @@ public abstract class ColorTextureReaderBase implements ColorTextureReader
             .tonemap(tonemapper)
             .flipVertical()
             .create();
+        file.getParentFile().mkdirs(); // make sure the directory structure exists
         ImageIO.write(outImg, fileFormat, file);
     }
 }
