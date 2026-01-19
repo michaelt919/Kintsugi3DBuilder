@@ -227,15 +227,24 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                 if (referencePoseIndex < 0) // check for override
                 {
                     // Imported orientation and object center if no override
+                    // For now, this is all that we're importing from Metashape;
+                    // everything else should be the same as with a reference image override.
+                    // This might change in the future.
                     sceneModel.setOrientation(Objects.requireNonNullElse(viewSet.getOrientationMatrix(), Matrix3.IDENTITY));
-                    sceneModel.setCentroid(sceneModel.getOrientation().transpose()
-                        .times(Objects.requireNonNullElse(viewSet.getObjectTranslation(), Vector3.ZERO).negated()));
+
+                    // COMMENTED OUT: Object translation doesn't seem to be that meaningful coming from Metashape.
+//                    sceneModel.setCentroid(sceneModel.getOrientation().transpose()
+//                        .times(Objects.requireNonNullElse(viewSet.getObjectTranslation(), Vector3.ZERO).negated()));
+
+                    // Just use true centroid instead
+                    sceneModel.setCentroid(resources.getGeometry().getCentroid());
 
                     // TODO figure out if we can use imported scale for user interaction without breaking things.
-                    //// "Scene scale" is generally taken by the Kintsugi renderer to be world space to model space
-                    //// so we need to invert the imported global scale.
-                    //sceneModel.setScale(1.0f / viewSet.getObjectScale());
-                    sceneModel.setScale((resources.getGeometry().getBoundingRadius() + resources.getGeometry().getCentroid().length()) * 2);
+//                    // "Scene scale" is generally taken by the Kintsugi renderer to be world space to model space
+//                    // so we need to invert the imported global scale.
+//                    sceneModel.setScale(1.0f / viewSet.getObjectScale());
+//                    sceneModel.setScale((resources.getGeometry().getBoundingRadius() + resources.getGeometry().getCentroid().length()) * 2);
+                    sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
                 }
                 else
                 {

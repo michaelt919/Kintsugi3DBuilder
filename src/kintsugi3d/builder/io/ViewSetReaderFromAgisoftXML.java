@@ -575,7 +575,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             break;
 
                         case "scale":
-                            if (camera == null && !ignoreGlobalTransforms)
+                            if (camera == null)
                             {
                                 LOG.debug("\tSetting global scale.");
                                 globalScale = Float.parseFloat(reader.getElementText());
@@ -773,15 +773,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             projTexWorldTransform = modelTransformNoScale;
             projTexWorldScaleCombined = modelScale;
 
-            // We also want a transformation from internal PLY space to the space the Metashape would use for exporting OBJ
-            // This is the original global transformation (not inverted as for XML import)
-            // TODO...
-
             // Transform object all the way from imported PLY space, first to camera optimization space
             // and then to the space that would be used for OBJ export
 
             // Scale may come from the globalTransform and modelTransform matrices, or from a separate global scale attribute.
-            // All three should be accounted for when exporting the .
+            // All three should be accounted for when exporting the object scale.
             builder.setObjectScale(globalScale * globalScaleFromTransform * modelScale);
 
             Matrix4 combinedTransformNoScale = globalTransformNoScale.times(modelTransformNoScale);
@@ -928,8 +924,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                     // TODO: USING A HARD CODED VERSION VALUE (200)
                     // Create and store ViewSet
-                    ViewSet.Builder viewSetBuilder = ViewSetReaderFromAgisoftXML
-                        .readFromStream(fileStream, directories,
+                    Builder viewSetBuilder = readFromStream(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
                             cameraPathsMap,
                             maskPathsMap,
