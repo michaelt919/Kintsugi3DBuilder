@@ -526,7 +526,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     if (expectedSize == 9)
                                     {
                                         LOG.debug("\tSetting global rotation.");
-                                        globalTransform = Matrix3.fromRows(
+                                        globalTransform = Matrix3.fromColumns(
                                                 new Vector3(m[0], m[3], m[6]),
                                                 new Vector3(m[1], m[4], m[7]),
                                                 new Vector3(m[2], m[5], m[8]))
@@ -535,20 +535,27 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     else
                                     {
                                         LOG.debug("\tSetting global transformation.");
-                                        Matrix3 rotationScaleTranspose = Matrix3.fromRows(
-                                            new Vector3(m[0], m[4], m[8]),
-                                            new Vector3(m[1], m[5], m[9]),
-                                            new Vector3(m[2], m[6], m[10]));
-                                        float scale = rotationScaleTranspose.determinant();
 
-                                        // Note: for the longest time this translation was not negated,  nor was the scale inverted
-                                        // and I'm not sure if 4x4 global transforms actually exist in real Metashape files
-                                        // (typically they're separated as rotation / translation / scale -- going back even to old light field datasets)
-                                        // but I'm pretty sure this is basically inverting the matrix
-                                        // (transposing the rotation and applying the inverse translation first)
-                                        // so these other inverse steps should be necessary.
-                                        globalTransform = rotationScaleTranspose.times(1.0f / (scale * scale)).asMatrix4()
-                                            .times(Matrix4.translate(-m[3], -m[7], -m[11]));
+                                        globalTransform = Matrix4.fromColumns(
+                                            new Vector4(m[0], m[4], m[8], 0),
+                                            new Vector4(m[1], m[5], m[9], 0),
+                                            new Vector4(m[2], m[6], m[10], 0),
+                                            new Vector4(m[3], m[7], m[11], 1));
+
+//                                        Matrix3 rotationScaleTranspose = Matrix3.fromRows(
+//                                            new Vector3(m[0], m[4], m[8]),
+//                                            new Vector3(m[1], m[5], m[9]),
+//                                            new Vector3(m[2], m[6], m[10]));
+//                                        float scale = rotationScaleTranspose.determinant();
+//
+//                                        // Note: for the longest time this translation was not negated,  nor was the scale inverted
+//                                        // and I'm not sure if 4x4 global transforms actually exist in real Metashape files
+//                                        // (typically they're separated as rotation / translation / scale -- going back even to old light field datasets)
+//                                        // but I'm pretty sure this is basically inverting the matrix
+//                                        // (transposing the rotation and applying the inverse translation first)
+//                                        // so these other inverse steps should be necessary.
+//                                        globalTransform = rotationScaleTranspose.times(1.0f / (scale * scale)).asMatrix4()
+//                                            .times(Matrix4.translate(-m[3], -m[7], -m[11]));
                                     }
                                 }
                             }
@@ -571,7 +578,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             if (camera == null && !ignoreGlobalTransforms)
                             {
                                 LOG.debug("\tSetting global scale.");
-                                globalScale = 1.0f / Float.parseFloat(reader.getElementText());
+                                globalScale = Float.parseFloat(reader.getElementText());
                             }
                             break;
 
@@ -745,43 +752,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             globalTransformNoScale = globalTransform;
         }
 
-
-        // TODO orientation and object center isn't right, needs to be determined separately for PSX and XML cases
-
-        // globalTransform may be just rotation, or may also incorporate translation and scale.
-        // We do the global rotation and translation to get the orientation and location right for projective texture mapping,
-        // but we keep the scale at the imported model scale
-        // Order of transformation is:
-        // 1. "model" transformation from internal PLY space to global camera optimization space -- PSX only
-        // 2. "global" transformation from exported OBJ space to global camera optimization space -- needed for XML only
-        // 3. camera transformation from global camera optimization space to individual camera POV
-        // The global transformation needs to be inverted based on how it's represented by Metashape
-        // so we would do translation, then rotation, than scale last.
-        Matrix4 orientationAndObjectCenter = globalTransformNoScale
-            .times(Matrix4.translate(globalTranslate.negated()))
-            .times(modelTransformNoScale);
-
-        // We already removed scale, now taking the upper left 3x3 should isolate an orthogonal rotation matrix.
-        Matrix3 orientation = orientationAndObjectCenter.getUpperLeft3x3();
-
-        // Transpose should be the same as the inverse for the orientation matrix.
-        // Apply the inverse of rotation to the translation column and negate the result to get the "model center" vector
-        // objectCenter = -inverse(orientation) * translation
-        // i.e. translate(translation) * orientation = orientation * translate(inverse(orientation) * translation)
-        // so translate(translation) * orientation = orientation * translate(-objectCenter)
-        // which is how the "centroid" will be used for rendering.
-        Vector3 objectCenter = orientation.transpose()
-            .times(orientationAndObjectCenter.getColumn(3).getXYZ())
-            .negated();
-
-        builder.setOrientationMatrix(orientation);
-        builder.setObjectCenter(objectCenter);
-
-        // "Global transform" for projective texture mapping might ignore the true "global" transform and just use the model transform.
-        // This is typical for when importing from a PSX rather than an exported cameras XML file.
+        // "World transform" for projective texture mapping might be based on "global" transform
+        // (typical for XML import, need to account for transformation from camera optimization space to XML export space)
+        // or could be based on "model" transform (typical for PSX import, transformation from raw PLY space to camera optimization space
+        //  -- often identity but not always especially with an imported and/or aligned model).
         Matrix4 projTexWorldTransform;
 
-        // Scale may also be specified separately from the globalTransform and modelTransform matrices.
+        // Similarly, keep track of the scale that we want to ultimately apply when exporting.
         float projTexWorldScaleCombined;
 
         if (ignoreGlobalTransforms)
@@ -800,8 +777,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             // This is the original global transformation (not inverted as for XML import)
             // TODO...
 
-            // We still pass global scale to the view set for export purposes.
-            builder.setObjectScale(globalScale * globalScaleFromTransform);
+            // Transform object all the way from imported PLY space, first to camera optimization space
+            // and then to the space that would be used for OBJ export
+
+            // Scale may come from the globalTransform and modelTransform matrices, or from a separate global scale attribute.
+            // All three should be accounted for when exporting the .
+            builder.setObjectScale(globalScale * globalScaleFromTransform * modelScale);
+
+            Matrix4 combinedTransformNoScale = globalTransformNoScale.times(modelTransformNoScale);
+            builder.setOrientationMatrix(combinedTransformNoScale.getUpperLeft3x3());
+            builder.setObjectTranslation(combinedTransformNoScale.getColumn(3).getXYZ());
         }
         else
         {
@@ -810,15 +795,17 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             // We do the global rotation and translation to get the orientation and location right for projective texture mapping,
             // but we keep the scale at the imported model scale
             // Order of transformation is:
-            // 1. "global" transformation from exported OBJ space to global camera optimization space
-            // 2. camera transformation from global camera optimization space to individual camera POV
-            // The global transformation needs to be inverted based on how it's represented by Metashape (global to exported OBJ space)
-            // so we would do translation, then rotation, than scale last.
+            // 1. inverse of "global" transformation, i.e. from OBJ export space to camera optimization space
+            // 2. camera transformation from camera optimization space to individual camera POV
+            // The global transformation needs to be inverted based on how it's represented by Metashape
+            // (camera opt. space to OBJ export space) so we would do translation, then rotation, than scale last.
             // Rather than actually applying the scale, we will adjust the camera transformations later.
-            projTexWorldTransform = globalTransformNoScale.times(Matrix4.translate(globalTranslate.negated()));
+            projTexWorldTransform = globalTransformNoScale.quickInverse(0.001f)
+                .times(Matrix4.translate(globalTranslate.negated()));
+            projTexWorldScaleCombined = 1.0f / (globalScale * globalScaleFromTransform);
 
-            projTexWorldScaleCombined = globalScale * globalScaleFromTransform;
-            builder.setObjectScale(projTexWorldScaleCombined);
+            // Object orientation, translation, and scale should just default; imported mesh should already be at the right orientation.
+            // Since we avoid actually scaling the model, the glTF will export at the same scale as imported aside from any user adjustments
         }
 
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
@@ -826,18 +813,18 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
         {
-            // camera's coordinates are expressed in global coordinates
-            // we're planning to work in model coordinates
+            // camera's coordinates are expressed in optimization coordinates
+            // we're planning to work in exported model coordinates
             // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
             // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
             Vector3 displacement = cam.transform.getColumn(3).getXYZ();
             Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
                 .times(cam.transform);
 
-            // Technically we'd need to also apply global to cam.transform.
+            // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
             // Rather than actually applying the scale, we just adjusted the camera translation above.
-            // We could apply global scale after unscaledCamTransform (scaleMatrix * unscaledCamTransform)
-            // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scaleMatrix)
+            // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
+            // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
             // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
             // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
             cam.transform = unscaledCamTransform.times(projTexWorldTransform);

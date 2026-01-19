@@ -228,7 +228,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                 {
                     // Imported orientation and object center if no override
                     sceneModel.setOrientation(Objects.requireNonNullElse(viewSet.getOrientationMatrix(), Matrix3.IDENTITY));
-                    sceneModel.setCentroid(Objects.requireNonNullElse(viewSet.getObjectCenter(), Vector3.ZERO));
+                    sceneModel.setCentroid(Objects.requireNonNullElse(
+                        viewSet.getOrientationMatrix().transpose().times(viewSet.getObjectTranslation().negated()), Vector3.ZERO));
 
                     // TODO figure out if we can use imported scale for user interaction without breaking things.
                     //// "Scene scale" is generally taken by the Kintsugi renderer to be world space to model space

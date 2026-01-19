@@ -130,10 +130,10 @@ public interface ReadonlyViewSet
     Matrix3 getOrientationMatrix();
 
     /**
-     * Gets object center location imported, to be applied to the model
-     * @return center as a vector
+     * Gets object translation imported, to be applied to the model
+     * @return translation as a vector
      */
-    Vector3 getObjectCenter();
+    Vector3 getObjectTranslation();
 
     /**
      * Gets object scale imported, to be applied to the model

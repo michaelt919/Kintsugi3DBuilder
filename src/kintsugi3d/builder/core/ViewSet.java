@@ -191,9 +191,9 @@ public final class ViewSet implements ReadonlyViewSet
     private Matrix3 orientationMatrix = null;
 
     /**
-     * Object center location imported, to be applied to the model
+     * Object translation imported, to be applied to the model
      */
-    private Vector3 objectCenter = null;
+    private Vector3 objectTranslation = null;
 
     /**
      * Object scale imported, to be applied to the model
@@ -218,14 +218,14 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public Vector3 getObjectCenter()
+    public Vector3 getObjectTranslation()
     {
-        return objectCenter;
+        return objectTranslation;
     }
 
-    public void setObjectCenter(Vector3 objectCenter)
+    public void setObjectTranslation(Vector3 objectTranslation)
     {
-        this.objectCenter = objectCenter;
+        this.objectTranslation = objectTranslation;
     }
 
     @Override
@@ -441,9 +441,9 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder setObjectCenter(Vector3 objectCenter)
+        public Builder setObjectTranslation(Vector3 objectTranslation)
         {
-            result.setObjectCenter(objectCenter);
+            result.setObjectTranslation(objectTranslation);
             return this;
         }
 
@@ -763,7 +763,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.orientationViewIndex = this.orientationViewIndex;
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
         result.orientationMatrix = this.orientationMatrix;
-        result.objectCenter = this.objectCenter;
+        result.objectTranslation = this.objectTranslation;
         result.objectScale = this.objectScale;
 
         result.projectSettings.copyFrom(this.projectSettings);
@@ -811,7 +811,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.orientationViewIndex = this.orientationViewIndex;
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
         result.orientationMatrix = this.orientationMatrix;
-        result.objectCenter = this.objectCenter;
+        result.objectTranslation = this.objectTranslation;
         result.objectScale = this.objectScale;
 
         result.previewWidth = this.previewWidth;
