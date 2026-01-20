@@ -72,7 +72,7 @@ Special thanks to Carla Schroer and Mark Mudge from Cultural Heritage Imaging an
 
 ## Copyright and License
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins 2025\
+Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins 2026\
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html)
