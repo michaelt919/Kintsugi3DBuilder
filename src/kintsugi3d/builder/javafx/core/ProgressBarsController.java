@@ -532,7 +532,7 @@ public class ProgressBarsController
             //useful for simple exports like orbit animation
             boolean removeStageNums = stageCountProperty.getValue() <= 1 || currentStageProperty.getValue() == 0;
             this.localText = removeStageNums ? message :
-                String.format("Stage %s/%s — %s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+                String.format("Stage %s/%s -- %s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
 
             Platform.runLater(() ->
             {
