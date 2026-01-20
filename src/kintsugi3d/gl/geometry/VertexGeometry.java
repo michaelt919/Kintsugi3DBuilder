@@ -562,10 +562,22 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                 inst.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount);
                 for (i = 0; i < normalIndexList.size(); i++)
                 {
-                    inst.tangents.set(i, 0, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).x);
-                    inst.tangents.set(i, 1, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).y);
-                    inst.tangents.set(i, 2, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).z);
-                    inst.tangents.set(i, 3, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).w);
+                    Vector4 tangent = orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i)));
+                    if (tangent == null)
+                    {
+                        // Probably a degenerate face or a vertex not connected to any faces
+                        inst.tangents.set(i, 0, 0.0f);
+                        inst.tangents.set(i, 1, 0.0f);
+                        inst.tangents.set(i, 2, 0.0f);
+                        inst.tangents.set(i, 3, 0.0f);
+                    }
+                    else
+                    {
+                        inst.tangents.set(i, 0, tangent.x);
+                        inst.tangents.set(i, 1, tangent.y);
+                        inst.tangents.set(i, 2, tangent.z);
+                        inst.tangents.set(i, 3, tangent.w);
+                    }
                 }
             }
         }
@@ -661,7 +673,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             float e02Length = e02.length();
             Vector3 e02Norm = e02.times(1 / e02Length); // normalized
 
-            // Only update the normals if this faces is not degenerate
+            // Only update the normals if this face is not degenerate
             if (e10Length != 0.0f && e02Length != 0.0f && e21Length != 0.0f)
             {
                 float angle0 = (float) Math.acos(Math.max(-1.0f, Math.min(1.0f, -e10Norm.dot(e02Norm))));
