@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.util;
 
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
@@ -24,8 +23,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class Kintsugi3DViewerLauncher
+public final class Kintsugi3DViewerLauncher
 {
+    private Kintsugi3DViewerLauncher()
+    {
+    }
+
     /**
      * Attempts to find the executable location of an installed instance of Kintsugi 3D Viewer
      * Searches first in the PATH env variable, then the registry (Windows only), then by relative path
@@ -75,7 +78,9 @@ public class Kintsugi3DViewerLauncher
             File dir = new File(dirStr);
             Optional<File> exec = getExecFromDirectory(dir);
             if (exec.isPresent())
+            {
                 return exec;
+            }
         }
 
         return Optional.empty();
@@ -84,7 +89,9 @@ public class Kintsugi3DViewerLauncher
     private static Optional<File> getFromRegistry() throws IOException, InterruptedException
     {
         if (OperatingSystem.getCurrentOS() != OperatingSystem.WINDOWS)
+        {
             return Optional.empty();
+        }
 
         ProcessBuilder builder = new ProcessBuilder("reg", "query",
                 "HKEY_LOCAL_MACHINE\\SOFTWARE\\Kintsugi3DViewer");
@@ -127,7 +134,7 @@ public class Kintsugi3DViewerLauncher
      * @throws IOException Unknown Error
      * @throws IllegalStateException Kintsugi 3D Viewer is not installed or not found
      */
-    public static void launchViewer() throws IOException, IllegalStateException
+    public static void launchViewer() throws IOException
     {
         ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
         launchViewer(viewSet == null ? null : new File(viewSet.getSupportingFilesDirectory(), "model.glb"));
@@ -139,7 +146,7 @@ public class Kintsugi3DViewerLauncher
      * @throws IOException Unknown error
      * @throws IllegalStateException Kintsugi 3D Viewer is not installed or not found
      */
-    public static void launchViewer(File modelFile) throws IOException, IllegalStateException
+    public static void launchViewer(File modelFile) throws IOException
     {
         Optional<File> execOpt = getViewerExecutableLocation();
         if (execOpt.isEmpty())
