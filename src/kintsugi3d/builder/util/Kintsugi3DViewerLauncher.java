@@ -13,6 +13,8 @@ package kintsugi3d.builder.util;
 
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.OperatingSystem;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ViewSet;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -127,7 +129,8 @@ public class Kintsugi3DViewerLauncher
      */
     public static void launchViewer() throws IOException, IllegalStateException
     {
-        launchViewer(null);
+        ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+        launchViewer(viewSet == null ? null : new File(viewSet.getSupportingFilesDirectory(), "model.glb"));
     }
 
     /**
