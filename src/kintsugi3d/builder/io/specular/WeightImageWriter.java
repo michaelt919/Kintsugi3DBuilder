@@ -59,7 +59,7 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
         // Loop over the index of each final image to export
         for (int i = 0; i * weightsPerImage < basisCount; i++)
         {
-            drawable.program().setUniform("weightIndex", i);
+            drawable.program().setUniform("weightIndex", i * weightsPerImage);
             drawable.program().setUniform("weightStride", Math.min(weightsPerImage, basisCount - i * weightsPerImage));
             drawable.draw(framebuffer);
             String filename = filenameOverrides != null ? filenameOverrides.apply(i)
