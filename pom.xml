@@ -194,6 +194,7 @@
     </build>
     <properties>
         <lwjgl.version>3.3.3</lwjgl.version>
+        <lwjgl.natives>natives-macos</lwjgl.natives>
     </properties>
     <profiles>
         <profile>

@@ -338,7 +338,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public Map<String, Image> getImageCache()
     {
-        return Collections.unmodifiableMap(imageCache);
+        return imageCache;
     }
 
     protected String getSelectedViewName()
