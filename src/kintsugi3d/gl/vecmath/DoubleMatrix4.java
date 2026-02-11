@@ -106,6 +106,11 @@ public final class DoubleMatrix4
                                     0.0,    0.0,    0.0,    1.0    );
     }
 
+    public static DoubleMatrix4 scaleAndTranslate(DoubleVector3 s, DoubleVector3 t)
+    {
+        return scaleAndTranslate(s.x, s.y, s.z, t.x, t.y, t.z);
+    }
+
     public static DoubleMatrix4 scale(double sx, double sy, double sz)
     {
         return scaleAndTranslate(sx, sy, sz, 0.0, 0.0, 0.0);
@@ -114,6 +119,11 @@ public final class DoubleMatrix4
     public static DoubleMatrix4 scale(double s)
     {
         return scale(s, s, s);
+    }
+
+    public static DoubleMatrix4 scale(DoubleVector3 s)
+    {
+        return scale(s.x, s.y, s.z);
     }
 
     public static DoubleMatrix4 translate(double tx, double ty, double tz)

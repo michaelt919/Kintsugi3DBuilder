@@ -20,6 +20,7 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 
 import java.io.File;
@@ -79,13 +80,11 @@ public class CameraFrustum<ContextType extends Context<ContextType>> extends Sha
 
             // Scale to match actual camera frustum.
             Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-            float fy = 1.0f / (float)Math.tan(viewSelection.getSelectedCameraProjection().getVerticalFieldOfView() / 2);
-            float fx = fy / viewSelection.getSelectedCameraProjection().getAspectRatio();
+            Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
             this.getDrawable().program().setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
             this.getProgram().setUniform("model_view",
-                cameraViewport.getView().times(snapViewInverse)
-                    .times(Matrix4.scale(20 / fx, 20 / fy, 20.0f)));
+                cameraViewport.getView().times(snapViewInverse).times(Matrix4.scale(frustumDims)));
             this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
             this.getDrawable().draw(PrimitiveMode.LINES, cameraViewport.ofFramebuffer(framebuffer));
         }

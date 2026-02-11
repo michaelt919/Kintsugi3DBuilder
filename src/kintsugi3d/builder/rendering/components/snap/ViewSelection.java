@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering.components.snap;
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ViewSelection
 {
@@ -50,4 +51,6 @@ public interface ViewSelection
         ReadonlyViewSet viewSet = getViewSet();
         return viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(getSelectedViewIndex()));
     }
+
+    Vector3 getFrustumDimensions();
 }

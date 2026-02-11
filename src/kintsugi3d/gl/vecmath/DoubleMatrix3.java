@@ -104,6 +104,16 @@ public final class DoubleMatrix3
     }
 
     /**
+     * Gets a scale matrix.
+     * @param s The scale vector
+     * @return The specified scale matrix.
+     */
+    public static DoubleMatrix3 scale(DoubleVector3 s)
+    {
+        return scale(s.x, s.y, s.z);
+    }
+
+    /**
      * Gets a rotation matrix about the x-axis.
      * @param radians The amount of rotation, in radians.
      * @return The specified transformation matrix.
