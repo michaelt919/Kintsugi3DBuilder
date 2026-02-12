@@ -154,7 +154,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             directories.supportingFilesDirectory = directories.projectRoot;
         }
 
-        return readFromStream(stream, directories, null, null, null, -1, false);
+        return readFromStream(stream, directories, null, null, null, false);
     }
 
     /**
@@ -164,13 +164,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * * @param stream
      *
      * @param imagePathMap             A map of image IDs to paths, if passed this will override the paths being assigned to the images.
-     * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
      * @param ignoreGlobalTransforms   Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
      * @return
      * @throws XMLStreamException
      */
     public static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
-        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
+        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new HashMap<>(16);
@@ -225,13 +224,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
         float b1 = 0.0f; // fx - fy: https://www.agisoft.com/forum/index.php?topic=6437.0
 
-        String version = "";
         String chunkLabel = "";
         String groupLabel = "";
         String sensorID = "";
         String cameraID = "";
         String imageFile = "";
-        int intVersion = Math.max(metashapeVersionOverride, 0);
 
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
@@ -246,14 +243,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     {
                         case "document":
                         {
-                            version = reader.getAttributeValue(null, "version");
-                            String[] verComponents = version.split("\\.");
-                            for (String verComponent : verComponents)
-                            {
-                                intVersion *= 10;
-                                intVersion += Integer.parseInt(verComponent);
-                            }
-                            LOG.debug("Agisoft XML version {} ({})", version, intVersion);
                             break;
                         }
                         case "chunk":
@@ -264,21 +253,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 chunkLabel = "unnamed";
                             }
                             LOG.debug("Reading chunk '{}'", chunkLabel);
-
-                            // Commented out; chunk XMLs seem to always be labelled version 1.2.0; regardless of Metashape version or actual format details.
-//                            // chunk XMLs put the version in the chunk tag
-//                            String tryVersion = reader.getAttributeValue(null, "version");
-//                            if (tryVersion != null)
-//                            {
-//                                version = tryVersion;
-//                                String[] verComponents = version.split("\\.");
-//                                for (String verComponent : verComponents)
-//                                {
-//                                    intVersion *= 10;
-//                                    intVersion += Integer.parseInt(verComponent);
-//                                }
-//                            }
-
                             break;
                         }
                         case "group":
@@ -436,7 +410,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             break;
                         case "transform":
-                            if (currentModelID == null && camera == null && intVersion >= 110)
+                            if (currentModelID == null && camera == null)
                             {
                                 break;
                             }
@@ -617,7 +591,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "points":
                         case "sensors":
                         case "cameras":
-                            // These can all be safely ignored if version is >= 0.9.1
+                            // These can all be safely ignored
                             break;
 
                         case "photo":
@@ -625,10 +599,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "depth_maps":
                         case "depth_map":
                         case "dense_cloud":
-                            if (intVersion < 110)
-                            {
-                                LOG.debug("Unexpected tag '{}' for psz version {}", reader.getLocalName(), version);
-                            }
                             break;
 
                         default:
@@ -683,13 +653,10 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 
-        if (intVersion >= 140) // centers were pre-offset prior to version 1.4
+        for (Sensor s : sensors)
         {
-            for (Sensor s : sensors)
-            {
-                s.cx += s.width * 0.5f;
-                s.cy += s.height * 0.5f;
-            }
+            s.cx += s.width * 0.5f;
+            s.cy += s.height * 0.5f;
         }
 
         // Reassign the ID for each sensor to correspond with the sensor's index
@@ -922,14 +889,10 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     directories.supportingFilesDirectory = null;
                     directories.fullResImagesNeedUndistort = true;
 
-                    // TODO: USING A HARD CODED VERSION VALUE (200)
                     // Create and store ViewSet
                     Builder viewSetBuilder = readFromStream(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
-                            cameraPathsMap,
-                            maskPathsMap,
-                            200,
-                            true);
+                            cameraPathsMap, maskPathsMap, true);
 
                     // Send masksDirectory to viewset and have it process them once the progress bars are ready for it
                     viewSetBuilder.setMasksDirectory(masksDir);

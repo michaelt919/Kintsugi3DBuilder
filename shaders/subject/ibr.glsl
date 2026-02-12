@@ -318,7 +318,6 @@ vec3 specularFromPredictedMFD(LightingParameters l, Material m, vec4 predictedMF
     float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / m.specularColor);
     return max(vec3(0.0), fresnel(predictedMFD.rgb, vec3(grazingIntensity), l.hDotV));
 #else // !FRESNEL_EFFECT_ENABLED
-    vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
     return max(vec3(0.0), predictedMFD.rgb);
 #endif // FRESNEL_EFFECT_ENABLED
 }
