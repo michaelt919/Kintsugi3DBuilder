@@ -686,6 +686,18 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
             else
             {
+                // TODO Metashape now seems to be doing some weird rescaling that it didn't used to do before.
+                // TODO The below code is an attempt to reverse engineer it but doesn't seem quite right...
+                // TODO for instance, the absolute difference should probably be doubled if it's just trying to keep all pixels in frame?
+//                float adjustedFOV = new DistortionProjection(
+//                    sensors[i].width + Math.abs(sensors[i].cx - sensors[i].width / 2),
+//                    sensors[i].height + Math.abs(sensors[i].cy - sensors[i].height / 2),
+//                    sensors[i].fx,
+//                    sensors[i].fy,
+//                    0,
+//                    0)
+//                    .getVerticalFieldOfView();
+
                 builder.addCameraProjection(new SimpleProjection(
                     distortionProj.getAspectRatio(), distortionProj.getVerticalFieldOfView()));
             }

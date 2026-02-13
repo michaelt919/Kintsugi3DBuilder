@@ -37,7 +37,7 @@ void main()
     vec2 uvd = uv;
     // Radial distortion
     // distort = 1 + K1*r^2 + K2*r^4 + K3*r^6 + K4*r^8
-    float distort = (1 + coefficientsK[0] * r2 + coefficientsK[1] * r4 + coefficientsK[2] * r6 + coefficientsK[2] * r8);
+    float distort = (1 + coefficientsK[0] * r2 + coefficientsK[1] * r4 + coefficientsK[2] * r6 + coefficientsK[3] * r8);
     uvd.x = uv.x * distort;
     uvd.y = uv.y * distort;
 
