@@ -1165,6 +1165,13 @@ public final class ViewSet implements ReadonlyViewSet
 
     public int findIndexOfView(String viewName)
     {
+        // Treat null as "not found" or "not present"
+        // Important for allowing for orientation pose to remain unset.
+        if (viewName == null)
+        {
+            return -1;
+        }
+
         int poseIndex = this.imageFiles.indexOf(new File(viewName));
         if (poseIndex >= 0)
         {

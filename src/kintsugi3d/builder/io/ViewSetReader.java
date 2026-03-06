@@ -67,11 +67,9 @@ public interface ViewSetReader
             builder.setMasksDirectory(loadOptions.masksDirectory);
         }
 
-        if (loadOptions.orientationViewName != null)
-        {
-            builder.setOrientationViewName(loadOptions.orientationViewName)
-                .setOrientationViewRotation(loadOptions.orientationViewRotation);
-        }
+        // Set even if orientationViewName is null (to use default orientation in that case).
+        builder.setOrientationViewName(loadOptions.orientationViewName)
+            .setOrientationViewRotation(loadOptions.orientationViewRotation);
 
         if (loadOptions.uuid != null)
         {
