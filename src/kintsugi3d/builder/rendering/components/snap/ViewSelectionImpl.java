@@ -15,9 +15,12 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public class ViewSelectionImpl implements ViewSelection
 {
+    private static final float FRUSTUM_VISUALIZATION_SCALE = 0.1f;
+
     private final ViewSet viewSet;
     private final SceneModel sceneModel;
 
@@ -44,5 +47,11 @@ public class ViewSelectionImpl implements ViewSelection
     {
         Matrix4 pose = this.viewSet.getCameraPose(index);
         return pose.times(sceneModel.getFullModelMatrix().quickInverse(0.01f));
+    }
+
+    @Override
+    public Vector3 getFrustumDimensions()
+    {
+        return getSelectedCameraProjection().getNormalizedFrustumDimensions().times(FRUSTUM_VISUALIZATION_SCALE);
     }
 }

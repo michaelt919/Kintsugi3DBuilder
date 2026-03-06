@@ -115,9 +115,19 @@ public final class Matrix4
                                     0.0f,    0.0f,    0.0f,    1.0f    );
     }
 
+    public static Matrix4 scaleAndTranslate(Vector3 s, Vector3 t)
+    {
+        return scaleAndTranslate(s.x, s.y, s.z, t.x, t.y, t.z);
+    }
+
     public static Matrix4 scale(float sx, float sy, float sz)
     {
         return scaleAndTranslate(sx, sy, sz, 0.0f, 0.0f, 0.0f);
+    }
+
+    public static Matrix4 scale(Vector3 s)
+    {
+        return scale(s.x, s.y, s.z);
     }
 
     public static Matrix4 scale(float s)

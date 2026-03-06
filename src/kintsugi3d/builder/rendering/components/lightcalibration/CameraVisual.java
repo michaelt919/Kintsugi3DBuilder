@@ -67,28 +67,19 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
             this.getContext().getState().enableDepthTest();
 
             Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-            float aspect = viewSelection.getSelectedCameraProjection().getAspectRatio();
-            float fPlane = getCameraPlane(viewSelection);
+            Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
             this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
             this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
             this.getProgram().setUniform("model_view",
                 cameraViewport.getView().times(snapViewInverse)
-                    .times(Matrix4.translate(new Vector3(0, 0, -fPlane)))
-                    .times(Matrix4.scale(Math.min(1.0f, aspect), Math.min(1.0f, 1.0f / aspect), 1.0f)));
+                    .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
             this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
             this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
             this.getContext().getState().enableDepthWrite();
             this.getContext().getState().enableDepthTest();
         }
-    }
-
-    public static float getCameraPlane(ViewSelection viewSelection)
-    {
-        float fy = 1.0f / (float)Math.tan(viewSelection.getSelectedCameraProjection().getVerticalFieldOfView() / 2);
-        float fx = fy / viewSelection.getSelectedCameraProjection().getAspectRatio();
-        return Math.min(fx, fy);
     }
 
     public ViewSelection getViewSelection()
