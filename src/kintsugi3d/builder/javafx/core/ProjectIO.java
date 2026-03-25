@@ -446,7 +446,7 @@ public final class ProjectIO
 
         var fileContainer = new Object()
         {
-            boolean complete = false;
+            volatile boolean complete = false;
             File selectedFile = null;
         };
 
