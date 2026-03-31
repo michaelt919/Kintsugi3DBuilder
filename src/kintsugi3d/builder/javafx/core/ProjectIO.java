@@ -447,7 +447,7 @@ public final class ProjectIO
         var fileContainer = new Object()
         {
             volatile boolean complete = false;
-            File selectedFile = null;
+            volatile File selectedFile = null;
         };
 
         if (Application.isEventThread())
