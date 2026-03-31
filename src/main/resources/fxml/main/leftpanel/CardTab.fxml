@@ -5,6 +5,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Label?>
 <VBox fx:id="tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS">
@@ -27,9 +28,14 @@
             <Insets />
         </VBox.margin>
     </HBox>
+    <HBox alignment="CENTER_LEFT" prefHeight="32">
+        <padding >
+            <Insets left="15.5" right="16.0" top="10.0" />
+        </padding>
+        <Label fx:id="countLabel" style="-fx-text-fill: #aaaaaa; -fx-font-size: 14;"/>
+    </HBox>
     <ScrollPane fx:id="scrollpane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
         <VBox fx:id="vbox" spacing="5.0" style="-fx-background-color: #202020">
-
         </VBox>
         <VBox.margin>
             <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />

@@ -8,8 +8,10 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
@@ -25,6 +27,7 @@ public class CardTabController
     @FXML private TextField searchbar;
     @FXML private VBox vbox;
     @FXML private ScrollPane scrollpane;
+    @FXML private Label countLabel;
 
     private double scrollPosition = 0;
 
@@ -44,6 +47,11 @@ public class CardTabController
         // Add all at once to avoid repeated listener triggers.
         vbox.getChildren().addAll(displayCards);
         createListeners();
+        updateSummary();
+    }
+
+    private void updateSummary() {
+        countLabel.setText("There are a total of: " + cardsModel.getCardList().size() + " cameras");
     }
 
     private CardController createDataCard(ProjectDataCard card)
@@ -131,6 +139,7 @@ public class CardTabController
                     }
                 }
             }
+            updateSummary();
         });
 
         searchList.addListener((ListChangeListener<CardController>) change ->
@@ -160,6 +169,7 @@ public class CardTabController
                     }
                 }
             }
+            updateSummary();
         });
 
         // Fires when scrolling. Updates Viewport Visibility
@@ -171,11 +181,11 @@ public class CardTabController
 
         // Search Bar Listener
         searchbar.textProperty().addListener((observable, oldValue, newValue) ->
-            searchList.setPredicate(controller ->
-            {
-                // If search text is empty, display all items
-                return controller.titleContainsString(newValue.toLowerCase(Locale.ROOT));
-            }));
+                searchList.setPredicate(controller ->
+                {
+                    // If search text is empty, display all items
+                    return controller.titleContainsString(newValue.toLowerCase(Locale.ROOT));
+                }));
 
         // Updates the scrollpane after a datacard is added, removed, collapsed, etc.
         vbox.heightProperty().addListener(change -> updateViewportVisibility());
@@ -197,5 +207,3 @@ public class CardTabController
         }
     }
 }
-
-
