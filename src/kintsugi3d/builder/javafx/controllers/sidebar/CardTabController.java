@@ -51,7 +51,7 @@ public class CardTabController
     }
 
     private void updateSummary() {
-        countLabel.setText("There are a total of: " + cardsModel.getCardList().size() + " cameras");
+        countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
     }
 
     private CardController createDataCard(ProjectDataCard card)
