@@ -202,7 +202,11 @@ public class MainWindowController
 
         ObservableUserShaderModel userShaderModel = javaFXState.getUserShaderModel();
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
-            userShaderModel.getUserShader().getFriendlyName(), userShaderModel.getUserShaderProperty()));
+            {
+                UserShader userShader = userShaderModel.getUserShader();
+                return userShader != null ? userShader.getFriendlyName() : "(no shader)";
+            },
+            userShaderModel.getUserShaderProperty()));
 
         userShaderModel.getUserShaderProperty().addListener((obs, oldValue, newValue) ->
             renderGroup.selectToggle(renderGroup.getToggles().stream()
