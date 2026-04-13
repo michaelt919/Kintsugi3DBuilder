@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.value.ChangeListener;
@@ -8,8 +19,10 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
@@ -25,6 +38,7 @@ public class CardTabController
     @FXML private TextField searchbar;
     @FXML private VBox vbox;
     @FXML private ScrollPane scrollpane;
+    @FXML private Label countLabel;
 
     private double scrollPosition = 0;
 
@@ -44,6 +58,11 @@ public class CardTabController
         // Add all at once to avoid repeated listener triggers.
         vbox.getChildren().addAll(displayCards);
         createListeners();
+        updateSummary();
+    }
+
+    private void updateSummary() {
+        countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
     }
 
     private CardController createDataCard(ProjectDataCard card)
@@ -131,6 +150,7 @@ public class CardTabController
                     }
                 }
             }
+            updateSummary();
         });
 
         searchList.addListener((ListChangeListener<CardController>) change ->
@@ -160,6 +180,7 @@ public class CardTabController
                     }
                 }
             }
+            updateSummary();
         });
 
         // Fires when scrolling. Updates Viewport Visibility
@@ -171,11 +192,11 @@ public class CardTabController
 
         // Search Bar Listener
         searchbar.textProperty().addListener((observable, oldValue, newValue) ->
-            searchList.setPredicate(controller ->
-            {
-                // If search text is empty, display all items
-                return controller.titleContainsString(newValue.toLowerCase(Locale.ROOT));
-            }));
+                searchList.setPredicate(controller ->
+                {
+                    // If search text is empty, display all items
+                    return controller.titleContainsString(newValue.toLowerCase(Locale.ROOT));
+                }));
 
         // Updates the scrollpane after a datacard is added, removed, collapsed, etc.
         vbox.heightProperty().addListener(change -> updateViewportVisibility());
@@ -197,5 +218,3 @@ public class CardTabController
         }
     }
 }
-
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -202,7 +202,11 @@ public class MainWindowController
 
         ObservableUserShaderModel userShaderModel = javaFXState.getUserShaderModel();
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
-            userShaderModel.getUserShader().getFriendlyName(), userShaderModel.getUserShaderProperty()));
+            {
+                UserShader userShader = userShaderModel.getUserShader();
+                return userShader != null ? userShader.getFriendlyName() : "(no shader)";
+            },
+            userShaderModel.getUserShaderProperty()));
 
         userShaderModel.getUserShaderProperty().addListener((obs, oldValue, newValue) ->
             renderGroup.selectToggle(renderGroup.getToggles().stream()

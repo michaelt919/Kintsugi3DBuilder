@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -446,8 +446,8 @@ public final class ProjectIO
 
         var fileContainer = new Object()
         {
-            boolean complete = false;
-            File selectedFile = null;
+            volatile boolean complete = false;
+            volatile File selectedFile = null;
         };
 
         if (Application.isEventThread())

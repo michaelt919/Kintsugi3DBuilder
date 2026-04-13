@@ -57,6 +57,7 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Atlas Collins (University of Wisconsin - Stout) - contributor
 - Kyle Boatwright (University of Wisconsin - Stout) - contributor
 - Melissa Kosharek (University of Wisconsin - Stout) - contributor
+- Simon Cao (University of Wisconsin - Stout) - contributor
 - Darcy Hannen (University of Wisconsin - Stout) - UX designer
 - Isabel Smith (University of Wisconsin - Stout) - UX designer
 - Elliot Duffy (University of Wisconsin - Stout) - UX designer
@@ -72,7 +73,7 @@ Special thanks to Carla Schroer and Mark Mudge from Cultural Heritage Imaging an
 
 ## Copyright and License
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins 2026\
+Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao 2026\
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html)
