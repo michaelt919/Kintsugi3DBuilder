@@ -179,7 +179,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         if (cameraCount > 1024)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
-            progressMonitor.warn(e);
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.warn(e);
+            }
 //            LOG.warn("Dataset has {} cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount);
 //            Platform.runLater(() -> {
 //                Alert alert = new Alert(Alert.AlertType.WARNING);
