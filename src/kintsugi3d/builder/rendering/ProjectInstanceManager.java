@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.rendering;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -173,6 +175,22 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
+        int cameraCount = loadedViewSet.getCameraPoseCount();
+        if (cameraCount > 1024)
+        {
+            LOG.warn("Dataset has {} cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount);
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Large Camera Count");
+                alert.setHeaderText("Dataset has " + cameraCount + " cameras");
+                alert.setContentText(
+                        "This dataset has more than 1024 cameras, which may fail to load "
+                                + "on many graphics cards due to texture array size limits.\n\n"
+                                + "Consider reducing the number of cameras in your photogrammetry project.");
+                alert.showAndWait();
+            });
+        }
+
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
@@ -212,6 +230,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         newInstance = newItem;
 
         new TabsManager(loadedViewSet, newInstance).rebuildTabs();
+
     }
 
     @Override
@@ -271,7 +290,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 .setImageLoadOptions(loadOptionsModel)
                 .loadFromMetashapeModel(model)
                 .setOrientationView(orientationView, rotation);
-
             loadInstance(parentChunk.getFramePath(), builder);
         }
         catch (UserCancellationException e)

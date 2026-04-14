@@ -251,6 +251,11 @@ public final class ViewSet implements ReadonlyViewSet
         private File maskFile;
 
         /**
+         * A flag to track whether a corrections tag exist in camera file
+         */
+        private boolean hasUnsupportedCorrections;
+
+        /**
          * Uses root directory as supporting files directory by default
          *
          * @param rootDirectory
@@ -299,6 +304,24 @@ public final class ViewSet implements ReadonlyViewSet
         {
             this.maskFile = maskFile;
             return this;
+        }
+
+        /**
+         * set whether the camera file being loaded contains correction flag
+         * @param hasAdditionalCorrections true if the camera file contains correction flag, false otherwise
+         * @return ViewSet.Builder instance
+         */
+        public Builder setHasUnSupportedCorrection(boolean hasAdditionalCorrections) {
+            this.hasUnsupportedCorrections = hasAdditionalCorrections;
+            return this;
+        }
+
+        /**
+         *
+         * @return true if the camera file being loaded contains correction flag, false otherwise
+         */
+        public boolean hasUnsupportedCorrections() {
+            return this.hasUnsupportedCorrections;
         }
 
         public Builder commitCurrentCameraPose()
