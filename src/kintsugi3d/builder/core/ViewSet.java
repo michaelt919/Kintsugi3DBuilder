@@ -307,12 +307,13 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         /**
-         * set whether the camera file being loaded contains correction flag
-         * @param hasAdditionalCorrections true if the camera file contains correction flag, false otherwise
+         * Set whether the camera file being loaded contains correction flag that is currently unsupported.
+         * @param hasUnsupportedCorrections true if the camera file contains correction flag, false otherwise
          * @return ViewSet.Builder instance
          */
-        public Builder setHasUnSupportedCorrection(boolean hasAdditionalCorrections) {
-            this.hasUnsupportedCorrections = hasAdditionalCorrections;
+        public Builder setHasUnsupportedCorrections(boolean hasUnsupportedCorrections)
+        {
+            this.hasUnsupportedCorrections = hasUnsupportedCorrections;
             return this;
         }
 
@@ -320,7 +321,8 @@ public final class ViewSet implements ReadonlyViewSet
          *
          * @return true if the camera file being loaded contains correction flag, false otherwise
          */
-        public boolean hasUnsupportedCorrections() {
+        public boolean hasUnsupportedCorrections()
+        {
             return this.hasUnsupportedCorrections;
         }
 

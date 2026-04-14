@@ -847,7 +847,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
         // Set full res image directory according to input argument
         builder.setFullResImageDirectory(directories.fullResImageDirectory);
-        builder.setHasUnSupportedCorrection(hasAdditionalCorrections);
+        builder.setHasUnsupportedCorrections(hasAdditionalCorrections);
 
         return builder;
     }
