@@ -214,7 +214,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         int lightIndex = -1;
         int nextLightIndex = 0;
         int defaultLightIndex = -1;
-        boolean hasAdditionalCorrections = false;
 
         Matrix4 globalTransform = Matrix4.IDENTITY;
         float globalScale = 1.0f;
@@ -234,6 +233,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
         XMLStreamReader reader = factory.createXMLStreamReader(stream);
+        boolean hasUnsupportedCorrections = false;
         while (reader.hasNext())
         {
             int event = reader.next();
@@ -574,7 +574,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             currentModelID = reader.getAttributeValue(null, "id");
                             break;
                         case "corrections":
-                            hasAdditionalCorrections = true;
+                            hasUnsupportedCorrections = true;
                             break;
                         case "projections":
                         case "depth":
@@ -840,15 +840,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
             builder.addLight(Vector3.ZERO, new Vector3(1.0f));
         }
-        if (hasAdditionalCorrections)
-        {
-            LOG.warn("Metashape project uses 'Fit additional corrections' which are not supported. "
-                    + "Results may be inaccurate. Consider re-calibrating without additional corrections.");
-        }
         // Set full res image directory according to input argument
         builder.setFullResImageDirectory(directories.fullResImageDirectory);
-        builder.setHasUnsupportedCorrections(hasAdditionalCorrections);
 
+        //Set if camera contains corrections tag
+        builder.setHasUnsupportedCorrections(hasUnsupportedCorrections);
         return builder;
     }
 
