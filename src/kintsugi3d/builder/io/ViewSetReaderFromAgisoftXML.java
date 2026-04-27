@@ -820,10 +820,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
             else
             {
-                builder.setCurrentImageFile(new File(cam.filename));
-                if (imagePathMap != null)
-                {
-                    LOG.error("Camera path override not found for camera: {}", camID);
+                if (imagePathMap == null) {
+                    builder.setCurrentImageFile(new File(cam.filename));
+                } else {
+                    //change to warn as image might be disabled.
+                    LOG.warn("Cannot find {} new path in the alternative directory", camID);
                 }
             }
 
