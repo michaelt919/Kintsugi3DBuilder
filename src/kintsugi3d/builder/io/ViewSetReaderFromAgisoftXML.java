@@ -214,6 +214,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         int lightIndex = -1;
         int nextLightIndex = 0;
         int defaultLightIndex = -1;
+        int nums_of_disabled_cameras = 0;
         boolean hasAdditionalCorrections = false;
 
         Matrix4 globalTransform = Matrix4.IDENTITY;
@@ -791,6 +792,19 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
         {
+            final int camID = Integer.parseInt(cam.id);
+            final File imgFile;
+
+            if (imagePathMap == null) {
+                imgFile = new File(cam.filename);
+            } else {
+                String resolvedPath = imagePathMap.get(camID);
+                if (resolvedPath == null) {
+                    ++nums_of_disabled_cameras;
+                    continue;
+                }
+                imgFile = new File(resolvedPath);
+            }
             // camera's coordinates are expressed in optimization coordinates
             // we're planning to work in exported model coordinates
             // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
@@ -811,22 +825,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
             builder.setCurrentCameraProjectionIndex(cam.sensor.index);
             builder.setCurrentLightIndex(cam.lightIndex);
-
-            int camID = Integer.parseInt(cam.id);
-
-            if (imagePathMap != null && imagePathMap.containsKey(camID))
-            {
-                builder.setCurrentImageFile(new File(imagePathMap.get(camID)));
-            }
-            else
-            {
-                if (imagePathMap == null) {
-                    builder.setCurrentImageFile(new File(cam.filename));
-                } else {
-                    //change to warn as image might be disabled.
-                    LOG.warn("Cannot find {} new path in the alternative directory", camID);
-                }
-            }
+            builder.setCurrentImageFile(imgFile);
 
             if (maskPathMap != null && maskPathMap.containsKey(camID))
             {
@@ -841,10 +840,19 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
             builder.addLight(Vector3.ZERO, new Vector3(1.0f));
         }
+        if (nums_of_disabled_cameras > 0) {
+            LOG.info(
+                    "Skipped {} of {} cameras absent from image directory",
+                    nums_of_disabled_cameras,
+                    cameras.length
+            );
+        }
         if (hasAdditionalCorrections)
         {
-            LOG.warn("Metashape project uses 'Fit additional corrections' which are not supported. "
-                    + "Results may be inaccurate. Consider re-calibrating without additional corrections.");
+            LOG.warn(
+                    "Metashape project uses 'Fit additional corrections' which are not supported. "
+                    + "Results may be inaccurate. Consider re-calibrating without additional corrections."
+            );
         }
         // Set full res image directory according to input argument
         builder.setFullResImageDirectory(directories.fullResImageDirectory);

@@ -47,7 +47,8 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
     private final Map<Integer, Image> thumbnailMap;
 
     //custom import path
-    public MetashapeViewSelectionModel(File cameraFile, File fullResSearchDir, Collection<File> disabledImageFiles) throws ParserConfigurationException, IOException, SAXException
+    public MetashapeViewSelectionModel(File cameraFile, File fullResSearchDir, Collection<File> disabledImageFiles)
+            throws ParserConfigurationException, IOException, SAXException, MissingImagesException
     {
         this.fullResSearchDir = fullResSearchDir;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -79,6 +80,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
         thumbnailMap = new HashMap<>(16);
 
         cameraIdToFullRes = new HashMap<>(views.size());
+        List<File> missingImgs = new ArrayList<>();
         for (View view : views)
         {
             if (!disabledImageFiles.contains(new File(view.name)))
@@ -87,13 +89,22 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
                 if (imgFile != null && view.id != -1)
                 {
                     cameraIdToFullRes.put(view.id, imgFile.getPath());
+                } else {
+                    missingImgs.add(new File(view.name));
                 }
             }
+        }
+        if (!missingImgs.isEmpty()) {
+            throw new MissingImagesException(
+                    String.format("{} image(s) missing in {}", missingImgs.size(), fullResSearchDir),
+                    missingImgs, fullResSearchDir
+            );
         }
     }
 
     //metashape import path
-    public MetashapeViewSelectionModel(MetashapeModel model, Collection<File> disabledImageFiles) throws MissingImagesException, FileNotFoundException
+    public MetashapeViewSelectionModel(MetashapeModel model, Collection<File> disabledImageFiles)
+            throws MissingImagesException, FileNotFoundException
     {
         MetashapeChunk parentChunk = model.getChunk();
         this.chunkName = parentChunk.getLabel();

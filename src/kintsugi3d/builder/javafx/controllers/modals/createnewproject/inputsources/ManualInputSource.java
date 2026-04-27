@@ -122,7 +122,7 @@ public class ManualInputSource extends InputSourceBase
         loadOptions.mainDirectories.fullResImagesNeedUndistort = needsUndistort;
         loadOptions.orientationViewName = getViewSelection();
         loadOptions.orientationViewRotation = getViewRotation();
-
+        loadOptions.disabledImages = getDisabledImages();
         if (hotSwap)
         {
             new Thread(() ->
