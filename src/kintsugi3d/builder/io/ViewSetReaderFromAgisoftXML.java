@@ -214,7 +214,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         int lightIndex = -1;
         int nextLightIndex = 0;
         int defaultLightIndex = -1;
-        int nums_of_disabled_cameras = 0;
+        int disabledCameraCount = 0;
         boolean hasAdditionalCorrections = false;
 
         Matrix4 globalTransform = Matrix4.IDENTITY;
@@ -792,47 +792,58 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
         {
-            final int camID = Integer.parseInt(cam.id);
-            final File imgFile;
+            int camID = Integer.parseInt(cam.id);
+            File imgFile = null;
 
-            if (imagePathMap == null) {
-                imgFile = new File(cam.filename);
-            } else {
-                String resolvedPath = imagePathMap.get(camID);
-                if (resolvedPath == null) {
-                    ++nums_of_disabled_cameras;
-                    continue;
-                }
-                imgFile = new File(resolvedPath);
-            }
-            // camera's coordinates are expressed in optimization coordinates
-            // we're planning to work in exported model coordinates
-            // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
-            // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
-            Vector3 displacement = cam.transform.getColumn(3).getXYZ();
-            Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
-                .times(cam.transform);
-
-            // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
-            // Rather than actually applying the scale, we just adjusted the camera translation above.
-            // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
-            // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
-            // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
-            // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
-            cam.transform = unscaledCamTransform.times(projTexWorldTransform);
-
-            builder.setCurrentCameraPose(cam.transform);
-
-            builder.setCurrentCameraProjectionIndex(cam.sensor.index);
-            builder.setCurrentLightIndex(cam.lightIndex);
-            builder.setCurrentImageFile(imgFile);
-
-            if (maskPathMap != null && maskPathMap.containsKey(camID))
+            if (imagePathMap == null)
             {
-                builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
+                imgFile = new File(cam.filename);
+            }
+            else
+            {
+                String resolvedPath = imagePathMap.get(camID);
+                if (resolvedPath == null)
+                {
+                    ++disabledCameraCount;
+                    LOG.warn("Cannot find camera: {}", camID);
+                }
+                else
+                {
+                    imgFile = new File(resolvedPath);
+                }
             }
 
-            builder.commitCurrentCameraPose();
+            if (imgFile != null)
+            {
+                // camera's coordinates are expressed in optimization coordinates
+                // we're planning to work in exported model coordinates
+                // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
+                // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
+                Vector3 displacement = cam.transform.getColumn(3).getXYZ();
+                Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
+                    .times(cam.transform);
+
+                // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
+                // Rather than actually applying the scale, we just adjusted the camera translation above.
+                // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
+                // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
+                // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
+                // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
+                cam.transform = unscaledCamTransform.times(projTexWorldTransform);
+
+                builder.setCurrentCameraPose(cam.transform);
+
+                builder.setCurrentCameraProjectionIndex(cam.sensor.index);
+                builder.setCurrentLightIndex(cam.lightIndex);
+                builder.setCurrentImageFile(imgFile);
+
+                if (maskPathMap != null && maskPathMap.containsKey(camID))
+                {
+                    builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
+                }
+
+                builder.commitCurrentCameraPose();
+            }
         }
 
         for (int i = 0; i < nextLightIndex; i++)
@@ -840,10 +851,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
             builder.addLight(Vector3.ZERO, new Vector3(1.0f));
         }
-        if (nums_of_disabled_cameras > 0) {
-            LOG.info(
+
+        if (disabledCameraCount > 0)
+        {
+            LOG.warn(
                     "Skipped {} of {} cameras absent from image directory",
-                    nums_of_disabled_cameras,
+                    disabledCameraCount,
                     cameras.length
             );
         }
