@@ -57,6 +57,11 @@ public interface ViewSetReader
     {
         ViewSet.Builder builder = this.readFromFile(cameraFile, loadOptions.mainDirectories);
 
+        if (loadOptions.disabledImages != null)
+        {
+            builder.disableCamerasByImageFilename(loadOptions.disabledImages);
+        }
+
         if (loadOptions.geometryFile != null)
         {
             builder.setGeometryFile(loadOptions.geometryFile);

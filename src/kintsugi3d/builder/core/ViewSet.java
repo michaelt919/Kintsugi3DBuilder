@@ -336,6 +336,24 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder disableCamerasByImageFilename(Iterable<File> disabledImageFiles)
+        {
+            for (File f : disabledImageFiles)
+            {
+                int index = result.imageFiles.indexOf(f);
+
+                result.cameraPoseList.remove(index);
+                result.cameraPoseInvList.remove(index);
+                result.cameraProjectionIndexList.remove(index);
+                result.lightIndexList.remove(index);
+                result.imageFiles.remove(index);
+                result.maskFiles.remove(index);
+                result.viewErrorMetrics.remove(index);
+            }
+
+            return this;
+        }
+
         public Builder addCameraProjection(Projection projection)
         {
             result.cameraProjectionList.add(projection);

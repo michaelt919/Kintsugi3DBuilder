@@ -155,55 +155,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             directories.supportingFilesDirectory = directories.projectRoot;
         }
 
-        return readForLooseFiles(stream, directories, null);
-    }
-
-    /**
-     * Loads a view set from a camera XML file on disk, applying the supplied load options.
-     * The project root is set to the file's parent directory. the supporting files directory
-     * defaults to the project root if not already set on {@code loadOptions.mainDirectories}.
-     * Geometry, masks, orientation, UUID, and disabled-image filtering are applied from
-     * {@code loadOptions} after the XML is parsed.
-     *
-     * @param cameraFile The XML file to load.
-     * @param loadOptions Load options applied to the resulting view set builder.
-     * @return The populated {@link Builder}.
-     */
-    @Override
-    public Builder readFromFile(File cameraFile, ViewSetLoadOptions loadOptions) throws Exception
-    {
-        Builder builder;
-        try (InputStream stream = new FileInputStream(cameraFile))
-        {
-            loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
-            if (loadOptions.mainDirectories.supportingFilesDirectory == null)
-            {
-                loadOptions.mainDirectories.supportingFilesDirectory = loadOptions.mainDirectories.projectRoot;
-            }
-
-            builder = readForLooseFiles(stream, loadOptions.mainDirectories, loadOptions.disabledImages);
-        }
-
-        if (loadOptions.geometryFile != null)
-        {
-            builder.setGeometryFile(loadOptions.geometryFile);
-        }
-
-        if (loadOptions.masksDirectory != null)
-        {
-            builder.setMasksDirectory(loadOptions.masksDirectory);
-        }
-
-        // Set even if orientationViewName is null (to use default orientation in that case).
-        builder.setOrientationViewName(loadOptions.orientationViewName)
-            .setOrientationViewRotation(loadOptions.orientationViewRotation);
-
-        if (loadOptions.uuid != null)
-        {
-            builder.setUUID(loadOptions.uuid);
-        }
-
-        return builder;
+        return readForLooseFiles(stream, directories);
     }
 
     /**
@@ -212,12 +164,10 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * Cameras whose label matches a disabledImage entry are skipped.
      * @param stream stream The Agisoft camera XML stream to parse.
      * @param directories the project directory used when constructing {@code Builder}
-     * @param disabledImages Camera labels (as {@code new File(label)}) to skip. May be null.
      */
-    public static Builder readForLooseFiles(InputStream stream, ViewSetDirectories directories,
-        Collection<File> disabledImages) throws XMLStreamException
+    public static Builder readForLooseFiles(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
     {
-        return readFromStream(stream, directories, null, null, null, false, disabledImages);
+        return readFromStream(stream, directories, null, null, null, false);
     }
 
     /**
@@ -227,7 +177,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     public static Builder readForMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
         Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap) throws XMLStreamException
     {
-        return readFromStream(stream, directories, modelID, imagePathMap, maskPathMap, true, null);
+        return readFromStream(stream, directories, modelID, imagePathMap, maskPathMap, true);
     }
 
     /**
@@ -243,13 +193,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param ignoreGlobalTransforms When true (PSX import), the global transform is ignored and the model
      *                               transform drives projective texture mapping. When false (XML import),
      *                               the inverted global transform is used instead.
-     * @param disabledImages Loose-file disabled-image filter, matched against camera labels via {@code new File(label)}.
-     *                       Ignored when {@code imagePathMap} is non-null, since the Metashape-chunk path
-     *                       filters disabled images upstream when building the path map.
      */
     private static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
-        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms,
-        Collection<File> disabledImages)
+        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new HashMap<>(16);
@@ -872,52 +818,58 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             final int camID = Integer.parseInt(cam.id);
             final File imgFile;
 
-            if (imagePathMap == null) {
-                // Loose-file path: cam.filename is the camera label from the XML.
-                // disabledImages was populated upstream from the same label source
-                // (MetashapeViewSelectionModel uses `new File(view.name)` where view.name
-                // is also the XML camera label), so File equality matches.
-                if (disabledImages != null && disabledImages.contains(new File(cam.filename))) {
-                    ++nums_of_disabled_cameras;
-                    continue;
-                }
-                imgFile = new File(cam.filename);
-            } else {
-                String resolvedPath = imagePathMap.get(camID);
-                if (resolvedPath == null) {
-                    ++nums_of_disabled_cameras;
-                    continue;
-                }
-                imgFile = new File(resolvedPath);
-            }
-            // camera's coordinates are expressed in optimization coordinates
-            // we're planning to work in exported model coordinates
-            // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
-            // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
-            Vector3 displacement = cam.transform.getColumn(3).getXYZ();
-            Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
-                .times(cam.transform);
-
-            // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
-            // Rather than actually applying the scale, we just adjusted the camera translation above.
-            // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
-            // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
-            // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
-            // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
-            cam.transform = unscaledCamTransform.times(projTexWorldTransform);
-
-            builder.setCurrentCameraPose(cam.transform);
-
-            builder.setCurrentCameraProjectionIndex(cam.sensor.index);
-            builder.setCurrentLightIndex(cam.lightIndex);
-            builder.setCurrentImageFile(imgFile);
-
-            if (maskPathMap != null && maskPathMap.containsKey(camID))
+            if (imagePathMap != null)
             {
-                builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
+                String resolvedPath = imagePathMap.get(camID);
+                if (resolvedPath == null)
+                {
+                    // File missing from image map (loading from metashape chunk, typically)
+                    ++nums_of_disabled_cameras;
+                    imgFile = null;
+                }
+                else
+                {
+                    // File found in image map
+                    imgFile = new File(resolvedPath);
+                }
+            }
+            else
+            {
+                // Loose-file path: cam.filename is the camera label from the XML.
+                imgFile = new File(cam.filename);
             }
 
-            builder.commitCurrentCameraPose();
+            if (imgFile != null)
+            {
+                // camera's coordinates are expressed in optimization coordinates
+                // we're planning to work in exported model coordinates
+                // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
+                // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
+                Vector3 displacement = cam.transform.getColumn(3).getXYZ();
+                Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
+                    .times(cam.transform);
+
+                // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
+                // Rather than actually applying the scale, we just adjusted the camera translation above.
+                // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
+                // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
+                // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
+                // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
+                cam.transform = unscaledCamTransform.times(projTexWorldTransform);
+
+                builder.setCurrentCameraPose(cam.transform);
+
+                builder.setCurrentCameraProjectionIndex(cam.sensor.index);
+                builder.setCurrentLightIndex(cam.lightIndex);
+                builder.setCurrentImageFile(imgFile);
+
+                if (maskPathMap != null && maskPathMap.containsKey(camID))
+                {
+                    builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
+                }
+
+                builder.commitCurrentCameraPose();
+            }
         }
 
         for (int i = 0; i < nextLightIndex; i++)
