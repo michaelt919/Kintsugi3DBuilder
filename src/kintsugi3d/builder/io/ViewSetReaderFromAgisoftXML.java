@@ -154,41 +154,88 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             directories.supportingFilesDirectory = directories.projectRoot;
         }
 
-        return readFromStream(stream, directories, null, null, null, false);
+        return readForLooseFiles(stream, directories, null);
+    }
+
+    @Override
+    public Builder readFromFile(File cameraFile, ViewSetLoadOptions loadOptions) throws Exception
+    {
+        Builder builder;
+        try (InputStream stream = new FileInputStream(cameraFile))
+        {
+            loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
+            if (loadOptions.mainDirectories.supportingFilesDirectory == null)
+            {
+                loadOptions.mainDirectories.supportingFilesDirectory = loadOptions.mainDirectories.projectRoot;
+            }
+
+            builder = readForLooseFiles(stream, loadOptions.mainDirectories, loadOptions.disabledImages);
+        }
+
+        if (loadOptions.geometryFile != null)
+        {
+            builder.setGeometryFile(loadOptions.geometryFile);
+        }
+
+        if (loadOptions.masksDirectory != null)
+        {
+            builder.setMasksDirectory(loadOptions.masksDirectory);
+        }
+
+        // Set even if orientationViewName is null (to use default orientation in that case).
+        builder.setOrientationViewName(loadOptions.orientationViewName)
+            .setOrientationViewRotation(loadOptions.orientationViewRotation);
+
+        if (loadOptions.uuid != null)
+        {
+            builder.setUUID(loadOptions.uuid);
+        }
+
+        return builder;
     }
 
     /**
-     * Loads a view set from an input file.
-     * The root directory and the supporting files directory will be set as specified.
-     * The supporting files directory may be overridden by a directory specified in the file.
-     * * @param stream
+     * Loads a view set from a loose-file XML camera file.
+     * Image filenames come from the XML
+     * Cameras whose label matches a disabledImage entry are skipped.
      *
-     * @param imagePathMap             A map of image IDs to paths, if passed this will override the paths being assigned to the images.
-     * @param ignoreGlobalTransforms   Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
-     * @return
-     * @throws XMLStreamException
+     * @param disabledImages Camera labels (as {@code new File(label)}) to skip. May be null.
      */
-    public static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
-        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms)
+    public static Builder readForLooseFiles(InputStream stream, ViewSetDirectories directories,
+        Collection<File> disabledImages) throws XMLStreamException
+    {
+        return readInternal(stream, directories, null, null, null, false, disabledImages);
+    }
+
+    /**
+     * Loads a view set from a Metashape psx chunk's extracted XML.
+     * Image and mask filenames come from a pre-built path map; disabled images already be filtered out of imagePathMap.
+     */
+    public static Builder readForMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
+        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap) throws XMLStreamException
+    {
+        return readInternal(stream, directories, modelID, imagePathMap, maskPathMap, true, null);
+    }
+
+    private static Builder readInternal(InputStream stream, ViewSetDirectories directories, String modelID,
+        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms,
+        Collection<File> disabledImages)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new HashMap<>(16);
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
         {
-            // Attempt to sort the camera IDs which are probably integers but not guaranteed to be.
             try
             {
                 int id1 = Integer.parseInt(c1.id);
 
                 try
                 {
-                    // Both are integers; compare as numbers.
                     int id2 = Integer.parseInt(c2.id);
                     return Integer.compare(id1, id2);
                 }
                 catch (NumberFormatException e)
                 {
-                    // id1 is a number but id2 isn't
                     return -1;
                 }
             }
@@ -796,6 +843,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             final File imgFile;
 
             if (imagePathMap == null) {
+                // Loose-file path: cam.filename is the camera label from the XML.
+                // disabledImages was populated upstream from the same label source
+                // (MetashapeViewSelectionModel uses `new File(view.name)` where view.name
+                // is also the XML camera label), so File equality matches.
+                if (disabledImages != null && disabledImages.contains(new File(cam.filename))) {
+                    ++nums_of_disabled_cameras;
+                    continue;
+                }
                 imgFile = new File(cam.filename);
             } else {
                 String resolvedPath = imagePathMap.get(camID);
@@ -918,10 +973,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     directories.supportingFilesDirectory = null;
                     directories.fullResImagesNeedUndistort = true;
 
-                    // Create and store ViewSet
-                    Builder viewSetBuilder = readFromStream(fileStream, directories,
+                    // cameraPathsMap was already built with disabledImageFiles excluded
+                    // (see metashapeChunk.buildCameraPathsMap above), so cameras whose images
+                    // are disabled simply won't be in the map and will be skipped downstream.
+                    Builder viewSetBuilder = readForMetashapeChunk(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
-                            cameraPathsMap, maskPathsMap, true);
+                            cameraPathsMap, maskPathsMap);
 
                     // Send masksDirectory to viewset and have it process them once the progress bars are ready for it
                     viewSetBuilder.setMasksDirectory(masksDir);
