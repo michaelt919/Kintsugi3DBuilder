@@ -66,16 +66,14 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             // Run shader program to fill framebuffer with per-pixel information.
             drawable.draw(framebuffer);
 
-//            if (SpecularOptimization.DEBUG)
+//            try
 //            {
-//                try
-//                {
-//                    framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "average.png"));
-//                }
-//                catch (IOException e)
-//                {
-//                    e.printStackTrace();
-//                }
+//                framebuffer.getTextureReaderForColorAttachment(0)
+//                    .saveToFile("PNG", new File(resources.getViewSet().getSupportingFilesDirectory(), "average.png"));
+//            }
+//            catch (IOException e)
+//            {
+//                e.printStackTrace();
 //            }
 
             float[] averages = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
