@@ -12,6 +12,8 @@
 package kintsugi3d.builder.io;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 
 public class ViewSetLoadOptions
@@ -22,4 +24,5 @@ public class ViewSetLoadOptions
     public String orientationViewName;
     public double orientationViewRotation;
     public UUID uuid;
+    public Collection<File> disabledImages = new ArrayList<>(8);
 }

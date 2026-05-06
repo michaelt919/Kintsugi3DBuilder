@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.rendering;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -173,6 +175,22 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
+        int cameraCount = loadedViewSet.getCameraPoseCount();
+        if (cameraCount > 1024)
+        {
+            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.warn(e);
+            }
+        }
+        boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
+        if (hasUnsupportedCorrections && (progressMonitor != null)) {
+            IOException e = new IOException("This project uses 'Fit additional corrections' which are not supported.");
+            progressMonitor.warn(e);
+        }
+
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
@@ -212,6 +230,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         newInstance = newItem;
 
         new TabsManager(loadedViewSet, newInstance).rebuildTabs();
+
     }
 
     @Override
@@ -271,7 +290,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
                 .setImageLoadOptions(loadOptionsModel)
                 .loadFromMetashapeModel(model)
                 .setOrientationView(orientationView, rotation);
-
             loadInstance(parentChunk.getFramePath(), builder);
         }
         catch (UserCancellationException e)

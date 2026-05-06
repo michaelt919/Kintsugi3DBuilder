@@ -40,7 +40,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan/Metashape.
+ * Handles loading view sets from a Agisoft camera XML file.
  */
 public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
@@ -58,7 +58,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A private class for representing a "sensor" in an Agisoft PhotoScan/Metashape XML file.
+     * A private class for representing a "sensor" in an Agisoft XML file.
      *
      * @author Michael Tetzlaff
      */
@@ -89,7 +89,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A private class for representing a "camera" in an Agisoft PhotoScan/Metashape XML file.
+     * A private class for representing a "camera" in an Agisoft XML file.
      *
      * @author Michael Tetzlaff
      */
@@ -138,13 +138,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * Loads a view set from an input file.
-     * The root directory will be set as specified.
-     * The supporting files directory will default to the root directory.
+     * Loads a view set from an Agisoft camera XML stream (a standalone exported {@code cameras.xml}
+     * or an equivalent loose-file XML, not a chunk's {@code doc.xml} from inside a PSX archive).
+     * The project root is taken from {@code directories.projectRoot}. The supporting files directory
+     * defaults to the project root when not already set. No disabled-image filtering is applied.
      *
-     * @param stream The file to load
-     * @return
-     * @throws XMLStreamException
+     * @param stream The Agisoft camera XML stream to parse.
+     * @param directories Project directory used when constructing the builder.
+     * @return The populated {@link Builder}.
      */
     @Override
     public Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
@@ -154,21 +155,46 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             directories.supportingFilesDirectory = directories.projectRoot;
         }
 
+        return readFromLooseFiles(stream, directories);
+    }
+
+    /**
+     * Loads a view set from a loose-file XML camera file.
+     * Image filenames come from the XML
+     * Cameras whose label matches a disabledImage entry are skipped.
+     * @param stream stream The Agisoft camera XML stream to parse.
+     * @param directories the project directory used when constructing {@code Builder}
+     */
+    private static Builder readFromLooseFiles(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
+    {
         return readFromStream(stream, directories, null, null, null, false);
     }
 
     /**
-     * Loads a view set from an input file.
-     * The root directory and the supporting files directory will be set as specified.
-     * The supporting files directory may be overridden by a directory specified in the file.
-     * * @param stream
-     *
-     * @param imagePathMap             A map of image IDs to paths, if passed this will override the paths being assigned to the images.
-     * @param ignoreGlobalTransforms   Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
-     * @return
-     * @throws XMLStreamException
+     * Loads a view set from a Metashape psx chunk's extracted XML.
+     * Image and mask filenames come from a pre-built path map; disabled images already be filtered out of imagePathMap.
      */
-    public static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
+    private static Builder readFromMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
+        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap) throws XMLStreamException
+    {
+        return readFromStream(stream, directories, modelID, imagePathMap, maskPathMap, true);
+    }
+
+    /**
+     * Core XML stream parser shared by the loose-file and Metashape-chunk paths.
+     * transforms, and produces a populated view set {@link Builder}.
+     *
+     * @param stream The XML stream (a chunk's {@code doc.xml} or a standalone exported camera file).
+     * @param directories Project directory layout used when constructing the builder and resolving image paths.
+     * @param modelID When non-null, only the {@code <model>} entry whose id matches contributes to the model transform.
+     * @param imagePathMap Camera-ID → image path map for the Metashape-chunk path. When null, the loose-file
+     *                     path is used and image filenames come from each camera's {@code label} attribute.
+     * @param maskPathMap Camera-ID → mask path map; may be null.
+     * @param ignoreGlobalTransforms When true (PSX import), the global transform is ignored and the model
+     *                               transform drives projective texture mapping. When false (XML import),
+     *                               the inverted global transform is used instead.
+     */
+    private static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
         Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
@@ -214,6 +240,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         int lightIndex = -1;
         int nextLightIndex = 0;
         int defaultLightIndex = -1;
+        int disabledCameraCount = 0;
 
         Matrix4 globalTransform = Matrix4.IDENTITY;
         float globalScale = 1.0f;
@@ -233,6 +260,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
         XMLStreamReader reader = factory.createXMLStreamReader(stream);
+        boolean hasUnsupportedCorrections = false;
         while (reader.hasNext())
         {
             int event = reader.next();
@@ -572,6 +600,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "model":
                             currentModelID = reader.getAttributeValue(null, "id");
                             break;
+                        case "corrections":
+                            hasUnsupportedCorrections = true;
+                            break;
                         case "projections":
                         case "depth":
                         case "frames":
@@ -600,7 +631,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "depth_map":
                         case "dense_cloud":
                             break;
-
                         default:
 //                            LOG.debug("Unexpected tag '{}'", reader.getLocalName());
                             break;
@@ -788,48 +818,58 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
         {
-            // camera's coordinates are expressed in optimization coordinates
-            // we're planning to work in exported model coordinates
-            // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
-            // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
-            Vector3 displacement = cam.transform.getColumn(3).getXYZ();
-            Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
-                .times(cam.transform);
-
-            // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
-            // Rather than actually applying the scale, we just adjusted the camera translation above.
-            // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
-            // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
-            // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
-            // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
-            cam.transform = unscaledCamTransform.times(projTexWorldTransform);
-
-            builder.setCurrentCameraPose(cam.transform);
-
-            builder.setCurrentCameraProjectionIndex(cam.sensor.index);
-            builder.setCurrentLightIndex(cam.lightIndex);
-
             int camID = Integer.parseInt(cam.id);
+            File imgFile = null;
 
-            if (imagePathMap != null && imagePathMap.containsKey(camID))
+            if (imagePathMap == null)
             {
-                builder.setCurrentImageFile(new File(imagePathMap.get(camID)));
+                imgFile = new File(cam.filename);
             }
             else
             {
-                builder.setCurrentImageFile(new File(cam.filename));
-                if (imagePathMap != null)
+                String resolvedPath = imagePathMap.get(camID);
+                if (resolvedPath == null)
                 {
-                    LOG.error("Camera path override not found for camera: {}", camID);
+                    ++disabledCameraCount;
+                    LOG.warn("Cannot find camera: {}", camID);
+                }
+                else
+                {
+                    imgFile = new File(resolvedPath);
                 }
             }
 
-            if (maskPathMap != null && maskPathMap.containsKey(camID))
+            if (imgFile != null)
             {
-                builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
-            }
+                // camera's coordinates are expressed in optimization coordinates
+                // we're planning to work in exported model coordinates
+                // so we need to scale the camera's displacement by 1 / projTexWorldScaleCombined
+                // unscaledCamTransform should basically be equivalent to scale(1 / projTexWorldScaleCombined) * cam.transform * scale(projTexWorldScaleCombined)
+                Vector3 displacement = cam.transform.getColumn(3).getXYZ();
+                Matrix4 unscaledCamTransform = Matrix4.translate(displacement.times(1.0f / projTexWorldScaleCombined).minus(displacement))
+                    .times(cam.transform);
 
-            builder.commitCurrentCameraPose();
+                // Technically we'd need to also apply scale from global or model tramsform to cam.transform.
+                // Rather than actually applying the scale, we just adjusted the camera translation above.
+                // We could apply global scale after unscaledCamTransform (scale(projTexWorldScaleCombined) * unscaledCamTransform)
+                // and it would be equivalent to applying scale before the original cam.transform (i.e. cam.transform * scale(projTexWorldScaleCombined))
+                // Keeping the original scale avoids breaking code that assumes rendering at the scale of the raw geometry
+                // but doesn't affect projective texture mapping if scale would be the last transformation in the sequence
+                cam.transform = unscaledCamTransform.times(projTexWorldTransform);
+
+                builder.setCurrentCameraPose(cam.transform);
+
+                builder.setCurrentCameraProjectionIndex(cam.sensor.index);
+                builder.setCurrentLightIndex(cam.lightIndex);
+                builder.setCurrentImageFile(imgFile);
+
+                if (maskPathMap != null && maskPathMap.containsKey(camID))
+                {
+                    builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
+                }
+
+                builder.commitCurrentCameraPose();
+            }
         }
 
         for (int i = 0; i < nextLightIndex; i++)
@@ -838,12 +878,41 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             builder.addLight(Vector3.ZERO, new Vector3(1.0f));
         }
 
+        if (disabledCameraCount > 0)
+        {
+            LOG.warn(
+                    "Skipped {} of {} cameras absent from image directory",
+                    disabledCameraCount,
+                    cameras.length
+            );
+        }
+
+        if (hasUnsupportedCorrections)
+        {
+            LOG.warn(
+                    "Metashape project uses 'Fit additional corrections' which are not supported. "
+                    + "Results may be inaccurate. Consider re-calibrating without additional corrections."
+            );
+        }
+
         // Set full res image directory according to input argument
         builder.setFullResImageDirectory(directories.fullResImageDirectory);
 
+        //Set if camera contains corrections tag
+        builder.setHasUnsupportedCorrections(hasUnsupportedCorrections);
         return builder;
     }
 
+    /**
+     * Loads a view set from a Metashape PSX chunk.
+     * Disabled images are filtered out upstream while building the
+     * camera-ID → image path map, so cameras whose images are disabled are absent from the map and
+     * skipped during view set assembly.
+     *
+     * @param metashapeChunk The Metashape chunk to load.
+     * @param disabledImageFiles Image labels to exclude from the camera path map; may be null or empty.
+     * @return A builder populated with the chunk's cameras, masks, geometry, and full-res image directory.
+     */
     public static Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk, Collection<File> disabledImageFiles)
         throws IOException, XMLStreamException, MissingImagesException
     {
@@ -901,10 +970,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     directories.supportingFilesDirectory = null;
                     directories.fullResImagesNeedUndistort = true;
 
-                    // Create and store ViewSet
-                    Builder viewSetBuilder = readFromStream(fileStream, directories,
+                    // cameraPathsMap was already built with disabledImageFiles excluded
+                    // (see metashapeChunk.buildCameraPathsMap above), so cameras whose images
+                    // are disabled simply won't be in the map and will be skipped downstream.
+                    Builder viewSetBuilder = readFromMetashapeChunk(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
-                            cameraPathsMap, maskPathsMap, true);
+                            cameraPathsMap, maskPathsMap);
 
                     // Send masksDirectory to viewset and have it process them once the progress bars are ready for it
                     viewSetBuilder.setMasksDirectory(masksDir);
@@ -947,6 +1018,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
     }
 
+    /**
+     * Reads mask paths from a Metashape masks zip's {@code doc.xml}, keyed by camera ID.
+     *
+     * @param masksZipFile The masks zip to inspect.
+     * @return A camera-ID → mask path map containing one entry per {@code <mask>} element in the document.
+     */
     private static Map<Integer, String> extractMaskFilenames(File masksZipFile) throws IOException
     {
         LOG.info("Unzipping masks folder...");

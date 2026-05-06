@@ -206,6 +206,28 @@ public final class ViewSet implements ReadonlyViewSet
     private final GeneralSettingsModel projectSettings = new SimpleGeneralSettingsModel();
     private final Map<String, File> resourceMap = new HashMap<>(32);
 
+    private boolean hasUnsupportedCorrections = false;
+
+
+    /**
+     *
+     * @return true if the camera file being loaded contains correction flag, false otherwise
+     */
+    public boolean hasUnsupportedCorrections()
+    {
+        return this.hasUnsupportedCorrections;
+    }
+
+    /**
+     * Set whether the camera file being loaded contains correction flag that is currently unsupported.
+     * @param hasUnsupportedCorrections true if the camera file contains correction flag, false otherwise
+     * @return ViewSet.Builder instance
+     */
+    public void setHasUnsupportedCorrections(boolean hasUnsupportedCorrections)
+    {
+        this.hasUnsupportedCorrections = hasUnsupportedCorrections;
+    }
+
     @Override
     public Matrix3 getOrientationMatrix()
     {
@@ -249,6 +271,7 @@ public final class ViewSet implements ReadonlyViewSet
         private int lightIndex = 0;
         private File imageFile;
         private File maskFile;
+        private boolean hasUnsupportedCorrections;
 
         /**
          * Uses root directory as supporting files directory by default
@@ -310,6 +333,24 @@ public final class ViewSet implements ReadonlyViewSet
             result.imageFiles.add(imageFile);
             result.maskFiles.put(result.imageFiles.size() - 1, maskFile); // associate mask file with current image file index
             result.viewErrorMetrics.add(new ViewRMSE());
+            return this;
+        }
+
+        public Builder disableCamerasByImageFilename(Iterable<File> disabledImageFiles)
+        {
+            for (File f : disabledImageFiles)
+            {
+                int index = result.imageFiles.indexOf(f);
+
+                result.cameraPoseList.remove(index);
+                result.cameraPoseInvList.remove(index);
+                result.cameraProjectionIndexList.remove(index);
+                result.lightIndexList.remove(index);
+                result.imageFiles.remove(index);
+                result.maskFiles.remove(index);
+                result.viewErrorMetrics.remove(index);
+            }
+
             return this;
         }
 
@@ -477,6 +518,11 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setHasUnsupportedCorrections(boolean has) {
+            this.hasUnsupportedCorrections = has;
+            return this;
+        }
+
         public ViewSet finish()
         {
             if (needsClipPlanes)
@@ -504,6 +550,8 @@ public final class ViewSet implements ReadonlyViewSet
                 // Make sure the supporting files directory exists
                 result.getSupportingFilesDirectory().mkdirs();
             }
+
+            this.hasUnsupportedCorrections = result.hasUnsupportedCorrections;
 
             return result;
         }
