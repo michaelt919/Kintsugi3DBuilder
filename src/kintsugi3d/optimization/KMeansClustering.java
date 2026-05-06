@@ -82,6 +82,11 @@ public class KMeansClustering
                         .orElse(Double.MAX_VALUE);
                     cdf[p + 1] = cdf[p] + minDistance * minDistance;
                 }
+                else
+                {
+                    // Forward the old cdf value if the current sample is not valid (and thus has zero contribution).
+                    cdf[p + 1] = cdf[p];
+                }
             }
 
             double x = random.nextDouble() * cdf[colorMap.size() - 1];

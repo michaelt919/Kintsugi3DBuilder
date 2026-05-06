@@ -237,8 +237,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         int lightIndex = -1;
         int nextLightIndex = 0;
         int defaultLightIndex = -1;
-        int nums_of_disabled_cameras = 0;
-        boolean hasAdditionalCorrections = false;
+        int disabledCameraCount = 0;
 
         Matrix4 globalTransform = Matrix4.IDENTITY;
         float globalScale = 1.0f;
@@ -258,6 +257,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
         XMLStreamReader reader = factory.createXMLStreamReader(stream);
+        boolean hasUnsupportedCorrections = false;
         while (reader.hasNext())
         {
             int event = reader.next();
@@ -598,7 +598,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             currentModelID = reader.getAttributeValue(null, "id");
                             break;
                         case "corrections":
-                            hasAdditionalCorrections = true;
+                            hasUnsupportedCorrections = true;
                             break;
                         case "projections":
                         case "depth":
@@ -815,28 +815,25 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
         {
-            final int camID = Integer.parseInt(cam.id);
-            final File imgFile;
+            int camID = Integer.parseInt(cam.id);
+            File imgFile = null;
 
-            if (imagePathMap != null)
+            if (imagePathMap == null)
+            {
+                imgFile = new File(cam.filename);
+            }
+            else
             {
                 String resolvedPath = imagePathMap.get(camID);
                 if (resolvedPath == null)
                 {
-                    // File missing from image map (loading from metashape chunk, typically)
-                    ++nums_of_disabled_cameras;
-                    imgFile = null;
+                    ++disabledCameraCount;
+                    LOG.warn("Cannot find camera: {}", camID);
                 }
                 else
                 {
-                    // File found in image map
                     imgFile = new File(resolvedPath);
                 }
-            }
-            else
-            {
-                // Loose-file path: cam.filename is the camera label from the XML.
-                imgFile = new File(cam.filename);
             }
 
             if (imgFile != null)
@@ -877,24 +874,29 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
             builder.addLight(Vector3.ZERO, new Vector3(1.0f));
         }
-        if (nums_of_disabled_cameras > 0) {
-            LOG.info(
+
+        if (disabledCameraCount > 0)
+        {
+            LOG.warn(
                     "Skipped {} of {} cameras absent from image directory",
-                    nums_of_disabled_cameras,
+                    disabledCameraCount,
                     cameras.length
             );
         }
-        if (hasAdditionalCorrections)
+
+        if (hasUnsupportedCorrections)
         {
             LOG.warn(
                     "Metashape project uses 'Fit additional corrections' which are not supported. "
                     + "Results may be inaccurate. Consider re-calibrating without additional corrections."
             );
         }
+
         // Set full res image directory according to input argument
         builder.setFullResImageDirectory(directories.fullResImageDirectory);
-        builder.setHasUnSupportedCorrection(hasAdditionalCorrections);
 
+        //Set if camera contains corrections tag
+        builder.setHasUnsupportedCorrections(hasUnsupportedCorrections);
         return builder;
     }
 

@@ -178,17 +178,17 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         int cameraCount = loadedViewSet.getCameraPoseCount();
         if (cameraCount > 1024)
         {
-            LOG.warn("Dataset has {} cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount);
-            Platform.runLater(() -> {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Large Camera Count");
-                alert.setHeaderText("Dataset has " + cameraCount + " cameras");
-                alert.setContentText(
-                        "This dataset has more than 1024 cameras, which may fail to load "
-                                + "on many graphics cards due to texture array size limits.\n\n"
-                                + "Consider reducing the number of cameras in your photogrammetry project.");
-                alert.showAndWait();
-            });
+            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.warn(e);
+            }
+        }
+        boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
+        if (hasUnsupportedCorrections && (progressMonitor != null)) {
+            IOException e = new IOException("This project uses 'Fit additional corrections' which are not supported.");
+            progressMonitor.warn(e);
         }
 
         List<File> imgFiles = loadedViewSet.getImageFiles();

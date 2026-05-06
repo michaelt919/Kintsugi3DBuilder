@@ -55,6 +55,8 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
     {
         this(geometry.context, width, height);
 
+        context.getState().disableBackFaceCulling();
+
         // Use a shader program to initialize the framebuffer once
         try(ProgramObject<ContextType> program = geometry.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))

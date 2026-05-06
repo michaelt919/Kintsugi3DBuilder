@@ -102,7 +102,7 @@ public final class ProjectIO
             @Override
             public void warn(Throwable e)
             {
-                ExceptionHandling.error("An error occurred while loading project", e);
+                ExceptionHandling.error("A potential problem occurred while loading project", e);
             }
         });
     }
