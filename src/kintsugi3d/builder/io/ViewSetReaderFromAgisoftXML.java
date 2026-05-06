@@ -155,7 +155,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             directories.supportingFilesDirectory = directories.projectRoot;
         }
 
-        return readForLooseFiles(stream, directories);
+        return readFromLooseFiles(stream, directories);
     }
 
     /**
@@ -165,7 +165,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param stream stream The Agisoft camera XML stream to parse.
      * @param directories the project directory used when constructing {@code Builder}
      */
-    public static Builder readForLooseFiles(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
+    private static Builder readFromLooseFiles(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
     {
         return readFromStream(stream, directories, null, null, null, false);
     }
@@ -174,7 +174,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * Loads a view set from a Metashape psx chunk's extracted XML.
      * Image and mask filenames come from a pre-built path map; disabled images already be filtered out of imagePathMap.
      */
-    public static Builder readForMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
+    private static Builder readFromMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
         Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap) throws XMLStreamException
     {
         return readFromStream(stream, directories, modelID, imagePathMap, maskPathMap, true);
@@ -201,17 +201,20 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         Map<String, Sensor> sensorSet = new HashMap<>(16);
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
         {
+            // Attempt to sort the camera IDs which are probably integers but not guaranteed to be.
             try
             {
                 int id1 = Integer.parseInt(c1.id);
 
                 try
                 {
+                    // Both are integers; compare as numbers.
                     int id2 = Integer.parseInt(c2.id);
                     return Integer.compare(id1, id2);
                 }
                 catch (NumberFormatException e)
                 {
+                    // id1 is a number but id2 isn't
                     return -1;
                 }
             }
@@ -970,7 +973,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // cameraPathsMap was already built with disabledImageFiles excluded
                     // (see metashapeChunk.buildCameraPathsMap above), so cameras whose images
                     // are disabled simply won't be in the map and will be skipped downstream.
-                    Builder viewSetBuilder = readForMetashapeChunk(fileStream, directories,
+                    Builder viewSetBuilder = readFromMetashapeChunk(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
                             cameraPathsMap, maskPathsMap);
 
