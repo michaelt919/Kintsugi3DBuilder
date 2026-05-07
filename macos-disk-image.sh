@@ -18,5 +18,5 @@ OUTPUT_DMG=$5
 
 unzip -o "$K3DBUILDER_ZIP_PATH" -d "$BUILD_DIRECTORY" # Builder: unzip with overwriting (-o)
 cp -a "viewer/Kintsugi 3D Viewer.app" "$K3D_STAGING_FOLDER/Kintsugi 3D Viewer.app" # Viewer: copy as archive (-a)
-./staging-folder.sh "$K3D_STAGING_FOLDER" # Create applications alias and layout window
+./macos-staging-folder.sh "$K3D_STAGING_FOLDER" # Create applications alias and layout window
 hdiutil create -volname "$FRIENDLY_NAME" -srcfolder "$K3D_STAGING_FOLDER" -ov -format UDZO "$OUTPUT_DMG" # create DMG

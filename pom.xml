@@ -225,7 +225,7 @@
                                 <configuration>
                                     <executable>bash</executable>
                                     <arguments>
-                                        <argument>${project.basedir}/macos/disk-image.sh</argument>
+                                        <argument>${project.basedir}/macos-disk-image.sh</argument>
                                         <argument>Kintsugi 3D Builder ${project.version}</argument>
                                         <argument>${project.build.directory}</argument>
                                         <argument>${project.build.directory}/${project.artifactId}-${project.version}-distribution-macos.zip</argument>
