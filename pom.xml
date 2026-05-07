@@ -150,28 +150,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.digitalmediaserver</groupId>
-                <artifactId>nsis-maven-plugin</artifactId>
-                <version>1.0.3</version>
-                <configuration>
-                    <injectHeaderFile>true</injectHeaderFile>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>build-windows-installer</id>
-                        <phase>install</phase>
-                        <configuration>
-                            <scriptFile>installer.nsi</scriptFile>
-                            <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
-                        </configuration>
-                        <goals>
-                            <goal>generate-headerfile</goal>
-                            <goal>make</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -221,7 +199,48 @@
             </properties>
         </profile>
         <profile>
-            <id>lwjgl-natives-windows-amd64</id>
+            <id>macos-install</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <lwjgl.natives>natives-macos</lwjgl.natives>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- Disk image for MacOS -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>create-dmg</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>bash</executable>
+                                    <arguments>
+                                        <argument>${project.basedir}/macos/disk-image.sh</argument>
+                                        <argument>Kintsugi 3D Builder ${project.version}</argument>
+                                        <argument>${project.build.directory}</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-distribution-macos.zip</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-macos.dmg</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>windows-amd64</id>
             <activation>
                 <os>
                     <family>windows</family>
@@ -231,6 +250,32 @@
             <properties>
                 <lwjgl.natives>natives-windows</lwjgl.natives>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.digitalmediaserver</groupId>
+                        <artifactId>nsis-maven-plugin</artifactId>
+                        <version>1.0.3</version>
+                        <configuration>
+                            <injectHeaderFile>true</injectHeaderFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build-windows-installer</id>
+                                <phase>install</phase>
+                                <configuration>
+                                    <scriptFile>installer.nsi</scriptFile>
+                                    <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
+                                </configuration>
+                                <goals>
+                                    <goal>generate-headerfile</goal>
+                                    <goal>make</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>lwjgl-natives-linux-amd64</id>
