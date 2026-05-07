@@ -48,7 +48,7 @@ tell application "Finder"
         -- Position icons
         set position of item "Kintsugi 3D Builder.app" of container window to {200, 100}
         set position of item "Kintsugi 3D Viewer.app" of container window to {200, 250}
-        set position of item "Applications" of container window to {650, 150}
+        set position of item "Applications" of container window to {700, 150}
 
         close
         open
