@@ -26,23 +26,24 @@ public class ExceptionHandling
 
     public static void error(String message, Throwable e)
     {
-        LOG.error("{}:", message, e);
-        showAlert(message);
+        LOG.error("{}: {}", message, e);
+        showAlert(message, e);
     }
 
     public static void warn(String message, Throwable e)
     {
-        LOG.warn("{}:", message, e);
-        showAlert(message);
+        LOG.warn("{}: {}", message, e);
+        showAlert(message, e);
     }
 
-    private static void showAlert(String message)
+    private static void showAlert(String message, Throwable e)
     {
         Platform.runLater(() ->
         {
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(AlertType.NONE, String.format("%s\nSee the log for more info.", message), ok, showLog);
+            Alert alert = new Alert(AlertType.NONE,
+                String.format("%s:\n%s\nSee the log for more info.", message, e.getMessage()), ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
                 event -> ExperienceManager.getInstance().getExperience("Log").tryOpen());
             alert.show();

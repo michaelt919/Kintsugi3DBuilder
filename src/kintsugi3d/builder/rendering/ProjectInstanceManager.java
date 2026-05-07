@@ -176,17 +176,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     {
         loadedViewSet = builder.getViewSet();
         int cameraCount = loadedViewSet.getCameraPoseCount();
-        if (cameraCount > 1024)
+        if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
-
-            if (progressMonitor != null)
-            {
-                progressMonitor.warn(e);
-            }
+            progressMonitor.warn(e);
         }
         boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
-        if (hasUnsupportedCorrections && (progressMonitor != null)) {
+        if (hasUnsupportedCorrections && progressMonitor != null)
+        {
             IOException e = new IOException("This project uses 'Fit additional corrections' which are not supported.");
             progressMonitor.warn(e);
         }

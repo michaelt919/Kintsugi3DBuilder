@@ -518,8 +518,8 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder setHasUnsupportedCorrections(boolean has) {
-            this.hasUnsupportedCorrections = has;
+        public Builder setHasUnsupportedCorrections(boolean hasUnsupportedCorrections) {
+            this.hasUnsupportedCorrections = hasUnsupportedCorrections;
             return this;
         }
 
@@ -551,7 +551,7 @@ public final class ViewSet implements ReadonlyViewSet
                 result.getSupportingFilesDirectory().mkdirs();
             }
 
-            this.hasUnsupportedCorrections = result.hasUnsupportedCorrections;
+            result.hasUnsupportedCorrections = this.hasUnsupportedCorrections;
 
             return result;
         }

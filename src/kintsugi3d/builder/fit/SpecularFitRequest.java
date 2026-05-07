@@ -197,7 +197,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         }
         catch (IOException | ParserConfigurationException | TransformerException e)
         {
-            ExceptionHandling.error("Error executing specular fit request:", e);
+            ExceptionHandling.error("Error executing specular fit request", e);
         }
     }
 

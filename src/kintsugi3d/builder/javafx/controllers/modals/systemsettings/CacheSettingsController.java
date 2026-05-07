@@ -61,7 +61,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
             Desktop.getDesktop().open(file);
         }
         catch(IOException ioe){
-            ExceptionHandling.error("Failed to open project directory.", ioe);
+            ExceptionHandling.error("Failed to open project directory", ioe);
         }
     }
 

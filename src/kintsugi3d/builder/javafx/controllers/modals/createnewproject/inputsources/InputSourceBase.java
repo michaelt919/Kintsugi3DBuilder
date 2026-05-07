@@ -50,7 +50,7 @@ public abstract class InputSourceBase extends ViewSelectableBase implements Inpu
         }
         catch (Exception e)
         {
-            ExceptionHandling.error("Error initializing view selection.", e);
+            ExceptionHandling.error("Error initializing view selection", e);
         }
     }
 

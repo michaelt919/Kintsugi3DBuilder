@@ -627,7 +627,7 @@ public class MainWindowController
         }
         catch (IllegalStateException e)
         {
-            ExceptionHandling.error("Kintsugi 3D Viewer was not found on this computer. Check that it is installed.", e);
+            ExceptionHandling.error("Kintsugi 3D Viewer was not found on this computer. Check that it is installed", e);
         }
         catch (IOException|RuntimeException e)
         {

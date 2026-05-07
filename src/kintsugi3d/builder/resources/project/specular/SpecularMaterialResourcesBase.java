@@ -263,7 +263,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
             }
             catch (IOException e)
             {
-                ExceptionHandling.error("Error saving basis image thumbnails:", e);
+                ExceptionHandling.error("Error saving basis image thumbnails", e);
             }
         }
     }

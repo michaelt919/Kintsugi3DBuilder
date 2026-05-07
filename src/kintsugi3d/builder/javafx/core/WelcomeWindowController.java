@@ -320,7 +320,7 @@ public class WelcomeWindowController
             }
             catch (IOException ioe)
             {
-                ExceptionHandling.error("Failed to open project directory.", ioe);
+                ExceptionHandling.error("Failed to open project directory", ioe);
             }
         });
         openInExplorer.setStyle("-fx-text-fill: #FFFFFF");
