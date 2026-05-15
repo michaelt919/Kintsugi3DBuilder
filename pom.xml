@@ -205,9 +205,6 @@
                     <family>mac</family>
                 </os>
             </activation>
-            <properties>
-                <lwjgl.natives>natives-macos</lwjgl.natives>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
