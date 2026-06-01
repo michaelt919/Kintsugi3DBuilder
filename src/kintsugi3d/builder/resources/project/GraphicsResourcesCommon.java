@@ -68,6 +68,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
     /**
+     * A GPU buffer containing the indices of enabled and non-deleted cameras
+     */
+    public final UniformBuffer<ContextType> viewIndexBuffer;
+
+    /**
      * Contains the VBOs for positions, tex-coords, normals, and tangents
      */
     private final GeometryResources<ContextType> geometryResources;
@@ -128,6 +133,16 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         else
         {
             lightIndexBuffer = null;
+        }
+
+        // Store the view indices in a uniform buffer
+        if (viewSet != null && viewSet.getViewIndexData() != null)
+        {
+            viewIndexBuffer = context.createUniformBuffer().setData(viewSet.getViewIndexData());
+        }
+        else
+        {
+            viewIndexBuffer = null;
         }
 
         // Luminance map texture
@@ -430,6 +445,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         this.specularMaterialResources = specularMaterialResources == null ? SpecularMaterialResources.makeNull(context) : specularMaterialResources;
     }
 
+    // use update light or replace as model for refreshing
+
     /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
      * characteristics of this instance:
@@ -464,7 +481,9 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             .define("OCCLUSION_TEXTURE_ENABLED", specularMaterialResources.getOcclusionMap() != null)
             .define("ALBEDO_TEXTURE_ENABLED", specularMaterialResources.getAlbedoMap() != null)
             .define("ORM_TEXTURE_ENABLED", specularMaterialResources.getORMMap() != null)
+            .define("USE_VIEW_INDICES", true)
             .define("BASIS_ENABLED", basisEnabled);
+
 
         if (basisEnabled)
         {
@@ -497,6 +516,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             program.setUniformBuffer("LightIndices", this.lightIndexBuffer);
         }
 
+        if (this.viewIndexBuffer != null)
+        {
+            program.setUniformBuffer("viewIndices", this.viewIndexBuffer);
+        }
+
         getLuminanceMapResources().setupShaderProgram(program);
         getSpecularMaterialResources().setupShaderProgram(program);
     }
@@ -511,5 +535,6 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         this.geometryResources.close();
         this.specularMaterialResources.close();
         this.luminanceMapResources.close();
+        this.viewIndexBuffer.close();
     }
 }

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
@@ -22,15 +21,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CameraCardFactory implements ProjectDataCardFactory
 {
-    ReadonlyViewSet viewSet;
+    ViewSet viewSet;
 
-    public CameraCardFactory(ReadonlyViewSet viewSet)
+    public CameraCardFactory(ViewSet viewSet)
     {
         this.viewSet = viewSet;
     }
@@ -60,7 +60,28 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 {{
                     put("Resolution", res);
                     put("Size", (fullResFile.length() / (1024 * 1024)) + " MB");
-                }});
+                }},
+                Map.of("Delete Image", () ->
+                    {
+                        cardsModel.confirm("Delete Image", "Delete Image?", "This will delete the image from the project.",
+                            ()-> {
+                                try
+                                {
+                                    viewSet.deleteCamera(fullResFile);
+                                }
+                                catch (IOException e)
+                                {
+                                    throw new RuntimeException(e);
+                                }
+                                finally
+                                {
+                                    cardsModel.setCardList(createAllCards(cardsModel));
+                                }
+                            });
+                    },
+                   "Disable Image", () -> {}
+                )
+            );
         }
         catch (IOException e)
         {
@@ -94,9 +115,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
         int index = findIndexByCardUUID(cardsModel.getCardList(), id);
         if (index != -1 && viewSet != null)
         {
-            viewSet.deleteCamera(index);
+//            viewSet.deleteCamera(index);
         }
 
         cardsModel.deleteCard(card);
     }
+
 }
