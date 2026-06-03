@@ -69,10 +69,6 @@ public class CameraCardFactory implements ProjectDataCardFactory
                                 {
                                     viewSet.deleteCamera(fullResFile);
                                 }
-                                catch (IOException e)
-                                {
-                                    throw new RuntimeException(e);
-                                }
                                 finally
                                 {
                                     cardsModel.setCardList(createAllCards(cardsModel));

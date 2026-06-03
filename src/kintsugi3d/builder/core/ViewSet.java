@@ -58,6 +58,8 @@ public final class ViewSet implements ReadonlyViewSet
 
     private final ArrayList<ViewSetData> viewSetDataList;
 
+    private final ArrayList<ViewSetData> disabledViewSets;
+
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to perform projective texture mapping.
@@ -330,7 +332,7 @@ public final class ViewSet implements ReadonlyViewSet
         public Builder commitCurrentCameraPose()
         {
             ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f), cameraProjectionIndex,
-                    lightIndex, imageFile, maskFile, new ViewRMSE());
+                    result.viewSetDataList.size(), lightIndex, imageFile, maskFile, new ViewRMSE());
             result.viewSetDataList.add(currentCamera);
 //            result.cameraPoseList.add(cameraPose);
 //            result.cameraPoseInvList.add(cameraPose.quickInverse(0.002f));
@@ -629,6 +631,7 @@ public final class ViewSet implements ReadonlyViewSet
     public ViewSet(int initialCapacity)
     {
         viewSetDataList = new ArrayList<>(initialCapacity);
+        disabledViewSets = new ArrayList<>(initialCapacity);
 //        this.cameraPoseList = new ArrayList<>(initialCapacity);
 //        this.cameraPoseInvList = new ArrayList<>(initialCapacity);
 //        this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
@@ -801,6 +804,7 @@ public final class ViewSet implements ReadonlyViewSet
         else
         {
             int[] indexArray = new int[viewSetDataList.size()];
+//            Arrays.setAll(indexArray, i->viewSetDataList.get(i).viewIndex);
             for (int i = 0; i < viewSetDataList.size(); ++i)
             {
                 indexArray[i] = i;
@@ -953,27 +957,51 @@ public final class ViewSet implements ReadonlyViewSet
         return uuid;
     }
 
-    public void deleteCamera(File image) throws IOException {
-        int index = -1;
-        String imagePath = image.getPath().substring(0, image.getPath().lastIndexOf('.'));
-        for (int i = 0; i < viewSetDataList.size(); ++i)
+    private int findViewSetIndex(ArrayList<ViewSetData> list, File image)
+    {
+        String imagePath = removeExt(image.getAbsolutePath());
+        for (int i = 0; i < list.size(); ++i)
         {
-            String o = getFullResImageFile(i).getPath();
-            if (imagePath.equals(o))
+            String s = getFullResImageDirectory() + "\\" + list.get(i).imageFile.getPath();
+            if (imagePath.equals(s))
             {
-                index = i;
-                break;
+                return i;
             }
         }
+        return -1;
+    }
+
+    public void deleteCamera(File image) {
+        int index = findViewSetIndex(viewSetDataList, image);
         if (index != -1)
         {
+//            for (int i = index; i < index + 20; ++i)
+//            {
             viewSetDataList.remove(index);
+//            }
         }
-//        cameraPoseList.remove(index);
-//        cameraPoseInvList.remove(index); // check
-//        lightIndexList.remove(index);
-//        imageFiles.remove(index);
-//        viewErrorMetrics.remove(index);
+    }
+
+    public void toggleCamera(File image)
+    {
+        int index = findViewSetIndex(disabledViewSets, image);
+        // Disable camera
+        if (index != -1)
+        {
+            index = findViewSetIndex(viewSetDataList, image);
+            if (index != -1)
+            {
+                disabledViewSets.add(viewSetDataList.get(index));
+                viewSetDataList.remove(index);
+            }
+
+        }
+        // Enable camera
+        else
+        {
+            viewSetDataList.add(disabledViewSets.get(index));
+            disabledViewSets.remove(index);
+        }
     }
 
     @Override
@@ -1198,7 +1226,8 @@ public final class ViewSet implements ReadonlyViewSet
     public File getThumbnailImageFile(int poseIndex, String extension)
     {
         return new File(this.getThumbnailImageDirectory(),
-            ImageFinder.getInstance().getImageFileNameWithExtension(String.valueOf(poseIndex), extension));
+            // TODO: replace String.valueOf with the actual image filename
+            ImageFinder.getInstance().getImageFileNameWithExtension(viewSetDataList.get(poseIndex).imageFile.getPath(), extension));
     }
 
     @Override

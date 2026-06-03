@@ -518,7 +518,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         if (this.viewIndexBuffer != null)
         {
-            program.setUniformBuffer("viewIndices", this.viewIndexBuffer);
+            program.setUniformBuffer("ViewIndices", this.viewIndexBuffer);
         }
 
         getLuminanceMapResources().setupShaderProgram(program);

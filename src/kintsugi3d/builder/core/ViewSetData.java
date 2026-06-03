@@ -50,6 +50,8 @@ public class ViewSetData {
      */
     public final File imageFile;
 
+    public final int viewIndex;
+
     public File maskFile;
 
     public final ViewRMSE viewErrorMetric;
@@ -58,12 +60,29 @@ public class ViewSetData {
      * Creates a new view set data object with parameters for each member.
      */
     public ViewSetData(Matrix4 cameraPose, Matrix4 cameraPoseInv, int cameraProjectionIndex, int lightIndex,
-                       File imageFile, File maskFile, ViewRMSE viewErrorMetric)
+                        File imageFile, File maskFile, ViewRMSE viewErrorMetric)
     {
         this.cameraPose = cameraPose;
         this.cameraPoseInv = cameraPoseInv;
         this.cameraProjectionIndex = cameraProjectionIndex;
         this.lightIndex = lightIndex;
+        this.viewIndex = 0;
+        this.imageFile = imageFile;
+        this.maskFile = maskFile;
+        this.viewErrorMetric = viewErrorMetric;
+    }
+
+    /**
+     * Creates a new view set data object with parameters for each member.
+     */
+    public ViewSetData(Matrix4 cameraPose, Matrix4 cameraPoseInv, int cameraProjectionIndex, int lightIndex,
+                       int viewIndex, File imageFile, File maskFile, ViewRMSE viewErrorMetric)
+    {
+        this.cameraPose = cameraPose;
+        this.cameraPoseInv = cameraPoseInv;
+        this.cameraProjectionIndex = cameraProjectionIndex;
+        this.lightIndex = lightIndex;
+        this.viewIndex = viewIndex;
         this.imageFile = imageFile;
         this.maskFile = maskFile;
         this.viewErrorMetric = viewErrorMetric;
