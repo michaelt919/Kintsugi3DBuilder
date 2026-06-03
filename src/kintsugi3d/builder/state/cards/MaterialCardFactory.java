@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.javafx.core.MainApplication;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
@@ -38,7 +38,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         this.instance = instance;
     }
 
-    public ProjectDataCard createCard(CardsModel cardsModel, SpecularMaterialResources<?> resources, int cardIndex)
+    public ProjectDataCard createCard(CardsModel cardsModel, TextureResources<?> resources, int cardIndex)
     {
         String thumbnailPath;
         try
@@ -91,7 +91,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
     {
         if (instance.getResources() != null)
         {
-            SpecularMaterialResources<?> resources = instance.getResources().getSpecularMaterialResources();
+            TextureResources<?> resources = instance.getResources().getTextureResources();
             BasisResources<?> basisResources = resources.getBasisResources();
             if (basisResources != null)
             {

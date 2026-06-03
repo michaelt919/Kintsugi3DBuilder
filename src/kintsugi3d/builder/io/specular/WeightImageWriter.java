@@ -12,12 +12,11 @@
 package kintsugi3d.builder.io.specular;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.function.IntFunction;
 
 public class WeightImageWriter<ContextType extends Context<ContextType>> implements Resource
 {
@@ -49,22 +48,20 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void saveImages(SpecularMaterialResources<ContextType> specularFit, String format,
-        File outputDirectory, IntFunction<String> filenameOverrides) throws IOException
+    public void saveImages(TextureResources<ContextType> specularFit, String format,
+                           File outputDirectory, String... filenames) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
 
         int basisCount = specularFit.getBasisResources().getBasisCount();
 
         // Loop over the index of each final image to export
-        for (int i = 0; i * weightsPerImage < basisCount; i++)
+        for (int i = 0; i * weightsPerImage < basisCount && i < filenames.length; i++)
         {
             drawable.program().setUniform("weightIndex", i * weightsPerImage);
             drawable.program().setUniform("weightStride", Math.min(weightsPerImage, basisCount - i * weightsPerImage));
             drawable.draw(framebuffer);
-            String filename = filenameOverrides != null ? filenameOverrides.apply(i)
-                : SpecularFitSerializer.getWeightFileName(i, weightsPerImage, format);
-            framebuffer.getTextureReaderForColorAttachment(0).saveToFile(format, new File(outputDirectory, filename));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile(format, new File(outputDirectory, filenames[i]));
         }
     }
 

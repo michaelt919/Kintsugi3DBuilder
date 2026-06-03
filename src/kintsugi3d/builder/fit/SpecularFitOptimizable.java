@@ -12,6 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.decomposition.*;
@@ -21,7 +22,7 @@ import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStream;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.*;
@@ -34,8 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -119,13 +121,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-        SpecularMaterialResources<ContextType> specularFit, ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> errorCalcProgram)
+        TextureResources<ContextType> specularFit, ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
         specularFit.getBasisWeightResources().useWithShaderProgram(errorCalcProgram);
-        errorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
-        errorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
+        errorCalcProgram.setTexture("tex_roughness", specularFit.getTexture(StandardTexture.ROUGHNESS));
+        errorCalcProgram.setTexture("tex_normal", specularFit.getTexture(StandardTexture.NORMAL_MAP));
         errorCalcProgram.setUniform("sRGB", false);
         return errorCalcDrawable;
     }
@@ -196,7 +198,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             () ->
             {
                 // Use the current front normal buffer for extracting reflectance information.
-                reflectanceStream.getProgram().setTexture("normalMap", getNormalMap());
+                reflectanceStream.getProgram().setTexture("tex_normal", getTexture(StandardTexture.NORMAL_MAP));
 
                 weightAndNormalIteration(specularDecomposition, reflectanceStream, weightOptimization,
                     convergenceTolerance, debugDirectory);
@@ -220,7 +222,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             () ->
             {
                 // Use the current front normal buffer for extracting reflectance information.
-                reflectanceStream.getProgram().setTexture("normalMap", getNormalMap());
+                reflectanceStream.getProgram().setTexture("tex_normal", getTexture(StandardTexture.NORMAL_MAP));
 
                 basisOptimizationIteration(specularDecomposition, reflectanceStreamParallel, monitor);
 
@@ -263,7 +265,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         getBasisWeightResources().updateFromSolution(specularDecomposition);
 
         // Use the current front normal buffer for calculating error.
-        errorCalculator.getProgram().setTexture("normalMap", getNormalMap());
+        errorCalculator.getProgram().setTexture("tex_normal", getTexture(StandardTexture.NORMAL_MAP));
         calculateError();
 
         if (errorCalculator.getReport().getError() > 0.0 // error == 0 probably only if there are no valid pixels
@@ -290,7 +292,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         // Setup reflectance extraction program
         setupShaderProgram.accept(reflectanceStream.getProgram());
 
-        reflectanceStream.getProgram().setTexture("roughnessMap", getSpecularRoughnessMap());
+        reflectanceStream.getProgram().setTexture("tex_roughness", getTexture(StandardTexture.ROUGHNESS));
     }
 
     private void calculateError()
@@ -327,7 +329,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             specularDecomposition, monitor);
 
         // Use the current front normal buffer for calculating error.
-        errorCalculator.getProgram().setTexture("normalMap", getNormalMap());
+        errorCalculator.getProgram().setTexture("tex_normal", getTexture(StandardTexture.NORMAL_MAP));
 
         // Prepare for error calculation on the GPU.
         // Basis functions will have changed.
@@ -378,7 +380,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         normalOptimization.execute(normalMap ->
             {
                 // Update program to use the new front buffer for error calculation.
-                errorCalculator.getProgram().setTexture("normalMap", normalMap);
+                errorCalculator.getProgram().setTexture("tex_normal", normalMap);
                 calculateError();
                 return errorCalculator.getReport();
             },
@@ -386,7 +388,9 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         if (debugDirectory != null)
         {
-            saveNormalMap("PNG", debugDirectory, "normal.png");
+
+            saveTexture(StandardTexture.NORMAL_MAP, "PNG", debugDirectory,
+                TextureResources.getTextureFilename(StandardTexture.NORMAL_MAP, "PNG"));
         }
 
         if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
@@ -411,58 +415,28 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     @Override
-    public Texture2D<ContextType> getDiffuseMap()
+    public Map<StandardTexture, Texture2D<ContextType>> getStandardTextures()
     {
-        return diffuseOptimization.getDiffuseMap();
+        // Mutable copy of getSpecularTextures()
+        Map<StandardTexture, Texture2D<ContextType>> standardTextures = new EnumMap<>(getStandardSpecularTextures());
+
+        standardTextures.putAll(Map.of(
+            StandardTexture.DIFFUSE_COLOR, diffuseOptimization.getDiffuseMap(),
+            StandardTexture.NORMAL_MAP, normalOptimization.getNormalMap(),
+            StandardTexture.ERROR, errorCalculator.getFramebufferAsTexture()));
+        return Collections.unmodifiableMap(standardTextures);
     }
 
     @Override
-    public Texture2D<ContextType> getNormalMap()
+    public Map<String, Texture2D<ContextType>> getTextures()
     {
-        return normalOptimization.getNormalMap();
-    }
+        // Convert to enum-based keys to string-based keys
+        Map<String, Texture2D<ContextType>> standardTextures = StandardTexture.convertEnumMapToStringMap(getStandardTextures());
 
-    @Override
-    public Texture2D<ContextType> getConstantMap()
-    {
-        return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getConstantMap() : null;
-    }
-
-//    @Override
-//    public Texture2D<ContextType> getQuadraticMap()
-//    {
-//        return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getQuadraticMap() : null;
-//    }
-
-    @Override
-    public Map<String, Texture2D<ContextType>> getMetadataMaps()
-    {
-        return Map.of("error", errorCalculator.getFramebufferAsTexture());
-    }
-
-    public static Collection<String> getSerializableMetadataMapNames()
-    {
-        return List.of("error");
-    }
-
-    /**
-     * Always returns null; albedo map should not be needed while optimizing; only afterwards
-     * @return null
-     */
-    @Override
-    public Texture2D<ContextType> getAlbedoMap()
-    {
-        return null;
-    }
-
-    /**
-     * Always returns null; ORM map should not be needed while optimizing; only afterwards
-     * @return null
-     */
-    @Override
-    public Texture2D<ContextType> getORMMap()
-    {
-        return null;
+        // make the previous result mutable and add non-standard textures
+        Map<String, Texture2D<ContextType>> textures = new HashMap<>(standardTextures);
+        textures.putAll(diffuseOptimization.getNonStandardTextures());
+        return textures;
     }
 
     /**

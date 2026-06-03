@@ -11,10 +11,11 @@
 
 package kintsugi3d.builder.fit.finalize;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ShaderHoleFill;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -73,13 +75,13 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return builder.createFramebufferObject();
     }
 
-    public void execute(SpecularMaterialResources<ContextType> specularFit)
+    public void execute(TextureResources<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.getBasisResources().useWithShaderProgram(estimationProgram);
         specularFit.getBasisWeightResources().useWithShaderProgram(estimationProgram);
-        estimationProgram.setTexture("normalMap", specularFit.getNormalMap());
-        estimationProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
+        estimationProgram.setTexture("tex_normal", specularFit.getTexture(StandardTexture.NORMAL_MAP));
+        estimationProgram.setTexture("tex_roughness", specularFit.getTexture(StandardTexture.ROUGHNESS));
 
         // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
         // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
@@ -139,19 +141,9 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(0);
     }
 
-    public Texture2D<ContextType> getConstantMap()
+    public Map<String, Texture2D<ContextType>> getNonStandardTextures()
     {
-        return framebuffer.getColorAttachmentTexture(1);
-    }
-
-//    public Texture2D<ContextType> getQuadraticMap()
-//    {
-//        return framebuffer.getColorAttachmentTexture(2);
-//    }
-
-    public boolean includesConstantMap()
-    {
-        return includeConstant;
+        return includeConstant ? Map.of("constant", framebuffer.getColorAttachmentTexture(1)) : Map.of();
     }
 
     private static <ContextType extends Context<ContextType>>

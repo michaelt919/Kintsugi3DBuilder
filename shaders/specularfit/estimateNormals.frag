@@ -80,7 +80,7 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 prevNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 prevNormalXY = texture(tex_normal, fTexCoord).xy * 2 - vec2(1.0);
     vec3 prevNormalTS = vec3(prevNormalXY, sqrt(1 - dot(prevNormalXY, prevNormalXY)));
 
     vec3 fittingTangent = normalize(vec3(1, 0, 0) - prevNormalTS.x * prevNormalTS);
@@ -119,7 +119,7 @@ void main()
             // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
             vec3 incidentRadiance = PI * lightInfo.attenuatedIntensity;
 
-            float roughness = texture(roughnessMap, fTexCoord)[0];
+            float roughness = texture(tex_roughness, fTexCoord)[0];
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;

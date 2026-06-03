@@ -13,7 +13,7 @@ package kintsugi3d.gl.geometry;
 
 import javafx.util.Pair;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.material.Material;
+import kintsugi3d.gl.material.ImportedMaterial;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -59,7 +59,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     private float boundingRadius;
 
     private String materialFileName;
-    private Material material; // TODO support multiple materials
+    private ImportedMaterial material; // TODO support multiple materials
 
     private VertexGeometry(File filename)
     {
@@ -300,7 +300,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         {
             try
             {
-                Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), inst.materialFileName));
+                Dictionary<String, ImportedMaterial> materialLibrary = ImportedMaterial.loadFromMTLFile(new File(file.getParentFile(), inst.materialFileName));
                 inst.material = materialLibrary.get(materialName);
             }
             catch(IOException e)
@@ -819,7 +819,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     }
 
     @Override
-    public Material getMaterial()
+    public ImportedMaterial getMaterial()
     {
         return this.material;
     }

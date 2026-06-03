@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -491,7 +489,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
         if (projectInstance == null || projectInstance.getResources() == null
-            || projectInstance.getResources().getSpecularMaterialResources() == null)
+            || projectInstance.getResources().getTextureResources() == null)
         {
             if (finishedCallback != null)
             {
@@ -502,7 +500,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         {
             Rendering.runLater(() ->
             {
-                projectInstance.getResources().getSpecularMaterialResources().saveAll(materialDirectory);
+                projectInstance.getResources().getTextureResources().saveAll(materialDirectory);
 
                 if (finishedCallback != null)
                 {

@@ -11,8 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.fit.settings.BasisSettings;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
@@ -50,7 +49,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularMaterialResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(TextureResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
         specularFit.getBasisResources().useWithShaderProgram(program);
         specularFit.getBasisWeightResources().useWithShaderProgram(program);

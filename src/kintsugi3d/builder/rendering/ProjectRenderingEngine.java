@@ -11,11 +11,9 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.LODGenerator;
-import kintsugi3d.builder.io.gltf.GLTFExporter;
+import kintsugi3d.builder.io.gltf.ModelExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -27,7 +25,7 @@ import kintsugi3d.builder.rendering.components.split.SplitScreenComponent;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -45,9 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.IntStream;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
 {
@@ -511,7 +507,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
             }
 
             LOG.info("Starting glTF export...");
-            if(progressMonitor != null){
+            if(progressMonitor != null)
+            {
                 progressMonitor.setProcessName("glTF Export");
             }
 
@@ -529,69 +526,20 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
                     transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
                 }
 
-                GLTFExporter exporter = GLTFExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                TextureResources<ContextType> textureResources = resources.getTextureResources();
 
-                if (settings.shouldAppendModelNameToTextures())
+                ModelExporter exporter = ModelExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                settings.applyToExporter(exporter, textureResources, filename);
+
+                File modelFile = new File(outputDirectory, filename);
+
+                if (settings.shouldSaveTextures())
                 {
-                    String baseName = filename;
-                    if (baseName.toLowerCase(Locale.ROOT).endsWith(".gltf"))
-                    {
-                        baseName = baseName.substring(0, baseName.length() - 5);
-                    }
-                    else if (baseName.toLowerCase(Locale.ROOT).endsWith(".glb"))
-                    {
-                        baseName = baseName.substring(0, baseName.length() - 4);
-                    }
-
-                    exporter.setTextureFilePrefix(baseName + "_");
-                }
-
-                exporter.setTextureFileFormat(settings.getTextureFormat());
-
-                exporter.setDefaultNames();
-
-                SpecularMaterialResources<ContextType> material = resources.getSpecularMaterialResources();
-
-                if (material.getBasisResources() != null)
-                {
-                    exporter.addWeightImages(material.getBasisResources().getBasisCount(), settings.shouldCombineWeights());
-                }
-
-                // Add diffuse constant if requested
-                boolean constantMap = material.getConstantMap() != null
-                    && material.getConstantMap().getWidth() > 0 && material.getConstantMap().getHeight() > 0;
-
-                if (constantMap)
-                {
-                    exporter.setDiffuseConstantUri("constant.png");
-                }
-
-                // Deal with LODs if enabled
-                if (settings.shouldGenerateLowResTextures())
-                {
-                    exporter.addAllDefaultLods(material.getHeight(), settings.getMinimumTextureResolution());
-
-                    if (material.getBasisResources() != null)
-                    {
-                        exporter.addWeightImageLods(material.getBasisResources().getBasisCount(), material.getHeight(),
-                            settings.getMinimumTextureResolution());
-                    }
-
-                    if (constantMap)
-                    {
-                        exporter.addDiffuseConstantLods("constant.png", material.getHeight(),
-                            settings.getMinimumTextureResolution());
-                    }
-                }
-
-                exporter.write(new File(outputDirectory, filename));
-
-                if (settings.shouldSaveTextures() && resources.getSpecularMaterialResources() != null)
-                {
-                    Rendering.runLater(() -> exportTextures(outputDirectory, exporter, settings, finishedCallback));
+                    exporter.exportWithTextures(modelFile, finishedCallback);
                 }
                 else if (finishedCallback != null) // not saving textures
                 {
+                    exporter.exportModelOnly(modelFile);
                     finishedCallback.run();
                 }
 
@@ -601,69 +549,6 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
             {
                 LOG.error("Error occurred during glTF export:", e);
             }
-        }
-    }
-
-    private void exportTextures(File outputDirectory, GLTFExporter exporter, ExportSettings settings, Runnable finishedCallback)
-    {
-        SpecularMaterialResources<ContextType> materialResources = resources.getSpecularMaterialResources();
-        String textureFormat = settings.getTextureFormat();
-        String textureFilePrefix = exporter.getTextureFilePrefix();
-
-        materialResources.saveDiffuseMap(textureFormat, outputDirectory, exporter.getDiffuseTextureFilename());
-        materialResources.saveNormalMap(textureFormat, outputDirectory, exporter.getNormalTextureFilename());
-        materialResources.saveConstantMap(textureFormat, outputDirectory, exporter.getDiffuseConstantTextureFilename());
-        materialResources.saveAlbedoMap(textureFormat, outputDirectory, exporter.getBaseColorTextureFilename());
-        materialResources.saveORMMap(textureFormat, outputDirectory, exporter.getRoughnessMetallicTextureFilename());
-        materialResources.saveSpecularReflectivityMap(textureFormat, outputDirectory, exporter.getSpecularTextureFilename());
-        materialResources.saveSpecularRoughnessMap(textureFormat, outputDirectory,
-            String.format("%sroughness.%s", textureFilePrefix, textureFormat.toLowerCase(Locale.ROOT)));
-
-        // Skip standalone occlusion (which is often really a renamed ORM where we ignore the G & B channels)
-
-        // If user requested JPEG, force PNG since JPEG doensn't support alpha.
-        String weightmapFormat = "JPEG".equals(textureFormat) ? "PNG" : textureFormat;
-
-        if (settings.shouldCombineWeights())
-        {
-            materialResources.savePackedWeightMaps(weightmapFormat, outputDirectory,
-                index -> exporter.getWeightTextureFilename(index, 4));
-        }
-        else
-        {
-            materialResources.saveUnpackedWeightMaps(weightmapFormat, outputDirectory,
-                index -> exporter.getWeightTextureFilename(index, 1));
-        }
-
-        materialResources.saveBasisFunctions(outputDirectory, exporter.getBasisFunctionsFilename());
-        materialResources.saveMetadataMaps(textureFormat, outputDirectory, textureFilePrefix);
-
-        if (settings.shouldGenerateLowResTextures())
-        {
-            LODGenerator lodGenerator = LODGenerator.getInstance();
-
-            // Everything except weight textures
-            lodGenerator.generateLODs(textureFormat, settings.getMinimumTextureResolution(), outputDirectory,
-                exporter.getDiffuseTextureFilename(),
-                exporter.getNormalTextureFilename(),
-                exporter.getDiffuseConstantTextureFilename(),
-                exporter.getBaseColorTextureFilename(),
-                exporter.getRoughnessMetallicTextureFilename(),
-                exporter.getSpecularTextureFilename());
-
-            // Weight textures
-            // If user requested JPEG, force PNG since JPEG doesn't support alpha.
-            int basisCount = materialResources.getBasisResources().getBasisCount();
-            lodGenerator.generateLODs("JPEG".equals(textureFormat) ? "PNG" : textureFormat,
-                settings.getMinimumTextureResolution(), outputDirectory,
-                IntStream.range(0, settings.shouldCombineWeights() ? (basisCount + 3) / 4 : basisCount)
-                    .mapToObj(index -> exporter.getWeightTextureFilename(index, settings.shouldCombineWeights() ? 4 : 1))
-                    .toArray(String[]::new));
-        }
-
-        if (finishedCallback != null)
-        {
-            finishedCallback.run();
         }
     }
 }

@@ -16,26 +16,26 @@
 #include <colorappearance/colorappearance_multi_as_single.glsl>
 #line 18 0
 
-uniform sampler2D specularEstimate;
+uniform sampler2D tex_specular;
 
 layout(location = 0) out vec4 errorOut;
 
 void main()
 {
-    vec2 sqrtRoughness_Mask = texture(roughnessMap, fTexCoord).ra;
+    vec2 sqrtRoughness_Mask = texture(tex_roughness, fTexCoord).ra;
     float filteredMask = sqrtRoughness_Mask[1];
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0];
 
-    vec3 diffuseColor = sRGBToLinear(clamp(texture(diffuseMap, fTexCoord).rgb, 0, 1));
-    vec3 specularColor = sRGBToLinear(texture(specularEstimate, fTexCoord).rgb);
+    vec3 diffuseColor = sRGBToLinear(clamp(texture(tex_diffuse, fTexCoord).rgb, 0, 1));
+    vec3 specularColor = sRGBToLinear(texture(tex_specular, fTexCoord).rgb);
 
     vec3 position = getPosition();
 
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 fittedNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 fittedNormalXY = texture(tex_normal, fTexCoord).xy * 2 - vec2(1.0);
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 

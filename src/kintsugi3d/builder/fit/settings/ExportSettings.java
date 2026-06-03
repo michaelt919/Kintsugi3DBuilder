@@ -11,28 +11,27 @@
 
 package kintsugi3d.builder.fit.settings;
 
+import kintsugi3d.builder.io.gltf.MaterialExporter;
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.io.gltf.ModelExporter;
+import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporter;
+import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
+
+import java.util.Locale;
+
 public class ExportSettings
 {
     private boolean combineWeights = true;
 
-    private boolean exportTextures = false; // by default assume that textures are being handled elsewhere
+    private MaterialExporterFactory exporterFactory = Kintsugi3DViewerExporterFactory.getInstance();
+    private boolean exportTextures = false;
     private boolean appendModelNameToTextures = false;
     private String textureFormat = "PNG";
     private boolean generateLowResTextures = false;
     private int minimumTextureResolution = 128;
 
-    private boolean saveModel = true;
     private boolean openViewerOnceComplete = false;
-
-    public boolean shouldSaveModel()
-    {
-        return saveModel;
-    }
-
-    public void setShouldSaveModel(boolean saveModel)
-    {
-        this.saveModel = saveModel;
-    }
 
     public boolean shouldSaveTextures()
     {
@@ -102,5 +101,49 @@ public class ExportSettings
     public void setShouldOpenViewerOnceComplete(boolean openViewerOnceComplete)
     {
         this.openViewerOnceComplete = openViewerOnceComplete;
+    }
+
+    public MaterialExporterFactory getExporterFactory()
+    {
+        return exporterFactory;
+    }
+
+    public void setExporterFactory(MaterialExporterFactory exporterFactory)
+    {
+        this.exporterFactory = exporterFactory;
+    }
+
+    public void applyToExporter(ModelExporter exporter, TextureResources<?> textureResources, String filename)
+    {
+        MaterialExporter materialExporter = exporterFactory.getExporter(textureResources);
+        exporter.setMaterialExporter(materialExporter);
+
+        if (materialExporter instanceof Kintsugi3DViewerExporter)
+        {
+            // TODO figure out a less hacky way of doing this.
+            ((Kintsugi3DViewerExporter)materialExporter).setCombineWeights(combineWeights);
+        }
+
+        materialExporter.setTextureFileFormat(textureFormat);
+
+        if (generateLowResTextures)
+        {
+            materialExporter.setMinLODSize(minimumTextureResolution);
+        }
+
+        if (appendModelNameToTextures)
+        {
+            String baseName = filename;
+            if (baseName.toLowerCase(Locale.ROOT).endsWith(".gltf"))
+            {
+                baseName = baseName.substring(0, baseName.length() - 5);
+            }
+            else if (baseName.toLowerCase(Locale.ROOT).endsWith(".glb"))
+            {
+                baseName = baseName.substring(0, baseName.length() - 4);
+            }
+
+            materialExporter.setTextureFilePrefix(String.format("%s_", baseName));
+        }
     }
 }

@@ -128,7 +128,7 @@ class BackendProgressMonitor implements ProgressMonitor
         if (isProcessed())
         {
             BasisWeightResources<?> basisWeightResources =
-                instance.getResources().getSpecularMaterialResources().getBasisWeightResources();
+                instance.getResources().getTextureResources().getBasisWeightResources();
 
             Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.weightMaps.getWidth());
         }
@@ -148,7 +148,7 @@ class BackendProgressMonitor implements ProgressMonitor
 
     private boolean isProcessed()
     {
-        return instance.getResources().getSpecularMaterialResources().getBasisWeightResources() != null;
+        return instance.getResources().getTextureResources().getBasisWeightResources() != null;
     }
 
     @Override

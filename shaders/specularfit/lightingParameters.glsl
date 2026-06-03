@@ -11,7 +11,7 @@
  */
 #line 13 4002
 
-uniform sampler2D normalMap;
+uniform sampler2D tex_normal;
 #include "../common/constructTBN.glsl"
 #line 17 4002
 
@@ -44,7 +44,7 @@ LightingParameters calculateLightingParameters(vec3 lightPos, vec3 cameraPos)
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(tex_normal, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 
