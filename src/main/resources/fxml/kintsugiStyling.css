@@ -78,7 +78,6 @@
 
 .modal-root,
 .content-root,
-.scroll-pane .viewport,
 .cameraviewlist,
 .context-menu,
 .mainwindow-root,
@@ -561,4 +560,56 @@
 .left-bar .scroll-bar:vertical .thumb {
     -fx-background-color: white;
     -fx-background-radius: 5em;
+}
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+/* 1. Base Horizontal ScrollBar Settings */
+#carouselScrollPane .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+    -fx-pref-height: 18px;
+    -fx-min-height: 18px;
+    -fx-max-height: 18px;
+}
+
+/* 2. The Scrollbar Track (Background) */
+#carouselScrollPane .scroll-bar:horizontal .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0px;
+}
+
+/* 3. The Thumb (The draggable white bar) */
+#carouselScrollPane .scroll-bar:horizontal .thumb {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 4px;
+    -fx-min-width: 40px;
+    -fx-border-color: transparent black transparent black; /* Change 'black' to match your app background if transparent acts up */
+    -fx-border-style: solid;
+    -fx-border-width: 5px 0px 5px 0px;
+
+    /* Ensures background color stays within the border boundaries */
+    -fx-background-insets: 5px 0px 5px 0px;
+}
+
+/* Change thumb color when hovering over it */
+#carouselScrollPane .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: #dcdcdc; /* Slightly off-white on hover */
+}
+
+/* 4. Remove and collapse the Arrow Buttons entirely */
+#carouselScrollPane .scroll-bar:horizontal .increment-button,
+#carouselScrollPane .scroll-bar:horizontal .decrement-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0px;
+    -fx-border-color: transparent;
+    -fx-padding: 0px;
+    -fx-opacity: 0.0;
+}
+
+#carouselScrollPane .scroll-bar:horizontal .increment-arrow,
+#carouselScrollPane .scroll-bar:horizontal .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0px;
+    -fx-opacity: 0.0;
 }

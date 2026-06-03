@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.javafx.internal.CarouselModel;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.CanvasModel;
 import kintsugi3d.builder.state.SceneViewportModel;
@@ -45,4 +46,5 @@ public interface Kintsugi3DBuilderState
     IOModel getIOModel();
 
     ProjectModel getProjectModel();
+    CarouselModel getCarouselModel();
 }
