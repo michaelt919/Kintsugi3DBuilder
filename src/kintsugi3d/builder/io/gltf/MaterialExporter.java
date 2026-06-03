@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MaterialExporter
@@ -43,7 +44,7 @@ public class MaterialExporter
 
     private TextureResources<?> textureResources;
 
-    private Map<String, TextureExportSpecification> textures;
+    private final Map<String, TextureExportSpecification> textures = new HashMap<>(StandardTexture.values().length);
 
     protected MaterialExporter()
     {
@@ -103,7 +104,7 @@ public class MaterialExporter
     {
         Collection<String> supportedTextures = new ArrayList<>(StandardTexture.values().length);
 
-        for (Method method : this.getClass().getDeclaredMethods())
+        for (Method method : this.getClass().getMethods()) // all methods in the current class and superclasses
         {
             String texName;
 
@@ -124,7 +125,7 @@ public class MaterialExporter
     {
         Collection<String> availableTextures = textureResources.getTextures().keySet();
 
-        for (Method method : this.getClass().getDeclaredMethods())
+        for (Method method : this.getClass().getMethods()) // all methods in the current class and superclasses
         {
             String texName;
             boolean requiresAlpha;
@@ -334,7 +335,7 @@ public class MaterialExporter
     protected static String determineFileFormat(String preferredFormat, boolean requiresAlpha)
     {
         // If user requested JPEG and alpha is required, force PNG since JPEG doesn't support alpha.
-        return "JPEG".equals(preferredFormat) || "JPG".equals(preferredFormat) ? "PNG" : preferredFormat;
+        return requiresAlpha && ("JPEG".equals(preferredFormat) || "JPG".equals(preferredFormat)) ? "PNG" : preferredFormat;
     }
 
     private void addLodsToTexture(TextureInfo textureInfo, String baseUri, int baseRes, int minRes)

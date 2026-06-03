@@ -422,8 +422,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         standardTextures.putAll(Map.of(
             StandardTexture.DIFFUSE_COLOR, diffuseOptimization.getDiffuseMap(),
-            StandardTexture.NORMAL_MAP, normalOptimization.getNormalMap(),
-            StandardTexture.ERROR, errorCalculator.getFramebufferAsTexture()));
+            StandardTexture.NORMAL_MAP, normalOptimization.getNormalMap()));
+
+        if (errorCalculator != null)
+        {
+            standardTextures.put(StandardTexture.ERROR, errorCalculator.getFramebufferAsTexture());
+        }
+
         return Collections.unmodifiableMap(standardTextures);
     }
 
