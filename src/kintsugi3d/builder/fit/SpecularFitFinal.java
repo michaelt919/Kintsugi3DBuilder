@@ -52,7 +52,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         managedTextures = new HashMap<>(original.getTextures().size());
 
         // Copy all textures not handled elsewhere
-        original.getTextures().entrySet().stream()
+        managedTextures.putAll(original.getTextures().entrySet().stream()
             .filter(entry -> 
                 // Skip specular color and roughness maps that are handled by SpecularFitBase:
                 !StandardTexture.SPECULAR_COLOR.texName.equals(entry.getKey()) && !StandardTexture.ROUGHNESS.texName.equals(entry.getKey()))
@@ -61,7 +61,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                     .build2DColorTexture(textureResolution.width, textureResolution.height)
                     .setInternalFormat(entry.getValue().getInternalUncompressedColorFormat()) // copy format of the original.
                     .setLinearFilteringEnabled(true)
-                    .createTexture()));
+                    .createTexture())));
 
         Texture2D<ContextType> occlusionMap = original.getTexture(StandardTexture.OCCLUSION);
         albedoORMOptimization = occlusionMap == null ?

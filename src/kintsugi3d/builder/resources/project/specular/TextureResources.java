@@ -325,7 +325,8 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     static String getPackedWeightMapName(int index)
     {
-        return String.format("weights%02d", index);
+        int scaledWeightMapIndex = index * WEIGHTS_PER_PACKED_CHANNEL;
+        return String.format("weights%02d%02d", scaledWeightMapIndex, scaledWeightMapIndex + (WEIGHTS_PER_PACKED_CHANNEL - 1));
     }
 
     static String getUnpackedWeightMapFilename(int index, String format)
@@ -340,8 +341,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     static String getUnpackedWeightMapName(int index)
     {
-        int scaledWeightMapIndex = index * WEIGHTS_PER_PACKED_CHANNEL;
-        return String.format("weights%02d%02d", scaledWeightMapIndex, scaledWeightMapIndex + (WEIGHTS_PER_PACKED_CHANNEL - 1));
+        return String.format("weights%02d", index);
     }
 
     static String getBasisFunctionsFilename()
