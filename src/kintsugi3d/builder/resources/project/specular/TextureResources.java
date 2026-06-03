@@ -358,7 +358,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * Saves the specified named textures to the filesystem as images in the specified format.
      * @param texNames        The names of the textures to save.
      * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory The directory in which to save the metadata maps.
+     * @param outputDirectory The directory in which to save the textures.
      * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
      *                        This can be set to the empty string "" to use just the base / default names.
      */
@@ -373,7 +373,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     /**
      * Saves all named textures (but not weight maps) to the filesystem as images in the specified format.
      * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory The directory in which to save the metadata maps.
+     * @param outputDirectory The directory in which to save the textures.
      * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
      *                        This can be set to the empty string "" to use just the base / default names.
      */
