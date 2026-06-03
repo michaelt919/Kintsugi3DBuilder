@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 
@@ -35,23 +35,23 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit,
+            ReadonlyGraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit,
             SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/reconstruction/basisModel.frag"))
-            .define("USE_CONSTANT_MAP", specularFit.getConstantMap() != null);
+            .define("USE_CONSTANT_MAP", specularFit.getTexture("constant") != null);
     }
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit,
+            ReadonlyGraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit,
             SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/reconstruction/reflectivityModel.frag"))
-            .define("USE_CONSTANT_MAP", specularFit.getConstantMap() != null);
+            .define("USE_CONSTANT_MAP", specularFit.getTexture("constant") != null);
     }
 }

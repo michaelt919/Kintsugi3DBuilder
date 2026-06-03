@@ -70,16 +70,8 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
     public <ContextType extends Context<ContextType>> void executeRequest(
         ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
     {
-        if (settings.shouldSaveModel())
-        {
-            // Includes textures is shouldSaveTextures is true
-            renderable.saveGLTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings, this::onSaveComplete);
-        }
-        else if (settings.shouldSaveTextures())
-        {
-            renderable.getResources().getSpecularMaterialResources()
-                .saveEssential(settings.getTextureFormat(), exportLocationFile.getParentFile());
-        }
+        // Includes textures is shouldSaveTextures is true
+        renderable.saveGLTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings, this::onSaveComplete);
     }
 
     private void onSaveComplete()

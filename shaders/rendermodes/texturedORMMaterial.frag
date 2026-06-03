@@ -13,19 +13,19 @@
  */
 
 // Disable diffuse / specular / roughness maps to force it to use ORM
-#ifdef DIFFUSE_TEXTURE_ENABLED
-#undef DIFFUSE_TEXTURE_ENABLED
+#ifdef TEXTURE_DIFFUSE
+#undef TEXTURE_DIFFUSE
 #endif
-#define DIFFUSE_TEXTURE_ENABLED 0
+#define TEXTURE_DIFFUSE 0
 
-#ifdef SPECULAR_TEXTURE_ENABLED
-#undef SPECULAR_TEXTURE_ENABLED
+#ifdef TEXTURE_SPECULAR
+#undef TEXTURE_SPECULAR
 #endif
-#define SPECULAR_TEXTURE_ENABLED 0
+#define TEXTURE_SPECULAR 0
 
-#ifdef ROUGHNESS_TEXTURE_ENABLED
-#undef ROUGHNESS_TEXTURE_ENABLED
+#ifdef TEXTURE_ROUGHNESS
+#undef TEXTURE_ROUGHNESS
 #endif
-#define ROUGHNESS_TEXTURE_ENABLED 0
+#define TEXTURE_ROUGHNESS 0
 
 #include <subject/standard.glsl>

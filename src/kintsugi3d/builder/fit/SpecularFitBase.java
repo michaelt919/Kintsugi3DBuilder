@@ -11,22 +11,23 @@
 
 package kintsugi3d.builder.fit;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
 import kintsugi3d.builder.fit.settings.BasisSettings;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResourcesBase;
+import kintsugi3d.builder.resources.project.specular.TextureResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 
-public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
-    extends SpecularMaterialResourcesBase<ContextType>
+public abstract class SpecularFitBase<ContextType extends Context<ContextType>> extends TextureResourcesBase<ContextType>
 {
     private final ContextType context;
     private final BasisResources<ContextType> basisResources;
@@ -147,16 +148,21 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
         }
     }
 
-    @Override
-    public final Texture2D<ContextType> getSpecularReflectivityMap()
+    protected int getSpecularTextureCount()
     {
-        return roughnessOptimization == null ? null : roughnessOptimization.getReflectivityTexture();
+        return roughnessOptimization == null ? 0 : 2;
     }
 
-    @Override
-    public final Texture2D<ContextType> getSpecularRoughnessMap()
+    protected Map<StandardTexture, Texture2D<ContextType>> getStandardSpecularTextures()
     {
-        return roughnessOptimization == null ? null : roughnessOptimization.getRoughnessTexture();
+        return roughnessOptimization == null ? Map.of() :
+            Map.of(StandardTexture.SPECULAR_COLOR, roughnessOptimization.getReflectivityTexture(),
+                StandardTexture.ROUGHNESS, roughnessOptimization.getRoughnessTexture());
+    }
+
+    protected Map<String, Texture2D<ContextType>> getSpecularTextures()
+    {
+        return roughnessOptimization == null ? Map.of() : StandardTexture.convertEnumMapToStringMap(getStandardSpecularTextures());
     }
 
     /**

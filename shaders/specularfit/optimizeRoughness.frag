@@ -32,9 +32,9 @@ layout(location = 0) out vec4 specularColor;
 layout(location = 1) out vec4 sqrtRoughness;
 layout(location = 2) out vec4 dampingErrorOut;
 
-uniform sampler2D diffuseMap;
-uniform sampler2D specularEstimate;
-uniform sampler2D roughnessMap;
+uniform sampler2D tex_diffuse;
+uniform sampler2D tex_specular;
+uniform sampler2D tex_roughness;
 uniform sampler2D dampingTex;
 
 // TODO: This is an attempt at implementing Levenberg-Marquardt for GGX roughness estimation, but it doesn't work and hasn't been debugged.
@@ -45,12 +45,12 @@ void main()
 
     vec2 dampingError = texture(dampingTex, fTexCoord).rg;
     float dampingFactor = dampingError[0];
-    vec3 reflectivityGammaPrev = texture(specularEstimate, fTexCoord).rgb;
+    vec3 reflectivityGammaPrev = texture(tex_specular, fTexCoord).rgb;
     vec3 reflectivity = sRGBToLinear(reflectivityGammaPrev);
-    float sqrtRoughnessPrev = texture(roughnessMap, fTexCoord)[0];
+    float sqrtRoughnessPrev = texture(tex_roughness, fTexCoord)[0];
     float roughness = sqrtRoughnessPrev * sqrtRoughnessPrev;
     float roughnessSquared = roughness * roughness;
-    vec3 diffuse = pow(sRGBToLinear(diffuseMap, fTexCoord).rgb);
+    vec3 diffuse = pow(sRGBToLinear(tex_diffuse, fTexCoord).rgb);
 
     for (int m = 1; m < BASIS_RESOLUTION; m++)
     {

@@ -11,10 +11,12 @@
 
 package kintsugi3d.builder.fit.normal;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -69,7 +71,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         estimateNormals.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
             // Update normal estimation program to use the new front buffer.
-            estimationProgram.setTexture("normalMap", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            estimationProgram.setTexture("tex_normal", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
             estimationProgram.setTexture("dampingTex", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(1));
 
             // Clear framebuffer
@@ -184,7 +186,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         try
         {
             Framebuffer<ContextType> contextTypeFramebuffer = estimateNormals.getFrontFramebuffer();
-            contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "normal.png"));
+            contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG",
+                new File(outputDirectory, TextureResources.getTextureFilename(StandardTexture.NORMAL_MAP, "PNG")));
         }
         catch (IOException e)
         {

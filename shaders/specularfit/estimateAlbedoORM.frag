@@ -15,25 +15,25 @@
 #include <colorappearance/linearize.glsl>
 #line 17 0
 
-#ifndef OCCLUSION_TEXTURE_ENABLED
-#define OCCLUSION_TEXTURE_ENABLED 0
+#ifndef TEXTURE_OCCLUSION
+#define TEXTURE_OCCLUSION 0
 #endif
 
-#ifndef CONSTANT_TEXTURE_ENABLED
-#define CONSTANT_TEXTURE_ENABLED 0
+#ifndef TEXTURE_CONSTANT
+#define TEXTURE_CONSTANT 0
 #endif
 
 in vec2 fTexCoord;
 
-#if OCCLUSION_TEXTURE_ENABLED
+#if TEXTURE_OCCLUSION
 uniform sampler2D occlusionTexture; // pass-through occlusion
 #endif
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D roughnessEstimate;
-uniform sampler2D specularEstimate;
+uniform sampler2D tex_specular;
 
-#if CONSTANT_TEXTURE_ENABLED
+#if TEXTURE_CONSTANT
 uniform sampler2D constantTexture; // pass-through occlusion // TODO figure this out after implementing Godot shader
 #endif
 
@@ -45,7 +45,7 @@ void main()
     float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
 
     vec3 diffuseGamma = texture(diffuseEstimate, fTexCoord).rgb;
-    vec3 specularGamma = texture(specularEstimate, fTexCoord).rgb;
+    vec3 specularGamma = texture(tex_specular, fTexCoord).rgb;
     vec3 diffuseLinearRaw = sRGBToLinear(diffuseGamma);
     vec3 specularLinearRaw = sRGBToLinear(specularGamma);
 
@@ -121,7 +121,7 @@ void main()
 
     totalAlbedoOut = vec4(linearToSRGB(albedoLinear), 1.0);
 
-#if OCCLUSION_TEXTURE_ENABLED
+#if TEXTURE_OCCLUSION
     float occlusion = texture(occlusionTexture, fTexCoord).r;
 #else
     float occlusion = 1.0;

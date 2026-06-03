@@ -9,40 +9,29 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.gltf;
+package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
 
-import java.util.HashMap;
-import java.util.Map;
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public class GLTFTextureExtras
+public final class Kintsugi3DViewerExporterFactory implements MaterialExporterFactory
 {
-
-    private Integer baseRes = null;
-
-    private final Map<Integer, Integer> lods = new HashMap<>();
-
-    public void setLodImageIndex(int resolution, int index)
+    private static final Kintsugi3DViewerExporterFactory INSTANCE = new Kintsugi3DViewerExporterFactory();
+    
+    public static Kintsugi3DViewerExporterFactory getInstance()
     {
-        lods.put(resolution, index);
+        return INSTANCE;
     }
-
-    public Integer getLodImageIndex(int resolution)
+    
+    private Kintsugi3DViewerExporterFactory()
     {
-        return lods.get(resolution);
     }
-
-    public Map<Integer, Integer> getLods()
+    
+    @Override
+    public Kintsugi3DViewerExporter getExporter(TextureResources<?> resources)
     {
-        return lods;
-    }
-
-    public Integer getBaseRes()
-    {
-        return baseRes;
-    }
-
-    public void setBaseRes(Integer baseRes)
-    {
-        this.baseRes = baseRes;
+        Kintsugi3DViewerExporter exporter = new Kintsugi3DViewerExporter();
+        exporter.setTextureResources(resources);
+        return exporter;
     }
 }
