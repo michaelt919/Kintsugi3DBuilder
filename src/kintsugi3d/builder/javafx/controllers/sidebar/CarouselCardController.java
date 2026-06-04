@@ -32,7 +32,7 @@ public class CarouselCardController {
 
     private UserShader currentShader;
 
-    private UserShader defaultShader = new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
+    private UserShader defaultShader = new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
 
     // If the checkbox is selected it will apply the shader that is assigned to the card
     // If the checkbox is already selected when the user selects it again it will
