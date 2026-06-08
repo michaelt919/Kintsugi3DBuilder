@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.stream.IntStream;
 
-final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> implements ViewSetObserver
+final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
     /**
@@ -95,7 +95,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
     {
         this.context = context;
         this.viewSet = viewSet;
-        viewSet.registerObserver(this);
+        viewSet.registerObserver(this::updateViewIndicesData);
 
         // Store the poses in a uniform buffer
         if (viewSet != null && viewSet.getCameraPoseData() != null)
@@ -340,7 +340,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            LOG.info(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
+            LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);
         }
 
         return cameraWeights;
@@ -461,8 +461,6 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         this.textureResources = textureResources == null ? TextureResources.makeNull(context) : textureResources;
     }
 
-    // use update light or replace as model for refreshing
-
     /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
      * characteristics of this instance:
@@ -553,11 +551,5 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         this.textureResources.close();
         this.luminanceMapResources.close();
         this.viewIndexBuffer.close();
-    }
-
-    @Override
-    public void update()
-    {
-        updateViewIndicesData();
     }
 }
