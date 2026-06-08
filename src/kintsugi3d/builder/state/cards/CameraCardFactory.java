@@ -76,7 +76,11 @@ public class CameraCardFactory implements ProjectDataCardFactory
                                 Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
                             }
                         })),
-               "Disable Image", () -> {}
+               "Toggle Enabled", () ->
+                    {
+                        Rendering.runLater(() -> viewSet.toggleCamera(fullResFile));
+                        // TODO: update card appearance based on toggled or not.
+                    }
                 )
             );
         }

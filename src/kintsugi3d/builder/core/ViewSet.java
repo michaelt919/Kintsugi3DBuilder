@@ -986,8 +986,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     public void toggleCamera(File image)
     {
         int index = findViewSetIndex(disabledViewSets, image);
-        // Disable camera
-        if (index != -1)
+        // Currently enabled, so disable camera
+        if (index == -1)
         {
             index = findViewSetIndex(viewSetDataList, image);
             if (index != -1)
@@ -997,12 +997,14 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
             }
 
         }
-        // Enable camera
+        // Currently disabled, so enable camera
         else
         {
             viewSetDataList.add(disabledViewSets.get(index));
             disabledViewSets.remove(index);
         }
+        // Notify regardless of enable or disable
+        notifyObservers();
     }
 
     @Override
