@@ -32,15 +32,18 @@ public class CarouselCardController
     @FXML private FramebufferView framebufferView;
 
     @FXML
-    private CheckBox textureType;
+    private CheckBox selectedCheckbox;
 
     @FXML
     private Label shaderName;
 
     private UserShader currentShader;
 
-    private final UserShader defaultShaderUnprocessed = new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
-    private final UserShader defaultShaderProcessed = new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
+    private static final UserShader DEFAULT_SHADER_UNPROCESSED =
+        new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
+
+    private static final UserShader DEFAULT_SHADER_PROCESSED =
+        new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
 
     /**
      * If the checkbox is selected it will apply the shader that is assigned to the card.
@@ -48,21 +51,21 @@ public class CarouselCardController
      * remove the shader / change it to the default shader.
      */
     @FXML
-    public void useTextureBox()
+    public void selectedChanged()
     {
-        if (textureType.isSelected())
+        if (selectedCheckbox.isSelected())
         {
             Global.state().getUserShaderModel().setUserShader(currentShader);
         }
-        if (!textureType.isSelected())
+        else
         {
             if (Global.state().getProjectModel().isProjectProcessed())
             {
-                Global.state().getUserShaderModel().setUserShader(defaultShaderProcessed);
+                Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_PROCESSED);
             }
             else
             {
-                Global.state().getUserShaderModel().setUserShader(defaultShaderUnprocessed);
+                Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_UNPROCESSED);
             }
         }
     }
@@ -76,6 +79,7 @@ public class CarouselCardController
     {
         this.currentShader = shader;
         shaderName.setText(currentShader.getFriendlyName());
+
         /*
         Works like a listener in that it detects if there were any changes to the
         shader that is applied to the model, if there is it looks to see if it needs
@@ -85,7 +89,7 @@ public class CarouselCardController
         updateCheckboxState(Global.state().getUserShaderModel().getUserShader());
 
         // Creating the canvas requires layout to determine card size
-        // so put this in a Platform.runLater to ensure that the the card has a non-zero size.
+        // so put this in a Platform.runLater to ensure that the card has a non-zero size.
         Platform.runLater(() ->
         {
             // Set up the rendering backend for the card.
@@ -97,7 +101,7 @@ public class CarouselCardController
     private void updateCheckboxState(UserShader activeShader)
     {
         // Will select or deselect the shader cards checkbox if another cards checkbox is selected
-        textureType.setSelected(currentShader != null && currentShader.equals(activeShader));
+        selectedCheckbox.setSelected(currentShader != null && currentShader.equals(activeShader));
     }
 
     /**
@@ -118,11 +122,11 @@ public class CarouselCardController
             {
                 if(Global.state().getProjectModel().isProjectProcessed())
                 {
-                    Global.state().getUserShaderModel().setUserShader(defaultShaderProcessed);
+                    Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_PROCESSED);
                 }
                 else
                 {
-                    Global.state().getUserShaderModel().setUserShader(defaultShaderUnprocessed);
+                    Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_UNPROCESSED);
                 }
             }
             Global.state().getCarouselModel().getCarouselShaders().remove(currentShader);

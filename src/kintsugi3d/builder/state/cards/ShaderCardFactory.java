@@ -12,20 +12,14 @@
 package kintsugi3d.builder.state.cards;
 
 import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController;
-import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
+import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.state.scene.UserShader;
 
-import java.io.IOException;
 import java.util.*;
 
-/*
+/**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
 the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
@@ -37,24 +31,28 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
 
     private final ProjectInstance<?> instance;
 
-    private boolean fail;
-
-    //ShaderCardFactory is the constructor for this class takes a ProjectInstance and
-    //assigns it to private variable in class
+    /**
+     * ShaderCardFactory is the constructor for this class takes a ProjectInstance and
+     * assigns it to private variable in class
+     * @param instance
+     */
     public ShaderCardFactory(ProjectInstance<?> instance)
     {
         this.instance = instance;
     }
 
-    /*
+    /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
     the title of the shader and the file name. Returns ProjectDataCard of the shader
     (single card). This is also where View Shader and Send to Carousel button and
     code are located.
+     @param title
+     @param fileName
+     @return
     */
     public ProjectDataCard createCard(String title, String fileName){
 
-        return new ProjectDataCard(title, null, Map.of(), Map.of("View Shader", ()->{
+        return new ProjectDataCard(title, MainApplication.ICON_PATH, Map.of(), Map.of("View Shader", ()->{
             //Creates shader with given title and filename
             UserShader shaderView = new UserShader(title, fileName);
 
@@ -62,7 +60,6 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
             Global.state().getUserShaderModel().setUserShader(shaderView);
 
         },"Send to Carousel", ()-> {
-            fail = false;
 
             //list of shaders currently in carousel
             ObservableList<UserShader> current = Global.state().getCarouselModel().getCarouselShaders();
@@ -70,31 +67,35 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
             //Shader that is trying to be sent to carousel
             UserShader newCarouselShader = new UserShader(title, fileName);
 
+            boolean alreadyInCarousel = false;
+
             //For loop looks through Arraylist for any that match the shader
             //that is trying to be sent to carousel
             for (UserShader element : current){
                 if (newCarouselShader.equals(element)){
                     //if one matches:
-                    fail = true;
+                    alreadyInCarousel = true;
                 }
             }
 
             //Prevents duplicate shaders in carousel / if the shaders don't match
             //then shader is sent to carousel
-            if (!fail){
+            if (!alreadyInCarousel){
                 Global.state().getCarouselModel().addShader(newCarouselShader);
             }
         }));
     }
-    /*
+    /**
     createAllCards will call createCard for all the shaders and will
     return them in a list. This method will also detect if the model
     is processed and if so will limit the shaders shown to the user.
+     @param cardsModel
+     @return
      */
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         // shaderDataCards is an arraylist that will hold all shaders user can use
-        ArrayList<ProjectDataCard> shaderDataCards = new ArrayList<ProjectDataCard>();
+        List<ProjectDataCard> shaderDataCards = new ArrayList<ProjectDataCard>();
         shaderDataCards.add(createCard("Simple specular", "rendermodes/simpleSpecular.frag"));
         shaderDataCards.add(createCard("Normal mapped", "rendermodes/normalMapped.frag"));
         shaderDataCards.add(createCard("Textured Lambertian", "rendermodes/texturedLambertian.frag"));

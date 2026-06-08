@@ -53,8 +53,8 @@
 
         <Region HBox.hgrow="ALWAYS"/>
 
-        <CheckBox fx:id="textureType"
-                  onAction="#useTextureBox"
+        <CheckBox fx:id="selectedCheckbox"
+                  onAction="#selectedChanged"
                   style="-fx-alignment: center-right; -fx-padding: 0px"/>
     </HBox>
 </AnchorPane>

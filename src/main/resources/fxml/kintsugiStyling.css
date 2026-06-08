@@ -565,7 +565,7 @@
     -fx-background-color: transparent;
 }
 /* 1. Base Horizontal ScrollBar Settings */
-#carouselScrollPane .scroll-bar:horizontal {
+.scroll-bar:horizontal {
     -fx-background-color: transparent;
     -fx-pref-height: 18px;
     -fx-min-height: 18px;
@@ -573,14 +573,14 @@
 }
 
 /* 2. The Scrollbar Track (Background) */
-#carouselScrollPane .scroll-bar:horizontal .track {
+.scroll-bar:horizontal .track {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-background-radius: 0px;
 }
 
 /* 3. The Thumb (The draggable white bar) */
-#carouselScrollPane .scroll-bar:horizontal .thumb {
+.scroll-bar:horizontal .thumb {
     -fx-background-color: #ffffff;
     -fx-background-radius: 4px;
     -fx-min-width: 40px;
@@ -593,7 +593,7 @@
 }
 
 /* Change thumb color when hovering over it */
-#carouselScrollPane .scroll-bar:horizontal .thumb:hover {
+.scroll-bar:horizontal .thumb:hover {
     -fx-background-color: #dcdcdc; /* Slightly off-white on hover */
 }
 

@@ -56,7 +56,7 @@ public class CarouselController implements Initializable {
                         loadCarouselCard(addedShader);
                     }
                     Platform.runLater(() -> {
-                        carouselScrollPane.setHvalue(0.0);
+                        carouselScrollPane.setHvalue(1.0);
                     });
                 //If an element was removed, we remove the element from the container
                 } else if (change.wasRemoved()) {
