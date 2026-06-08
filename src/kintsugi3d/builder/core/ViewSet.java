@@ -303,8 +303,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 
         public Builder commitCurrentCameraPose()
         {
-            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f), cameraProjectionIndex,
-                    result.viewSetDataList.size(), lightIndex, imageFile, maskFile, new ViewRMSE());
+            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f),
+                cameraProjectionIndex, lightIndex, result.viewSetDataList.size(), imageFile, maskFile, new ViewRMSE());
             result.viewSetDataList.add(currentCamera);
             return this;
         }
@@ -1151,7 +1151,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     {
         return new File(this.getThumbnailImageDirectory(),
             // TODO: replace String.valueOf with the actual image filename
-            ImageFinder.getInstance().getImageFileNameWithExtension(viewSetDataList.get(poseIndex).imageFile.getPath(), extension));
+            ImageFinder.getInstance().getImageFileNameWithExtension(
+                viewSetDataList.get(poseIndex).imageFile.getName(), extension));
     }
 
     @Override
