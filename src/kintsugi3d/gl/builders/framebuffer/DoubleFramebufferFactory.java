@@ -14,22 +14,22 @@ package kintsugi3d.gl.builders.framebuffer;
 import kintsugi3d.gl.core.*;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Consumer;
 
-public final class DefaultFramebufferFactory
+public final class DoubleFramebufferFactory
 {
-    private DefaultFramebufferFactory()
+    private DoubleFramebufferFactory()
     {
     }
 
     public static <ContextType extends Context<ContextType>> DoubleFramebufferObject<ContextType> create(
         ContextType context, int initWidth, int initHeight)
     {
-        return new DefaultFramebufferObjectImpl<>(context, initWidth, initHeight);
+        return new DoubleFramebufferObjectImpl<>(context, initWidth, initHeight);
     }
 
-    private static class DefaultFramebufferObjectImpl<ContextType extends Context<ContextType>>
+    private static class DoubleFramebufferObjectImpl<ContextType extends Context<ContextType>>
         implements DoubleFramebufferObject<ContextType>, Framebuffer<ContextType>
     {
         private final ContextType context;
@@ -45,9 +45,9 @@ public final class DefaultFramebufferFactory
         private int newWidth;
         private int newHeight;
 
-        private final List<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
+        private final Collection<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
 
-        DefaultFramebufferObjectImpl(ContextType context, int initWidth, int initHeight)
+        DoubleFramebufferObjectImpl(ContextType context, int initWidth, int initHeight)
         {
             this.context = context;
 

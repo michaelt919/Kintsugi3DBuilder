@@ -8,6 +8,6 @@ layout(location = 0) out vec4 fragColor;
 void main() {
     // getMaterial()
     vec2 texCoords = getTexCoords();
-    vec3 roughness = texture(roughnessMap, texCoords).rgb;
+    vec3 roughness = texture(tex_roughness, texCoords).rgb;
     fragColor = vec4(roughness, 1);
 }

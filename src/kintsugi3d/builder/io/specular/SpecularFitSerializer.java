@@ -14,6 +14,7 @@ package kintsugi3d.builder.io.specular;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Texture3D;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.slf4j.Logger;
@@ -62,7 +63,8 @@ public final class SpecularFitSerializer
 
             try
             {
-                ImageIO.write(weightImg, "PNG", new File(outputDirectory, getWeightFileName(b)));
+                ImageIO.write(weightImg, "PNG",
+                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
             }
             catch (IOException e)
             {
@@ -76,7 +78,8 @@ public final class SpecularFitSerializer
         {
             try
             {
-                basisWeights.getColorTextureReader(b).saveToFile("PNG", new File(outputDirectory, getWeightFileName(b)));
+                basisWeights.getColorTextureReader(b).saveToFile("PNG",
+                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
             }
             catch (IOException e)
             {
@@ -85,42 +88,12 @@ public final class SpecularFitSerializer
         }
     }
 
-    public static String getCombinedWeightFilename(int imageIndex, String format)
-    {
-        return getWeightFileName(imageIndex, 4, format);
-    }
-
-    public static String getWeightFileName(int weightMapIndex)
-    {
-        return getWeightFileName(weightMapIndex, 1, "PNG");
-    }
-
-    public static String getWeightFileName(int weightMapIndex, String format)
-    {
-        return getWeightFileName(weightMapIndex, 1, format);
-    }
-
-    public static String getWeightFileName(int weightMapIndex, int weightsPerChannel, String format)
-    {
-        int scaledWeightMapIndex = weightMapIndex;
-        if (weightsPerChannel <= 1)
-        {
-            return String.format("weights%02d.%s", scaledWeightMapIndex, format.toLowerCase(Locale.ROOT));
-        }
-        else
-        {
-            scaledWeightMapIndex *= weightsPerChannel;
-            return String.format("weights%02d%02d.%s", scaledWeightMapIndex,
-                scaledWeightMapIndex + (weightsPerChannel - 1), format.toLowerCase(Locale.ROOT));
-        }
-    }
-
     public static void serializeBasisFunctions(
         int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
     {
         // Text file format
         try (PrintStream out = new PrintStream(new File(outputDirectory,
-            filenameOverride != null ? filenameOverride : getBasisFunctionsFilename()), StandardCharsets.UTF_8))
+            filenameOverride != null ? filenameOverride : TextureResources.getBasisFunctionsFilename()), StandardCharsets.UTF_8))
         {
             for (int b = 0; b < basisCount; b++)
             {
@@ -162,11 +135,6 @@ public final class SpecularFitSerializer
         }
     }
 
-    public static String getBasisFunctionsFilename()
-    {
-        return "basisFunctions.csv";
-    }
-
     /**
      * Deserializes basis functions only.
      * Does not deserialize weights (which can be loaded as images) or diffuse basis colors (which should be re-fit, or a diffuse texture can be used instead).
@@ -176,7 +144,7 @@ public final class SpecularFitSerializer
     public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory)
         throws IOException
     {
-        File basisFile = new File(priorSolutionDirectory, getBasisFunctionsFilename());
+        File basisFile = new File(priorSolutionDirectory, TextureResources.getBasisFunctionsFilename());
 
         if (basisFile.exists())
         {

@@ -11,12 +11,14 @@
 
 package kintsugi3d.builder.state.scene;
 
+import java.io.File;
 import java.util.*;
 
 public class UserShader
 {
-    private final String friendlyName;
+    public static final String SHADER_DIR = "shaders";
 
+    private final String friendlyName;
     private final String filename;
 
     private final Map<String, Optional<Object>> defines;
@@ -32,7 +34,7 @@ public class UserShader
     {
         this.friendlyName = friendlyName;
         this.filename = filename;
-        this.defines = defines;
+        this.defines = Collections.unmodifiableMap(defines);
     }
 
     public String getFriendlyName()
@@ -45,17 +47,23 @@ public class UserShader
         return filename;
     }
 
+    public File getFile()
+    {
+        return new File(SHADER_DIR, filename);
+    }
+
     public Map<String, Optional<Object>> getDefines()
     {
         return Collections.unmodifiableMap(defines);
     }
 
+
     @Override
-    public boolean equals(Object other)
+    public boolean equals(Object obj)
     {
-        if (other instanceof UserShader)
+        if (obj instanceof UserShader)
         {
-            UserShader otherShader = (UserShader)other;
+            UserShader otherShader = (UserShader) obj;
             return Objects.equals(this.friendlyName, otherShader.friendlyName)
                 && Objects.equals(this.filename, otherShader.filename)
                 && Objects.equals(this.defines, otherShader.defines);
@@ -64,5 +72,11 @@ public class UserShader
         {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(friendlyName, filename, defines);
     }
 }

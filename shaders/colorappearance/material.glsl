@@ -19,32 +19,32 @@
 
 in vec2 fTexCoord;
 
-#ifndef DIFFUSE_TEXTURE_ENABLED
-#define DIFFUSE_TEXTURE_ENABLED 0
+#ifndef TEXTURE_DIFFUSE
+#define TEXTURE_DIFFUSE 0
 #endif
 
-#ifndef SPECULAR_TEXTURE_ENABLED
-#define SPECULAR_TEXTURE_ENABLED 0
+#ifndef TEXTURE_SPECULAR
+#define TEXTURE_SPECULAR 0
 #endif
 
-#ifndef ROUGHNESS_TEXTURE_ENABLED
-#define ROUGHNESS_TEXTURE_ENABLED 0
+#ifndef TEXTURE_ROUGHNESS
+#define TEXTURE_ROUGHNESS 0
 #endif
 
-#ifndef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 0
+#ifndef TEXTURE_NORMAL
+#define TEXTURE_NORMAL 0
 #endif
 
-#ifndef OCCLUSION_TEXTURE_ENABLED
-#define OCCLUSION_TEXTURE_ENABLED 0
+#ifndef TEXTURE_OCCLUSION
+#define TEXTURE_OCCLUSION 0
 #endif
 
-#ifndef ALBEDO_TEXTURE_ENABLED
-#define ALBEDO_TEXTURE_ENABLED 0
+#ifndef TEXTURE_ALBEDO
+#define TEXTURE_ALBEDO 0
 #endif
 
-#ifndef ORM_TEXTURE_ENABLED
-#define ORM_TEXTURE_ENABLED 0
+#ifndef TEXTURE_ORM
+#define TEXTURE_ORM 0
 #endif
 
 #ifndef TANGENT_SPACE_NORMAL_MAP
@@ -87,32 +87,32 @@ in vec2 fTexCoord;
 #define DEFAULT_AMBIENT_OCCLUSION (1.0)
 #endif
 
-#if DIFFUSE_TEXTURE_ENABLED
-uniform sampler2D diffuseMap;
+#if TEXTURE_DIFFUSE
+uniform sampler2D tex_diffuse;
 #endif
 
-#if SPECULAR_TEXTURE_ENABLED
-uniform sampler2D specularMap;
+#if TEXTURE_SPECULAR
+uniform sampler2D tex_specular;
 #endif
 
-#if ROUGHNESS_TEXTURE_ENABLED
-uniform sampler2D roughnessMap;
+#if TEXTURE_ROUGHNESS
+uniform sampler2D tex_roughness;
 #endif
 
-#if OCCLUSION_TEXTURE_ENABLED
-uniform sampler2D occlusionMap;
+#if TEXTURE_OCCLUSION
+uniform sampler2D tex_occlusion;
 #endif
 
-#if ALBEDO_TEXTURE_ENABLED
-uniform sampler2D albedoMap;
+#if TEXTURE_ALBEDO
+uniform sampler2D tex_albedo;
 #endif
 
-#if ORM_TEXTURE_ENABLED
-uniform sampler2D ormMap;
+#if TEXTURE_ORM
+uniform sampler2D tex_orm;
 #endif
 
 #ifndef SMITH_MASKING_SHADOWING
-#if ROUGHNESS_TEXTURE_ENABLED
+#if TEXTURE_ROUGHNESS
 #define SMITH_MASKING_SHADOWING 1
 #endif
 #endif
@@ -135,8 +135,8 @@ struct Material
     float roughness;
 };
 
-#define USE_ALBEDO_ORM (ORM_TEXTURE_ENABLED && ALBEDO_TEXTURE_ENABLED && (!DIFFUSE_TEXTURE_ENABLED || !SPECULAR_TEXTURE_ENABLED))
-#define USE_ORM (ORM_TEXTURE_ENABLED && (!OCCLUSION_TEXTURE_ENABLED || !ROUGHNESS_TEXTURE_ENABLED || USE_ALBEDO_ORM))
+#define USE_ALBEDO_ORM (TEXTURE_ORM && TEXTURE_ALBEDO && (!TEXTURE_DIFFUSE || !TEXTURE_SPECULAR))
+#define USE_ORM (TEXTURE_ORM && (!TEXTURE_OCCLUSION || !TEXTURE_ROUGHNESS || USE_ALBEDO_ORM))
 
 Material getMaterial()
 {
@@ -145,21 +145,21 @@ Material getMaterial()
 
 #if USE_ORM
 #if USE_ALBEDO_ORM
-    vec3 albedo = sRGBToLinear(texture(albedoMap, texCoords).rgb);
+    vec3 albedo = sRGBToLinear(texture(tex_albedo, texCoords).rgb);
 #endif
-    vec3 orm = texture(ormMap, texCoords).rgb;
+    vec3 orm = texture(tex_orm, texCoords).rgb;
 #endif
 
-#if DIFFUSE_TEXTURE_ENABLED
-    m.diffuseColor = sRGBToLinear(texture(diffuseMap, texCoords).rgb);
+#if TEXTURE_DIFFUSE
+    m.diffuseColor = sRGBToLinear(texture(tex_diffuse, texCoords).rgb);
 #elif USE_ALBEDO_ORM
     m.diffuseColor = albedo - albedo * orm[2];
 #else
     m.diffuseColor = DEFAULT_DIFFUSE_COLOR;
 #endif
 
-#if SPECULAR_TEXTURE_ENABLED
-    m.specularColor = sRGBToLinear(texture(specularMap, texCoords).rgb);
+#if TEXTURE_SPECULAR
+    m.specularColor = sRGBToLinear(texture(tex_specular, texCoords).rgb);
 #elif USE_ALBEDO_ORM
     m.specularColor = mix(vec3(0.04), albedo, orm[2]);
 #else
@@ -168,8 +168,8 @@ Material getMaterial()
 
 #if USE_ALBEDO_ORM
     m.roughness = orm[1] * orm[1];
-#elif ROUGHNESS_TEXTURE_ENABLED
-    float sqrtRoughness = texture(roughnessMap, texCoords)[0];
+#elif TEXTURE_ROUGHNESS
+    float sqrtRoughness = texture(tex_roughness, texCoords)[0];
     m.roughness = sqrtRoughness * sqrtRoughness;
 #else
     m.roughness = DEFAULT_SPECULAR_ROUGHNESS;
@@ -177,8 +177,8 @@ Material getMaterial()
 
 #if USE_ALBEDO_ORM
     m.occlusion = orm[0];
-#elif OCCLUSION_TEXTURE_ENABLED
-    m.occlusion = texture(occlusionMap, texCoords)[0];
+#elif TEXTURE_OCCLUSION
+    m.occlusion = texture(tex_occlusion, texCoords)[0];
 #else
     m.occlusion = DEFAULT_AMBIENT_OCCLUSION;
 #endif
@@ -186,8 +186,8 @@ Material getMaterial()
     return m;
 }
 
-#if NORMAL_TEXTURE_ENABLED
-uniform sampler2D normalMap;
+#if TEXTURE_NORMAL
+uniform sampler2D tex_normal;
 
 #if TANGENT_SPACE_NORMAL_MAP
 
@@ -196,15 +196,15 @@ in vec3 fBitangent;
 
 vec3 getTangentSpaceNormal(vec2 texCoord)
 {
-    vec2 normalXY = texture(normalMap, texCoord).xy * 2 - 1;
+    vec2 normalXY = texture(tex_normal, texCoord).xy * 2 - 1;
     return vec3(normalXY, 1.0 - dot(normalXY, normalXY));
 }
 #endif // TANGENT_SPACE_NORMAL_MAP
-#endif // NORMAL_TEXTURE_ENABLED
+#endif // TEXTURE_NORMAL
 
 vec3 getRefinedWorldSpaceNormal(vec3 triangleNormal)
 {
-#if TANGENT_SPACE_NORMAL_MAP && NORMAL_TEXTURE_ENABLED
+#if TANGENT_SPACE_NORMAL_MAP && TEXTURE_NORMAL
     vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
     vec3 bitangent = normalize(fBitangent
         - dot(triangleNormal, fBitangent) * triangleNormal
@@ -215,20 +215,20 @@ vec3 getRefinedWorldSpaceNormal(vec3 triangleNormal)
     vec2 texCoords = getTexCoords();
 
     vec3 normalDir;
-#if NORMAL_TEXTURE_ENABLED
+#if TEXTURE_NORMAL
 #if (TANGENT_SPACE_NORMAL_MAP && NORMAL_MAP_SCALE_ENABLED)
     vec3 normalDirTS = normalize(getTangentSpaceNormal(texCoords) * vec3(NORMAL_MAP_SCALE, NORMAL_MAP_SCALE, 1.0));
     normalDir = tangentToObject * normalDirTS;
 #elif TANGENT_SPACE_NORMAL_MAP
-    vec2 normalDirXY = texture(normalMap, texCoords).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(tex_normal, texCoords).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     normalDir = tangentToObject * normalDirTS;
 #else
-    normalDir = texture(normalMap, texCoords).xyz * 2 - vec3(1.0);
+    normalDir = texture(tex_normal, texCoords).xyz * 2 - vec3(1.0);
 #endif // TANGENT_SPACE_NORMAL_MAP
 #else
     normalDir = triangleNormal;
-#endif // NORMAL_TEXTURE_ENABLED
+#endif // TEXTURE_NORMAL
 
     return normalDir;
 }

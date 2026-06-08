@@ -11,10 +11,11 @@
 
 package kintsugi3d.builder.fit.debug;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
@@ -58,9 +59,10 @@ public final class FinalErrorCalculaton
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        GraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
+        GraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit, PrintStream rmseOut)
     {
-        if (CALCULATE_NORMAL_RMSE && resources.getSpecularMaterialResources().getNormalMap() != null)
+        Texture2D<ContextType> priorNormalMap = resources.getTextureResources().getTexture(StandardTexture.NORMAL_MAP);
+        if (CALCULATE_NORMAL_RMSE && priorNormalMap != null)
         {
             try (ProgramObject<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
@@ -70,13 +72,13 @@ public final class FinalErrorCalculaton
                     resources.getContext().buildFramebufferObject(specularFit.getWidth(), specularFit.getHeight()).addColorAttachment().createFramebufferObject();
                 Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram))
             {
-                textureRectProgram.setTexture("tex", resources.getSpecularMaterialResources().getNormalMap());
+                textureRectProgram.setTexture("tex", priorNormalMap);
                 textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));
 
                 float[] groundTruth = textureRectFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
-                float[] estimate = specularFit.getNormalMap().getColorTextureReader().readFloatingPointRGBA();
+                float[] estimate = specularFit.getTexture(StandardTexture.NORMAL_MAP).getColorTextureReader().readFloatingPointRGBA();
 
                 double rmse = Math.sqrt( // root
                     IntStream.range(0, groundTruth.length / 4)
@@ -109,7 +111,7 @@ public final class FinalErrorCalculaton
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
         ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        SpecularMaterialResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
+        TextureResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
         try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory);
@@ -125,18 +127,7 @@ public final class FinalErrorCalculaton
             rmseOut.println("RMSE using basis diffuse (sRGB): " + basisErrorCalculator.getReport().getError());
 
             // Setup drawable that uses the final diffuse texture (not limited to basis colors)
-            specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
-            specularFit.getBasisWeightResources().useWithShaderProgram(finalErrorCalcProgram);
-            finalErrorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
-            finalErrorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
-            finalErrorCalcProgram.setTexture("diffuseMap", specularFit.getDiffuseMap());
-
-            if (specularFit.getConstantMap() != null)
-            {
-                // TODO add support for constant maps in error estimation
-                finalErrorCalcProgram.setTexture("constantEstimate", specularFit.getConstantMap());
-            }
-
+            specularFit.setupShaderProgram(finalErrorCalcProgram);
             finalErrorCalcProgram.setUniform("sRGB", false);
 
             // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
@@ -169,24 +160,14 @@ public final class FinalErrorCalculaton
      * @throws FileNotFoundException
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
-            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-            SpecularMaterialResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+        TextureResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws IOException
     {
         try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory);
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram))
         {
-            ggxErrorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
-            ggxErrorCalcProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
-            ggxErrorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
-            ggxErrorCalcProgram.setTexture("diffuseMap", specularFit.getDiffuseMap());
-
-            if (specularFit.getConstantMap() != null)
-            {
-                // TODO add support for constant maps in error estimation
-                ggxErrorCalcProgram.setTexture("constantEstimate", specularFit.getConstantMap());
-            }
-
+            specularFit.setupShaderProgram(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setUniform("sRGB", false);
 
             rmseOut.println("RMSE for GGX fit (linear): " +

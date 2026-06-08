@@ -22,7 +22,7 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-    float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
+    float sqrtRoughness = texture(tex_roughness, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
     float geomRatio;
 
@@ -43,7 +43,7 @@ void main()
 
     if (l.nDotL > 0.0)
     {
-        vec3 brdf = sRGBToLinear(texture(diffuseMap, fTexCoord).rgb) / PI + geomRatio * getMFDEstimate(l.nDotH);
+        vec3 brdf = sRGBToLinear(texture(tex_diffuse, fTexCoord).rgb) / PI + geomRatio * getMFDEstimate(l.nDotH);
 
         // Gamma correction intentionally omitted for error calculation.
         fragColor = vec4(l.nDotL * brdf + constant, 1.0);

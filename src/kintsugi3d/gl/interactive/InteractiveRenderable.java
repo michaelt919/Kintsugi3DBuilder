@@ -13,6 +13,7 @@ package kintsugi3d.gl.interactive;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.Resource;
 
 /**
  * An interface used with the InteractiveGraphics object to coordinate the initialization,
@@ -21,8 +22,21 @@ import kintsugi3d.gl.core.Framebuffer;
  * @author Michael Tetzlaff
  * @see InteractiveGraphics
  */
-public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends AutoCloseable
+public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends Resource
 {
+    /**
+     * Gets the application managing this renderable.
+     * @return
+     */
+    InteractiveApplication getOwningApp();
+
+
+    /**
+     * Sets the application managing this renderable.
+     * @param app
+     */
+    void setOwningApp(InteractiveApplication app);
+
     /**
      * Execute any initialization needed prior to updating and drawing this object.  You
      * should bring the internal state into being prepared to call update and draw.  Called

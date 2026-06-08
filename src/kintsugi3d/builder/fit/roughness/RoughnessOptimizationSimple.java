@@ -11,9 +11,11 @@
 
 package kintsugi3d.builder.fit.roughness;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.ColorFormat;
@@ -49,14 +51,10 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
         super(basisResources);
 
         // Load specular and roughness maps from files
-        Texture2D<ContextType> specularTex = basisResources.getContext().getTextureFactory()
-            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "specular.png"), true)
-            .setLinearFilteringEnabled(true)
-            .createTexture();
-        Texture2D<ContextType> roughnessTex = basisResources.getContext().getTextureFactory()
-            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "roughness.png"), true)
-            .setLinearFilteringEnabled(true)
-            .createTexture();
+        Texture2D<ContextType> specularTex =
+            TextureResources.loadTexture(StandardTexture.SPECULAR_COLOR, priorSolutionDirectory, basisResources.getContext());
+        Texture2D<ContextType> roughnessTex =
+            TextureResources.loadTexture(StandardTexture.ROUGHNESS, priorSolutionDirectory, basisResources.getContext());
 
         // Framebuffer for fitting and storing the specular parameter estimates (specular Fresnel color and roughness)
         FramebufferObjectBuilder<ContextType> fboBuilder = basisResources.getContext().buildFramebufferObject(

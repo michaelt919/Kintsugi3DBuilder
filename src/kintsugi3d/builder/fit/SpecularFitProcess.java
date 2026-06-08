@@ -18,11 +18,11 @@ import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.material.ReadonlyMaterial;
+import kintsugi3d.gl.material.ReadonlyImportedMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.BufferedImageColorList;
@@ -83,8 +83,8 @@ public class SpecularFitProcess
         LOG.info("Cache found / generated in: {}", duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        SpecularMaterialResources<ContextType> result = optimizeFitWithCache(cache, monitor);
-        resources.replaceSpecularMaterialResources(result);
+        TextureResources<ContextType> result = optimizeFitWithCache(cache, monitor);
+        resources.replaceTextureResources(result);
     }
 
     public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(
@@ -95,7 +95,7 @@ public class SpecularFitProcess
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), null);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceSpecularMaterialResources(reoptimizeTexturesWithCache(cache, resources.getSpecularMaterialResources(), monitor));
+        resources.replaceTextureResources(reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor));
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
@@ -138,7 +138,7 @@ public class SpecularFitProcess
                 }
             });
             ProgramObject<ContextType> basisModelReconstructionProgram = ReconstructionShaders.getBasisModelReconstructionProgramBuilder(
-                    resources, resources.getSpecularMaterialResources(), programFactory)
+                    resources, resources.getTextureResources(), programFactory)
                 .createProgram();
             Drawable<ContextType> drawable = resources.createDrawable(basisModelReconstructionProgram))
         {
@@ -217,7 +217,7 @@ public class SpecularFitProcess
         }
     }
 
-    private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFitWithCache(
+    private <ContextType extends Context<ContextType>> TextureResources<ContextType> optimizeFitWithCache(
         ImageCache<ContextType> cache, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
@@ -275,8 +275,8 @@ public class SpecularFitProcess
         }
     }
 
-    private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> reoptimizeTexturesWithCache(
-        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, ProgressMonitor monitor)
+    private <ContextType extends Context<ContextType>> TextureResources<ContextType> reoptimizeTexturesWithCache(
+        ImageCache<ContextType> cache, TextureResources<ContextType> original, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -298,14 +298,13 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> optimizeFitWithCacheHelper(
-        ImageCache<ContextType> cache, ProgressMonitor monitor, SpecularMaterialResources<ContextType> reference,
+        ImageCache<ContextType> cache, ProgressMonitor monitor, TextureResources<ContextType> reference,
         MaterialBasis basis, Instant start) throws IOException, UserCancellationException
     {
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
         SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(reference,
-            settings.getTextureResolution(), reference.getMetadataMaps().keySet(), /* include all metadata maps supported by SpecularFitOptimizable */
-            settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
+            settings.getTextureResolution(), settings.getSpecularBasisSettings());
 
 
         try
@@ -320,7 +319,7 @@ public class SpecularFitProcess
             // If normal map optimization is enabled, this will be used as the starting point.
             // If disabled, it should revert to this imported normal map
             File geometryFile = cache.getViewSet().getGeometryFile();
-            ReadonlyMaterial material = cache.getGeometry().getMaterial();
+            ReadonlyImportedMaterial material = cache.getGeometry().getMaterial();
             ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();
             File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
                 ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
@@ -374,7 +373,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
-        Blittable<SpecularMaterialResources<ContextType>> fullResolutionDestination,
+        Blittable<TextureResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
         MaterialBasis basis,
         File inputNormalMapFile,

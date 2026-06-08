@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<AnchorPane prefHeight="200.0" prefWidth="1000" style="-fx-background-color: transparent;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
+    <children>
+        <ScrollPane AnchorPane.bottomAnchor="0.0"
+                    AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0"
+                    AnchorPane.topAnchor="0.0"
+                    fitToHeight="true"
+                    style="-fx-background-color: transparent;"
+                    scaleY="-1.0"
+                    fx:id = "carouselScrollPane">
+            <content>
+                <HBox fx:id="containerHBox"
+                      scaleY="-1.0"
+                      spacing="10.0"
+                      alignment="CENTER_LEFT"
+                      style="-fx-background-color: transparent;">
+                    <padding>
+                        <Insets top="0.0" right="15.0" bottom="15.0" left="15.0" />
+                    </padding>
+                </HBox>
+            </content>
+        </ScrollPane>
+    </children>
+</AnchorPane>

@@ -20,11 +20,11 @@ uniform vec3 reconstructionLightPos;
 
 layout(location = 0) out vec4 fragColor;
 
-uniform sampler2D specularEstimate;
+uniform sampler2D tex_specular;
 
 void main()
 {
-    vec2 sqrtRoughness_Mask = texture(roughnessMap, fTexCoord).ra;
+    vec2 sqrtRoughness_Mask = texture(tex_roughness, fTexCoord).ra;
     float filteredMask = sqrtRoughness_Mask[1];
 
     if (filteredMask == 0.0)
@@ -34,8 +34,8 @@ void main()
     }
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0] / (filteredMask * filteredMask);
-    vec3 diffuseColor = sRGBToLinear(texture(diffuseMap, fTexCoord).rgb / filteredMask);
-    vec3 specularColor = sRGBToLinear(texture(specularEstimate, fTexCoord).rgb / filteredMask);
+    vec3 diffuseColor = sRGBToLinear(texture(tex_diffuse, fTexCoord).rgb / filteredMask);
+    vec3 specularColor = sRGBToLinear(texture(tex_specular, fTexCoord).rgb / filteredMask);
 
     // Constant term for pseudo-translucency
     vec3 constant = sRGBToLinear(getConstantTerm()) / PI;

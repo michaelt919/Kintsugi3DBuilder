@@ -12,7 +12,7 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Resource;
@@ -48,7 +48,7 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      * Diffuse, normal, specular, roughness maps
      * @return
      */
-    SpecularMaterialResources<ContextType> getSpecularMaterialResources();
+    TextureResources<ContextType> getTextureResources();
 
     /**
      * 1D textures for encoding and decoding
@@ -77,9 +77,9 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
 
     /**
      * Replace the specular material resources (textures); releasing the old resources if they were present
-     * @param specularMaterialResources The new resources / textures
+     * @param textureResources The new resources / textures
      */
-    void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources);
+    void replaceTextureResources(TextureResources<ContextType> textureResources);
 
     /**
      * Initialize any light intensities currently set to zero with the provided light intensity.

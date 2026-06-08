@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.core;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.javafx.internal.CarouselModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
@@ -32,11 +33,13 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final UserShaderModel userShaderModel;
     private final CameraViewListModel cameraViewListModel;
     private final ProjectModel projectModel;
+    private final CarouselModel carouselModel;
 
     private final GeneralSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
-    private final CanvasModel canvasModel;
+    private final CanvasModel mainCanvasModel;
+    private final CanvasListModel canvasListModel;
     private final IOModel ioModel;
 
     private final TabsModel tabsModel;
@@ -60,9 +63,11 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
-        canvasModel = new CanvasModelImpl();
+        mainCanvasModel = new CanvasModelImpl();
+        canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
+        carouselModel = new CarouselModel();
     }
 
     @Override
@@ -119,9 +124,15 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public CanvasModel getCanvasModel()
+    public CanvasModel getMainCanvasModel()
     {
-        return canvasModel;
+        return mainCanvasModel;
+    }
+
+    @Override
+    public CanvasListModel getCanvasListModel()
+    {
+        return canvasListModel;
     }
 
     @Override
@@ -135,4 +146,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     {
         return projectModel;
     }
+
+    @Override
+    public CarouselModel getCarouselModel() {return carouselModel; }
 }

@@ -69,10 +69,10 @@ float geom(float roughness, LightingParameters l)
 #undef DEFAULT_DIFFUSE_COLOR
 #undef DEFAULT_SPECULAR_COLOR
 #undef DEFAULT_SPECULAR_ROUGHNESS
-#undef DIFFUSE_TEXTURE_ENABLED
-#undef SPECULAR_TEXTURE_ENABLED
-#undef ROUGHNESS_TEXTURE_ENABLED
-#undef NORMAL_TEXTURE_ENABLED
+#undef TEXTURE_DIFFUSE
+#undef TEXTURE_SPECULAR
+#undef TEXTURE_ROUGHNESS
+#undef TEXTURE_NORMAL
 #undef UV_SCALE_ENABLED
 #undef UV_SCALE
 #undef NORMAL_MAP_SCALE_ENABLED
@@ -81,10 +81,10 @@ float geom(float roughness, LightingParameters l)
 #define DEFAULT_DIFFUSE_COLOR ANALYTIC_DIFFUSE_COLOR
 #define DEFAULT_SPECULAR_COLOR ANALYTIC_SPECULAR_COLOR
 #define DEFAULT_SPECULAR_ROUGHNESS vec3(ANALYTIC_ROUGHNESS)
-#define DIFFUSE_TEXTURE_ENABLED 0
-#define SPECULAR_TEXTURE_ENABLED 0
-#define ROUGHNESS_TEXTURE_ENABLED 0
-#define NORMAL_TEXTURE_ENABLED 1
+#define TEXTURE_DIFFUSE 0
+#define TEXTURE_SPECULAR 0
+#define TEXTURE_ROUGHNESS 0
+#define TEXTURE_NORMAL 1
 #define UV_SCALE_ENABLED 1
 #define UV_SCALE ANALYTIC_UV_SCALE
 #define NORMAL_MAP_SCALE_ENABLED 1
@@ -265,7 +265,7 @@ EnvironmentSample computeEnvironmentSample(int virtualSampleIndex, ViewingParame
 //            4 * hDotV_virtual * getCameraWeight(virtualSampleIndex));
         * getEnvironment(fPosition, transpose(mat3(cameraPose)) * envLighting.lightDir);
 
-#if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
+#if TEXTURE_SPECULAR && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
     // Normalizes with respect to specular texture when available as described in our Archiving 2017 paper.
     unweightedSample.a = mfdMono * geomAttenEnv / (4 * nDotV_virtual);
 #else

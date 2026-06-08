@@ -21,9 +21,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Material implements ReadonlyMaterial
+public class ImportedMaterial implements ReadonlyImportedMaterial
 {
-    private static final Logger LOG = LoggerFactory.getLogger(Material.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImportedMaterial.class);
     private String name;
 
     private Vector3 ambient;
@@ -57,7 +57,7 @@ public class Material implements ReadonlyMaterial
     private ReadonlyMaterialScalarMap displacementMap;
     private ReadonlyMaterialScalarMap ambientOcclusionMap;
 
-    public Material(String name)
+    public ImportedMaterial(String name)
     {
         this.name = name;
 
@@ -74,10 +74,10 @@ public class Material implements ReadonlyMaterial
         this.clearcoatRoughness = 0.0f;
     }
 
-    public static Dictionary<String, Material> loadFromMTLFile(File mtlFile) throws IOException
+    public static Dictionary<String, ImportedMaterial> loadFromMTLFile(File mtlFile) throws IOException
     {
-        Dictionary<String, Material> materials = new Hashtable<>();
-        Material currentMaterial = null;
+        Dictionary<String, ImportedMaterial> materials = new Hashtable<>();
+        ImportedMaterial currentMaterial = null;
         boolean ambientSet = false;
 
         if (mtlFile.exists())
@@ -92,7 +92,7 @@ public class Material implements ReadonlyMaterial
 
                     if ("newmtl".equals(id) && scanner.hasNext())
                     {
-                        currentMaterial = new Material(scanner.next());
+                        currentMaterial = new ImportedMaterial(scanner.next());
                         materials.put(currentMaterial.getName(), currentMaterial);
                     }
                     else if (currentMaterial != null)
@@ -906,9 +906,9 @@ public class Material implements ReadonlyMaterial
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
+    public <ContextType extends Context<ContextType>> ImportedMaterialResources<ContextType> createResources(
         ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
-        return new MaterialResources<>(context, this, textureDirectory, loadOptions);
+        return new ImportedMaterialResources<>(context, this, textureDirectory, loadOptions);
     }
 }

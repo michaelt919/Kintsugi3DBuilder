@@ -9,40 +9,24 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.gltf;
+package kintsugi3d.builder.javafx.internal;
 
-import java.util.HashMap;
-import java.util.Map;
+import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
+import kintsugi3d.builder.state.scene.UserShader;
+/*
+This class is for the global state, so we can have a list of shaders in the carousel.
+Has two methods, one to get an arraylist of the shaders currently in the carousel.
+And another to add a shader to the carousel list.
+ */
+public class CarouselModel {
+    private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
 
-public class GLTFTextureExtras
-{
-
-    private Integer baseRes = null;
-
-    private final Map<Integer, Integer> lods = new HashMap<>();
-
-    public void setLodImageIndex(int resolution, int index)
-    {
-        lods.put(resolution, index);
+    public ObservableList<UserShader> getCarouselShaders() {
+        return carouselShaders;
     }
 
-    public Integer getLodImageIndex(int resolution)
-    {
-        return lods.get(resolution);
-    }
-
-    public Map<Integer, Integer> getLods()
-    {
-        return lods;
-    }
-
-    public Integer getBaseRes()
-    {
-        return baseRes;
-    }
-
-    public void setBaseRes(Integer baseRes)
-    {
-        this.baseRes = baseRes;
+    public void addShader(UserShader shader) {
+        this.carouselShaders.add(shader);
     }
 }

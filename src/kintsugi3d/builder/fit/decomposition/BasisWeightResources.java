@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.io.specular.SpecularFitSerializer;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
@@ -128,7 +128,9 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         for (int b = 0; b < basisCount; b++)
         {
             // Load weight maps
-            resources.weightMaps.loadLayer(b, new File(priorSolutionDirectory, SpecularFitSerializer.getWeightFileName(b)), true);
+            resources.weightMaps.loadLayer(b,
+                new File(priorSolutionDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")),
+                true);
         }
 
         return resources;

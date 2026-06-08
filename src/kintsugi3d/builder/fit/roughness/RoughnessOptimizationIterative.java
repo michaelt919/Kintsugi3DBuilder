@@ -88,9 +88,9 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         roughnessOptimization.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
             // Bind previous estimate textures to the shader
-            estimationProgram.setTexture("diffuseMap", getDiffuseTexture.get());
-            estimationProgram.setTexture("specularEstimate", getReflectivityTexture()); // front FBO, attachment 0
-            estimationProgram.setTexture("roughnessMap", getRoughnessTexture()); // front FBO, attachment 1
+            estimationProgram.setTexture("tex_diffuse", getDiffuseTexture.get());
+            estimationProgram.setTexture("tex_specular", getReflectivityTexture()); // front FBO, attachment 0
+            estimationProgram.setTexture("tex_roughness", getRoughnessTexture()); // front FBO, attachment 1
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
 
             // Clear framebuffer

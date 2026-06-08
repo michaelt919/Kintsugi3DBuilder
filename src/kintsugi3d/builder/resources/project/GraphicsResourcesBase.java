@@ -12,7 +12,7 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -70,9 +70,9 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     }
 
     @Override
-    public final SpecularMaterialResources<ContextType> getSpecularMaterialResources()
+    public final TextureResources<ContextType> getTextureResources()
     {
-        return sharedResources.getSpecularMaterialResources();
+        return sharedResources.getTextureResources();
     }
 
     @Override
@@ -109,9 +109,9 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     }
 
     @Override
-    public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
+    public void replaceTextureResources(TextureResources<ContextType> textureResources)
     {
-        sharedResources.replaceSpecularMaterialResources(specularMaterialResources);
+        sharedResources.replaceTextureResources(textureResources);
     }
 
     @Override

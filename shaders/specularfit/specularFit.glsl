@@ -17,19 +17,19 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 // normal and tangent will be declared by constructTBN.glsl
 
-uniform sampler2D diffuseMap;
-uniform sampler2D roughnessMap;
+uniform sampler2D tex_diffuse;
+uniform sampler2D tex_roughness;
 
 #ifndef USE_CONSTANT_MAP
 #define USE_CONSTANT_MAP 0
 #endif
 
 #if USE_CONSTANT_MAP
-uniform sampler2D constantMap;
+uniform sampler2D tex_constant;
 
 vec3 getConstantTerm()
 {
-    return texture(constantMap, fTexCoord).rgb;
+    return texture(tex_constant, fTexCoord).rgb;
 }
 
 #else
