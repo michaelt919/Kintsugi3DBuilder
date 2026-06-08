@@ -14,7 +14,7 @@ package kintsugi3d.gl.builders.framebuffer;
 import kintsugi3d.gl.core.*;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 public final class DoubleFramebufferFactory
@@ -45,7 +45,7 @@ public final class DoubleFramebufferFactory
         private int newWidth;
         private int newHeight;
 
-        private final List<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
+        private final Collection<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
 
         DoubleFramebufferObjectImpl(ContextType context, int initWidth, int initHeight)
         {

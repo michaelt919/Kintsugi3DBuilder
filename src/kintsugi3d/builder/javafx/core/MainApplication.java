@@ -100,7 +100,7 @@ public class MainApplication extends Application
                 GlobalUserPreferencesManager.getInstance().save();
                 LOG.debug("User preferences file saved successfully!");
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 LOG.error("An error occurred saving user preferences", e);
                 Platform.runLater(() ->
@@ -266,7 +266,7 @@ public class MainApplication extends Application
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(
+            ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
                 event -> ExperienceManager.getInstance().getExperience("Log").tryOpen());
             alert.show();
         }

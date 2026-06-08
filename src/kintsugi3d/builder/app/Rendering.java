@@ -53,10 +53,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class Rendering
@@ -122,7 +119,8 @@ public final class Rendering
 
                 // Need to still specify a native window to create the context, even though we won't use it.
                 CanvasWindow<OpenGLContext> nativeWindow = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
-                    .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DoubleFramebufferFactory.create(c, 800, 800))
+                    .setDefaultFramebufferCreator(
+                        c -> framebufferCapture.fbo = DoubleFramebufferFactory.create(c, 800, 800))
                     .create();
 
                 FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
@@ -137,7 +135,7 @@ public final class Rendering
         }
     }
 
-    private static void setup3DWindow(PollableWindow window)
+    private static void setup3DWindow(Window window)
     {
         SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
         {
@@ -583,9 +581,9 @@ public final class Rendering
         String[] formatNames = ImageIO.getReaderFormatNames();
 
         Collection<String> set = Arrays.stream(formatNames)
-            .map(String::toLowerCase)
+            .map(s -> s.toLowerCase(Locale.ROOT))
             .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
-        LOG.info("Supported image formats: " + set);
+        LOG.info("Supported image formats: {}", set);
     }
 }

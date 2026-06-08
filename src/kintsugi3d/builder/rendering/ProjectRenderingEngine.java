@@ -237,7 +237,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
             lightCalibration.update();
             lightCalibration3DRoot.update();
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
             LOG.error("Error occurred during update:", e);
         }
@@ -469,7 +469,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             shadingFramebuffers.clear();
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
             LOG.error("Error closing ProjectRenderingEngine:", e);
         }
@@ -497,7 +497,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     public String toString()
     {
         return this.id.length() > 32
-                ? "..." + this.id.substring(this.id.length()-31)
+                ? String.format("...%s", this.id.substring(this.id.length() - 31))
                 : this.id;
     }
 
@@ -512,7 +512,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             suppressErrors = false;
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
             LOG.error("Error reloading shaders:", e);
         }
