@@ -598,18 +598,48 @@
 }
 
 /* 4. Remove and collapse the Arrow Buttons entirely */
-#carouselScrollPane .scroll-bar:horizontal .increment-button,
-#carouselScrollPane .scroll-bar:horizontal .decrement-button {
+
+.scroll-pane .scroll-bar .increment-button,
+.scroll-pane .scroll-bar .decrement-button {
     -fx-background-color: transparent;
     -fx-background-radius: 0px;
     -fx-border-color: transparent;
     -fx-padding: 0px;
     -fx-opacity: 0.0;
+    /* Forces the layout engine to collapse their size to absolute zero */
+    -fx-max-width: 0px;
+    -fx-max-height: 0px;
+    -fx-min-width: 0px;
+    -fx-min-height: 0px;
 }
 
-#carouselScrollPane .scroll-bar:horizontal .increment-arrow,
-#carouselScrollPane .scroll-bar:horizontal .decrement-arrow {
+.scroll-pane .scroll-bar .increment-arrow,
+.scroll-pane .scroll-bar .decrement-arrow {
     -fx-shape: "";
     -fx-padding: 0px;
     -fx-opacity: 0.0;
+    -fx-max-width: 0px;
+    -fx-max-height: 0px;
+}
+.scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 18px;
+    -fx-min-width: 18px;
+    -fx-max-width: 18px;
+}
+.scroll-pane .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0px;
+}
+.scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 4px;
+    -fx-min-height: 40px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0px;
+    -fx-background-insets: 0px 5px 0px 5px;
+}
+.scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #dcdcdc;
 }

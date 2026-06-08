@@ -39,7 +39,8 @@ public class CarouselCardController
 
     private UserShader currentShader;
 
-    private final UserShader defaultShader = new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
+    private final UserShader defaultShaderUnprocessed = new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
+    private final UserShader defaultShaderProcessed = new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
 
     /**
      * If the checkbox is selected it will apply the shader that is assigned to the card.
@@ -53,10 +54,16 @@ public class CarouselCardController
         {
             Global.state().getUserShaderModel().setUserShader(currentShader);
         }
-
         if (!textureType.isSelected())
         {
-            Global.state().getUserShaderModel().setUserShader(defaultShader);
+            if (Global.state().getProjectModel().isProjectProcessed())
+            {
+                Global.state().getUserShaderModel().setUserShader(defaultShaderProcessed);
+            }
+            else
+            {
+                Global.state().getUserShaderModel().setUserShader(defaultShaderUnprocessed);
+            }
         }
     }
 
@@ -109,7 +116,14 @@ public class CarouselCardController
              */
             if (currentShader.equals(Global.state().getUserShaderModel().getUserShader()))
             {
-                Global.state().getUserShaderModel().setUserShader(defaultShader);
+                if(Global.state().getProjectModel().isProjectProcessed())
+                {
+                    Global.state().getUserShaderModel().setUserShader(defaultShaderProcessed);
+                }
+                else
+                {
+                    Global.state().getUserShaderModel().setUserShader(defaultShaderUnprocessed);
+                }
             }
             Global.state().getCarouselModel().getCarouselShaders().remove(currentShader);
 
