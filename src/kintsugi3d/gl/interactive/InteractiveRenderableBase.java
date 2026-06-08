@@ -9,39 +9,30 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.gl.interactive;
 
-import kintsugi3d.gl.window.FramebufferCanvas;
+import kintsugi3d.gl.core.Context;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.function.Consumer;
-
-public class CanvasModelImpl implements CanvasModel
+public abstract class InteractiveRenderableBase<ContextType extends Context<ContextType>> implements InteractiveRenderable<ContextType>
 {
-    private FramebufferCanvas<?> canvas = null;
-    private final Collection<Consumer<FramebufferCanvas<?>>> canvasChangedListeners = new LinkedList<>();
+    private InteractiveApplication owningApp;
 
     @Override
-    public FramebufferCanvas<?> getCanvas()
+    public final InteractiveApplication getOwningApp()
     {
-        return canvas;
+        return this.owningApp;
     }
 
     @Override
-    public void setCanvas(FramebufferCanvas<?> canvas)
+    public final void setOwningApp(InteractiveApplication app)
     {
-        this.canvas = canvas;
-
-        for (Consumer<FramebufferCanvas<?>> listener : canvasChangedListeners)
+        if (this.owningApp == null)
         {
-            listener.accept(canvas);
+            this.owningApp = app;
         }
-    }
-
-    @Override
-    public void addCanvasChangedListener(Consumer<FramebufferCanvas<?>> listener)
-    {
-        canvasChangedListeners.add(listener);
+        else
+        {
+            throw new IllegalStateException("Renderable is already owned by another application!");
+        }
     }
 }

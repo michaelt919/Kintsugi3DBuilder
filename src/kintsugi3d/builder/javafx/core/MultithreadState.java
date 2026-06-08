@@ -38,7 +38,8 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final GeneralSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
-    private final CanvasModel canvasModel;
+    private final CanvasModel mainCanvasModel;
+    private final CanvasListModel canvasListModel;
     private final IOModel ioModel;
 
     private final TabsModel tabsModel;
@@ -62,7 +63,8 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
-        canvasModel = new CanvasModelImpl();
+        mainCanvasModel = new CanvasModelImpl();
+        canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
         carouselModel = new CarouselModel();
@@ -122,9 +124,15 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public CanvasModel getCanvasModel()
+    public CanvasModel getMainCanvasModel()
     {
-        return canvasModel;
+        return mainCanvasModel;
+    }
+
+    @Override
+    public CanvasListModel getCanvasListModel()
+    {
+        return canvasListModel;
     }
 
     @Override

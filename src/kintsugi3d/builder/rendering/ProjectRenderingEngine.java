@@ -32,6 +32,7 @@ import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
+import kintsugi3d.gl.interactive.InteractiveRenderableBase;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -45,7 +46,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class ProjectRenderingEngine<ContextType extends Context<ContextType>> implements ProjectInstance<ContextType>
+public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
+    extends InteractiveRenderableBase<ContextType> implements ProjectInstance<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
 
@@ -56,6 +58,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
     private final Builder<ContextType> resourceBuilder;
     private GraphicsResourcesImageSpace<ContextType> resources;
+    private final boolean managedResources;
 
     private VertexBuffer<ContextType> rectangleVertices;
 
@@ -71,6 +74,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
     private LitRoot<ContextType> litRoot;
     private LitRoot<ContextType> lightCalibration3DRoot;
 
+    private RenderingSubject<ContextType> subject;
+
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel sceneViewportModel;
 
@@ -84,11 +89,38 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
         this.id = id;
         this.context = context;
         this.resourceBuilder = resourceBuilder;
-
+        this.managedResources = true;
         this.sceneModel = new SceneModel();
+        this.sceneViewportModel = createSceneViewportModel(this.sceneModel);
+    }
 
-        this.sceneViewportModel = new SceneViewportModel(sceneModel);
-        this.sceneViewportModel.addSceneObjectType("SceneObject");
+    ProjectRenderingEngine(String id, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
+    {
+        this.id = id;
+        this.context = context;
+        this.resources = resources;
+        this.resourceBuilder = null;
+        this.managedResources = false;
+        this.sceneModel = new SceneModel();
+        this.sceneViewportModel = createSceneViewportModel(this.sceneModel);
+    }
+
+    private static SceneViewportModel createSceneViewportModel(SceneModel sceneModel)
+    {
+        SceneViewportModel sceneViewportModel = new SceneViewportModel(sceneModel);
+        sceneViewportModel.addSceneObjectType("SceneObject");
+        return sceneViewportModel;
+    }
+
+    @Override
+    public String getID()
+    {
+        return id;
+    }
+
+    public RenderingSubject<ContextType> getSubject()
+    {
+        return subject;
     }
 
     @Override
@@ -115,12 +147,15 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
             this.rectangleVertices = context.createRectangle();
 
-            this.resources = resourceBuilder
-                .setProgressMonitor(this.progressMonitor) // Use the progress monitor that offsets the stage count if generating preview images
+            if (resourceBuilder != null)
+            {
+                this.resources = resourceBuilder
+                    .setProgressMonitor(this.progressMonitor) // Use the progress monitor that offsets the stage count if generating preview images
 //                .generateUndistortedPreviewImages()
-                .create();
+                    .create();
 
-            context.flush();
+                context.flush();
+            }
 
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
@@ -146,7 +181,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
 
             lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, lightCalibration3DRoot);
 
-            RenderingSubject<ContextType> subject = scene.getSubject();
+            this.subject = scene.getSubject();
             this.dynamicResourceLoader = new DynamicResourceLoader<>(progressMonitor,
                 resources, subject, litRoot.getLightingResources());
 
@@ -385,7 +420,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>> im
     {
         try
         {
-            if (resources != null)
+            if (managedResources && resources != null)
             {
                 resources.close();
                 resources = null;

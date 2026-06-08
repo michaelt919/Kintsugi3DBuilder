@@ -47,6 +47,16 @@ public class InteractiveApplication
         this.refreshables.add(refreshable);
     }
 
+    public void removePollable(EventPollable pollable)
+    {
+        this.pollables.remove(pollable);
+    }
+
+    public void removeRefreshable(Refreshable refreshable)
+    {
+        this.refreshables.remove(refreshable);
+    }
+
     public void run() throws InitializationException
     {
         for (Refreshable refreshable : this.refreshables)

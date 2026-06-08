@@ -13,6 +13,7 @@ package kintsugi3d.gl.interactive;
 
 public interface Refreshable 
 {
+    boolean isInitialized();
     void initialize() throws InitializationException;
     void refresh();
     void terminate();

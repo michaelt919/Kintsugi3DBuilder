@@ -106,6 +106,12 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
     void reloadShaders();
 
     /**
+     * Gets the ID of the project instance.
+     * @return
+     */
+    String getID();
+
+    /**
      * Gets the resources used by this project instance.
      * These resources can be used to accomplish other shading tasks other than the built-in image-based renderer.
      * The resources are automatically destroyed when this implementation closes.

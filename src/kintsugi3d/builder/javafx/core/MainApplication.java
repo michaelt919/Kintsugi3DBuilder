@@ -251,7 +251,7 @@ public class MainApplication extends Application
             welcomeStage.show();
         }
 
-        Global.state().getCanvasModel().addCanvasChangedListener(
+        Global.state().getMainCanvasModel().addCanvasChangedListener(
             canvas -> mainWindowController.getFramebufferView().setCanvas(canvas));
 
         ObservableGeneralSettingsModel settingsModel = JavaFXState.getInstance().getSettingsModel();
