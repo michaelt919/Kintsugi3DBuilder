@@ -47,6 +47,6 @@ public class CanvasListModelImpl implements CanvasListModel
     @Override
     public void removeCanvas(UserShader shader)
     {
-
+        instanceManager.removeRenderView(shader);
     }
 }
