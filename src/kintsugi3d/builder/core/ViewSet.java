@@ -47,9 +47,11 @@ import java.util.*;
  *
  * @author Michael Tetzlaff
  */
-public final class ViewSet implements ReadonlyViewSet
+public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 {
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
+
+    private List<ViewSetObserver> observers = new ArrayList<>();
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
@@ -804,11 +806,11 @@ public final class ViewSet implements ReadonlyViewSet
         else
         {
             int[] indexArray = new int[viewSetDataList.size()];
-//            Arrays.setAll(indexArray, i->viewSetDataList.get(i).viewIndex);
-            for (int i = 0; i < viewSetDataList.size(); ++i)
-            {
-                indexArray[i] = i;
-            }
+            Arrays.setAll(indexArray, i->viewSetDataList.get(i).viewIndex);
+//            for (int i = 0; i < viewSetDataList.size(); ++i)
+//            {
+//                indexArray[i] = i;
+//            }
             return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewSetDataList.size(), indexArray);
         }
     }
@@ -945,7 +947,7 @@ public final class ViewSet implements ReadonlyViewSet
 
 //            result.viewErrorMetrics.add(new ViewRMSE());
             ViewSetData currentViewSetData = new ViewSetData(cameraPose, cameraPoseInv, 0, 0,
-                    imageFile, null, new ViewRMSE());
+                    i, imageFile, null, new ViewRMSE());
         }
 
         return result;
@@ -971,14 +973,13 @@ public final class ViewSet implements ReadonlyViewSet
         return -1;
     }
 
-    public void deleteCamera(File image) {
+    public void deleteCamera(File image)
+    {
         int index = findViewSetIndex(viewSetDataList, image);
         if (index != -1)
         {
-//            for (int i = index; i < index + 20; ++i)
-//            {
             viewSetDataList.remove(index);
-//            }
+            notifyObservers();
         }
     }
 
@@ -1863,5 +1864,26 @@ public final class ViewSet implements ReadonlyViewSet
         program.setUniform("occlusionBias", projectSettings.getFloat("occlusionBias"));
         program.setUniform("edgeProximityMargin", projectSettings.getFloat("edgeProximityMargin"));
         program.setUniform("edgeProximityCutoff", projectSettings.getFloat("edgeProximityCutoff"));
+    }
+
+    @Override
+    public void registerObserver(ViewSetObserver observer)
+    {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(ViewSetObserver observer)
+    {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers()
+    {
+        for (ViewSetObserver observer : observers)
+        {
+            observer.update();
+        }
     }
 }

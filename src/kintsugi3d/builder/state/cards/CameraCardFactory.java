@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.state.cards;
 
+import javafx.application.Platform;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
@@ -61,21 +63,20 @@ public class CameraCardFactory implements ProjectDataCardFactory
                     put("Resolution", res);
                     put("Size", (fullResFile.length() / (1024 * 1024)) + " MB");
                 }},
-                Map.of("Delete Image", () ->
-                    {
-                        cardsModel.confirm("Delete Image", "Delete Image?", "This will delete the image from the project.",
-                            ()-> {
-                                try
-                                {
-                                    viewSet.deleteCamera(fullResFile);
-                                }
-                                finally
-                                {
-                                    cardsModel.setCardList(createAllCards(cardsModel));
-                                }
-                            });
-                    },
-                   "Disable Image", () -> {}
+                Map.of("Remove from Project", () ->
+                    cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
+                        () -> Rendering.runLater(() ->
+                        {
+                            try
+                            {
+                                viewSet.deleteCamera(fullResFile);
+                            }
+                            finally
+                            {
+                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+                            }
+                        })),
+               "Disable Image", () -> {}
                 )
             );
         }

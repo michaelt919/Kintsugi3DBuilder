@@ -13,6 +13,7 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.ViewSetObserver;
 import kintsugi3d.builder.fit.SpecularFitFinal;
 import kintsugi3d.builder.resources.project.specular.GenericMaterialResources;
 import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
@@ -35,7 +36,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
-final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
+final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> implements ViewSetObserver
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
     /**
@@ -91,6 +92,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     {
         this.context = context;
         this.viewSet = viewSet;
+        viewSet.registerObserver(this);
 
         // Store the poses in a uniform buffer
         if (viewSet != null && viewSet.getCameraPoseData() != null)
@@ -438,6 +440,17 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
     }
 
+    /**
+     * Refresh the view index data in the uniform buffers using the current values in the view set.
+     */
+    public void updateViewIndicesData()
+    {
+        if (viewIndexBuffer != null)
+        {
+            viewIndexBuffer.setData(viewSet.getViewIndexData());
+        }
+    }
+
     public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
     {
         this.specularMaterialResources.close();
@@ -536,5 +549,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         this.specularMaterialResources.close();
         this.luminanceMapResources.close();
         this.viewIndexBuffer.close();
+    }
+
+    @Override
+    public void update()
+    {
+        updateViewIndicesData();
     }
 }
