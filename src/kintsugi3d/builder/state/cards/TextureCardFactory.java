@@ -96,7 +96,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             // TODO convert weightmap to grayscale
             ImageHelper.read(textureImage).saveAtResolution("PNG", newTextureImage,256,256);
         }
-        catch (IOException e)
+        catch (IOException|RuntimeException e)
         {
             LOG.error("Error loading texture card: {}", friendlyName, e);
         }
