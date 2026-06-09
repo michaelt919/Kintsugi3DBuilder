@@ -1,5 +1,8 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
+    <codeStyleSettings language="Glsl">
+      <option name="SPACE_BEFORE_COLON" value="false" />
+    </codeStyleSettings>
     <codeStyleSettings language="JAVA">
       <option name="BRACE_STYLE" value="2" />
       <option name="CLASS_BRACE_STYLE" value="2" />
