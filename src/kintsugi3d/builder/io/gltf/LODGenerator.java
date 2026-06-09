@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io;
+package kintsugi3d.builder.io.gltf;
 
 import kintsugi3d.gl.util.ImageHelper;
 import org.slf4j.Logger;
@@ -33,6 +33,14 @@ public final class LODGenerator
     {
     }
 
+    void generateLODs(int minResolution, File directory, TextureExportSpecification... originalTextureSpecs)
+    {
+        for (TextureExportSpecification t : originalTextureSpecs)
+        {
+            generateLODs(t.format, minResolution, directory, t.uri);
+        }
+    }
+
     public void generateLODs(String format, int minResolution, File directory, String... originalImageFilenames)
     {
         for (String filename : originalImageFilenames)
@@ -47,7 +55,7 @@ public final class LODGenerator
 
         try
         {
-            if (originalImageFile.exists()) // Among other things, should catch when constant.png doesn't exist.
+            if (originalImageFile.exists()) // Among other things, should catch when non-standard textures like constant.png don't exist.
             {
                 String filename = originalImageFile.getName();
                 String extension = "";

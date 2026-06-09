@@ -29,7 +29,7 @@ import kintsugi3d.builder.tools.KeyPressToolType;
 import kintsugi3d.builder.tools.ToolBindingModel;
 import kintsugi3d.builder.tools.ToolBindingModelImpl;
 import kintsugi3d.builder.tools.ToolBox.Builder;
-import kintsugi3d.gl.builders.framebuffer.DefaultFramebufferFactory;
+import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.DoubleFramebufferObject;
 import kintsugi3d.gl.glfw.CanvasWindow;
@@ -53,10 +53,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class Rendering
@@ -122,11 +119,12 @@ public final class Rendering
 
                 // Need to still specify a native window to create the context, even though we won't use it.
                 CanvasWindow<OpenGLContext> nativeWindow = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
-                    .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
+                    .setDefaultFramebufferCreator(
+                        c -> framebufferCapture.fbo = DoubleFramebufferFactory.create(c, 800, 800))
                     .create();
 
                 FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
-                Global.state().getCanvasModel().setCanvas(canvas);
+                Global.state().getMainCanvasModel().setCanvas(canvas);
                 runProgram(stage, canvas, args);
             }
         }
@@ -137,7 +135,7 @@ public final class Rendering
         }
     }
 
-    private static void setup3DWindow(PollableWindow window)
+    private static void setup3DWindow(Window window)
     {
         SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
         {
@@ -352,10 +350,14 @@ public final class Rendering
             }
         });
 
+        MultithreadState.getInstance().getCanvasListModel().setInstanceManager(instanceManager);
+
         // Create a new application to run our event loop and give it the WindowImpl for polling
         // of events and the OpenGL context.  The ULFRendererList provides the renderable.
         InteractiveApplication app = InteractiveGraphics.createApplication(canvas, context, instanceManager);
         app.setFPSCap(60.0); // TODO make this configurable
+
+        app.addRefreshable(instanceManager.getRenderViews()); // i.e. views in carousel that also need to be in the refresh loop
 
         requestQueue.setInstanceManager(instanceManager);
         requestQueue.setProgressMonitor(new ProgressMonitor()
@@ -439,6 +441,12 @@ public final class Rendering
 
         app.addRefreshable(new Refreshable()
         {
+            @Override
+            public boolean isInitialized()
+            {
+                return true;
+            }
+
             @Override
             public void initialize()
             {
@@ -573,9 +581,9 @@ public final class Rendering
         String[] formatNames = ImageIO.getReaderFormatNames();
 
         Collection<String> set = Arrays.stream(formatNames)
-            .map(String::toLowerCase)
+            .map(s -> s.toLowerCase(Locale.ROOT))
             .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
-        LOG.info("Supported image formats: " + set);
+        LOG.info("Supported image formats: {}", set);
     }
 }

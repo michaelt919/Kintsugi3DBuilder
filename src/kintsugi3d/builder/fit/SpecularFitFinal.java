@@ -11,20 +11,21 @@
 
 package kintsugi3d.builder.fit;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.settings.BasisSettings;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
-import kintsugi3d.gl.core.ColorFormat;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs
@@ -32,138 +33,60 @@ import java.util.Map;
  */
 public final class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
-    private final Texture2D<ContextType> diffuseMap;
-    private final Texture2D<ContextType> normalMap;
-    private final Texture2D<ContextType> constantMap;
-//    private final Texture2D<ContextType> quadraticMap;
+    private final Map<String, Texture2D<ContextType>> managedTextures;
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
-    private final Map<String, Texture2D<ContextType>> metadataMaps;
-
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
-        SpecularMaterialResources<ContextType> original, TextureResolution textureResolution,
-        Collection<String> metadataMapNames, BasisSettings basisSettings, boolean includeConstant) throws IOException
+        TextureResources<ContextType> original, TextureResolution textureResolution, BasisSettings basisSettings) throws IOException
     {
-        return new SpecularFitFinal<>(original, textureResolution, metadataMapNames, basisSettings, includeConstant);
+        return new SpecularFitFinal<>(original, textureResolution, basisSettings);
     }
 
-    private SpecularFitFinal(SpecularMaterialResources<ContextType> original, TextureResolution textureResolution,
-        Collection<String> metadataMapNames, BasisSettings basisSettings, boolean includeConstant) throws IOException
+    private SpecularFitFinal(TextureResources<ContextType> original, TextureResolution textureResolution, BasisSettings basisSettings)
+        throws IOException
     {
         super(original.getContext(), textureResolution, basisSettings);
 
         ContextType context = original.getContext();
 
-        // Allocate diffuse map
-        diffuseMap = context.getTextureFactory()
-            .build2DColorTexture(textureResolution.width, textureResolution.height)
-            .setInternalFormat(ColorFormat.RGB8)
-            .setLinearFilteringEnabled(true)
-            .createTexture();
+        managedTextures = new HashMap<>(original.getTextures().size());
 
-        // Allocate normal map
-        normalMap = context.getTextureFactory()
-            .build2DColorTexture(textureResolution.width, textureResolution.height)
-            .setInternalFormat(ColorFormat.RGB8)
-            .setLinearFilteringEnabled(true)
-            .createTexture();
-
-        // Allocate constant map
-        constantMap = includeConstant ?
-            context.getTextureFactory()
-                .build2DColorTexture(textureResolution.width, textureResolution.height)
-                .setInternalFormat(ColorFormat.RGB8)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
-
-//        // Allocate quadratic map
-//        quadraticMap = includeConstant ?
-//            context.getTextureFactory()
-//                .build2DColorTexture(textureResolution.width, textureResolution.height)
-//                .setInternalFormat(ColorFormat.RGB8)
-//                .setLinearFilteringEnabled(true)
-//                .setMipmapsEnabled(true)
-//                .createTexture()
-//            : null;
-
-        // Allocate metadata maps
-        metadataMaps = new HashMap<>(metadataMapNames.size());
-        for (String key : metadataMapNames)
-        {
-            metadataMaps.put(key,
-                context.getTextureFactory()
+        // Copy all textures not handled elsewhere
+        managedTextures.putAll(original.getTextures().entrySet().stream()
+            .filter(entry -> 
+                // Skip specular color and roughness maps that are handled by SpecularFitBase:
+                !StandardTexture.SPECULAR_COLOR.texName.equals(entry.getKey()) && !StandardTexture.ROUGHNESS.texName.equals(entry.getKey()))
+            .collect(Collectors.toMap(Entry::getKey,
+                entry -> context.getTextureFactory()
                     .build2DColorTexture(textureResolution.width, textureResolution.height)
-                    .setInternalFormat(ColorFormat.RGBA8)
+                    .setInternalFormat(entry.getValue().getInternalUncompressedColorFormat()) // copy format of the original.
                     .setLinearFilteringEnabled(true)
-                    .createTexture());
-        }
+                    .createTexture())));
 
-        albedoORMOptimization = original.getOcclusionMap() == null ?
+        Texture2D<ContextType> occlusionMap = original.getTexture(StandardTexture.OCCLUSION);
+        albedoORMOptimization = occlusionMap == null ?
             AlbedoORMOptimization.createWithoutOcclusion(context, textureResolution) :
-            AlbedoORMOptimization.createWithOcclusion(original.getOcclusionMap(), textureResolution);
+            AlbedoORMOptimization.createWithOcclusion(occlusionMap, textureResolution);
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
         ContextType context, File priorSolutionDirectory) throws IOException
     {
-        return new SpecularFitFinal<>(context, SpecularFitOptimizable.getSerializableMetadataMapNames(), priorSolutionDirectory);
+        return new SpecularFitFinal<>(context, priorSolutionDirectory);
     }
 
-    private SpecularFitFinal(ContextType context, Collection<String> metadataMapNames, File priorSolutionDirectory) throws IOException
+    private SpecularFitFinal(ContextType context, File priorSolutionDirectory) throws IOException
     {
         super(context, priorSolutionDirectory);
+        
+        managedTextures = new HashMap<>(StandardTexture.values().length);
 
-        // Load diffuse map
-        File diffuseMapFile = new File(priorSolutionDirectory, "diffuse.png");
-        diffuseMap = diffuseMapFile.exists() ?
-            context.getTextureFactory()
-                .build2DColorTextureFromFile(diffuseMapFile, true)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
+        addStandardTexture(StandardTexture.DIFFUSE_COLOR, priorSolutionDirectory);
+        addStandardTexture(StandardTexture.NORMAL_MAP, priorSolutionDirectory);
+        addStandardTexture(StandardTexture.ERROR, priorSolutionDirectory);
 
-        // Load normal map
-        File normalMapFile = new File(priorSolutionDirectory, "normal.png");
-        normalMap = normalMapFile.exists() ?
-            context.getTextureFactory()
-                .build2DColorTextureFromFile(normalMapFile, true)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
-
-        // Load constant map
-        File constantMapFile = new File(priorSolutionDirectory, "constant.png");
-        constantMap = constantMapFile.exists() ?
-            context.getTextureFactory()
-                .build2DColorTextureFromFile(constantMapFile, true)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
-
-//        // Load quadratic map
-//        File quadraticMapFile = new File(priorSolutionDirectory, "quadratic.png");
-//        quadraticMap = quadraticMapFile.exists() ?
-//            context.getTextureFactory()
-//                .build2DColorTextureFromFile(quadraticMapFile, true)
-//                .setLinearFilteringEnabled(true)
-//                .createTexture()
-//            : null;
-
-        // Load metadata maps
-        metadataMaps = new HashMap<>(metadataMapNames.size());
-        for (String key : metadataMapNames)
-        {
-            File metadataMapFile = new File(priorSolutionDirectory, key + ".png");
-            if (metadataMapFile.exists())
-            {
-                metadataMaps.put(key,
-                    context.getTextureFactory()
-                        .build2DColorTextureFromFile(metadataMapFile, true)
-                        .setLinearFilteringEnabled(true)
-                        .createTexture());
-            }
-        }
+        // TODO store a list of non-standard textures in the project file rather than hard-coding here.
+        addTexture("constant", priorSolutionDirectory);
 
         AlbedoORMOptimization<ContextType> albedoORMOptimizationTemp = null;
         try
@@ -175,25 +98,71 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 // Load failed
                 albedoORMOptimizationTemp.close();
 
-                // Try to initialize based on diffuse map resolution
-                if (diffuseMap != null)
-                {
-                    albedoORMOptimizationTemp = AlbedoORMOptimization.createWithoutOcclusion(context,
-                        new TextureResolution(diffuseMap.getWidth(), diffuseMap.getHeight()));
-                }
+                AlbedoORMOptimization<ContextType> fallback = albedoDiffuseFallback();
+                albedoORMOptimizationTemp = fallback != null ? fallback : albedoORMOptimizationTemp;
             }
         }
         catch (IOException e)
         {
-            // Load failed; try to initialize based on diffuse map resolution
+            AlbedoORMOptimization<ContextType> fallback = albedoDiffuseFallback();
+            albedoORMOptimizationTemp = fallback != null ? fallback : albedoORMOptimizationTemp;
+        }
+
+        albedoORMOptimization = albedoORMOptimizationTemp;
+    }
+
+    private AlbedoORMOptimization<ContextType> albedoDiffuseFallback() throws IOException
+    {
+        // Load failed; try to initialize based on diffuse map resolution
+        if (managedTextures.containsKey(StandardTexture.DIFFUSE_COLOR.texName))
+        {
+            Texture2D<ContextType> diffuseMap = managedTextures.get(StandardTexture.DIFFUSE_COLOR.texName);
             if (diffuseMap != null)
             {
-                albedoORMOptimizationTemp = AlbedoORMOptimization.createWithoutOcclusion(context,
+                return AlbedoORMOptimization.createWithoutOcclusion(getContext(),
                     new TextureResolution(diffuseMap.getWidth(), diffuseMap.getHeight()));
             }
         }
 
-        albedoORMOptimization = albedoORMOptimizationTemp;
+        return null;
+    }
+
+    private void addStandardTexture(StandardTexture standardTex, File priorSolutionDirectory) throws IOException
+    {
+        // Load texture file
+        Texture2D<ContextType> texture = loadTexture(standardTex.texName, priorSolutionDirectory);
+
+        if (texture != null)
+        {
+            managedTextures.put(standardTex.texName, texture);
+        }
+    }
+
+    private void addTexture(String texName, File priorSolutionDirectory) throws IOException
+    {
+        // Load texture file
+        Texture2D<ContextType> texture = loadTexture(texName, priorSolutionDirectory);
+
+        if (texture != null)
+        {
+            managedTextures.put(texName, texture);
+        }
+    }
+
+    @Override
+    public Map<String, Texture2D<ContextType>> getTextures()
+    {
+        Map<String, Texture2D<ContextType>> mergedMaps =
+            new HashMap<>(getSpecularTextureCount() + managedTextures.size() + albedoORMOptimization.getTextureCount());
+        mergedMaps.putAll(getSpecularTextures());
+        mergedMaps.putAll(managedTextures);
+        mergedMaps.putAll(albedoORMOptimization.getTextures());
+        return Collections.unmodifiableMap(mergedMaps);
+    }
+
+    public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()
+    {
+        return albedoORMOptimization;
     }
 
     @Override
@@ -201,80 +170,15 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     {
         super.close();
 
-        if (diffuseMap != null)
+        for (Texture2D<ContextType> texture : managedTextures.values())
         {
-            diffuseMap.close();
+            texture.close();
         }
-
-        if (normalMap != null)
-        {
-            normalMap.close();
-        }
-
-        if (constantMap != null)
-        {
-            constantMap.close();
-        }
-
-//        if (quadraticMap != null)
-//        {
-//            quadraticMap.close();
-//        }
+        managedTextures.clear();
 
         if (albedoORMOptimization != null)
         {
             albedoORMOptimization.close();
         }
-
-        for (Texture2D<ContextType> metadataMap : metadataMaps.values())
-        {
-            metadataMap.close();
-        }
-    }
-
-    @Override
-    public Texture2D<ContextType> getDiffuseMap()
-    {
-        return diffuseMap;
-    }
-
-    @Override
-    public Texture2D<ContextType> getNormalMap()
-    {
-        return normalMap;
-    }
-
-    @Override
-    public Texture2D<ContextType> getConstantMap()
-    {
-        return constantMap;
-    }
-
-//    @Override
-//    public Texture2D<ContextType> getQuadraticMap()
-//    {
-//        return quadraticMap;
-//    }
-
-    @Override
-    public Texture2D<ContextType> getAlbedoMap()
-    {
-        return albedoORMOptimization == null ? null : albedoORMOptimization.getAlbedoMap();
-    }
-    @Override
-    public Texture2D<ContextType> getORMMap()
-    {
-        return albedoORMOptimization == null ? null : albedoORMOptimization.getORMMap();
-    }
-
-    @Override
-    public Map<String, Texture2D<ContextType>> getMetadataMaps()
-    {
-        return Collections.unmodifiableMap(metadataMaps);
-    }
-
-    public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()
-    {
-        return albedoORMOptimization;
     }
 }

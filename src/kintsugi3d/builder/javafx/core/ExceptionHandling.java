@@ -26,13 +26,13 @@ public class ExceptionHandling
 
     public static void error(String message, Throwable e)
     {
-        LOG.error("{}: {}", message, e);
+        LOG.error("{}: {}", message, e, e);
         showAlert(message, e);
     }
 
     public static void warn(String message, Throwable e)
     {
-        LOG.warn("{}: {}", message, e);
+        LOG.warn("{}: {}", message, e, e);
         showAlert(message, e);
     }
 

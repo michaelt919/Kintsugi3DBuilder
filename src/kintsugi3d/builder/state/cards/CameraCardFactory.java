@@ -17,20 +17,21 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CameraCardFactory implements ProjectDataCardFactory
 {
-    ViewSet viewSet;
+    private static final Logger LOG = LoggerFactory.getLogger(CameraCardFactory.class);
+
+    private final ViewSet viewSet;
 
     public CameraCardFactory(ViewSet viewSet)
     {
@@ -54,7 +55,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
         {
             File fullResFile = viewSet.findFullResImageFile(cardIndex);
             IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
-            String res = dimensions.x + "x" + dimensions.y;
+            String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
             return new ProjectDataCard(
                 viewSet.getImageFiles().get(cardIndex).getName(), thumbnailPath,
@@ -84,9 +85,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 )
             );
         }
-        catch (IOException e)
+        catch (RuntimeException|IOException e)
         {
-            throw new RuntimeException(e);
+            LOG.error("Error creating card", e);
+            return null;
         }
     }
 
@@ -97,29 +99,4 @@ public class CameraCardFactory implements ProjectDataCardFactory
             .mapToObj(i -> createCard(cardsModel, i))
             .collect(Collectors.toUnmodifiableList());
     }
-
-    private static int findIndexByCardUUID(List<ProjectDataCard> cardsList, UUID id)
-    {
-        for (int i = 0; i < cardsList.size(); i++)
-        {
-            if (cardsList.get(i).getCardId() == id)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static void deleteCard(CardsModel cardsModel, ProjectDataCard card, ViewSet viewSet)
-    {
-        UUID id = card.getCardId();
-        int index = findIndexByCardUUID(cardsModel.getCardList(), id);
-        if (index != -1 && viewSet != null)
-        {
-//            viewSet.deleteCamera(index);
-        }
-
-        cardsModel.deleteCard(card);
-    }
-
 }

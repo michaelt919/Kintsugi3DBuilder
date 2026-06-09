@@ -9,38 +9,29 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.gltf;
+package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
 
-import de.javagl.jgltf.impl.v2.TextureInfo;
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class GLTFMaterialSpecularWeights
+public final class Kintsugi3DViewerExporterFactory implements MaterialExporterFactory
 {
-
-    private int stride = 4;
-
-    private final List<TextureInfo> textures = new ArrayList<>();
-
-    public List<TextureInfo> getTextures()
+    private static final Kintsugi3DViewerExporterFactory INSTANCE = new Kintsugi3DViewerExporterFactory();
+    
+    public static Kintsugi3DViewerExporterFactory getInstance()
     {
-        return textures;
+        return INSTANCE;
     }
-
-    public void addTexture(TextureInfo texture)
+    
+    private Kintsugi3DViewerExporterFactory()
     {
-        textures.add(texture);
     }
-
-    public int getStride()
+    
+    @Override
+    public Kintsugi3DViewerExporter getExporter(TextureResources<?> resources)
     {
-        return stride;
+        Kintsugi3DViewerExporter exporter = new Kintsugi3DViewerExporter();
+        exporter.setTextureResources(resources);
+        return exporter;
     }
-
-    public void setStride(int stride)
-    {
-        this.stride = stride;
-    }
-
 }

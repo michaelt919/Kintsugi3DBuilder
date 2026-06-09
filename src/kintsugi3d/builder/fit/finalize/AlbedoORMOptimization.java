@@ -11,8 +11,9 @@
 
 package kintsugi3d.builder.fit.finalize;
 
+import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
@@ -20,6 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
 
 public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -77,21 +81,10 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private AlbedoORMOptimization(ContextType context, File priorSolutionDirectory)
         throws IOException
     {
-        File albedoMapFile = new File(priorSolutionDirectory, "albedo.png");
-        Texture2D<ContextType> albedoMap = albedoMapFile.exists() ?
-            context.getTextureFactory()
-                .build2DColorTextureFromFile(albedoMapFile, true)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
+        Texture2D<ContextType> albedoMap = TextureResources.loadTexture(StandardTexture.ALBEDO, priorSolutionDirectory, context);
 
         // Load ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
-        File ormMapFile = new File(priorSolutionDirectory, "orm.png");
-        this.occlusionMap = ormMapFile.exists() ?
-            context.getTextureFactory().build2DColorTextureFromFile(ormMapFile, true)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
+        this.occlusionMap = TextureResources.loadTexture(StandardTexture.ORM, priorSolutionDirectory, context);
 
         if (albedoMap != null)
         {
@@ -118,16 +111,16 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         }
     }
 
-    public void execute(SpecularMaterialResources<ContextType> specularFit)
+    public void execute(TextureResources<ContextType> specularFit)
     {
         // Set up shader program
-        estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
-        estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
-        estimationProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+        estimationProgram.setTexture("diffuseEstimate", specularFit.getTexture(StandardTexture.DIFFUSE_COLOR));
+        estimationProgram.setTexture("tex_specular", specularFit.getTexture(StandardTexture.SPECULAR_COLOR));
+        estimationProgram.setTexture("roughnessEstimate", specularFit.getTexture(StandardTexture.ROUGHNESS));
 
-        if (specularFit.getConstantMap() != null)
+        if (specularFit.getTexture("constant") != null)
         {
-            estimationProgram.setTexture("constantEstimate", specularFit.getConstantMap());
+            estimationProgram.setTexture("constantEstimate", specularFit.getTexture("constant"));
         }
 
         if (occlusionMap != null)
@@ -180,17 +173,32 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         return framebuffer == null ? null : framebuffer.getColorAttachmentTexture(1);
     }
 
-    public void saveTextures(File outputDirectory)
+    public int getTextureCount()
     {
-        try
+        return getStandardTextures().size();
+    }
+
+    public Map<StandardTexture, Texture2D<ContextType>> getStandardTextures()
+    {
+        Map<StandardTexture, Texture2D<ContextType>> textures = new EnumMap<>(StandardTexture.class);
+        if (framebuffer != null)
         {
-            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "albedo.png"));
-            framebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, "orm.png"));
+            textures.putAll(Map.of(
+                StandardTexture.ALBEDO, framebuffer.getColorAttachmentTexture(0),
+                StandardTexture.ORM, framebuffer.getColorAttachmentTexture(1)));
         }
-        catch (IOException e)
+
+        if (occlusionMap != null)
         {
-            LOG.error("An error occurred while saving textures:", e);
+            textures.put(StandardTexture.OCCLUSION, occlusionMap);
         }
+
+        return Collections.unmodifiableMap(textures);
+    }
+
+    public Map<String, Texture2D<ContextType>> getTextures()
+    {
+        return StandardTexture.convertEnumMapToStringMap(getStandardTextures());
     }
 
     private static <ContextType extends Context<ContextType>>
@@ -199,7 +207,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/estimateAlbedoORM.frag"))
-            .define("OCCLUSION_TEXTURE_ENABLED", occlusionTextureEnabled)
+            .define("TEXTURE_OCCLUSION", occlusionTextureEnabled)
             .createProgram();
     }
 }

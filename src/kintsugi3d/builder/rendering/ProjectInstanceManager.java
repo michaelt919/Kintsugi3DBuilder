@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -20,6 +18,7 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
@@ -28,12 +27,18 @@ import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.DoubleFramebufferObject;
 import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.interactive.InitializationException;
-import kintsugi3d.gl.interactive.InteractiveRenderable;
+import kintsugi3d.gl.interactive.InteractiveRenderableBase;
+import kintsugi3d.gl.interactive.RefreshableCollection;
+import kintsugi3d.gl.interactive.RenderRefreshable;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.window.FramebufferCanvas;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,11 +51,15 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class ProjectInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
+public class ProjectInstanceManager<ContextType extends Context<ContextType>>
+    extends InteractiveRenderableBase<ContextType> implements IOHandler
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectInstanceManager.class);
 
     private final ContextType context;
+
+    private final RefreshableCollection<RenderRefreshable<ContextType>> renderViews = new RefreshableCollection<>();
+    private final Map<UserShader, RenderRefreshable<ContextType>> renderViewMap = new HashMap<>(8);
 
     private boolean unloadRequested = false;
     private ViewSet loadedViewSet;
@@ -156,7 +165,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     {
         this.loadedProjectFile = loadedProjectFile;
     }
-
     private void invokeViewSetLoadCallbacks(ViewSet viewSet)
     {
         synchronized (viewSetLoadCallbacks)
@@ -216,18 +224,24 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
 
         // Create the instance (will be initialized on the graphics thread)
         ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
+        newItem.setOwningApp(this.getOwningApp());
 
-        newItem.getSceneModel().setObjectModel(this.objectModel);
-        newItem.getSceneModel().setCameraModel(this.cameraModel);
-        newItem.getSceneModel().setLightingModel(this.lightingModel);
-        newItem.getSceneModel().setSettingsModel(this.settingsModel);
-        newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
+        initializeSceneModel(newItem.getSceneModel());
 
         newItem.setProgressMonitor(new BackendProgressMonitor(newItem, progressMonitor));
         newInstance = newItem;
 
         new TabsManager(loadedViewSet, newInstance).rebuildTabs();
 
+    }
+
+    private void initializeSceneModel(SceneModel sceneModel)
+    {
+        sceneModel.setObjectModel(this.objectModel);
+        sceneModel.setCameraModel(this.cameraModel);
+        sceneModel.setLightingModel(this.lightingModel);
+        sceneModel.setSettingsModel(this.settingsModel);
+        sceneModel.setCameraViewListModel(this.cameraViewListModel);
     }
 
     @Override
@@ -333,6 +347,69 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         }
     }
 
+    public RefreshableCollection<RenderRefreshable<ContextType>> getRenderViews()
+    {
+        return renderViews;
+    }
+
+    public void addRenderView(UserShader shader, FramebufferSize initialSize,
+                              Consumer<FramebufferCanvas<ContextType>> framebufferCallback)
+    {
+        // Create a new rendering engine instance that references the same resources as the main rendering engine.
+        // This can run on any thread, but initialization needs to run on the graphics thread.
+        ProjectRenderingEngine<ContextType> renderView =
+            new ProjectRenderingEngine<>(projectInstance.getID(), context, projectInstance.getResources());
+        initializeSceneModel(renderView.getSceneModel());
+
+        Rendering.runLater(() ->
+        {
+            // Create framebuffer
+            DoubleFramebufferObject<ContextType> framebuffer =
+                DoubleFramebufferFactory.create(context, initialSize.width, initialSize.height);
+
+            // Create and initialize refreshable, which will manage the framebuffer object
+            RenderRefreshable<ContextType> refreshable = RenderRefreshable.createWithManagedFrambufferObject(
+                context, renderView, framebuffer);
+
+            try
+            {
+                // Pre-initialize here so that we can set the shader right away.
+                // RefreshableCollection will just skip this one when processing its initialize queue
+                // as it sees that it is already initialized.
+                refreshable.initialize();
+            }
+            catch (InitializationException e)
+            {
+                LOG.error("Error initialing render view for shader: {}", shader.getFriendlyName(), e);
+            }
+
+            // Set to use the specified shader.
+            RenderingSubject<ContextType> subject = renderView.getSubject();
+            subject.setExtraFragmentShaderDefines(shader.getDefines());
+            subject.useFragmentShader(shader.getFile());
+
+            // render views will defer actually adding it to its main list until its own refresh call
+            // so it can safely be added here in the processing of the runLater queue.
+            renderViews.add(refreshable);
+
+            // Also store it in a map so that we can find it by UserShader when it needs to be removed.
+            renderViewMap.put(shader, refreshable);
+
+            framebufferCallback.accept(FramebufferCanvas.createUsingExistingFramebuffer(framebuffer));
+        });
+    }
+
+    public void removeRenderView(UserShader shader)
+    {
+        RenderRefreshable<ContextType> renderViewToRemove = renderViewMap.get(shader);
+
+        if (renderViewToRemove != null)
+        {
+            // This adds the render view to the refreshable collection's terminate queue so it will get cleaned up.
+            renderViews.remove(renderViewToRemove);
+        }
+    }
+
     @Override
     public void requestFragmentShader(File shaderFile)
     {
@@ -354,7 +431,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     @Override
     public void requestFragmentShader(UserShader userShader)
     {
-        requestFragmentShader(new File("shaders", userShader.getFilename()), userShader.getDefines());
+        requestFragmentShader(userShader.getFile(), userShader.getDefines());
     }
 
     public ProjectInstance<ContextType> getLoadedInstance()
@@ -491,7 +568,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
         if (projectInstance == null || projectInstance.getResources() == null
-            || projectInstance.getResources().getSpecularMaterialResources() == null)
+            || projectInstance.getResources().getTextureResources() == null)
         {
             if (finishedCallback != null)
             {
@@ -502,7 +579,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
         {
             Rendering.runLater(() ->
             {
-                projectInstance.getResources().getSpecularMaterialResources().saveAll(materialDirectory);
+                projectInstance.getResources().getTextureResources().saveAll(materialDirectory);
 
                 if (finishedCallback != null)
                 {
@@ -526,6 +603,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>> im
     {
         unloadRequested = true;
         loadedProjectFile = null;
+
+        // Also remove render views which will be tied to the loaded project.
+        renderViewMap.clear();
+        renderViews.clear();
     }
 
     @Override

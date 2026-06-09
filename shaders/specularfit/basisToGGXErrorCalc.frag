@@ -24,14 +24,14 @@ in vec2 fTexCoord;
 
 layout(location = 0) out vec4 errorOut;
 
-uniform sampler2D diffuseMap;
-uniform sampler2D specularEstimate;
-uniform sampler2D roughnessMap;
+uniform sampler2D tex_diffuse;
+uniform sampler2D tex_specular;
+uniform sampler2D tex_roughness;
 
 void main()
 {
-    vec3 reflectivity = sRGBToLinear(texture(specularEstimate, fTexCoord).rgb);
-    float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
+    vec3 reflectivity = sRGBToLinear(texture(tex_specular, fTexCoord).rgb);
+    float sqrtRoughness = texture(tex_roughness, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
     vec3 diffuse = sRGBToLinear(texture(diffuseColor, fTexCoord).rgb);
 

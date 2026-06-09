@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
@@ -19,7 +18,7 @@ import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
@@ -35,32 +34,16 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
     private final ReadonlyGraphicsResources<ContextType> resources;
     private final ReconstructionSettings reconstructionSettings;
 
-    private final int imageWidth;
-    private final int imageHeight;
-
     public FinalReconstruction(ReadonlyGraphicsResources<ContextType> resources, TextureResolution textureResolution, ReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
         this.reconstructionSettings = reconstructionSettings;
-
-        // Calculate reasonable image resolution for reconstructed images (supplemental output)
-        Projection defaultProj = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(0));
-        if (defaultProj.getAspectRatio() < 1.0)
-        {
-            imageWidth = textureResolution.width;
-            imageHeight = Math.round(imageWidth / defaultProj.getAspectRatio());
-        }
-        else
-        {
-            imageHeight = textureResolution.height;
-            imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
-        }
     }
 
-    public List<Map<String, ColorAppearanceRMSE>> reconstruct(SpecularMaterialResources<ContextType> specularFit,
-            Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
-            ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-            File debugDirectory, File groundTruthDirectory)
+    public List<Map<String, ColorAppearanceRMSE>> reconstruct(TextureResources<ContextType> specularFit,
+                                                              Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
+                                                              ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
+                                                              File debugDirectory, File groundTruthDirectory)
     {
         if (debugDirectory != null)
         {
@@ -106,19 +89,6 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 ProgramObject<ContextType> program = entry.getValue().createProgram();
                 programMap.put(entry.getKey(), program);
                 resources.setupShaderProgram(program);
-
-                specularFit.getBasisResources().useWithShaderProgram(program);
-                specularFit.getBasisWeightResources().useWithShaderProgram(program);
-                program.setTexture("normalMap", specularFit.getNormalMap());
-                program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
-                program.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
-                program.setTexture("diffuseMap", specularFit.getDiffuseMap());
-
-                if (specularFit.getConstantMap() != null)
-                {
-                    program.setTexture("constantMap", specularFit.getConstantMap());
-                }
-
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
             }
 

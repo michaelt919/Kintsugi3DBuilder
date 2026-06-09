@@ -205,6 +205,7 @@ public class ImageHelper
         {
             // Just use java.awt graphics for simple scaling
             // drawImage is more lightweight and possibly higher quality than AffineTransform.
+            // TODO This doesn't seem to work when rescaling TIFFs previously saved from Kintsugi.
             BufferedImage resized = new BufferedImage(width, height, image.getType());
             Graphics resizedGraphics = resized.createGraphics();
             resizedGraphics.drawImage(image.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null);

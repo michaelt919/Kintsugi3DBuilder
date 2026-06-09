@@ -37,11 +37,19 @@ public class InteractiveApplication
         this.refreshables.add(refreshable);
     }
 
+    /**
+     * Must be called before run().
+     * @param pollable
+     */
     public void addPollable(EventPollable pollable)
     {
         this.pollables.add(pollable);
     }
 
+    /**
+     * Must be called before run().
+     * @param refreshable
+     */
     public void addRefreshable(Refreshable refreshable)
     {
         this.refreshables.add(refreshable);
@@ -113,7 +121,7 @@ public class InteractiveApplication
             {
                 if (timestampA.getTime() - lastSecond > 1000)
                 {
-                    LOG.info("FPS: " + frames);
+                    LOG.info("FPS: {}", frames);
                     lastSecond = timestampA.getTime();
                     frames = 0;
                 }
@@ -139,9 +147,9 @@ public class InteractiveApplication
         }
 
         LOG.info("Main loop terminated.");
-        LOG.info("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
-        LOG.info("Time spent polling for events: " + pollingTime + " milliseconds");
-        LOG.info("Time spent on refreshes: " + refreshTime + " milliseconds");
+        LOG.info("Total time elapsed: {} milliseconds", timestampA.getTime() - startTimestamp.getTime());
+        LOG.info("Time spent polling for events: {} milliseconds", pollingTime);
+        LOG.info("Time spent on refreshes: {} milliseconds", refreshTime);
 
         for (Refreshable refreshable : this.refreshables)
         {

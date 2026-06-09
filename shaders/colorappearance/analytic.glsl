@@ -42,7 +42,7 @@ vec4 getColor(int index)
     {
         vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
 
-#if NORMAL_TEXTURE_ENABLED && TANGENT_SPACE_NORMAL_MAP
+#if TEXTURE_NORMAL && TANGENT_SPACE_NORMAL_MAP
         vec3 shadingNormal = normalize(tbn * (getTangentSpaceNormal(scaledTexCoord - floor(scaledTexCoord))
             * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0)));
 #else

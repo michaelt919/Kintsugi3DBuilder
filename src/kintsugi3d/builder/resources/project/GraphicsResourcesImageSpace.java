@@ -592,10 +592,10 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
      *     <li>VISIBILITY_TEST_ENABLED</li>
      *     <li>SHADOW_TEST_ENABLED</li>
      *     <li>IMAGE_BASED_RENDERING_ENABLED</li>
-     *     <li>DIFFUSE_TEXTURE_ENABLED</li>
-     *     <li>SPECULAR_TEXTURE_ENABLED</li>
-     *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
-     *     <li>NORMAL_TEXTURE_ENABLED</li>
+     *     <li>TEXTURE_DIFFUSE</li>
+     *     <li>TEXTURE_SPECULAR</li>
+     *     <li>TEXTURE_ROUGHNESS</li>
+     *     <li>TEXTURE_NORMAL</li>
      * </ul>
      *
      * @return A program builder with all of the above preprocessor defines specified, ready to have the

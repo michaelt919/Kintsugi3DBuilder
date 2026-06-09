@@ -15,11 +15,12 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSetObserver;
 import kintsugi3d.builder.fit.SpecularFitFinal;
-import kintsugi3d.builder.resources.project.specular.GenericMaterialResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.gl.core.UniformBuffer;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
@@ -34,9 +35,11 @@ import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.stream.IntStream;
 
-final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> implements ViewSetObserver
+final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
     /**
@@ -78,7 +81,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
      */
     private final GeometryResources<ContextType> geometryResources;
 
-    private SpecularMaterialResources<ContextType> specularMaterialResources;
+    private TextureResources<ContextType> textureResources;
 
     private final LuminanceMapResources<ContextType> luminanceMapResources;
 
@@ -92,7 +95,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
     {
         this.context = context;
         this.viewSet = viewSet;
-        viewSet.registerObserver(this);
+        viewSet.registerObserver(this::updateViewIndicesData);
 
         // Store the poses in a uniform buffer
         if (viewSet != null && viewSet.getCameraPoseData() != null)
@@ -169,12 +172,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
                         .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
                                 1, viewSet.getCameraPoseCount(), this.cameraWeights));
 
-                Material material = geometry.getMaterial();
+                ImportedMaterial material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
 
                 if (viewSet.getSupportingFilesDirectory() != null) // Load texture fit from previous session
                 {
-                    SpecularMaterialResources<ContextType> loadedFit;
+                    TextureResources<ContextType> loadedFit;
                     try
                     {
                         loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesDirectory());
@@ -182,9 +185,9 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
                     catch (IOException e)
                     {
                         LOG.error("An error occured while loading the previous specular fit (textures).", e);
-                        loadedFit = SpecularMaterialResources.makeNull(context);
+                        loadedFit = TextureResources.makeNull(context);
                     }
-                    specularMaterialResources = loadedFit;
+                    textureResources = loadedFit;
                 }
                 else if (material != null && geometryFileName != null /* need an actual file path to load the textures */)
                 {
@@ -231,7 +234,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
                     TextureLoadOptions mtlLoadOptions = new TextureLoadOptions();
                     mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
                     mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
-                    this.specularMaterialResources = GenericMaterialResources.wrap(
+                    this.textureResources = ImportedMaterialResourcesWrapper.wrap(
                         () ->
                         {
                             try
@@ -241,21 +244,21 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
                             catch (IOException e)
                             {
                                 LOG.error("An error occured while loading material resources (textures)", e);
-                                return MaterialResources.createNull();
+                                return ImportedMaterialResources.createNull();
                             }
                         });
                 }
                 else
                 {
                     // Neither a texture fit or an OBJ material: material is null
-                    this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
+                    this.textureResources = TextureResources.makeNull(context);
                 }
             }
             else
             {
                 this.cameraWeights = null;
                 this.cameraWeightBuffer = null;
-                this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
+                this.textureResources = TextureResources.makeNull(context);
             }
         }
         else
@@ -263,7 +266,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
             this.geometryResources = GeometryResources.createNullResources();
             this.cameraWeights = null;
             this.cameraWeightBuffer = null;
-            this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
+            this.textureResources = TextureResources.makeNull(context);
         }
     }
 
@@ -337,7 +340,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            LOG.info(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
+            LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);
         }
 
         return cameraWeights;
@@ -402,9 +405,9 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
     /**
      * Diffuse, normal, specular, roughness maps
      */
-    public SpecularMaterialResources<ContextType> getSpecularMaterialResources()
+    public TextureResources<ContextType> getTextureResources()
     {
-        return specularMaterialResources;
+        return textureResources;
     }
 
     public LuminanceMapResources<ContextType> getLuminanceMapResources()
@@ -451,14 +454,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         }
     }
 
-    public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
+    public void replaceTextureResources(TextureResources<ContextType> textureResources)
     {
-        this.specularMaterialResources.close();
+        this.textureResources.close();
 
-        this.specularMaterialResources = specularMaterialResources == null ? SpecularMaterialResources.makeNull(context) : specularMaterialResources;
+        this.textureResources = textureResources == null ? TextureResources.makeNull(context) : textureResources;
     }
-
-    // use update light or replace as model for refreshing
 
     /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
@@ -470,10 +471,10 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
      *     <li>INVERSE_LUMINANCE_MAP_ENABLED</li>
      *     <li>INFINITE_LIGHT_SOURCES</li>
      *     <li>IMAGE_BASED_RENDERING_ENABLED</li>
-     *     <li>DIFFUSE_TEXTURE_ENABLED</li>
-     *     <li>SPECULAR_TEXTURE_ENABLED</li>
-     *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
-     *     <li>NORMAL_TEXTURE_ENABLED</li>
+     *     <li>TEXTURE_DIFFUSE</li>
+     *     <li>TEXTURE_SPECULAR</li>
+     *     <li>TEXTURE_ROUGHNESS</li>
+     *     <li>TEXTURE_NORMAL</li>
      * </ul>
      *
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
@@ -481,28 +482,29 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
      */
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        boolean basisEnabled = specularMaterialResources.getBasisResources() != null
-            && specularMaterialResources.getBasisWeightResources() != null;
+        boolean basisEnabled = textureResources.getBasisResources() != null
+            && textureResources.getBasisWeightResources() != null;
 
         // Determine shader defines here that should apply globally as defaults and require specific graphics resources.
         // The defines can be overridden by the actual shader.
-        ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context)
-            .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null)
-            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null)
-            .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null)
-            .define("ROUGHNESS_TEXTURE_ENABLED", specularMaterialResources.getSpecularRoughnessMap() != null)
-            .define("OCCLUSION_TEXTURE_ENABLED", specularMaterialResources.getOcclusionMap() != null)
-            .define("ALBEDO_TEXTURE_ENABLED", specularMaterialResources.getAlbedoMap() != null)
-            .define("ORM_TEXTURE_ENABLED", specularMaterialResources.getORMMap() != null)
+        ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context);
+
+        for (Entry<String, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
+        {
+            builder.define(
+                String.format("TEXTURE_%s", entry.getKey().toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "_")),
+                entry.getValue() != null);
+        }
+
+        builder
             .define("USE_VIEW_INDICES", true)
             .define("BASIS_ENABLED", basisEnabled);
-
 
         if (basisEnabled)
         {
             builder
-                .define("BASIS_COUNT", specularMaterialResources.getBasisResources().getBasisCount())
-                .define("BASIS_RESOLUTION", specularMaterialResources.getBasisResources().getBasisResolution());
+                .define("BASIS_COUNT", textureResources.getBasisResources().getBasisCount())
+                .define("BASIS_RESOLUTION", textureResources.getBasisResources().getBasisResolution());
         }
 
         return builder;
@@ -535,7 +537,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         }
 
         getLuminanceMapResources().setupShaderProgram(program);
-        getSpecularMaterialResources().setupShaderProgram(program);
+        getTextureResources().setupShaderProgram(program);
     }
 
     public void close()
@@ -546,14 +548,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         this.lightIntensityBuffer.close();
         this.lightIndexBuffer.close();
         this.geometryResources.close();
-        this.specularMaterialResources.close();
+        this.textureResources.close();
         this.luminanceMapResources.close();
         this.viewIndexBuffer.close();
-    }
-
-    @Override
-    public void update()
-    {
-        updateViewIndicesData();
     }
 }

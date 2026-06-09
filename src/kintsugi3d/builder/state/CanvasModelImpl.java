@@ -13,14 +13,14 @@ package kintsugi3d.builder.state;
 
 import kintsugi3d.gl.window.FramebufferCanvas;
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class CanvasModelImpl implements CanvasModel
 {
     private FramebufferCanvas<?> canvas = null;
-    private final List<Consumer<FramebufferCanvas<?>>> canvasChangedListeners = new LinkedList<>();
+    private final Collection<Consumer<FramebufferCanvas<?>>> canvasChangedListeners = new LinkedList<>();
 
     @Override
     public FramebufferCanvas<?> getCanvas()

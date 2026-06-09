@@ -20,7 +20,7 @@ import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
@@ -106,7 +106,6 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         settings.getReconstructionSettings().setReconstructAll(false);
 
         // glTF export settings
-        settings.getExportSettings().setShouldSaveModel(true);
         settings.getExportSettings().setShouldCombineWeights(true);
         settings.getExportSettings().setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnProcessingComplete"));
 
@@ -155,7 +154,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             else
             {
                 BasisSettings basisSettings = settings.getSpecularBasisSettings();
-                BasisResources<ContextType> basisResources = resources.getSpecularMaterialResources().getBasisResources();
+                BasisResources<ContextType> basisResources = resources.getTextureResources().getBasisResources();
                 basisSettings.setBasisCount(basisResources.getBasisCount());
                 basisSettings.setBasisResolution(basisResources.getBasisResolution());
 
@@ -177,7 +176,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
             // Save textures and basis functions
             // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
-            resources.getSpecularMaterialResources().saveAll(renderable.getActiveViewSet().getSupportingFilesDirectory());
+            resources.getTextureResources().saveAll(renderable.getActiveViewSet().getSupportingFilesDirectory());
 
             // Perform reconstruction
             //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
@@ -202,7 +201,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
     }
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit)
+        ReadonlyGraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit)
         throws IOException
     {
         if (settings.getOutputDirectory() != null)
