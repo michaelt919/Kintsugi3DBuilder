@@ -393,8 +393,8 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     {
         saveAllNamedTextures(format, outputDirectory, "");
         saveBasisFunctions(outputDirectory, null);
-        savePackedWeightMaps(format, outputDirectory, null);
-        saveUnpackedWeightMaps(format, outputDirectory, null);
+        savePackedWeightMaps(format, outputDirectory, "");
+        saveUnpackedWeightMaps(format, outputDirectory, "");
     }
 
     /**

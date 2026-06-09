@@ -218,8 +218,8 @@
                         </StackPane>
                     </HBox>
                 </AnchorPane>
+                <Label fx:id="shaderName" style="-fx-background-color: #383838; -fx-label-padding: 10;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.leftAnchor="32.0" AnchorPane.bottomAnchor="32.0" />
             </AnchorPane>
         </HBox>
     </VBox>
-    <Label fx:id="shaderName" style="-fx-border-color: #d4aa00; -fx-label-padding: 10; -fx-border-radius: 30; -fx-opacity: 50;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="44.0" />
 </AnchorPane>

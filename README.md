@@ -19,7 +19,7 @@ For the time being, Kintsugi 3D is not signed or notarized and must be manually 
 Kintsugi 3D Builder is beta software and may contain bugs or other issues.  We welcome feedback on your experience with the software so that we can continue improving it.  Comments or bug reports should be directed to Michael Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu)) or posted on the CHI forums (linked above).
 
 ## Overview
-Developed by a team at the University of Wisconsin – Stout with support from the Minneapolis Institute of Art (Mia) and Cultural Heritage Imaging (CHI) under a grant from the National Endowment for the Humanities (NEH), Kintsugi 3D is a novel software platform for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination. What sets Kintsugi 3D apart from other workflows that produce specularity maps is that all the textures produced are empirically-based: they are derived directly from photographic data using classical optimization methods, and the reconstruction error from this optimization process can be recorded as metadata for the object as documentation of the fidelity of the digitized form.
+Developed by a team at UW-Stout Polytechnic with support from the Minneapolis Institute of Art (Mia) and Cultural Heritage Imaging (CHI) under a grant from the National Endowment for the Humanities (NEH), Kintsugi 3D is a novel software platform for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination. What sets Kintsugi 3D apart from other workflows that produce specularity maps is that all the textures produced are empirically-based: they are derived directly from photographic data using classical optimization methods, and the reconstruction error from this optimization process can be recorded as metadata for the object as documentation of the fidelity of the digitized form.
 
 Kintsugi 3D is an evolution of its predecessor, IBRelight: a tool developed as part of Michael Tetzlaff’s (Kintsugi 3D project lead) doctoral thesis that originally had a use case of being a tool for cultural heritage professionals to generate images and videos from photogrammetric models by reprojecting the original photographs onto the 3D model.  What was unique about IBRelight was its use of a flash-on-camera photography technique that made it possible to change the lighting in software based on which flash images were selected for blending.  However, IBRelight had substantial hardware requirements which were a barrier preventing it from being used for general-purpose dissemination of digitized heritage objects.  By implementing a texture processing technique originally described by Nam et al. and refined by Tetzlaff, IBRelight has evolved into Kintsugi 3D Builder, with a user experience redesigned to specifically target the application of building textures and materials for use in lightweight 3D viewer applications.
 
@@ -41,28 +41,32 @@ Giljoo Nam, Joo Ho Lee, Diego Gutierrez, and Min H. Kim, “Practical SVBRDF Acq
 Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Renderer for Cultural Heritage,” *IS&T Archiving Conference*, 2018, pp. 93-98.
 
 ## Contributors
-- Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - primary developer
+- Michael Tetzlaff (University of Minnesota / UW-Stout Polytechnic) - primary developer
 - Alex Kautz (University of Rochester) - contributor
-- Seth Berrier (University of Wisconsin - Stout) - contributor
+- Seth Berrier (UW-Stout Polytechnic) - contributor
 - Michael Ludwig (University of Minnesota) - contributor
 - Sam Steinkamp (University of Minnesota) - contributor
-- Tyler Betanski (University of Wisconsin - Stout) - contributor
-- Jacob Buelow (University of Wisconsin - Stout) - contributor
-- Luke Denney (University of Wisconsin - Stout) - contributor
-- Ian Anderson (University of Wisconsin - Stout) - contributor
-- Zoe Cuthrell (University of Wisconsin - Stout) - contributor
-- Blane Suess (University of Wisconsin - Stout) - contributor
-- Isaac Tesch (University of Wisconsin - Stout) - contributor
-- Nathaniel Willius (University of Wisconsin - Stout) - contributor
-- Atlas Collins (University of Wisconsin - Stout) - contributor
-- Kyle Boatwright (University of Wisconsin - Stout) - contributor
-- Melissa Kosharek (University of Wisconsin - Stout) - contributor
-- Simon Cao (University of Wisconsin - Stout) - contributor
-- Darcy Hannen (University of Wisconsin - Stout) - UX designer
-- Isabel Smith (University of Wisconsin - Stout) - UX designer
-- Elliot Duffy (University of Wisconsin - Stout) - UX designer
-- Augusto Freitas (University of Wisconsin - Stout) - UX designer
-- Chloe Ferguson  (University of Wisconsin - Stout) - UX designer
+- Tyler Betanski (UW-Stout Polytechnic) - contributor
+- Jacob Buelow (UW-Stout Polytechnic) - contributor
+- Luke Denney (UW-Stout Polytechnic) - contributor
+- Ian Anderson (UW-Stout Polytechnic) - contributor
+- Zoe Cuthrell (UW-Stout Polytechnic) - contributor
+- Blane Suess (UW-Stout Polytechnic) - contributor
+- Isaac Tesch (UW-Stout Polytechnic) - contributor
+- Nathaniel Willius (UW-Stout Polytechnic) - contributor
+- Atlas Collins (UW-Stout Polytechnic) - contributor
+- Kyle Boatwright (UW-Stout Polytechnic) - contributor
+- Melissa Kosharek (UW-Stout Polytechnic) - contributor
+- Simon Cao (UW-Stout Polytechnic) - contributor
+- Seth Kendrick (UW-Stout Polytechnic) - contributor
+- Joe Luther (UW-Stout Polytechnic) - contributor
+- Jakob Schmucki (UW-Stout Polytechnic) - contributor
+- Nathan Sunday (UW-Stout Polytechnic) - contributor
+- Darcy Hannen (UW-Stout Polytechnic) - UX designer
+- Isabel Smith (UW-Stout Polytechnic) - UX designer
+- Elliot Duffy (UW-Stout Polytechnic) - UX designer
+- Augusto Freitas (UW-Stout Polytechnic) - UX designer
+- Chloe Ferguson  (UW-Stout Polytechnic) - UX designer
 - Gary Meyer (University of Minnesota) - designer and advisor
 
 Kintsugi 3D was developed with support from a grant from the National Endowment for the Humanities (NEH PR-290101-23).

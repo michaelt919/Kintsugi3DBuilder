@@ -572,10 +572,14 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 {
                     exporter.exportWithTextures(modelFile, finishedCallback);
                 }
-                else if (finishedCallback != null) // not saving textures
+                else  // not saving textures
                 {
                     exporter.exportModelOnly(modelFile);
-                    finishedCallback.run();
+
+                    if (finishedCallback != null)
+                    {
+                        finishedCallback.run();
+                    }
                 }
 
                 LOG.info("DONE!");
