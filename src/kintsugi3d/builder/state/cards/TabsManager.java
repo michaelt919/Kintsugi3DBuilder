@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,14 +20,14 @@ import java.util.Map;
 
 public class TabsManager
 {
-    private final Map<String, ProjectDataCardFactory> factories = new LinkedHashMap<>();
+    private final Map<String, ProjectDataCardFactory> factories = new LinkedHashMap<>(4);
 
     public TabsManager(ViewSet viewSet, ProjectInstance<?> instance)
     {
         factories.put("Photos", new CameraCardFactory(viewSet));
+        factories.put("Textures", new TextureCardFactory(instance));
         factories.put("Materials", new MaterialCardFactory(instance));
         factories.put("Shaders", new ShaderCardFactory(instance));
-        factories.put("Textures", new TextureCardFactory(instance));
     }
 
     public TabsManager(ProjectInstance<?> instance)
