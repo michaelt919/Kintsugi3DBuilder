@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -130,7 +130,15 @@ class OpenGLShader implements Shader<OpenGLContext>
 
                         sb.append("#define ");
                         sb.append(key);
-                        sb.append(" ( ");
+
+                        if (value instanceof String) // omit parentheses for symbols that could be variable names
+                        {
+                            sb.append(' ');
+                        }
+                        else
+                        {
+                            sb.append(" ( ");
+                        }
 
                         if (value instanceof Boolean)
                         {
@@ -148,7 +156,11 @@ class OpenGLShader implements Shader<OpenGLContext>
                             sb.append(value);
                         }
 
-                        sb.append(" )");
+                        if (!(value instanceof String)) // omit parentheses for symbols that could be variable names
+                        {
+                            sb.append(" )");
+                        }
+
                         sb.append(System.lineSeparator());
                     }
 

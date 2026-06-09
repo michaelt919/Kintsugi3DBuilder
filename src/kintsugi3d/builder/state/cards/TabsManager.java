@@ -26,6 +26,8 @@ public class TabsManager
     {
         factories.put("Photos", new CameraCardFactory(viewSet));
         factories.put("Materials", new MaterialCardFactory(instance));
+        factories.put("Shaders", new ShaderCardFactory(instance));
+        factories.put("Textures", new TextureCardFactory(instance));
     }
 
     public TabsManager(ProjectInstance<?> instance)

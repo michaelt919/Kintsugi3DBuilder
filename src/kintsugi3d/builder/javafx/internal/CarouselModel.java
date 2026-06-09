@@ -9,12 +9,24 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.gl.interactive;
+package kintsugi3d.builder.javafx.internal;
 
-public interface Refreshable 
-{
-    boolean isInitialized();
-    void initialize() throws InitializationException;
-    void refresh();
-    void terminate();
+import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
+import kintsugi3d.builder.state.scene.UserShader;
+/*
+This class is for the global state, so we can have a list of shaders in the carousel.
+Has two methods, one to get an arraylist of the shaders currently in the carousel.
+And another to add a shader to the carousel list.
+ */
+public class CarouselModel {
+    private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
+
+    public ObservableList<UserShader> getCarouselShaders() {
+        return carouselShaders;
+    }
+
+    public void addShader(UserShader shader) {
+        this.carouselShaders.add(shader);
+    }
 }

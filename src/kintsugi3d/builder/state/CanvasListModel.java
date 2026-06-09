@@ -11,37 +11,15 @@
 
 package kintsugi3d.builder.state;
 
+import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.function.Consumer;
 
-public class CanvasModelImpl implements CanvasModel
+public interface CanvasListModel
 {
-    private FramebufferCanvas<?> canvas = null;
-    private final Collection<Consumer<FramebufferCanvas<?>>> canvasChangedListeners = new LinkedList<>();
-
-    @Override
-    public FramebufferCanvas<?> getCanvas()
-    {
-        return canvas;
-    }
-
-    @Override
-    public void setCanvas(FramebufferCanvas<?> canvas)
-    {
-        this.canvas = canvas;
-
-        for (Consumer<FramebufferCanvas<?>> listener : canvasChangedListeners)
-        {
-            listener.accept(canvas);
-        }
-    }
-
-    @Override
-    public void addCanvasChangedListener(Consumer<FramebufferCanvas<?>> listener)
-    {
-        canvasChangedListeners.add(listener);
-    }
+    void setInstanceManager(ProjectInstanceManager<?> instanceManager);
+    void createCanvas(UserShader shader, int width, int height, Consumer<FramebufferCanvas<?>> canvasChangedListener);
+    void removeCanvas(UserShader shader);
 }

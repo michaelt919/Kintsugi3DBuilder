@@ -29,7 +29,7 @@ import java.util.*;
  * @author Michael Tetzlaff
  */
 public class InteractiveRenderableList<ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>> 
-    implements InteractiveRenderable<ContextType>, SelectableList<RenderableType>
+    extends InteractiveRenderableBase<ContextType> implements SelectableList<RenderableType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(InteractiveRenderableList.class);
     private List<RenderableType> renderables;

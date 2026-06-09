@@ -43,32 +43,17 @@ public final class InteractiveGraphics
     public static <ContextType extends Context<ContextType>> InteractiveApplication createApplication(
         EventPollable pollable, ContextType context, InteractiveRenderable<ContextType> renderable)
     {
-        return new InteractiveApplication(pollable, new Refreshable()
+        if (renderable.getOwningApp() != null)
         {
-            @Override
-            public void initialize() throws InitializationException
-            {
-                context.makeContextCurrent();
-                renderable.initialize();
-            }
+            throw new IllegalStateException("Renderable is already owned by another application!");
+        }
 
-            @Override
-            public void refresh()
-            {
-                context.makeContextCurrent();
-                renderable.update();
-                context.getDefaultFramebuffer().clearColorBuffer(0, 0, 0, 0, 0);
-                renderable.draw(context.getDefaultFramebuffer());
-                context.flush();
-                context.getDefaultFramebuffer().swapBuffers();
-            }
+        InteractiveApplication app = new InteractiveApplication(pollable,
+            RenderRefreshable.createWithDefaultFrambufferObject(context, renderable));
 
-            @Override
-            public void terminate()
-            {
-                context.makeContextCurrent();
-                renderable.close();
-            }
-        });
+        renderable.setOwningApp(app);
+
+        return app;
     }
+
 }

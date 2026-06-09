@@ -138,7 +138,7 @@ class BackendProgressMonitor implements ProgressMonitor
         }
 
         // Refresh tabs for materials
-        new TabsManager(instance).refreshTab("Materials");
+        new TabsManager(instance).refreshAllTabs();
 
         if (base != null)
         {
