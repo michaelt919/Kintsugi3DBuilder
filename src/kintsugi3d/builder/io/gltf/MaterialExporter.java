@@ -327,7 +327,7 @@ public class MaterialExporter
         return occlusionInfo;
     }
 
-    private String getTextureFilename(String name, String format)
+    protected String getTextureFilename(String name, String format)
     {
         return TextureResources.getTextureFilename(name, format, textureFilePrefix);
     }
