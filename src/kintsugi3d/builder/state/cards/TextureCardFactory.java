@@ -13,6 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
@@ -43,39 +44,64 @@ public class TextureCardFactory implements ProjectDataCardFactory
         this.instance = instance;
     }
 
-    /*
+    /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
     the title of the shader and the file name. Returns ProjectDataCard of the shader
     (single card). This is also where View Shader and Send to Carousel button and
     code are located.
+     @param texture
+     @param title
+     @return
     */
-    public ProjectDataCard createCard(CardsModel cardsModel, Texture2D<?> texture, String title, TextureResources<?> test)
+    private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, String title)
     {
-        String thumbnailPath;
-
-        //1. Base Location where the .pngs and thumbnails folder are.
-        File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
-
         //2. File name for the .pngs
         String fileName = TextureResources.getTextureFilename(title, "PNG");
 
-        //3. .png File
-        File textureImage = new File(baseDirectory, fileName);
+        UserShader textureShader = new UserShader(title, "rendermodes/viewTextureSimple.frag",
+            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", title)))); // TODO decouple title from texture name
 
-        //4. thumbnails folder
+        return createProjectDataCard(fileName, title, textureShader);
+    }
+
+    private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
+    {
+        // File name for the .pngs
+        String fileName = TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG");
+
+        String friendlyName = String.format("Weight map %d", weightmapIndex);
+
+        UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
+            Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
+
+        return createProjectDataCard(fileName, friendlyName, textureShader);
+    }
+
+    private ProjectDataCard createProjectDataCard(String fileName, String friendlyName, UserShader shader)
+    {
+        // Base Location where the .pngs and thumbnails folder are.
+        File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
+
+        // thumbnails folder
         File thumbnailDestination = new File(baseDirectory, "thumbnails");
 
-        //5. Where and how to save the new .pngs
+        // Where and how to save the new .pngs
         File newTextureImage = new File(thumbnailDestination, fileName);
 
         try
         {
+            // .png File
+            File textureImage = new File(baseDirectory, fileName);
+
+            // TODO convert weightmap to grayscale
             ImageHelper.read(textureImage).saveAtResolution("PNG", newTextureImage,256,256);
         }
         catch (IOException e)
         {
-            LOG.error("Error loading texture card: {}", title, e);
+            LOG.error("Error loading texture card: {}", friendlyName, e);
         }
+
+        String thumbnailPath;
 
         try
         {
@@ -87,42 +113,52 @@ public class TextureCardFactory implements ProjectDataCardFactory
             thumbnailPath = MainApplication.ICON_PATH;
         }
 
-        UserShader textureShader = new UserShader(title, "rendermodes/viewTextureSimple.frag",
-            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", title)))); // TODO decouple title from texture name
-
-        return new ProjectDataCard(title, thumbnailPath, Map.of(), Map.of(
-            "View Texture", () -> Global.state().getUserShaderModel().setUserShader(textureShader),
-            "Send to Carousel", ()->
+        return new ProjectDataCard(friendlyName, thumbnailPath, Map.of(), Map.of(
+            "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
+            "Send to Carousel", () ->
             {
                 //Todo: out code for send to carousel
             }));
     }
-    /*
+
+    /**
     createAllCards will call createCard for all the shaders and will
     return them in a list. This method will also detect if the model
     is processed and if so will limit the shaders shown to the user.
+     @param cardsModel
+     @return
      */
-
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
-        List<ProjectDataCard> textures = new ArrayList<>();
+        List<ProjectDataCard> textureCards = new ArrayList<>(8);
         if (instance.getResources() != null)
         {
             TextureResources<?> resources = instance.getResources().getTextureResources();
-            var basisResources = resources.getTextures();
-            if (basisResources != null)
+
+            var textures = resources.getTextures();
+            if (textures != null)
             {
-                for (var entry : basisResources.entrySet()) {
+                for (var entry : textures.entrySet())
+                {
                     String key = entry.getKey();
                     Texture2D<?> texture = entry.getValue();
-                    textures.add(createCard(cardsModel, texture, key, resources));
+                    textureCards.add(createSimpleTextureCard(texture, key));
+                }
+            }
+
+            BasisResources<?> basisResources = resources.getBasisResources();
+            if (basisResources != null)
+            {
+                for (int i = 0; i < basisResources.getBasisCount(); i++)
+                {
+                    textureCards.add(createWeightmapCard(resources, i));
                 }
             }
         }
 
         // If not yet initialized, return empty list.
-        return textures;
+        return textureCards;
     }
 
 }
