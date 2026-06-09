@@ -192,7 +192,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             projectModel.notifyProcessingComplete();
 
             // Refresh tabs
-            new TabsManager(renderable).refreshTab("Materials");
+            new TabsManager(renderable).refreshAllTabs();
         }
         catch (IOException | ParserConfigurationException | TransformerException e)
         {

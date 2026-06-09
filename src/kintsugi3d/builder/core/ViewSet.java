@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -38,11 +38,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -885,13 +882,13 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
         return uuid;
     }
 
-    private int findViewSetIndex(ArrayList<ViewSetData> list, File image)
+    private int findViewSetIndex(List<ViewSetData> list, File image)
     {
-        String imagePath = removeExt(image.getAbsolutePath());
+        File imagePath = new File(removeExt(image.getAbsolutePath()));
         for (int i = 0; i < list.size(); ++i)
         {
-            String s = getFullResImageDirectory() + "\\" + list.get(i).imageFile.getPath();
-            if (imagePath.equals(s))
+            File f = new File(getFullResImageDirectory(), removeExt(list.get(i).imageFile.getPath()));
+            if (imagePath.equals(f))
             {
                 return i;
             }
