@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -23,7 +23,6 @@ import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,23 +52,14 @@ public class MaterialCardFactory implements ProjectDataCardFactory
             thumbnailPath = MainApplication.ICON_PATH;
         }
 
-        return new ProjectDataCard("Material " + cardIndex, thumbnailPath, Map.of(),
+        return new ProjectDataCard(String.format("Material %d", cardIndex), thumbnailPath, Map.of(),
             List.of(
-                new LinkedHashMap<>()
-                {{
-                    put("View Material ", () ->
+                Map.of("View Material", () ->
                         Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL, cardIndex)));
-                    put("View Weight Map (Grayscale)", () ->
+                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex)),
+                 "Highlight Material", () ->
                         Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.WEIGHT_MAP_GRAYSCALE, cardIndex)));
-                    put("View Weight Map (Superimposed)", () ->
-                        Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.WEIGHT_MAP_SUPERIMPOSED, cardIndex)));
-                    put("View Material X Weight Map", () ->
-                        Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex)));
-                }},
+                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.WEIGHT_MAP_SUPERIMPOSED, cardIndex))),
                 Map.of("Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
