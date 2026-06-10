@@ -14,6 +14,8 @@ package kintsugi3d.builder.state.cards;
 import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.ViewSetData;
+import kintsugi3d.builder.core.ViewSetDataCollection;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -38,12 +40,12 @@ public class CameraCardFactory implements ProjectDataCardFactory
         this.viewSet = viewSet;
     }
 
-    public ProjectDataCard createCard(CardsModel cardsModel, int cardIndex)
+    private ProjectDataCard createCard(CardsModel cardsModel, int cardIndex, ViewSetDataCollection viewSetDataCollection)
     {
         String thumbnailPath;
         try
         {
-            thumbnailPath = viewSet.findThumbnailImageFile(cardIndex).toString();
+            thumbnailPath = viewSetDataCollection.findThumbnailImageFile(cardIndex).toString();
         }
         catch (FileNotFoundException e)
         {
@@ -53,12 +55,12 @@ public class CameraCardFactory implements ProjectDataCardFactory
 
         try
         {
-            File fullResFile = viewSet.findFullResImageFile(cardIndex);
+            File fullResFile = viewSetDataCollection.findFullResImageFile(cardIndex);
             IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
             String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
             return new ProjectDataCard(
-                viewSet.getImageFiles().get(cardIndex).getName(), thumbnailPath,
+                viewSetDataCollection.getImageFiles().get(cardIndex).getName(), thumbnailPath,
                 new LinkedHashMap<>()
                 {{
                     put("Resolution", res);
@@ -75,12 +77,15 @@ public class CameraCardFactory implements ProjectDataCardFactory
                             finally
                             {
                                 Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+                                cardsModel.setCardList(createAllCards(cardsModel));
                             }
                         })),
-               "Toggle Enabled", () ->
+               "Toggle Disabled", () ->
                     {
                         Rendering.runLater(() -> viewSet.toggleCamera(fullResFile));
-                        // TODO: update card appearance based on toggled or not.
+                        Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+//                        cardsModel.setCardList(createAllCards(cardsModel));
+                        cardsModel.getCardList().get(cardIndex).setIsDisabled(!cardsModel.getCardList().get(cardIndex).getIsDisabled());
                     }
                 )
             );
@@ -95,8 +100,15 @@ public class CameraCardFactory implements ProjectDataCardFactory
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
-        return IntStream.range(0, viewSet.getCameraPoseCount())
-            .mapToObj(i -> createCard(cardsModel, i))
-            .collect(Collectors.toUnmodifiableList());
+        List<ProjectDataCard> cardsList = IntStream.range(0, viewSet.getCameraPoseCount())
+            .mapToObj(i -> createCard(cardsModel, i, viewSet.getViewSetData()))
+            .collect(Collectors.toList());
+        // Make sure to also display disabled cards
+        List<ProjectDataCard> disabledCardsList = IntStream.range(0, viewSet.getDisabledCameraCount())
+            .mapToObj(i -> createCard(cardsModel, i, viewSet.getDisabledViewSetData()))
+            .collect(Collectors.toList());
+        cardsList.addAll(disabledCardsList);
+        cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());
+        return cardsList;
     }
 }

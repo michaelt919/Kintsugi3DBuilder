@@ -22,6 +22,7 @@ public class ProjectDataCard
     private final String imagePath;
     private final Map<String, String> textFields;
     private final List<? extends Map<String, Runnable>> actionGroups;
+    private boolean isDisabled = false; // TODO: consider getting from viewset
 
     public ProjectDataCard(String title, String imagePath, Map<String, String> textFields, List<? extends Map<String, Runnable>> actionGroups)
     {
@@ -54,6 +55,10 @@ public class ProjectDataCard
 
     public String getTitle()
     {
+        if (isDisabled)
+        {
+            return title + " - DISABLED";
+        }
         return title;
     }
 
@@ -80,4 +85,8 @@ public class ProjectDataCard
     {
         return actionGroups;
     }
+
+    public boolean getIsDisabled() { return isDisabled; }
+
+    public void setIsDisabled(boolean isDisabled) { this.isDisabled = isDisabled; }
 }

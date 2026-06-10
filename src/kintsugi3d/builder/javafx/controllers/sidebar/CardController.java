@@ -127,7 +127,11 @@ public class CardController
                 button.getStyleClass().add("card-button");
                 button.getStyleClass().add("wireframeBodyStrong");
                 button.getStylesheets().add("file:./kintsugiStyling.css");
-                button.setOnAction(event -> action.run());
+                button.setOnAction(event ->
+                {
+                    action.run();
+                    cardTitle.setText(dataCard.getTitle());
+                });
 
                 HBox.setMargin(button, new Insets(0, 0, 8, 0));
                 hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
@@ -161,6 +165,14 @@ public class CardController
                 mainImage.setImage(preview);
             }
         });
+        // Update title for disabled or not
+//        dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->
+//        {
+//            if (newVal)
+//            {
+//                cardTitle.setText(dataCard.getTitle());
+//            }
+//        });
     }
 
     public void setCardVisibility(boolean visibility)
