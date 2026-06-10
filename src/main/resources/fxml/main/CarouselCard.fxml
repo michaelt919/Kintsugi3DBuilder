@@ -26,7 +26,7 @@
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController">
-    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     <Button fx:id = "closeButton"
             onAction = "#closeCard"
             prefHeight="20.0"
@@ -40,21 +40,26 @@
             text = "x"
             style = "-fx-background-color: #A1A1A1; -fx-font-size: 12px; -fx-padding: 0px; -fx-text-fill: black; -fx-alignment: center;">
     </Button>
-    <HBox prefHeight="30"
-          minHeight="30"
-          maxHeight="30"
-          alignment="CENTER_LEFT"
-          style="-fx-background-color: #3C3C3C; -fx-background-radius: 5px; -fx-padding: 10px;-fx-border-color: #dcdcdc; -fx-border-width: 1; -fx-border-style: solid;"
-          AnchorPane.leftAnchor="2.0"
-          AnchorPane.rightAnchor="2.0"
-          AnchorPane.bottomAnchor="2.0">
-        <Label fx:id="shaderName" text="Texture Type"
-               style="-fx-text-fill: #ffffff; -fx-font-size: 12px; -fx-alignment: center-left;"/>
+    <HBox   prefHeight="30"
+            minHeight="30"
+            maxHeight="30"
+            alignment="CENTER_LEFT"
+            style="-fx-background-color: rgba(60, 60, 60, 0.75); -fx-padding: 10px;"
+            AnchorPane.leftAnchor="2.0"
+            AnchorPane.rightAnchor="2.0"
+            AnchorPane.bottomAnchor="2.0">
+        <!--
+        If added to style for Hbox, makes a selection boarder
+        -fx-border-color: #dcdcdc; -fx-border-width: 1; -fx-border-style: solid;
+        -->
+        <Label  fx:id="shaderName"
+                text="Texture Type"
+                style="-fx-text-fill: #ffffff; -fx-font-size: 12px; -fx-alignment: center-left;"/>
 
         <Region HBox.hgrow="ALWAYS"/>
 
-        <CheckBox fx:id="selectedCheckbox"
-                  onAction="#selectedChanged"
-                  style="-fx-alignment: center-right; -fx-padding: 0px"/>
+        <CheckBox   fx:id="selectedCheckbox"
+                    onAction="#selectedChanged"
+                    style="-fx-alignment: center-right; -fx-padding: 0px"/>
     </HBox>
 </AnchorPane>
