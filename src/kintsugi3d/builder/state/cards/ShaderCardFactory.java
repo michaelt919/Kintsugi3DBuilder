@@ -60,29 +60,10 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
             Global.state().getUserShaderModel().setUserShader(shaderView);
 
         },"Send to Carousel", ()-> {
-
-            //list of shaders currently in carousel
-            ObservableList<UserShader> current = Global.state().getCarouselModel().getCarouselShaders();
-
-            //Shader that is trying to be sent to carousel
+            //Creates new shader with title and filename
             UserShader newCarouselShader = new UserShader(title, fileName);
-
-            boolean alreadyInCarousel = false;
-
-            //For loop looks through Arraylist for any that match the shader
-            //that is trying to be sent to carousel
-            for (UserShader element : current){
-                if (newCarouselShader.equals(element)){
-                    //if one matches:
-                    alreadyInCarousel = true;
-                }
-            }
-
-            //Prevents duplicate shaders in carousel / if the shaders don't match
-            //then shader is sent to carousel
-            if (!alreadyInCarousel){
-                Global.state().getCarouselModel().addShader(newCarouselShader);
-            }
+            //Adds the shader to the carousel
+            Global.state().getCarouselModel().addToCarousel(newCarouselShader);
         }));
     }
     /**

@@ -59,7 +59,10 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex)),
                  "Highlight Material", () ->
                         Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.WEIGHT_MAP_SUPERIMPOSED, cardIndex))),
+                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.WEIGHT_MAP_SUPERIMPOSED, cardIndex)),
+                "Send Material to Carousel", () ->{
+                    Global.state().getCarouselModel().addToCarousel(VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex));
+                    }),
                 Map.of("Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources

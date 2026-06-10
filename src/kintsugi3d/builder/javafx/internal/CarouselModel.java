@@ -29,4 +29,23 @@ public class CarouselModel {
     public void addShader(UserShader shader) {
         this.carouselShaders.add(shader);
     }
+    public void addToCarousel(UserShader shader){
+
+        boolean alreadyInCarousel = false;
+
+        //For loop looks through List for any that match the shader
+        //that is trying to be sent to carousel
+        for (UserShader element : carouselShaders){
+            if (shader.equals(element)){
+                //if one matches:
+                alreadyInCarousel = true;
+            }
+        }
+
+        //Prevents duplicate shaders in carousel / if the shaders don't match
+        //then shader is sent to carousel
+        if (!alreadyInCarousel){
+            carouselShaders.add(shader);
+        }
+    }
 }

@@ -117,7 +117,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
             "Send to Carousel", () ->
             {
-                //Todo: out code for send to carousel
+                Global.state().getCarouselModel().addToCarousel(shader);
             }));
     }
 
