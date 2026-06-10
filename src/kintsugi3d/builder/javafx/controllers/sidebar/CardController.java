@@ -127,7 +127,13 @@ public class CardController
                 button.getStyleClass().add("card-button");
                 button.getStyleClass().add("wireframeBodyStrong");
                 button.getStylesheets().add("file:./kintsugiStyling.css");
-                button.setOnAction(event -> action.run());
+                button.setOnAction(event -> {
+
+                    /*If uncommented will make it so after a button is clicked
+                      boarder will remain to show it is selected*/
+                    //button.getStyleClass().add("activated");
+                    action.run();
+                });
 
                 HBox.setMargin(button, new Insets(0, 0, 8, 0));
                 hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
@@ -176,15 +182,15 @@ public class CardController
     @FXML
     public void cardClicked()
     {
-//        if (cameraCardsModel.isSelected(cardId))
-//        {
-//            cameraCardsModel.deselectCard(cardId);
-//        }
-//        else
-//        {
-//            cameraCardsModel.selectCard(cardId);
-//        }
-
+        /*
+        if (cameraCardsModel.isSelected(cardId))
+        {
+            cameraCardsModel.deselectCard(cardId);
+        }
+        else
+        {
+            cameraCardsModel.selectCard(cardId);
+        } */
         if (cardsModel.isExpanded(cardId))
         {
             cardsModel.collapseCard(cardId);
