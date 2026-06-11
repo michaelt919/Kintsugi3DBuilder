@@ -37,19 +37,24 @@ import javafx.stage.Window;
 import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
 import kintsugi3d.builder.javafx.experience.ExportRender;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
+import kintsugi3d.builder.state.cards.ShaderDataCard;
+import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.javafx.FramebufferView;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MainWindowController
@@ -92,6 +97,7 @@ public class MainWindowController
     @FXML private Menu shadingMenu;
     @FXML private Menu weightmapMenu;
     @FXML private Menu paletteMaterialWeightedMenu;
+    @FXML private Menu texturesMenu;
 
     @FXML private MenuItem removeAllRefsCustMenuItem;
     @FXML private MenuItem removeSomeRefsCustMenuItem;
@@ -117,11 +123,6 @@ public class MainWindowController
     @FXML private RadioMenuItem materialBasis;
     @FXML private RadioMenuItem imgBasedWithTextures;
     @FXML private RadioMenuItem weightmapCombination;
-    @FXML private RadioMenuItem roughnessTexture;
-    @FXML private RadioMenuItem metallicityTexture;
-    @FXML private RadioMenuItem diffuseTexture;
-    @FXML private RadioMenuItem specularTexture;
-    @FXML private RadioMenuItem errorTexture;
 
     private final Collection<MenuItem> toggleableShaders = new ArrayList<>(8);
 
@@ -183,13 +184,6 @@ public class MainWindowController
         toggleableShaders.add(weightmapCombination);
         toggleableShaders.add(weightmapMenu);
         toggleableShaders.add(paletteMaterialWeightedMenu);
-        toggleableShaders.add(roughnessTexture);
-        toggleableShaders.add(metallicityTexture);
-        toggleableShaders.add(diffuseTexture);
-        toggleableShaders.add(specularTexture);
-        toggleableShaders.add(errorTexture);
-
-        updateShaderList(0);
 
         ObservableUserShaderModel userShaderModel = javaFXState.getUserShaderModel();
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
@@ -304,11 +298,17 @@ public class MainWindowController
         javaFXState.getTabModels().getObservableTabsMap().addListener(
             (MapChangeListener<? super String, ? super ObservableCardsModel>) change ->
             {
-                if (change.wasAdded() && "Materials".equals(change.getKey()))
+                if (change.wasAdded() && TabsManager.MATERIALS.equals(change.getKey()))
                 {
                     ObservableCardsModel materialCardsModel = change.getValueAdded();
                     materialCardsModel.getCardList().addListener((InvalidationListener)
-                        obs -> updateShaderList(materialCardsModel.getCardList().size()));
+                        obs -> updateMaterialShaderList(materialCardsModel.getCardList()));
+                }
+                else if (change.wasAdded() && TabsManager.TEXTURES.equals(change.getKey()))
+                {
+                    ObservableCardsModel textureCardsModel = change.getValueAdded();
+                    textureCardsModel.getCardList().addListener((InvalidationListener)
+                        obs -> updateTextureList(textureCardsModel.getCardList()));
                 }
             });
 
@@ -453,26 +453,43 @@ public class MainWindowController
     }
 
     // Populate menu based on a given input number
-    private void updateShaderList(int basisCount)
+    private void updateMaterialShaderList(Iterable<ProjectDataCard> materialCards)
     {
         paletteMaterialWeightedMenu.getItems().clear();
+
+        for (ProjectDataCard card : materialCards)
+        {
+            if (card instanceof ShaderDataCard)
+            {
+                UserShader shader = ((ShaderDataCard) card).getShader();
+
+                paletteMaterialWeightedMenu.getItems().add(createMenuItemFromShader(shader));
+            }
+        }
+    }
+
+    private void updateTextureList(Iterable<ProjectDataCard> textureCards)
+    {
+        texturesMenu.getItems().clear();
         weightmapMenu.getItems().clear();
 
-        Map<String, Optional<Object>> comboDefines = new HashMap<>(2);
-        comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
-        comboDefines.put("WEIGHTMAP_COUNT", Optional.of(basisCount));
-        weightmapCombination.setUserData(new UserShader(weightmapCombination.getText(),
-            "rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
-
-        for (int i = 0; i < basisCount; ++i)
+        for (ProjectDataCard card : textureCards)
         {
-            // palette material
-            paletteMaterialWeightedMenu.getItems().add(i, createMenuItemFromShader(VisualizationShaders.getForBasisMaterial(
-                (String) paletteMaterialWeightedMenu.getUserData(), i, VisualizationShaders.FORMAT_PALETTE_MATERIAL)));
+            if (card instanceof ShaderDataCard)
+            {
+                UserShader shader = ((ShaderDataCard) card).getShader();
 
-            // weightmap
-            weightmapMenu.getItems().add(i, createMenuItemFromShader(VisualizationShaders.getForBasisMaterial(
-                (String) weightmapMenu.getUserData(), i, VisualizationShaders.FORMAT_WEIGHTMAP)));
+                if (shader.getFilename().endsWith("viewTextureWeights.frag"))
+                {
+                    // Weightmaps go in a separate menu
+                    weightmapMenu.getItems().add(createMenuItemFromShader(shader));
+                }
+                else
+                {
+                    // Normal textures
+                    texturesMenu.getItems().add(createMenuItemFromShader(shader));
+                }
+            }
         }
     }
 

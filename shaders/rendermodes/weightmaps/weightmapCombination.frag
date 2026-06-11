@@ -23,7 +23,7 @@ layout(location = 0) out vec4 fragColor;
 #endif
 
 #ifndef WEIGHTMAP_COUNT
-#define WEIGHTMAP_COUNT 8
+#define WEIGHTMAP_COUNT BASIS_COUNT
 #endif
 
 #define WEIGHTMAP_COLOR_COUNT 8

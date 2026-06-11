@@ -140,28 +140,7 @@
                     <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material palette">
                         <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                     </Menu>
-                    <Menu mnemonicParsing="false" text="Textures">
-                        <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/normalMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Albedo map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/albedoMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="roughnessTexture" mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/roughnessMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="metallicityTexture" mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/metallicMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="diffuseTexture" mnemonicParsing="false" text="Diffuse color map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/diffuseColor.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="specularTexture" mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/specularColor.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="errorTexture" mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/errorMap.frag</userData>
-                        </RadioMenuItem>
+                    <Menu fx:id = "texturesMenu" mnemonicParsing="false" text="Textures">
                     </Menu>
                 </Menu>
                 <Menu text="Help">

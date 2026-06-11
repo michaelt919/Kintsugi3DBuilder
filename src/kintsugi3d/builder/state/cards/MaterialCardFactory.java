@@ -55,12 +55,12 @@ public class MaterialCardFactory implements ProjectDataCardFactory
             thumbnailPath = MainApplication.ICON_PATH;
         }
 
-        return new ProjectDataCard(String.format("Material %d", cardIndex), thumbnailPath, Map.of(),
+        UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
+            cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
+
+        return new ShaderDataCard(String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
             List.of(
-                Map.of("View Material", () ->
-                        Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
-                                cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL)),
+                Map.of("View Material", () -> Global.state().getUserShaderModel().setUserShader(shader),
                  "Highlight Material", () ->
                     {
                         UserShader prevShader = Global.state().getUserShaderModel().getUserShader();
