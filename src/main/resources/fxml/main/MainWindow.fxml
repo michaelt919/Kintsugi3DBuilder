@@ -49,7 +49,7 @@
                         </accelerator>
                     </MenuItem>
                     <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem fx:id="fileExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
+                    <MenuItem fx:id="fileExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export Model..." userData="ExportModel" />
                     <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export" />
                     <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false" />
                     <SeparatorMenuItem />

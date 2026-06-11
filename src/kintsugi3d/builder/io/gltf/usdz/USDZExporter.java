@@ -26,10 +26,9 @@ import java.nio.charset.StandardCharsets;
 
 public class USDZExporter extends MaterialExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(StandardShaderComponent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
     private static final String SCRIPT_LOCATION = "/home/nathan/Documents/Kintsugi3DBuilder/python/";
     private File outputPath;
-    private String glbName;
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
@@ -72,7 +71,7 @@ public class USDZExporter extends MaterialExporter
             ProcessBuilder pb = new ProcessBuilder(
                 pythonExecutable,
                 script,
-                glbName,
+                getFilename(),
                 getTextureFileFormat(),
                 normal,
                 diffuse,
@@ -84,18 +83,15 @@ public class USDZExporter extends MaterialExporter
             Process process = pb.start();
 
             try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)
-            ))
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
             {
-                String line;
-                while ((line = reader.readLine()) != null)
-                {
-                    LOG.info(line);
-                }
+                reader.lines().forEachOrdered(LOG::info);
             }
 
             if (process.waitFor() != 0)
+            {
                 throw new Exception();
+            }
         }
         catch (Exception e)
         {
@@ -110,10 +106,5 @@ public class USDZExporter extends MaterialExporter
         super.saveTextures(outputDirectory);
 
         outputPath = outputDirectory;
-    }
-
-    public void setGlbName(String glbName)
-    {
-        this.glbName = glbName;
     }
 }

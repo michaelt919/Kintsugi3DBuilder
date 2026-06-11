@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state.settings;
 
+import kintsugi3d.builder.io.gltf.ExportType;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
 
@@ -83,6 +84,7 @@ public final class DefaultSettings
         settingsModel.createBooleanSetting("openViewerOnProcessingComplete", false);
 
         // Export options
+        settingsModel.createObjectSetting("exportType", ExportType.GLTF);
         settingsModel.createObjectSetting("textureFormat", "PNG");
         settingsModel.createBooleanSetting("exportLODEnabled", false);
         settingsModel.createNumericSetting("minimumLODSize", 256);
