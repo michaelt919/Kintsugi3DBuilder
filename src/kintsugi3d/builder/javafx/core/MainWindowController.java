@@ -209,10 +209,17 @@ public class MainWindowController
             userShaderModel.getUserShaderProperty()));
 
         userShaderModel.getUserShaderProperty().addListener((obs, oldValue, newValue) ->
-            renderGroup.selectToggle(renderGroup.getToggles().stream()
-                .filter(toggle -> Objects.equals(newValue, getUserShaderFromToggle(toggle)))
+        {
+            Toggle toggle = renderGroup.getToggles().stream()
+                .filter(t ->
+                {
+                    UserShader shader = getUserShaderFromToggle(t);
+                    return Objects.equals(newValue, shader);
+                })
                 .findFirst()
-                .orElse(null)));
+                .orElse(null);
+            renderGroup.selectToggle(toggle);
+        });
 
         projectModel = javaFXState.getProjectModel();
 
@@ -431,14 +438,14 @@ public class MainWindowController
         }
     }
 
-    private List<RadioMenuItem> getRadioMenuItems(Menu menu)
+    private static List<RadioMenuItem> getRadioMenuItems(Menu menu)
     {
         List<RadioMenuItem> list = new ArrayList<>(menu.getItems().size());
         getRadioMenuItemsHelper(list, menu.getItems());
         return list;
     }
 
-    private void getRadioMenuItemsHelper(List<RadioMenuItem> radioMenuItems, List<MenuItem> menuItems)
+    private static void getRadioMenuItemsHelper(List<RadioMenuItem> radioMenuItems, Iterable<MenuItem> menuItems)
     {
         for (MenuItem item : menuItems)
         {
@@ -511,11 +518,11 @@ public class MainWindowController
         Global.state().getUserShaderModel().setUserShader(getUserShaderFromToggle(renderGroup.getSelectedToggle()));
     }
 
-    private UserShader getUserShaderFromToggle(Toggle newValue)
+    private static UserShader getUserShaderFromToggle(Toggle newValue)
     {
-        if (newValue.getUserData() instanceof String)
+        if (newValue instanceof MenuItem && newValue.getUserData() instanceof String)
         {
-            return new UserShader(((MenuItem) renderGroup.getSelectedToggle()).getText(), (String) newValue.getUserData());
+            return new UserShader(((MenuItem) newValue).getText(), (String) newValue.getUserData());
         }
         else if (newValue.getUserData() instanceof UserShader)
         {
