@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -91,8 +91,8 @@ public class MainWindowController
     @FXML private Menu cleanRecentProjectsMenu;
     @FXML private Menu shadingMenu;
     @FXML private Menu heatmapMenu;
-    @FXML private Menu superimposeMenu;
-    @FXML private Menu paletteMaterialMenu;
+//    @FXML private Menu superimposeMenu;
+//    @FXML private Menu paletteMaterialMenu;
     @FXML private Menu paletteMaterialWeightedMenu;
 
     @FXML private MenuItem removeAllRefsCustMenuItem;
@@ -181,8 +181,8 @@ public class MainWindowController
 
         // Shader menu flyouts
         shaderMenuFlyouts.add(heatmapMenu);
-        shaderMenuFlyouts.add(superimposeMenu);
-        shaderMenuFlyouts.add(paletteMaterialMenu);
+//        shaderMenuFlyouts.add(superimposeMenu);
+//        shaderMenuFlyouts.add(paletteMaterialMenu);
         shaderMenuFlyouts.add(paletteMaterialWeightedMenu);
 
         // Shader menu
@@ -204,7 +204,7 @@ public class MainWindowController
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
             {
                 UserShader userShader = userShaderModel.getUserShader();
-                return userShader != null ? userShader.getFriendlyName() : "(no shader)";
+                return userShader != null ? userShader.getFullName() : "(no shader)";
             },
             userShaderModel.getUserShaderProperty()));
 

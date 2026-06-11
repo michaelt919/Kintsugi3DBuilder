@@ -19,12 +19,15 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -58,8 +61,32 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                         Global.state().getUserShaderModel().setUserShader(
                             VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex)),
                  "Highlight Material", () ->
+                    {
+                        UserShader prevShader = Global.state().getUserShaderModel().getUserShader();
+                        var defines = new HashMap<>(prevShader.getDefines());
+                        var overlayMode = defines.get("OVERLAY_MODE");
+                        var overlayWeightmapIndex = defines.get("OVERLAY_WEIGHTMAP_INDEX");
+
+                        String subName;
+
+                        if (overlayMode != null && overlayMode.isPresent() && overlayMode.get().equals("OVERLAY_MODE_WEIGHTMAP")
+                            && overlayWeightmapIndex != null && overlayWeightmapIndex.isPresent() && overlayWeightmapIndex.get().equals(cardIndex))
+                        {
+                            // Overlay already active; toggle off
+                            defines.remove("OVERLAY_MODE");
+                            defines.remove("OVERLAY_WEIGHTMAP_INDEX");
+                            subName = null;
+                        }
+                        else
+                        {
+                            defines.put("OVERLAY_MODE", Optional.of("OVERLAY_MODE_WEIGHTMAP"));
+                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(cardIndex));
+                            subName = String.format("Palette material %d", cardIndex);
+                        }
+
                         Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.WEIGHT_MAP_SUPERIMPOSED, cardIndex))),
+                            new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
+                    }),
                 Map.of("Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources

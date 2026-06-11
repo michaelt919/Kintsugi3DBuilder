@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -137,13 +137,13 @@
                     <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
                         <userData>rendermodes/weightmaps/weightmapSingle.frag</userData>
                     </Menu>
-                    <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">
-                        <userData>rendermodes/weightmaps/weightmapOverlay.frag</userData>
-                    </Menu>
-                    <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
-                        <userData>rendermodes/basisMaterialSingle.frag</userData>
-                    </Menu>
-                    <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material x weights">
+<!--                    <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">-->
+<!--                        <userData>rendermodes/weightmaps/weightmapOverlay.frag</userData>-->
+<!--                    </Menu>-->
+<!--                    <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">-->
+<!--                        <userData>rendermodes/basisMaterialSingle.frag</userData>-->
+<!--                    </Menu>-->
+                    <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material palette">
                         <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                     </Menu>
                     <Menu mnemonicParsing="false" text="Texture Visualizations">
