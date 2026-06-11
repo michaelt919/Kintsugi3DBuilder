@@ -20,7 +20,7 @@ public class ExportModel extends ExperienceBase
     @Override
     public String getName()
     {
-        return "Export glTF";
+        return "Export Model";
     }
 
     @Override

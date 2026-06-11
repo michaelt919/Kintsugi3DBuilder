@@ -91,7 +91,7 @@
                         </accelerator>
                     </MenuItem>
                     <MenuItem fx:id="reoptimizeTexturesMenuItem" mnemonicParsing="false" onAction="#openExperience" text="Reoptimize Textures..." userData="SpecularTextureFit"/>
-                    <MenuItem fx:id="workflowExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export glTF Model..." userData="ExportModel" />
+                    <MenuItem fx:id="workflowExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export Model..." userData="ExportModel" />
                     <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
                 </Menu>
                 <Menu mnemonicParsing="false" text="Environment">
