@@ -56,6 +56,8 @@ public class ViewSetData {
 
     public final ViewRMSE viewErrorMetric;
 
+    public boolean isDisabled;
+
     /**
      * Creates a new view set data object with parameters for each member.
      */
@@ -70,5 +72,6 @@ public class ViewSetData {
         this.imageFile = imageFile;
         this.maskFile = maskFile;
         this.viewErrorMetric = viewErrorMetric;
+        isDisabled = false;
     }
 }

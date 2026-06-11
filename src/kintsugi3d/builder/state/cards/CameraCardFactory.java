@@ -35,9 +35,12 @@ public class CameraCardFactory implements ProjectDataCardFactory
 
     private final ViewSet viewSet;
 
+    private CardsModel lastUsedCardsModel;
+
     public CameraCardFactory(ViewSet viewSet)
     {
         this.viewSet = viewSet;
+        viewSet.registerObserver(this::updateCards);
     }
 
     private ProjectDataCard createCard(CardsModel cardsModel, int cardIndex, ViewSetDataCollection viewSetDataCollection)
@@ -68,26 +71,14 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 }},
                 Map.of("Remove from Project", () ->
                     cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                        () -> Rendering.runLater(() ->
-                        {
-                            try
-                            {
-                                viewSet.deleteCamera(fullResFile);
-                            }
-                            finally
-                            {
-                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
-                                cardsModel.setCardList(createAllCards(cardsModel));
-                            }
-                        })),
+                        () -> Rendering.runLater(() -> viewSet.deleteCamera(fullResFile))),
                "Toggle Disabled", () ->
                     {
+//                        cardsModel.getCardList().get(cardIndex).setIsDisabled(!cardsModel.getCardList().get(cardIndex).getIsDisabled());
                         Rendering.runLater(() -> viewSet.toggleCamera(fullResFile));
-                        Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
-//                        cardsModel.setCardList(createAllCards(cardsModel));
-                        cardsModel.getCardList().get(cardIndex).setIsDisabled(!cardsModel.getCardList().get(cardIndex).getIsDisabled());
                     }
-                )
+                ),
+                viewSetDataCollection.getViewSetData().get(cardIndex).isDisabled
             );
         }
         catch (RuntimeException|IOException e)
@@ -100,6 +91,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
+        lastUsedCardsModel = cardsModel;
         List<ProjectDataCard> cardsList = IntStream.range(0, viewSet.getCameraPoseCount())
             .mapToObj(i -> createCard(cardsModel, i, viewSet.getViewSetData()))
             .collect(Collectors.toList());
@@ -110,5 +102,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
         cardsList.addAll(disabledCardsList);
         cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());
         return cardsList;
+    }
+
+    private void updateCards()
+    {
+        Platform.runLater(() -> lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel)));
     }
 }

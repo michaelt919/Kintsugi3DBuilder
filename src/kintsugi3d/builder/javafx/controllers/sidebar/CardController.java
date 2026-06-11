@@ -12,6 +12,9 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,6 +31,7 @@ import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.io.File;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +59,12 @@ public class CardController
         this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();
         this.setCardVisibility(false);
+
+        if (dataCard.getIsDisabled())
+        {
+            cardTitle.setText(dataCard.getTitle());
+            dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
+        }
 
         cardTitle.setText(dataCard.getTitle());
 

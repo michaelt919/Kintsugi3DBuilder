@@ -494,6 +494,10 @@
     -fx-background-color: #CECECE
 }
 
+.card-background:disabled {
+    -fx-background-color: #858585
+}
+
 .card-button {
     -fx-background-color: #383838;
     -fx-text-fill: #CECECE;

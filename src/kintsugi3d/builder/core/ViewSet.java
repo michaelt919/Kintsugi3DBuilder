@@ -603,12 +603,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public List<File> getImageFiles()
     {
-        List<File> imageFiles = new ArrayList<>(viewSetDataCollection.getViewSetData().size());
-        for (ViewSetData viewSetData : viewSetDataCollection.getViewSetData())
-        {
-            imageFiles.add(viewSetData.imageFile);
-        }
-        return Collections.unmodifiableList(imageFiles);
+        return viewSetDataCollection.getImageFiles();
     }
 
     @Override
@@ -917,6 +912,15 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
             viewSetDataCollection.getViewSetData().remove(index);
             notifyObservers();
         }
+        else
+        {
+            index = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
+            if (index != -1)
+            {
+                disabledViewSetDataCollection.getViewSetData().remove(index);
+                notifyObservers();
+            }
+        }
     }
 
     public void toggleCamera(File image)
@@ -928,6 +932,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
             index = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
             if (index != -1)
             {
+                viewSetDataCollection.getViewSetData().get(index).isDisabled = true;
                 disabledViewSetDataCollection.getViewSetData().add(viewSetDataCollection.getViewSetData().get(index));
                 viewSetDataCollection.getViewSetData().remove(index);
             }
@@ -936,6 +941,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
         // Currently disabled, so enable camera
         else
         {
+            disabledViewSetDataCollection.getViewSetData().get(index).isDisabled = false;
             viewSetDataCollection.getViewSetData().add(disabledViewSetDataCollection.getViewSetData().get(index));
             disabledViewSetDataCollection.getViewSetData().remove(index);
         }
@@ -1008,16 +1014,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File getFullResImageDirectory()
     {
-        if (this.viewSetDataCollection.getFullResImageDirectory() == null)
-        {
-            // If no full res images, just use preview images as full res, or root directory as last fallback
-            return this.getPreviewImageDirectory() ==
-                null ? this.viewSetDataCollection.getRootDirectory() : this.viewSetDataCollection.getPreviewImageDirectory();
-        }
-        else
-        {
-            return this.viewSetDataCollection.getFullResImageDirectory();
-        }
+        return this.viewSetDataCollection.getFullResImageDirectory();
     }
 
 
@@ -1064,31 +1061,13 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File getPreviewImageDirectory()
     {
-        if (this.viewSetDataCollection.getPreviewImageDirectory() == null)
-        {
-            // If no preview images, default to just using full res images, or root directory as last fallback
-            return this.viewSetDataCollection.getFullResImageDirectory() ==
-                null ? this.viewSetDataCollection.getRootDirectory() : this.viewSetDataCollection.getFullResImageDirectory();
-        }
-        else
-        {
-            return this.viewSetDataCollection.getPreviewImageDirectory();
-        }
+        return this.viewSetDataCollection.getPreviewImageDirectory();
     }
 
     @Override
     public File getThumbnailImageDirectory()
     {
-        if (this.viewSetDataCollection.getThumbnailImageDirectory() == null)
-        {
-            // If no thumbnail images, default to just using full res images, or root directory as last fallback
-            return this.viewSetDataCollection.getFullResImageDirectory() ==
-                null ? this.viewSetDataCollection.getRootDirectory() : this.viewSetDataCollection.getFullResImageDirectory();
-        }
-        else
-        {
-            return this.viewSetDataCollection.getThumbnailImageDirectory();
-        }
+        return this.viewSetDataCollection.getThumbnailImageDirectory();
     }
 
     @Override
@@ -1150,7 +1129,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File getFullResImageFile(int poseIndex)
     {
-        return new File(this.getFullResImageDirectory(), this.viewSetDataCollection.getViewSetData().get(poseIndex).imageFile.getPath());
+        return viewSetDataCollection.getFullResImageFile(poseIndex);
     }
 
     @Override
@@ -1176,16 +1155,13 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File getThumbnailImageFile(int poseIndex, String extension)
     {
-        return new File(this.getThumbnailImageDirectory(),
-            // TODO: replace String.valueOf with the actual image filename
-            ImageFinder.getInstance().getImageFileNameWithExtension(
-                viewSetDataCollection.getViewSetData().get(poseIndex).imageFile.getName(), extension));
+        return viewSetDataCollection.getThumbnailImageFile(poseIndex, extension);
     }
 
     @Override
     public File getThumbnailImageFile(int poseIndex)
     {
-        return getThumbnailImageFile(poseIndex, "png");
+        return viewSetDataCollection.getThumbnailImageFile(poseIndex);
     }
 
     public int getPreviewWidth()
@@ -1494,7 +1470,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File findThumbnailImageFile(int index) throws FileNotFoundException
     {
-        return ImageFinder.getInstance().findImageFile(getThumbnailImageFile(index));
+        return viewSetDataCollection.findThumbnailImageFile(index);
     }
 
 

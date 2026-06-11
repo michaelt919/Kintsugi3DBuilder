@@ -33,6 +33,11 @@ public class ProjectDataCard
         this.actionGroups = actionGroups;
     }
 
+    public ProjectDataCard(String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions, boolean isDisabled)
+    {
+        this(title, imagePath, textFields, List.of(actions));
+        this.isDisabled = isDisabled;
+    }
     public ProjectDataCard(String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
     {
         this(title, imagePath, textFields, List.of(actions));
