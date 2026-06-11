@@ -134,19 +134,13 @@
                     <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false" text="Weight maps (combined)" toggleGroup="$renderGroup">
                         <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                     </RadioMenuItem>
-                    <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
-                        <userData>rendermodes/weightmaps/weightmapSingle.frag</userData>
+                    <Menu fx:id="weightmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
+                        <userData>rendermodes/viewTextureWeights.frag</userData>
                     </Menu>
-<!--                    <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">-->
-<!--                        <userData>rendermodes/weightmaps/weightmapOverlay.frag</userData>-->
-<!--                    </Menu>-->
-<!--                    <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">-->
-<!--                        <userData>rendermodes/basisMaterialSingle.frag</userData>-->
-<!--                    </Menu>-->
                     <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material palette">
                         <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                     </Menu>
-                    <Menu mnemonicParsing="false" text="Texture Visualizations">
+                    <Menu mnemonicParsing="false" text="Textures">
                         <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
                             <userData>rendermodes/maps/normalMap.frag</userData>
                         </RadioMenuItem>

@@ -90,9 +90,7 @@ public class MainWindowController
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
     @FXML private Menu shadingMenu;
-    @FXML private Menu heatmapMenu;
-//    @FXML private Menu superimposeMenu;
-//    @FXML private Menu paletteMaterialMenu;
+    @FXML private Menu weightmapMenu;
     @FXML private Menu paletteMaterialWeightedMenu;
 
     @FXML private MenuItem removeAllRefsCustMenuItem;
@@ -124,8 +122,6 @@ public class MainWindowController
     @FXML private RadioMenuItem diffuseTexture;
     @FXML private RadioMenuItem specularTexture;
     @FXML private RadioMenuItem errorTexture;
-
-    private final Collection<Menu> shaderMenuFlyouts = new ArrayList<>(4);
 
     private final Collection<MenuItem> toggleableShaders = new ArrayList<>(8);
 
@@ -179,19 +175,14 @@ public class MainWindowController
 
         RecentProjects.updateAllControlStructures();
 
-        // Shader menu flyouts
-        shaderMenuFlyouts.add(heatmapMenu);
-//        shaderMenuFlyouts.add(superimposeMenu);
-//        shaderMenuFlyouts.add(paletteMaterialMenu);
-        shaderMenuFlyouts.add(paletteMaterialWeightedMenu);
-
         // Shader menu
         toggleableShaders.add(materialMetallicity);
         toggleableShaders.add(materialReflectivity);
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
         toggleableShaders.add(weightmapCombination);
-        toggleableShaders.addAll(shaderMenuFlyouts);
+        toggleableShaders.add(weightmapMenu);
+        toggleableShaders.add(paletteMaterialWeightedMenu);
         toggleableShaders.add(roughnessTexture);
         toggleableShaders.add(metallicityTexture);
         toggleableShaders.add(diffuseTexture);
@@ -464,10 +455,8 @@ public class MainWindowController
     // Populate menu based on a given input number
     private void updateShaderList(int basisCount)
     {
-        for (Menu flyout : shaderMenuFlyouts)
-        {
-            flyout.getItems().clear();
-        }
+        paletteMaterialWeightedMenu.getItems().clear();
+        weightmapMenu.getItems().clear();
 
         Map<String, Optional<Object>> comboDefines = new HashMap<>(2);
         comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
@@ -477,15 +466,22 @@ public class MainWindowController
 
         for (int i = 0; i < basisCount; ++i)
         {
-            for (Menu flyout : shaderMenuFlyouts)
-            {
-                UserShader shader = VisualizationShaders.getForBasisMaterial((String) flyout.getUserData(), i);
-                RadioMenuItem item = new RadioMenuItem(String.format(shader.getFriendlyName(), i));
-                item.setToggleGroup(renderGroup);
-                item.setUserData(shader);
-                flyout.getItems().add(i, item);
-            }
+            // palette material
+            paletteMaterialWeightedMenu.getItems().add(i, createMenuItemFromShader(VisualizationShaders.getForBasisMaterial(
+                (String) paletteMaterialWeightedMenu.getUserData(), i, VisualizationShaders.FORMAT_PALETTE_MATERIAL)));
+
+            // weightmap
+            weightmapMenu.getItems().add(i, createMenuItemFromShader(VisualizationShaders.getForBasisMaterial(
+                (String) weightmapMenu.getUserData(), i, VisualizationShaders.FORMAT_WEIGHTMAP)));
         }
+    }
+
+    private RadioMenuItem createMenuItemFromShader(UserShader shader)
+    {
+        RadioMenuItem item = new RadioMenuItem(shader.getFriendlyName());
+        item.setToggleGroup(renderGroup);
+        item.setUserData(shader);
+        return item;
     }
 
     public FramebufferView getFramebufferView()

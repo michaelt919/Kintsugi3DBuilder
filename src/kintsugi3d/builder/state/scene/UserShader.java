@@ -79,9 +79,7 @@ public class UserShader
         if (obj instanceof UserShader)
         {
             UserShader otherShader = (UserShader) obj;
-            return Objects.equals(this.friendlyName, otherShader.friendlyName)
-                && Objects.equals(this.subName, otherShader.subName)
-                && Objects.equals(this.filename, otherShader.filename)
+            return Objects.equals(this.filename, otherShader.filename)
                 && Objects.equals(this.defines, otherShader.defines);
         }
         else
@@ -93,6 +91,6 @@ public class UserShader
     @Override
     public int hashCode()
     {
-        return Objects.hash(friendlyName, subName, filename, defines);
+        return Objects.hash(filename, defines);
     }
 }

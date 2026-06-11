@@ -59,7 +59,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
             List.of(
                 Map.of("View Material", () ->
                         Global.state().getUserShaderModel().setUserShader(
-                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex)),
+                            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
+                                cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL)),
                  "Highlight Material", () ->
                     {
                         UserShader prevShader = Global.state().getUserShaderModel().getUserShader();
