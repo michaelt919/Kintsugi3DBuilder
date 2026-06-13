@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,6 +30,7 @@ import kintsugi3d.builder.state.cards.ProjectDataCard;
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 public class CardController
@@ -108,7 +109,7 @@ public class CardController
             separator.getStyleClass().add("card-separator");
             separator.setPadding(new Insets(16.0, 8.0, 16, 8.0)); // Top, Right, Bottom, Left
             buttonBox.getChildren().add(separator);
-            group.forEach((label, action) ->
+            group.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry ->
             {
                 HBox hBox = new HBox();
                 hBox.setAlignment(Pos.TOP_CENTER);
@@ -121,7 +122,7 @@ public class CardController
 //                imageView.setPreserveRatio(true);
 
                 // Button
-                Button button = new Button(label);
+                Button button = new Button(entry.getKey());
                 button.setGraphicTextGap(8.0);
                 button.setMnemonicParsing(false);
                 button.getStyleClass().add("card-button");
@@ -132,7 +133,7 @@ public class CardController
                     /*If uncommented will make it so after a button is clicked
                       boarder will remain to show it is selected*/
                     //button.getStyleClass().add("activated");
-                    action.run();
+                    entry.getValue().run();
                 });
 
                 HBox.setMargin(button, new Insets(0, 0, 8, 0));
