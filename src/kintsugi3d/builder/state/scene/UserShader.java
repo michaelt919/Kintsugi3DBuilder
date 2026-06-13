@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,6 +20,7 @@ public class UserShader
 
     private final String friendlyName;
     private final String filename;
+    private final String subName;
 
     private final Map<String, Optional<Object>> defines;
 
@@ -28,6 +29,7 @@ public class UserShader
         this.friendlyName = friendlyName;
         this.filename = filename;
         this.defines = new HashMap<>(0);
+        this.subName = null;
     }
 
     public UserShader(String friendlyName, String filename, Map<String, Optional<Object>> defines)
@@ -35,11 +37,25 @@ public class UserShader
         this.friendlyName = friendlyName;
         this.filename = filename;
         this.defines = Collections.unmodifiableMap(defines);
+        this.subName = null;
+    }
+
+    public UserShader(String friendlyName, String filename, Map<String, Optional<Object>> defines, String subName)
+    {
+        this.friendlyName = friendlyName;
+        this.filename = filename;
+        this.defines = Collections.unmodifiableMap(defines);
+        this.subName = subName;
     }
 
     public String getFriendlyName()
     {
         return friendlyName;
+    }
+
+    public String getFullName()
+    {
+        return subName == null ? friendlyName : String.format("%s [%s]", friendlyName, subName);
     }
 
     public String getFilename()
@@ -57,15 +73,13 @@ public class UserShader
         return Collections.unmodifiableMap(defines);
     }
 
-
     @Override
     public boolean equals(Object obj)
     {
         if (obj instanceof UserShader)
         {
             UserShader otherShader = (UserShader) obj;
-            return Objects.equals(this.friendlyName, otherShader.friendlyName)
-                && Objects.equals(this.filename, otherShader.filename)
+            return Objects.equals(this.filename, otherShader.filename)
                 && Objects.equals(this.defines, otherShader.defines);
         }
         else
@@ -77,6 +91,6 @@ public class UserShader
     @Override
     public int hashCode()
     {
-        return Objects.hash(friendlyName, filename, defines);
+        return Objects.hash(filename, defines);
     }
 }

@@ -26,10 +26,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class TextureCardFactory implements ProjectDataCardFactory
 {
@@ -61,7 +60,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(title, "rendermodes/viewTextureSimple.frag",
             Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", title)))); // TODO decouple title from texture name
 
-        return createProjectDataCard(fileName, title, textureShader);
+        return createProjectDataCard(fileName, textureShader);
     }
 
     private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
@@ -74,10 +73,10 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, friendlyName, textureShader);
+        return createProjectDataCard(fileName, textureShader);
     }
 
-    private ProjectDataCard createProjectDataCard(String fileName, String friendlyName, UserShader shader)
+    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader)
     {
         // Base Location where the .pngs and thumbnails folder are.
         File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
@@ -98,7 +97,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         }
         catch (IOException|RuntimeException e)
         {
-            LOG.error("Error loading texture card: {}", friendlyName, e);
+            LOG.error("Error loading texture card: {}", shader.getFriendlyName(), e);
         }
 
         String thumbnailPath;
@@ -113,7 +112,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             thumbnailPath = MainApplication.ICON_PATH;
         }
 
-        return new ProjectDataCard(friendlyName, thumbnailPath, Map.of(), Map.of(
+        return new ShaderDataCard(shader, thumbnailPath, Map.of(), Map.of(
             "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
             "Send to Carousel", () ->
             {
@@ -139,7 +138,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             var textures = resources.getTextures();
             if (textures != null)
             {
-                for (var entry : textures.entrySet())
+                for (var entry : textures.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).collect(Collectors.toList()))
                 {
                     String key = entry.getKey();
                     Texture2D<?> texture = entry.getValue();
