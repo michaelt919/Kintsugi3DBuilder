@@ -415,21 +415,21 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         saveAll("PNG", outputDirectory);
     }
 
-    private static File getTextureFile(File priorSolutionDirectory, StandardTexture t)
+    static File getTextureFile(StandardTexture t, File directory)
     {
-        return getTextureFile(priorSolutionDirectory, t.details.name);
+        return getTextureFile(t.details.name, directory);
     }
 
-    private static File getTextureFile(File priorSolutionDirectory, String texName)
+    static File getTextureFile(String texName, File directory)
     {
-        return new File(priorSolutionDirectory, getTextureFilename(texName, "PNG"));
+        return new File(directory, getTextureFilename(texName, "PNG"));
     }
 
     static <ContextType extends Context<ContextType>>
     Texture2D<ContextType> loadTexture(String texName, File directory, ContextType context) throws IOException
     {
         // Load texture file
-        File textureFile = getTextureFile(directory, texName);
+        File textureFile = getTextureFile(texName, directory);
 
         if (textureFile.exists())
         {
