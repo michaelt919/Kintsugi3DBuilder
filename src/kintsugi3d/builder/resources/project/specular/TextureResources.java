@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
@@ -20,13 +21,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public interface TextureResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<TextureResources<ContextType>>
 {
     int WEIGHTS_PER_PACKED_CHANNEL = 4;
 
-    Map<String, Texture2D<ContextType>> getTextures();
+    Map<TextureDetails, Texture2D<ContextType>> getTextures();
 
     /**
      * Returns a map containing only the standard textures
@@ -34,17 +36,22 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      */
     default Map<StandardTexture, Texture2D<ContextType>> getStandardTextures()
     {
-        return StandardTexture.convertStringMapToEnumMap(getTextures());
+        return StandardTexture.convertObjectMapToEnumMap(getTextures());
     }
 
     default Texture2D<ContextType> getTexture(String texName)
     {
-        return getTextures().get(texName);
+        return getTextures().get(new TextureDetails(texName));
+    }
+
+    default Texture2D<ContextType> getTexture(TextureDetails tex)
+    {
+        return getTextures().get(tex);
     }
 
     default Texture2D<ContextType> getTexture(StandardTexture tex)
     {
-        return getTextures().get(tex.texName);
+        return getTextures().get(tex.details);
     }
 
     BasisResources<ContextType> getBasisResources();
@@ -150,7 +157,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public Map<String, Texture2D<ContextType>> getTextures()
+            public Map<TextureDetails, Texture2D<ContextType>> getTextures()
             {
                 return Map.of();
             }
@@ -230,7 +237,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      */
     default void saveTexture(StandardTexture tex, String format,  File outputDirectory, String filenameOverride)
     {
-        saveTexture(tex.texName, format, outputDirectory, filenameOverride);
+        saveTexture(tex.details.name, format, outputDirectory, filenameOverride);
     }
 
     /**
@@ -295,12 +302,12 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     static String getTextureFilename(StandardTexture tex, String format)
     {
-        return getTextureFilename(tex.texName, format);
+        return getTextureFilename(tex.details.name, format);
     }
 
     static String getTextureFilename(StandardTexture tex, String format, String filenamePrefix)
     {
-        return getTextureFilename(tex.texName, format, filenamePrefix);
+        return getTextureFilename(tex.details.name, format, filenamePrefix);
     }
 
     static String getTextureFilename(String texName, String format)
@@ -379,7 +386,8 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      */
     default void saveAllNamedTextures(String format, File outputDirectory, String filenamePrefix)
     {
-        saveNamedTextures(getTextures().keySet(), format, outputDirectory, filenamePrefix);
+        saveNamedTextures(getTextures().keySet().stream().map(t -> t.name).collect(Collectors.toList()),
+            format, outputDirectory, filenamePrefix);
     }
 
     /**
@@ -409,7 +417,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     private static File getTextureFile(File priorSolutionDirectory, StandardTexture t)
     {
-        return getTextureFile(priorSolutionDirectory, t.texName);
+        return getTextureFile(priorSolutionDirectory, t.details.name);
     }
 
     private static File getTextureFile(File priorSolutionDirectory, String texName)
@@ -439,7 +447,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     static <ContextType extends Context<ContextType>>
     Texture2D<ContextType> loadTexture(StandardTexture tex, File directory, ContextType context) throws IOException
     {
-        return loadTexture(tex.texName, directory, context);
+        return loadTexture(tex.details.name, directory, context);
     }
 
     default Texture2D<ContextType> loadTexture(String texName, File directory) throws IOException
@@ -449,7 +457,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     default Texture2D<ContextType> loadTexture(StandardTexture tex, File directory) throws IOException
     {
-        return loadTexture(tex.texName, directory, getContext());
+        return loadTexture(tex.details.name, directory, getContext());
     }
 
     /**

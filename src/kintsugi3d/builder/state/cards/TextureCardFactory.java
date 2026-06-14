@@ -13,6 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
@@ -49,16 +50,16 @@ public class TextureCardFactory implements ProjectDataCardFactory
     (single card). This is also where View Shader and Send to Carousel button and
     code are located.
      @param texture
-     @param title
+     @param details
      @return
     */
-    private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, String title)
+    private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, TextureDetails details)
     {
         //2. File name for the .pngs
-        String fileName = TextureResources.getTextureFilename(title, "PNG");
+        String fileName = TextureResources.getTextureFilename(details.name, "PNG");
 
-        UserShader textureShader = new UserShader(title, "rendermodes/viewTextureSimple.frag",
-            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", title)))); // TODO decouple title from texture name
+        UserShader textureShader = new UserShader(details.friendlyName, "rendermodes/viewTextureSimple.frag",
+            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", details.name))));
 
         return createProjectDataCard(fileName, textureShader);
     }
@@ -140,7 +141,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             {
                 for (var entry : textures.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).collect(Collectors.toList()))
                 {
-                    String key = entry.getKey();
+                    TextureDetails key = entry.getKey();
                     Texture2D<?> texture = entry.getValue();
                     textureCards.add(createSimpleTextureCard(texture, key));
                 }

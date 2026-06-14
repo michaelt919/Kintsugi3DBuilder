@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MaterialExporter
 {
@@ -114,7 +115,7 @@ public class MaterialExporter
             }
             else if (method.isAnnotationPresent(StandardTextureExport.class))
             {
-                supportedTextures.add(method.getAnnotation(StandardTextureExport.class).value().texName);
+                supportedTextures.add(method.getAnnotation(StandardTextureExport.class).value().details.name);
             }
         }
 
@@ -123,7 +124,8 @@ public class MaterialExporter
 
     public final void apply()
     {
-        Collection<String> availableTextures = textureResources.getTextures().keySet();
+        Collection<String> availableTextures = textureResources.getTextures().keySet().stream()
+            .map(t -> t.name).collect(Collectors.toList());
 
         for (Method method : this.getClass().getMethods()) // all methods in the current class and superclasses
         {
@@ -139,7 +141,7 @@ public class MaterialExporter
             else if (method.isAnnotationPresent(StandardTextureExport.class))
             {
                 StandardTextureExport annotation = method.getAnnotation(StandardTextureExport.class);
-                texName = annotation.value().texName;
+                texName = annotation.value().details.name;
                 requiresAlpha = annotation.requiresAlpha();
             }
             else
