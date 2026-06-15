@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.fit.finalize;
 
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
@@ -30,6 +31,10 @@ import java.util.Objects;
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
+
+    public static final TextureDetails CONSTANT_TRANSLUCENCY_MAP =
+        new TextureDetails("constant", "Constant translucency map",
+            "An experimental texture for translucency fitting.");
 
     // Graphics context
     private final ContextType context;
@@ -141,9 +146,9 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(0);
     }
 
-    public Map<String, Texture2D<ContextType>> getNonStandardTextures()
+    public Map<TextureDetails, Texture2D<ContextType>> getNonStandardTextures()
     {
-        return includeConstant ? Map.of("constant", framebuffer.getColorAttachmentTexture(1)) : Map.of();
+        return includeConstant ? Map.of(CONSTANT_TRANSLUCENCY_MAP, framebuffer.getColorAttachmentTexture(1)) : Map.of();
     }
 
     private static <ContextType extends Context<ContextType>>

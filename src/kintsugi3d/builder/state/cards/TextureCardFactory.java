@@ -13,6 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
@@ -26,10 +27,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class TextureCardFactory implements ProjectDataCardFactory
 {
@@ -50,18 +50,18 @@ public class TextureCardFactory implements ProjectDataCardFactory
     (single card). This is also where View Shader and Send to Carousel button and
     code are located.
      @param texture
-     @param title
+     @param details
      @return
     */
-    private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, String title)
+    private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, TextureDetails details)
     {
         //2. File name for the .pngs
-        String fileName = TextureResources.getTextureFilename(title, "PNG");
+        String fileName = TextureResources.getTextureFilename(details.name, "PNG");
 
-        UserShader textureShader = new UserShader(title, "rendermodes/viewTextureSimple.frag",
-            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", title)))); // TODO decouple title from texture name
+        UserShader textureShader = new UserShader(details.friendlyName, "rendermodes/viewTextureSimple.frag",
+            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", details.name))));
 
-        return createProjectDataCard(fileName, title, textureShader);
+        return createProjectDataCard(fileName, textureShader);
     }
 
     private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
@@ -74,10 +74,10 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, friendlyName, textureShader);
+        return createProjectDataCard(fileName, textureShader);
     }
 
-    private ProjectDataCard createProjectDataCard(String fileName, String friendlyName, UserShader shader)
+    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader)
     {
         // Base Location where the .pngs and thumbnails folder are.
         File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
@@ -98,7 +98,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         }
         catch (IOException|RuntimeException e)
         {
-            LOG.error("Error loading texture card: {}", friendlyName, e);
+            LOG.error("Error loading texture card: {}", shader.getFriendlyName(), e);
         }
 
         String thumbnailPath;
@@ -113,7 +113,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             thumbnailPath = MainApplication.ICON_PATH;
         }
 
-        return new ProjectDataCard(friendlyName, thumbnailPath, Map.of(), Map.of(
+        return new ShaderDataCard(shader, thumbnailPath, Map.of(), Map.of(
             "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
             "Send to Carousel", () ->
             {
@@ -139,9 +139,9 @@ public class TextureCardFactory implements ProjectDataCardFactory
             var textures = resources.getTextures();
             if (textures != null)
             {
-                for (var entry : textures.entrySet())
+                for (var entry : textures.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).collect(Collectors.toList()))
                 {
-                    String key = entry.getKey();
+                    TextureDetails key = entry.getKey();
                     Texture2D<?> texture = entry.getValue();
                     textureCards.add(createSimpleTextureCard(texture, key));
                 }

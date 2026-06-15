@@ -13,6 +13,7 @@
  */
 
 #include <subject/subject.glsl>
+#include <subject/overlay.glsl>
 
 #ifndef DEFAULT_DIFFUSE_COLOR
 #define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
@@ -33,7 +34,7 @@
 #include <colorappearance/material.glsl>
 #include <specularfit/evaluateBRDF.glsl>
 
-#line 37 0
+#line 38 0
 
 vec3 global(ViewingParameters v, Material m)
 {
@@ -68,11 +69,6 @@ vec3 specular(LightingParameters l, Material m)
 vec3 diffuse(LightingParameters l, Material m)
 {
     return diffuseColors[WEIGHTMAP_INDEX].rgb;
-}
-
-vec3 emissive(Material m)
-{
-    return vec3(0.0);
 }
 
 #include <subject/subjectMain.glsl>

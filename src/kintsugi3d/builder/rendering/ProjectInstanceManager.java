@@ -422,7 +422,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             }
             catch (InitializationException e)
             {
-                LOG.error("Error initialing render view for shader: {}", shader.getFriendlyName(), e);
+                LOG.error("Error initialing render view for shader: {}", shader.getFullName(), e);
             }
 
             // Set to use the specified shader.

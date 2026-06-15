@@ -14,6 +14,7 @@
 #define BASIS_GLSL
 
 #include "subject.glsl"
+#include "overlay.glsl"
 
 uniform vec3 defaultDiffuseColor;
 
@@ -40,7 +41,7 @@ uniform vec3 defaultDiffuseColor;
 #include <colorappearance/material.glsl>
 #include <specularfit/evaluateBRDF.glsl>
 
-#line 44 3102
+#line 45 3102
 
 vec3 global(ViewingParameters v, Material m)
 {
@@ -63,11 +64,6 @@ vec3 specular(LightingParameters l, Material m)
 vec3 diffuse(LightingParameters l, Material m)
 {
     return m.diffuseColor;
-}
-
-vec3 emissive(Material m)
-{
-    return vec3(0.0);
 }
 
 #include "subjectMain.glsl"

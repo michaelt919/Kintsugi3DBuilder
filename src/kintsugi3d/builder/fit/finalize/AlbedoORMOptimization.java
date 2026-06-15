@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.fit.finalize;
 
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
@@ -83,8 +84,15 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     {
         Texture2D<ContextType> albedoMap = TextureResources.loadTexture(StandardTexture.ALBEDO, priorSolutionDirectory, context);
 
-        // Load ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
-        this.occlusionMap = TextureResources.loadTexture(StandardTexture.ORM, priorSolutionDirectory, context);
+        if (TextureResources.getTextureFile(StandardTexture.OCCLUSION, priorSolutionDirectory).exists())
+        {
+            // Load occlusion map if it exists (to pack it into the red channel of ORM)
+            this.occlusionMap = TextureResources.loadTexture(StandardTexture.OCCLUSION, priorSolutionDirectory, context);
+        }
+        else
+        {
+            this.occlusionMap = null;
+        }
 
         if (albedoMap != null)
         {
@@ -95,7 +103,11 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
                         .setLinearFilteringEnabled(true)) // Will blit in ORM map after FBO is created
                     .createFramebufferObject();
             framebuffer.setColorAttachment(0, albedoMap);
-            framebuffer.getColorAttachmentTexture(1).blitScaled(occlusionMap, true);
+
+            if (occlusionMap != null)
+            {
+                framebuffer.getColorAttachmentTexture(1).blitScaled(occlusionMap, true);
+            }
 
             estimationProgram = createProgram(context, occlusionMap != null);
 
@@ -196,9 +208,9 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         return Collections.unmodifiableMap(textures);
     }
 
-    public Map<String, Texture2D<ContextType>> getTextures()
+    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
     {
-        return StandardTexture.convertEnumMapToStringMap(getStandardTextures());
+        return StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
     }
 
     private static <ContextType extends Context<ContextType>>

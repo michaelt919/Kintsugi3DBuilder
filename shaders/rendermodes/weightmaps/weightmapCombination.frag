@@ -14,6 +14,7 @@
 
 #include <colorappearance/material.glsl>
 #include <specularfit/evaluateBRDF.glsl>
+#include "../../subject/overlayModes.glsl"
 
 layout(location = 0) out vec4 fragColor;
 
@@ -22,7 +23,7 @@ layout(location = 0) out vec4 fragColor;
 #endif
 
 #ifndef WEIGHTMAP_COUNT
-#define WEIGHTMAP_COUNT 8
+#define WEIGHTMAP_COUNT BASIS_COUNT
 #endif
 
 #define WEIGHTMAP_COLOR_COUNT 8
@@ -57,6 +58,17 @@ void main() {
     fragColor = vec4(0);
     for (int i = WEIGHTMAP_INDEX; i < min(WEIGHTMAP_COLOR_COUNT, WEIGHTMAP_COUNT); i++)
     {
+#if OVERLAY_MODE == OVERLAY_MODE_WEIGHTMAP
+        if (i == OVERLAY_WEIGHTMAP_INDEX)
+        {
+            fragColor += texture(weightMaps, vec3(fTexCoord, i)).r * vec4(1, 0, 1, 1);
+        }
+        else
+        {
+            fragColor += texture(weightMaps, vec3(fTexCoord, i)).r * getWeightmapColor(i) * vec4(0.25, 0.25, 0.25, 1.0);
+        }
+#else
         fragColor += texture(weightMaps, vec3(fTexCoord, i)).r * getWeightmapColor(i);
+#endif
     }
 }

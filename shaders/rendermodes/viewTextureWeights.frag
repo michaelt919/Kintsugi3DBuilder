@@ -1,7 +1,5 @@
 #version 330
 
-uniform sampler2DArray weightMaps;
-
 #ifndef WEIGHTMAP_INDEX
 #define WEIGHTMAP_INDEX 0
 #endif
