@@ -86,6 +86,9 @@ http-client.private.env.json
 # Github Copilot persisted session migrations, see: https://github.com/microsoft/copilot-intellij-feedback/issues/712#issuecomment-3322062215
 .idea/**/copilot.data.migration.*.xml
 
+# Adding this one since it seems to get frequently touched and doesn't contain information that would need to be synced.
+/.idea/modules.xml
+
 # Not part of JetBrains standard .gitignore but seem to be necessary with current project configuration.
 target/*
 /dependency-reduced-pom.xml
@@ -93,5 +96,6 @@ target/*
 # Project-specific
 *.log
 /jre*
+/python*
 /viewer
 /test-output/

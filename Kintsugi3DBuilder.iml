@@ -10,6 +10,10 @@
       <excludeFolder url="file://$MODULE_DIR$/test-output" />
       <excludeFolder url="file://$MODULE_DIR$/viewer" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/copyright" />
+      <excludeFolder url="file://$MODULE_DIR$/python/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/python/include" />
+      <excludeFolder url="file://$MODULE_DIR$/python/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/python/share" />
     </content>
   </component>
 </module>

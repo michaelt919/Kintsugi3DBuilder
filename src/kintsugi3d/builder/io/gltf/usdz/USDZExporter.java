@@ -15,19 +15,22 @@ import de.javagl.jgltf.impl.v2.TextureInfo;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
-import kintsugi3d.builder.rendering.StandardShaderComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 
 public class USDZExporter extends MaterialExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
-    private static final String SCRIPT_LOCATION = "/home/nathan/Documents/Kintsugi3DBuilder/python/";
+    private static final File PYTHON_LOCATION_MACOS = Path.of("python", "bin", "python3").toFile();
+    private static final File SCRIPT_LOCATION = new File("python-scripts");
     private File outputPath;
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
@@ -61,8 +64,8 @@ public class USDZExporter extends MaterialExporter
         try
         {
             // may need to set up a python install toolchain
-            String pythonExecutable = SCRIPT_LOCATION + ".venv/bin/python";
-            String script = SCRIPT_LOCATION + "scripts/converter.py";
+            String pythonExecutable = PYTHON_LOCATION_MACOS.getAbsolutePath();
+            String script = new File(SCRIPT_LOCATION, "converter.py").getAbsolutePath();
             String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, "PNG");
             String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, "PNG");
             String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, "PNG");
@@ -82,20 +85,50 @@ public class USDZExporter extends MaterialExporter
             pb.directory(outputPath);
             Process process = pb.start();
 
-            try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
+            Thread standardOutput = new Thread(() ->
             {
-                reader.lines().forEachOrdered(LOG::info);
-            }
+                try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
+                {
+                    reader.lines().forEachOrdered(LOG::info);
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Error reading from standard output.", e);
+                }
+            });
 
-            if (process.waitFor() != 0)
+            standardOutput.start();
+
+            Thread standardError = new Thread(() ->
             {
-                throw new Exception();
+                try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8)))
+                {
+                    reader.lines().forEachOrdered(LOG::error);
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Error reading from standard error.", e);
+                }
+            });
+
+            standardError.start();
+
+            // Wait to finish receiving process output.
+            standardOutput.join();
+            standardError.join();
+
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0)
+            {
+                LOG.error("Could not export USDZ file.  Error code: {}", exitCode);
             }
         }
-        catch (Exception e)
+        catch (IOException|InterruptedException|RuntimeException e)
         {
-            LOG.error("Could not export USDZ file.");
+            LOG.error("Could not export USDZ file.", e);
         }
     }
 
