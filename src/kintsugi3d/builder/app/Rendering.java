@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -59,6 +59,10 @@ import java.util.stream.Collectors;
 public final class Rendering
 {
     private static final Logger LOG = LoggerFactory.getLogger(Rendering.class);
+
+    public static final int ICONIFIED_TIMEOUT_MILLIS = 5000;
+    public static final int UNFOCUSED_TIMEOUT_MILLIS = 1000;
+
     private Rendering()
     {
     }
@@ -80,7 +84,7 @@ public final class Rendering
         });
     }
 
-    private static GraphicsRequestManager<OpenGLContext> requestQueue = null;
+    private static GraphicsRequestManager<OpenGLContext> requestQueue;
 
     public static GraphicsRequestManager<OpenGLContext> getRequestQueue()
     {
@@ -464,6 +468,9 @@ public final class Rendering
             }
         });
 
+        // Used for wait / notify on rendering thread.
+        Object waitForRenderingWork = new Object();
+
         // Keep the graphics thread paused while the window is minimized.
         if (stage != null)
         {
@@ -472,9 +479,35 @@ public final class Rendering
                 @Override
                 public void pollEvents()
                 {
-                    while (stage.isIconified() && requestQueue.isEmpty())
+                    synchronized (waitForRenderingWork)
                     {
-                        Thread.onSpinWait();
+                        while ((stage.isIconified() ||
+                            javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isFocused).isEmpty()) &&
+                            requestQueue.isEmpty())
+                        {
+                            try
+                            {
+                                if (stage.isIconified())
+                                {
+                                    // Longer timeout (5 seconds) while minimized
+                                    // Just wake it up periodically just in case we missed a condition for notifying the thread.
+                                    waitForRenderingWork.wait(ICONIFIED_TIMEOUT_MILLIS);
+                                }
+                                else
+                                {
+                                    // Shorter timeout (1 second) while unfocused
+                                    // This still reduces GPU load while still rendering regularly as a safeguard for edge cases
+                                    // (such as refocusing using a window other than the main window).
+                                    waitForRenderingWork.wait(UNFOCUSED_TIMEOUT_MILLIS);
+                                }
+
+                                LOG.info("Wait ended");
+                            }
+                            catch (InterruptedException e)
+                            {
+                                LOG.warn("Wait interrupted", e);
+                            }
+                        }
                     }
                 }
 
@@ -486,16 +519,43 @@ public final class Rendering
             });
         }
 
-        // Wake the graphics thread up when the window is un-minimized.
         if (stage != null)
         {
             Thread graphicsThread = Thread.currentThread();
 
+            // Wake the graphics thread up when the window is un-minimized.
             stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->
             {
                 if (wasIconified && !isIconified && requestQueue.isEmpty())
                 {
-                    graphicsThread.interrupt();
+                    synchronized (waitForRenderingWork)
+                    {
+                        waitForRenderingWork.notifyAll();
+                    }
+                }
+            });
+
+            // Wake the graphics thread up when the window is refocused.
+            stage.focusedProperty().addListener((observable, wasFocused, isFocused) ->
+            {
+                var focusedWindows = javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isFocused);
+
+                if (!wasFocused && isFocused && focusedWindows.size() == 1 && focusedWindows.get(0).equals(stage)
+                    && requestQueue.isEmpty())
+                {
+                    synchronized (waitForRenderingWork)
+                    {
+                        waitForRenderingWork.notifyAll();
+                    }
+                }
+            });
+
+            // Wake the graphics thread up when work is added to the request queue.
+            requestQueue.addRequestAddedListener(() ->
+            {
+                synchronized (waitForRenderingWork)
+                {
+                    waitForRenderingWork.notifyAll();
                 }
             });
         }

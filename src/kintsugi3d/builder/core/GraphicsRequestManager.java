@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,6 +22,8 @@ import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -30,6 +32,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsRequestManager.class);
     private final ContextType context;
     private final Queue<Runnable> requestList;
+    private final Collection<Runnable> requestAddedListeners = new ArrayList<>(1);
     private ProjectInstanceManager<ContextType> instanceManager;
     private ProgressMonitor progressMonitor;
 
@@ -54,7 +57,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         this.progressMonitor = progressMonitor;
     }
 
-    private void handleCancellation()
+    private static void handleCancellation()
     {
         Platform.runLater(() ->
         {
@@ -65,8 +68,13 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         });
     }
 
+    public void addRequestAddedListener(Runnable listener)
+    {
+        requestAddedListeners.add(listener);
+    }
+
     @Override
-    public synchronized void addBackgroundGraphicsRequest(ProjectGraphicsRequest request)
+    public void addBackgroundGraphicsRequest(ProjectGraphicsRequest request)
     {
         if (instanceManager.getLoadedInstance() == null)
         {
@@ -75,40 +83,50 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         }
         else
         {
-            this.requestList.add(() ->
+            synchronized (requestList)
             {
-                // Check again for null, just in case
-                if (instanceManager.getLoadedInstance() == null)
+                this.requestList.add(() ->
                 {
-                    // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-                    instanceManager.addInstanceLoadCallback(instance -> addBackgroundGraphicsRequest(request));
-                }
-                else
-                {
-                    // Suppress warning about catching and not rethrowing AssertionError.
-                    // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-                    //noinspection ErrorNotRethrown
-                    try
+                    // Check again for null, just in case
+                    if (instanceManager.getLoadedInstance() == null)
                     {
-                        request.executeRequest(instanceManager.getLoadedInstance());
+                        // Instance is currently null, wait for a load and then call this function again (recursive-ish)
+                        instanceManager.addInstanceLoadCallback(instance -> addBackgroundGraphicsRequest(request));
                     }
-                    catch (UserCancellationException e)
+                    else
                     {
-                        LOG.error("Operation was cancelled while executing request:", e);
+                        // Suppress warning about catching and not rethrowing AssertionError.
+                        // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                        //noinspection ErrorNotRethrown
+                        try
+                        {
+                            request.executeRequest(instanceManager.getLoadedInstance());
+                        }
+                        catch (UserCancellationException e)
+                        {
+                            LOG.error("Operation was cancelled while executing request", e);
+                        }
+                        catch (Exception | AssertionError e)
+                        {
+                            LOG.error("Error occurred while executing request", e);
+                        }
                     }
-                    catch (Exception | AssertionError e)
-                    {
-                        LOG.error("Error occurred while executing request:", e);
-                    }
-                }
-            });
+                });
+            }
+
+            // Notify listeners
+            for (Runnable r :  requestAddedListeners)
+            {
+                r.run();
+            }
         }
     }
 
     @Override
-    public synchronized void addGraphicsRequest(ObservableProjectGraphicsRequest request)
+    public void addGraphicsRequest(ObservableProjectGraphicsRequest request)
     {
-        if(this.progressMonitor.isConflictingProcess()){
+        if (this.progressMonitor.isConflictingProcess())
+        {
             return;
         }
 
@@ -119,37 +137,127 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         }
         else
         {
+            synchronized (requestList)
+            {
+                this.requestList.add(() ->
+                {
+                    if (progressMonitor != null)
+                    {
+                        progressMonitor.start();
+                    }
+
+                    // Check again for null, just in case
+                    if (instanceManager.getLoadedInstance() == null)
+                    {
+                        // Instance is currently null, wait for a load and then call this function again (recursive-ish)
+                        instanceManager.addInstanceLoadCallback(instance -> addGraphicsRequest(request));
+                    }
+                    else
+                    {
+                        // Suppress warning about catching and not rethrowing AssertionError.
+                        // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                        //noinspection ErrorNotRethrown
+                        try
+                        {
+                            request.executeRequest(instanceManager.getLoadedInstance(), progressMonitor);
+                        }
+                        catch (UserCancellationException e)
+                        {
+                            LOG.error("Operation was cancelled while executing request", e);
+                            handleCancellation();
+                        }
+                        catch (Exception | AssertionError e)
+                        {
+                            ExceptionHandling.error("Error occured while excecuting request", e);
+                        }
+                    }
+
+                    if (progressMonitor != null)
+                    {
+                        progressMonitor.complete();
+                    }
+                });
+            }
+        }
+
+        // Notify listeners
+        for (Runnable r :  requestAddedListeners)
+        {
+            r.run();
+        }
+    }
+
+    /**
+     * Add a graphics request without a loading monitor
+     *
+     * @param request
+     */
+    @Override
+    public void addBackgroundGraphicsRequest(GraphicsRequest request)
+    {
+        synchronized (requestList)
+        {
+            this.requestList.add(() ->
+            {
+
+                // Suppress warning about catching and not rethrowing AssertionError.
+                // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                // noinspection ErrorNotRethrown
+                try
+                {
+                    request.executeRequest(context);
+                }
+                catch (UserCancellationException e)
+                {
+                    LOG.error("Operation was cancelled while executing request", e);
+                }
+                catch (Exception | AssertionError e)
+                {
+                    LOG.error("Error occurred while executing request", e);
+                }
+            });
+        }
+
+        // Notify listeners
+        for (Runnable r :  requestAddedListeners)
+        {
+            r.run();
+        }
+    }
+
+    @Override
+    public void addGraphicsRequest(ObservableGraphicsRequest request)
+    {
+        synchronized (requestList)
+        {
             this.requestList.add(() ->
             {
                 if (progressMonitor != null)
                 {
+                    if (this.progressMonitor.isConflictingProcess())
+                    {
+                        return;
+                    }
                     progressMonitor.start();
                 }
 
-                // Check again for null, just in case
-                if (instanceManager.getLoadedInstance() == null)
+                // Suppress warning about catching and not rethrowing AssertionError.
+                // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                // noinspection ErrorNotRethrown
+                try
                 {
-                    // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-                    instanceManager.addInstanceLoadCallback(instance -> addGraphicsRequest(request));
+                    request.executeRequest(context, progressMonitor);
                 }
-                else
+                catch (UserCancellationException e)
                 {
-                    // Suppress warning about catching and not rethrowing AssertionError.
-                    // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-                    //noinspection ErrorNotRethrown
-                    try
-                    {
-                        request.executeRequest(instanceManager.getLoadedInstance(), progressMonitor);
-                    }
-                    catch (UserCancellationException e)
-                    {
-                        LOG.error("Operation was cancelled while executing request:", e);
-                        handleCancellation();
-                    }
-                    catch (Exception | AssertionError e)
-                    {
-                        ExceptionHandling.error("Error occured while excecuting request", e);
-                    }
+                    LOG.error("Operation was cancelled while executing request", e);
+                    handleCancellation();
+                }
+                catch (Exception | AssertionError e)
+                {
+                    LOG.error("Error occurred while executing request", e);
+                    Platform.runLater(() ->
+                        new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
                 }
 
                 if (progressMonitor != null)
@@ -158,81 +266,20 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 }
             });
         }
+
+        // Notify listeners
+        for (Runnable r :  requestAddedListeners)
+        {
+            r.run();
+        }
     }
 
-    /**
-     * Add a graphics request without a loading monitor
-     * @param request
-     */
-    @Override
-    public synchronized void addBackgroundGraphicsRequest(GraphicsRequest request)
+    public void executeQueue()
     {
-        this.requestList.add(() ->
+        context.makeContextCurrent();
+
+        synchronized (requestList)
         {
-
-            // Suppress warning about catching and not rethrowing AssertionError.
-            // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-            // noinspection ErrorNotRethrown
-            try
-            {
-                request.executeRequest(context);
-            }
-            catch (UserCancellationException e)
-            {
-                LOG.error("Operation was cancelled while executing request:", e);
-            }
-            catch(Exception | AssertionError e)
-            {
-                LOG.error("Error occurred while executing request:", e);
-            }
-        });
-    }
-
-    @Override
-    public synchronized void addGraphicsRequest(ObservableGraphicsRequest request)
-    {
-        this.requestList.add(() ->
-        {
-            if (progressMonitor != null)
-            {
-                if(this.progressMonitor.isConflictingProcess()){
-                    return;
-                }
-                progressMonitor.start();
-            }
-
-            // Suppress warning about catching and not rethrowing AssertionError.
-            // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-            // noinspection ErrorNotRethrown
-            try
-            {
-                request.executeRequest(context, progressMonitor);
-            }
-            catch (UserCancellationException e)
-            {
-                LOG.error("Operation was cancelled while executing request:", e);
-                handleCancellation();
-            }
-            catch(Exception | AssertionError e)
-            {
-                LOG.error("Error occurred while executing request:", e);
-                Platform.runLater(() ->
-                    new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
-            }
-
-            if (progressMonitor != null)
-            {
-                progressMonitor.complete();
-            }
-        });
-    }
-
-    public synchronized void executeQueue()
-    {
-        //if (model != null && model.getLoadedInstance() != null)
-        {
-            context.makeContextCurrent();
-
             while (!requestList.isEmpty())
             {
                 if (requestList.peek() != null)
