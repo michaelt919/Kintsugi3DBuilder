@@ -177,21 +177,22 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
-        ViewSet newViewSet = builder.getViewSet();
-        int cameraCount = newViewSet.getCameraPoseCount();
+        loadedViewSet = builder.getViewSet();
+
+        int cameraCount = loadedViewSet.getCameraPoseCount();
         if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
             progressMonitor.warn(e);
         }
-        boolean hasUnsupportedCorrections = newViewSet.hasUnsupportedCorrections();
+        boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
         if (hasUnsupportedCorrections && progressMonitor != null)
         {
             IOException e = new IOException("This project uses 'Fit additional corrections' which are not supported.");
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = newViewSet.getImageFiles();
+        List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
         imgFiles.forEach(file -> imgFileNames.add(file.getName()));
@@ -199,7 +200,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
-        invokeViewSetLoadCallbacks(newViewSet);
+        invokeViewSetLoadCallbacks(loadedViewSet);
 
         if (progressMonitor != null)
         {
@@ -228,11 +229,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            // Wait to actually set the loaded view set until we're about to actually initialize the corresponding instance.
-            loadedViewSet = newViewSet;
-
             // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
-            new TabsManager(newViewSet, newInstance).rebuildTabs();
+            new TabsManager(loadedViewSet, newInstance).rebuildTabs();
 
             // If a new instance was just loaded, initialize it.
             try
