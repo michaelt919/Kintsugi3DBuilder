@@ -16,6 +16,7 @@ import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.gltf.ExportType;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
@@ -58,6 +59,7 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
         exportSettings.setShouldAppendModelNameToTextures(true); // Give textures better filenames for export
 
         // Settings affected by modal and stored in project
+        exportSettings.setExporterFactory(projectSettings.get("exportType", ExportType.class).getFactory());
         exportSettings.setShouldGenerateLowResTextures(projectSettings.getBoolean("exportLODEnabled"));
         exportSettings.setMinimumTextureResolution(projectSettings.getInt("minimumLODSize"));
         exportSettings.setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnExportComplete"));

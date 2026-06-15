@@ -18,24 +18,24 @@ public enum OperatingSystem
     MACOS,
     UNIX;
 
+    private static final String OS = System.getProperty("os.name").toLowerCase();
+
     public static OperatingSystem getCurrentOS()
     {
-        String os = System.getProperty("os.name").toLowerCase();
-
         // Windows
-        if (os.contains("win"))
+        if (OS.contains("win"))
         {
             return WINDOWS;
         }
 
         // Mac OS
-        if (os.contains("mac"))
+        if (OS.contains("mac"))
         {
             return MACOS;
         }
 
         // Linux and Unix
-        if (os.contains("nix") || os.contains("nux") || os.contains("aix"))
+        if (OS.contains("nix") || OS.contains("nux") || OS.contains("aix"))
         {
             return UNIX;
         }

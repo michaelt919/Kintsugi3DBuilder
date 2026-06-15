@@ -266,7 +266,7 @@
 }
 
 .list-cell:odd,
-.table-row-cell: odd,
+.table-row-cell:odd,
 .tree-cell:odd {
     -fx-background-color: #202020;
 }

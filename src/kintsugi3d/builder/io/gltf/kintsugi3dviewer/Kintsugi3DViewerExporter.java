@@ -27,18 +27,6 @@ public class Kintsugi3DViewerExporter extends PBRExporter
 {
     private final Kintsugi3DViewerExtras extras = new Kintsugi3DViewerExtras();
 
-    private boolean combineWeights = true;
-
-    public boolean shouldCombineWeights()
-    {
-        return combineWeights;
-    }
-
-    public void setCombineWeights(boolean combineWeights)
-    {
-        this.combineWeights = combineWeights;
-    }
-
     @StandardTextureExport(StandardTexture.DIFFUSE_COLOR)
     public void diffuseColor(TextureInfo diffuseColor)
     {
@@ -80,7 +68,7 @@ public class Kintsugi3DViewerExporter extends PBRExporter
                 // Add weight images
                 SpecularWeights weights = new SpecularWeights();
 
-                if (combineWeights)
+            if (shouldCombineWeights())
                 {
                     weights.setStride(TextureResources.WEIGHTS_PER_PACKED_CHANNEL);
                     for (int b = 0; b * weights.getStride() < basisCount; b++)
@@ -114,7 +102,7 @@ public class Kintsugi3DViewerExporter extends PBRExporter
         // Check if we need to fallback to PNG to ensure alpha channels exist.
         String format = determineFileFormat(getTextureFileFormat(), true);
 
-        if (combineWeights)
+        if (shouldCombineWeights())
         {
             getTextureResources().savePackedWeightMaps(format, outputDirectory, getTextureFilePrefix());
         }

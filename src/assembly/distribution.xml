@@ -43,5 +43,9 @@
             <directory>${project.basedir}/jre</directory>
             <outputDirectory>jre</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/python</directory>
+            <outputDirectory>python</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>
