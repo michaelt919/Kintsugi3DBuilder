@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,10 +28,7 @@ import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.DoubleFramebufferObject;
-import kintsugi3d.gl.core.Framebuffer;
-import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
 import kintsugi3d.gl.interactive.RefreshableCollection;
@@ -61,10 +58,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final RefreshableCollection<RenderRefreshable<ContextType>> renderViews = new RefreshableCollection<>();
     private final Map<UserShader, RenderRefreshable<ContextType>> renderViewMap = new HashMap<>(8);
 
-    private boolean unloadRequested = false;
     private ViewSet loadedViewSet;
-    private ProjectInstance<ContextType> projectInstance = null;
-    private ProjectInstance<ContextType> newInstance = null;
+    private ProjectInstance<ContextType> projectInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -182,21 +177,21 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
-        loadedViewSet = builder.getViewSet();
-        int cameraCount = loadedViewSet.getCameraPoseCount();
+        ViewSet newViewSet = builder.getViewSet();
+        int cameraCount = newViewSet.getCameraPoseCount();
         if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
             progressMonitor.warn(e);
         }
-        boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
+        boolean hasUnsupportedCorrections = newViewSet.hasUnsupportedCorrections();
         if (hasUnsupportedCorrections && progressMonitor != null)
         {
             IOException e = new IOException("This project uses 'Fit additional corrections' which are not supported.");
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = loadedViewSet.getImageFiles();
+        List<File> imgFiles = newViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
         imgFiles.forEach(file -> imgFileNames.add(file.getName()));
@@ -204,7 +199,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
-        invokeViewSetLoadCallbacks(loadedViewSet);
+        invokeViewSetLoadCallbacks(newViewSet);
 
         if (progressMonitor != null)
         {
@@ -223,16 +218,63 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        ProjectInstance<ContextType> newItem = new ProjectRenderingEngine<>(id, context, builder);
-        newItem.setOwningApp(this.getOwningApp());
+        ProjectInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
+        newInstance.setOwningApp(this.getOwningApp());
 
-        initializeSceneModel(newItem.getSceneModel());
+        initializeSceneModel(newInstance.getSceneModel());
 
-        newItem.setProgressMonitor(new BackendProgressMonitor(newItem, progressMonitor));
-        newInstance = newItem;
+        newInstance.setProgressMonitor(new BackendProgressMonitor(newInstance, progressMonitor));
 
-        new TabsManager(loadedViewSet, newInstance).rebuildTabs();
+        // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
+        Rendering.runLater(() ->
+        {
+            // Wait to actually set the loaded view set until we're about to actually initialize the corresponding instance.
+            loadedViewSet = newViewSet;
 
+            // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
+            new TabsManager(newViewSet, newInstance).rebuildTabs();
+
+            // If a new instance was just loaded, initialize it.
+            try
+            {
+                newInstance.initialize();
+
+                // Check for an old instance just to be safe
+                if (projectInstance != null)
+                {
+                    projectInstance.close();
+                }
+
+                // Use the new instance as the active instance if initialization was successful
+                projectInstance = newInstance;
+            }
+            catch (InitializationException e)
+            {
+                LOG.error("Error occurred initializing new instance:", e);
+                newInstance.close();
+            }
+
+            // Invoke callbacks
+            for (Consumer<ProjectInstance<ContextType>> callback : instanceLoadCallbacks)
+            {
+                callback.accept(projectInstance);
+            }
+
+            // Clear the list of callbacks for the next load.
+            instanceLoadCallbacks.clear();
+
+            // Update once before drawing
+            newInstance.update();
+
+            // Force GPU resources to be fully loaded / flushed by rendering once to a small throwaway FBO.
+            try(FramebufferObject<ContextType> tempFBO = context.buildFramebufferObject(256, 256)
+                .addColorAttachment()
+                .addDepthAttachment()
+                .createFramebufferObject())
+            {
+                newInstance.draw(tempFBO);
+            }
+        });
     }
 
     private void initializeSceneModel(SceneModel sceneModel)
@@ -601,27 +643,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void unload()
     {
-        unloadRequested = true;
         loadedProjectFile = null;
 
         // Also remove render views which will be tied to the loaded project.
         renderViewMap.clear();
         renderViews.clear();
-    }
 
-    @Override
-    public void initialize() throws InitializationException
-    {
-        if (projectInstance != null)
-        {
-            projectInstance.initialize();
-        }
-    }
-
-    @Override
-    public void update()
-    {
-        if (unloadRequested)
+        // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
+        Rendering.runLater(() ->
         {
             if (projectInstance != null)
             {
@@ -637,49 +666,21 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 // Empty sidebar; will be repopulated when another project is opened.
                 Global.state().getTabModels().clearTabs();
             }
+        });
+    }
 
-            unloadRequested = false;
-        }
-
-        if (newInstance != null)
+    @Override
+    public void initialize() throws InitializationException
+    {
+        if (projectInstance != null)
         {
-            // If a new instance was just loaded, initialize it.
-            try
-            {
-                newInstance.initialize();
-            }
-            catch (InitializationException e)
-            {
-                LOG.error("Error occurred initializing new instance:", e);
-
-                newInstance.close();
-                newInstance = null;
-            }
-
-            if (newInstance != null)
-            {
-                // Check for an old instance just to be safe
-                if (projectInstance != null)
-                {
-                    projectInstance.close();
-                }
-
-                // Use the new instance as the active instance if initialization was successful
-                projectInstance = newInstance;
-
-                newInstance = null;
-            }
-
-            // Invoke callbacks
-            for (Consumer<ProjectInstance<ContextType>> callback : instanceLoadCallbacks)
-            {
-                callback.accept(projectInstance);
-            }
-
-            // Clear the list of callbacks for the next load.
-            instanceLoadCallbacks.clear();
+            projectInstance.initialize();
         }
+    }
 
+    @Override
+    public void update()
+    {
         if (projectInstance != null)
         {
             projectInstance.update();
