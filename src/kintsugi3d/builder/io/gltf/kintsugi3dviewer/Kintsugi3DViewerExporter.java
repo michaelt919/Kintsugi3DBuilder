@@ -68,7 +68,7 @@ public class Kintsugi3DViewerExporter extends PBRExporter
                 // Add weight images
                 SpecularWeights weights = new SpecularWeights();
 
-            if (shouldCombineWeights())
+                if (shouldCombineWeights())
                 {
                     weights.setStride(TextureResources.WEIGHTS_PER_PACKED_CHANNEL);
                     for (int b = 0; b * weights.getStride() < basisCount; b++)
