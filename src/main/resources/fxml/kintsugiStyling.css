@@ -487,15 +487,19 @@
 
 /* Card Component */
 .card-background {
-    -fx-background-color: #ADADAD
-}
-
-.card-background:hover {
     -fx-background-color: #CECECE
 }
 
-.card-background:disabled {
-    -fx-background-color: #858585
+.card-background:hover {
+    -fx-background-color: #EEEEEE
+}
+
+.card-background:disabled{
+    -fx-background-color: #ADADAD
+}
+
+.card-background:disabled:hover {
+    -fx-background-color: #EEEEEE
 }
 
 .card-button {
@@ -509,6 +513,7 @@
 
 .card-button:hover,
 .card-button:pressed {
+    -fx-background-color: #CECECE;
     -fx-text-fill: #383838;
 }
 
