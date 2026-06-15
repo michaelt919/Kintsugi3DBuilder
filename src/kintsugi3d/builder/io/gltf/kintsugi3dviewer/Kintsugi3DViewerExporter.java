@@ -72,34 +72,37 @@ public class Kintsugi3DViewerExporter extends PBRExporter
     @Override
     public void finishTextures()
     {
-        int basisCount = getTextureResources().getBasisResources().getBasisCount();
-        if (basisCount > 0)
+        if (getTextureResources().getBasisResources() != null)
         {
-            // Add weight images
-            SpecularWeights weights = new SpecularWeights();
-
-            if (combineWeights)
+            int basisCount = getTextureResources().getBasisResources().getBasisCount();
+            if (basisCount > 0)
             {
-                weights.setStride(TextureResources.WEIGHTS_PER_PACKED_CHANNEL);
-                for (int b = 0; b * weights.getStride() < basisCount; b++)
-                {
-                    String weightmapName = TextureResources.getPackedWeightMapName(b);
-                    TextureInfo weightTexInfo = addTexture(weightmapName, true);
-                    weights.addTexture(weightTexInfo);
-                }
-            }
-            else
-            {
-                weights.setStride(1);
-                for (int b = 0; b < basisCount; b++)
-                {
-                    String weightmapName = TextureResources.getUnpackedWeightMapName(b);
-                    TextureInfo weightTexInfo = addTexture(weightmapName, true);
-                    weights.addTexture(weightTexInfo);
-                }
-            }
+                // Add weight images
+                SpecularWeights weights = new SpecularWeights();
 
-            extras.setSpecularWeights(weights);
+                if (combineWeights)
+                {
+                    weights.setStride(TextureResources.WEIGHTS_PER_PACKED_CHANNEL);
+                    for (int b = 0; b * weights.getStride() < basisCount; b++)
+                    {
+                        String weightmapName = TextureResources.getPackedWeightMapName(b);
+                        TextureInfo weightTexInfo = addTexture(weightmapName, true);
+                        weights.addTexture(weightTexInfo);
+                    }
+                }
+                else
+                {
+                    weights.setStride(1);
+                    for (int b = 0; b < basisCount; b++)
+                    {
+                        String weightmapName = TextureResources.getUnpackedWeightMapName(b);
+                        TextureInfo weightTexInfo = addTexture(weightmapName, true);
+                        weights.addTexture(weightTexInfo);
+                    }
+                }
+
+                extras.setSpecularWeights(weights);
+            }
         }
     }
 
