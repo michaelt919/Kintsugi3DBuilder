@@ -12,12 +12,14 @@
 package kintsugi3d.builder.io.gltf.usdz;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
+import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
-import kintsugi3d.builder.rendering.StandardShaderComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -27,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 public class USDZExporter extends MaterialExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
-    private static final String SCRIPT_LOCATION = "/home/nathan/Documents/Kintsugi3DBuilder/python/";
     private File outputPath;
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
@@ -57,16 +58,37 @@ public class USDZExporter extends MaterialExporter
     @Override
     protected void postExport()
     {
-        // base_name texture_extension normal diffuse specular roughness
         try
         {
-            // may need to set up a python install toolchain
-            String pythonExecutable = SCRIPT_LOCATION + ".venv/bin/python";
-            String script = SCRIPT_LOCATION + "scripts/converter.py";
+            String installLocation = ApplicationFolders.getInstallationDirectory().toString();
+            LOG.info(installLocation);
+
             String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, "PNG");
             String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, "PNG");
             String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, "PNG");
             String roughness = getTextureFilename(StandardTexture.ROUGHNESS.texName, "PNG");
+            String pythonExecutable;
+            String script;
+
+            switch (OperatingSystem.getCurrentOS())
+            {
+                case WINDOWS:
+                    // may need to set up a python install toolchain
+                    pythonExecutable = installLocation + "\\python\\windows\\python.exe";
+
+                    ProcessBuilder installPackages = new ProcessBuilder(
+                        pythonExecutable,
+                        "-m pip install -r requirements.txt"
+                    );
+                    installPackages.directory(new File(installLocation + "\\python"));
+                    installPackages.start();
+
+                    script = installLocation + "\\python\\scripts\\converter.py";
+                    break;
+                default:
+                    throw new Exception();
+            }
+
 
             ProcessBuilder pb = new ProcessBuilder(
                 pythonExecutable,
