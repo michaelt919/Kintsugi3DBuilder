@@ -503,12 +503,12 @@
             #CECECE,
             #CECECE;
 }
-.card-background:pressed {
+/*.card-background:pressed {
     -fx-background-color:
             #CECECE,
             #1A1A1A,
             #CECECE;
-}
+}*/
 
 .card-button {
     -fx-text-fill: #CECECE;
@@ -537,10 +537,10 @@
 }
 .card-button:pressed{
     -fx-text-fill: #383838;
-    -fx-background-color:
+    /*-fx-background-color:
             #ffffff,
             #1A1A1A,
-            #ffffff;
+            #ffffff;*/
 }
 /*This card-button.activated is for future "selected" use. See Card Controller for more*/
 .card-button.activated {
