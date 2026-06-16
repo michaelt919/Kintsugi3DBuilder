@@ -20,6 +20,7 @@ import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +38,11 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private final ProjectInstance<?> instance;
 
-    //ShaderCardFactory is the constructor for this class takes a ProjectInstance and
+    private File textureImage = null;
+
+    //TextureCardFactory is the constructor for this class takes a ProjectInstance and
     //assigns it to private variable in class
-    public TextureCardFactory(ProjectInstance<?> instance)
-    {
-        this.instance = instance;
-    }
+    public TextureCardFactory(ProjectInstance<?> instance) {this.instance = instance;}
 
     /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
@@ -61,7 +61,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(details.friendlyName, "rendermodes/viewTextureSimple.frag",
             Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", details.name))));
 
-        return createProjectDataCard(fileName, textureShader);
+        return createProjectDataCard(fileName, textureShader, details.purpose);
     }
 
     private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
@@ -74,10 +74,10 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, textureShader);
+        return createProjectDataCard(fileName, textureShader, "Weight Map " + weightmapIndex);
     }
 
-    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader)
+    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose)
     {
         // Base Location where the .pngs and thumbnails folder are.
         File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
@@ -87,11 +87,10 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
         // Where and how to save the new .pngs
         File newTextureImage = new File(thumbnailDestination, fileName);
-
         try
         {
             // .png File
-            File textureImage = new File(baseDirectory, fileName);
+            textureImage = new File(baseDirectory, fileName);
 
             // TODO convert weightmap to grayscale
             ImageHelper.read(textureImage).saveAtResolution("PNG", newTextureImage,256,256);
@@ -112,19 +111,35 @@ public class TextureCardFactory implements ProjectDataCardFactory
             // Default to icon if thumbnail isn't found
             thumbnailPath = MainApplication.ICON_PATH;
         }
+        try{
+            IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
+            String res = dimensions.x + "x" + dimensions.y;
 
-        return new ShaderDataCard(shader, thumbnailPath, Map.of(), Map.of(
-            "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
-            "Send to Carousel", () ->
-            {
-                Global.state().getCarouselModel().addToCarousel(shader);
-            }));
+            return new ShaderDataCard(shader, thumbnailPath, new LinkedHashMap<>()
+            {{
+                put("File Name", textureImage.getName());
+                put("Resolution", res);
+                put("Size", (int) (((double) textureImage.length() / (1024.0 * 1024.0))*1000.0) + " KB");
+                put("Purpose", purpose);
+            }}
+            , Map.of(
+                "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
+                "Send to Carousel", () ->
+                {
+                    Global.state().getCarouselModel().addToCarousel(shader);
+                }));
+        }
+        catch (IOException|RuntimeException e)
+        {
+            LOG.error("Error creating card: {}", shader.getFriendlyName(), e);
+            return null;
+        }
     }
 
     /**
-    createAllCards will call createCard for all the shaders and will
-    return them in a list. This method will also detect if the model
-    is processed and if so will limit the shaders shown to the user.
+    createAllCards will call createCard for all the textures and will
+    return them in a list. If the model is not processed there will be
+     no textures at all shown to the user.
      @param cardsModel
      @return
      */
@@ -156,9 +171,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 }
             }
         }
-
         // If not yet initialized, return empty list.
         return textureCards;
     }
-
 }
