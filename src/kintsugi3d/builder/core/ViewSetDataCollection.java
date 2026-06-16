@@ -23,29 +23,12 @@ public class ViewSetDataCollection
 {
     private final ArrayList<ViewSetData> viewSetData;
 
-    /**
-     * The absolute file path to be used for loading all resources.
-     */
-    private File rootDirectory;
+    private final ViewSet viewSet;
 
-    /**
-     * The directory to be used for loading images. It is an absolute file path.
-     */
-    private File fullResImageDirectory;
-
-    /**
-     * The directory to be used for saving preview images
-     */
-    private File previewImageDirectory;
-
-    /**
-     * The directory where thumbnail images are stored.
-     */
-    private File thumbnailImageDirectory;
-
-    public ViewSetDataCollection(int initialSize)
+    public ViewSetDataCollection(int initialSize, ViewSet viewSet)
     {
-        this.viewSetData= new ArrayList<>(initialSize);
+        this.viewSetData = new ArrayList<>(initialSize);
+        this.viewSet = viewSet;
     }
 
     public ArrayList<ViewSetData> getViewSetData()
@@ -53,61 +36,9 @@ public class ViewSetDataCollection
         return this.viewSetData;
     }
 
-    public File getRootDirectory() { return this.rootDirectory; }
-
-    public void setRootDirectory(File dir) { this.rootDirectory = dir; }
-
-    public File getFullResImageDirectory()
-    {
-        if (this.fullResImageDirectory == null)
-        {
-            // If no full res images, just use preview images as full res, or root directory as last fallback
-            return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
-        }
-        else
-        {
-            return this.fullResImageDirectory;
-        }
-    }
-
-    public void setFullResImageDirectory(File dir) { this.fullResImageDirectory = dir; }
-
-    public File getPreviewImageDirectory()
-    {
-        if (this.previewImageDirectory == null)
-        {
-            // If no preview images, default to just using full res images, or root directory as last fallback
-            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
-        }
-        else
-        {
-            return this.previewImageDirectory;
-        }
-    }
-
-    public void setPreviewImageDirectory(File dir) { this.previewImageDirectory = dir; }
-
-    public File getThumbnailImageDirectory()
-    {
-        if (this.thumbnailImageDirectory == null)
-        {
-            // If no thumbnail images, default to just using full res images, or root directory as last fallback
-            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
-        }
-        else
-        {
-            return this.thumbnailImageDirectory;
-        }
-    }
-
-    public void setThumbnailImageDirectory(File dir)
-    {
-        this.thumbnailImageDirectory = dir;
-    }
-
     public File getFullResImageFile(int poseIndex)
     {
-        return new File(this.fullResImageDirectory, this.viewSetData.get(poseIndex).imageFile.getPath());
+        return new File(viewSet.getFullResImageDirectory(), this.viewSetData.get(poseIndex).imageFile.getPath());
     }
 
     public File findFullResImageFile(int index) throws FileNotFoundException
@@ -127,7 +58,7 @@ public class ViewSetDataCollection
 
    public File getThumbnailImageFile(int poseIndex, String extension)
    {
-       return new File(this.getThumbnailImageDirectory(), ImageFinder.getInstance().getImageFileNameWithExtension(
+       return new File(viewSet.getThumbnailImageDirectory(), ImageFinder.getInstance().getImageFileNameWithExtension(
            viewSetData.get(poseIndex).imageFile.getName(), extension));
    }
 

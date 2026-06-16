@@ -73,10 +73,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
                     cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
                         () -> Rendering.runLater(() -> viewSet.deleteCamera(fullResFile))),
                "Toggle Disabled", () ->
-                    {
-//                        cardsModel.getCardList().get(cardIndex).setIsDisabled(!cardsModel.getCardList().get(cardIndex).getIsDisabled());
-                        Rendering.runLater(() -> viewSet.toggleCamera(fullResFile));
-                    }
+                        Rendering.runLater(() -> viewSet.toggleCamera(fullResFile))
                 ),
                 viewSetDataCollection.getViewSetData().get(cardIndex).isDisabled
             );

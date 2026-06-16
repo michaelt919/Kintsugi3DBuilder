@@ -299,7 +299,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         scanner.nextLine();
                         break;
                     }
-                    case "v":
+                    case "v": // Add case "vd" here
                     {
                         int poseId = scanner.nextInt();
                         int projectionId = scanner.nextInt();

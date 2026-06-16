@@ -95,6 +95,14 @@
     -fx-text-fill: #202020;
 }
 
+.button:disabled,
+.toggle-button:disabled,
+.card-background:disabled .label:disabled,
+.split-menu-button:disabled .label:disabled,
+.titled-pane:disabled > .title{
+    -fx-text-fill: #383838;
+}
+
 .button, .toggle-button,
 .scroll-bar .increment-button,
 .scroll-bar .decrement-button,
@@ -495,7 +503,7 @@
 }
 
 .card-background:disabled{
-    -fx-background-color: #ADADAD
+    -fx-background-color: #ADADAD;
 }
 
 .card-background:disabled:hover {

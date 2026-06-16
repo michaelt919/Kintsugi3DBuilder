@@ -95,17 +95,17 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     /**
      * The absolute file path to be used for loading all resources.
      */
-//    private File rootDirectory;
+    private File rootDirectory;
 
     /**
      * The directory to be used for loading images. It is an absolute file path.
      */
-//    private File fullResImageDirectory;
+    private File fullResImageDirectory;
 
     /**
      * The directory to be used for saving preview images.
      */
-//    private File previewImageDirectory;
+    private File previewImageDirectory;
 
     /**
      * The directory where the results of the texture / specular fitting are stored
@@ -115,7 +115,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     /**
      * The directory where thumbnail images are stored
      */
-//    private File thumbnailImageDirectory;
+    private File thumbnailImageDirectory;
 
     /**
      * The directory where the masks are stored, if any are present (null if no masks)
@@ -322,6 +322,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
                     }
                 }
 
+                result.viewSetDataCollection.getViewSetData().get(index).isDisabled = true;
+                result.disabledViewSetDataCollection.getViewSetData().add(result.viewSetDataCollection.getViewSetData().get(index));
                 result.viewSetDataCollection.getViewSetData().remove(index);
             }
 
@@ -389,7 +391,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
          */
         public Builder setGeometryFileName(String geometryFileName)
         {
-            result.geometryFile = geometryFileName == null ? null : result.viewSetDataCollection.getRootDirectory()
+            result.geometryFile = geometryFileName == null ? null : result.rootDirectory
                 .toPath().resolve(geometryFileName).toFile();
             return this;
         }
@@ -423,8 +425,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
          */
         public Builder setRelativeSupportingFilesPathName(String relativePath)
         {
-            result.supportingFilesDirectory = result.viewSetDataCollection.getFullResImageDirectory()
-                .toPath().resolve(relativePath).toFile();
+            result.supportingFilesDirectory = result.fullResImageDirectory.toPath().resolve(relativePath).toFile();
             return this;
         }
 
@@ -516,7 +517,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
                 result.lightIntensityList.add(Vector3.ZERO);
             }
 
-            if (result.geometryFile == null && result.viewSetDataCollection.getRootDirectory() != null)
+            if (result.geometryFile == null && result.rootDirectory != null)
             {
                 setGeometryFileName("manifold.obj"); // Used by some really old datasets
             }
@@ -591,8 +592,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 //        viewSetDataList = new ArrayList<>(initialCapacity);
 //        disabledViewSets = new ArrayList<>(initialCapacity);
 
-        viewSetDataCollection = new ViewSetDataCollection(initialCapacity);
-        disabledViewSetDataCollection = new ViewSetDataCollection(initialCapacity);
+        viewSetDataCollection = new ViewSetDataCollection(initialCapacity, this);
+        disabledViewSetDataCollection = new ViewSetDataCollection(initialCapacity, this);
 
         // Often these lists will have just one element
         this.cameraProjectionList = new ArrayList<>(1);
@@ -780,15 +781,11 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
                 Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
-        result.viewSetDataCollection.setRootDirectory(this.getRootDirectory());
-        result.disabledViewSetDataCollection.setRootDirectory(this.getRootDirectory());
-        result.viewSetDataCollection.setFullResImageDirectory(this.getFullResImageDirectory());
-        result.disabledViewSetDataCollection.setFullResImageDirectory(this.getFullResImageDirectory());
-        result.viewSetDataCollection.setPreviewImageDirectory(this.getPreviewImageDirectory());
-        result.disabledViewSetDataCollection.setPreviewImageDirectory(this.getPreviewImageDirectory());
+        result.rootDirectory = this.rootDirectory;
+        result.fullResImageDirectory = this.fullResImageDirectory;
+        result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
-        result.viewSetDataCollection.setThumbnailImageDirectory(this.getThumbnailImageDirectory());
-        result.disabledViewSetDataCollection.setThumbnailImageDirectory(this.getThumbnailImageDirectory());
+        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.masksDirectory = this.masksDirectory;
         result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
@@ -815,6 +812,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 
         result.uuid = this.uuid;
         result.viewSetDataCollection.getViewSetData().addAll(this.viewSetDataCollection.getViewSetData());
+        result.disabledViewSetDataCollection.getViewSetData().addAll(this.disabledViewSetDataCollection.getViewSetData());
         result.cameraProjectionList.addAll(this.cameraProjectionList);
         result.lightPositionList.addAll(this.lightPositionList);
         result.lightIntensityList.addAll(this.lightIntensityList);
@@ -826,15 +824,11 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
                 Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
-        result.viewSetDataCollection.setRootDirectory(this.getRootDirectory());
-        result.disabledViewSetDataCollection.setRootDirectory(this.getRootDirectory());
-        result.viewSetDataCollection.setFullResImageDirectory(this.getFullResImageDirectory());
-        result.disabledViewSetDataCollection.setFullResImageDirectory(this.getFullResImageDirectory());
-        result.viewSetDataCollection.setPreviewImageDirectory(this.getPreviewImageDirectory());
-        result.disabledViewSetDataCollection.setPreviewImageDirectory(this.getPreviewImageDirectory());
+        result.rootDirectory = this.rootDirectory;
+        result.fullResImageDirectory = this.fullResImageDirectory;
+        result.previewImageDirectory = this.previewImageDirectory;
         result.supportingFilesDirectory = this.supportingFilesDirectory;
-        result.viewSetDataCollection.setThumbnailImageDirectory(this.getThumbnailImageDirectory());
-        result.disabledViewSetDataCollection.setThumbnailImageDirectory(this.getThumbnailImageDirectory());
+        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.masksDirectory = this.masksDirectory;
         result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
@@ -964,7 +958,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File getRootDirectory()
     {
-        return this.viewSetDataCollection.getRootDirectory();
+        return this.rootDirectory;
     }
 
     /**
@@ -974,15 +968,14 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
      */
     public void setRootDirectory(File rootDirectory)
     {
-        this.viewSetDataCollection.setRootDirectory(rootDirectory);
-        this.disabledViewSetDataCollection.setRootDirectory(rootDirectory);
+        this.rootDirectory = rootDirectory;
     }
 
     @Override
     public File getSupportingFilesDirectory()
     {
         // Fallback to root directory if no supporting files defined
-        return this.supportingFilesDirectory == null ? this.viewSetDataCollection.getRootDirectory() : this.supportingFilesDirectory;
+        return this.supportingFilesDirectory == null ? this.rootDirectory : this.supportingFilesDirectory;
     }
 
     @Override
@@ -991,7 +984,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
         File effectiveSupportingFilesDirectory = this.getSupportingFilesDirectory();
         try
         {
-            return this.viewSetDataCollection.getRootDirectory().toPath().relativize(effectiveSupportingFilesDirectory.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(effectiveSupportingFilesDirectory.toPath()).toString();
         }
         catch (IllegalArgumentException |
             NullPointerException e) //If the root and other directories are located under different drive letters on windows
@@ -1014,7 +1007,15 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     @Override
     public File getFullResImageDirectory()
     {
-        return this.viewSetDataCollection.getFullResImageDirectory();
+        if (this.fullResImageDirectory == null)
+        {
+            // If no full res images, just use preview images as full res, or root directory as last fallback
+            return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
+        }
+        else
+        {
+            return this.fullResImageDirectory;
+        }
     }
 
 
@@ -1025,8 +1026,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
      */
     public void setFullResImageDirectory(File absoluteImageDirectory)
     {
-        this.viewSetDataCollection.setFullResImageDirectory(absoluteImageDirectory);
-        this.disabledViewSetDataCollection.setFullResImageDirectory(absoluteImageDirectory);
+        this.fullResImageDirectory = absoluteImageDirectory;
     }
 
     @Override
@@ -1036,7 +1036,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 
         try
         {
-            return this.viewSetDataCollection.getRootDirectory().toPath().relativize(effectiveFullResImageDirectory.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(effectiveFullResImageDirectory.toPath()).toString();
         }
         catch (IllegalArgumentException |
             NullPointerException e) //If the root and other directories are located under different drive letters on windows
@@ -1052,22 +1052,35 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
     {
-        this.viewSetDataCollection.setFullResImageDirectory(this.viewSetDataCollection.getRootDirectory().toPath()
-            .resolve(relativeImagePath).toFile());
-        this.disabledViewSetDataCollection.setFullResImageDirectory(this.viewSetDataCollection.getRootDirectory().toPath()
-            .resolve(relativeImagePath).toFile());
+        this.fullResImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
     public File getPreviewImageDirectory()
     {
-        return this.viewSetDataCollection.getPreviewImageDirectory();
+        if (this.previewImageDirectory == null)
+        {
+            // If no preview images, default to just using full res images, or root directory as last fallback
+            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+        }
+        else
+        {
+            return this.previewImageDirectory;
+        }
     }
 
     @Override
     public File getThumbnailImageDirectory()
     {
-        return this.viewSetDataCollection.getThumbnailImageDirectory();
+        if (this.thumbnailImageDirectory == null)
+        {
+            // If no thumbnail images, default to just using full res images, or root directory as last fallback
+            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+        }
+        else
+        {
+            return this.thumbnailImageDirectory;
+        }
     }
 
     @Override
@@ -1077,7 +1090,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 
         try
         {
-            return this.viewSetDataCollection.getRootDirectory().toPath().relativize(effectivePreviewImageDirectory.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(effectivePreviewImageDirectory.toPath()).toString();
         }
         catch (IllegalArgumentException |
             NullPointerException e) //If the root and other directories are located under different drive letters on windows
@@ -1093,25 +1106,18 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
-        if (this.viewSetDataCollection.getFullResImageDirectory() == null)
+        if (this.fullResImageDirectory == null)
         {
             // If we didn't have a full res directory, use the old preview directory as our full res directory
-            this.viewSetDataCollection.setFullResImageDirectory(viewSetDataCollection.getPreviewImageDirectory());
-            this.disabledViewSetDataCollection.setFullResImageDirectory(viewSetDataCollection.getPreviewImageDirectory());
+            this.fullResImageDirectory = previewImageDirectory;
         }
 
-        this.viewSetDataCollection.setPreviewImageDirectory(this.viewSetDataCollection.getRootDirectory().toPath()
-            .resolve(relativeImagePath).toFile());
-        this.disabledViewSetDataCollection.setPreviewImageDirectory(this.viewSetDataCollection.getRootDirectory().toPath()
-            .resolve(relativeImagePath).toFile());
+        this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     public void setRelativeThumbnailImagePathName(String relativeImagePath)
     {
-        this.viewSetDataCollection.setThumbnailImageDirectory(this.viewSetDataCollection.getRootDirectory().toPath()
-            .resolve(relativeImagePath).toFile());
-        this.disabledViewSetDataCollection.setThumbnailImageDirectory(this.viewSetDataCollection.getRootDirectory().toPath()
-            .resolve(relativeImagePath).toFile());
+        this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
@@ -1363,11 +1369,6 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     public int getLightCount()
     {
         return this.lightPositionList.size();
-    }
-
-    public int getImageCount()
-    {
-        return this.viewSetDataCollection.getViewSetData().size() + this.disabledViewSetDataCollection.getViewSetData().size();
     }
 
     @Override
@@ -1704,7 +1705,7 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
 
     public File getModelDirectory()
     {
-        return this.modelDirectory == null ? this.viewSetDataCollection.getRootDirectory() : this.modelDirectory;
+        return this.modelDirectory == null ? this.rootDirectory : this.modelDirectory;
     }
 
     public void setModelDirectory(File modelDirectory)
