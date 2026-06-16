@@ -505,8 +505,8 @@
 }
 .card-background:pressed {
     -fx-background-color:
+            #838383,
             #CECECE,
-            #1A1A1A,
             #CECECE;
 }
 
@@ -538,22 +538,22 @@
 .card-button:pressed{
     -fx-text-fill: #383838;
     -fx-background-color:
-            #ffffff,
             #1A1A1A,
+            #ffffff,
             #ffffff;
 }
 /*This card-button.activated is for future "selected" use. See Card Controller for more*/
 .card-button.activated {
     -fx-background-color:
-            #383838,
             #1A1A1A,
+            #383838,
             #383838;
 }
 .card-button.activated:hover {
     -fx-text-fill: #383838;
     -fx-background-color:
-            #ffffff,
             #1A1A1A,
+            #ffffff,
             #ffffff;
 }
 
