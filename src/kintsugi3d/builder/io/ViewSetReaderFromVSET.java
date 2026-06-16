@@ -299,7 +299,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         scanner.nextLine();
                         break;
                     }
-                    case "v": // Add case "vd" here
+                    case "v":
+                    case "vd":
                     {
                         int poseId = scanner.nextInt();
                         int projectionId = scanner.nextInt();
@@ -307,6 +308,16 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
                         String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
 
+                        if (id.equals("vd"))
+                        {
+                            // commit as disabled
+                            builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
+                                .setCurrentCameraProjectionIndex(projectionId)
+                                .setCurrentLightIndex(lightId)
+                                .setCurrentImageFile(new File(imgFilename))
+                                .commitCurrentCameraPoseAsDisabled();
+                            break;
+                        }
                         builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)

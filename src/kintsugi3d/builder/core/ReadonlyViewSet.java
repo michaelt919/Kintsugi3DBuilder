@@ -159,6 +159,13 @@ public interface ReadonlyViewSet
     File getImageFile(int poseIndex);
 
     /**
+     * Gets the image file corresponding to a particular disabled view, relative to the full res image directory.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file's relative name.
+     */
+    File getDisabledImageFile(int poseIndex);
+
+    /**
      * Gets the name of the image file corresponding to a particular view.
      * This method should be used to retrieve the filename in contexts when the relative path is unwanted.
      * (i.e. for creating or finding images with the same name as the full-res image file, but which are in a different directory).
@@ -257,6 +264,14 @@ public interface ReadonlyViewSet
     int getCameraProjectionIndex(int poseIndex);
 
     /**
+     * Gets the index of the projection transformation to be used for a particular disabled view,
+     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
+     * @param poseIndex The index of the disabled view.
+     * @return The index of the projection transformation.
+     */
+    int getDisabledCameraProjectionIndex(int poseIndex);
+
+    /**
      * Gets the position of a particular light source.
      * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * Assumed by convention to be in camera space.
@@ -284,6 +299,14 @@ public interface ReadonlyViewSet
      */
     int getLightIndex(int poseIndex);
 
+    /**
+     * Gets the index of the light source to be used for a particular disabled view,
+     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
+     * @param poseIndex The index of the disabled view.
+     * @return The index of the light source.
+     */
+    int getDisabledLightIndex(int poseIndex);
+
     ViewRMSE getViewErrorMetrics(int poseIndex);
 
     /**
@@ -291,6 +314,12 @@ public interface ReadonlyViewSet
      * @return The number of camera poses defined in this view set.
      */
     int getCameraPoseCount();
+
+    /**
+     * Gets the number of disabled camera poses defined in this view set
+     * @return The number of disabled camera Poses defined in this view set
+     */
+    int getDisabledCameraPoseCount();
 
     /**
      * Gets the number of projection transformations defined in this view set.

@@ -93,7 +93,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
             .mapToObj(i -> createCard(cardsModel, i, viewSet.getViewSetData()))
             .collect(Collectors.toList());
         // Make sure to also display disabled cards
-        List<ProjectDataCard> disabledCardsList = IntStream.range(0, viewSet.getDisabledCameraCount())
+        List<ProjectDataCard> disabledCardsList = IntStream.range(0, viewSet.getDisabledCameraPoseCount())
             .mapToObj(i -> createCard(cardsModel, i, viewSet.getDisabledViewSetData()))
             .collect(Collectors.toList());
         cardsList.addAll(disabledCardsList);

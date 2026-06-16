@@ -247,6 +247,15 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             }
         }
 
+        out.println();
+        out.printf("# %d%s%n", viewSet.getDisabledCameraPoseCount(), viewSet.getDisabledCameraPoseCount() == 1 ? " Disabled View" : " Disabled Views");
+
+        for (int id = 0; id < viewSet.getDisabledCameraPoseCount(); id++)
+        {
+            out.printf("vd\t%d\t%d\t%d\t%s", id, viewSet.getDisabledCameraProjectionIndex(id), viewSet.getDisabledLightIndex(id), viewSet.getDisabledImageFile(id));
+            out.println();
+        }
+
         out.close();
     }
 }

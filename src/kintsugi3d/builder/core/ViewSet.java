@@ -57,10 +57,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
      */
     private UUID uuid = UUID.randomUUID();
 
-//    private final ArrayList<ViewSetData> viewSetDataList;
     private final ViewSetDataCollection viewSetDataCollection;
 
-//    private final ArrayList<ViewSetData> disabledViewSets;
     private final ViewSetDataCollection disabledViewSetDataCollection;
 
     /**
@@ -305,6 +303,16 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
             ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f),
                 cameraProjectionIndex, lightIndex, result.viewSetDataCollection.getViewSetData().size(), imageFile, maskFile, new ViewRMSE());
             result.viewSetDataCollection.getViewSetData().add(currentCamera);
+            return this;
+        }
+
+        public Builder commitCurrentCameraPoseAsDisabled()
+        {
+            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f), cameraProjectionIndex,
+                lightIndex, result.viewSetDataCollection.getViewSetData().size() + result.disabledViewSetDataCollection.getViewSetData().size(),
+                imageFile, maskFile, new ViewRMSE());
+            currentCamera.isDisabled = true;
+            result.disabledViewSetDataCollection.getViewSetData().add(currentCamera);
             return this;
         }
 
@@ -1127,6 +1135,13 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     }
 
     @Override
+    public File getDisabledImageFile(int poseIndex)
+    {
+        return this.disabledViewSetDataCollection.getViewSetData().get(poseIndex).imageFile;
+    }
+
+
+    @Override
     public String getImageFileName(int poseIndex)
     {
         return this.viewSetDataCollection.getViewSetData().get(poseIndex).imageFile.getName();
@@ -1315,6 +1330,12 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     }
 
     @Override
+    public int getDisabledCameraProjectionIndex(int poseIndex)
+    {
+        return this.disabledViewSetDataCollection.getViewSetData().get(poseIndex).cameraProjectionIndex;
+    }
+
+    @Override
     public Vector3 getLightPosition(int lightIndex)
     {
         return this.lightPositionList.get(lightIndex);
@@ -1343,6 +1364,12 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     }
 
     @Override
+    public int getDisabledLightIndex(int poseIndex)
+    {
+        return this.disabledViewSetDataCollection.getViewSetData().get(poseIndex).lightIndex;
+    }
+
+    @Override
     public ViewRMSE getViewErrorMetrics(int poseIndex)
     {
         return this.viewSetDataCollection.getViewSetData().get(poseIndex).viewErrorMetric;
@@ -1354,7 +1381,8 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
         return this.viewSetDataCollection.getViewSetData().size();
     }
 
-    public int getDisabledCameraCount()
+    @Override
+    public int getDisabledCameraPoseCount()
     {
         return this.disabledViewSetDataCollection.getViewSetData().size();
     }
