@@ -16,8 +16,9 @@ import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.Cursor;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -26,11 +27,15 @@ import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 public class SideBarController
 {
     @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
+    @FXML private Button minimizeButton;
+    @FXML private Label workspaceLabel;
+    @FXML private HBox workspaceBox;
 
     // needed to remove tabs
     private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
@@ -40,7 +45,12 @@ public class SideBarController
     private final List<RadioButton> buttons = new ArrayList<>(8);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
+    private static final double RESIZE_WIDTH = 5.0;
+    //Alternative LOWER_BOUND: 62
+    private static final int LOWER_BOUND = 273;
     private ObservableTabsModel tabModels;
+    private String lastSelectedTabLabel = null;
+    private boolean minimized = false;
 
     public Node getRootNode()
     {
@@ -78,11 +88,12 @@ public class SideBarController
             }
 
             // Select the first tab if no tab is selected.
-            if (!tabModels.getAllTabs().isEmpty() && tabToggleGroup.getSelectedToggle() == null)
+            if (!tabModels.getAllTabs().isEmpty() && (tabToggleGroup.getSelectedToggle() == null))
             {
                 buttons.get(0).setSelected(true);
             }
         });
+        mainBox.setOnMouseReleased(this::mouseReleased);
     }
 
     private void removeTab(String key)
@@ -182,6 +193,202 @@ public class SideBarController
         }
     }
 
+    /**
+     * If the Minimize button has a "-" it will call minimize. Alternatively if the
+     * minimize button has a "+" it will set the mainBox size to 400 and will call
+     * maximize
+     */
+    public void minimizeSideBar()
+    {
+        if (minimizeButton.getText().equals("-"))
+        {
+            minimize();
+        }
+        else if (minimizeButton.getText().equals("+"))
+        {
+            mainBox.setPrefWidth(494);
+            mainBox.setMinWidth(400);
+
+            maximize();
+        }
+    }
+
+    /**
+     * Uses event parameter to determine if the mouse is within 5 pixels of the edge.
+     * If it is, cursor is set to resize cursor. Otherwise, default cursor.
+     * @param event
+     */
+    public void mouseMoved(MouseEvent event)
+    {
+        if (event.getX() > (mainBox.getWidth() - RESIZE_WIDTH))
+        {
+            mainBox.setCursor(Cursor.E_RESIZE);
+        }
+        else
+        {
+            mainBox.setCursor(Cursor.DEFAULT);
+        }
+    }
+
+    /**
+     * If the mouse is dragged it first gets the new mouse position, then it finds
+     * the upper bound. Next it resizes the tab accordingly: If the box is minimized
+     * it will snap back to minimized state if the drag is not far enough. Otherwise,
+     * If it's dragged to make it bigger, once it is big enough it will call maximize.
+     * If it's maximized and dragged small enough it will go into minimized state.
+     * @param event
+     */
+    @FXML
+    public void mouseDragged(MouseEvent event)
+    {
+        double newWidth = event.getX();
+
+        //decimal at end is percentage of screen it can be dragged to
+        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .50;
+
+        if (!mainBox.getCursor().equals(Cursor.E_RESIZE))
+        {
+            return;
+        }
+
+        if (minimized)
+        {
+            if (newWidth >= 23)
+            {
+                mainBox.setPrefWidth(newWidth);
+                mainBox.setMinWidth(newWidth);
+                mainBox.setMinWidth(newWidth);
+
+                if (newWidth >= (LOWER_BOUND/2.0))
+                {
+                    maximize();
+                }
+            }
+            else
+            {
+                mainBox.setPrefWidth(23);
+                mainBox.setMinWidth(23);
+                mainBox.setMinWidth(23);
+            }
+        }
+        else{
+            if (newWidth < (LOWER_BOUND/2.0))
+            {
+                minimize();
+            }
+            else if ((newWidth >= LOWER_BOUND) && (newWidth <= upperBound))
+            {
+                mainBox.setPrefWidth(newWidth);
+                mainBox.setMinWidth(newWidth);
+                mainBox.setMaxWidth(newWidth);
+            }
+            else if (newWidth < LOWER_BOUND)
+            {
+                mainBox.setPrefWidth(LOWER_BOUND);
+                mainBox.setMinWidth(LOWER_BOUND);
+                mainBox.setMaxWidth(LOWER_BOUND);
+            }
+        }
+    }
+
+    /**
+     * If the mouse is released, the method looks to see if the tab is still in the
+     * minimize state. If it is it will snap the window back to default 23 pixels wide.
+     * @param event
+     */
+    @FXML
+    public void mouseReleased(MouseEvent event)
+    {
+        if (minimized)
+        {
+            mainBox.setPrefWidth(23);
+            mainBox.setMinWidth(23);
+            mainBox.setMaxWidth(23);
+        }
+    }
+
+    /**
+     * This function hides tabs like shaders, materials, etc. It also remembers the
+     * tab that was currently being displayed to the user.
+     */
+    private void hideAllTabs()
+    {
+        if (lastSelectedTabLabel == null)
+        {
+            for (Map.Entry<String, RadioButton> entry : buttonMap.entrySet())
+            {
+                RadioButton button = entry.getValue();
+
+                if (button.isSelected())
+                {
+                    lastSelectedTabLabel = entry.getKey();
+                }
+                button.setSelected(false);
+            }
+        }
+    }
+
+    /**
+     * Will select the tab that was last displayed to the user.
+     */
+    private void restoreTab()
+    {
+        if (lastSelectedTabLabel != null)
+        {
+            RadioButton lastTab = buttonMap.get(lastSelectedTabLabel);
+            lastTab.setSelected(true);
+            lastSelectedTabLabel = null;
+        }
+    }
+
+    /**
+     * Hides all the tabs and features of the workspace then will set the mainBox size
+     * to 23 pixels. Removes the features abilities to take up space when it hides
+     * them. Sets minimized to true and changes minimize button text to "+".
+     */
+    private void minimize()
+    {
+        mainBox.setPrefWidth(23);
+        mainBox.setMinWidth(23);
+        mainBox.setMaxWidth(23);
+
+        buttonBox.setVisible(false);
+        workspaceLabel.setVisible(false);
+
+        hideAllTabs();
+
+        for (Node child: workspaceBox.getChildren())
+        {
+            if (!Objects.equals(child, minimizeButton))
+            {
+                child.setManaged(false);
+            }
+        }
+        minimizeButton.setTranslateX(-4);
+        minimizeButton.setText("+");
+        minimized = true;
+    }
+
+    /**
+     * Unhides all tabs, features, and will make the features take up their space again.
+     * Sets minimized to false. Changes minimize button to - again.
+     */
+    private void maximize()
+    {
+        buttonBox.setVisible(true);
+        workspaceLabel.setVisible(true);
+
+        restoreTab();
+
+        for (Node child: workspaceBox.getChildren())
+        {
+            child.setManaged(true);
+        }
+
+        minimizeButton.setTranslateX(0);
+        minimizeButton.setText("-");
+        minimized = false;
+    }
     public void refreshTabs()
     {
         tabControllers.forEach(CardTabController::refreshCardList);

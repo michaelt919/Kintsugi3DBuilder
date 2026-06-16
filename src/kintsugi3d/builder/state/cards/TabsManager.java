@@ -34,6 +34,7 @@ public class TabsManager
         factories.put(TEXTURES, new TextureCardFactory(instance));
         factories.put(MATERIALS, new MaterialCardFactory(instance));
         factories.put(SHADERS, new ShaderCardFactory(instance));
+        Global.state().getInstanceModel().setInstances(instance,viewSet);
     }
 
     public TabsManager(ProjectInstance<?> instance)

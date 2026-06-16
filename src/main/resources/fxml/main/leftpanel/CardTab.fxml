@@ -6,10 +6,11 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
 <VBox fx:id="tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS">
-    <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="200.0" VBox.vgrow="NEVER">
+    <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="200.0" VBox.vgrow="NEVER" minWidth="0.0">
         <padding>
             <Insets left="16.0" right="16.0" top="8.0" />
         </padding>
@@ -27,14 +28,15 @@
         <VBox.margin>
             <Insets />
         </VBox.margin>
+        <Button text = "Open File Path" alignment = "CENTER_RIGHT" onAction = "#openFilePath"/>
     </HBox>
-    <HBox alignment="CENTER_LEFT" prefHeight="32">
+    <HBox alignment="CENTER_LEFT" prefHeight="32" minWidth="0.0">
         <padding >
             <Insets left="15.5" right="16.0" top="10.0" />
         </padding>
         <Label fx:id="countLabel" style="-fx-text-fill: #aaaaaa; -fx-font-size: 14;"/>
     </HBox>
-    <ScrollPane fx:id="scrollpane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
+    <ScrollPane fx:id="scrollpane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS" minWidth="0.0">
         <VBox fx:id="vbox" spacing="5.0" style="-fx-background-color: #202020">
         </VBox>
         <VBox.margin>

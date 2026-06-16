@@ -22,11 +22,14 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.state.cards.ProjectDataCard;
+import kintsugi3d.builder.state.cards.*;
 
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -215,6 +218,39 @@ public class CardTabController
             Bounds cardY = vbox.getChildren().get(i).getBoundsInParent();
             boolean inScrollRange = cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight;
             searchList.get(i).setCardVisibility(inScrollRange);
+        }
+    }
+
+    /**
+     * When Open file path button is called, this method is activated and will open file
+     * explorer with the path for that particular tab.
+     */
+    public void openFilePath()
+    {
+        String path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
+        String label = cardsModel.getModelLabel();
+
+        if (label.equals("Photos"))
+        {
+            path = Global.state().getInstanceModel().getViewSet().getFullResImageDirectory().getPath();
+            path += "\\Processed";
+        }
+        try{
+            if (path != null){
+
+                File folder = new File(path);
+
+                if (folder.exists())
+                {
+                    Desktop.getDesktop().open(folder);
+                } else
+                {
+                    System.err.println("The folder does not exist.");
+                }
+            }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
         }
     }
 }
