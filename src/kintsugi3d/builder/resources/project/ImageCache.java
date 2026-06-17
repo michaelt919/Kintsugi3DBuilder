@@ -281,15 +281,15 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setMaxProgress(resources.getViewSet().getCameraPoseCount());
+                monitor.setMaxProgress(resources.getViewSet().getCombinedCameraPoseCount());
             }
 
             // Loop over the images, processing each one at a time
-            for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
+            for (int k = 0; k < resources.getViewSet().getCombinedCameraPoseCount(); k++)
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCombinedCameraPoseCount()));
                     monitor.allowUserCancellation();
                 }
 
@@ -389,7 +389,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setProgress(resources.getViewSet().getCameraPoseCount(), "All images completed.");
+                monitor.setProgress(resources.getViewSet().getCombinedCameraPoseCount(), "All images completed.");
             }
         }
     }

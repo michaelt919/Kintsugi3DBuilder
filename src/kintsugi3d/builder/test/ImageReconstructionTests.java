@@ -237,7 +237,7 @@ class ImageReconstructionTests
                 File outputDirectory = new File(TEST_OUTPUT_DIR, groundTruthName);
                 outputDirectory.mkdirs();
 
-                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
                 {
                     renderGroundTruth(viewSet, i, groundTruthDrawable, groundTruthFBO);
                     groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG",

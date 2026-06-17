@@ -170,7 +170,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
                 this.cameraWeightBuffer = context.createUniformBuffer()
                         .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                1, viewSet.getCameraPoseCount(), this.cameraWeights));
+                                1, viewSet.getCombinedCameraPoseCount(), this.cameraWeights));
 
                 ImportedMaterial material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
@@ -272,25 +272,25 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
     {
-        float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
+        float[] cameraWeights = new float[viewSet.getCombinedCameraPoseCount()];
 
-        Vector3[] viewDirections = IntStream.range(0, viewSet.getCameraPoseCount())
+        Vector3[] viewDirections = IntStream.range(0, viewSet.getCombinedCameraPoseCount())
                 .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
                         .minus(geometry.getCentroid()).normalized())
                 .toArray(Vector3[]::new);
 
-        int[] totals = new int[viewSet.getCameraPoseCount()];
-        int targetSampleCount = viewSet.getCameraPoseCount() * 256;
+        int[] totals = new int[viewSet.getCombinedCameraPoseCount()];
+        int targetSampleCount = viewSet.getCombinedCameraPoseCount() * 256;
         double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
         int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
 
         // Find the view with the greatest distance from any other view.
         // Directions that are further from any view than distance will be ignored in the view weight calculation.
         double maxMinDistance = 0.0;
-        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+        for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
         {
             double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < viewSet.getCameraPoseCount(); j++)
+            for (int j = 0; j < viewSet.getCombinedCameraPoseCount(); j++)
             {
                 if (i != j)
                 {
@@ -316,7 +316,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
                 double minDistance = maxMinDistance;
                 int minIndex = -1;
-                for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+                for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
                 {
                     double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
                     if (distance < minDistance)
@@ -337,7 +337,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         LOG.info("View weights:");
 
-        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+        for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
             LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);

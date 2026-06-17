@@ -56,7 +56,7 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
             if(monitor != null){
                 monitor.setProcessName("Resample");
             }
-            for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+            for (int i = 0; i < targetViewSet.getCombinedCameraPoseCount(); i++)
             {
                 if (monitor != null)
                 {
@@ -78,8 +78,8 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) targetViewSet.getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i+1, targetViewSet.getCameraPoseCount()));
+                    monitor.setProgress((double) i / (double) targetViewSet.getCombinedCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i+1, targetViewSet.getCombinedCameraPoseCount()));
                 }
             }
 

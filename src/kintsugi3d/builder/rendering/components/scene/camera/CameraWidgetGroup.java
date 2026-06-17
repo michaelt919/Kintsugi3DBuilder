@@ -76,7 +76,7 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     {
         if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
         {
-            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCameraPoseCount(); cameraIndex++)
+            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCombinedCameraPoseCount(); cameraIndex++)
             {
                 cameraVisual.draw(framebuffer, cameraViewport);
                 cameraFrustum.draw(framebuffer, cameraViewport);

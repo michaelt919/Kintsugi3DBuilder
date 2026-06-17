@@ -178,7 +178,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         ViewSet newViewSet = builder.getViewSet();
-        int cameraCount = newViewSet.getCameraPoseCount();
+        int cameraCount = newViewSet.getCombinedCameraPoseCount();
         if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
@@ -191,7 +191,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = newViewSet.getImageFiles();
+        List<File> imgFiles = newViewSet.getAllImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
         imgFiles.forEach(file -> imgFileNames.add(file.getName()));

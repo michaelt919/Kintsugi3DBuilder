@@ -69,7 +69,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+            for (int i = 0; i < targetViewSet.getCombinedCameraPoseCount(); i++)
             {
                 if (monitor != null)
                 {
@@ -93,8 +93,8 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress((double) i / (double) resources.getViewSet().getCombinedCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCombinedCameraPoseCount()));
                 }
             }
         }

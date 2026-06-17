@@ -76,7 +76,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
         Date timestamp = new Date();
 
         ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> builder = getContext().getTextureFactory()
-                .build2DColorTextureArray(texWidth, texHeight, getViewSet().getCameraPoseCount())
+                .build2DColorTextureArray(texWidth, texHeight, getViewSet().getCombinedCameraPoseCount())
                 .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested());
 
@@ -95,18 +95,18 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
         if(progressMonitor != null)
         {
-            progressMonitor.setMaxProgress(getViewSet().getCameraPoseCount());
+            progressMonitor.setMaxProgress(getViewSet().getCombinedCameraPoseCount());
             progressMonitor.setStage(0, "Loading textures...");
         }
 
         try
         {
             // Iterate over the layers to load in the texture array
-            for (int k = 0; k < getViewSet().getCameraPoseCount(); k++)
+            for (int k = 0; k < getViewSet().getCombinedCameraPoseCount(); k++)
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCameraPoseCount()));
+                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCombinedCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
@@ -117,7 +117,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
             if (progressMonitor != null)
             {
-                progressMonitor.setProgress(getViewSet().getCameraPoseCount(), "All images loaded.");
+                progressMonitor.setProgress(getViewSet().getCombinedCameraPoseCount(), "All images loaded.");
             }
         }
         catch (IOException e)

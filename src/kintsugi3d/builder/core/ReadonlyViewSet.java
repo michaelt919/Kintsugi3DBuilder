@@ -147,7 +147,8 @@ public interface ReadonlyViewSet
      * In contexts when the relative path is unwanted, use getImageFileName() instead.
      * @return The list of image files
      */
-    List<File> getImageFiles();
+    List<File> getAllImageFiles();
+    List<File> getEnabledImageFiles();
 
     /**
      * Gets the image file corresponding to a particular view, relative to the full res image directory.
@@ -158,10 +159,12 @@ public interface ReadonlyViewSet
      */
     File getImageFile(int poseIndex);
 
+    File getEnabledImageFile(int poseIndex);
+
     /**
      * Gets the image file corresponding to a particular disabled view, relative to the full res image directory.
      * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name.
+     * @return The dsimage file's relative name.
      */
     File getDisabledImageFile(int poseIndex);
 
@@ -263,6 +266,8 @@ public interface ReadonlyViewSet
      */
     int getCameraProjectionIndex(int poseIndex);
 
+    int getEnabledCameraProjectionIndex(int poseIndex);
+
     /**
      * Gets the index of the projection transformation to be used for a particular disabled view,
      * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
@@ -299,6 +304,8 @@ public interface ReadonlyViewSet
      */
     int getLightIndex(int poseIndex);
 
+    int getEnabledLightIndex(int poseIdex);
+
     /**
      * Gets the index of the light source to be used for a particular disabled view,
      * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
@@ -313,7 +320,10 @@ public interface ReadonlyViewSet
      * Gets the number of camera poses defined in this view set.
      * @return The number of camera poses defined in this view set.
      */
-    int getCameraPoseCount();
+    int getCombinedCameraPoseCount();
+//    int getCameraPoseCount();
+
+    int getEnabledCameraPoseCount();
 
     /**
      * Gets the number of disabled camera poses defined in this view set
@@ -386,6 +396,8 @@ public interface ReadonlyViewSet
     Map<Integer, File> getMasksMap();
 
     ImageHelper loadFullResMaskedImage(int index) throws IOException;
+
+    boolean getIsDisabled(int poseIndex);
 
     /**
      * Gets additional settings associated with this view set

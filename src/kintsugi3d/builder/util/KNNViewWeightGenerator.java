@@ -65,10 +65,10 @@ public class KNNViewWeightGenerator implements ViewWeightGenerator
     @Override
     public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
+        float[] viewWeights = new float[resources.getViewSet().getCombinedCameraPoseCount()];
         float viewWeightSum = 0.0f;
 
-        Queue<WeightedView> viewPriority = new PriorityQueue<>(resources.getViewSet().getCameraPoseCount(), Comparator.reverseOrder());
+        Queue<WeightedView> viewPriority = new PriorityQueue<>(resources.getViewSet().getCombinedCameraPoseCount(), Comparator.reverseOrder());
 
         for (int i : activeViewIndexList)
         {
