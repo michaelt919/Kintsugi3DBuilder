@@ -264,6 +264,11 @@ public class CardTabController
             e.printStackTrace();
         }
     }
+
+    /**
+     * Similar to openFilePath, but instead of opening file explorer it
+     * copies path to clipboard
+     */
     public void copyFilePath()
     {
         String path = findFilePath();
@@ -284,6 +289,12 @@ public class CardTabController
             }
         }
     }
+
+    /**
+     * Assigns file path to variable path using global project instance. Alternate path
+     * if photos tab is selected.
+     * @return String path
+     */
     public String findFilePath()
     {
         String path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
