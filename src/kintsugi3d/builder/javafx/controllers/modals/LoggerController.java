@@ -18,9 +18,12 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.control.ScrollBar;
 import javafx.util.Callback;
 import kintsugi3d.builder.app.logging.LogMessage;
 import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
@@ -48,6 +51,7 @@ public class LoggerController implements Initializable
     @FXML private ToggleButton toggleButtonTrace;
     @FXML private ToggleButton toggleButtonWarn;
     @FXML private ListView<LogMessage> messageListView;
+    @FXML private Pane cornerPatch;
 
     private RecentLogMessageAppender logMessages;
 
@@ -86,6 +90,26 @@ public class LoggerController implements Initializable
             toggleButtonTrace.setSelected(false);
             toggleButtonTrace.setDisable(true);
         }
+        Platform.runLater(() -> {
+            messageListView.applyCss();
+            messageListView.layout();
+
+            Node verticalBarNode = messageListView.lookup(".scroll-bar:vertical");
+            Node horizontalBarNode = messageListView.lookup(".scroll-bar:horizontal");
+
+            if (verticalBarNode instanceof ScrollBar) {
+                ScrollBar scrollBar = (ScrollBar) verticalBarNode;
+                scrollBar.visibleAmountProperty().addListener((obs, oldVal, newVal) -> {
+
+                    if (newVal.doubleValue() < 0.1) {
+                        scrollBar.setVisibleAmount(0.1);
+                    }
+                });
+                if (scrollBar.getVisibleAmount() < 0.1) {
+                    scrollBar.setVisibleAmount(0.1);
+                }
+            }
+        });
     }
 
     public void buttonOpenLogDir(ActionEvent actionEvent)

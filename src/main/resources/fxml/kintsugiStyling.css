@@ -505,8 +505,8 @@
 }
 .card-background:pressed {
     -fx-background-color:
+            #838383,
             #CECECE,
-            #1A1A1A,
             #CECECE;
 }
 
@@ -538,22 +538,22 @@
 .card-button:pressed{
     -fx-text-fill: #383838;
     -fx-background-color:
-            #ffffff,
             #1A1A1A,
+            #ffffff,
             #ffffff;
 }
 /*This card-button.activated is for future "selected" use. See Card Controller for more*/
 .card-button.activated {
     -fx-background-color:
-            #383838,
             #1A1A1A,
+            #383838,
             #383838;
 }
 .card-button.activated:hover {
     -fx-text-fill: #383838;
     -fx-background-color:
-            #ffffff,
             #1A1A1A,
+            #ffffff,
             #ffffff;
 }
 
@@ -648,8 +648,8 @@
 
 /* 4. Remove and collapse the Arrow Buttons entirely */
 
-.scroll-pane .scroll-bar .increment-button,
-.scroll-pane .scroll-bar .decrement-button {
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
     -fx-background-color: transparent;
     -fx-background-radius: 0px;
     -fx-border-color: transparent;
@@ -662,26 +662,26 @@
     -fx-min-height: 0px;
 }
 
-.scroll-pane .scroll-bar .increment-arrow,
-.scroll-pane .scroll-bar .decrement-arrow {
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
     -fx-shape: "";
     -fx-padding: 0px;
     -fx-opacity: 0.0;
     -fx-max-width: 0px;
     -fx-max-height: 0px;
 }
-.scroll-pane .scroll-bar:vertical {
+.scroll-bar:vertical {
     -fx-background-color: transparent;
     -fx-pref-width: 18px;
     -fx-min-width: 18px;
     -fx-max-width: 18px;
 }
-.scroll-pane .scroll-bar:vertical .track {
+.scroll-bar:vertical .track {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-background-radius: 0px;
 }
-.scroll-pane .scroll-bar:vertical .thumb {
+.scroll-bar:vertical .thumb {
     -fx-background-color: #ffffff;
     -fx-background-radius: 4px;
     -fx-min-height: 40px;
@@ -689,6 +689,12 @@
     -fx-border-width: 0px;
     -fx-background-insets: 0px 5px 0px 5px;
 }
-.scroll-pane .scroll-bar:vertical .thumb:hover {
+.scroll-bar:vertical .thumb:hover {
     -fx-background-color: #dcdcdc;
+}
+.corner {
+    -fx-background-color: #202020;
+}
+.tree-view {
+    -fx-background-color: #383838;
 }
