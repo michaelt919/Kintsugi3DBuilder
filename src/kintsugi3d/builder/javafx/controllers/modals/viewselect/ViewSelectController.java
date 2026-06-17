@@ -11,7 +11,9 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -84,6 +86,25 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             .addListener((a, b, c) -> selectImageInTreeView());
 
         setCanAdvance(true);
+        Platform.runLater(() -> {
+            chunkTreeView.applyCss();
+            chunkTreeView.layout();
+
+            Node verticalBarNode = chunkTreeView.lookup(".scroll-bar:vertical");
+
+            if (verticalBarNode instanceof ScrollBar) {
+                ScrollBar scrollBar = (ScrollBar) verticalBarNode;
+                scrollBar.visibleAmountProperty().addListener((obs, oldVal, newVal) -> {
+
+                    if (newVal.doubleValue() < 0.1) {
+                        scrollBar.setVisibleAmount(0.1);
+                    }
+                });
+                if (scrollBar.getVisibleAmount() < 0.1) {
+                    scrollBar.setVisibleAmount(0.1);
+                }
+            }
+        });
     }
 
     @Override
