@@ -36,7 +36,7 @@
         </padding>
         <Label fx:id="countLabel" style="-fx-text-fill: #aaaaaa; -fx-font-size: 14;"/>
     </HBox>
-    <ScrollPane fx:id="scrollpane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS" minWidth="0.0">
+    <ScrollPane fx:id="scrollpane" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS" minWidth="0.0">
         <VBox fx:id="vbox" spacing="5.0" style="-fx-background-color: #202020">
         </VBox>
         <VBox.margin>

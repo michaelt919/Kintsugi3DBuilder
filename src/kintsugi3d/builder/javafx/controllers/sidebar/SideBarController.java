@@ -47,7 +47,7 @@ public class SideBarController
 
     private static final double RESIZE_WIDTH = 5.0;
     //Alternative LOWER_BOUND: 62
-    private static final int LOWER_BOUND = 273;
+    private static final int LOWER_BOUND = 322;
     private ObservableTabsModel tabModels;
     private String lastSelectedTabLabel = null;
     private boolean minimized = false;
