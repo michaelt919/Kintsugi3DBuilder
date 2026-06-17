@@ -695,3 +695,6 @@
 .corner {
     -fx-background-color: #202020;
 }
+.tree-view {
+    -fx-background-color: #383838;
+}
