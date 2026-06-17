@@ -28,7 +28,13 @@
         <VBox.margin>
             <Insets />
         </VBox.margin>
-        <Button text = "Open File Path" alignment = "CENTER_RIGHT" onAction = "#openFilePath"/>
+        <Button fx:id="openFilePathButton" text="Open" textOverrun="CLIP" minWidth="-Infinity" onAction="#openFilePath" style = "-fx-padding: 5px">
+            <HBox.margin>
+                <Insets right="10.0" />
+            </HBox.margin>
+        </Button>
+
+        <Button fx:id="copyFilePathButton" text="Copy" textOverrun="CLIP" minWidth="-Infinity" onAction="#copyFilePath" style = "-fx-padding: 5px"/>
     </HBox>
     <HBox alignment="CENTER_LEFT" prefHeight="32" minWidth="0.0">
         <padding >
