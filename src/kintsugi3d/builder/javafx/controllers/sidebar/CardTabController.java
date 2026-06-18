@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -19,6 +20,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -29,6 +31,8 @@ import kintsugi3d.builder.state.cards.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +46,8 @@ public class CardTabController
     @FXML private VBox vbox;
     @FXML private ScrollPane scrollpane;
     @FXML private Label countLabel;
+    @FXML private Button openFilePathButton;
+    @FXML private Button copyFilePathButton;
 
     private double scrollPosition = 0;
 
@@ -62,6 +68,15 @@ public class CardTabController
         vbox.getChildren().addAll(displayCards);
         createListeners();
         updateSummary();
+
+        Platform.runLater(() ->
+        {
+            if (cardsModel.getModelLabel().equals("Shaders"))
+            {
+                openFilePathButton.setVisible(false);
+                copyFilePathButton.setVisible(false);
+            }
+        });
     }
 
     private void updateSummary() {
@@ -227,6 +242,61 @@ public class CardTabController
      */
     public void openFilePath()
     {
+        String path = findFilePath();
+        try
+        {
+            if (path != null)
+            {
+                File folder = new File(path);
+
+                if (folder.exists())
+                {
+                    Desktop.getDesktop().open(folder);
+                }
+                else
+                {
+                    System.err.println("The folder does not exist.");
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Similar to openFilePath, but instead of opening file explorer it
+     * copies path to clipboard
+     */
+    public void copyFilePath()
+    {
+        String path = findFilePath();
+
+        if (path != null){
+
+            File folder = new File(path);
+
+            if (folder.exists())
+            {
+                StringSelection stringSelection = new StringSelection(path);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            else
+            {
+                System.err.println("The folder does not exist.");
+            }
+        }
+    }
+
+    /**
+     * Assigns file path to variable path using global project instance. Alternate path
+     * if photos tab is selected.
+     * @return String path
+     */
+    public String findFilePath()
+    {
         String path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
         String label = cardsModel.getModelLabel();
 
@@ -235,22 +305,6 @@ public class CardTabController
             path = Global.state().getInstanceModel().getViewSet().getFullResImageDirectory().getPath();
             path += "\\Processed";
         }
-        try{
-            if (path != null){
-
-                File folder = new File(path);
-
-                if (folder.exists())
-                {
-                    Desktop.getDesktop().open(folder);
-                } else
-                {
-                    System.err.println("The folder does not exist.");
-                }
-            }
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        return path;
     }
 }
