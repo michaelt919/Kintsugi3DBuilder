@@ -62,7 +62,12 @@ public class CardTabController
     }
 
     private void updateSummary() {
-        countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
+        String summary = cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size();
+        if (cardsModel.getModelLabel().equals("Photos"))
+        {
+            summary = cardsModel.getModelLabel() + " count: " + cardsModel.getEnabledCardCount() + "/" + cardsModel.getCardList().size();
+        }
+        countLabel.setText(summary);
     }
 
     private CardController createDataCard(ProjectDataCard card)

@@ -117,6 +117,32 @@ public class ObservableCardsModel implements CardsModel
         expandedCardsModel.clearSelection();
     }
 
+    public int getEnabledCardCount()
+    {
+        int totalEnabled = 0;
+        for (ProjectDataCard card : cardsList)
+        {
+            if (card.getIsDisabled() == false)
+            {
+                ++totalEnabled;
+            }
+        }
+        return totalEnabled;
+    }
+
+    public int getDisabledCardCount()
+    {
+        int totalEnabled = 0;
+        for (ProjectDataCard card : cardsList)
+        {
+            if (card.getIsDisabled() == true)
+            {
+                ++totalEnabled;
+            }
+        }
+        return totalEnabled;
+    }
+
     @Override
     public void deleteCard(ProjectDataCard card)
     {

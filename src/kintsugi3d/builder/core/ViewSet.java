@@ -618,12 +618,6 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     }
 
     @Override
-    public List<File> getEnabledImageFiles()
-    {
-        return viewSetDataCollection.getImageFiles();
-    }
-
-    @Override
     public ReadonlyNativeVectorBuffer getCameraPoseData()
     {
         // Store the poses in a uniform buffer
@@ -1411,13 +1405,6 @@ public final class ViewSet implements ReadonlyViewSet, ObservableViewSet
     {
         return this.viewSetDataCollection.getViewSetData().get(poseIndex).viewErrorMetric;
     }
-
-//    @Override
-//    public int getCameraPoseCount()
-//    {
-//        return this.getAllViewSetData().size();
-////        return this.viewSetDataCollection.getViewSetData().size();
-//    }
 
     @Override
     public int getCombinedCameraPoseCount()
