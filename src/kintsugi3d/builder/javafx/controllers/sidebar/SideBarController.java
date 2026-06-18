@@ -288,6 +288,11 @@ public class SideBarController
                 mainBox.setMinWidth(LOWER_BOUND);
                 mainBox.setMaxWidth(LOWER_BOUND);
             }
+            else if (newWidth > upperBound){
+                mainBox.setPrefWidth(upperBound);
+                mainBox.setMinWidth(upperBound);
+                mainBox.setMaxWidth(upperBound);
+            }
         }
     }
 
