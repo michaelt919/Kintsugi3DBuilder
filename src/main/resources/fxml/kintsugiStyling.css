@@ -528,14 +528,14 @@
     -fx-padding: 8px 16px 8px 16px;
     -fx-alignment: CENTER;
 }
-.card-button:hover{
+.button:hover{
     -fx-text-fill: #383838;
     -fx-background-color:
             #ffffff,
             #ffffff,
             #ffffff;
 }
-.card-button:pressed{
+.button:pressed{
     -fx-text-fill: #383838;
     -fx-background-color:
             #1A1A1A,
