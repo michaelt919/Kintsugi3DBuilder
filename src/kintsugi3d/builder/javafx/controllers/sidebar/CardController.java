@@ -101,6 +101,8 @@ public class CardController
             textContent.getChildren().add(caption);
 
             Tooltip tooltip = new Tooltip(caption.getText());
+            tooltip.setWrapText(true);
+            tooltip.setMaxWidth(500);
             Tooltip.install(caption, tooltip);
 
             VBox.setMargin(caption, new Insets(0, 0, 8, 4));
