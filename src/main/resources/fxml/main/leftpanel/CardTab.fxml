@@ -9,7 +9,22 @@
 <?import javafx.scene.control.Button?>
 <VBox fx:id="tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS">
+      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS" fillWidth="true">
+    <HBox maxWidth="1.7976931348623157E308"  alignment="CENTER_LEFT" style = "-fx-padding: 10px">
+        <padding>
+            <Insets top="20.0" right="0.0" bottom="0.0" left="20.0" />
+        </padding>
+        <Label fx:id = "locationLabel" textOverrun="CLIP" minWidth="-Infinity" text = "Location: " style = "-fx-font-weight: bold;" alignment="CENTER_LEFT"/>
+        <Label fx:id = "filePathLabel" text = "File Path"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="openFilePathButton" text="Open..." textOverrun="CLIP" minWidth="-Infinity" onAction="#openFilePath" style = "-fx-padding: 5px">
+            <HBox.margin>
+                <Insets right="10.0" />
+            </HBox.margin>
+        </Button>
+        <Button fx:id="copyFilePathButton" text="Copy" textOverrun="CLIP" minWidth="-Infinity" onAction="#copyFilePath" style = "-fx-padding: 5px">
+        </Button>
+    </HBox>
     <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="200.0" VBox.vgrow="NEVER" minWidth="0.0">
         <padding>
             <Insets left="16.0" right="16.0" top="8.0" />
@@ -28,13 +43,6 @@
         <VBox.margin>
             <Insets />
         </VBox.margin>
-        <Button fx:id="openFilePathButton" text="Open" textOverrun="CLIP" minWidth="-Infinity" onAction="#openFilePath" style = "-fx-padding: 5px">
-            <HBox.margin>
-                <Insets right="10.0" />
-            </HBox.margin>
-        </Button>
-
-        <Button fx:id="copyFilePathButton" text="Copy" textOverrun="CLIP" minWidth="-Infinity" onAction="#copyFilePath" style = "-fx-padding: 5px"/>
     </HBox>
     <HBox alignment="CENTER_LEFT" prefHeight="32" minWidth="0.0">
         <padding >

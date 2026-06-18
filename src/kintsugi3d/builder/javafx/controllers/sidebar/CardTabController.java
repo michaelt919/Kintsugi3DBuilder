@@ -20,16 +20,17 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.*;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -48,8 +49,11 @@ public class CardTabController
     @FXML private Label countLabel;
     @FXML private Button openFilePathButton;
     @FXML private Button copyFilePathButton;
+    @FXML private Label filePathLabel;
+    @FXML private Label locationLabel;
 
     private double scrollPosition = 0;
+    private String path;
 
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
@@ -75,12 +79,26 @@ public class CardTabController
             {
                 openFilePathButton.setVisible(false);
                 copyFilePathButton.setVisible(false);
+                filePathLabel.setVisible(false);
+                locationLabel.setVisible(false);
             }
         });
+        double totalPixelSpacing = 15.0;
+        double pixelSpacing = totalPixelSpacing / 2.0;
+        openFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
+        copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
+        filePathLabel.prefWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(pixelSpacing));
     }
 
     private void updateSummary() {
         countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
+        Platform.runLater(() ->{
+            findFilePath();
+            filePathLabel.setText(path);
+            Tooltip tooltip = new Tooltip(path);
+            tooltip.setShowDelay(Duration.millis(100));
+            filePathLabel.setTooltip(tooltip);
+        });
     }
 
     private CardController createDataCard(ProjectDataCard card)
@@ -242,7 +260,7 @@ public class CardTabController
      */
     public void openFilePath()
     {
-        String path = findFilePath();
+        findFilePath();
         try
         {
             if (path != null)
@@ -271,7 +289,7 @@ public class CardTabController
      */
     public void copyFilePath()
     {
-        String path = findFilePath();
+        findFilePath();
 
         if (path != null){
 
@@ -295,9 +313,9 @@ public class CardTabController
      * if photos tab is selected.
      * @return String path
      */
-    public String findFilePath()
+    public void findFilePath()
     {
-        String path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
+        path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
         String label = cardsModel.getModelLabel();
 
         if (label.equals("Photos"))
@@ -305,6 +323,5 @@ public class CardTabController
             path = Global.state().getInstanceModel().getViewSet().getFullResImageDirectory().getPath();
             path += "\\Processed";
         }
-        return path;
     }
 }
