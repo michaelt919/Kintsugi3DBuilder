@@ -93,6 +93,8 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
+
+        //makes mouse released action set to method mouseReleased
         mainBox.setOnMouseReleased(this::mouseReleased);
     }
 
@@ -246,12 +248,13 @@ public class SideBarController
         //decimal at end is percentage of screen it can be dragged to
         double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .50;
 
+        //will only preform actions after this method if the cursor is resize cursor
         if (!mainBox.getCursor().equals(Cursor.E_RESIZE))
         {
             return;
         }
 
-        if (minimized)
+        if (minimized) //if in minimized state
         {
             if (newWidth >= 23)
             {
@@ -271,7 +274,8 @@ public class SideBarController
                 mainBox.setMinWidth(23);
             }
         }
-        else{
+        else
+        {
             if (newWidth < (LOWER_BOUND/2.0))
             {
                 minimize();

@@ -43,15 +43,19 @@ public class CarouselController implements Initializable {
     private ScrollPane carouselScrollPane;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
+    public void initialize(URL location, ResourceBundle resources)
+    {
         // Creates a listener to detect if any elements are added or removed from array list
         Global.state().getCarouselModel().getCarouselShaders().addListener((ListChangeListener<UserShader>) change -> {
+
             //Once change happens, the while loop looks at what next change is
-            while (change.next()) {
+            while (change.next())
+            {
                 //If an element was added, loadCarouselCard is called with the additional shader
-                if (change.wasAdded()) {
-                    for (UserShader addedShader : change.getAddedSubList()) {
+                if (change.wasAdded())
+                {
+                    for (UserShader addedShader : change.getAddedSubList())
+                    {
                         // Dynamically load the FXML for every shader added to the model
                         loadCarouselCard(addedShader);
                     }
@@ -59,8 +63,10 @@ public class CarouselController implements Initializable {
                         carouselScrollPane.setHvalue(1.0);
                     });
                 //If an element was removed, we remove the element from the container
-                } else if (change.wasRemoved()) {
-                    for (UserShader removedShader : change.getRemoved()){
+                } else if (change.wasRemoved())
+                {
+                    for (UserShader removedShader : change.getRemoved())
+                    {
                         containerHBox.getChildren().removeIf(node -> {
                             return removedShader.equals(node.getUserData());
                         });
@@ -69,10 +75,16 @@ public class CarouselController implements Initializable {
             }
         });
     }
-    // This function is what loads the Carousel and its cards
-    private void loadCarouselCard(UserShader shader) {
-        try {
 
+    /**
+     * Takes in parameter shader and loads a CarouselCard assigned to that shader.
+     * Adds the card to the scrollpane through containerHbox.
+     * @param shader
+     */
+    private void loadCarouselCard(UserShader shader)
+    {
+        try
+        {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main/CarouselCard.fxml"));
             Node card = loader.load();
 
@@ -84,7 +96,8 @@ public class CarouselController implements Initializable {
             // Add the Carousel Cards to the layout through containerHBox
             containerHBox.getChildren().add(card);
 
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
     }

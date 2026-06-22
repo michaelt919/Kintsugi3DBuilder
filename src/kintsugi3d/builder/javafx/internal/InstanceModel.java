@@ -25,7 +25,8 @@ public class InstanceModel
      * @param currentInstance
      * @param currentViewSet
      */
-    public void setInstances(ProjectInstance<?> currentInstance, ViewSet currentViewSet){
+    public void setInstances(ProjectInstance<?> currentInstance, ViewSet currentViewSet)
+    {
         instance = currentInstance;
         viewSet = currentViewSet;
     }

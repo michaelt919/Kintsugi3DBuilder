@@ -39,20 +39,13 @@ public class TextureCardFactory implements ProjectDataCardFactory
     private final ProjectInstance<?> instance;
 
     private File textureImage = null;
-
-    //TextureCardFactory is the constructor for this class takes a ProjectInstance and
-    //assigns it to private variable in class
+    /**
+     * TextureCardFactory is the constructor for this class takes a ProjectInstance and
+     * assigns it to private variable in class
+     * @param instance
+     */
     public TextureCardFactory(ProjectInstance<?> instance) {this.instance = instance;}
 
-    /**
-    createCard will use ProjectDataCard to create cards for the shaders, needs both
-    the title of the shader and the file name. Returns ProjectDataCard of the shader
-    (single card). This is also where View Shader and Send to Carousel button and
-    code are located.
-     @param texture
-     @param details
-     @return
-    */
     private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, TextureDetails details)
     {
         //2. File name for the .pngs
@@ -77,6 +70,15 @@ public class TextureCardFactory implements ProjectDataCardFactory
         return createProjectDataCard(fileName, textureShader, "Weight Map " + weightmapIndex);
     }
 
+    /**
+     * finds the base directory for the textures and creates thumbnails from those images
+     * in the thumbnails folder. returns a project data card with a list of details,
+     * image, view texture button, and send to carousel button.
+     * @param fileName
+     * @param shader
+     * @param purpose
+     * @return projectDataCard
+     */
     private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose)
     {
         // Base Location where the .pngs and thumbnails folder are.
@@ -111,7 +113,8 @@ public class TextureCardFactory implements ProjectDataCardFactory
             // Default to icon if thumbnail isn't found
             thumbnailPath = MainApplication.ICON_PATH;
         }
-        try{
+        try
+        {
             IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
             String res = dimensions.x + "x" + dimensions.y;
 
@@ -137,11 +140,11 @@ public class TextureCardFactory implements ProjectDataCardFactory
     }
 
     /**
-    createAllCards will call createCard for all the textures and will
-    return them in a list. If the model is not processed there will be
-     no textures at all shown to the user.
-     @param cardsModel
-     @return
+     * createAllCards will call createCard for all the textures and will
+     * return them in a list. If the model is not processed there will be
+     * no textures at all shown to the user.
+     * @param cardsModel
+     * @return
      */
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)

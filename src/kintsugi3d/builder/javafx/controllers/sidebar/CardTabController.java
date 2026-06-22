@@ -25,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
@@ -51,6 +52,7 @@ public class CardTabController
     @FXML private Button copyFilePathButton;
     @FXML private Label filePathLabel;
     @FXML private Label locationLabel;
+    @FXML private HBox filePathHBox;
 
     private double scrollPosition = 0;
     private String path;
@@ -73,25 +75,40 @@ public class CardTabController
         createListeners();
         updateSummary();
 
+        /*
+        if it's the shaders tab will hide the filePathHBox
+        otherwise makes them visible
+         */
         Platform.runLater(() ->
         {
             if (cardsModel.getModelLabel().equals("Shaders"))
             {
-                openFilePathButton.setVisible(false);
-                copyFilePathButton.setVisible(false);
-                filePathLabel.setVisible(false);
-                locationLabel.setVisible(false);
+                filePathHBox.setVisible(false);
+                filePathHBox.setManaged(false);
+            }
+            else{
+                filePathHBox.setVisible(true);
+                filePathHBox.setManaged(true);
             }
         });
+        /*
+        creates double that has the total pixel space between middle of the window and
+        the end of the window that is NOT covered by the buttons. Using that information
+        it binds the width of the button with appropriate size.
+        */
         double totalPixelSpacing = 15.0;
         double pixelSpacing = totalPixelSpacing / 2.0;
+
         openFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
         copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
+
         filePathLabel.prefWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(pixelSpacing));
     }
 
     private void updateSummary() {
         countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
+
+        //sets filePathLabel with current path, also creates tooltip with the path
         Platform.runLater(() ->{
             findFilePath();
             filePathLabel.setText(path);

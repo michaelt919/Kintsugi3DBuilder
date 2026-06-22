@@ -337,10 +337,12 @@ public final class ProjectIO
             File selectedFile = fileChooser.showOpenDialog(parentWindow);
             if (selectedFile != null)
             {
+                //removes shaders from carouselModel
+                Global.state().getCarouselModel().clearCarousel();
+
                 //opens project and also updates the recently opened files list
                 openProjectFromFile(selectedFile);
             }
-            Global.state().getCarouselModel().clearCarousel();
         }
     }
 
@@ -348,8 +350,8 @@ public final class ProjectIO
     {
         if (confirmClose("Are you sure you want to open another project?"))
         {
-            openProjectFromFile(file);
             Global.state().getCarouselModel().clearCarousel();
+            openProjectFromFile(file);
         }
     }
 
