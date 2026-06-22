@@ -340,6 +340,7 @@ public final class ProjectIO
                 //opens project and also updates the recently opened files list
                 openProjectFromFile(selectedFile);
             }
+            Global.state().getCarouselModel().clearCarousel();
         }
     }
 
@@ -348,6 +349,7 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to open another project?"))
         {
             openProjectFromFile(file);
+            Global.state().getCarouselModel().clearCarousel();
         }
     }
 

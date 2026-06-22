@@ -48,4 +48,5 @@ public class CarouselModel {
             carouselShaders.add(shader);
         }
     }
+    public void clearCarousel() { carouselShaders.clear(); }
 }
