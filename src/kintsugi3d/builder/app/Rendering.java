@@ -500,8 +500,6 @@ public final class Rendering
                                     // (such as refocusing using a window other than the main window).
                                     waitForRenderingWork.wait(UNFOCUSED_TIMEOUT_MILLIS);
                                 }
-
-                                LOG.info("Wait ended");
                             }
                             catch (InterruptedException e)
                             {

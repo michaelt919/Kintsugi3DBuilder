@@ -274,7 +274,7 @@
 }
 
 .list-cell:odd,
-.table-row-cell: odd,
+.table-row-cell:odd,
 .tree-cell:odd {
     -fx-background-color: #202020;
 }
@@ -495,11 +495,21 @@
 
 /* Card Component */
 .card-background {
-    -fx-background-color: #CECECE
+    -fx-background-color:
+            #CECECE,
+            #CECECE,
+            #CECECE;
+    -fx-background-insets:
+            2,
+            4,
+            6;
 }
 
 .card-background:hover {
-    -fx-background-color: #EEEEEE
+    -fx-background-color:
+            #EEEEEE,
+            #EEEEEE,
+            #EEEEEE;
 }
 
 .card-background:disabled{
@@ -509,20 +519,59 @@
 .card-background:disabled:hover {
     -fx-background-color: #EEEEEE
 }
+/*.card-background:pressed {
+    -fx-background-color:
+            #CECECE,
+            #1A1A1A,
+            #CECECE;
+}*/
 
 .card-button {
-    -fx-background-color: #383838;
     -fx-text-fill: #CECECE;
     -fx-background-radius: 0;
     -fx-min-width: 184;
     -fx-pref-width: 330;
     -fx-min-height: 32;
-}
+    -fx-background-color:
+            #383838,
+            #383838,
+            #383838;
 
-.card-button:hover,
-.card-button:pressed {
+    -fx-background-insets:
+            1,
+            3,
+            5;
+    -fx-padding: 8px 16px 8px 16px;
+    -fx-alignment: CENTER;
+}
+.card-button:hover{
+    -fx-text-fill: #383838;
+    -fx-background-color:
+            #CECECE,
+            #CECECE,
+            #CECECE;
+}
+.card-button:pressed{
     -fx-background-color: #CECECE;
     -fx-text-fill: #383838;
+    /*-fx-background-color:
+            #ffffff,
+            #1A1A1A,
+            #ffffff;*/
+}
+/*This card-button.activated is for future "selected" use. See Card Controller for more*/
+.card-button.activated {
+    -fx-background-color:
+            #383838,
+            #1A1A1A,
+            #383838;
+}
+.card-button.activated:hover {
+    -fx-text-fill: #383838;
+    -fx-background-color:
+            #ffffff,
+            #1A1A1A,
+            #ffffff;
 }
 
 .card-separator .line {
