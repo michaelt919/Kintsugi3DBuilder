@@ -81,7 +81,7 @@ public class CardTabController
          */
         Platform.runLater(() ->
         {
-            if (cardsModel.getModelLabel().equals("Shaders"))
+            if ("Shaders".equals(cardsModel.getModelLabel()) || "Photos".equals(cardsModel.getModelLabel()))
             {
                 filePathHBox.setVisible(false);
                 filePathHBox.setManaged(false);
