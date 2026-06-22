@@ -113,12 +113,16 @@ public class TextureCardFactory implements ProjectDataCardFactory
             thumbnailPath = MainApplication.ICON_PATH;
         }
 
-        return new ShaderDataCard(shader, thumbnailPath, Map.of(), Map.of(
+        return new ShaderDataCard(shader, thumbnailPath, Map.of(), List.of(
+            Map.of(
             "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
-            "Send to Carousel", () ->
-            {
-                Global.state().getCarouselModel().addToCarousel(shader);
-            }));
+            "Send to Carousel", () -> Global.state().getCarouselModel().addToCarousel(shader)
+            ),
+            Map.of(
+                "Refresh Texture", () -> {},
+                "Replace Texture", () -> {}
+            )
+        ));
     }
 
     /**
