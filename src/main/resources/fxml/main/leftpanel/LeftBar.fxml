@@ -29,7 +29,7 @@
                 maxWidth="15"
                 minWidth="15"
                 style="-fx-padding: 0;"
-                onAction = "#minimizeSideBar"/>
+                onAction = "#toggleSideBar"/>
     </HBox>
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox fx:id="buttonBox" styleClass="tabButtonBox" prefHeight="31.0" prefWidth="462.0" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER">

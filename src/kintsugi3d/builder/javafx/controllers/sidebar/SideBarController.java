@@ -200,18 +200,18 @@ public class SideBarController
      * minimize button has a "+" it will set the mainBox size to 400 and will call
      * maximize
      */
-    public void minimizeSideBar()
+    public void toggleSideBar()
     {
-        if (minimizeButton.getText().equals("-"))
-        {
-            minimize();
-        }
-        else if (minimizeButton.getText().equals("+"))
+        if (minimized)
         {
             mainBox.setPrefWidth(494);
             mainBox.setMinWidth(400);
 
             maximize();
+        }
+        else
+        {
+            minimize();
         }
     }
 

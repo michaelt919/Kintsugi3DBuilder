@@ -15,7 +15,7 @@ import java.util.Map;
 
 public interface TabsModel
 {
-    void addTab(String tabName, ProjectDataCardFactory cardFactory);
+    void addTab(String tabName, ProjectDataCardFactory cardFactory, String path);
     void clearTabs();
     CardsModel getTab(String label);
     Map<String, ? extends CardsModel> getTabsMap();

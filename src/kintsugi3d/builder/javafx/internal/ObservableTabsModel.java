@@ -30,9 +30,9 @@ public class ObservableTabsModel implements TabsModel
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory)
+    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
     {
-        ObservableCardsModel newTab = new ObservableCardsModel(tabName);
+        ObservableCardsModel newTab = new ObservableCardsModel(tabName, path);
         List<ProjectDataCard> dataCards = cardFactory.createAllCards(newTab);
         newTab.setCardList(dataCards);
         tabs.put(tabName, newTab);

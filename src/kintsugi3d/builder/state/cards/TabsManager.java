@@ -15,7 +15,9 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.ViewSet;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TabsManager
@@ -25,16 +27,14 @@ public class TabsManager
     public static final String MATERIALS = "Materials";
     public static final String SHADERS = "Shaders";
 
-
-    private final Map<String, ProjectDataCardFactory> factories = new LinkedHashMap<>(4);
+    private final List<TabInfo> factories = new ArrayList<>();
 
     public TabsManager(ViewSet viewSet, ProjectInstance<?> instance)
     {
-        factories.put(PHOTOS, new CameraCardFactory(viewSet));
-        factories.put(TEXTURES, new TextureCardFactory(instance));
-        factories.put(MATERIALS, new MaterialCardFactory(instance));
-        factories.put(SHADERS, new ShaderCardFactory(instance));
-        Global.state().getInstanceModel().setInstances(instance,viewSet);
+        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(viewSet), null));
+        factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance), Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
+        factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance), Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
+        factories.add(new TabInfo(SHADERS, new ShaderCardFactory(instance), null));
     }
 
     public TabsManager(ProjectInstance<?> instance)
@@ -47,20 +47,21 @@ public class TabsManager
         TabsModel tabsModel = Global.state().getTabModels();
         tabsModel.clearTabs();
 
-        for (var entry : factories.entrySet())
+        for (var entry : factories)
         {
-            tabsModel.addTab(entry.getKey(), entry.getValue());
+            tabsModel.addTab(entry.getLabel(), entry.getFactory(), entry.getPath());
         }
     }
 
     public void refreshAllTabs()
     {
         TabsModel tabsModel = Global.state().getTabModels();
-
+        int index = 0;
         for (var tab : tabsModel.getTabsMap().entrySet())
         {
             CardsModel cardsModel = tab.getValue();
-            cardsModel.setCardList(factories.get(tab.getKey()).createAllCards(cardsModel));
+            cardsModel.setCardList(factories.get(index).getFactory().createAllCards(cardsModel));
+            index += 1;
         }
     }
 
@@ -69,6 +70,10 @@ public class TabsManager
         TabsModel tabsModel = Global.state().getTabModels();
 
         CardsModel cardsModel = tabsModel.getTab(tabName);
-        cardsModel.setCardList(factories.get(tabName).createAllCards(cardsModel));
+        for (var fac : factories){
+            if (fac.getLabel().equals(tabName)){
+                cardsModel.setCardList(fac.getFactory().createAllCards(cardsModel));
+            }
+        }
     }
 }

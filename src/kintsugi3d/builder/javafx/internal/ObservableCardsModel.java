@@ -28,15 +28,17 @@ import java.util.UUID;
 public class ObservableCardsModel implements CardsModel
 {
     private final String label;
+    private final String path;
 
     private final UUIDSelectionModel selectedCardsModel;
     private final UUIDSelectionModel expandedCardsModel;
     private final ObservableList<ProjectDataCard> cardsList;
     private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
 
-    public ObservableCardsModel(String label)
+    public ObservableCardsModel(String label, String path)
     {
         this.label = label;
+        this.path = path;
 
         cardsList = FXCollections.observableList(new ArrayList<>());
         unmodifiableCardsList = FXCollections.unmodifiableObservableList(cardsList);
@@ -61,6 +63,8 @@ public class ObservableCardsModel implements CardsModel
     {
         return label;
     }
+
+    public String getPath() {return path; }
 
     public boolean isSelected(UUID cardId)
     {

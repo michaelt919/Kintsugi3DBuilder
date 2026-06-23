@@ -76,19 +76,19 @@ public class CardTabController
         updateSummary();
 
         /*
-        if it's the shaders tab will hide the filePathHBox
-        otherwise makes them visible
+        if the tab was created with a null filepath
+        the file path buttons and locations will not show
          */
         Platform.runLater(() ->
         {
-            if ("Shaders".equals(cardsModel.getModelLabel()) || "Photos".equals(cardsModel.getModelLabel()))
+            if (cardsModel.getPath() != null)
             {
-                filePathHBox.setVisible(false);
-                filePathHBox.setManaged(false);
-            }
-            else{
                 filePathHBox.setVisible(true);
                 filePathHBox.setManaged(true);
+            }
+            else{
+                filePathHBox.setVisible(false);
+                filePathHBox.setManaged(false);
             }
         });
         /*
@@ -101,8 +101,7 @@ public class CardTabController
 
         openFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
         copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
-
-        filePathLabel.prefWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(pixelSpacing));
+        filePathLabel.prefWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.getWidth()-10));
     }
 
     private void updateSummary() {
@@ -326,19 +325,11 @@ public class CardTabController
     }
 
     /**
-     * Assigns file path to variable path using global project instance. Alternate path
-     * if photos tab is selected.
-     * @return String path
+     * Uses cardsModel to get the file path for that tab
+     * Does not return anything, assigns path with file path
      */
-    public void findFilePath()
+    private void findFilePath()
     {
-        path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
-        String label = cardsModel.getModelLabel();
-
-        if (label.equals("Photos"))
-        {
-            path = Global.state().getInstanceModel().getViewSet().getFullResImageDirectory().getPath();
-            path += "\\Processed";
-        }
+        path = cardsModel.getPath();
     }
 }
