@@ -98,9 +98,12 @@ public class CarouselCardController
         });
     }
 
+    /**
+     * Will select or deselect the shader cards checkbox if another cards checkbox is selected
+     * @param activeShader
+     */
     private void updateCheckboxState(UserShader activeShader)
     {
-        // Will select or deselect the shader cards checkbox if another cards checkbox is selected
         selectedCheckbox.setSelected(currentShader != null && currentShader.equals(activeShader));
     }
 

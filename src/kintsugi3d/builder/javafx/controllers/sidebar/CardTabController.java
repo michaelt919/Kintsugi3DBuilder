@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -19,14 +20,22 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.state.cards.ProjectDataCard;
+import kintsugi3d.builder.state.cards.*;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,8 +48,14 @@ public class CardTabController
     @FXML private VBox vbox;
     @FXML private ScrollPane scrollpane;
     @FXML private Label countLabel;
+    @FXML private Button openFilePathButton;
+    @FXML private Button copyFilePathButton;
+    @FXML private Label filePathLabel;
+    @FXML private Label locationLabel;
+    @FXML private HBox filePathHBox;
 
     private double scrollPosition = 0;
+    private String path;
 
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
@@ -59,10 +74,48 @@ public class CardTabController
         vbox.getChildren().addAll(displayCards);
         createListeners();
         updateSummary();
+
+        /*
+        if it's the shaders tab will hide the filePathHBox
+        otherwise makes them visible
+         */
+        Platform.runLater(() ->
+        {
+            if ("Shaders".equals(cardsModel.getModelLabel()) || "Photos".equals(cardsModel.getModelLabel()))
+            {
+                filePathHBox.setVisible(false);
+                filePathHBox.setManaged(false);
+            }
+            else{
+                filePathHBox.setVisible(true);
+                filePathHBox.setManaged(true);
+            }
+        });
+        /*
+        creates double that has the total pixel space between middle of the window and
+        the end of the window that is NOT covered by the buttons. Using that information
+        it binds the width of the button with appropriate size.
+        */
+        double totalPixelSpacing = 15.0;
+        double pixelSpacing = totalPixelSpacing / 2.0;
+
+        openFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
+        copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
+
+        filePathLabel.prefWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(pixelSpacing));
     }
 
     private void updateSummary() {
         countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
+
+        //sets filePathLabel with current path, also creates tooltip with the path
+        Platform.runLater(() ->{
+            findFilePath();
+            filePathLabel.setText(path);
+            Tooltip tooltip = new Tooltip(path);
+            tooltip.setShowDelay(Duration.millis(100));
+            filePathLabel.setTooltip(tooltip);
+        });
     }
 
     private CardController createDataCard(ProjectDataCard card)
@@ -215,6 +268,77 @@ public class CardTabController
             Bounds cardY = vbox.getChildren().get(i).getBoundsInParent();
             boolean inScrollRange = cardY.getMinY() < scrollPointer + viewportHeight && cardY.getMaxY() > scrollPointer - viewportHeight;
             searchList.get(i).setCardVisibility(inScrollRange);
+        }
+    }
+
+    /**
+     * When Open file path button is called, this method is activated and will open file
+     * explorer with the path for that particular tab.
+     */
+    public void openFilePath()
+    {
+        findFilePath();
+        try
+        {
+            if (path != null)
+            {
+                File folder = new File(path);
+
+                if (folder.exists())
+                {
+                    Desktop.getDesktop().open(folder);
+                }
+                else
+                {
+                    System.err.println("The folder does not exist.");
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Similar to openFilePath, but instead of opening file explorer it
+     * copies path to clipboard
+     */
+    public void copyFilePath()
+    {
+        findFilePath();
+
+        if (path != null){
+
+            File folder = new File(path);
+
+            if (folder.exists())
+            {
+                StringSelection stringSelection = new StringSelection(path);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            else
+            {
+                System.err.println("The folder does not exist.");
+            }
+        }
+    }
+
+    /**
+     * Assigns file path to variable path using global project instance. Alternate path
+     * if photos tab is selected.
+     * @return String path
+     */
+    public void findFilePath()
+    {
+        path = Global.state().getInstanceModel().getProjectInstance().getActiveViewSet().getSupportingFilesDirectory().toString();
+        String label = cardsModel.getModelLabel();
+
+        if (label.equals("Photos"))
+        {
+            path = Global.state().getInstanceModel().getViewSet().getFullResImageDirectory().getPath();
+            path += "\\Processed";
         }
     }
 }

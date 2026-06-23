@@ -22,21 +22,30 @@ And another to add a shader to the carousel list.
 public class CarouselModel {
     private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
 
-    public ObservableList<UserShader> getCarouselShaders() {
+    /**
+     * returns the list of shaders currently held in global carousel model.
+     * @return
+     */
+    public ObservableList<UserShader> getCarouselShaders()
+    {
         return carouselShaders;
     }
-
-    public void addShader(UserShader shader) {
-        this.carouselShaders.add(shader);
-    }
-    public void addToCarousel(UserShader shader){
-
+    /**
+     * Looks through the existing shaders if the parameter shader is already
+     * in carousel it will not add the shader. If it is not it will add
+     * shader to carouselShaders list.
+     * @param shader
+     */
+    public void addToCarousel(UserShader shader)
+    {
         boolean alreadyInCarousel = false;
 
         //For loop looks through List for any that match the shader
         //that is trying to be sent to carousel
-        for (UserShader element : carouselShaders){
-            if (shader.equals(element)){
+        for (UserShader element : carouselShaders)
+        {
+            if (shader.equals(element))
+            {
                 //if one matches:
                 alreadyInCarousel = true;
             }
@@ -44,8 +53,14 @@ public class CarouselModel {
 
         //Prevents duplicate shaders in carousel / if the shaders don't match
         //then shader is sent to carousel
-        if (!alreadyInCarousel){
+        if (!alreadyInCarousel)
+        {
             carouselShaders.add(shader);
         }
     }
+
+    /**
+     * Clears all the shaders in carouselShaders list.
+     */
+    public void clearCarousel() { carouselShaders.clear(); }
 }
