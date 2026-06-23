@@ -50,7 +50,7 @@ public class ViewSetData {
      */
     public final File imageFile;
 
-    public final int viewIndex;
+    public int viewIndex;
 
     public File maskFile;
 

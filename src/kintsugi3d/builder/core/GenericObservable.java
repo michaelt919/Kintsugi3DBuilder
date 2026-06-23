@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.core;
 
-public interface ViewSetObserver {
-    void update();
+public interface GenericObservable
+{
+    void registerObserver(GenericObserver observer);
+    void removeObserver(GenericObserver observer);
+    void notifyObservers();
 }

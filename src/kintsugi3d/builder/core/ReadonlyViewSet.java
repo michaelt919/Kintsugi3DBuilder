@@ -58,6 +58,20 @@ public interface ReadonlyViewSet
     Matrix4 getCameraPose(int poseIndex);
 
     /**
+     * Gets the camera pose defining the transformation from object space to camera space for a particular disabled view.
+     * @param poseIndex The index of the camera pose to retrieve.
+     * @return The camera pose as a 4x4 affine transformation matrix.
+     */
+    Matrix4 getDisabledCameraPose(int poseIndex);
+
+    /**
+     * Gets the camera pose defining the transformation from object space to camera space for a particular enabled view.
+     * @param poseIndex The index of the camera pose to retrieve.
+     * @return The camera pose as a 4x4 affine transformation matrix.
+     */
+    Matrix4 getEnabledCameraPose(int poseIndex);
+
+    /**
      * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
      * @param poseIndex The index of the camera pose to retrieve.
      * @return The inverse camera pose as a 4x4 affine transformation matrix.

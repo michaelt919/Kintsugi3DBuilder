@@ -33,6 +33,40 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         return INSTANCE;
     }
 
+    public void writeMatrixHelper(int index, ReadonlyViewSet viewSet, PrintStream out, boolean isEnabled)
+    {
+        Matrix4 pose;
+        if (isEnabled)
+        {
+            pose = viewSet.getEnabledCameraPose(index);
+        }
+        else
+        {
+            pose = viewSet.getDisabledCameraPose(index);
+        }
+
+        // TODO validate quaternion computation
+//            Matrix3 rot = new Matrix3(pose);
+//            if (rot.determinant() == 1.0f)
+//            {
+//                // No scale - use quaternion
+//                Vector4 quat = rot.toQuaternion();
+//                Vector4 loc = pose.getColumn(3);
+//                out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
+//                            loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
+//            }
+//            else
+        //{
+        // Write a general 4x4 matrix
+        out.printf("P" + "\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+            pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
+            pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
+            pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
+            pose.get(3, 0), pose.get(3, 1), pose.get(3, 2), pose.get(3, 3));
+        //}
+        out.println();
+    }
+
     private ViewSetWriterToVSET()
     {
     }
@@ -189,31 +223,13 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.printf("# %d%s%n", viewSet.getCombinedCameraPoseCount(), viewSet.getCombinedCameraPoseCount() == 1 ? " Camera" : " Cameras");
-        for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
+        for (int i = 0; i < viewSet.getEnabledCameraPoseCount(); i++)
         {
-            Matrix4 pose = viewSet.getCameraPose(i);
-
-            // TODO validate quaternion computation
-//            Matrix3 rot = new Matrix3(pose);
-//            if (rot.determinant() == 1.0f)
-//            {
-//                // No scale - use quaternion
-//                Vector4 quat = rot.toQuaternion();
-//                Vector4 loc = pose.getColumn(3);
-//                out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
-//                            loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
-//            }
-//            else
-            //{
-            // Write a general 4x4 matrix
-            String label = (viewSet.getIsDisabled(i)) ? "Pd" : "P";
-            out.printf(label + "\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
-                pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
-                pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
-                pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
-                pose.get(3, 0), pose.get(3, 1), pose.get(3, 2), pose.get(3, 3));
-            //}
-            out.println();
+            writeMatrixHelper(i, viewSet, out, true);
+        }
+        for (int i = 0; i < viewSet.getDisabledCameraPoseCount(); i++)
+        {
+            writeMatrixHelper(i, viewSet, out, false);
         }
 
         if (viewSet.getLightCount() > 0)
@@ -253,7 +269,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         for (int id = 0; id < viewSet.getDisabledCameraPoseCount(); id++)
         {
-            out.printf("vd\t%d\t%d\t%d\t%s", id, viewSet.getDisabledCameraProjectionIndex(id), viewSet.getDisabledLightIndex(id), viewSet.getDisabledImageFile(id));
+            out.printf("vd\t%d\t%d\t%d\t%s", viewSet.getEnabledCameraPoseCount() + id, viewSet.getDisabledCameraProjectionIndex(id), viewSet.getDisabledLightIndex(id), viewSet.getDisabledImageFile(id));
             out.println();
         }
 

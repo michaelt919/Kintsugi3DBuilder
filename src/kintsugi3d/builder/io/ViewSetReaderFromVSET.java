@@ -84,7 +84,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             scanner.useLocale(Locale.ROOT);
             
             List<Matrix4> unorderedCameraPoseList = new ArrayList<>(128);
-            List<Matrix4> disabledUnorderedCameraPoseList = new ArrayList<>(128);
 
             while (scanner.hasNext())
             {
@@ -185,7 +184,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         break;
                     }
                     case "P":
-                    case "Pd":
                     {
                         // Pose from matrix
                         Matrix4 newPose = Matrix4.fromRows(
@@ -194,12 +192,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
                             new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
 
-                       if (id.equals("P"))
-                       {
-                           unorderedCameraPoseList.add(newPose);
-                           break;
-                       }
-                       disabledUnorderedCameraPoseList.add(newPose);
+                       unorderedCameraPoseList.add(newPose);
                        break;
                     }
                     case "d": // Legacy format; generally used with synthetic data
@@ -318,15 +311,12 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         if (id.equals("vd"))
                         {
                             // commit as disabled
-                            if (disabledUnorderedCameraPoseList.size() != 0)
-                            {
-                                builder.setCurrentCameraPose(disabledUnorderedCameraPoseList.get(poseId))
-                                    .setCurrentCameraProjectionIndex(projectionId)
-                                    .setCurrentLightIndex(lightId)
-                                    .setCurrentImageFile(new File(imgFilename))
-                                    .commitCurrentCameraPoseAsDisabled();
-                                break;
-                            }
+                            builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
+                                .setCurrentCameraProjectionIndex(projectionId)
+                                .setCurrentLightIndex(lightId)
+                                .setCurrentImageFile(new File(imgFilename))
+                                .commitCurrentCameraPoseAsDisabled();
+                            break;
                         }
                         builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                             .setCurrentCameraProjectionIndex(projectionId)

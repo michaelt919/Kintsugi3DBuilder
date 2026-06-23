@@ -14,7 +14,6 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.core.ViewSetObserver;
 import kintsugi3d.builder.fit.SpecularFitFinal;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
