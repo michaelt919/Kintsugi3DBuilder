@@ -9,7 +9,7 @@
 <?import javafx.scene.control.Button?>
 <VBox fx:id="mainBox" styleClass="sidebar-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.SideBarController" onMouseMoved="#mouseMoved" onMouseDragged="#mouseDragged" onMouseReleased="#mouseReleased">
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-    <HBox fx:id = "workspaceBox" alignment="TOP_RIGHT" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
+    <HBox fx:id = "workspaceBox" alignment="TOP_RIGHT" prefHeight="23.0" maxHeight="23" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
             <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>

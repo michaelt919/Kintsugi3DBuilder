@@ -19,11 +19,9 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.state.scene.UserShader;
 import javafx.collections.ListChangeListener;
@@ -47,6 +45,8 @@ public class CarouselController implements Initializable {
     @FXML private Button minimizeButton;
     @FXML private Region resizeHandle;
     @FXML private HBox buttonBox;
+    @FXML private Separator minimizeSeparator;
+    @FXML private VBox minimizeBar;
 
     private double dragStartY;
     private double initialHeight;
@@ -164,14 +164,21 @@ public class CarouselController implements Initializable {
             {
                 updateHeight(newHeight);
 
+                buttonBox.setMinHeight(newHeight);
+                buttonBox.setMaxHeight(newHeight);
+
                 if (newHeight >= (LOWER_BOUND / 2.0))
                 {
+                    buttonBox.setMinHeight(23);
+                    buttonBox.setMaxHeight(23);
                     maximize();
                 }
             }
             else
             {
                 updateHeight(23);
+                buttonBox.setMinHeight(23);
+                buttonBox.setMaxHeight(23);
             }
         }
         else
@@ -215,6 +222,8 @@ public class CarouselController implements Initializable {
         {
             updateHeight(23);
         }
+        buttonBox.setMinHeight(23);
+        buttonBox.setMaxHeight(23);
     }
 
     /**
@@ -227,11 +236,8 @@ public class CarouselController implements Initializable {
 
         containerHBox.setVisible(false);
 
-        buttonBox.setManaged(true);
-        buttonBox.setVisible(true);
-
-        minimizeButton.setManaged(true);
-        minimizeButton.setVisible(true);
+        minimizeBar.setVisible(true);
+        minimizeBar.setManaged(true);
 
         minimized = true;
     }
@@ -244,11 +250,8 @@ public class CarouselController implements Initializable {
 
         containerHBox.setVisible(true);
 
-        buttonBox.setManaged(false);
-        buttonBox.setVisible(false);
-
-        minimizeButton.setManaged(false);
-        minimizeButton.setVisible(false);
+        minimizeBar.setVisible(false);
+        minimizeBar.setManaged(false);
 
         minimized = false;
     }

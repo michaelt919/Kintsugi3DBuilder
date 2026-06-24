@@ -51,29 +51,27 @@
                 </HBox>
             </content>
         </ScrollPane>
-        <HBox   AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0"
-                fx:id = "buttonBox"
-                managed = "false"
-                visible= "false"
-                minHeight="23"
-                maxHeight="23"
-                style  = "-fx-background-color: #3C3C3C;"
-                alignment="BOTTOM_CENTER">
-            <Button
-                    fx:id = "minimizeButton"
-                    alignment="CENTER"
-                    text = "︾︾︾"
-                    maxHeight="20"
-                    minHeight="20"
-                    maxWidth="50"
-                    minWidth="30"
-                    style="-fx-padding: 2; -fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #636363; -fx-border-width: 2px;"
-                    managed = "false"
-                    visible= "false"
-                    onAction = "#toggleTopBar"/>
-        </HBox>
+        <VBox fx:id ="minimizeBar" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" managed="false" visible="false">
+            <Separator fx:id = "minimizeSeparator" styleClass="black-line" stylesheets="@../kintsugiStyling.css" />
+            <HBox   fx:id = "buttonBox"
+                    minHeight="23"
+                    maxHeight="23"
+                    style  = "-fx-background-color: #383838;"
+                    alignment="BOTTOM_CENTER">
+                <Button
+                        fx:id = "minimizeButton"
+                        alignment="CENTER"
+                        text = "︾︾︾"
+                        maxHeight="20"
+                        minHeight="20"
+                        maxWidth="50"
+                        minWidth="30"
+                        style="-fx-padding: 2; -fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #636363; -fx-border-width: 2px;"
+                        onAction = "#toggleTopBar"/>
+            </HBox>
+        </VBox>
         <Region fx:id="resizeHandle"
-                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                AnchorPane.bottomAnchor="-5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
                 prefHeight="8.0" minHeight="8.0" maxHeight="8.0"
                 style="-fx-cursor: s-resize; -fx-background-color: transparent;"
                 onMousePressed="#mousePressed"

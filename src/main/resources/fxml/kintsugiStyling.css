@@ -698,3 +698,12 @@
 .tree-view {
     -fx-background-color: #383838;
 }
+.black-line {
+    -fx-background-color: black;
+}
+.black-line .line {
+    -fx-border-color: #000000;
+    -fx-border-style: solid;
+    -fx-border-width: 1px;
+    -fx-background-color: #000000;
+}
