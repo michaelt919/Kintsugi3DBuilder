@@ -101,7 +101,7 @@ public class CardTabController
 
         openFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
         copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
-        filePathLabel.prefWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.getWidth()-10));
+        filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
     }
 
     private void updateSummary() {

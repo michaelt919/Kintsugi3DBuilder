@@ -93,9 +93,8 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
-
-        //makes mouse released action set to method mouseReleased
-        mainBox.setOnMouseReleased(this::mouseReleased);
+        mainBox.setPrefWidth(400);
+        mainBox.setMaxWidth(400);
     }
 
     private void removeTab(String key)
@@ -244,7 +243,7 @@ public class SideBarController
     public void mouseDragged(MouseEvent event)
     {
         double newWidth = event.getX();
-
+        System.out.println(newWidth);
         //decimal at end is percentage of screen it can be dragged to
         double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .50;
 
@@ -258,9 +257,7 @@ public class SideBarController
         {
             if (newWidth >= 23)
             {
-                mainBox.setPrefWidth(newWidth);
-                mainBox.setMinWidth(newWidth);
-                mainBox.setMinWidth(newWidth);
+                resizeWidth(newWidth);
 
                 if (newWidth >= (LOWER_BOUND/2.0))
                 {
@@ -269,9 +266,7 @@ public class SideBarController
             }
             else
             {
-                mainBox.setPrefWidth(23);
-                mainBox.setMinWidth(23);
-                mainBox.setMinWidth(23);
+                resizeWidth(23);
             }
         }
         else
@@ -282,20 +277,14 @@ public class SideBarController
             }
             else if ((newWidth >= LOWER_BOUND) && (newWidth <= upperBound))
             {
-                mainBox.setPrefWidth(newWidth);
-                mainBox.setMinWidth(newWidth);
-                mainBox.setMaxWidth(newWidth);
+                resizeWidth(newWidth);
             }
             else if (newWidth < LOWER_BOUND)
             {
-                mainBox.setPrefWidth(LOWER_BOUND);
-                mainBox.setMinWidth(LOWER_BOUND);
-                mainBox.setMaxWidth(LOWER_BOUND);
+                resizeWidth(LOWER_BOUND);
             }
             else if (newWidth > upperBound){
-                mainBox.setPrefWidth(upperBound);
-                mainBox.setMinWidth(upperBound);
-                mainBox.setMaxWidth(upperBound);
+                resizeWidth(upperBound);
             }
         }
     }
@@ -310,9 +299,7 @@ public class SideBarController
     {
         if (minimized)
         {
-            mainBox.setPrefWidth(23);
-            mainBox.setMinWidth(23);
-            mainBox.setMaxWidth(23);
+            resizeWidth(23);
         }
     }
 
@@ -357,9 +344,7 @@ public class SideBarController
      */
     private void minimize()
     {
-        mainBox.setPrefWidth(23);
-        mainBox.setMinWidth(23);
-        mainBox.setMaxWidth(23);
+        resizeWidth(23);
 
         buttonBox.setVisible(false);
         workspaceLabel.setVisible(false);
@@ -397,6 +382,16 @@ public class SideBarController
         minimizeButton.setTranslateX(0);
         minimizeButton.setText("-");
         minimized = false;
+    }
+
+    /**
+     * Used to condense code. Resizes mainBox according to parameter width.
+     * @param width
+     */
+    private void resizeWidth(double width){
+        mainBox.setPrefWidth(width);
+        mainBox.setMinWidth(width);
+        mainBox.setMaxWidth(width);
     }
     public void refreshTabs()
     {
