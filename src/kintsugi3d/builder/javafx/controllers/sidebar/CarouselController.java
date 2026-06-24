@@ -15,17 +15,22 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.state.cards.ShaderCardFactory;
 import kintsugi3d.builder.state.scene.UserShader;
 import javafx.collections.ListChangeListener;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 /*
 This is the controller for the carousel has two main methods. Initialize which is called immediately
@@ -36,11 +41,18 @@ carousel cards.
  */
 public class CarouselController implements Initializable {
 
-    @FXML
-    private HBox containerHBox;
+    @FXML private HBox containerHBox;
+    @FXML private ScrollPane carouselScrollPane;
+    @FXML private AnchorPane mainBox;
+    @FXML private Button minimizeButton;
+    @FXML private Region resizeHandle;
+    @FXML private HBox buttonBox;
 
-    @FXML
-    private ScrollPane carouselScrollPane;
+    private double dragStartY;
+    private double initialHeight;
+    private static final double RESIZE_HEIGHT = 5.0;
+    private static final int LOWER_BOUND = 180;
+    private boolean minimized = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -78,7 +90,8 @@ public class CarouselController implements Initializable {
 
     /**
      * Takes in parameter shader and loads a CarouselCard assigned to that shader.
-     * Adds the card to the scrollpane through containerHbox.
+     * Adds the card to the scrollpane through containerHbox. Handles the listener
+     * to detect when mainBox size changes and changes the cards height accordingly
      * @param shader
      */
     private void loadCarouselCard(UserShader shader)
@@ -86,19 +99,174 @@ public class CarouselController implements Initializable {
         try
         {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main/CarouselCard.fxml"));
-            Node card = loader.load();
+            Region card = loader.load();
 
             card.setUserData(shader);
-            // Shader data is passed to CarouselCard through initData(shader)
+
             CarouselCardController cardController = loader.getController();
             cardController.initData(shader);
 
-            // Add the Carousel Cards to the layout through containerHBox
+            HBox.setHgrow(card, Priority.ALWAYS);
+            double aspectRatio = 210.0 / 160.0;
+
+            mainBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+                double width = newHeight.doubleValue() * aspectRatio;
+                card.setPrefWidth(width);
+                card.setMaxWidth(width);
+                card.setMinWidth(width);
+            });
+
+            double startWidth = mainBox.getHeight() * aspectRatio;
+            card.setPrefWidth(startWidth);
+            card.setMaxWidth(startWidth);
+            card.setMinWidth(startWidth);
+
             containerHBox.getChildren().add(card);
 
         } catch (IOException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Gets information needed to calculate offset
+     * @param event
+     */
+    @FXML
+    public void mousePressed(MouseEvent event) {
+        dragStartY = event.getSceneY();
+        initialHeight = mainBox.getHeight();
+    }
+    /**
+     * If the mouse is dragged it first gets the new mouse position, then it finds
+     * the upper bound. Next it resizes the tab accordingly: If the box is minimized
+     * it will snap back to minimized state if the drag is not far enough. Otherwise,
+     * if it's dragged to make it bigger, once it is big enough it will call maximize.
+     * If it's maximized and dragged small enough it will go into minimized state.
+     * @param event
+     */
+    @FXML
+    public void mouseDragged(MouseEvent event)
+    {
+        if ((resizeHandle.getCursor() == null) || !resizeHandle.getCursor().equals(Cursor.S_RESIZE))
+        {
+            return;
+        }
+
+        double difference = event.getSceneY() - dragStartY;
+        double newHeight = initialHeight + difference;
+        double upperBound = mainBox.getParent().getScene().getWindow().getHeight() * .50;
+
+        if (minimized)
+        {
+            if (newHeight >= 23)
+            {
+                updateHeight(newHeight);
+
+                if (newHeight >= (LOWER_BOUND / 2.0))
+                {
+                    maximize();
+                }
+            }
+            else
+            {
+                updateHeight(23);
+            }
+        }
+        else
+        {
+            if (newHeight < (LOWER_BOUND/2.0))
+            {
+                minimize();
+            }
+            else if ((newHeight >= LOWER_BOUND) && (newHeight <= upperBound))
+            {
+                updateHeight(newHeight);
+            }
+            else if (newHeight < LOWER_BOUND)
+            {
+                updateHeight(LOWER_BOUND);
+            }
+            else if (newHeight > upperBound){
+                updateHeight(upperBound);
+            }
+        }
+    }
+
+    /**
+     * Used to clear code up, updates all of mainBox height settings to parameter height
+     * @param height
+     */
+    private void updateHeight(double height){
+        mainBox.setPrefHeight(height);
+        mainBox.setMinHeight(height);
+        mainBox.setMaxHeight(height);
+    }
+
+    /**
+     * Detects if the release is not past the threshold to call maximize. Will resize bar back to 23
+     * @param event
+     */
+    @FXML
+    public void mouseReleased(MouseEvent event)
+    {
+        if (minimized)
+        {
+            updateHeight(23);
+        }
+    }
+
+    /**
+     * Un-hides button and the minimize bar while Hiding the cards. Sets minimized to true and updates
+     * mainBox height to 23.
+     */
+    private void minimize()
+    {
+        updateHeight(23);
+
+        containerHBox.setVisible(false);
+
+        buttonBox.setManaged(true);
+        buttonBox.setVisible(true);
+
+        minimizeButton.setManaged(true);
+        minimizeButton.setVisible(true);
+
+        minimized = true;
+    }
+
+    /**
+     * Hides button and the minimize bar while un-hiding the cards. Sets minimized to false.
+     */
+    private void maximize()
+    {
+
+        containerHBox.setVisible(true);
+
+        buttonBox.setManaged(false);
+        buttonBox.setVisible(false);
+
+        minimizeButton.setManaged(false);
+        minimizeButton.setVisible(false);
+
+        minimized = false;
+    }
+
+    /**
+     * When button is pressed toggleTopBar is triggered. For now button is only available when
+     * minimized. It will update cardHeight to 180 and calls maximize().
+     */
+    public void toggleTopBar()
+    {
+        if (minimized)
+        {
+            updateHeight(180);
+            maximize();
+        }
+        else
+        {
+            minimize();
         }
     }
 }

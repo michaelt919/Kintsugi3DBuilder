@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -26,8 +27,8 @@ import kintsugi3d.gl.javafx.FramebufferView;
  */
 public class CarouselCardController
 {
-    private static final int CARD_WIDTH = 160;
-    private static final int CARD_HEIGHT = 210;
+    private int cardWidth = 210;
+    private int cardHeight = 160;
 
     @FXML private FramebufferView framebufferView;
 
@@ -94,7 +95,7 @@ public class CarouselCardController
         {
             // Set up the rendering backend for the card.
             Global.state().getCanvasListModel().createCanvas(shader,
-                CARD_WIDTH, CARD_HEIGHT, framebufferView::setCanvas);
+                cardWidth, cardHeight, framebufferView::setCanvas);
         });
     }
 

@@ -16,27 +16,65 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<AnchorPane prefHeight="200.0" prefWidth="1000" style="-fx-background-color: transparent;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
+<AnchorPane fx:id = "mainBox"
+            pickOnBounds="true"
+            stylesheets="@../kintsugiStyling.css"
+            style="-fx-background-color: transparent;"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
     <children>
         <ScrollPane AnchorPane.bottomAnchor="0.0"
                     AnchorPane.leftAnchor="0.0"
+                    scaleY = "-1.0"
                     AnchorPane.rightAnchor="0.0"
                     AnchorPane.topAnchor="0.0"
                     fitToHeight="true"
+                    vbarPolicy="NEVER"
                     style="-fx-background-color: transparent;"
-                    scaleY="-1.0"
                     fx:id = "carouselScrollPane">
             <content>
                 <HBox fx:id="containerHBox"
-                      scaleY="-1.0"
+                      scaleY = "-1.0"
                       spacing="10.0"
                       alignment="CENTER_LEFT"
+                      fillHeight="true"
+                      prefHeight = "160"
+                      prefWidth = "210"
                       style="-fx-background-color: transparent;">
                     <padding>
-                        <Insets top="0.0" right="15.0" bottom="15.0" left="15.0" />
+                        <Insets top="0.0" right="15.0" bottom="0.0" left="15.0" />
                     </padding>
                 </HBox>
             </content>
         </ScrollPane>
+        <HBox   AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0"
+                fx:id = "buttonBox"
+                managed = "false"
+                visible= "false"
+                minHeight="23"
+                maxHeight="23"
+                style  = "-fx-background-color: #3C3C3C;"
+                alignment="BOTTOM_CENTER">
+            <Button
+                    fx:id = "minimizeButton"
+                    alignment="CENTER"
+                    text = "︾︾︾"
+                    maxHeight="20"
+                    minHeight="20"
+                    maxWidth="50"
+                    minWidth="30"
+                    style="-fx-padding: 2; -fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #636363; -fx-border-width: 2px;"
+                    managed = "false"
+                    visible= "false"
+                    onAction = "#toggleTopBar"/>
+        </HBox>
+        <Region fx:id="resizeHandle"
+                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                prefHeight="8.0" minHeight="8.0" maxHeight="8.0"
+                style="-fx-cursor: s-resize; -fx-background-color: transparent;"
+                onMousePressed="#mousePressed"
+                onMouseDragged="#mouseDragged"
+                onMouseReleased="#mouseReleased"/>
     </children>
 </AnchorPane>
