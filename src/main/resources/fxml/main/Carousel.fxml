@@ -22,6 +22,9 @@
             style="-fx-background-color: transparent;"
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
+            maxHeight="180"
+            minHeight="180"
+            prefHeight="180"
             fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
     <children>
         <ScrollPane AnchorPane.bottomAnchor="0.0"
