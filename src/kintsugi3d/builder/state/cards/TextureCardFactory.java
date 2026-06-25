@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.state.cards;
 
+import javafx.application.Platform;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
@@ -36,6 +38,8 @@ public class TextureCardFactory implements ProjectDataCardFactory
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureCardFactory.class);
 
+    CardsModel lastUsedCardsModel;
+
     private final ProjectInstance<?> instance;
 
     private File textureImage = null;
@@ -54,7 +58,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(details.friendlyName, "rendermodes/viewTextureSimple.frag",
             Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", details.name))));
 
-        return createProjectDataCard(fileName, textureShader, details.purpose);
+        return createProjectDataCard(fileName, textureShader, details.purpose, details);
     }
 
     private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
@@ -67,7 +71,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, textureShader, "Weight Map " + weightmapIndex);
+        return createProjectDataCard(fileName, textureShader, "Weight Map " + weightmapIndex, null);
     }
 
     /**
@@ -79,7 +83,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
      * @param purpose
      * @return projectDataCard
      */
-    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose)
+    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose, TextureDetails key)
     {
         // Base Location where the .pngs and thumbnails folder are.
         File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
@@ -133,8 +137,11 @@ public class TextureCardFactory implements ProjectDataCardFactory
                     Global.state().getCarouselModel().addToCarousel(shader);
                 }),
                 Map.of(
-                    "Refresh Texture", () -> {},
-                    "Replace Texture", () -> {}
+                    "Refresh Texture", () -> refreshTexture(key),
+                    "Replace Texture", () -> Platform.runLater(() ->
+                    {
+                        replaceTexture(key);
+                    })
                 )));
         }
         catch (IOException|RuntimeException e)
@@ -154,6 +161,8 @@ public class TextureCardFactory implements ProjectDataCardFactory
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
+        lastUsedCardsModel = cardsModel;
+
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
         if (instance.getResources() != null)
         {
@@ -181,5 +190,27 @@ public class TextureCardFactory implements ProjectDataCardFactory
         }
         // If not yet initialized, return empty list.
         return textureCards;
+    }
+
+    private void refreshTexture(TextureDetails key)
+    {
+
+        if (key != null)
+        {
+            if (instance.getResources() != null)
+            {
+                TextureResources<?> resources = instance.getResources().getTextureResources();
+
+                if (resources.getTextures() != null)
+                {
+                    resources.refreshTexture(key, instance.getActiveViewSet());
+                    lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel));
+                }
+            }
+        }
+    }
+
+    private void replaceTexture(TextureDetails key)
+    {
     }
 }

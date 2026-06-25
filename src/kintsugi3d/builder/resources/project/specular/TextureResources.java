@@ -11,11 +11,16 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.state.cards.TextureCardFactory;
 import kintsugi3d.gl.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +32,8 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<TextureResources<ContextType>>
 {
     int WEIGHTS_PER_PACKED_CHANNEL = 4;
+
+    Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
     Map<TextureDetails, Texture2D<ContextType>> getTextures();
 
@@ -467,4 +474,31 @@ public interface TextureResources<ContextType extends Context<ContextType>>
       * @param materialIndex
      */
     void deleteBasisMaterial(int materialIndex);
+
+
+    /**
+     * Refreshes a texture specified by key using the default location for the given texture.
+     * @param key The TextureDetails used to choose which texture to refresh.
+     * @param viewSet
+     * @throws IOException
+     */
+    default void refreshTexture(TextureDetails key, ViewSet viewSet)
+    {
+        Rendering.runLater(() ->
+        {
+            Texture2D newTexture = null;
+            try
+            {
+                newTexture = loadTexture(key.name, viewSet.getSupportingFilesDirectory());
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error refreshing card", e);
+            }
+            if (newTexture != null)
+            {
+                getTextures().replace(key, newTexture);
+            }
+        });
+    }
 }
