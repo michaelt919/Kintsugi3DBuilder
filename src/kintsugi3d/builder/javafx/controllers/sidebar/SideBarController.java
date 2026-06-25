@@ -15,6 +15,7 @@ import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.Cursor;
@@ -36,6 +37,7 @@ public class SideBarController
     @FXML private Button minimizeButton;
     @FXML private Label workspaceLabel;
     @FXML private HBox workspaceBox;
+    @FXML private Insets inseters;
 
     // needed to remove tabs
     private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
@@ -242,7 +244,7 @@ public class SideBarController
     public void mouseDragged(MouseEvent event)
     {
         double newWidth = event.getX();
-        System.out.println(newWidth);
+
         //decimal at end is percentage of screen it can be dragged to
         double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .50;
 
@@ -343,23 +345,28 @@ public class SideBarController
      */
     private void minimize()
     {
-        resizeWidth(23);
+        if (!buttonBox.getChildren().isEmpty()){
+            resizeWidth(23);
 
-        buttonBox.setVisible(false);
-        workspaceLabel.setVisible(false);
+            buttonBox.setVisible(false);
+            buttonBox.setManaged(false);
+            workspaceLabel.setVisible(false);
+            workspaceLabel.setManaged(false);
 
-        hideAllTabs();
+            hideAllTabs();
 
-        for (Node child: workspaceBox.getChildren())
-        {
-            if (!Objects.equals(child, minimizeButton))
+            for (Node child: workspaceBox.getChildren())
             {
-                child.setManaged(false);
+                if (!Objects.equals(child, minimizeButton))
+                {
+                    child.setVisible(false);
+                    child.setManaged(false);
+                }
             }
+            workspaceBox.setPadding(new Insets(4, 4, 4,4));
+            minimizeButton.setText("+");
+            minimized = true;
         }
-        minimizeButton.setTranslateX(-4);
-        minimizeButton.setText("+");
-        minimized = true;
     }
 
     /**
@@ -369,16 +376,19 @@ public class SideBarController
     private void maximize()
     {
         buttonBox.setVisible(true);
+        buttonBox.setManaged(true);
         workspaceLabel.setVisible(true);
+        workspaceLabel.setManaged(true);
 
         restoreTab();
 
         for (Node child: workspaceBox.getChildren())
         {
+            child.setVisible(true);
             child.setManaged(true);
         }
 
-        minimizeButton.setTranslateX(0);
+        workspaceBox.setPadding(inseters);
         minimizeButton.setText("-");
         minimized = false;
     }

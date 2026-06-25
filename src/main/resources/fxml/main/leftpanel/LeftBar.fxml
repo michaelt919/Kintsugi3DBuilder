@@ -11,7 +11,7 @@
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox fx:id = "workspaceBox" alignment="TOP_RIGHT" prefHeight="23.0" maxHeight="23" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
-            <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
+            <Insets fx:id = "inseters" bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>
         <StackPane alignment="CENTER_LEFT" prefHeight="150.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
             <Label fx:id = "workspaceLabel" text="Workspace" />
