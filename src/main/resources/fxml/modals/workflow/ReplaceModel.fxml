@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<VBox fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" style="-fx-padding: 0px 24px 52px 24px;" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceModelController" prefHeight="500.0" prefWidth="924.0">
+    <VBox spacing="8.0">
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeTitle"  text="Replace Texture..."/>
+        </HBox>
+        <VBox style="-fx-padding: 0px 16px 0px 16px;">
+            <VBox spacing="8.0">
+                <Label styleClass="wireframeSubtitle" text="Existing File Path"/>
+                <HBox style="-fx-padding: 0px 0px 0px 16px;">
+                    <ImageView fitWidth="72" fitHeight="72" preserveRatio="true">
+                        <Image url="@../../../../../Kintsugi3D-icon.png"/>
+                    </ImageView>
+                    <HBox>
+                        <VBox fillWidth="true" alignment="CENTER" style="-fx-fill: #CECECE">
+                            <Label styleClass="wireframeBody" text="C>/Test/Url/example_texture.png"/>
+                        </VBox>
+                    </HBox>
+                </HBox>
+                <Label styleClass="wireframeSubtitle" text="New File Path"/>
+                <HBox style="-fx-padding: 0px 0px 0px 16px;">
+                    <ImageView fitWidth="72" fitHeight="72" preserveRatio="true">
+                        <Image url="@../../../../../Kintsugi3D-icon.png"/>
+                    </ImageView>
+                    <HBox>
+                        <VBox fillWidth="true" alignment="CENTER" style="-fx-fill: #CECECE">
+                            <Label styleClass="wireframeBody" text="C>/Test/Url/example_texture.png"/>
+                        </VBox>
+                    </HBox>
+                </HBox>
+            </VBox>
+        </VBox>
+    </VBox>
+</VBox>

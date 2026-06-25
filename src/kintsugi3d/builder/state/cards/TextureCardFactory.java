@@ -17,6 +17,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.javafx.core.ExperienceManager;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
@@ -38,7 +39,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureCardFactory.class);
 
-    CardsModel lastUsedCardsModel;
+    private CardsModel lastUsedCardsModel;
 
     private final ProjectInstance<?> instance;
 
@@ -138,10 +139,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 }),
                 Map.of(
                     "Refresh Texture", () -> refreshTexture(key),
-                    "Replace Texture", () -> Platform.runLater(() ->
-                    {
-                        replaceTexture(key);
-                    })
+                    "Replace Texture", () -> replaceTexture(key)
                 )));
         }
         catch (IOException|RuntimeException e)
@@ -212,5 +210,6 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private void replaceTexture(TextureDetails key)
     {
+        Platform.runLater(() -> ExperienceManager.getInstance().getExperience("ReplaceModel").tryOpen());
     }
 }

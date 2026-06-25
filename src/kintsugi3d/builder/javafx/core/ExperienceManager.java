@@ -41,9 +41,10 @@ public final class ExperienceManager
         experiences.put("Log", new Log());
         experiences.put("SystemSettings", new SystemSettings());
         experiences.put("About", new About());
+        experiences.put("ReplaceModel", new ReplaceModel());
     }
 
-    static ExperienceManager getInstance()
+    public static ExperienceManager getInstance()
     {
         return INSTANCE;
     }
