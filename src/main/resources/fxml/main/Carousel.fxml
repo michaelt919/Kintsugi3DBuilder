@@ -52,11 +52,14 @@
             </content>
         </ScrollPane>
         <VBox fx:id ="minimizeBar" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" managed="false" visible="false">
+            <!-- If this is uncommented then the minimize bar will be shown. Additionally, you need to change
+            buttonBox background color to #383838
             <Separator fx:id = "minimizeSeparator" styleClass="black-line" stylesheets="@../kintsugiStyling.css" />
+            -->
             <HBox   fx:id = "buttonBox"
                     minHeight="23"
                     maxHeight="23"
-                    style  = "-fx-background-color: #383838;"
+                    style  = "-fx-background-color: transparent;"
                     alignment="BOTTOM_LEFT">
                 <padding>
                     <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
