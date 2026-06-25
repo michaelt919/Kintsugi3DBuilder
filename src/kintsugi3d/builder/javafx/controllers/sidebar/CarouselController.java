@@ -54,6 +54,7 @@ public class CarouselController implements Initializable {
     private static final double RESIZE_HEIGHT = 5.0;
     private static final int LOWER_BOUND = 180;
     private boolean minimized = false;
+    private double minimizedValue;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -80,6 +81,7 @@ public class CarouselController implements Initializable {
                     Platform.runLater(() -> {
                         carouselScrollPane.setHvalue(1.0);
                     });
+                    maximize();
                 //If an element was removed, we remove the element from the container
                 } else if (change.wasRemoved())
                 {
@@ -166,6 +168,7 @@ public class CarouselController implements Initializable {
 
         if (minimized)
         {
+            /* Minimized draggable code. Also need to remove setManged for resizeHandle
             if (newHeight >= 23)
             {
                 updateHeight(newHeight);
@@ -186,6 +189,7 @@ public class CarouselController implements Initializable {
                 buttonBox.setMinHeight(23);
                 buttonBox.setMaxHeight(23);
             }
+            */
         }
         else
         {
@@ -238,6 +242,7 @@ public class CarouselController implements Initializable {
      */
     private void minimize()
     {
+        minimizedValue = mainBox.getHeight();
         updateHeight(23);
 
         containerHBox.setVisible(false);
@@ -247,6 +252,8 @@ public class CarouselController implements Initializable {
 
         miniButton.setVisible(false);
 
+        resizeHandle.setManaged(false);
+
         minimized = true;
     }
 
@@ -255,6 +262,16 @@ public class CarouselController implements Initializable {
      */
     private void maximize()
     {
+        if (minimizedValue < 180)
+        {
+            updateHeight(180);
+        }
+        else
+        {
+            updateHeight(minimizedValue);
+        }
+
+        resizeHandle.setManaged(true);
 
         containerHBox.setVisible(true);
 
@@ -274,7 +291,6 @@ public class CarouselController implements Initializable {
     {
         if (minimized)
         {
-            updateHeight(180);
             maximize();
         }
         else
