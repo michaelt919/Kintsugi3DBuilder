@@ -203,8 +203,7 @@ public class SideBarController
     {
         if (minimized)
         {
-            mainBox.setPrefWidth(494);
-            mainBox.setMinWidth(400);
+            resizeWidth(400);
 
             maximize();
         }
