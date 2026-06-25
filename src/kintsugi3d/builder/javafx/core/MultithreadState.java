@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.javafx.internal.CarouselModel;
-import kintsugi3d.builder.javafx.internal.SynchronizedCarouselModel;
+import kintsugi3d.builder.javafx.multithread.SynchronizedCarouselModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;

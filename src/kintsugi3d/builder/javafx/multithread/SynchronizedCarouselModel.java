@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -9,17 +9,19 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.internal;
+package kintsugi3d.builder.javafx.multithread;
 
 import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
+import kintsugi3d.builder.javafx.internal.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
 /*
 This class is for the global state, so we can have a list of shaders in the carousel.
 Has two methods, one to get an arraylist of the shaders currently in the carousel.
 And another to add a shader to the carousel list.
  */
-public class SynchronizedCarouselModel implements CarouselModel {
+public class SynchronizedCarouselModel implements CarouselModel
+{
     private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
 
     /**
