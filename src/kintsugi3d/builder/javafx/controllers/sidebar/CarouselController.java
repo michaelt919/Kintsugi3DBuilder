@@ -47,6 +47,7 @@ public class CarouselController implements Initializable {
     @FXML private HBox buttonBox;
     @FXML private Separator minimizeSeparator;
     @FXML private VBox minimizeBar;
+    @FXML private Button miniButton;
 
     private double dragStartY;
     private double initialHeight;
@@ -59,7 +60,12 @@ public class CarouselController implements Initializable {
     {
         // Creates a listener to detect if any elements are added or removed from array list
         Global.state().getCarouselModel().getCarouselShaders().addListener((ListChangeListener<UserShader>) change -> {
-
+            if (!Global.state().getCarouselModel().getCarouselShaders().isEmpty() && !minimized){
+                miniButton.setVisible(true);
+            }
+            else{
+                miniButton.setVisible(false);
+            }
             //Once change happens, the while loop looks at what next change is
             while (change.next())
             {
@@ -239,6 +245,8 @@ public class CarouselController implements Initializable {
         minimizeBar.setVisible(true);
         minimizeBar.setManaged(true);
 
+        miniButton.setVisible(false);
+
         minimized = true;
     }
 
@@ -252,6 +260,8 @@ public class CarouselController implements Initializable {
 
         minimizeBar.setVisible(false);
         minimizeBar.setManaged(false);
+
+        miniButton.setVisible(true);
 
         minimized = false;
     }
@@ -271,5 +281,8 @@ public class CarouselController implements Initializable {
         {
             minimize();
         }
+    }
+    public void minimizeCarousel(){
+        minimize();
     }
 }

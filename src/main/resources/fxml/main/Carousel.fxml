@@ -57,16 +57,19 @@
                     minHeight="23"
                     maxHeight="23"
                     style  = "-fx-background-color: #383838;"
-                    alignment="BOTTOM_CENTER">
+                    alignment="BOTTOM_LEFT">
+                <padding>
+                    <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                </padding>
                 <Button
                         fx:id = "minimizeButton"
                         alignment="CENTER"
-                        text = "︾︾︾"
-                        maxHeight="20"
-                        minHeight="20"
-                        maxWidth="50"
-                        minWidth="30"
-                        style="-fx-padding: 2; -fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #636363; -fx-border-width: 2px;"
+                        text = "+"
+                        maxHeight="15"
+                        minHeight="15"
+                        maxWidth="15"
+                        minWidth="15"
+                        style="-fx-padding: 0;"
                         onAction = "#toggleTopBar"/>
             </HBox>
         </VBox>
@@ -77,5 +80,17 @@
                 onMousePressed="#mousePressed"
                 onMouseDragged="#mouseDragged"
                 onMouseReleased="#mouseReleased"/>
+        <HBox minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.bottomAnchor="-30.0">
+            <Button
+                    fx:id = "miniButton"
+                    text = "-"
+                    maxHeight="15"
+                    minHeight="15"
+                    maxWidth="15"
+                    minWidth="15"
+                    visible="false"
+                    style="-fx-padding: 0;"
+                    onAction = "#minimizeCarousel"/>
+        </HBox>
     </children>
 </AnchorPane>
