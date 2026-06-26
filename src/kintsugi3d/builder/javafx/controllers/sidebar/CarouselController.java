@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
@@ -20,9 +21,10 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
+import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.scene.UserShader;
-import javafx.collections.ListChangeListener;
 
 import java.io.IOException;
 
@@ -60,11 +62,15 @@ public class CarouselController
     {
         this.carouselModel = carouselModel;
 
+        // Bind carousel card height to the height of the JavaFX container.
+        // Carousel card width will be auto-calculated from height.
+        carouselModel.carouselCardHeightProperty().bind(containerHBox.heightProperty());
+
         // Creates a listener to detect if any elements are added or removed from array list
-        carouselModel.getCarouselShaders().addListener(
-            (ListChangeListener<UserShader>) change ->
+        carouselModel.getCarouselItems().addListener(
+            (ListChangeListener<CarouselItem>) change ->
             {
-                miniButton.setVisible(!carouselModel.getCarouselShaders().isEmpty() && !minimized);
+                miniButton.setVisible(!carouselModel.getCarouselItems().isEmpty() && !minimized);
 
                 // Once change happens, the while loop looks at what next change is
                 while (change.next())
@@ -72,10 +78,28 @@ public class CarouselController
                     // If an element was added, loadCarouselCard is called with the additional shader
                     if (change.wasAdded())
                     {
-                        for (UserShader addedShader : change.getAddedSubList())
+                        for (CarouselItem addedItem : change.getAddedSubList())
                         {
                             // Dynamically load the FXML for every shader added to the model
-                            loadCarouselCard(addedShader);
+                            CarouselCardController carouselCard = loadCarouselCard(addedItem.getShader());
+
+                            if (carouselCard == null)
+                            {
+                                // Card load failed; clean up backend.
+                                Global.state().getCanvasListModel().removeCanvas(addedItem.getShader());
+                            }
+                            else
+                            {
+                                // Force layout so that the ImageView has real dimensions when connecting to the backend.
+                                mainBox.layout();
+
+                                // Wait for layout.
+                                Platform.runLater(() ->
+                                {
+                                    // Connect the backend to the JavaFX frontend.
+                                    carouselCard.setupCanvas(addedItem.getCanvasModel());
+                                });
+                            }
                         }
                         Platform.runLater(() -> carouselScrollPane.setHvalue(1.0));
                         maximize();
@@ -83,9 +107,9 @@ public class CarouselController
                     // If an element was removed, we remove the element from the container
                     else if (change.wasRemoved())
                     {
-                        for (UserShader removedShader : change.getRemoved())
+                        for (CarouselItem removedItem : change.getRemoved())
                         {
-                            containerHBox.getChildren().removeIf(node -> removedShader.equals(node.getUserData()));
+                            containerHBox.getChildren().removeIf(node -> removedItem.getShader().equals(node.getUserData()));
                         }
                     }
                 }
@@ -98,7 +122,7 @@ public class CarouselController
      * to detect when mainBox size changes and changes the cards height accordingly
      * @param shader
      */
-    private void loadCarouselCard(UserShader shader)
+    private CarouselCardController loadCarouselCard(UserShader shader)
     {
         try
         {
@@ -111,27 +135,20 @@ public class CarouselController
             cardController.init(carouselModel, shader);
 
             HBox.setHgrow(card, Priority.ALWAYS);
-            double aspectRatio = (double)CarouselCardController.CARD_WIDTH / (double)CarouselCardController.CARD_HEIGHT;
 
-            mainBox.heightProperty().addListener((obs, oldHeight, newHeight) ->
-            {
-                double width = newHeight.doubleValue() * aspectRatio;
-                card.setPrefWidth(width);
-                card.setMaxWidth(width);
-                card.setMinWidth(width);
-            });
-
-            double startWidth = mainBox.getHeight() * aspectRatio;
-            card.setPrefWidth(startWidth);
-            card.setMaxWidth(startWidth);
-            card.setMinWidth(startWidth);
+            // Determine card width from the model, which uses aspect ratio to calculate it from the bound height property.
+            card.prefWidthProperty().bind(carouselModel.carouselCardWidthProperty());
+            card.maxWidthProperty().bind(carouselModel.carouselCardWidthProperty());
+            card.minWidthProperty().bind(carouselModel.carouselCardWidthProperty());
 
             containerHBox.getChildren().add(card);
 
+            return cardController;
         }
         catch (IOException e)
         {
             e.printStackTrace();
+            return null;
         }
     }
 

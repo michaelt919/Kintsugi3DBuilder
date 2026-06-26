@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -291,9 +291,14 @@ public final class FramebufferView extends Region
         {
             handleWindowEvent(); // sets canvas size and applies vertical flip to imageView
             CanvasSize canvasSize = canvas.getSize();
-            frontImage = new WritableImage(canvasSize.width, canvasSize.height);
-            backImage = new WritableImage(canvasSize.width, canvasSize.height);
-            imageView.setImage(frontImage);
+
+            if (canvasSize.width > 0 && canvasSize.height > 0) // Writeable image allocation will fail if zero.
+            {
+                // If the canvas size is valid, pre-allocate for the first frame.
+                frontImage = new WritableImage(canvasSize.width, canvasSize.height);
+                backImage = new WritableImage(canvasSize.width, canvasSize.height);
+                imageView.setImage(frontImage);
+            }
 
             canvas.addSwapListener(frontFBO ->
             {
@@ -355,12 +360,15 @@ public final class FramebufferView extends Region
                                 }
 
                                 //noinspection FloatingPointEquality
-                                if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
+                                if (backImage == null || // backImage could be null if the canvas size was 0x0.
+                                    fboCopyBufferDimensions.width != backImage.getWidth() ||
+                                    fboCopyBufferDimensions.height != backImage.getHeight())
                                 {
                                     backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
                                 }
 
-                                backImage.getPixelWriter().setPixels(0, 0, fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
+                                backImage.getPixelWriter().setPixels(0, 0,
+                                    fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
                                     PixelFormat.getByteBgraInstance(), frontCopyBuffer, fboCopyBufferDimensions.width * 4);
 
                                 // Swap images

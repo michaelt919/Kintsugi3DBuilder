@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,8 +14,6 @@ package kintsugi3d.builder.javafx.core;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
-import kintsugi3d.builder.state.CarouselModel;
-import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
@@ -63,7 +61,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
         tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
-        carouselModel = JavaFXState.getInstance().getCarouselModel(); // TODO wrap with multithread?
+        carouselModel = new SynchronizedCarouselModel(JavaFXState.getInstance().getCarouselModel());
 
         sceneViewportModel = new SceneViewportModelImpl();
         mainCanvasModel = new CanvasModelImpl();
@@ -150,5 +148,8 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public CarouselModel getCarouselModel() {return carouselModel; }
+    public CarouselModel getCarouselModel()
+    {
+        return carouselModel;
+    }
 }

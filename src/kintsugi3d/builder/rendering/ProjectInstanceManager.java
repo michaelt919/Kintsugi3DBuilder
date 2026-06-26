@@ -393,7 +393,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     public void addRenderView(UserShader shader, FramebufferSize initialSize,
-                              Consumer<FramebufferCanvas<ContextType>> framebufferCallback)
+                              Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.

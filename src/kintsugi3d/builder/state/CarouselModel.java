@@ -17,7 +17,7 @@ import java.util.List;
 
 public interface CarouselModel
 {
-    List<UserShader> getCarouselShaders();
+    List<CarouselItem> getCarouselItems();
     void addToCarousel(UserShader shader);
     void removeFromCarousel(UserShader shader);
     void clearCarousel();

@@ -11,11 +11,21 @@
 
 package kintsugi3d.builder.javafx.internal;
 
-import javafx.collections.ObservableList;
+import javafx.application.Platform;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.state.CanvasModel;
+import kintsugi3d.builder.state.CanvasModelImpl;
+import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
+
+import java.util.Objects;
+
 /*
 This class is for the global state, so we can have a list of shaders in the carousel.
 Has two methods, one to get an arraylist of the shaders currently in the carousel.
@@ -23,22 +33,51 @@ And another to add a shader to the carousel list.
  */
 public class ObservableCarouselModel implements CarouselModel
 {
-    private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
+    public static final int DEFAULT_CARD_WIDTH = 210;
+    public static final int DEFAULT_CARD_HEIGHT = 160;
+
+    private final ObservableList<CarouselItem> carouselItems = FXCollections.observableArrayList();
+
+    private final DoubleProperty carouselCardHeight = new SimpleDoubleProperty(DEFAULT_CARD_HEIGHT);
+
+    // Auto-calculate card width from card height, preserving aspect ratio.
+    private final DoubleBinding carouselCardWidth =
+        carouselCardHeight.multiply((double)DEFAULT_CARD_WIDTH / (double)DEFAULT_CARD_HEIGHT);
 
     /**
-     * returns the list of shaders currently held in global carousel model.
+     * returns the list of items (shader + canvas backend reference) currently held in global carousel model.
      * @return
      */
     @Override
-    public ObservableList<UserShader> getCarouselShaders()
+    public ObservableList<CarouselItem> getCarouselItems()
     {
-        return carouselShaders;
+        return carouselItems;
+    }
+
+    public double getCarouselCardHeight()
+    {
+        return carouselCardHeight.get();
+    }
+
+    public DoubleProperty carouselCardHeightProperty()
+    {
+        return carouselCardHeight;
+    }
+
+    public double getCarouselCardWidth()
+    {
+        return carouselCardWidth.get();
+    }
+
+    public DoubleBinding carouselCardWidthProperty()
+    {
+        return carouselCardWidth;
     }
 
     /**
      * Looks through the existing shaders if the parameter shader is already
      * in carousel it will not add the shader. If it is not it will add
-     * shader to carouselShaders list.
+     * shader to carouselItems list.
      * @param shader
      */
     @Override
@@ -46,26 +85,41 @@ public class ObservableCarouselModel implements CarouselModel
     {
         // Prevents duplicate shaders in carousel / if the shaders don't match
         // then shader is sent to carousel
-        if (!carouselShaders.contains(shader))
+        if (carouselItems.stream().noneMatch(item -> Objects.equals(item.getShader(), shader)))
         {
-            carouselShaders.add(shader);
+            // Set up the rendering backend for the card.
+            // GPU resource allocation will happen within a Rendering.runLater call on the graphcs thread.
+            Global.state().getCanvasListModel().createCanvas(shader,
+                (int)Math.round(getCarouselCardWidth()), (int)Math.round(getCarouselCardHeight()),
+                framebufferCanvas ->
+                {
+                    // Create a CanvasModel for connecting JavaFX to the backend.
+                    CanvasModel canvas = new CanvasModelImpl();
+                    canvas.setCanvas(framebufferCanvas);
 
-            // Adding the rendering backend is handled when the card initializes
+                    // After the canvas FBO is allocated we are notified on the graphics thread.
+                    // Use Platform runLater to set up the card on the JavaFX side.
+                    Platform.runLater(() ->
+                    {
+                         // This will trigger the FXML to load via observer and subsequently connect to the backend.
+                        carouselItems.add(new CarouselItem(shader, canvas));
+                    });
+                });
         }
     }
 
     /**
      * Looks through the existing shaders if the parameter shader is already
      * in carousel it will not add the shader. If it is not it will add
-     * shader to carouselShaders list.
+     * shader to carouselItems list.
      * @param shader
      */
     @Override
     public void removeFromCarousel(UserShader shader)
     {
-        if (carouselShaders.contains(shader))
+        if (carouselItems.stream().anyMatch(item -> Objects.equals(item.getShader(), shader)))
         {
-            carouselShaders.remove(shader);
+            carouselItems.removeIf(item -> Objects.equals(item.getShader(), shader));
 
             // Clean up the rendering backend for the card.
             Global.state().getCanvasListModel().removeCanvas(shader);
@@ -73,17 +127,17 @@ public class ObservableCarouselModel implements CarouselModel
     }
 
     /**
-     * Clears all the shaders in carouselShaders list.
+     * Clears all the shaders in carouselItems list.
      */
     @Override
     public void clearCarousel()
     {
         // Remove all shaders from rendering backend.
-        for (UserShader shader : carouselShaders)
+        for (CarouselItem item : carouselItems)
         {
-            Global.state().getCanvasListModel().removeCanvas(shader);
+            Global.state().getCanvasListModel().removeCanvas(item.getShader());
         }
 
-        carouselShaders.clear();
+        carouselItems.clear();
     }
 }

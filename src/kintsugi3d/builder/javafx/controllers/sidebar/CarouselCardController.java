@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.state.CarouselModel;
+import kintsugi3d.builder.state.ReadonlyCanvasModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.javafx.FramebufferView;
 
@@ -32,9 +32,6 @@ public class CarouselCardController
 
     private static final UserShader DEFAULT_SHADER_PROCESSED =
         new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
-
-    static final int CARD_WIDTH = 210;
-    static final int CARD_HEIGHT = 160;
 
     @FXML private FramebufferView framebufferView;
 
@@ -91,14 +88,11 @@ public class CarouselCardController
         */
         Global.state().getUserShaderModel().registerHandler(this::updateCheckboxState);
         updateCheckboxState(Global.state().getUserShaderModel().getUserShader());
+    }
 
-        // Creating the canvas requires layout to determine card size
-        // so put this in a Platform.runLater to ensure that the card has a non-zero size.
-        Platform.runLater(() ->
-        {
-            // Set up the rendering backend for the card.
-            Global.state().getCanvasListModel().createCanvas(shader, CARD_WIDTH, CARD_HEIGHT, framebufferView::setCanvas);
-        });
+    public void setupCanvas(ReadonlyCanvasModel canvasModel)
+    {
+        framebufferView.setCanvas(canvasModel.getCanvas());
     }
 
     /**
