@@ -22,13 +22,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CameraCardFactory implements ProjectDataCardFactory
 {
-    ReadonlyViewSet viewSet;
+    private final ReadonlyViewSet viewSet;
 
     public CameraCardFactory(ReadonlyViewSet viewSet)
     {
@@ -52,7 +53,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
         {
             File fullResFile = viewSet.findFullResImageFile(cardIndex);
             IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
-            String res = dimensions.x + "x" + dimensions.y;
+            String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
             return new ProjectDataCard(
                 viewSet.getImageFiles().get(cardIndex).getName(), thumbnailPath,
@@ -80,7 +81,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
     {
         for (int i = 0; i < cardsList.size(); i++)
         {
-            if (cardsList.get(i).getCardId() == id)
+            if (Objects.equals(cardsList.get(i).getCardId(), id))
             {
                 return i;
             }

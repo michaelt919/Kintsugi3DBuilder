@@ -67,7 +67,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, textureShader, "Weight Map " + weightmapIndex);
+        return createProjectDataCard(fileName, textureShader, String.format("Weight Map %d", weightmapIndex));
     }
 
     /**
@@ -116,7 +116,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         try
         {
             IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
-            String res = dimensions.x + "x" + dimensions.y;
+            String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
             return new ShaderDataCard(shader, thumbnailPath, new LinkedHashMap<>()
             {{
@@ -124,13 +124,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 put("Resolution", res);
                 put("Size", (int) (((double) textureImage.length() / (1024.0 * 1024.0))*1000.0) + " KB");
                 put("Purpose", purpose);
-            }}
-            , Map.of(
-                "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
-                "Send to Carousel", () ->
-                {
-                    Global.state().getCarouselModel().addToCarousel(shader);
-                }));
+            }});
         }
         catch (IOException|RuntimeException e)
         {

@@ -13,12 +13,9 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.core.ViewSet;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TabsManager
 {
@@ -27,19 +24,16 @@ public class TabsManager
     public static final String MATERIALS = "Materials";
     public static final String SHADERS = "Shaders";
 
-    private final List<TabInfo> factories = new ArrayList<>();
-
-    public TabsManager(ViewSet viewSet, ProjectInstance<?> instance)
-    {
-        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(viewSet), null));
-        factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance), Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
-        factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance), Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
-        factories.add(new TabInfo(SHADERS, new ShaderCardFactory(instance), null));
-    }
+    private final List<TabInfo> factories = new ArrayList<>(4);
 
     public TabsManager(ProjectInstance<?> instance)
     {
-        this(instance.getActiveViewSet(), instance);
+        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance.getActiveViewSet()), null));
+        factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),
+            Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
+        factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance),
+            Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
+        factories.add(new TabInfo(SHADERS, new ShaderCardFactory(instance), null));
     }
 
     public void rebuildTabs()
@@ -70,8 +64,10 @@ public class TabsManager
         TabsModel tabsModel = Global.state().getTabModels();
 
         CardsModel cardsModel = tabsModel.getTab(tabName);
-        for (var fac : factories){
-            if (fac.getLabel().equals(tabName)){
+        for (var fac : factories)
+        {
+            if (fac.getLabel().equals(tabName))
+            {
                 cardsModel.setCardList(fac.getFactory().createAllCards(cardsModel));
             }
         }

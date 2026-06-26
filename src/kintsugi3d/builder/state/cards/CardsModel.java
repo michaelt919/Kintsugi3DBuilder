@@ -18,6 +18,8 @@ public interface CardsModel
     List<ProjectDataCard> getCardList();
     void setCardList(List<ProjectDataCard> cards);
 
+    // TODO unneeded?
     void deleteCard(ProjectDataCard card);
+
     void confirm(String title, String header, String message, Runnable onConfirm);
 }

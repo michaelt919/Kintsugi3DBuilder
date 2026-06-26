@@ -45,8 +45,8 @@ public final class JavaFXState
         loadOptionsModel = new ObservableLoadOptionsModel();
         settingsModel = new ObservableGeneralSettingsModel();
         projectModel = new ObservableProjectModel();
-        tabModels = new ObservableTabsModel();
         carouselModel = new ObservableCarouselModel();
+        tabModels = new ObservableTabsModel(carouselModel);
     }
 
     public ObservableCameraModel getCameraModel()

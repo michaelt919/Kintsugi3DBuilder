@@ -11,45 +11,71 @@
 
 package kintsugi3d.builder.state.cards;
 
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.state.scene.UserShader;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ShaderDataCard extends ProjectDataCard
 {
     private final UserShader shader;
 
-    public ShaderDataCard(String title, UserShader shader, String imagePath, Map<String, String> textFields,
-                          List<? extends Map<String, Runnable>> actionGroups)
+    /**
+     * Used in initialization
+     * @param shader
+     */
+    private static Map<String, Runnable> getActionMap(UserShader shader)
     {
-        super(title, imagePath, textFields, actionGroups);
+        Runnable viewShader = () ->
+        {
+            // Sets the model to the shader
+            Global.state().getUserShaderModel().setUserShader(shader);
+        };
+
+        Runnable sendToCarousel = () ->
+        {
+            // Adds the shader to the carousel
+            Global.state().getCarouselModel().addToCarousel(shader);
+        };
+
+        return Map.of(
+            "View Shader", viewShader,
+            "Send to Carousel", sendToCarousel);
+    }
+
+    public ShaderDataCard(String title, UserShader shader, String imagePath, Map<String, String> textFields,
+                          Collection<? extends Map<String, Runnable>> actionGroups)
+    {
+        super(title, imagePath, textFields,
+            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
         this.shader = shader;
     }
 
     public ShaderDataCard(UserShader shader, String imagePath, Map<String, String> textFields,
-                          List<? extends Map<String, Runnable>> actionGroups)
+                          Collection<? extends Map<String, Runnable>> actionGroups)
     {
-        super(shader.getFriendlyName(), imagePath, textFields, actionGroups);
-        this.shader = shader;
+        this(shader.getFriendlyName(), shader, imagePath, textFields, actionGroups);
     }
 
-    public ShaderDataCard(UserShader shader, String imagePath,
-                          Map<String, String> textFields, Map<String, Runnable> actions)
+    public ShaderDataCard(UserShader shader, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
     {
-        super(shader.getFriendlyName(), imagePath, textFields, actions);
+        super(shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader), actions));
         this.shader = shader;
     }
 
     public ShaderDataCard(UserShader shader, String imagePath, Map<String, String> textFields)
     {
-        super(shader.getFriendlyName(), imagePath, textFields);
+        super(shader.getFriendlyName(), imagePath, textFields, getActionMap(shader));
         this.shader = shader;
     }
 
     public ShaderDataCard(UserShader shader, String imagePath)
     {
-        super(shader.getFriendlyName(), imagePath);
+        super(shader.getFriendlyName(), imagePath, Map.of(), getActionMap(shader));
         this.shader = shader;
     }
 

@@ -229,13 +229,13 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
-            new TabsManager(loadedViewSet, newInstance).rebuildTabs();
-
             // If a new instance was just loaded, initialize it.
             try
             {
                 newInstance.initialize();
+
+                // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
+                new TabsManager(newInstance).rebuildTabs();
 
                 // Check for an old instance just to be safe
                 if (projectInstance != null)
