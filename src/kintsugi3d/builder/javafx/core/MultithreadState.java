@@ -14,8 +14,8 @@ package kintsugi3d.builder.javafx.core;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
-import kintsugi3d.builder.javafx.internal.CarouselModel;
-import kintsugi3d.builder.javafx.multithread.SynchronizedCarouselModel;
+import kintsugi3d.builder.state.CarouselModel;
+import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
@@ -61,14 +61,15 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
         settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
-        tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
-        sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
+        tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
+        carouselModel = JavaFXState.getInstance().getCarouselModel(); // TODO wrap with multithread?
+
+        sceneViewportModel = new SceneViewportModelImpl();
         mainCanvasModel = new CanvasModelImpl();
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        carouselModel = new SynchronizedCarouselModel();
     }
 
     @Override

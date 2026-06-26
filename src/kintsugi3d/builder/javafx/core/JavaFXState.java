@@ -32,6 +32,7 @@ public final class JavaFXState
     private final ObservableGeneralSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
     private final ObservableTabsModel tabModels;
+    private final ObservableCarouselModel carouselModel;
 
     private JavaFXState()
     {
@@ -45,6 +46,7 @@ public final class JavaFXState
         settingsModel = new ObservableGeneralSettingsModel();
         projectModel = new ObservableProjectModel();
         tabModels = new ObservableTabsModel();
+        carouselModel = new ObservableCarouselModel();
     }
 
     public ObservableCameraModel getCameraModel()
@@ -92,5 +94,10 @@ public final class JavaFXState
     public ObservableProjectModel getProjectModel()
     {
         return projectModel;
+    }
+
+    public ObservableCarouselModel getCarouselModel()
+    {
+        return carouselModel;
     }
 }

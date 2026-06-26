@@ -25,7 +25,7 @@ import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import kintsugi3d.builder.app.logging.LogMessage;
 import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
-import kintsugi3d.builder.javafx.util.ScrollBarHelp;
+import kintsugi3d.builder.javafx.util.ScrollBarHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -89,7 +89,7 @@ public class LoggerController implements Initializable
             toggleButtonTrace.setSelected(false);
             toggleButtonTrace.setDisable(true);
         }
-        ScrollBarHelp.scrollbarFix(messageListView);
+        ScrollBarHelper.scrollbarFix(messageListView);
     }
 
     public void buttonOpenLogDir(ActionEvent actionEvent)

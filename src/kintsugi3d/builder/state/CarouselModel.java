@@ -9,14 +9,16 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.internal;
+package kintsugi3d.builder.state;
 
-import javafx.collections.ObservableList;
 import kintsugi3d.builder.state.scene.UserShader;
+
+import java.util.List;
 
 public interface CarouselModel
 {
-    ObservableList<UserShader> getCarouselShaders();
+    List<UserShader> getCarouselShaders();
     void addToCarousel(UserShader shader);
+    void removeFromCarousel(UserShader shader);
     void clearCarousel();
 }

@@ -647,6 +647,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         renderViewMap.clear();
         renderViews.clear();
 
+        // Empty sidebar; will be repopulated when another project is opened.
+        Global.state().getTabModels().clearTabs();
+
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
@@ -660,9 +663,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 Global.state().getProjectModel().setProjectProcessed(false);
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
-
-                // Empty sidebar; will be repopulated when another project is opened.
-                Global.state().getTabModels().clearTabs();
             }
         });
     }

@@ -13,45 +13,32 @@ package kintsugi3d.builder.javafx.util;
 
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.control.Control;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TreeView;
 import kintsugi3d.builder.app.logging.LogMessage;
 
-public class ScrollBarHelp
+public final class ScrollBarHelper
 {
-    public static void scrollbarFix(ListView<LogMessage> listView){
-        Platform.runLater(() ->
-        {
-            listView.applyCss();
-            listView.layout();
-
-            Node verticalBarNode = listView.lookup(".scroll-bar:vertical");
-
-            if (verticalBarNode instanceof ScrollBar)
-            {
-                ScrollBar scrollBar = (ScrollBar) verticalBarNode;
-                scrollBar.visibleAmountProperty().addListener((obs, oldVal, newVal) ->
-                {
-                    if (newVal.doubleValue() < 0.1)
-                    {
-                        scrollBar.setVisibleAmount(0.1);
-                    }
-                });
-                if (scrollBar.getVisibleAmount() < 0.1)
-                {
-                    scrollBar.setVisibleAmount(0.1);
-                }
-            }
-        });
+    private ScrollBarHelper()
+    {
     }
-    public static void scrollbarFix(TreeView<String> treeView){
+
+    /**
+     * Fixes scrollbars so that a minimum visible amount is enforced.
+     * @param control Control for which to fix scrollbar.
+     *                Expected to contain a scroll bar accessible with the CSS lookup ".scroll-bar:vertical".
+     *                Confirmed to work with ListView and TreeView.
+     */
+    public static void scrollbarFix(Control control)
+    {
         Platform.runLater(() ->
         {
-            treeView.applyCss();
-            treeView.layout();
+            control.applyCss();
+            control.layout();
 
-            Node verticalBarNode = treeView.lookup(".scroll-bar:vertical");
+            Node verticalBarNode = control.lookup(".scroll-bar:vertical");
 
             if (verticalBarNode instanceof ScrollBar)
             {
@@ -63,6 +50,7 @@ public class ScrollBarHelp
                         scrollBar.setVisibleAmount(0.1);
                     }
                 });
+
                 if (scrollBar.getVisibleAmount() < 0.1)
                 {
                     scrollBar.setVisibleAmount(0.1);

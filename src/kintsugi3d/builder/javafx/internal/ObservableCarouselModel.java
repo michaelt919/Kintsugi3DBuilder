@@ -9,18 +9,19 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.multithread;
+package kintsugi3d.builder.javafx.internal;
 
 import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
-import kintsugi3d.builder.javafx.internal.CarouselModel;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
 /*
 This class is for the global state, so we can have a list of shaders in the carousel.
 Has two methods, one to get an arraylist of the shaders currently in the carousel.
 And another to add a shader to the carousel list.
  */
-public class SynchronizedCarouselModel implements CarouselModel
+public class ObservableCarouselModel implements CarouselModel
 {
     private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
 
@@ -33,6 +34,7 @@ public class SynchronizedCarouselModel implements CarouselModel
     {
         return carouselShaders;
     }
+
     /**
      * Looks through the existing shaders if the parameter shader is already
      * in carousel it will not add the shader. If it is not it will add
@@ -42,24 +44,31 @@ public class SynchronizedCarouselModel implements CarouselModel
     @Override
     public void addToCarousel(UserShader shader)
     {
-        boolean alreadyInCarousel = false;
-
-        //For loop looks through List for any that match the shader
-        //that is trying to be sent to carousel
-        for (UserShader element : carouselShaders)
-        {
-            if (shader.equals(element))
-            {
-                //if one matches:
-                alreadyInCarousel = true;
-            }
-        }
-
-        //Prevents duplicate shaders in carousel / if the shaders don't match
-        //then shader is sent to carousel
-        if (!alreadyInCarousel)
+        // Prevents duplicate shaders in carousel / if the shaders don't match
+        // then shader is sent to carousel
+        if (!carouselShaders.contains(shader))
         {
             carouselShaders.add(shader);
+
+            // Adding the rendering backend is handled when the card initializes
+        }
+    }
+
+    /**
+     * Looks through the existing shaders if the parameter shader is already
+     * in carousel it will not add the shader. If it is not it will add
+     * shader to carouselShaders list.
+     * @param shader
+     */
+    @Override
+    public void removeFromCarousel(UserShader shader)
+    {
+        if (carouselShaders.contains(shader))
+        {
+            carouselShaders.remove(shader);
+
+            // Clean up the rendering backend for the card.
+            Global.state().getCanvasListModel().removeCanvas(shader);
         }
     }
 
@@ -67,5 +76,14 @@ public class SynchronizedCarouselModel implements CarouselModel
      * Clears all the shaders in carouselShaders list.
      */
     @Override
-    public void clearCarousel() { carouselShaders.clear(); }
+    public void clearCarousel()
+    {
+        // Remove all shaders from rendering backend.
+        for (UserShader shader : carouselShaders)
+        {
+            Global.state().getCanvasListModel().removeCanvas(shader);
+        }
+
+        carouselShaders.clear();
+    }
 }

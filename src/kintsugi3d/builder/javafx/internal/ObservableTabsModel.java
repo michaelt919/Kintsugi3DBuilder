@@ -13,6 +13,7 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
@@ -42,6 +43,9 @@ public class ObservableTabsModel implements TabsModel
     public void clearTabs()
     {
         tabs.clear();
+
+        // Also clear carousel as its contents will be invalidated if the tabs are gone.
+        Global.state().getCarouselModel().clearCarousel();
     }
 
     @Override

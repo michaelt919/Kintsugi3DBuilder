@@ -14,22 +14,18 @@ package kintsugi3d.builder.javafx.controllers.sidebar;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import javafx.collections.ListChangeListener;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.Objects;
-import java.util.ResourceBundle;
+
 /*
 This is the controller for the carousel has two main methods. Initialize which is called immediately
 when CarouselController is created. This function detects changes to global carousel list and
@@ -37,7 +33,11 @@ does action based on if an element was added or removed. LoadCarouselCard is the
 this function is called whenever an element has been added to the list. That function just loads the
 carousel cards.
  */
-public class CarouselController implements Initializable {
+public class CarouselController
+{
+    private static final int DEFAULT_HEIGHT = 180;
+    private static final int MINIMIZED_HEIGHT = 23;
+    private static final double RESIZE_HEIGHT = 5.0;
 
     @FXML private HBox containerHBox;
     @FXML private ScrollPane carouselScrollPane;
@@ -51,49 +51,45 @@ public class CarouselController implements Initializable {
 
     private double dragStartY;
     private double initialHeight;
-    private static final double RESIZE_HEIGHT = 5.0;
-    private static final int LOWER_BOUND = 180;
     private boolean minimized = false;
     private double minimizedValue;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources)
+    private ObservableCarouselModel carouselModel;
+
+    public void init(ObservableCarouselModel carouselModel)
     {
+        this.carouselModel = carouselModel;
+
         // Creates a listener to detect if any elements are added or removed from array list
-        Global.state().getCarouselModel().getCarouselShaders().addListener((ListChangeListener<UserShader>) change -> {
-            if (!Global.state().getCarouselModel().getCarouselShaders().isEmpty() && !minimized){
-                miniButton.setVisible(true);
-            }
-            else{
-                miniButton.setVisible(false);
-            }
-            //Once change happens, the while loop looks at what next change is
-            while (change.next())
+        carouselModel.getCarouselShaders().addListener(
+            (ListChangeListener<UserShader>) change ->
             {
-                //If an element was added, loadCarouselCard is called with the additional shader
-                if (change.wasAdded())
+                miniButton.setVisible(!carouselModel.getCarouselShaders().isEmpty() && !minimized);
+
+                // Once change happens, the while loop looks at what next change is
+                while (change.next())
                 {
-                    for (UserShader addedShader : change.getAddedSubList())
+                    // If an element was added, loadCarouselCard is called with the additional shader
+                    if (change.wasAdded())
                     {
-                        // Dynamically load the FXML for every shader added to the model
-                        loadCarouselCard(addedShader);
+                        for (UserShader addedShader : change.getAddedSubList())
+                        {
+                            // Dynamically load the FXML for every shader added to the model
+                            loadCarouselCard(addedShader);
+                        }
+                        Platform.runLater(() -> carouselScrollPane.setHvalue(1.0));
+                        maximize();
                     }
-                    Platform.runLater(() -> {
-                        carouselScrollPane.setHvalue(1.0);
-                    });
-                    maximize();
-                //If an element was removed, we remove the element from the container
-                } else if (change.wasRemoved())
-                {
-                    for (UserShader removedShader : change.getRemoved())
+                    // If an element was removed, we remove the element from the container
+                    else if (change.wasRemoved())
                     {
-                        containerHBox.getChildren().removeIf(node -> {
-                            return removedShader.equals(node.getUserData());
-                        });
+                        for (UserShader removedShader : change.getRemoved())
+                        {
+                            containerHBox.getChildren().removeIf(node -> removedShader.equals(node.getUserData()));
+                        }
                     }
                 }
-            }
-        });
+            });
     }
 
     /**
@@ -112,12 +108,13 @@ public class CarouselController implements Initializable {
             card.setUserData(shader);
 
             CarouselCardController cardController = loader.getController();
-            cardController.initData(shader);
+            cardController.init(carouselModel, shader);
 
             HBox.setHgrow(card, Priority.ALWAYS);
-            double aspectRatio = 210.0 / 160.0;
+            double aspectRatio = (double)CarouselCardController.CARD_WIDTH / (double)CarouselCardController.CARD_HEIGHT;
 
-            mainBox.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+            mainBox.heightProperty().addListener((obs, oldHeight, newHeight) ->
+            {
                 double width = newHeight.doubleValue() * aspectRatio;
                 card.setPrefWidth(width);
                 card.setMaxWidth(width);
@@ -131,7 +128,8 @@ public class CarouselController implements Initializable {
 
             containerHBox.getChildren().add(card);
 
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             e.printStackTrace();
         }
@@ -142,10 +140,12 @@ public class CarouselController implements Initializable {
      * @param event
      */
     @FXML
-    public void mousePressed(MouseEvent event) {
+    public void mousePressed(MouseEvent event)
+    {
         dragStartY = event.getSceneY();
         initialHeight = mainBox.getHeight();
     }
+
     /**
      * If the mouse is dragged it first gets the new mouse position, then it finds
      * the upper bound. Next it resizes the tab accordingly: If the box is minimized
@@ -164,46 +164,46 @@ public class CarouselController implements Initializable {
 
         double difference = event.getSceneY() - dragStartY;
         double newHeight = initialHeight + difference;
-        double upperBound = mainBox.getParent().getScene().getWindow().getHeight() * .50;
+        double upperBound = mainBox.getParent().getScene().getWindow().getHeight() * 0.50;
 
         if (minimized)
         {
             /* Minimized draggable code. Also need to remove setManged for resizeHandle
-            if (newHeight >= 23)
+            if (newHeight >= MINIMIZED_HEIGHT)
             {
                 updateHeight(newHeight);
 
                 buttonBox.setMinHeight(newHeight);
                 buttonBox.setMaxHeight(newHeight);
 
-                if (newHeight >= (LOWER_BOUND / 2.0))
+                if (newHeight >= (DEFAULT_HEIGHT / 2.0))
                 {
-                    buttonBox.setMinHeight(23);
-                    buttonBox.setMaxHeight(23);
+                    buttonBox.setMinHeight(MINIMIZED_HEIGHT);
+                    buttonBox.setMaxHeight(MINIMIZED_HEIGHT);
                     maximize();
                 }
             }
             else
             {
-                updateHeight(23);
-                buttonBox.setMinHeight(23);
-                buttonBox.setMaxHeight(23);
+                updateHeight(MINIMIZED_HEIGHT);
+                buttonBox.setMinHeight(MINIMIZED_HEIGHT);
+                buttonBox.setMaxHeight(MINIMIZED_HEIGHT);
             }
             */
         }
         else
         {
-            if (newHeight < (LOWER_BOUND/2.0))
+            if (newHeight < (DEFAULT_HEIGHT/2.0))
             {
                 minimize();
             }
-            else if ((newHeight >= LOWER_BOUND) && (newHeight <= upperBound))
+            else if ((newHeight >= DEFAULT_HEIGHT) && (newHeight <= upperBound))
             {
                 updateHeight(newHeight);
             }
-            else if (newHeight < LOWER_BOUND)
+            else if (newHeight < DEFAULT_HEIGHT)
             {
-                updateHeight(LOWER_BOUND);
+                updateHeight(DEFAULT_HEIGHT);
             }
             else if (newHeight > upperBound){
                 updateHeight(upperBound);
@@ -215,14 +215,15 @@ public class CarouselController implements Initializable {
      * Used to clear code up, updates all of mainBox height settings to parameter height
      * @param height
      */
-    private void updateHeight(double height){
+    private void updateHeight(double height)
+    {
         mainBox.setPrefHeight(height);
         mainBox.setMinHeight(height);
         mainBox.setMaxHeight(height);
     }
 
     /**
-     * Detects if the release is not past the threshold to call maximize. Will resize bar back to 23
+     * Detects if the release is not past the threshold to call maximize. Will resize bar back to MINIMIZED_HEIGHT
      * @param event
      */
     @FXML
@@ -230,20 +231,20 @@ public class CarouselController implements Initializable {
     {
         if (minimized)
         {
-            updateHeight(23);
+            updateHeight(MINIMIZED_HEIGHT);
         }
-        buttonBox.setMinHeight(23);
-        buttonBox.setMaxHeight(23);
+        buttonBox.setMinHeight(MINIMIZED_HEIGHT);
+        buttonBox.setMaxHeight(MINIMIZED_HEIGHT);
     }
 
     /**
      * Un-hides button and the minimize bar while Hiding the cards. Sets minimized to true and updates
-     * mainBox height to 23.
+     * mainBox height to MINIMIZED_HEIGHT.
      */
     private void minimize()
     {
         minimizedValue = mainBox.getHeight();
-        updateHeight(23);
+        updateHeight(MINIMIZED_HEIGHT);
 
         containerHBox.setVisible(false);
 
@@ -262,9 +263,9 @@ public class CarouselController implements Initializable {
      */
     private void maximize()
     {
-        if (minimizedValue < 180)
+        if (minimizedValue < DEFAULT_HEIGHT)
         {
-            updateHeight(180);
+            updateHeight(DEFAULT_HEIGHT);
         }
         else
         {
@@ -285,7 +286,7 @@ public class CarouselController implements Initializable {
 
     /**
      * When button is pressed toggleTopBar is triggered. For now button is only available when
-     * minimized. It will update cardHeight to 180 and calls maximize().
+     * minimized. It will update cardHeight to DEFAULT_HEIGHT and calls maximize().
      */
     public void toggleTopBar()
     {
@@ -298,7 +299,9 @@ public class CarouselController implements Initializable {
             minimize();
         }
     }
-    public void minimizeCarousel(){
+
+    public void minimizeCarousel()
+    {
         minimize();
     }
 }

@@ -31,6 +31,14 @@ import java.util.List;
 
 public class SideBarController
 {
+    private static final int DEFAULT_WIDTH = 400;
+    private static final int MINIMIZED_WIDTH = 23;
+
+    private static final double RESIZE_WIDTH = 5.0;
+
+    //Alternative LOWER_BOUND: 62
+    private static final int LOWER_BOUND = 322;
+
     @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
     @FXML private Button minimizeButton;
@@ -45,9 +53,6 @@ public class SideBarController
     private final List<RadioButton> buttons = new ArrayList<>(8);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
-    private static final double RESIZE_WIDTH = 5.0;
-    //Alternative LOWER_BOUND: 62
-    private static final int LOWER_BOUND = 322;
     private ObservableTabsModel tabModels;
     private String lastSelectedTabLabel = null;
     private boolean minimized = false;
@@ -93,8 +98,8 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
-        mainBox.setPrefWidth(400);
-        mainBox.setMaxWidth(400);
+        mainBox.setPrefWidth(DEFAULT_WIDTH);
+        mainBox.setMaxWidth(DEFAULT_WIDTH);
     }
 
     private void removeTab(String key)
@@ -140,9 +145,10 @@ public class SideBarController
         RadioButton button = new RadioButton(name);
 
         // Set sizing
-        button.setMinHeight(32.0);
-        button.setMaxHeight(32.0);
-        button.setPrefHeight(32.0);
+        double buttonHeight = 32.0;
+        button.setMinHeight(buttonHeight);
+        button.setMaxHeight(buttonHeight);
+        button.setPrefHeight(buttonHeight);
         button.setMaxWidth(Double.MAX_VALUE);  // Equivalent to 1.7976931348623157E308
 
         // Set properties
@@ -203,7 +209,7 @@ public class SideBarController
     {
         if (minimized)
         {
-            resizeWidth(400);
+            resizeWidth(DEFAULT_WIDTH);
 
             maximize();
         }
@@ -242,9 +248,9 @@ public class SideBarController
     public void mouseDragged(MouseEvent event)
     {
         double newWidth = event.getX();
-        System.out.println(newWidth);
+
         //decimal at end is percentage of screen it can be dragged to
-        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .50;
+        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * 0.50;
 
         //will only preform actions after this method if the cursor is resize cursor
         if (!mainBox.getCursor().equals(Cursor.E_RESIZE))
@@ -254,7 +260,7 @@ public class SideBarController
 
         if (minimized) //if in minimized state
         {
-            if (newWidth >= 23)
+            if (newWidth >= MINIMIZED_WIDTH)
             {
                 resizeWidth(newWidth);
 
@@ -265,7 +271,7 @@ public class SideBarController
             }
             else
             {
-                resizeWidth(23);
+                resizeWidth(MINIMIZED_WIDTH);
             }
         }
         else
@@ -298,7 +304,7 @@ public class SideBarController
     {
         if (minimized)
         {
-            resizeWidth(23);
+            resizeWidth(MINIMIZED_WIDTH);
         }
     }
 
@@ -343,7 +349,7 @@ public class SideBarController
      */
     private void minimize()
     {
-        resizeWidth(23);
+        resizeWidth(MINIMIZED_WIDTH);
 
         buttonBox.setVisible(false);
         workspaceLabel.setVisible(false);
