@@ -12,6 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.ViewSetChange.Type;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
@@ -48,11 +49,11 @@ import java.util.stream.Stream;
  *
  * @author Michael Tetzlaff
  */
-public final class ViewSet implements ReadonlyViewSet, GenericObservable
+public final class ViewSet implements ReadonlyViewSet, Observable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
-    private List<GenericObserver> observers = new ArrayList<>();
+    private final Collection<Observer<ViewSetChange>> observers = new ArrayList<>(8);
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
@@ -164,12 +165,12 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     /**
      * Orientation imported, to be applied to the model
      */
-    private Matrix3 orientationMatrix = null;
+    private Matrix3 orientationMatrix;
 
     /**
      * Object translation imported, to be applied to the model
      */
-    private Vector3 objectTranslation = null;
+    private Vector3 objectTranslation;
 
     /**
      * Object scale imported, to be applied to the model
@@ -242,12 +243,12 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
         private final ViewSet result;
         private boolean needsClipPlanes = true;
 
-        private Matrix4 cameraPose = null;
+        private Matrix4 cameraPose;
         private int cameraProjectionIndex = 0;
         private int lightIndex = 0;
         private File imageFile;
         private File maskFile;
-        private Map<Integer, File> maskMap;
+        private final Map<Integer, File> maskMap;
         private boolean hasUnsupportedCorrections;
 
         /**
@@ -338,10 +339,10 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
                 {
                     result.viewSetDataCollection.getViewSetData().remove(index);
                 }
-                index = result.disabledViewSetDataCollection.getImageFiles().indexOf(f);
-                if (index != -1)
+                int disabledIndex = result.disabledViewSetDataCollection.getImageFiles().indexOf(f);
+                if (disabledIndex != -1)
                 {
-                    result.disabledViewSetDataCollection.getViewSetData().remove(index);
+                    result.disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
                 }
             }
             // Reassign view indices for smaller data set.
@@ -514,7 +515,7 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
 
         public Builder addResourceFiles(Map<String, File> resourceMap)
         {
-            result.getResourceMap().putAll(resourceMap);
+            result.resourceMap.putAll(resourceMap);
             return this;
         }
 
@@ -925,18 +926,18 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     public void deleteCamera(File image)
     {
         int index = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
-        if (index != -1)
+        if (index >= 0)
         {
             viewSetDataCollection.getViewSetData().remove(index);
-            notifyObservers();
+            notifyObservers(new ViewSetChange(Type.REMOVED, image));
         }
         else
         {
-            index = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
-            if (index != -1)
+            int disabledIndex = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
+            if (disabledIndex >= 0)
             {
-                disabledViewSetDataCollection.getViewSetData().remove(index);
-                notifyObservers();
+                disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
+                notifyObservers(new ViewSetChange(Type.REMOVED, image));
             }
         }
     }
@@ -944,55 +945,53 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     public void toggleCamera(File image)
     {
         int index = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
-        if (index != -1)
+        if (index >= 0)
         {
             setCameraEnabled(image, viewSetDataCollection.getViewSetData().get(index).isDisabled);
         }
         else
         {
-            index = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
-            if (index != -1)
+            int disabledIndex = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
+            if (disabledIndex >= 0)
             {
-                setCameraEnabled(image, disabledViewSetDataCollection.getViewSetData().get(index).isDisabled);
+                setCameraEnabled(image, disabledViewSetDataCollection.getViewSetData().get(disabledIndex).isDisabled);
             }
         }
     }
 
     public void setCameraEnabled(File image, boolean isEnabled)
     {
-        int index = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
-        // Currently enabled
-        if (index == -1)
+        int disabledIndex = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
+        if (disabledIndex == -1) // Currently enabled
         {
-            index = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
-            if (index != -1)
+            int enabledIndex = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
+            if (enabledIndex != -1)
             {
-                viewSetDataCollection.getViewSetData().get(index).isDisabled = !isEnabled;
-                // Now is disabled
-                if (viewSetDataCollection.getViewSetData().get(index).isDisabled)
+                viewSetDataCollection.getViewSetData().get(enabledIndex).isDisabled = !isEnabled;
+                if (viewSetDataCollection.getViewSetData().get(enabledIndex).isDisabled) // Now is disabled
                 {
-                    disabledViewSetDataCollection.getViewSetData().add(viewSetDataCollection.getViewSetData().get(index));
-                    viewSetDataCollection.getViewSetData().remove(index);
-                }
-                // Else still enabled so nothing needs to change
-            }
+                    disabledViewSetDataCollection.getViewSetData().add(viewSetDataCollection.getViewSetData().get(enabledIndex));
+                    viewSetDataCollection.getViewSetData().remove(enabledIndex);
 
+                    notifyObservers(new ViewSetChange(Type.MODIFIED, image));
+                }
+            }
+            // Else still enabled so nothing needs to change
         }
         // Currently disabled, so enable camera
         else
         {
-            disabledViewSetDataCollection.getViewSetData().get(index).isDisabled = !isEnabled;
+            disabledViewSetDataCollection.getViewSetData().get(disabledIndex).isDisabled = !isEnabled;
             // Now is enabled
-            if (!disabledViewSetDataCollection.getViewSetData().get(index).isDisabled)
+            if (!disabledViewSetDataCollection.getViewSetData().get(disabledIndex).isDisabled)
             {
-                viewSetDataCollection.getViewSetData().add(disabledViewSetDataCollection.getViewSetData().get(index));
-                disabledViewSetDataCollection.getViewSetData().remove(index);
+                viewSetDataCollection.getViewSetData().add(disabledViewSetDataCollection.getViewSetData().get(disabledIndex));
+                disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
+
+                notifyObservers(new ViewSetChange(Type.MODIFIED, image));
             }
             // Else still disabled so nothing needs to change
         }
-        // Notify regardless of enable or disable
-        notifyObservers();
-
     }
 
     @Override
@@ -1239,7 +1238,11 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     @Override
     public File getThumbnailImageFile(int poseIndex, String extension)
     {
-        return viewSetDataCollection.getThumbnailImageFile(poseIndex, extension);
+        if (poseIndex < viewSetDataCollection.getViewSetData().size())
+        {
+            return viewSetDataCollection.getThumbnailImageFile(poseIndex, extension);
+        }
+        return disabledViewSetDataCollection.getThumbnailImageFile(poseIndex - viewSetDataCollection.getViewSetData().size(), extension);
     }
 
     @Override
@@ -1336,6 +1339,19 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
             {
                 poseIndex = i;
                 break;
+            }
+        }
+
+        if (poseIndex < 0)
+        {
+            // Check disabled views
+            for (int i = 0; i < disabledViewSetDataCollection.getViewSetData().size(); ++i)
+            {
+                if (this.disabledViewSetDataCollection.getViewSetData().get(i).imageFile.equals(key))
+                {
+                    poseIndex = i + getEnabledCameraPoseCount();
+                    break;
+                }
             }
         }
 
@@ -1456,7 +1472,7 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     @Override
     public ViewRMSE getViewErrorMetrics(int poseIndex)
     {
-        return this.viewSetDataCollection.getViewSetData().get(poseIndex).viewErrorMetric;
+        return this.getAllViewSetData().get(poseIndex).viewErrorMetric;
     }
 
     @Override
@@ -1630,7 +1646,7 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     @Override
     public Map<Integer, File> getMasksMap()
     {
-        HashMap<Integer, File>maskFiles = new HashMap<>(viewSetDataCollection.getViewSetData().size());
+        Map<Integer, File> maskFiles = new HashMap<>(viewSetDataCollection.getViewSetData().size());
         for (int i = 0; i < viewSetDataCollection.getViewSetData().size(); ++i)
         {
             if (viewSetDataCollection.getViewSetData().get(i).maskFile != null)
@@ -1892,7 +1908,7 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     }
 
     @Override
-    public boolean getIsDisabled(int poseIndex)
+    public boolean isViewDisabled(int poseIndex)
     {
         return getAllViewSetData().get(poseIndex).isDisabled;
     }
@@ -1926,23 +1942,23 @@ public final class ViewSet implements ReadonlyViewSet, GenericObservable
     }
 
     @Override
-    public void registerObserver(GenericObserver observer)
+    public void registerObserver(Observer<ViewSetChange> observer)
     {
         observers.add(observer);
     }
 
     @Override
-    public void removeObserver(GenericObserver observer)
+    public void removeObserver(Observer<ViewSetChange> observer)
     {
         observers.remove(observer);
     }
 
     @Override
-    public void notifyObservers()
+    public void notifyObservers(ViewSetChange change)
     {
-        for (GenericObserver observer : observers)
+        for (Observer<ViewSetChange> observer : observers)
         {
-            observer.update();
+            observer.update(change);
         }
     }
 }

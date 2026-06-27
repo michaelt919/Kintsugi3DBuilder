@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -136,7 +136,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         try
         {
             // Set the output directory based on the view set's texture fit file path
-            settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesDirectory());
+            settings.setOutputDirectory(renderable.getViewSet().getSupportingFilesDirectory());
 
             if (monitor != null)
             {
@@ -176,7 +176,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
             // Save textures and basis functions
             // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
-            resources.getTextureResources().saveAll(renderable.getActiveViewSet().getSupportingFilesDirectory());
+            resources.getTextureResources().saveAll(renderable.getViewSet().getSupportingFilesDirectory());
 
             // Perform reconstruction
             //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());

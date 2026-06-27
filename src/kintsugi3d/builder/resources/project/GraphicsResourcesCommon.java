@@ -95,7 +95,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     {
         this.context = context;
         this.viewSet = viewSet;
-        viewSet.registerObserver(this::updateViewIndicesData);
+
+        if (viewSet != null)
+        {
+            viewSet.registerObserver(change -> updateViewIndicesData());
+        }
 
         // Store the poses in a uniform buffer
         if (viewSet != null && viewSet.getCameraPoseData() != null)

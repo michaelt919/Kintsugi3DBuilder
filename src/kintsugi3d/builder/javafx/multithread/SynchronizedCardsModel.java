@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,6 +16,7 @@ import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public class SynchronizedCardsModel implements CardsModel
 {
@@ -39,9 +40,15 @@ public class SynchronizedCardsModel implements CardsModel
     }
 
     @Override
-    public void deleteCard(ProjectDataCard card)
+    public void refreshCards(Predicate<ProjectDataCard> filter)
     {
-        Platform.runLater(() -> base.deleteCard(card));
+        Platform.runLater(() -> base.refreshCards(filter));
+    }
+
+    @Override
+    public void deleteCards(Predicate<ProjectDataCard> filter)
+    {
+        Platform.runLater(() -> base.deleteCards(filter));
     }
 
     @Override

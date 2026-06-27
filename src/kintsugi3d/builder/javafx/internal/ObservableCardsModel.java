@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,10 +21,12 @@ import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
+import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class ObservableCardsModel implements CardsModel
 {
@@ -36,12 +38,15 @@ public class ObservableCardsModel implements CardsModel
     private final ObservableList<ProjectDataCard> cardsList;
     private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
 
+    private final ProjectDataCardFactory cardFactory;
     private final ObservableCarouselModel carouselModel;
 
-    public ObservableCardsModel(String label, String path, ObservableCarouselModel carouselModel)
+    public ObservableCardsModel(String label, String path, ProjectDataCardFactory cardFactory,
+                                ObservableCarouselModel carouselModel)
     {
         this.label = label;
         this.path = path;
+        this.cardFactory = cardFactory;
         this.carouselModel = carouselModel;
 
         cardsList = FXCollections.observableList(new ArrayList<>(8));
@@ -61,6 +66,12 @@ public class ObservableCardsModel implements CardsModel
                 }
             }
         });
+    }
+
+    public void initialize()
+    {
+        List<ProjectDataCard> dataCards = cardFactory.createAllCards(this);
+        this.setCardList(dataCards);
     }
 
     public String getModelLabel()
@@ -130,7 +141,7 @@ public class ObservableCardsModel implements CardsModel
         int totalEnabled = 0;
         for (ProjectDataCard card : cardsList)
         {
-            if (card.getIsDisabled() == false)
+            if (!card.isDisabled())
             {
                 ++totalEnabled;
             }
@@ -143,7 +154,7 @@ public class ObservableCardsModel implements CardsModel
         int totalEnabled = 0;
         for (ProjectDataCard card : cardsList)
         {
-            if (card.getIsDisabled() == true)
+            if (card.isDisabled())
             {
                 ++totalEnabled;
             }
@@ -152,9 +163,15 @@ public class ObservableCardsModel implements CardsModel
     }
 
     @Override
-    public void deleteCard(ProjectDataCard card)
+    public void refreshCards(Predicate<ProjectDataCard> filter)
     {
-        cardsList.removeIf(other -> other.getCardId().equals(card.getCardId()));
+        cardFactory.refreshCards(this, filter);
+    }
+
+    @Override
+    public void deleteCards(Predicate<ProjectDataCard> filter )
+    {
+        cardsList.removeIf(filter);
     }
 
     @Override

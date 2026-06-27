@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -77,11 +77,11 @@ class MultiframeRenderRequest extends RenderRequestBase
 
                 program.setUniform("frame", i);
                 program.setUniform("frameCount", frameCount);
-                program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
+                program.setUniform("model_view", renderable.getViewSet().getCameraPose(0));
                 program.setUniform("projection",
-                    renderable.getActiveViewSet().getCameraProjectionForViewIndex(0)
-                        .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
-                            renderable.getActiveViewSet().getRecommendedFarPlane()));
+                    renderable.getViewSet().getCameraProjectionForViewIndex(0)
+                        .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
+                            renderable.getViewSet().getRecommendedFarPlane()));
 
                 render(drawable, framebuffer);
 

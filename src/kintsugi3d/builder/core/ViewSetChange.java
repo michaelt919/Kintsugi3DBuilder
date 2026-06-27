@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,9 +11,21 @@
 
 package kintsugi3d.builder.core;
 
-public interface GenericObservable
+import java.io.File;
+
+public class ViewSetChange
 {
-    void registerObserver(GenericObserver observer);
-    void removeObserver(GenericObserver observer);
-    void notifyObservers();
+    public enum Type
+    {
+        ADDED, REMOVED, MODIFIED
+    }
+
+    public final Type type;
+    public final File image;
+
+    public ViewSetChange(Type type, File image)
+    {
+        this.type = type;
+        this.image = image;
+    }
 }

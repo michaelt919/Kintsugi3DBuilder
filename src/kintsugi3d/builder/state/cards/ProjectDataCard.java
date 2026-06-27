@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,14 @@
 
 package kintsugi3d.builder.state.cards;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ProjectDataCard
 {
+    private final String internalName;
     private final UUID cardId;
     private final String title;
     private final String imagePath;
@@ -24,33 +26,39 @@ public class ProjectDataCard
     private final List<? extends Map<String, Runnable>> actionGroups;
     private boolean isDisabled = false; // TODO: consider getting from viewset
 
-    public ProjectDataCard(String title, String imagePath, Map<String, String> textFields, List<? extends Map<String, Runnable>> actionGroups)
+    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, List<? extends Map<String, Runnable>> actionGroups)
     {
+        this.internalName = internalName;
         this.cardId = UUID.randomUUID();
         this.title = title;
         this.imagePath = imagePath;
-        this.textFields = textFields;
-        this.actionGroups = actionGroups;
+        this.textFields = Collections.unmodifiableMap(textFields);
+        this.actionGroups = Collections.unmodifiableList(actionGroups);
     }
 
-    public ProjectDataCard(String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions, boolean isDisabled)
+    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions, boolean isDisabled)
     {
-        this(title, imagePath, textFields, List.of(actions));
+        this(internalName, title, imagePath, textFields, List.of(actions));
         this.isDisabled = isDisabled;
     }
-    public ProjectDataCard(String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
+    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
     {
-        this(title, imagePath, textFields, List.of(actions));
+        this(internalName, title, imagePath, textFields, List.of(actions));
     }
 
-    public ProjectDataCard(String title, String imagePath, Map<String, String> textFields)
+    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields)
     {
-        this(title, imagePath, textFields, List.of());
+        this(internalName, title, imagePath, textFields, List.of());
     }
 
-    public ProjectDataCard(String title, String imagePath)
+    public ProjectDataCard(String internalName, String title, String imagePath)
     {
-        this(title, imagePath, Map.of());
+        this(internalName, title, imagePath, Map.of());
+    }
+
+    public String getInternalName()
+    {
+        return internalName;
     }
 
     public UUID getCardId()
@@ -62,7 +70,7 @@ public class ProjectDataCard
     {
         if (isDisabled)
         {
-            return title + " - DISABLED";
+            return String.format("%s - DISABLED", title);
         }
         return title;
     }
@@ -91,7 +99,7 @@ public class ProjectDataCard
         return actionGroups;
     }
 
-    public boolean getIsDisabled() { return isDisabled; }
+    public boolean isDisabled() { return isDisabled; }
 
     public void setIsDisabled(boolean isDisabled) { this.isDisabled = isDisabled; }
 }

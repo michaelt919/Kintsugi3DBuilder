@@ -28,7 +28,7 @@ public class TabsManager
 
     public TabsManager(ProjectInstance<?> instance)
     {
-        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance.getActiveViewSet()), null));
+        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance.getViewSet()), null));
         factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),
             Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
         factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance),

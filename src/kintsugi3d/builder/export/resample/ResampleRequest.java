@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,16 +11,14 @@
 
 package kintsugi3d.builder.export.resample;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
@@ -41,7 +39,7 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile).finish();
 
@@ -86,8 +84,8 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
             Files.copy(resampleVSETFile.toPath(),
                 new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
-            Files.copy(renderable.getActiveViewSet().getGeometryFile().toPath(),
-                new File(resampleExportPath, renderable.getActiveViewSet().getGeometryFile().getName()).toPath(),
+            Files.copy(renderable.getViewSet().getGeometryFile().toPath(),
+                new File(resampleExportPath, renderable.getViewSet().getGeometryFile().getName()).toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
         }
     }

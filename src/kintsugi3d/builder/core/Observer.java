@@ -9,14 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state.cards;
+package kintsugi3d.builder.core;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-
-public interface ProjectDataCardFactory
+@FunctionalInterface
+public interface Observer<ChangeType>
 {
-    List<ProjectDataCard> createAllCards(CardsModel cardsModel);
-    Map<ProjectDataCard, ProjectDataCard> refreshCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter);
+    void update(ChangeType change);
 }

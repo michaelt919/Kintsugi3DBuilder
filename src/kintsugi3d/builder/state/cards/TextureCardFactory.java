@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
@@ -30,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class TextureCardFactory implements ProjectDataCardFactory
@@ -38,7 +38,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private final ProjectInstance<?> instance;
 
-    private File textureImage = null;
+    private File textureImage;
     /**
      * TextureCardFactory is the constructor for this class takes a ProjectInstance and
      * assigns it to private variable in class
@@ -82,7 +82,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
     private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose)
     {
         // Base Location where the .pngs and thumbnails folder are.
-        File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
+        File baseDirectory = instance.getViewSet().getSupportingFilesDirectory();
 
         // thumbnails folder
         File thumbnailDestination = new File(baseDirectory, "thumbnails");
@@ -118,7 +118,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
             String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
-            return new ShaderDataCard(shader, thumbnailPath, new LinkedHashMap<>()
+            return new ShaderDataCard(fileName, shader, thumbnailPath, new LinkedHashMap<>()
             {{
                 put("File Name", textureImage.getName());
                 put("Resolution", res);
@@ -170,5 +170,12 @@ public class TextureCardFactory implements ProjectDataCardFactory
         }
         // If not yet initialized, return empty list.
         return textureCards;
+    }
+
+    @Override
+    public Map<ProjectDataCard, ProjectDataCard> refreshCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    {
+        LOG.warn("refreshCards not implemented for textures.");
+        return Map.of();
     }
 }

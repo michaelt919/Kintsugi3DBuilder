@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -47,6 +47,7 @@ class MultiviewRenderRequest extends RenderRequestBase
         }
     }
 
+    @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
         ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
             throws IOException, UserCancellationException
@@ -67,16 +68,16 @@ class MultiviewRenderRequest extends RenderRequestBase
                     monitor.allowUserCancellation();
                 }
                 program.setUniform("viewIndex", i);
-                program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(i));
+                program.setUniform("model_view", renderable.getViewSet().getCameraPose(i));
                 program.setUniform("projection",
-                    renderable.getActiveViewSet().getCameraProjectionForViewIndex(i)
-                        .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
-                            renderable.getActiveViewSet().getRecommendedFarPlane()));
+                    renderable.getViewSet().getCameraProjectionForViewIndex(i)
+                        .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
+                            renderable.getViewSet().getRecommendedFarPlane()));
 
                 render(drawable, framebuffer);
 
                 String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
-                    renderable.getActiveViewSet().getImageFileName(i), "png");
+                    renderable.getViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();

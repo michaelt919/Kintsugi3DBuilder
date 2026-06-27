@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,13 +28,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.state.cards.*;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -105,10 +105,18 @@ public class CardTabController
     }
 
     private void updateSummary() {
-        String summary = cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size();
-        if (cardsModel.getModelLabel().equals("Photos"))
+        int enabledCardCount = cardsModel.getEnabledCardCount();
+        int disabledCardCount = cardsModel.getDisabledCardCount();
+        int totalCardCount = cardsModel.getCardList().size();
+
+        String summary;
+        if (disabledCardCount == 0)
         {
-            summary = cardsModel.getModelLabel() + " count: " + cardsModel.getEnabledCardCount() + "/" + cardsModel.getCardList().size();
+            summary = String.format("%d %s ", totalCardCount, cardsModel.getModelLabel());
+        }
+        else
+        {
+            summary = String.format("%d %s (%d Disabled)", totalCardCount, cardsModel.getModelLabel(), disabledCardCount);
         }
         countLabel.setText(summary);
 
@@ -318,7 +326,7 @@ public class CardTabController
 
             if (folder.exists())
             {
-                StringSelection stringSelection = new StringSelection(path);
+                Transferable stringSelection = new StringSelection(path);
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -160,7 +160,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            ViewSelection viewSelection = new ViewSelectionImpl(getActiveViewSet(), sceneModel);
+            ViewSelection viewSelection = new ViewSelectionImpl(getViewSet(), sceneModel);
 
             lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, viewSelection, sceneViewportModel);
             lightCalibration.initialize();
@@ -249,7 +249,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     {
         if (resources.getGeometry() != null)
         {
-            ReadonlyViewSet viewSet = getActiveViewSet();
+            ReadonlyViewSet viewSet = getViewSet();
 
             if (viewSet != null)
             {
@@ -482,13 +482,13 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ReadonlyVertexGeometry getActiveGeometry()
+    public ReadonlyVertexGeometry getGeometry()
     {
         return this.resources.getGeometry();
     }
 
     @Override
-    public ViewSet getActiveViewSet()
+    public ViewSet getViewSet()
     {
         return this.resources.getViewSet();
     }
@@ -536,7 +536,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     {
         if (outputDirectory != null)
         {
-            if (getActiveGeometry() == null)
+            if (getGeometry() == null)
             {
                 throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
             }
@@ -555,7 +555,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
                 // Scale to imported scale from the photogrammetry project if that exists, otherwise at the original, raw scale
                 // ViewSet should default to scale of 1.0 if nothing was imported.
-                ViewSet viewSet = getActiveViewSet();
+                ViewSet viewSet = getViewSet();
                 if (viewSet != null)
                 {
                     transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
@@ -563,7 +563,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
                 TextureResources<ContextType> textureResources = resources.getTextureResources();
 
-                ModelExporter exporter = ModelExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                ModelExporter exporter = ModelExporter.fromVertexGeometry(getGeometry(), transform);
                 settings.applyToExporter(exporter, textureResources, filename);
 
                 File modelFile = new File(outputDirectory, filename);
