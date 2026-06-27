@@ -21,6 +21,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -104,10 +105,16 @@ public class CardController
             Label caption = new Label(value);
             caption.getStyleClass().add("wireframeCaption");
             caption.setWrapText(true);
-            caption.setPrefWidth(200);
+            caption.setPrefWidth(350);
 
             textContent.getChildren().add(label);
             textContent.getChildren().add(caption);
+
+            Tooltip tooltip = new Tooltip(caption.getText());
+            tooltip.setWrapText(true);
+            tooltip.setMaxWidth(500);
+            Tooltip.install(caption, tooltip);
+
             VBox.setMargin(caption, new Insets(0, 0, 8, 4));
         });
 
@@ -178,6 +185,7 @@ public class CardController
                 mainImage.setImage(preview);
             }
         });
+        mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
     }
 
     public void setCardVisibility(boolean visibility)

@@ -9,11 +9,33 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.gl.window.FramebufferCanvas;
-
-public interface CanvasModel extends ReadonlyCanvasModel
+public class TabInfo
 {
-    void setCanvas(FramebufferCanvas<?> canvas);
+    private final String label;
+    private final ProjectDataCardFactory factory;
+    private final String path;
+
+    public TabInfo(String label, ProjectDataCardFactory factory, String path)
+    {
+        this.label = label;
+        this.factory = factory;
+        this.path = path;
+    }
+
+    public String getLabel()
+    {
+        return label;
+    }
+
+    public ProjectDataCardFactory getFactory()
+    {
+        return factory;
+    }
+
+    public String getPath()
+    {
+        return path;
+    }
 }

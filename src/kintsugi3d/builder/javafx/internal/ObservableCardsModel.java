@@ -18,6 +18,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 
@@ -28,17 +29,22 @@ import java.util.UUID;
 public class ObservableCardsModel implements CardsModel
 {
     private final String label;
+    private final String path;
 
     private final UUIDSelectionModel selectedCardsModel;
     private final UUIDSelectionModel expandedCardsModel;
     private final ObservableList<ProjectDataCard> cardsList;
     private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
 
-    public ObservableCardsModel(String label)
+    private final ObservableCarouselModel carouselModel;
+
+    public ObservableCardsModel(String label, String path, ObservableCarouselModel carouselModel)
     {
         this.label = label;
+        this.path = path;
+        this.carouselModel = carouselModel;
 
-        cardsList = FXCollections.observableList(new ArrayList<>());
+        cardsList = FXCollections.observableList(new ArrayList<>(8));
         unmodifiableCardsList = FXCollections.unmodifiableObservableList(cardsList);
         selectedCardsModel = new UUIDSelectionModel();
         expandedCardsModel = new UUIDSelectionModel();
@@ -61,6 +67,8 @@ public class ObservableCardsModel implements CardsModel
     {
         return label;
     }
+
+    public String getPath() {return path; }
 
     public boolean isSelected(UUID cardId)
     {
@@ -162,5 +170,10 @@ public class ObservableCardsModel implements CardsModel
         {
             onConfirm.run();
         }
+    }
+
+    public CarouselModel getCarousel()
+    {
+        return carouselModel;
     }
 }

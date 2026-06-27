@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,6 +20,6 @@ import java.util.function.Consumer;
 public interface CanvasListModel
 {
     void setInstanceManager(ProjectInstanceManager<?> instanceManager);
-    void createCanvas(UserShader shader, int width, int height, Consumer<FramebufferCanvas<?>> canvasChangedListener);
+    void createCanvas(UserShader shader, int width, int height, Consumer<FramebufferCanvas<?>> framebufferCallback);
     void removeCanvas(UserShader shader);
 }

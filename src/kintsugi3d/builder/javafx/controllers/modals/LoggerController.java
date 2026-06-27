@@ -21,9 +21,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import kintsugi3d.builder.app.logging.LogMessage;
 import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
+import kintsugi3d.builder.javafx.util.ScrollBarHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -48,6 +50,7 @@ public class LoggerController implements Initializable
     @FXML private ToggleButton toggleButtonTrace;
     @FXML private ToggleButton toggleButtonWarn;
     @FXML private ListView<LogMessage> messageListView;
+    @FXML private Pane cornerPatch;
 
     private RecentLogMessageAppender logMessages;
 
@@ -86,6 +89,7 @@ public class LoggerController implements Initializable
             toggleButtonTrace.setSelected(false);
             toggleButtonTrace.setDisable(true);
         }
+        ScrollBarHelper.scrollbarFix(messageListView);
     }
 
     public void buttonOpenLogDir(ActionEvent actionEvent)

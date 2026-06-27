@@ -22,17 +22,20 @@ import java.util.*;
 public class ObservableTabsModel implements TabsModel
 {
     private final ObservableMap<String, ObservableCardsModel> tabs;
+    private final ObservableCarouselModel carouselModel;
 
-    public ObservableTabsModel()
+    public ObservableTabsModel(ObservableCarouselModel carouselModel)
     {
+        this.carouselModel = carouselModel;
+
         Map<String, ObservableCardsModel> cardsModels = new LinkedHashMap<>(4);
-        tabs = FXCollections.observableMap(cardsModels);
+        this.tabs = FXCollections.observableMap(cardsModels);
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory)
+    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
     {
-        ObservableCardsModel newTab = new ObservableCardsModel(tabName);
+        ObservableCardsModel newTab = new ObservableCardsModel(tabName, path, carouselModel);
         List<ProjectDataCard> dataCards = cardFactory.createAllCards(newTab);
         newTab.setCardList(dataCards);
         tabs.put(tabName, newTab);
@@ -42,6 +45,9 @@ public class ObservableTabsModel implements TabsModel
     public void clearTabs()
     {
         tabs.clear();
+
+        // Also clear carousel as its contents will be invalidated if the tabs are gone.
+        carouselModel.clearCarousel();
     }
 
     @Override

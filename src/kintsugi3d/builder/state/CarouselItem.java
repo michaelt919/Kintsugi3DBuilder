@@ -11,9 +11,26 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.gl.window.FramebufferCanvas;
+import kintsugi3d.builder.state.scene.UserShader;
 
-public interface CanvasModel extends ReadonlyCanvasModel
+public class CarouselItem
 {
-    void setCanvas(FramebufferCanvas<?> canvas);
+    private final UserShader shader;
+    private final ReadonlyCanvasModel canvas;
+
+    public CarouselItem(UserShader shader, ReadonlyCanvasModel canvas)
+    {
+        this.shader = shader;
+        this.canvas = canvas;
+    }
+
+    public UserShader getShader()
+    {
+        return shader;
+    }
+
+    public ReadonlyCanvasModel getCanvasModel()
+    {
+        return canvas;
+    }
 }

@@ -25,8 +25,12 @@ import kintsugi3d.builder.javafx.experience.CreateProject;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -306,7 +310,7 @@ public final class ProjectIO
             {
                 newVsetFile = JavaFXState.getInstance().getProjectModel().openProjectFile(projectFile);
             }
-            catch (Exception e)
+            catch (RuntimeException | IOException | SAXException | ParserConfigurationException e)
             {
                 ExceptionHandling.error("An error occurred opening project", e);
             }
@@ -381,7 +385,7 @@ public final class ProjectIO
                     });
                 });
             }
-            catch (Exception e)
+            catch (RuntimeException | IOException | ParserConfigurationException | TransformerException e)
             {
                 ExceptionHandling.error("An error occurred saving project", e);
             }
@@ -391,7 +395,7 @@ public final class ProjectIO
     /**
      * Prompts the user for a project name and saves the project.
      * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
-     *
+     * <p>
      * NOTE: After "Save As", view set will share the same UUID as the original project,
      * including the preview resolution images and specular fit cache in the user's AppData folder.
      * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
@@ -409,7 +413,7 @@ public final class ProjectIO
     /**
      * Prompts the user for a project name and saves the project.
      * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
-     *
+     * <p>
      * NOTE: After "Save As", view set will share the same UUID as the original project,
      * including the preview resolution images and specular fit cache in the user's AppData folder.
      * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
@@ -489,7 +493,7 @@ public final class ProjectIO
     /**
      * Prompts the user for a project name and saves the project.
      * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
-     *
+     * <p>
      * NOTE: After "Save As", view set will share the same UUID as the original project,
      * including the preview resolution images and specular fit cache in the user's AppData folder.
      * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce

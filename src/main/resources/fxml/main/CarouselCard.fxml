@@ -18,10 +18,8 @@
 <?import javafx.scene.layout.*?>
 <AnchorPane prefHeight="160.0"
             prefWidth="210"
-            minHeight = "160"
-            maxHeight = "160"
-            minWidth = "210"
-            maxWidth="210"
+            minHeight = "-Infinity"
+            minWidth = "-Infinity"
             style = "-fx-background-color: #3C3C3C;"
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"

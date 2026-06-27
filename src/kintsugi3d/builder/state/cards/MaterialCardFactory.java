@@ -61,10 +61,6 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         return new ShaderDataCard(String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
-                    "View Material", () -> Global.state().getUserShaderModel().setUserShader(shader),
-                    "Send to Carousel", () ->
-                        Global.state().getCarouselModel().addToCarousel(VisualizationShaders.getForBasisMaterial(
-                            VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL)),
                     "Highlight Material", () ->
                     {
                         UserShader prevShader = Global.state().getUserShaderModel().getUserShader();

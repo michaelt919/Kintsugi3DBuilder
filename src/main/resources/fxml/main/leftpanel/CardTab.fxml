@@ -3,38 +3,47 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
 <VBox fx:id="tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS">
-    <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="200.0" VBox.vgrow="NEVER">
+      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS" fillWidth="true">
+    <HBox fx:id = "filePathHBox" maxWidth="1.7976931348623157E308"  alignment="CENTER_LEFT" style = "-fx-padding: 10px">
+        <padding>
+            <Insets top="20.0" right="0.0" bottom="0.0" left="20.0" />
+        </padding>
+        <Label fx:id = "locationLabel" minWidth="-Infinity" text = "Location: " style = "-fx-font-weight: bold;" alignment="CENTER_LEFT"/>
+        <Label fx:id = "filePathLabel" text = "File Path" textOverrun="ELLIPSIS" minWidth="0.0">
+            <HBox.margin>
+                <Insets right="10.0" />
+            </HBox.margin>
+        </Label>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="openFilePathButton" text="Open..." textOverrun="CLIP" minWidth="-Infinity" onAction="#openFilePath" style = "-fx-padding: 5px">
+            <HBox.margin>
+                <Insets right="10.0" />
+            </HBox.margin>
+        </Button>
+        <Button fx:id="copyFilePathButton" text="Copy" textOverrun="CLIP" minWidth="-Infinity" onAction="#copyFilePath" style = "-fx-padding: 5px">
+        </Button>
+    </HBox>
+    <HBox alignment="CENTER_LEFT" prefHeight="32.0" prefWidth="200.0" VBox.vgrow="NEVER" minWidth="0.0">
         <padding>
             <Insets left="16.0" right="16.0" top="8.0" />
         </padding>
         <TextField fx:id="searchbar" maxWidth="1.7976931348623157E308" promptText="Search" style="-fx-border-width: 0 0 1 0; -fx-border-color: #d9d9d9;" stylesheets="@../../kintsugiStyling.css" HBox.hgrow="ALWAYS" />
-        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-            <HBox.margin>
-                <Insets left="12.0" right="8.0" />
-            </HBox.margin>
-        </ImageView>
-        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-            <HBox.margin>
-                <Insets left="8.0" />
-            </HBox.margin>
-        </ImageView>
         <VBox.margin>
             <Insets />
         </VBox.margin>
     </HBox>
-    <HBox alignment="CENTER_LEFT" prefHeight="32">
+    <HBox alignment="CENTER_LEFT" prefHeight="32" minWidth="0.0">
         <padding >
             <Insets left="15.5" right="16.0" top="10.0" />
         </padding>
         <Label fx:id="countLabel" style="-fx-text-fill: #aaaaaa; -fx-font-size: 14;"/>
     </HBox>
-    <ScrollPane fx:id="scrollpane" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
+    <ScrollPane fx:id="scrollpane" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS" minWidth="0.0">
         <VBox fx:id="vbox" spacing="5.0" style="-fx-background-color: #202020">
         </VBox>
         <VBox.margin>

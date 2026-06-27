@@ -228,13 +228,13 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
-            new TabsManager(loadedViewSet, newInstance).rebuildTabs();
-
             // If a new instance was just loaded, initialize it.
             try
             {
                 newInstance.initialize();
+
+                // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
+                new TabsManager(newInstance).rebuildTabs();
 
                 // Check for an old instance just to be safe
                 if (projectInstance != null)
@@ -392,7 +392,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     public void addRenderView(UserShader shader, FramebufferSize initialSize,
-                              Consumer<FramebufferCanvas<ContextType>> framebufferCallback)
+                              Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
@@ -646,6 +646,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         renderViewMap.clear();
         renderViews.clear();
 
+        // Empty sidebar; will be repopulated when another project is opened.
+        Global.state().getTabModels().clearTabs();
+
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
@@ -659,9 +662,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 Global.state().getProjectModel().setProjectProcessed(false);
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
-
-                // Empty sidebar; will be repopulated when another project is opened.
-                Global.state().getTabModels().clearTabs();
             }
         });
     }
