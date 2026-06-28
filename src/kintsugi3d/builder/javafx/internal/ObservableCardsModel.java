@@ -17,6 +17,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.CardsModel;
@@ -165,7 +166,20 @@ public class ObservableCardsModel implements CardsModel
     @Override
     public void refreshCards(Predicate<ProjectDataCard> filter)
     {
-        cardFactory.refreshCards(this, filter);
+        // Get a mapping from stale cards needing refresh and their updated version.
+        var replacements = cardFactory.createRefreshedCards(this, filter);
+
+        // Loop over cards to check if refresh is needed.
+        for (int i = 0; i < cardsList.size(); i++)
+        {
+            // Look for the old card in the replacement map.
+            ProjectDataCard replacement = replacements.get(cardsList.get(i));
+            if (replacement != null) // replacement will be null if no refresh is needed.
+            {
+                // Overwrite the reference to the old card with the new one.
+                cardsList.set(i, replacement);
+            }
+        }
     }
 
     @Override
@@ -178,7 +192,7 @@ public class ObservableCardsModel implements CardsModel
     public void confirm(String title, String header, String message, Runnable onConfirm)
     {
         // Temp solution -- will eventually create a custom modal.
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message);
+        Alert alert = new Alert(AlertType.CONFIRMATION, message);
         alert.setTitle(title);
         alert.setHeaderText(header);
         var result = alert.showAndWait();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,19 +15,24 @@ import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
+import java.util.Map.Entry;
 
 public class SideBarController
 {
@@ -54,7 +59,7 @@ public class SideBarController
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
     private ObservableTabsModel tabModels;
-    private String lastSelectedTabLabel = null;
+    private String lastSelectedTabLabel;
     private boolean minimized = false;
 
     public Node getRootNode()
@@ -156,13 +161,13 @@ public class SideBarController
         button.setSelected(false);
         button.setStyle("-fx-alignment: center;");
         button.getStyleClass().add("stripped-radio-button");
-        button.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        button.setTextAlignment(TextAlignment.CENTER);
 
         // Add to ToggleGroup
         button.setToggleGroup(tabToggleGroup);
 
         // Allow the button to grow horizontally in an HBox
-        HBox.setHgrow(button, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(button, Priority.ALWAYS);
 
         buttons.add(button);
 
@@ -316,7 +321,7 @@ public class SideBarController
     {
         if (lastSelectedTabLabel == null)
         {
-            for (Map.Entry<String, RadioButton> entry : buttonMap.entrySet())
+            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
             {
                 RadioButton button = entry.getValue();
 
@@ -393,11 +398,13 @@ public class SideBarController
      * Used to condense code. Resizes mainBox according to parameter width.
      * @param width
      */
-    private void resizeWidth(double width){
+    private void resizeWidth(double width)
+    {
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
     }
+
     public void refreshTabs()
     {
         tabControllers.forEach(CardTabController::refreshCardList);

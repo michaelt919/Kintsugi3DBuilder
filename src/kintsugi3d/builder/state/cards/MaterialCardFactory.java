@@ -129,7 +129,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> refreshCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
     {
         LOG.warn("refreshCards not implemented for textures.");
         return Map.of();

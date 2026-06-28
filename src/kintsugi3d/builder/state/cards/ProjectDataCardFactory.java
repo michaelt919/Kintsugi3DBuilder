@@ -17,6 +17,18 @@ import java.util.function.Predicate;
 
 public interface ProjectDataCardFactory
 {
+    /**
+     * Creates all cards from scratch.
+     * @param cardsModel
+     * @return
+     */
     List<ProjectDataCard> createAllCards(CardsModel cardsModel);
-    Map<ProjectDataCard, ProjectDataCard> refreshCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter);
+
+    /**
+     * Returns a map from the original card to its replacement after refresh.
+     * @param cardsModel
+     * @param filter
+     * @return
+     */
+    Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter);
 }
