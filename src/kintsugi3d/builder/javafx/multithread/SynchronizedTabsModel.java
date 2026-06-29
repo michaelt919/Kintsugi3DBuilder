@@ -29,9 +29,9 @@ public class SynchronizedTabsModel implements TabsModel
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory)
+    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
     {
-        Platform.runLater(() -> base.addTab(tabName, cardFactory));
+        Platform.runLater(() -> base.addTab(tabName, cardFactory, path));
     }
 
     @Override

@@ -24,6 +24,7 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
@@ -178,8 +179,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-
-        int cameraCount = loadedViewSet.getCameraPoseCount();
+        int cameraCount = loadedViewSet.getCombinedCameraPoseCount();
         if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
@@ -192,7 +192,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = loadedViewSet.getImageFiles();
+        List<File> imgFiles = loadedViewSet.getAllImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
         imgFiles.forEach(file -> imgFileNames.add(file.getName()));
@@ -229,13 +229,33 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
-            new TabsManager(loadedViewSet, newInstance).rebuildTabs();
-
             // If a new instance was just loaded, initialize it.
             try
             {
                 newInstance.initialize();
+
+                // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
+                TabsManager tabsManager = new TabsManager(newInstance);
+                tabsManager.rebuildTabs();
+
+                // Register observer for changes to the Photos tab
+                loadedViewSet.registerObserver(change ->
+                {
+                    CardsModel photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS);
+
+                    switch (change.type)
+                    {
+                        case ADDED:
+                            tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
+                            break;
+                        case REMOVED:
+                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getName()));
+                            break;
+                        case MODIFIED:
+                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getName()));
+                            break;
+                    }
+                });
 
                 // Check for an old instance just to be safe
                 if (projectInstance != null)
@@ -393,7 +413,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     public void addRenderView(UserShader shader, FramebufferSize initialSize,
-                              Consumer<FramebufferCanvas<ContextType>> framebufferCallback)
+                              Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
@@ -490,7 +510,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     {
         if (projectInstance != null)
         {
-            return projectInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+            return projectInstance.getViewSet().getLuminanceEncoding().encodeFunction;
         }
         else
         {
@@ -647,6 +667,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         renderViewMap.clear();
         renderViews.clear();
 
+        // Empty sidebar; will be repopulated when another project is opened.
+        Global.state().getTabModels().clearTabs();
+
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
@@ -660,9 +683,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 Global.state().getProjectModel().setProjectProcessed(false);
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
-
-                // Empty sidebar; will be repopulated when another project is opened.
-                Global.state().getTabModels().clearTabs();
             }
         });
     }

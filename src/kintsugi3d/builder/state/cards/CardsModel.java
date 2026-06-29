@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,12 +12,15 @@
 package kintsugi3d.builder.state.cards;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public interface CardsModel
 {
     List<ProjectDataCard> getCardList();
     void setCardList(List<ProjectDataCard> cards);
 
-    void deleteCard(ProjectDataCard card);
+    void refreshCards(Predicate<ProjectDataCard> filter);
+    void deleteCards(Predicate<ProjectDataCard> filter);
+
     void confirm(String title, String header, String message, Runnable onConfirm);
 }

@@ -9,11 +9,23 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.window.FramebufferCanvas;
+import java.io.File;
 
-public interface CanvasModel extends ReadonlyCanvasModel
+public class ViewSetChange
 {
-    void setCanvas(FramebufferCanvas<?> canvas);
+    public enum Type
+    {
+        ADDED, REMOVED, MODIFIED
+    }
+
+    public final Type type;
+    public final File image;
+
+    public ViewSetChange(Type type, File image)
+    {
+        this.type = type;
+        this.image = image;
+    }
 }

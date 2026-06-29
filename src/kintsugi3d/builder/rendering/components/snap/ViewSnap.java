@@ -78,7 +78,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
             // View will be overridden for light calibration so that it snaps to specific views
             Matrix4 currentViewSnap = null;
 
-            for (int i = 0; i < this.viewSelection.getViewSet().getCameraPoseCount(); i++)
+            for (int i = 0; i < this.viewSelection.getViewSet().getCombinedCameraPoseCount(); i++)
             {
                 Matrix4 candidateView = this.viewSelection.getViewForIndex(i);
                 float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()

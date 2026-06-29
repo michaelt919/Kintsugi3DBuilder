@@ -13,7 +13,10 @@ package kintsugi3d.builder.state;
 
 import kintsugi3d.gl.window.FramebufferCanvas;
 
-public interface CanvasModel extends ReadonlyCanvasModel
+import java.util.function.Consumer;
+
+public interface ReadonlyCanvasModel
 {
-    void setCanvas(FramebufferCanvas<?> canvas);
+    FramebufferCanvas<?> getCanvas();
+    void addCanvasChangedListener(Consumer<FramebufferCanvas<?>> listener);
 }

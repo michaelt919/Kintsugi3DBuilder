@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,8 +14,6 @@ package kintsugi3d.builder.javafx.core;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
-import kintsugi3d.builder.javafx.internal.CarouselModel;
-import kintsugi3d.builder.javafx.internal.InstanceModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
@@ -35,7 +33,6 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final CameraViewListModel cameraViewListModel;
     private final ProjectModel projectModel;
     private final CarouselModel carouselModel;
-    private final InstanceModel instanceModel;
 
     private final GeneralSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
@@ -62,15 +59,15 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
         settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
-        tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
-        sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
+        tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
+        carouselModel = new SynchronizedCarouselModel(JavaFXState.getInstance().getCarouselModel());
+
+        sceneViewportModel = new SceneViewportModelImpl();
         mainCanvasModel = new CanvasModelImpl();
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        carouselModel = new CarouselModel();
-        instanceModel = new InstanceModel();
     }
 
     @Override
@@ -151,8 +148,8 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public CarouselModel getCarouselModel() {return carouselModel; }
-
-    @Override
-    public InstanceModel getInstanceModel() {return instanceModel; }
+    public CarouselModel getCarouselModel()
+    {
+        return carouselModel;
+    }
 }

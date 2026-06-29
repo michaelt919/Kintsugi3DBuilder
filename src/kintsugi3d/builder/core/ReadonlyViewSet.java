@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -49,12 +49,27 @@ public interface ReadonlyViewSet
     ViewSet copy();
 
     UUID getUUID();
+
     /**
      * Gets the camera pose defining the transformation from object space to camera space for a particular view.
      * @param poseIndex The index of the camera pose to retrieve.
      * @return The camera pose as a 4x4 affine transformation matrix.
      */
     Matrix4 getCameraPose(int poseIndex);
+
+    /**
+     * Gets the camera pose defining the transformation from object space to camera space for a particular disabled view.
+     * @param poseIndex The index of the camera pose to retrieve.
+     * @return The camera pose as a 4x4 affine transformation matrix.
+     */
+    Matrix4 getDisabledCameraPose(int poseIndex);
+
+    /**
+     * Gets the camera pose defining the transformation from object space to camera space for a particular enabled view.
+     * @param poseIndex The index of the camera pose to retrieve.
+     * @return The camera pose as a 4x4 affine transformation matrix.
+     */
+    Matrix4 getEnabledCameraPose(int poseIndex);
 
     /**
      * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
@@ -147,7 +162,7 @@ public interface ReadonlyViewSet
      * In contexts when the relative path is unwanted, use getImageFileName() instead.
      * @return The list of image files
      */
-    List<File> getImageFiles();
+    List<File> getAllImageFiles();
 
     /**
      * Gets the image file corresponding to a particular view, relative to the full res image directory.
@@ -157,6 +172,20 @@ public interface ReadonlyViewSet
      * @return The image file's relative name.
      */
     File getImageFile(int poseIndex);
+
+    /**
+     * Gets the image file corresponding to a particular enabled view, relative to the full res image directory.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The enabled image file's relative name.
+     */
+    File getEnabledImageFile(int poseIndex);
+
+    /**
+     * Gets the image file corresponding to a particular disabled view, relative to the full res image directory.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The disabled image file's relative name.
+     */
+    File getDisabledImageFile(int poseIndex);
 
     /**
      * Gets the name of the image file corresponding to a particular view.
@@ -257,6 +286,22 @@ public interface ReadonlyViewSet
     int getCameraProjectionIndex(int poseIndex);
 
     /**
+     * Gets the index of the projection transformation to be used for a particular enabled view,
+     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
+     * @param poseIndex The index of the enabled view.
+     * @return The index of the projection transformation.
+     */
+    int getEnabledCameraProjectionIndex(int poseIndex);
+
+    /**
+     * Gets the index of the projection transformation to be used for a particular disabled view,
+     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
+     * @param poseIndex The index of the disabled view.
+     * @return The index of the projection transformation.
+     */
+    int getDisabledCameraProjectionIndex(int poseIndex);
+
+    /**
      * Gets the position of a particular light source.
      * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * Assumed by convention to be in camera space.
@@ -284,13 +329,41 @@ public interface ReadonlyViewSet
      */
     int getLightIndex(int poseIndex);
 
+    /**
+     * Gets the index of the light source to be used for a particular view,
+     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
+     * @param poseIndex The index of the view.
+     * @return The index of the light source.
+     */
+    int getEnabledLightIndex(int poseIndex);
+
+    /**
+     * Gets the index of the light source to be used for a particular disabled view,
+     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
+     * @param poseIndex The index of the disabled view.
+     * @return The index of the light source.
+     */
+    int getDisabledLightIndex(int poseIndex);
+
     ViewRMSE getViewErrorMetrics(int poseIndex);
 
     /**
      * Gets the number of camera poses defined in this view set.
      * @return The number of camera poses defined in this view set.
      */
-    int getCameraPoseCount();
+    int getCombinedCameraPoseCount();
+
+    /**
+     * Gets the number of camera poses defined in the enabled view set.
+     * @return The number of camera poses defined in the enabled view set.
+     */
+    int getEnabledCameraPoseCount();
+
+    /**
+     * Gets the number of camera poses defined in the disabled view set
+     * @return The number of camera Poses defined in the disabled view set
+     */
+    int getDisabledCameraPoseCount();
 
     /**
      * Gets the number of projection transformations defined in this view set.
@@ -357,6 +430,13 @@ public interface ReadonlyViewSet
     Map<Integer, File> getMasksMap();
 
     ImageHelper loadFullResMaskedImage(int index) throws IOException;
+
+    /**
+     * Gets whether a camera pose in the combined views is disabled at a given index.
+     * @param poseIndex The index of the view to check.
+     * @return Whether this view is disabled.
+     */
+    boolean isViewDisabled(int poseIndex);
 
     /**
      * Gets additional settings associated with this view set

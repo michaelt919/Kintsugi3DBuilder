@@ -16,27 +16,84 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<AnchorPane prefHeight="200.0" prefWidth="1000" style="-fx-background-color: transparent;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
+<AnchorPane fx:id = "mainBox"
+            pickOnBounds="true"
+            stylesheets="@../kintsugiStyling.css"
+            style="-fx-background-color: transparent;"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            maxHeight="180"
+            minHeight="180"
+            prefHeight="180"
+            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
     <children>
         <ScrollPane AnchorPane.bottomAnchor="0.0"
                     AnchorPane.leftAnchor="0.0"
+                    scaleY = "-1.0"
                     AnchorPane.rightAnchor="0.0"
                     AnchorPane.topAnchor="0.0"
                     fitToHeight="true"
+                    vbarPolicy="NEVER"
                     style="-fx-background-color: transparent;"
-                    scaleY="-1.0"
                     fx:id = "carouselScrollPane">
             <content>
                 <HBox fx:id="containerHBox"
-                      scaleY="-1.0"
+                      scaleY = "-1.0"
                       spacing="10.0"
                       alignment="CENTER_LEFT"
+                      fillHeight="true"
+                      prefHeight = "160"
+                      prefWidth = "210"
                       style="-fx-background-color: transparent;">
                     <padding>
-                        <Insets top="0.0" right="15.0" bottom="15.0" left="15.0" />
+                        <Insets top="0.0" right="15.0" bottom="0.0" left="15.0" />
                     </padding>
                 </HBox>
             </content>
         </ScrollPane>
+        <VBox fx:id ="minimizeBar" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" managed="false" visible="false">
+            <!-- If this is uncommented then the minimize bar will be shown. Additionally, you need to change
+            buttonBox background color to #383838
+            <Separator fx:id = "minimizeSeparator" styleClass="black-line" stylesheets="@../kintsugiStyling.css" />
+            -->
+            <HBox   fx:id = "buttonBox"
+                    minHeight="23"
+                    maxHeight="23"
+                    style  = "-fx-background-color: transparent;"
+                    alignment="BOTTOM_LEFT">
+                <padding>
+                    <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                </padding>
+                <Button
+                        fx:id = "minimizeButton"
+                        alignment="CENTER"
+                        text = "+"
+                        maxHeight="15"
+                        minHeight="15"
+                        maxWidth="15"
+                        minWidth="15"
+                        style="-fx-padding: 0;"
+                        onAction = "#toggleTopBar"/>
+            </HBox>
+        </VBox>
+        <Region fx:id="resizeHandle"
+                AnchorPane.bottomAnchor="-5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                prefHeight="8.0" minHeight="8.0" maxHeight="8.0"
+                style="-fx-cursor: s-resize; -fx-background-color: transparent;"
+                onMousePressed="#mousePressed"
+                onMouseDragged="#mouseDragged"
+                onMouseReleased="#mouseReleased"/>
+        <HBox minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.bottomAnchor="-30.0">
+            <Button
+                    fx:id = "miniButton"
+                    text = "-"
+                    maxHeight="15"
+                    minHeight="15"
+                    maxWidth="15"
+                    minWidth="15"
+                    visible="false"
+                    style="-fx-padding: 0;"
+                    onAction = "#minimizeCarousel"/>
+        </HBox>
     </children>
 </AnchorPane>

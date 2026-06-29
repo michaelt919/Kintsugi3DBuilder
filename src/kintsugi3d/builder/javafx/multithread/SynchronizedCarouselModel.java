@@ -9,34 +9,46 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import javafx.application.Platform;
+import kintsugi3d.builder.state.CarouselItem;
+import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.window.FramebufferCanvas;
 
-import java.util.function.Consumer;
+import java.util.Collections;
+import java.util.List;
 
-public class CanvasListModelImpl implements CanvasListModel
+public class SynchronizedCarouselModel implements CarouselModel
 {
-    private ProjectInstanceManager<?> instanceManager;
+    private final CarouselModel base;
 
-    @Override
-    public void setInstanceManager(ProjectInstanceManager<?> instanceManager)
+    public SynchronizedCarouselModel(CarouselModel base)
     {
-        this.instanceManager = instanceManager;
+        this.base = base;
     }
 
     @Override
-    public void createCanvas(UserShader shader, int width, int height, Consumer<FramebufferCanvas<?>> framebufferCallback)
+    public List<CarouselItem> getCarouselItems()
     {
-        instanceManager.addRenderView(shader, new FramebufferSize(width, height), framebufferCallback);
+        return Collections.unmodifiableList(base.getCarouselItems());
     }
 
     @Override
-    public void removeCanvas(UserShader shader)
+    public void addToCarousel(UserShader shader)
     {
-        instanceManager.removeRenderView(shader);
+        Platform.runLater(() -> base.addToCarousel(shader));
+    }
+
+    @Override
+    public void removeFromCarousel(UserShader shader)
+    {
+        Platform.runLater(() -> base.removeFromCarousel(shader));
+    }
+
+    @Override
+    public void clearCarousel()
+    {
+        Platform.runLater(base::clearCarousel);
     }
 }

@@ -33,6 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class TextureCardFactory implements ProjectDataCardFactory
@@ -43,7 +44,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private final ProjectInstance<?> instance;
 
-    private File textureImage = null;
+    private File textureImage;
     /**
      * TextureCardFactory is the constructor for this class takes a ProjectInstance and
      * assigns it to private variable in class
@@ -72,7 +73,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, textureShader, "Weight Map " + weightmapIndex, null);
+        return createProjectDataCard(fileName, textureShader, String.format("Weight Map %d", weightmapIndex), null);
     }
 
     /**
@@ -87,7 +88,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
     private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose, TextureDetails key)
     {
         // Base Location where the .pngs and thumbnails folder are.
-        File baseDirectory = instance.getActiveViewSet().getSupportingFilesDirectory();
+        File baseDirectory = instance.getViewSet().getSupportingFilesDirectory();
 
         // thumbnails folder
         File thumbnailDestination = new File(baseDirectory, "thumbnails");
@@ -121,9 +122,9 @@ public class TextureCardFactory implements ProjectDataCardFactory
         try
         {
             IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
-            String res = dimensions.x + "x" + dimensions.y;
+            String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
-            return new ShaderDataCard(shader, thumbnailPath, new LinkedHashMap<>()
+            return new ShaderDataCard(fileName, shader, thumbnailPath, new LinkedHashMap<>()
             {{
                 put("File Name", textureImage.getName());
                 put("Resolution", res);
@@ -188,6 +189,13 @@ public class TextureCardFactory implements ProjectDataCardFactory
         }
         // If not yet initialized, return empty list.
         return textureCards;
+    }
+
+    @Override
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    {
+        LOG.warn("refreshCards not implemented for textures.");
+        return Map.of();
     }
 
     private void refreshTexture(TextureDetails key)

@@ -82,11 +82,13 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private AlbedoORMOptimization(ContextType context, File priorSolutionDirectory)
         throws IOException
     {
+        // Load albedo and ORM maps
         Texture2D<ContextType> albedoMap = TextureResources.loadTexture(StandardTexture.ALBEDO, priorSolutionDirectory, context);
+        Texture2D<ContextType> ormMap = TextureResources.loadTexture(StandardTexture.ORM, priorSolutionDirectory, context);
 
         if (TextureResources.getTextureFile(StandardTexture.OCCLUSION, priorSolutionDirectory).exists())
         {
-            // Load occlusion map if it exists (to pack it into the red channel of ORM)
+            // Load occlusion map if it exists (to pack it into the red channel of ORM if reoptimizing)
             this.occlusionMap = TextureResources.loadTexture(StandardTexture.OCCLUSION, priorSolutionDirectory, context);
         }
         else
@@ -104,9 +106,9 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
                     .createFramebufferObject();
             framebuffer.setColorAttachment(0, albedoMap);
 
-            if (occlusionMap != null)
+            if (ormMap != null)
             {
-                framebuffer.getColorAttachmentTexture(1).blitScaled(occlusionMap, true);
+                framebuffer.getColorAttachmentTexture(1).blitScaled(ormMap, true);
             }
 
             estimationProgram = createProgram(context, occlusionMap != null);

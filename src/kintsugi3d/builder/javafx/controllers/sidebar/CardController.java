@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.binding.BooleanBinding;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,6 +58,12 @@ public class CardController
         this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();
         this.setCardVisibility(false);
+
+        if (dataCard.isDisabled())
+        {
+            dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
+            cardTitle.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
+        }
 
         cardTitle.setText(dataCard.getTitle());
 
