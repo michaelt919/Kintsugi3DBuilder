@@ -136,6 +136,8 @@ public class CarouselController
 
             HBox.setHgrow(card, Priority.ALWAYS);
 
+            carouselModel.carouselCardHeightProperty().bind(mainBox.heightProperty());
+
             // Determine card width from the model, which uses aspect ratio to calculate it from the bound height property.
             card.prefWidthProperty().bind(carouselModel.carouselCardWidthProperty());
             card.maxWidthProperty().bind(carouselModel.carouselCardWidthProperty());
