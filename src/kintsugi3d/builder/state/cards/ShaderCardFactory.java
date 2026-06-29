@@ -27,9 +27,7 @@ import java.util.function.Predicate;
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
 the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
-shaders will be available for the user to use. On the shader cards there are two buttons
-"Add to Carousel" and "View Shader," Add to carousel will send the shader to a carousel
-for easier use for user. View Shader will apply the shader to the model.
+shaders will be available for the user to use.
  */
 public class ShaderCardFactory implements ProjectDataCardFactory
 {
@@ -50,8 +48,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
     /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
     the title of the shader and the file name. Returns ProjectDataCard of the shader
-    (single card). This is also where View Shader and Send to Carousel button and
-    code are located.
+    (single card).
      @param title
      @param fileName
      @return
