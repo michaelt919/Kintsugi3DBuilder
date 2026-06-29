@@ -95,6 +95,14 @@
     -fx-text-fill: #202020;
 }
 
+.button:disabled,
+.toggle-button:disabled,
+.card-background:disabled .label:disabled,
+.split-menu-button:disabled .label:disabled,
+.titled-pane:disabled > .title{
+    -fx-text-fill: #383838;
+}
+
 .button, .toggle-button,
 .scroll-bar .increment-button,
 .scroll-bar .decrement-button,
@@ -488,9 +496,9 @@
 /* Card Component */
 .card-background {
     -fx-background-color:
-            #ADADAD,
-            #ADADAD,
-            #ADADAD;
+            #CECECE,
+            #CECECE,
+            #CECECE;
     -fx-background-insets:
             2,
             4,
@@ -499,9 +507,17 @@
 
 .card-background:hover {
     -fx-background-color:
-            #CECECE,
-            #CECECE,
-            #CECECE;
+            #EEEEEE,
+            #EEEEEE,
+            #EEEEEE;
+}
+
+.card-background:disabled{
+    -fx-background-color: #ADADAD;
+}
+
+.card-background:disabled:hover {
+    -fx-background-color: #EEEEEE
 }
 .card-background:pressed {
     -fx-background-color:
@@ -531,11 +547,12 @@
 .button:hover{
     -fx-text-fill: #383838;
     -fx-background-color:
-            #ffffff,
-            #ffffff,
-            #ffffff;
+            #CECECE,
+            #CECECE,
+            #CECECE;
 }
 .button:pressed{
+    -fx-background-color: #CECECE;
     -fx-text-fill: #383838;
     -fx-background-color:
             #1A1A1A,

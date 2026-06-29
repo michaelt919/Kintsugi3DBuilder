@@ -311,7 +311,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
                     this.sceneModel.getLightingModel().getEnvironmentMapFilteringBias()
                         + (float)(0.5 *
                         Math.log(6 * (double)lightingResources.getEnvironmentMap().getFaceSize() * (double)lightingResources.getEnvironmentMap().getFaceSize()
-                            / (double) resources.getViewSet().getCameraPoseCount() )
+                            / (double) resources.getViewSet().getCombinedCameraPoseCount() )
                         / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", lightingResources.getEnvironmentMap().getMipmapLevelCount() - 1);
 

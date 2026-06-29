@@ -24,6 +24,7 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
@@ -178,8 +179,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-
-        int cameraCount = loadedViewSet.getCameraPoseCount();
+        int cameraCount = loadedViewSet.getCombinedCameraPoseCount();
         if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
@@ -192,7 +192,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = loadedViewSet.getImageFiles();
+        List<File> imgFiles = loadedViewSet.getAllImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
         imgFiles.forEach(file -> imgFileNames.add(file.getName()));
@@ -235,7 +235,27 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 newInstance.initialize();
 
                 // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
-                new TabsManager(newInstance).rebuildTabs();
+                TabsManager tabsManager = new TabsManager(newInstance);
+                tabsManager.rebuildTabs();
+
+                // Register observer for changes to the Photos tab
+                loadedViewSet.registerObserver(change ->
+                {
+                    CardsModel photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS);
+
+                    switch (change.type)
+                    {
+                        case ADDED:
+                            tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
+                            break;
+                        case REMOVED:
+                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getName()));
+                            break;
+                        case MODIFIED:
+                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getName()));
+                            break;
+                    }
+                });
 
                 // Check for an old instance just to be safe
                 if (projectInstance != null)
@@ -490,7 +510,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     {
         if (projectInstance != null)
         {
-            return projectInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+            return projectInstance.getViewSet().getLuminanceEncoding().encodeFunction;
         }
         else
         {

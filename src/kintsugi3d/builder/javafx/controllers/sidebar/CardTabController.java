@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,6 +22,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -31,21 +32,26 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.state.cards.*;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 public class CardTabController
 {
+    private static final Logger LOG = LoggerFactory.getLogger(CardTabController.class);
+
     @FXML private VBox tab;
     @FXML private TextField searchbar;
     @FXML private VBox vbox;
@@ -69,12 +75,24 @@ public class CardTabController
     {
         this.cardsModel = cardsModel;
         Collection<VBox> displayCards = new ArrayList<>(cardsModel.getCardList().size());
-        for (ProjectDataCard card : cardsModel.getCardList())
+
+        try
         {
-            displayCards.add(createDataCard(card).getCard());
+            for (ProjectDataCard card : cardsModel.getCardList())
+            {
+                CardController newCardController = createDataCard(card);
+                cardControllers.add(newCardController);
+                displayCards.add(newCardController.getCard());
+            }
+
+            // Add all at once to avoid repeated listener triggers.
+            vbox.getChildren().addAll(displayCards);
         }
-        // Add all at once to avoid repeated listener triggers.
-        vbox.getChildren().addAll(displayCards);
+        catch (IOException e)
+        {
+            cardLoadError(e);
+        }
+
         createListeners();
         updateSummary();
 
@@ -122,8 +140,22 @@ public class CardTabController
         });
     }
 
-    private void updateSummary() {
-        countLabel.setText(cardsModel.getModelLabel() + " count: "+ cardsModel.getCardList().size());
+    private void updateSummary()
+    {
+        int enabledCardCount = cardsModel.getEnabledCardCount();
+        int disabledCardCount = cardsModel.getDisabledCardCount();
+        int totalCardCount = cardsModel.getCardList().size();
+
+        String summary;
+        if (disabledCardCount == 0)
+        {
+            summary = String.format("%d %s ", totalCardCount, cardsModel.getModelLabel());
+        }
+        else
+        {
+            summary = String.format("%d %s (%d Disabled)", totalCardCount, cardsModel.getModelLabel(), disabledCardCount);
+        }
+        countLabel.setText(summary);
 
         //sets filePathLabel with current path, also creates tooltip with the path
         Platform.runLater(() ->{
@@ -135,46 +167,20 @@ public class CardTabController
         });
     }
 
-    private CardController createDataCard(ProjectDataCard card)
+    private CardController createDataCard(ProjectDataCard card) throws IOException
     {
         FXMLLoader loader = new FXMLLoader();
-        try
-        {
-            loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
-            loader.load();
-
-            CardController newCardController = loader.getController();
-            newCardController.init(cardsModel, card);
-
-            cardControllers.add(newCardController);
-            return newCardController;
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Could not load DataCard.fxml!", e);
-        }
+        loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
+        loader.load();
+        CardController newCardController = loader.getController();
+//            newCardController.setCardVisibility(false);
+        newCardController.init(cardsModel, card);
+        return newCardController;
     }
 
-    // For replace operations
-    private CardController createDataCard(ProjectDataCard card, int index)
+    private static void cardLoadError(IOException e)
     {
-        FXMLLoader loader = new FXMLLoader();
-        try
-        {
-            loader.setLocation(getClass().getResource("/fxml/main/leftpanel/DataCard.fxml"));
-            loader.load();
-
-            CardController newCardController = loader.getController();
-            newCardController.setCardVisibility(false);
-            newCardController.init(cardsModel, card);
-
-            cardControllers.set(index, newCardController);
-            return newCardController;
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("Failed to load DataCard.fxml", e);
-        }
+        LOG.error("Could not load DataCard.fxml!", e);
     }
 
     public void setVisible(boolean visibility)
@@ -188,42 +194,84 @@ public class CardTabController
      */
     public void refreshCardList()
     {
-        vbox.getChildren().clear();
-        cardControllers.clear();
-        for (ProjectDataCard card : cardsModel.getCardList())
+        try
         {
-            vbox.getChildren().add(createDataCard(card).getCard());
+            vbox.getChildren().clear();
+            cardControllers.clear();
+            for (ProjectDataCard card : cardsModel.getCardList())
+            {
+                cardControllers.add(createDataCard(card));
+            }
         }
+        catch (IOException e)
+        {
+            cardLoadError(e);
+        }
+
+        updateSummary();
     }
 
     private void createListeners()
     {
         cardsModel.getCardList().addListener((ListChangeListener<ProjectDataCard>) change ->
         {
-            while (change.next())
+            try
             {
-                if (change.wasRemoved())
+                while (change.next())
                 {
-                    for (int i = 0; i < change.getRemovedSize(); i++)
+                    // Don't need to handle permutations since the cardList is just a simple ObservableList that should never fire permutation changes.
+                    if (change.wasReplaced() && change.getTo() - change.getFrom() == change.getRemovedSize())
                     {
-                        cardControllers.remove(change.getFrom());
+                        // Optimized replacement without shifting for a replacement when # added == # removed
+                        for (int i = change.getFrom(); i < change.getTo(); i++)
+                        {
+                            ProjectDataCard card = cardsModel.getCardList().get(i);
+                            cardControllers.set(i, createDataCard(card));
+
+                            // Leave card open if enabled.
+                            if (!card.isDisabled())
+                            {
+                                cardsModel.expandCard(card.getCardId());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (change.wasRemoved())
+                        {
+                            for (int i = 0; i < change.getRemovedSize(); i++)
+                            {
+                                cardControllers.remove(change.getFrom());
+                            }
+                        }
+
+                        if (change.wasAdded())
+                        {
+                            for (int i = change.getFrom(); i < change.getTo(); i++)
+                            {
+                                ProjectDataCard card = cardsModel.getCardList().get(i);
+                                cardControllers.add(i, createDataCard(card));
+                            }
+                        }
                     }
                 }
-                if (change.wasAdded())
+
+                // Simple check to make sure the lists are still in sync after intended change.
+                if (cardsModel.getCardList().size() != cardControllers.size())
                 {
-                    for (int i = change.getFrom(); i < change.getTo(); i++)
-                    {
-                        createDataCard(cardsModel.getCardList().get(i));
-                    }
-                }
-                if (change.wasReplaced())
-                {
-                    for (int i = change.getFrom(); i < change.getTo(); i++)
-                    {
-                        createDataCard(cardsModel.getCardList().get(i), i);
-                    }
+                    // Shouldn't really every happen if things are working properly, but as a fallback, try to refresh the whole list.
+                    // (This will probably also fail if anything is failing, and will effectively empty the list which is better than inconsistent state.)
+                    refreshCardList();
                 }
             }
+            catch (IOException e)
+            {
+                cardLoadError(e);
+
+                // Again, this is a last-ditch effort to fix things but will probably just clear out the list.
+                refreshCardList();
+            }
+
             updateSummary();
         });
 
@@ -231,29 +279,47 @@ public class CardTabController
         {
             while (change.next())
             {
-                if (change.wasRemoved())
+                if (change.wasPermutated()) // Permutations could happen if we implement sorting at some point
                 {
-                    for (int i = 0; i < change.getRemovedSize(); i++)
+                    // Copy original cards into a temporary list.
+                    List<Node> originalCards = new ArrayList<>(vbox.getChildren().subList(change.getFrom(), change.getTo()));
+
+                    // Copy back into the vbox in permutated order.
+                    for (int oldIndex = change.getFrom(); oldIndex < change.getTo(); oldIndex++)
                     {
-                        vbox.getChildren().remove(change.getFrom());
+                        vbox.getChildren().set(change.getPermutation(oldIndex), originalCards.get(oldIndex - change.getFrom()));
                     }
                 }
-                if (change.wasAdded())
+                else if (change.wasReplaced() && change.getTo() - change.getFrom() == change.getRemovedSize())
                 {
+                    // Optimized replacement without shifting for a replacement when # added == # removed
                     for (int i = change.getFrom(); i < change.getTo(); i++)
                     {
                         CardController cardController = change.getList().get(i);
-                        vbox.getChildren().add(i, cardController.getCard());
+                        vbox.getChildren().set(i, cardController.getCard());
                     }
                 }
-                if (change.wasReplaced())
+                else
                 {
-                    for (int i = change.getFrom(); i < change.getTo(); i++)
+                    if (change.wasRemoved())
                     {
-                        vbox.getChildren().set(i, change.getList().get(i).getCard());
+                        for (int i = 0; i < change.getRemovedSize(); i++)
+                        {
+                            vbox.getChildren().remove(change.getFrom());
+                        }
+                    }
+
+                    if (change.wasAdded())
+                    {
+                        for (int i = change.getFrom(); i < change.getTo(); i++)
+                        {
+                            CardController cardController = change.getList().get(i);
+                            vbox.getChildren().add(i, cardController.getCard());
+                        }
                     }
                 }
             }
+
             updateSummary();
         });
 
@@ -335,7 +401,7 @@ public class CardTabController
 
             if (folder.exists())
             {
-                StringSelection stringSelection = new StringSelection(path);
+                Transferable stringSelection = new StringSelection(path);
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
             }

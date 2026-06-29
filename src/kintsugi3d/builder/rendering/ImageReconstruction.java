@@ -280,7 +280,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         @Override
         public boolean hasNext()
         {
-            return viewIndex < viewSet.getCameraPoseCount();
+            return viewIndex < viewSet.getCombinedCameraPoseCount();
         }
 
         @Override
@@ -322,12 +322,12 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
         public boolean canJump(int index)
         {
-            return index >= 0 && index < viewSet.getCameraPoseCount();
+            return index >= 0 && index < viewSet.getCombinedCameraPoseCount();
         }
 
         public ReconstructionView<ContextType> jump(int index)
         {
-            if (index >= 0 && index < viewSet.getCameraPoseCount())
+            if (index >= 0 && index < viewSet.getCombinedCameraPoseCount())
             {
                 this.viewIndex = index;
                 refresh();

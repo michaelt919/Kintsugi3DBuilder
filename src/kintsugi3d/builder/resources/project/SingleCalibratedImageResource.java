@@ -65,7 +65,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
         this.geometryResourcesOwned = geometryResourcesOwned;
 
         // Read the images from a file
-        if (loadOptions.areColorImagesRequested() && imageFile != null && viewIndex < viewSet.getCameraPoseCount())
+        if (loadOptions.areColorImagesRequested() && imageFile != null && viewIndex < viewSet.getCombinedCameraPoseCount())
         {
             File mask = viewSet.getMask(viewIndex);
             var colorTextureBuilder = mask == null ?

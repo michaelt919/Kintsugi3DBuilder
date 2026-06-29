@@ -30,7 +30,7 @@ public class PowerViewWeightGenerator implements ViewWeightGenerator
     @Override
     public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
+        float[] viewWeights = new float[resources.getViewSet().getCombinedCameraPoseCount()];
         float viewWeightSum = 0.0f;
 
         for (int viewIndex : activeViewIndexList)

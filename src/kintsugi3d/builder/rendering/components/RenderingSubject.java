@@ -68,7 +68,7 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
                         @Override
                         public int size()
                         {
-                            return resources.getViewSet().getCameraPoseCount();
+                            return resources.getViewSet().getCombinedCameraPoseCount();
                         }
                     },
                     targetView);

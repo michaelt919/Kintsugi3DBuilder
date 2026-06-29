@@ -9,26 +9,11 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state.cards;
+package kintsugi3d.builder.core;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-
-public interface ProjectDataCardFactory
+public interface Observable
 {
-    /**
-     * Creates all cards from scratch.
-     * @param cardsModel
-     * @return
-     */
-    List<ProjectDataCard> createAllCards(CardsModel cardsModel);
-
-    /**
-     * Returns a map from the original card to its replacement after refresh.
-     * @param cardsModel
-     * @param filter
-     * @return
-     */
-    Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter);
+    void registerObserver(Observer<ViewSetChange> observer);
+    void removeObserver(Observer<ViewSetChange> observer);
+    void notifyObservers(ViewSetChange change);
 }

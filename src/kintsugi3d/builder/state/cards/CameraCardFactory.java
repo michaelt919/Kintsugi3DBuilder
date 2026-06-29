@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,37 +11,44 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import javafx.application.Platform;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.ViewSetData;
+import kintsugi3d.builder.core.ViewSetDataCollection;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CameraCardFactory implements ProjectDataCardFactory
 {
-    private final ReadonlyViewSet viewSet;
+    private static final Logger LOG = LoggerFactory.getLogger(CameraCardFactory.class);
 
-    public CameraCardFactory(ReadonlyViewSet viewSet)
+    private final ViewSet viewSet;
+
+    private CardsModel lastUsedCardsModel;
+
+    public CameraCardFactory(ViewSet viewSet)
     {
         this.viewSet = viewSet;
     }
 
-    public ProjectDataCard createCard(CardsModel cardsModel, int cardIndex)
+    private ProjectDataCard createCard(CardsModel cardsModel, int cardIndex, ViewSetDataCollection viewSetDataCollection)
     {
         String thumbnailPath;
         try
         {
-            thumbnailPath = viewSet.findThumbnailImageFile(cardIndex).toString();
+            thumbnailPath = viewSetDataCollection.findThumbnailImageFile(cardIndex).toString();
         }
         catch (FileNotFoundException e)
         {
@@ -51,53 +58,86 @@ public class CameraCardFactory implements ProjectDataCardFactory
 
         try
         {
-            File fullResFile = viewSet.findFullResImageFile(cardIndex);
+            File fullResFile = viewSetDataCollection.findFullResImageFile(cardIndex);
             IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
             String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
+            ViewSetData view = viewSetDataCollection.getViewSetData().get(cardIndex);
+
             return new ProjectDataCard(
-                viewSet.getImageFiles().get(cardIndex).getName(), thumbnailPath,
+                view.imageFile.getPath(), // path is used to uniquely identify views for synchronizing with backend
+                view.imageFile.getName(), thumbnailPath,
                 new LinkedHashMap<>()
                 {{
                     put("Resolution", res);
                     put("Size", (fullResFile.length() / (1024 * 1024)) + " MB");
-                }});
+                }},
+                Map.of(
+                    "Remove from Project", () ->
+                        cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
+                            () -> Rendering.runLater(() -> viewSet.deleteCamera(fullResFile))),
+                    "Toggle Disabled", () ->
+                            Rendering.runLater(() -> viewSet.toggleCamera(fullResFile))
+                ),
+                view.isDisabled
+            );
         }
-        catch (IOException e)
+        catch (RuntimeException|IOException e)
         {
-            throw new RuntimeException(e);
+            LOG.error("Error creating card", e);
+            return null;
         }
     }
 
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
-        return IntStream.range(0, viewSet.getCameraPoseCount())
-            .mapToObj(i -> createCard(cardsModel, i))
-            .collect(Collectors.toUnmodifiableList());
+        lastUsedCardsModel = cardsModel;
+        List<ProjectDataCard> cardsList = IntStream.range(0, viewSet.getEnabledCameraPoseCount())
+            .mapToObj(i -> createCard(cardsModel, i, viewSet.getViewSetData()))
+            .collect(Collectors.toList());
+        // Make sure to also display disabled cards
+        List<ProjectDataCard> disabledCardsList = IntStream.range(0, viewSet.getDisabledCameraPoseCount())
+            .mapToObj(i -> createCard(cardsModel, i, viewSet.getDisabledViewSetData()))
+            .collect(Collectors.toList());
+        cardsList.addAll(disabledCardsList);
+        cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());
+        return cardsList;
     }
 
-    private static int findIndexByCardUUID(List<ProjectDataCard> cardsList, UUID id)
+    @Override
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
     {
-        for (int i = 0; i < cardsList.size(); i++)
+        Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
+
+        List<ProjectDataCard> cardsList = cardsModel.getCardList();
+        for (ProjectDataCard card : cardsList)
         {
-            if (Objects.equals(cardsList.get(i).getCardId(), id))
+            if (filter.test(card)) // Check whether the card is in the filter
             {
-                return i;
+                int viewIndex = viewSet.findIndexOfView(card.getInternalName()); // find the view index with this view name.
+
+                if (viewIndex >= 0)
+                {
+                    if (viewSet.isViewDisabled(viewIndex))
+                    {
+                        changes.put(card, createCard(cardsModel,
+                            // Subtract # of enabled views to get index within just disabled view list.
+                            viewIndex - viewSet.getEnabledCameraPoseCount(), viewSet.getDisabledViewSetData()));
+                    }
+                    else
+                    {
+                        changes.put(card, createCard(cardsModel, viewIndex, viewSet.getViewSetData()));
+                    }
+                }
             }
         }
-        return -1;
+
+        return changes;
     }
 
-    private static void deleteCard(CardsModel cardsModel, ProjectDataCard card, ViewSet viewSet)
+    private void updateCards()
     {
-        UUID id = card.getCardId();
-        int index = findIndexByCardUUID(cardsModel.getCardList(), id);
-        if (index != -1 && viewSet != null)
-        {
-            viewSet.deleteCamera(index);
-        }
-
-        cardsModel.deleteCard(card);
+        Platform.runLater(() -> lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel)));
     }
 }
