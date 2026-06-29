@@ -20,6 +20,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -41,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 public class CardTabController
@@ -199,13 +201,20 @@ public class CardTabController
             {
                 while (change.next())
                 {
-                    // TODO handle permutations?
+                    // Don't need to handle permutations since the cardList is just a simple ObservableList that should never fire permutation changes.
                     if (change.wasReplaced() && change.getTo() - change.getFrom() == change.getRemovedSize())
                     {
                         // Optimized replacement without shifting for a replacement when # added == # removed
                         for (int i = change.getFrom(); i < change.getTo(); i++)
                         {
-                            cardControllers.set(i, createDataCard(cardsModel.getCardList().get(i)));
+                            ProjectDataCard card = cardsModel.getCardList().get(i);
+                            cardControllers.set(i, createDataCard(card));
+
+                            // Leave card open if enabled.
+                            if (!card.isDisabled())
+                            {
+                                cardsModel.expandCard(card.getCardId());
+                            }
                         }
                     }
                     else
@@ -222,7 +231,8 @@ public class CardTabController
                         {
                             for (int i = change.getFrom(); i < change.getTo(); i++)
                             {
-                                cardControllers.add(i, createDataCard(cardsModel.getCardList().get(i)));
+                                ProjectDataCard card = cardsModel.getCardList().get(i);
+                                cardControllers.add(i, createDataCard(card));
                             }
                         }
                     }
@@ -251,8 +261,18 @@ public class CardTabController
         {
             while (change.next())
             {
-                // TODO handle permutations?
-                if (change.wasReplaced() && change.getTo() - change.getFrom() == change.getRemovedSize())
+                if (change.wasPermutated()) // Permutations could happen if we implement sorting at some point
+                {
+                    // Copy original cards into a temporary list.
+                    List<Node> originalCards = new ArrayList<>(vbox.getChildren().subList(change.getFrom(), change.getTo()));
+
+                    // Copy back into the vbox in permutated order.
+                    for (int oldIndex = change.getFrom(); oldIndex < change.getTo(); oldIndex++)
+                    {
+                        vbox.getChildren().set(change.getPermutation(oldIndex), originalCards.get(oldIndex - change.getFrom()));
+                    }
+                }
+                else if (change.wasReplaced() && change.getTo() - change.getFrom() == change.getRemovedSize())
                 {
                     // Optimized replacement without shifting for a replacement when # added == # removed
                     for (int i = change.getFrom(); i < change.getTo(); i++)
