@@ -75,9 +75,8 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 Map.of(
                     "Remove from Project", () ->
                         cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                            () -> Rendering.runLater(() -> viewSet.deleteCamera(fullResFile))),
-                    "Toggle Disabled", () ->
-                            Rendering.runLater(() -> viewSet.toggleCamera(fullResFile))
+                            () -> Rendering.runLater(() -> viewSet.deleteCamera(view.imageFile))),
+                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(view.imageFile))
                 ),
                 view.isDisabled
             );

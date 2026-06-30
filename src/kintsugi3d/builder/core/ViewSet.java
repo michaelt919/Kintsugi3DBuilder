@@ -948,89 +948,64 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return uuid;
     }
 
-    private int findViewSetIndex(List<ViewSetData> list, File image)
-    {
-        File imagePath = new File(removeExt(image.getAbsolutePath()));
-        for (int i = 0; i < list.size(); ++i)
-        {
-            File f = new File(getFullResImageDirectory(), removeExt(list.get(i).imageFile.getPath()));
-            if (imagePath.equals(f))
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-
     public void deleteCamera(File image)
     {
-        int index = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
+        int index = findIndexOfView(image.getName());
         if (index >= 0)
         {
-            viewSetDataCollection.getViewSetData().remove(index);
-            notifyObservers(new ViewSetChange(Type.REMOVED, image));
-        }
-        else
-        {
-            int disabledIndex = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
-            if (disabledIndex >= 0)
+            if (index < getEnabledCameraPoseCount()) // remove from enabled list
             {
-                disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
-                notifyObservers(new ViewSetChange(Type.REMOVED, image));
+                viewSetDataCollection.getViewSetData().remove(index);
             }
+            else // remove from disabled list
+            {
+                disabledViewSetDataCollection.getViewSetData().remove(index - getEnabledCameraPoseCount());
+            }
+
+            notifyObservers(new ViewSetChange(Type.REMOVED, image));
         }
     }
 
     public void toggleCamera(File image)
     {
-        int index = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
+        int index = findIndexOfView(image.getName());
         if (index >= 0)
         {
-            setCameraEnabled(image, viewSetDataCollection.getViewSetData().get(index).isDisabled);
-        }
-        else
-        {
-            int disabledIndex = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
-            if (disabledIndex >= 0)
-            {
-                setCameraEnabled(image, disabledViewSetDataCollection.getViewSetData().get(disabledIndex).isDisabled);
-            }
+            setCameraEnabled(image, combinedViewSetData.get(index).isDisabled);
         }
     }
 
     public void setCameraEnabled(File image, boolean isEnabled)
     {
-        int disabledIndex = findViewSetIndex(disabledViewSetDataCollection.getViewSetData(), image);
-        if (disabledIndex == -1) // Currently enabled
-        {
-            int enabledIndex = findViewSetIndex(viewSetDataCollection.getViewSetData(), image);
-            if (enabledIndex != -1)
-            {
-                viewSetDataCollection.getViewSetData().get(enabledIndex).isDisabled = !isEnabled;
-                if (viewSetDataCollection.getViewSetData().get(enabledIndex).isDisabled) // Now is disabled
-                {
-                    disabledViewSetDataCollection.getViewSetData().add(viewSetDataCollection.getViewSetData().get(enabledIndex));
-                    viewSetDataCollection.getViewSetData().remove(enabledIndex);
+        int index = findIndexOfView(image.getName());
 
-                    notifyObservers(new ViewSetChange(Type.MODIFIED, image));
-                }
-            }
-            // Else still enabled so nothing needs to change
-        }
-        // Currently disabled, so enable camera
-        else
+        if (combinedViewSetData.get(index).isDisabled) // Currently disabled, so enable camera
         {
-            disabledViewSetDataCollection.getViewSetData().get(disabledIndex).isDisabled = !isEnabled;
+            combinedViewSetData.get(index).isDisabled = !isEnabled;
             // Now is enabled
-            if (!disabledViewSetDataCollection.getViewSetData().get(disabledIndex).isDisabled)
+            if (!combinedViewSetData.get(index).isDisabled)
             {
-                viewSetDataCollection.getViewSetData().add(disabledViewSetDataCollection.getViewSetData().get(disabledIndex));
+                int disabledIndex = index - getEnabledCameraPoseCount();
+                viewSetDataCollection.getViewSetData().add(combinedViewSetData.get(index));
                 disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
 
                 notifyObservers(new ViewSetChange(Type.MODIFIED, image));
             }
             // Else still disabled so nothing needs to change
+        }
+        else // Currently enabled, so disable
+        {
+            combinedViewSetData.get(index).isDisabled = !isEnabled;
+            if (combinedViewSetData.get(index).isDisabled) // Now is disabled
+            {
+                disabledViewSetDataCollection.getViewSetData().add(combinedViewSetData.get(index));
+
+                // enabled are listed first so index in combined list should be same as index in enabled list
+                viewSetDataCollection.getViewSetData().remove(index);
+
+                notifyObservers(new ViewSetChange(Type.MODIFIED, image));
+            }
+            // Else still enabled so nothing needs to change
         }
     }
 
@@ -1371,53 +1346,32 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             return -1;
         }
 
-        int poseIndex = -1;
+        // Try simple file comparison with full paths
         File key = new File(viewName);
-        for (int i = 0; i < viewSetDataCollection.getViewSetData().size(); ++i)
+        for (int i = 0; i < combinedViewSetData.size(); ++i)
         {
-            if (this.viewSetDataCollection.getViewSetData().get(i).imageFile.equals(key))
+            if (getImageFile(i).equals(key))
             {
-                poseIndex = i;
-                break;
+                return i;
             }
         }
 
-        if (poseIndex < 0)
+        // Try just checking file name in case there were parent files
+        // i.e. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
+
+        // Also check for extension mismatch
+        // i.e. the camera label is photo314.jpg, other times just photo314
+
+        //This is all necessary due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
+        for (int i = 0; i < combinedViewSetData.size(); ++i)
         {
-            // Check disabled views
-            for (int i = 0; i < disabledViewSetDataCollection.getViewSetData().size(); ++i)
+            String imgName = getImageFileName(i);
+            String shortenedImgName = removeExt(imgName);
+            String shortenedViewName = removeExt(viewName);
+
+            if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
             {
-                if (this.disabledViewSetDataCollection.getViewSetData().get(i).imageFile.equals(key))
-                {
-                    poseIndex = i + getEnabledCameraPoseCount();
-                    break;
-                }
-            }
-        }
-
-        if (poseIndex >= 0)
-        {
-            return poseIndex;
-        }
-        else
-        {
-            //comb through manually because imageFiles could contain parent files
-            //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
-
-            //another possibility is an extension mismatch
-            //sometimes the camera label is photo314.jpg, other times just photo314
-
-            //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-            for (int i = 0; i < viewSetDataCollection.getViewSetData().size(); ++i)
-            {
-                String imgName = getImageFileName(i);
-                String shortenedImgName = removeExt(imgName);
-                String shortenedViewName = removeExt(viewName);
-
-                if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
-                {
-                    return i;
-                }
+                return i;
             }
         }
 
