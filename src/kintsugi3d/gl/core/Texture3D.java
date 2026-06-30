@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -38,12 +38,14 @@ public interface Texture3D<ContextType extends Context<ContextType>>
      * Gets the width of the texture.
      * @return The width of the texture.
      */
+    @Override
     int getWidth();
 
     /**
      * Gets the height of the texture.
      * @return The height of the texture.
      */
+    @Override
     int getHeight();
 
     /**
@@ -60,7 +62,7 @@ public interface Texture3D<ContextType extends Context<ContextType>>
      */
     void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT, TextureWrapMode wrapR);
 
-    /**}
+    /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
      * @param layerIndex The index of the layer where the pixel data should go.
      * @param fileStream The stream from which to read the texture layer.
@@ -246,17 +248,20 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                         destFBO.setDepthAttachment(this.getLayerAsFramebufferAttachment(destZ + i));
                         destFBO.blitDepthAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight,
                             sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                        break;
                     case STENCIL:
                         sourceFBO.setStencilAttachment(readSource.getLayerAsFramebufferAttachment(srcZ + i));
                         destFBO.setStencilAttachment(this.getLayerAsFramebufferAttachment(destZ + i));
                         destFBO.blitStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight,
                             sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                        break;
                     case DEPTH_STENCIL:
                     case FLOATING_POINT_DEPTH_STENCIL:
                         sourceFBO.setDepthStencilAttachment(readSource.getLayerAsFramebufferAttachment(srcZ + i));
                         destFBO.setDepthStencilAttachment(this.getLayerAsFramebufferAttachment(destZ + i));
                         destFBO.blitDepthStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight,
                             sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                        break;
                 }
             }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,7 +29,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
@@ -329,10 +328,14 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         validateLayerIndex(layerIndex);
 
-        this.bind();
-
+        // Load the image
         BufferedImage colorImg = ImageHelper.read(fileStream).scaledToResolution(width, height).getBufferedImage();
+
+        // Transfer data to byte buffer.
         ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, flipVertical);
+
+        // Send the data to the GPU.
+        this.bind();
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -358,11 +361,15 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         validateLayerIndex(layerIndex);
 
-        this.bind();
-
+        // Load the image
         BufferedImage colorImg =
             ImageHelper.read(imageStream).scaledToResolution(width, height).withAlphaMask(maskStream).getBufferedImage();
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, flipVertical);
+
+        // Transfer data to byte buffer.
+        ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, flipVertical);
+
+        // Send the data to the GPU.
+        this.bind();
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -390,17 +397,12 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         validateLayerIndex(layerIndex);
 
-        Function<ByteBuffer, BiConsumer<Integer, ? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapIndexedByteBuffer;
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
-            ImageHelper.read(imageStream).scaledToResolution(width, height).withAlphaMask(maskStream).getBufferedImage(),
-            flipVertical,
-            byteBuffer ->
-            {
-                BiConsumer<Integer, ? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-                return (index, color) -> partiallyWrappedBuffer.accept(index, mappingFunction.apply(color));
-            },
-            mappedType.getSizeInBytes());
+        // Load RGB and alpha separately and rescale to dimensions of texture array.
+        BufferedImage rescaledImage = 
+            ImageHelper.read(imageStream).scaledToResolution(width, height).withAlphaMask(maskStream).getBufferedImage();
 
+        // Transfer to ByteBuffer and send to GPU.
+        ByteBuffer buffer = bufferedImageToNativeBuffer(rescaledImage, flipVertical, mappedType, mappingFunction);
         loadLayer(layerIndex, mappedType, buffer);
     }
 
@@ -417,16 +419,11 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         validateLayerIndex(layerIndex);
 
-        Function<ByteBuffer, BiConsumer<Integer, ? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapIndexedByteBuffer;
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
-            ImageHelper.read(fileStream).scaledToResolution(width, height).getBufferedImage(), flipVertical,
-            byteBuffer ->
-            {
-                BiConsumer<Integer, ? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-                return (index, color) -> partiallyWrappedBuffer.accept(index, mappingFunction.apply(color));
-            },
-            mappedType.getSizeInBytes());
+        // Load image and rescale to dimensions of texture array.
+        BufferedImage colorImg = ImageHelper.read(fileStream).scaledToResolution(width, height).getBufferedImage();
 
+        // Transfer to ByteBuffer and send to GPU.
+        ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, flipVertical, mappedType, mappingFunction);
         loadLayer(layerIndex, mappedType, buffer);
     }
 
@@ -460,7 +457,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
                     || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
         int type = OpenGLContext.getDataTypeConstant(mappedType);
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(format, type));
         OpenGLContext.errorCheck();
 
         glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1, format, type, buffer);

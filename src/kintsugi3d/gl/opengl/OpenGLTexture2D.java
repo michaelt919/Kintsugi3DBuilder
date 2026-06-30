@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -25,11 +25,8 @@ import kintsugi3d.util.RadianceImageLoader.Image;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
@@ -156,16 +153,8 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
                         || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER));
             int type = OpenGLContext.getDataTypeConstant(mappedType);
-            Function<ByteBuffer, BiConsumer<Integer, ? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapIndexedByteBuffer;
-            int mappedColorLength = mappedType.getSizeInBytes();
 
-            Function<ByteBuffer, BiConsumer<Integer, Color>> bufferWrapperFunctionFull = byteBuffer ->
-            {
-                BiConsumer<Integer, ? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-                return (index, color) -> partiallyWrappedBuffer.accept(index, mappingFunction.apply(color));
-            };
-
-            ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
+            ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, flipVertical, mappedType, mappingFunction);
 
             if (this.isInternalFormatCompressed())
             {
@@ -225,7 +214,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             int width = colorImg.width;
             int height = colorImg.height;
 
-            ByteBuffer buffer = OpenGLTexture.hdrImageToNativeBuffer(colorImg, maskImg);
+            ByteBuffer buffer = hdrImageToNativeBuffer(colorImg, maskImg);
 
             if (this.isInternalFormatCompressed())
             {
@@ -584,7 +573,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         boolean useLinearFiltering, int maxMipmapLevel, float maxAnisotropy)
     {
         this.bind();
-        glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(format, type));
         OpenGLContext.errorCheck();
 
         glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
@@ -675,6 +664,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     width * height, width, height, data.getCount()));
         }
 
+        // Send the data to the GPU.
         this.bind();
 
         int format = OpenGLContext.getPixelDataFormatFromDimensions(
@@ -684,7 +674,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
 
         int type = OpenGLContext.getDataTypeConstant(data.getDataType());
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(format, type));
         OpenGLContext.errorCheck();
 
         glTexSubImage2D(openGLTextureTarget, 0, 0, 0, width, height, format, type, data.getBuffer());
@@ -694,6 +684,44 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             this.staleMipmaps = true;
         }
+    }
+
+    @Override
+    public void load(InputStream imageStream, boolean flipVertical) throws IOException
+    {
+        // Load the image
+        BufferedImage colorImg = ImageHelper.read(imageStream).getBufferedImage();
+
+        // Dimensions must match to replace the contents of the texture.
+        if (colorImg.getWidth() != width || colorImg.getHeight() !=  height)
+        {
+            throw new IllegalArgumentException(
+                String.format("Image does not have the required dimensions for this texture.  Expected: %dx%d  Actual: %dx%d",
+                    width, height, colorImg.getWidth(), colorImg.getHeight()));
+        }
+
+        // Transfer data to byte buffer.
+        ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, flipVertical);
+
+        // Send the data to the GPU.
+        this.bind();
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        OpenGLContext.errorCheck();
+
+        glTexSubImage2D(openGLTextureTarget, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+        OpenGLContext.errorCheck();
+
+        if (parameters.useMipmaps)
+        {
+            this.staleMipmaps = true;
+        }
+    }
+
+    @Override
+    public void load(File imageFile, boolean flipVertical) throws IOException
+    {
+        load(new FileInputStream(imageFile), flipVertical);
     }
 
     @Override

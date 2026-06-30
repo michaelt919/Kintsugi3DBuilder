@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,6 +13,7 @@ package kintsugi3d.gl.opengl;
 
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
+import kintsugi3d.gl.types.AbstractDataType;
 import kintsugi3d.util.RadianceImageLoader.Image;
 import org.lwjgl.BufferUtils;
 
@@ -21,8 +22,8 @@ import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.AbstractMap;
-import java.util.Map;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -336,29 +337,34 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
     }
 
-    private static Stream<Map.Entry<Integer, int[]>> getScanlineStream(BufferedImage colorImg, boolean flipVertical)
+    private static Stream<Entry<Integer, int[]>> getScanlineStream(BufferedImage colorImg, boolean flipVertical)
     {
         // Use parallel stream to accelerate image decoding / copy,
         IntStream scanlineRange = IntStream.range(0, colorImg.getHeight()).parallel();
 
-        Stream<Map.Entry<Integer, int[]>> scanlineStream;
-
         if (flipVertical)
         {
-            scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
-                colorImg.getHeight() - 1 - y,
-                colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
+            return scanlineRange.mapToObj(y -> new SimpleEntry<>(
+                    colorImg.getHeight() - 1 - y,
+                    colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
         }
         else
         {
-            scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
-                y,
-                colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
+            return scanlineRange.mapToObj(y -> new SimpleEntry<>(
+                    y,
+                    colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
         }
 
-        return scanlineStream;
     }
 
+    /**
+     * Puts contents of a buffered image into a byte buffer for passing to native code (i.e. OpenGL)
+     * The resulting buffer will contain RGB+A data, with one byte per channel per pixel (i.e. 4 bytes per pixel total).
+     * The byte packing format is BRGA (technically ARGB coming from the buffered image but Java's byte order is reversed than OpenGL's).
+     * @param colorImg
+     * @param flipVertical
+     * @return
+     */
     static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, boolean flipVertical)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * 4);
@@ -378,6 +384,17 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         return buffer;
     }
 
+    /**
+     * Puts contents of a buffered image into a byte buffer for passing to native code (i.e. OpenGL)
+     * The format and size of the byte buffer will be buffer wrapper function and mappedColorLength.
+     * @param colorImg
+     * @param flipVertical
+     * @param bufferWrapperFunction A function that wraps a ByteBuffer with an abstraction that consumes pixel index
+     *                              and color pairs and stores a representation of that pixel in the wrapped buffer.
+     * @param mappedColorLength The number of bytes required for each pixel.
+     *                          This determines how large of a buffer will be allocated.
+     * @return
+     */
     static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, boolean flipVertical,
         Function<ByteBuffer, BiConsumer<Integer, Color>> bufferWrapperFunction, int mappedColorLength)
     {
@@ -391,12 +408,35 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 
             for (int x = 0; x < colorImg.getWidth(); x++)
             {
-                wrappedBuffer.accept(
-                    y * colorImg.getWidth() + x, new Color(scanlineData[x], true));
+                wrappedBuffer.accept(y * colorImg.getWidth() + x, new Color(scanlineData[x], true));
             }
         });
 
         return buffer;
+    }
+
+    /**
+     * Puts contents of a buffered image into a byte buffer for passing to native code (i.e. OpenGL)
+     * The format and size of the byte buffer will be determined by the mapped type and mapping function.
+     * @param colorImg
+     * @param flipVertical
+     * @param mappedType An abstract type that will determine how pixels are packed in the buffer.
+     * @param mappingFunction A function that maps BufferedImage pixel colors to the abstract type.
+     * @return
+     * @param <MappedType>
+     */
+    static <MappedType> ByteBuffer bufferedImageToNativeBuffer(
+        BufferedImage colorImg, boolean flipVertical, AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
+    {
+        int mappedColorLength = mappedType.getSizeInBytes();
+        Function<ByteBuffer, BiConsumer<Integer, ? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapIndexedByteBuffer;
+        Function<ByteBuffer, BiConsumer<Integer, Color>> bufferWrapperFunctionFull = byteBuffer ->
+        {
+            BiConsumer<Integer, ? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
+            return (index, color) -> partiallyWrappedBuffer.accept(index, mappingFunction.apply(color));
+        };
+
+        return bufferedImageToNativeBuffer(colorImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
     }
 
     static ByteBuffer hdrImageToNativeBuffer(Image colorImg, BufferedImage maskImg)

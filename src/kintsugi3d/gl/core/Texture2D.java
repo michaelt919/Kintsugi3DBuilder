@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,6 +14,9 @@ package kintsugi3d.gl.core;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -32,12 +35,14 @@ public interface Texture2D<ContextType extends Context<ContextType>>
      * Gets the width of the texture.
      * @return The width of the texture.
      */
+    @Override
     int getWidth();
 
     /**
      * Gets the height of the texture.
      * @return The height of the texture.
      */
+    @Override
     int getHeight();
 
     /**
@@ -46,6 +51,22 @@ public interface Texture2D<ContextType extends Context<ContextType>>
      * @param wrapT The vertical wrap mode.
      */
     void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT);
+
+    /**
+     * Loads pixel data and sends it to the GPU, replacing whatever pixel data was there before.
+     * @param imageStream The stream from which to read the texture.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically
+     *                     to resolve discrepancies with respect to the orientation of the vertical axis.
+     */
+    void load(InputStream imageStream, boolean flipVertical) throws IOException;
+
+    /**
+     * Loads pixel data and sends it to the GPU, replacing whatever pixel data was there before.
+     * @param imageFile A file containing the image in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically
+     *                     to resolve discrepancies with respect to the orientation of the vertical axis.
+     */
+    void load(File imageFile, boolean flipVertical) throws IOException;
 
     /**
      * Loads pixel data from a buffer and sends it to the GPU, replacing whatever pixel data was there before.
@@ -115,17 +136,20 @@ public interface Texture2D<ContextType extends Context<ContextType>>
                     destFBO.setDepthAttachment(this);
                     destFBO.getViewport(destX, destY, destWidth, destHeight)
                         .blitDepthAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                    break;
                 case STENCIL:
                     sourceFBO.setStencilAttachment(readSource);
                     destFBO.setStencilAttachment(this);
                     destFBO.getViewport(destX, destY, destWidth, destHeight)
                         .blitStencilAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                    break;
                 case DEPTH_STENCIL:
                 case FLOATING_POINT_DEPTH_STENCIL:
                     sourceFBO.setDepthStencilAttachment(readSource);
                     destFBO.setDepthStencilAttachment(this);
                     destFBO.getViewport(destX, destY, destWidth, destHeight)
                         .blitDepthStencilAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                    break;
             }
         }
     }
