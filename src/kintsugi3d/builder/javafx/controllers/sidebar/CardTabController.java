@@ -12,6 +12,8 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -27,6 +29,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
@@ -120,6 +123,21 @@ public class CardTabController
         openFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
         copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
         filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
+
+        Platform.runLater(() -> {
+            ScrollBar vBar = (ScrollBar) scrollpane.lookup(".vertical");
+            if (vBar != null) {
+
+                DoubleBinding width = Bindings.createDoubleBinding(
+                    () -> vBar.isVisible() ? vBar.getWidth() : 0.0,
+                    vBar.widthProperty(),
+                    vBar.visibleProperty()
+                );
+
+                vbox.prefWidthProperty().bind(scrollpane.widthProperty().subtract(width));
+                vbox.maxWidthProperty().bind(scrollpane.widthProperty().subtract(width));
+            }
+        });
     }
 
     private void updateSummary()
