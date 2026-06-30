@@ -19,6 +19,7 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Matrix4;
 
 import java.io.File;
@@ -29,6 +30,19 @@ import java.io.File;
  */
 public interface ProjectInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
+    /**
+     * Sets the safe region for the target framebuffer.
+     * Essential content will bre rendered within this region.
+     * @param safeStartPixel
+     * @param safeEndPixel
+     */
+    void setSafeRegion(IntVector2 safeStartPixel, IntVector2 safeEndPixel);
+
+    /**
+     * Clears the safe region so that the whole framebuffer is considered safe.
+     */
+    void clearSafeRegion();
+
     /**
      * Draw the object using the current settings and selections in the 3D viewport,
      * potentially in subdivisions to avoid graphics card timeouts.

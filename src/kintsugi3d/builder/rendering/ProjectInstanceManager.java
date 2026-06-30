@@ -34,6 +34,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
 import kintsugi3d.gl.interactive.RefreshableCollection;
 import kintsugi3d.gl.interactive.RenderRefreshable;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.FramebufferCanvas;
@@ -413,12 +414,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     public void addRenderView(UserShader shader, FramebufferSize initialSize,
+                              IntVector2 safeStartPixel, IntVector2 safeEndPixel,
                               Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ProjectRenderingEngine<ContextType> renderView =
             new ProjectRenderingEngine<>(projectInstance.getID(), context, projectInstance.getResources());
+        renderView.setSafeRegion(safeStartPixel, safeEndPixel);
         initializeSceneModel(renderView.getSceneModel());
 
         Rendering.runLater(() ->
@@ -494,6 +497,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         requestFragmentShader(userShader.getFile(), userShader.getDefines());
     }
 
+    @Override
     public ProjectInstance<ContextType> getLoadedInstance()
     {
         return projectInstance;

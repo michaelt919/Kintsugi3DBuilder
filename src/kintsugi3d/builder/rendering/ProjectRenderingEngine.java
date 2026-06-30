@@ -33,9 +33,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
-import kintsugi3d.gl.vecmath.Matrix3;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.*;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +76,9 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel sceneViewportModel;
+
+    private IntVector2 safeStartPixel;
+    private IntVector2 safeEndPixel;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
@@ -133,6 +134,30 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     public DynamicResourceManager getDynamicResourceManager()
     {
         return this.dynamicResourceLoader;
+    }
+
+    public IntVector2 getSafeStartPixel()
+    {
+        return safeStartPixel;
+    }
+
+    public IntVector2 getSafeEndPixel()
+    {
+        return safeEndPixel;
+    }
+
+    @Override
+    public void setSafeRegion(IntVector2 safeStartPixel, IntVector2 safeEndPixel)
+    {
+        this.safeStartPixel = safeStartPixel;
+        this.safeEndPixel = safeEndPixel;
+    }
+
+    @Override
+    public void clearSafeRegion()
+    {
+        this.safeStartPixel = null;
+        this.safeEndPixel = null;
     }
 
     @Override
@@ -335,7 +360,44 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             FramebufferSize size = framebuffer.getSize();
 
-            Matrix4 projection = projectionOverride != null ? projectionOverride : getProjectionMatrix(size);
+            Matrix4 projection;
+
+            if (projectionOverride != null)
+            {
+                projection = projectionOverride;
+            }
+            else if (safeStartPixel != null && safeEndPixel != null)
+            {
+                FramebufferSize safeSize = new FramebufferSize(
+                    safeEndPixel.x - safeStartPixel.x,
+                    safeEndPixel.y - safeStartPixel.y);
+
+                projection =
+                    // After scaling from safe clip space to actual FBO clip space,
+                    // translate the origin to the location of the safe clip space center in FBO clip space.
+                    // This translation needs to be in normalized device coordinates [-1, 1].
+                    // Adding the start and end pixels then dividing by the FBO size, then subtracting 1
+                    // effectively gives us the center point in NDC
+                    // (dividing by two would have given the center point in a [0, 1] range,
+                    // which is cancelled out by multiplying by 2 before subtracting 1 to get to NDC)
+                    Matrix4.translate(
+                        safeStartPixel.asFloatingPoint().plus(safeEndPixel.asFloatingPoint())
+                            .dividedBy(new Vector2(size.width, size.height))
+                            .minus(new Vector2(1.0f))
+                            .negated()
+                            .asVector3())
+                    // If the safe region is smaller than the full framebuffer, then scale down in clip space accordingly
+                    // so that the content that should be visible is contained within that region.
+                    .times(Matrix4.scale(
+                        (float)safeSize.width / (float)size.width,
+                        (float)safeSize.height / (float)size.height,
+                        1.0f))
+                    .times(getProjectionMatrix(safeSize));
+            }
+            else
+            {
+                projection = getProjectionMatrix(size);
+            }
 
             int fboWidth = size.width;
             int fboHeight = size.height;

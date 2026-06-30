@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -161,7 +161,6 @@ public class IOModel
             return processing;
         }
     }
-
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
     private ReadonlyLoadOptionsModel imageLoadOptionsModel;
@@ -169,6 +168,11 @@ public class IOModel
     public ProgressMonitor getProgressMonitor()
     {
         return progressMonitor;
+    }
+
+    public IOHandler getLoadingHandler()
+    {
+        return handler;
     }
 
     public void setLoadingHandler(IOHandler handler)
@@ -185,6 +189,11 @@ public class IOModel
     public void setImageLoadOptionsModel(ReadonlyLoadOptionsModel imageLoadOptionsModel)
     {
         this.imageLoadOptionsModel = imageLoadOptionsModel;
+    }
+
+    public ProjectInstance<?> getLoadedInstance()
+    {
+        return this.handler.getLoadedInstance();
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
