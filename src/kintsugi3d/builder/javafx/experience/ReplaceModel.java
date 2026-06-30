@@ -21,6 +21,6 @@ public class ReplaceModel extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        this.openPagedModel("/fxml/modals/workflow/ReplaceModel.fxml");
+        this.openPagedModal("/fxml/modals/workflow/ReplaceModel.fxml");
     }
 }
