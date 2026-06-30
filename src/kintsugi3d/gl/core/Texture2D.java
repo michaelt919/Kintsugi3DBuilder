@@ -74,6 +74,8 @@ public interface Texture2D<ContextType extends Context<ContextType>>
      */
     void load(ReadonlyNativeVectorBuffer data);
 
+    void refresh(File texture, boolean flipVertical) throws IOException;
+
     /**
      * Creates a new, empty texture with different dimensions but the same internal format and settings as this texture.
      * Especially intended to be used with framebuffer blitting to ensure compatibility.

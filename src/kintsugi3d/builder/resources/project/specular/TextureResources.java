@@ -490,14 +490,14 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             try
             {
                 newTexture = loadTexture(key.name, viewSet.getSupportingFilesDirectory());
+                if (newTexture != null)
+                {
+                    getTextures().get(key).refresh(new File(viewSet.getSupportingFilesDirectory(), key.name + ".png"), true);
+                }
             }
             catch (IOException | RuntimeException e)
             {
                 LOG.error("Error refreshing card", e);
-            }
-            if (newTexture != null)
-            {
-                getTextures().replace(key, newTexture);
             }
         });
     }

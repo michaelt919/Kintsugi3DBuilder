@@ -17,8 +17,11 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceModelController;
 import kintsugi3d.builder.javafx.core.ExperienceManager;
 import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.javafx.experience.ReplaceModel;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.Texture2D;
@@ -132,12 +135,13 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 put("Purpose", purpose);
             }}
             , List.of(
-                Map.of(
-                "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
-                "Send to Carousel", () ->
-                {
-                    Global.state().getCarouselModel().addToCarousel(shader);
-                }),
+                // this was causing duplicated buttons
+//                Map.of(
+//                "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
+//                "Send to Carousel", () ->
+//                {
+//                    Global.state().getCarouselModel().addToCarousel(shader);
+//                }),
                 Map.of(
                     "Refresh Texture", () -> refreshTexture(key),
                     "Replace Texture", () -> replaceTexture(key)
@@ -209,7 +213,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
                 if (resources.getTextures() != null)
                 {
-                    resources.refreshTexture(key, instance.getActiveViewSet());
+                    resources.refreshTexture(key, instance.getViewSet());
                     lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel));
                 }
             }
@@ -218,6 +222,12 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private void replaceTexture(TextureDetails key)
     {
-        Platform.runLater(() -> ExperienceManager.getInstance().getExperience("ReplaceModel").tryOpen());
+        Platform.runLater(() ->
+        {
+            ReplaceData data = new ReplaceData(new File(Global.state().getIOModel().validateHandler().getLoadedViewSet().getSupportingFilesDirectory(), key.name + ".png"));
+            ReplaceModel model = (ReplaceModel) ExperienceManager.getInstance().getExperience("ReplaceModel");
+            model.setCurrentData(data);
+            model.tryOpen();
+        });
     }
 }

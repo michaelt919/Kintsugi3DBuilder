@@ -12,16 +12,28 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 
-public class ReplaceModelController extends NonDataPageControllerBase
+import java.io.File;
+
+public class ReplaceModelController extends DataReceiverPageControllerBase<ReplaceData>
 {
     @FXML private Pane root;
+    @FXML private ImageView currentImageView;
+    @FXML private ImageView newImageView;
+    @FXML private Label currentPath;
+    @FXML private Label newPath;
 
     private final FileChooser replacementFileChooser = new FileChooser();
+    private Image currentImage;
+
+    private ReplaceData data;
 
     @Override
     public Region getRootNode() { return root; }
@@ -30,11 +42,48 @@ public class ReplaceModelController extends NonDataPageControllerBase
     public void initPage()
     {
         replacementFileChooser.setTitle("Replace with...");
+        replacementFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture image", "*.png"));
+//        setCurrentDirectoryFile();
+
     }
 
     @Override
     public void refresh()
     {
 
+    }
+
+    public void setExistingImage(File currentTexture)
+    {
+        File diffuse = currentTexture;
+        currentImage = new Image(currentTexture.getPath());
+
+    }
+
+    private void setCurrentDirectoryFile(File currentDirectoryFile)
+    {
+        // Sets FileChooser defaults
+        if (currentDirectoryFile != null)
+        {
+            replacementFileChooser.setInitialDirectory(currentDirectoryFile);
+            replacementFileChooser.setInitialFileName(currentDirectoryFile.getName());
+        }
+    }
+
+    @Override
+    public void receiveData(ReplaceData newData)
+    {
+        this.data = newData;
+        if (data != null)
+        {
+            currentImage = new Image(data.getCurrentTexture().toURI().toString(), 72, 72, false, false);
+            currentImageView.setImage(currentImage);
+            currentPath.setText(data.getCurrentTexture().getPath());
+            if (data.getNewTexture() == null)
+            {
+                newImageView.setImage(currentImage);
+                newPath.setText(data.getCurrentTexture().getPath());
+            }
+        }
     }
 }

@@ -62,6 +62,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             this.flipVertical = flipVertical;
         }
 
+
         @Override
         public OpenGLTexture2D createTexture()
         {
@@ -652,6 +653,14 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             glTexParameteri(openGLTextureTarget, GL_TEXTURE_WRAP_T, numericWrapT);
             OpenGLContext.errorCheck();
         }
+    }
+
+    @Override
+    public void refresh(File texture, boolean flipVertical) throws IOException
+    {
+
+        load(texture, flipVertical);
+
     }
 
     @Override

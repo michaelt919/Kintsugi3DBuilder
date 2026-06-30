@@ -9,28 +9,43 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.experience;
+package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
-import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
+import java.io.File;
 
-import java.io.IOException;
-
-public class ReplaceModel extends ExperienceBase
+public class ReplaceData
 {
-    ReplaceData currentData = new ReplaceData();
+    private File currentTexture;
+    private File newTexture;
 
-    public void setCurrentData(ReplaceData newData)
+    public ReplaceData()
     {
-        this.currentData = newData;
+        this.currentTexture = null;
+        this.newTexture = null;
     }
 
-    @Override
-    public String getName() { return "Replace Texture"; }
-
-    @Override
-    protected void open() throws IOException
+    public ReplaceData(File currentTexture)
     {
-//        this.openPagedModal("/fxml/modals/workflow/ReplaceModel.fxml");
-        this.buildPagedModal(currentData).then("/fxml/modals/workflow/ReplaceModel.fxml").finish();
+        this.currentTexture = currentTexture;
+    }
+
+    public File getCurrentTexture()
+    {
+        return currentTexture;
+    }
+
+    public void setCurrentTexture(File currentTexture)
+    {
+        this.currentTexture = currentTexture;
+    }
+
+    public File getNewTexture()
+    {
+        return newTexture;
+    }
+
+    public void setNewTexture(File newTexture)
+    {
+        this.newTexture = newTexture;
     }
 }
