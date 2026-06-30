@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,6 +30,8 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     @FXML private ImageView newImageView;
     @FXML private Label currentPath;
     @FXML private Label newPath;
+    @FXML private Button currentFileButton;
+    @FXML private Button newFileButton;
 
     private final FileChooser replacementFileChooser = new FileChooser();
     private Image currentImage;
@@ -79,6 +82,7 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
             currentImage = new Image(data.getCurrentTexture().toURI().toString(), 72, 72, false, false);
             currentImageView.setImage(currentImage);
             currentPath.setText(data.getCurrentTexture().getPath());
+            setCurrentDirectoryFile(data.getCurrentTexture());
             if (data.getNewTexture() == null)
             {
                 newImageView.setImage(currentImage);

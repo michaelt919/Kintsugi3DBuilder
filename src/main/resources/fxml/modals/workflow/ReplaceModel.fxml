@@ -15,7 +15,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
-<VBox fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" style="-fx-padding: 0px 24px 52px 24px;" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceModelController" prefHeight="500.0" prefWidth="924.0">
+<?import javafx.geometry.Insets?>
+<VBox spacing="10.0" fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" style="-fx-padding: 16px 24px 52px 24px;" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceModelController">
     <VBox spacing="8.0">
         <HBox alignment="CENTER_LEFT" spacing="16.0">
             <Label styleClass="wireframeTitle"  text="Replace Texture..."/>
@@ -23,22 +24,34 @@
         <VBox style="-fx-padding: 0px 16px 0px 16px;">
             <VBox spacing="8.0">
                 <Label styleClass="wireframeSubtitle" text="Existing File Path"/>
-                <HBox style="-fx-padding: 0px 0px 0px 16px;">
+                <HBox spacing="16.0" style="-fx-padding: 0px 0px 0px 16px;">
                     <ImageView fitWidth="72" fitHeight="72" preserveRatio="true" fx:id="currentImageView"/>
-                    <HBox>
-                        <VBox fillWidth="true" alignment="CENTER" style="-fx-fill: #CECECE">
-                            <Label styleClass="wireframeBody" fx:id="currentPath" text="C>/Test/Url/example_texture.png"/>
-                        </VBox>
-                    </HBox>
+                    <VBox alignment="CENTER">
+                        <HBox maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
+                            <VBox alignment="CENTER_LEFT" style="-fx-background-color: #383838;">
+                                <padding>
+                                    <Insets left="4" right="4"/>
+                                </padding>
+                                <Label styleClass="wireframeBodyLarge" fx:id="currentPath" text="C>/Test/Url/example_texture.png"/>
+                            </VBox>
+                            <Button fx:id="currentFileButton" styleClass="wireframeBody" textAlignment="CENTER" text="..."/>
+                        </HBox>
+                    </VBox>
                 </HBox>
                 <Label styleClass="wireframeSubtitle" text="New File Path"/>
-                <HBox style="-fx-padding: 0px 0px 0px 16px;">
+                <HBox spacing="16.0" style="-fx-padding: 0px 0px 0px 16px;">
                     <ImageView fitWidth="72" fitHeight="72" preserveRatio="true" fx:id="newImageView"/>
-                    <HBox>
-                        <VBox fillWidth="true" alignment="CENTER" style="-fx-fill: #CECECE">
-                            <Label styleClass="wireframeBody" fx:id="newPath" text="C>/Test/Url/example_texture.png"/>
-                        </VBox>
-                    </HBox>
+                    <VBox alignment="CENTER">
+                        <HBox maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
+                            <VBox alignment="CENTER_LEFT" style="-fx-background-color: #383838;">
+                                <padding>
+                                    <Insets left="4" right="4"/>
+                                </padding>
+                                <Label styleClass="wireframeBodyLarge" fx:id="newPath" text="C>/Test/Url/example_texture.png"/>
+                            </VBox>
+                            <Button fx:id="newFileButton" styleClass="wireframeBody" textAlignment="CENTER" text="..."/>
+                        </HBox>
+                    </VBox>
                 </HBox>
             </VBox>
         </VBox>
