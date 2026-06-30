@@ -26,6 +26,6 @@ public class ExportModel extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        this.<ExportModelController>openPagedModel("/fxml/modals/workflow/ExportModel.fxml");
+        this.<ExportModelController>openPagedModal("/fxml/modals/workflow/ExportModel.fxml");
     }
 }

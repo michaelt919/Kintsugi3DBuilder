@@ -161,7 +161,7 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <ControllerType extends NonSupplierPageController<Object>>
-    PageFrameController openPagedModel(
+    PageFrameController openPagedModal(
         String firstPageURLString, Supplier<ControllerType> firstPageControllerConstructorOverride) throws IOException
     {
         return buildPagedModal()
@@ -177,9 +177,9 @@ public abstract class ExperienceBase implements Experience
      * @throws IOException If the FXML could not be loaded.
      */
     protected final <ControllerType extends NonSupplierPageController<Object>>
-    PageFrameController openPagedModel(String firstPageURLString) throws IOException
+    PageFrameController openPagedModal(String firstPageURLString) throws IOException
     {
-        return this.<ControllerType>openPagedModel(firstPageURLString, null);
+        return this.<ControllerType>openPagedModal(firstPageURLString, null);
     }
     /**
      * Handles errors that occur opening this experience (logging them and popping up a dialog window indicating that an error occurred).
