@@ -18,7 +18,6 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
-import kintsugi3d.builder.state.cards.TextureCardFactory;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -498,12 +497,12 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         });
     }
 
-    default void replaceTexture(TextureDetails key, ReplaceData data)
+    default void replaceTexture(ReplaceData data)
     {
         Rendering.runLater(() -> {
             try
             {
-                getTextures().get(key).load(data.getNewTexture(), true);
+                getTextures().get(data.getKey()).load(data.getNewTexture(), true);
             }
             catch (IOException | RuntimeException e)
             {

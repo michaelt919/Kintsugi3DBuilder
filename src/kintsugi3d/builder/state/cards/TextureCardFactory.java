@@ -12,13 +12,11 @@
 package kintsugi3d.builder.state.cards;
 
 import javafx.application.Platform;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
-import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceModelController;
 import kintsugi3d.builder.javafx.core.ExperienceManager;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.experience.ReplaceModel;
@@ -53,7 +51,10 @@ public class TextureCardFactory implements ProjectDataCardFactory
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(ProjectInstance<?> instance) {this.instance = instance;}
+    public TextureCardFactory(ProjectInstance<?> instance)
+    {
+        this.instance = instance;
+    }
 
     private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, TextureDetails details)
     {
@@ -198,8 +199,35 @@ public class TextureCardFactory implements ProjectDataCardFactory
     @Override
     public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
     {
-        LOG.warn("refreshCards not implemented for textures.");
-        return Map.of();
+        Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
+
+        List<ProjectDataCard> cardsList = cardsModel.getCardList();
+        Iterable<TextureDetails> details = new ArrayList<>(instance.getResources().getTextureResources().getTextures().keySet());
+
+        for (ProjectDataCard card : cardsList)
+        {
+            if (filter.test(card)) // Check whether the card is in the filter
+            {
+                String detailsName = removeExt(card.getInternalName());
+                TextureDetails key = new TextureDetails(detailsName);
+                for (TextureDetails d : details)
+                {
+                    if (d.name.equals(detailsName))
+                    {
+                        key = d;
+                    }
+                }
+                changes.put(card, createSimpleTextureCard(instance.getResources().getTextureResources().getTexture(detailsName), key));
+            }
+        }
+
+        return changes;
+    }
+
+    public static String removeExt(String fileName)
+    {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
     private void refreshTexture(TextureDetails key)
@@ -211,7 +239,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             {
                 TextureResources<?> resources = instance.getResources().getTextureResources();
                 resources.refreshTexture(key, instance.getViewSet());
-                lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel));
+                lastUsedCardsModel.refreshCards(card -> Objects.equals(card.getTitle(), key.friendlyName));
             }
         }
     }

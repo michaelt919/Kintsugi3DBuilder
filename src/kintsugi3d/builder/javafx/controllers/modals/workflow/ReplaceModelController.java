@@ -21,9 +21,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.Observer;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
-import kintsugi3d.builder.state.cards.TextureCardFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class ReplaceModelController extends DataReceiverPageControllerBase<ReplaceData>
@@ -43,8 +39,6 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     @FXML private Label currentPath;
     @FXML private Label newPath;
     @FXML private Button newFileButton;
-
-    private List<Observer> observers = new ArrayList<>(1);
 
     private final FileChooser replacementFileChooser = new FileChooser();
     private Image currentImage;
@@ -85,8 +79,8 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
         {
             LOG.error("Error confirming texture replace", e);
         }
-        data.getResources().replaceTexture(data.getKey(), data);
-//        Global.state().getTabModels().getTab("Textures");
+        data.getResources().replaceTexture(data);
+        Global.state().getTabModels().getTab("Textures").refreshCards(card -> Objects.equals(card.getTitle(), data.getKey().friendlyName));
         return true;
     }
 
