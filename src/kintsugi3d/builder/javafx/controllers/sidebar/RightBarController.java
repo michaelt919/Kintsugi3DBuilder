@@ -33,6 +33,14 @@ import java.util.*;
 
 public class RightBarController
 {
+    private static final int DEFAULT_WIDTH = 400;
+    private static final int MINIMIZED_WIDTH = 23;
+
+    private static final double RESIZE_WIDTH = 5.0;
+
+    //Alternative LOWER_BOUND: 62
+    private static final int LOWER_BOUND = 322;
+
     @FXML
     private HBox buttonBox;
     @FXML private VBox mainBox;
@@ -48,9 +56,7 @@ public class RightBarController
     private final List<RadioButton> buttons = new ArrayList<>(8);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
-    private static final double RESIZE_WIDTH = 5.0;
-    //Alternative LOWER_BOUND: 62
-    private static final int LOWER_BOUND = 322;
+
     private ObservableTabsModel tabModels;
     private String lastSelectedTabLabel = null;
     private boolean minimized = false;
@@ -97,7 +103,7 @@ public class RightBarController
             }
         });
 
-        resizeWidth(400);
+        resizeWidth(DEFAULT_WIDTH);
 
     }
 
@@ -207,7 +213,7 @@ public class RightBarController
     {
         if (minimized)
         {
-            resizeWidth(400);
+            resizeWidth(DEFAULT_WIDTH);
 
             maximize();
         }
@@ -248,7 +254,7 @@ public class RightBarController
         double newWidth = mainBox.getWidth()-event.getX();
 
         //decimal at end is percentage of screen it can be dragged to
-        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .45;
+        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * 0.45;
 
         //will only preform actions after this method if the cursor is resize cursor
         if (!mainBox.getCursor().equals(Cursor.W_RESIZE))
@@ -269,7 +275,7 @@ public class RightBarController
             }
             else
             {
-                resizeWidth(23);
+                resizeWidth(MINIMIZED_WIDTH);
             }
         }
         else
@@ -302,7 +308,7 @@ public class RightBarController
     {
         if (minimized)
         {
-            resizeWidth(23);
+            resizeWidth(MINIMIZED_WIDTH);
         }
     }
 
@@ -349,7 +355,7 @@ public class RightBarController
     {
         if (buttonBox.getChildren().isEmpty())
         {
-            resizeWidth(23);
+            resizeWidth(MINIMIZED_WIDTH);
 
             buttonBox.setVisible(false);
             buttonBox.setManaged(false);
