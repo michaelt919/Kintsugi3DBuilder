@@ -39,6 +39,7 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
+import kintsugi3d.builder.javafx.controllers.sidebar.RightBarController;
 import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
 import kintsugi3d.builder.javafx.experience.ExportRender;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
@@ -132,6 +133,7 @@ public class MainWindowController
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
     @FXML private SideBarController leftBarController;
+    @FXML private RightBarController rightBarController;
     @FXML private CarouselController carouselController;
 
     @FXML private Label shaderName;
@@ -170,7 +172,7 @@ public class MainWindowController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         this.leftBarController.init(javaFXState.getTabModels());
-        this.carouselController.init(javaFXState.getCarouselModel());
+        this.carouselController.init(javaFXState.getCarouselModel(), this);
 
         initExportRenderMenu();
         initToggleGroups();
@@ -808,4 +810,6 @@ public class MainWindowController
     {
         ProjectIO.getInstance().hotSwap(window);
     }
+    public double getRightTabWidth(){ return rightBarController.getTabWidth(); }
+    public double getLeftTabWidth(){ return leftBarController.getTabWidth(); }
 }

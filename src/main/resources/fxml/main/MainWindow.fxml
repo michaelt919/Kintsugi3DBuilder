@@ -165,10 +165,12 @@
         <HBox VBox.vgrow="ALWAYS">
             <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
             <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml" />
-
-            <AnchorPane HBox.hgrow="ALWAYS">
+            <AnchorPane HBox.hgrow="ALWAYS" minWidth = "0">
                 <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                <fx:include fx:id="carousel" source="Carousel.fxml" VBox.vgrow="ALWAYS" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                <HBox fx:id = "carouselContainer" pickOnBounds="false" AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="0">
+                    <fx:include fx:id="carousel" source="Carousel.fxml"  AnchorPane.topAnchor="0.0" HBox.hgrow="ALWAYS"/>
+                    <fx:include fx:id = "transparentContainer" source = "TransparentContainer.fxml" VBox.vgrow="ALWAYS" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                </HBox>
                 <AnchorPane fx:id="miniProgressPane" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
                     <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
                         <cursor>
@@ -193,6 +195,7 @@
                 </AnchorPane>
                 <Label fx:id="shaderName" style="-fx-background-color: #383838; -fx-label-padding: 10;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.leftAnchor="32.0" AnchorPane.bottomAnchor="32.0" />
             </AnchorPane>
+            <fx:include fx:id="rightBar" source="rightpanel/RightBar.fxml" AnchorPane.rightAnchor="0.0"/>
         </HBox>
     </VBox>
 </AnchorPane>

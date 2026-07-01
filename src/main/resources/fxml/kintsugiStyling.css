@@ -724,3 +724,8 @@
     -fx-border-width: 1px;
     -fx-background-color: #000000;
 }
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-pick-on-bounds: false;
+}
