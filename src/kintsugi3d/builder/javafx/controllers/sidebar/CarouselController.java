@@ -383,6 +383,7 @@ public class CarouselController
     {
         minimize();
     }
+
     /**
      * Gets the right and left tab widths then determines if the scroll bar needs to be there
      * This method was created because of a new flickering issue with the scrollbar when

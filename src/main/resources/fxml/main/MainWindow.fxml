@@ -195,7 +195,7 @@
                 </AnchorPane>
                 <Label fx:id="shaderName" style="-fx-background-color: #383838; -fx-label-padding: 10;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.leftAnchor="32.0" AnchorPane.bottomAnchor="32.0" />
             </AnchorPane>
-            <fx:include fx:id="rightBar" source="rightpanel/RightBar.fxml" AnchorPane.rightAnchor="0.0"/>
+<!--            <fx:include fx:id="rightBar" source="rightpanel/RightBar.fxml" AnchorPane.rightAnchor="0.0"/>-->
         </HBox>
     </VBox>
 </AnchorPane>
