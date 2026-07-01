@@ -210,12 +210,8 @@ public class TextureCardFactory implements ProjectDataCardFactory
             if (instance.getResources() != null)
             {
                 TextureResources<?> resources = instance.getResources().getTextureResources();
-
-                if (resources.getTextures() != null)
-                {
-                    resources.refreshTexture(key, instance.getViewSet());
-                    lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel));
-                }
+                resources.refreshTexture(key, instance.getViewSet());
+                lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel));
             }
         }
     }
@@ -224,10 +220,13 @@ public class TextureCardFactory implements ProjectDataCardFactory
     {
         Platform.runLater(() ->
         {
-            ReplaceData data = new ReplaceData(new File(Global.state().getIOModel().validateHandler().getLoadedViewSet().getSupportingFilesDirectory(), key.name + ".png"));
+            ReplaceData data = new ReplaceData(instance.getResources().getTextureResources(), key,
+                new File(Global.state().getIOModel().validateHandler().getLoadedViewSet().getSupportingFilesDirectory(), key.name + ".png"));
             ReplaceModel model = (ReplaceModel) ExperienceManager.getInstance().getExperience("ReplaceModel");
             model.setCurrentData(data);
             model.tryOpen();
         });
+        lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel));
     }
+
 }

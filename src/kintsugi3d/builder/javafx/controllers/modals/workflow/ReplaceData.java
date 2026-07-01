@@ -11,23 +11,35 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
+import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
+
 import java.io.File;
 
 public class ReplaceData
 {
+    private TextureResources<?> resources;
+    private TextureDetails key;
     private File currentTexture;
     private File newTexture;
 
     public ReplaceData()
     {
+        this.resources = null;
         this.currentTexture = null;
         this.newTexture = null;
     }
 
-    public ReplaceData(File currentTexture)
+    public ReplaceData(TextureResources<?> resources, TextureDetails key, File currentTexture)
     {
+        this.resources = resources;
+        this.key = key;
         this.currentTexture = currentTexture;
     }
+
+    public TextureResources<?> getResources() { return resources; }
+
+    public TextureDetails getKey() { return key; }
 
     public File getCurrentTexture()
     {

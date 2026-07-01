@@ -32,9 +32,9 @@
                                 <padding>
                                     <Insets left="4" right="4"/>
                                 </padding>
-                                <Label styleClass="wireframeBodyLarge" fx:id="currentPath" text="C>/Test/Url/example_texture.png"/>
+                                <Label styleClass="wireframeBodyLarge" fx:id="currentPath" />
                             </VBox>
-                            <Button fx:id="currentFileButton" styleClass="wireframeBody" textAlignment="CENTER" text="..."/>
+<!--                            <Button fx:id="currentFileButton" styleClass="wireframeBody" textAlignment="CENTER" text="..."/>-->
                         </HBox>
                     </VBox>
                 </HBox>
@@ -49,7 +49,7 @@
                                 </padding>
                                 <Label styleClass="wireframeBodyLarge" fx:id="newPath" text="C>/Test/Url/example_texture.png"/>
                             </VBox>
-                            <Button fx:id="newFileButton" styleClass="wireframeBody" textAlignment="CENTER" text="..."/>
+                            <Button fx:id="newFileButton" onAction="#openFileBrowser" styleClass="wireframeBody" textAlignment="CENTER" text="Open" style="fx-padding: 0px"/>
                         </HBox>
                     </VBox>
                 </HBox>

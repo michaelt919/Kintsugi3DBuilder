@@ -17,6 +17,7 @@ import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
 import kintsugi3d.builder.state.cards.TextureCardFactory;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
@@ -486,18 +487,27 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     {
         Rendering.runLater(() ->
         {
-            Texture2D newTexture = null;
             try
             {
-                newTexture = loadTexture(key.name, viewSet.getSupportingFilesDirectory());
-                if (newTexture != null)
-                {
-                    getTextures().get(key).refresh(new File(viewSet.getSupportingFilesDirectory(), key.name + ".png"), true);
-                }
+                getTextures().get(key).refresh(new File(viewSet.getSupportingFilesDirectory(), key.name + ".png"), true);
             }
             catch (IOException | RuntimeException e)
             {
                 LOG.error("Error refreshing card", e);
+            }
+        });
+    }
+
+    default void replaceTexture(TextureDetails key, ReplaceData data)
+    {
+        Rendering.runLater(() -> {
+            try
+            {
+                getTextures().get(key).load(data.getNewTexture(), true);
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error replacing card", e);
             }
         });
     }

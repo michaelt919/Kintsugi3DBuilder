@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,9 +20,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.Observer;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
+import kintsugi3d.builder.state.cards.TextureCardFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class ReplaceModelController extends DataReceiverPageControllerBase<ReplaceData>
 {
@@ -30,12 +42,15 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     @FXML private ImageView newImageView;
     @FXML private Label currentPath;
     @FXML private Label newPath;
-    @FXML private Button currentFileButton;
     @FXML private Button newFileButton;
+
+    private List<Observer> observers = new ArrayList<>(1);
 
     private final FileChooser replacementFileChooser = new FileChooser();
     private Image currentImage;
+    private Image newImage;
 
+    private static final Logger LOG = LoggerFactory.getLogger(ReplaceModelController.class);
     private ReplaceData data;
 
     @Override
@@ -44,23 +59,53 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     @Override
     public void initPage()
     {
+        newFileButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("dark-button"), true);
+
         replacementFileChooser.setTitle("Replace with...");
         replacementFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture image", "*.png"));
-//        setCurrentDirectoryFile();
+        setCurrentDirectoryFile(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory());
 
+        setCanConfirm(true);
+        setCanAdvance(true);
     }
 
     @Override
     public void refresh()
     {
-
     }
 
-    public void setExistingImage(File currentTexture)
+    @Override
+    public boolean confirm()
     {
-        File diffuse = currentTexture;
-        currentImage = new Image(currentTexture.getPath());
+        try
+        {
+            Files.copy(data.getNewTexture().toPath(), data.getCurrentTexture().toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        catch (IOException | RuntimeException e)
+        {
+            LOG.error("Error confirming texture replace", e);
+        }
+        data.getResources().replaceTexture(data.getKey(), data);
+//        Global.state().getTabModels().getTab("Textures");
+        return true;
+    }
 
+    private void updateNewTexture()
+    {
+        if (data != null)
+        {
+            if (data.getNewTexture() == null)
+            {
+                newImageView.setImage(currentImage);
+                newPath.setText(data.getCurrentTexture().getPath());
+            }
+            else
+            {
+                newImage = new Image(data.getNewTexture().toURI().toString(), 72, 72, false, false);
+                newImageView.setImage(newImage);
+                newPath.setText(data.getNewTexture().getPath());
+            }
+        }
     }
 
     private void setCurrentDirectoryFile(File currentDirectoryFile)
@@ -77,17 +122,18 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     public void receiveData(ReplaceData newData)
     {
         this.data = newData;
-        if (data != null)
-        {
-            currentImage = new Image(data.getCurrentTexture().toURI().toString(), 72, 72, false, false);
-            currentImageView.setImage(currentImage);
-            currentPath.setText(data.getCurrentTexture().getPath());
-            setCurrentDirectoryFile(data.getCurrentTexture());
-            if (data.getNewTexture() == null)
-            {
-                newImageView.setImage(currentImage);
-                newPath.setText(data.getCurrentTexture().getPath());
-            }
-        }
+
+        currentImage = new Image(data.getCurrentTexture().toURI().toString(), 72, 72, false, false);
+        currentImageView.setImage(currentImage);
+        currentPath.setText(data.getCurrentTexture().getPath());
+        updateNewTexture();
     }
+
+    @FXML
+    public void openFileBrowser()
+    {
+        data.setNewTexture(replacementFileChooser.showOpenDialog(root.getScene().getWindow()));
+        updateNewTexture();
+    }
+
 }

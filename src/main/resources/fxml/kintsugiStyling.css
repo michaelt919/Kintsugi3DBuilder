@@ -77,6 +77,7 @@
 /********************************************************************************/
 
 .modal-root,
+.button:dark-button,
 .content-root,
 .cameraviewlist,
 .context-menu,
@@ -149,6 +150,7 @@
  }
 
 .check-box,
+.button:dark-button,
 .label,
 .list-view,
 .list-cell,
@@ -192,6 +194,11 @@
 .button, .toggle-button {
     -fx-background-radius: 0;
     -fx-padding: 8 16 8 16; /* top right bottom left */
+}
+
+.button:dark-button {
+    -fx-background-radius: 0;
+    -fx-padding: 4 8 4 8;
 }
 
 .scroll-bar .increment-button,
