@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Map;
 public class RenderingSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
+    private UniformBuffer<ContextType> viewIndexBufferOverride;
     private UniformBuffer<ContextType> weightBuffer;
 
     public RenderingSubject(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel,
@@ -95,15 +96,26 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
         }
     }
 
+    public void overrideViewIndexBuffer(UniformBuffer<ContextType> viewIndexBufferOverride)
+    {
+        this.viewIndexBufferOverride = viewIndexBufferOverride;
+    }
+
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         getContext().getState().disableBackFaceCulling();
 
         // After the ground plane, use a gray color for anything without a texture map.
-        getDrawable().program().setUniform("defaultDiffuseColor", new Vector3(0.125f));
+        getProgram().setUniform("defaultDiffuseColor", new Vector3(0.125f));
 
         setupShader(cameraViewport);
+
+        if (viewIndexBufferOverride != null)
+        {
+            getProgram().setUniformBuffer("ViewIndices", viewIndexBufferOverride);
+        }
+
         getDrawable().draw(cameraViewport.ofFramebuffer(framebuffer));
 
         getContext().getState().enableBackFaceCulling();
