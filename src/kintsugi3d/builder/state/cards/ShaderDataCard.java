@@ -20,6 +20,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Represents a workspace card which will automatically have two buttons: "Add to Carousel" and "Send to Main View."
+ * "Add to Carousel" will send the shader to a carousel for easier use for user.
+ * "Send to Main View" will apply the shader to the model.
+ */
 public class ShaderDataCard extends ProjectDataCard
 {
     private final UserShader shader;
@@ -43,7 +48,7 @@ public class ShaderDataCard extends ProjectDataCard
         };
 
         return Map.of(
-            "View Shader", viewShader,
+            "Send to Main View", viewShader,
             "Send to Carousel", sendToCarousel);
     }
 

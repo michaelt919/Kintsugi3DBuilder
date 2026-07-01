@@ -249,10 +249,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                             tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
                             break;
                         case REMOVED:
-                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getName()));
+                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
                             break;
                         case MODIFIED:
-                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getName()));
+                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
                             break;
                     }
                 });
