@@ -17,27 +17,32 @@
 
 <?import javafx.geometry.Insets?>
 <AnchorPane fx:id = "mainBox"
-            pickOnBounds="true"
+            pickOnBounds="false"
+            mouseTransparent="true"
             stylesheets="@../kintsugiStyling.css"
-            style="-fx-background-color: transparent;"
+            style="-fx-background-color: null;"
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
             maxHeight="180"
             minHeight="180"
             prefHeight="180"
+            maxWidth="0"
             fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
     <children>
-        <ScrollPane AnchorPane.bottomAnchor="0.0"
+        <ScrollPane scaleY = "-1.0"
+                    fitToHeight="true"
+                    fitToWidth="true"
+                    pickOnBounds="false"
+                    AnchorPane.bottomAnchor="0.0"
                     AnchorPane.leftAnchor="0.0"
-                    scaleY = "-1.0"
                     AnchorPane.rightAnchor="0.0"
                     AnchorPane.topAnchor="0.0"
-                    fitToHeight="true"
                     vbarPolicy="NEVER"
                     style="-fx-background-color: transparent;"
                     fx:id = "carouselScrollPane">
             <content>
                 <HBox fx:id="containerHBox"
+                      pickOnBounds="false"
                       scaleY = "-1.0"
                       spacing="10.0"
                       alignment="CENTER_LEFT"
@@ -51,18 +56,19 @@
                 </HBox>
             </content>
         </ScrollPane>
-        <VBox fx:id ="minimizeBar" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" managed="false" visible="false">
+        <VBox fx:id ="minimizeBar" pickOnBounds="false" AnchorPane.topAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" managed="false" visible="false" style="-fx-background-color: null;">
             <!-- If this is uncommented then the minimize bar will be shown. Additionally, you need to change
             buttonBox background color to #383838
             <Separator fx:id = "minimizeSeparator" styleClass="black-line" stylesheets="@../kintsugiStyling.css" />
             -->
             <HBox   fx:id = "buttonBox"
-                    minHeight="23"
-                    maxHeight="23"
-                    style  = "-fx-background-color: transparent;"
+                    pickOnBounds="false"
+                    minHeight="24.5"
+                    maxHeight="24.5"
+                    style = "-fx-background-color: null;"
                     alignment="BOTTOM_LEFT">
                 <padding>
-                    <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                    <Insets bottom="4.0" left="4.0" right="4.0" top="5.0" />
                 </padding>
                 <Button
                         fx:id = "minimizeButton"
@@ -83,7 +89,7 @@
                 onMousePressed="#mousePressed"
                 onMouseDragged="#mouseDragged"
                 onMouseReleased="#mouseReleased"/>
-        <HBox minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.bottomAnchor="-30.0">
+        <HBox pickOnBounds="false" minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.bottomAnchor="-30.0">
             <Button
                     fx:id = "miniButton"
                     text = "-"
