@@ -22,10 +22,14 @@ import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.vecmath.IntVector2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -38,6 +42,8 @@ import java.io.IOException;
  */
 public class CarouselController
 {
+    private static final Logger LOG = LoggerFactory.getLogger(CarouselController.class);
+
     private static final int DEFAULT_HEIGHT = 180;
     private static final int MINIMIZED_HEIGHT = 23;
 
@@ -181,6 +187,17 @@ public class CarouselController
             card.prefWidthProperty().bind(carouselModel.carouselCardWidthProperty());
             card.maxWidthProperty().bind(carouselModel.carouselCardWidthProperty());
             card.minWidthProperty().bind(carouselModel.carouselCardWidthProperty());
+
+            card.heightProperty().addListener((obs, oldVal, newVal) ->
+            {
+                LOG.info("Carousel card height: {}", newVal);
+
+                // Refresh safe region for card
+                ProjectInstance<?> carouselInstance = Global.state().getIOModel().getInstanceForShader(shader);
+                carouselInstance.setSafeRegion(
+                    new IntVector2(0, 0),
+                    new IntVector2((int)Math.round(carouselModel.getCarouselCardWidth()), carouselModel.getCardSafeEndY()));
+            });
 
             containerHBox.getChildren().add(card);
 

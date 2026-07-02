@@ -451,6 +451,7 @@ public final class FramebufferView extends Region
 
         if (canvas != null)
         {
+            LOG.info("Handle window event ({}x{})", width, height);
             canvas.changeBounds(new CanvasPosition(x, y), new CanvasSize(width, height));
         }
     }

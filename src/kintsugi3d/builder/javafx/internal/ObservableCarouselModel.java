@@ -26,6 +26,8 @@ import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.window.CanvasSize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
@@ -36,6 +38,8 @@ And another to add a shader to the carousel list.
  */
 public class ObservableCarouselModel implements CarouselModel
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ObservableCarouselModel.class);
+
     public static final int DEFAULT_CARD_WIDTH = 210;
     public static final int DEFAULT_CARD_HEIGHT = 160;
 
@@ -63,17 +67,10 @@ public class ObservableCarouselModel implements CarouselModel
         
         carouselHeight.addListener((observable, oldValue, newValue) ->
         {
+            LOG.info("Carousel height listener ({})", newValue);
+
             // Refresh safe region for main view
             refreshMainViewSafeRegion();
-
-            // Also refresh safe regions for cards
-            for (CarouselItem item : carouselItems)
-            {
-                ProjectInstance<?> carouselInstance = Global.state().getIOModel().getInstanceForShader(item.getShader());
-                carouselInstance.setSafeRegion(
-                    new IntVector2(0, 0),
-                    new IntVector2((int)Math.round(getCarouselCardWidth()), getCardSafeEndY()));
-            }
         });
     }
 
@@ -170,7 +167,7 @@ public class ObservableCarouselModel implements CarouselModel
         }
     }
 
-    private int getCardSafeEndY()
+    public int getCardSafeEndY()
     {
         return (int) Math.round(getCarouselCardHeight() - CARD_SAFE_REGION_BOTTOM_MARGIN);
     }

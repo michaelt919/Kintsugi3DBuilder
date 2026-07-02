@@ -368,6 +368,10 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
             }
             else if (safeStartPixel != null && safeEndPixel != null)
             {
+                LOG.info("DRAW ({}x{})", size.width, size.height);
+                LOG.info("Safe start pixel: ({}, {})", safeStartPixel.x, safeStartPixel.y);
+                LOG.info("Safe end pixel: ({}, {})", safeEndPixel.x, safeEndPixel.y);
+
                 FramebufferSize safeSize = new FramebufferSize(
                     safeEndPixel.x - safeStartPixel.x,
                     safeEndPixel.y - safeStartPixel.y);
