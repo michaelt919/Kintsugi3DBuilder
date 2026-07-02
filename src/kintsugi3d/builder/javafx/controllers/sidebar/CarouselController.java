@@ -171,7 +171,7 @@ public class CarouselController
             card.setUserData(shader);
 
             CarouselCardController cardController = loader.getController();
-            cardController.init(carouselModel, shader);
+            cardController.init(carouselModel, shader, this);
 
             HBox.setHgrow(card, Priority.ALWAYS);
 
@@ -418,4 +418,6 @@ public class CarouselController
             }
         });
     }
+    public double getHBarValue(){ return carouselScrollPane.getHvalue();}
+    public void setHBarPosition(double pos){ carouselScrollPane.setHvalue(pos);}
 }

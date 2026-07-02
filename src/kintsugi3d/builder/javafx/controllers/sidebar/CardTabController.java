@@ -107,7 +107,8 @@ public class CardTabController
                 filePathHBox.setVisible(true);
                 filePathHBox.setManaged(true);
             }
-            else{
+            else
+            {
                 filePathHBox.setVisible(false);
                 filePathHBox.setManaged(false);
             }
@@ -124,9 +125,11 @@ public class CardTabController
         copyFilePathButton.prefWidthProperty().bind(tab.widthProperty().multiply(0.25).subtract(pixelSpacing));
         filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
 
-        Platform.runLater(() -> {
+        Platform.runLater(() ->
+        {
             ScrollBar vBar = (ScrollBar) scrollpane.lookup(".vertical");
-            if (vBar != null) {
+            if (vBar != null)
+            {
 
                 DoubleBinding width = Bindings.createDoubleBinding(
                     () -> vBar.isVisible() ? vBar.getWidth() : 0.0,

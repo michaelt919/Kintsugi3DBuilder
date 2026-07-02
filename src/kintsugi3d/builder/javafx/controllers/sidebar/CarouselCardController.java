@@ -12,8 +12,13 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.ReadonlyCanvasModel;
@@ -34,14 +39,15 @@ public class CarouselCardController
         new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
 
     @FXML private FramebufferView framebufferView;
-
-    @FXML
-    private CheckBox selectedCheckbox;
-
-    @FXML
-    private Label shaderName;
+    @FXML private CheckBox selectedCheckbox;
+    @FXML private Label shaderName;
+    @FXML private HBox buttonBox;
+    @FXML private AnchorPane carouselCard;
+    @FXML private Button moveLeft;
+    @FXML private Button moveRight;
 
     private CarouselModel carouselModel;
+    private CarouselController carousel;
     private UserShader shader;
 
     /**
@@ -74,11 +80,12 @@ public class CarouselCardController
      * and changes the label to have the name of the shader
      * @param shader
      */
-    public void init(CarouselModel carouselModel, UserShader shader)
+    public void init(CarouselModel carouselModel, UserShader shader, CarouselController carousel)
     {
         this.carouselModel = carouselModel;
-
+        this.carousel = carousel;
         this.shader = shader;
+
         shaderName.setText(this.shader.getFriendlyName());
 
         /*
@@ -88,6 +95,19 @@ public class CarouselCardController
         */
         Global.state().getUserShaderModel().registerHandler(this::updateCheckboxState);
         updateCheckboxState(Global.state().getUserShaderModel().getUserShader());
+    }
+    public void initialize()
+    {
+        buttonBox.translateYProperty().bind(carouselCard.heightProperty().divide(2.0).subtract(buttonBox.heightProperty().divide(2.0)));
+
+        Tooltip leftTip = new Tooltip();
+        Tooltip rightTip = new Tooltip();
+        leftTip.setText("Move Card Left");
+        rightTip.setText("Move Card Right");
+        leftTip.setShowDelay(Duration.millis(10));
+        rightTip.setShowDelay(Duration.millis(10));
+        moveLeft.setTooltip(leftTip);
+        moveRight.setTooltip(rightTip);
     }
 
     public void setupCanvas(ReadonlyCanvasModel canvasModel)
@@ -133,4 +153,23 @@ public class CarouselCardController
             carouselModel.removeFromCarousel(shader);
         }
     }
+    @FXML public void showMoveButtons()
+    {
+        buttonBox.setVisible(true);
+    }
+    @FXML public void hideMoveButtons()
+    {
+        buttonBox.setVisible(false);
+    }
+    @FXML public void moveCarouselCardLeft()
+    {
+        Global.state().getCarouselModel().moveCardLeft(this);
+    }
+    @FXML public void moveCarouselCardRight()
+    {
+        Global.state().getCarouselModel().moveCardRight(this);
+    }
+    public UserShader getShader(){ return shader;}
+    public double getHBarValue(){ return carousel.getHBarValue();}
+    public void setHBarValue(double pos) { carousel.setHBarPosition(pos);}
 }

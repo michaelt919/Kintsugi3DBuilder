@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
+import kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController;
 import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
@@ -51,4 +52,8 @@ public class SynchronizedCarouselModel implements CarouselModel
     {
         Platform.runLater(base::clearCarousel);
     }
+    @Override
+    public void moveCardLeft(CarouselCardController card){Platform.runLater(() -> base.moveCardLeft(card));}
+    @Override
+    public void moveCardRight(CarouselCardController card){Platform.runLater(() -> base.moveCardRight(card));}
 }
