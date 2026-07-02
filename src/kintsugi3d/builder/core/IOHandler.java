@@ -28,7 +28,8 @@ import java.util.function.DoubleUnaryOperator;
 public interface IOHandler
 {
     boolean isInstanceLoaded();
-    ProjectInstance<?> getLoadedInstance();
+    ProjectInstance<?> getMainInstance();
+    ProjectInstance<?> getInstanceForShader(UserShader shader);
 
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
     ViewSet getLoadedViewSet();
@@ -40,7 +41,6 @@ public interface IOHandler
     void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
-
     void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
@@ -48,7 +48,6 @@ public interface IOHandler
 
     void saveToVSETFile(File vsetFile) throws IOException;
     void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
-
     void saveGLTF(File outputDirectory, ExportSettings settings);
 
     void unload();

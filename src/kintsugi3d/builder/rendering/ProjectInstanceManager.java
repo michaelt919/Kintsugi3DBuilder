@@ -57,8 +57,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     private final ContextType context;
 
-    private final RefreshableCollection<RenderRefreshable<ContextType>> renderViews = new RefreshableCollection<>();
-    private final Map<UserShader, RenderRefreshable<ContextType>> renderViewMap = new HashMap<>(8);
+    private final RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViews
+        = new RefreshableCollection<>();
+    private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
+        = new HashMap<>(8);
 
     private ViewSet loadedViewSet;
     private ProjectInstance<ContextType> projectInstance;
@@ -408,7 +410,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public RefreshableCollection<RenderRefreshable<ContextType>> getRenderViews()
+    public RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> getRenderViews()
     {
         return renderViews;
     }
@@ -431,8 +433,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 DoubleFramebufferFactory.create(context, initialSize.width, initialSize.height);
 
             // Create and initialize refreshable, which will manage the framebuffer object
-            RenderRefreshable<ContextType> refreshable = RenderRefreshable.createWithManagedFrambufferObject(
-                context, renderView, framebuffer);
+            var refreshable = RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
 
             try
             {
@@ -462,9 +463,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         });
     }
 
+    @Override
+    public ProjectRenderingEngine<ContextType> getInstanceForShader(UserShader shader)
+    {
+        return renderViewMap.get(shader).getRenderable();
+    }
+
     public void removeRenderView(UserShader shader)
     {
-        RenderRefreshable<ContextType> renderViewToRemove = renderViewMap.get(shader);
+        var renderViewToRemove = renderViewMap.get(shader);
 
         if (renderViewToRemove != null)
         {
@@ -498,7 +505,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectInstance<ContextType> getLoadedInstance()
+    public ProjectInstance<ContextType> getMainInstance()
     {
         return projectInstance;
     }

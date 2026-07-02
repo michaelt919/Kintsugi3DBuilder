@@ -16,6 +16,7 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.EncodableColorImage;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -191,9 +192,14 @@ public class IOModel
         this.imageLoadOptionsModel = imageLoadOptionsModel;
     }
 
-    public ProjectInstance<?> getLoadedInstance()
+    public ProjectInstance<?> getMainInstance()
     {
-        return this.handler.getLoadedInstance();
+        return this.handler.getMainInstance();
+    }
+
+    public ProjectInstance<?> getInstanceForShader(UserShader shader)
+    {
+        return this.handler.getInstanceForShader(shader);
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)

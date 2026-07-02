@@ -234,9 +234,9 @@ public final class Rendering
             @Override
             public Object getObjectAtCoordinates(double x, double y)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainInstance() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getObjectAtCoordinates(x, y);
+                    return instanceManager.getMainInstance().getSceneViewportModel().getObjectAtCoordinates(x, y);
                 }
                 else
                 {
@@ -247,9 +247,9 @@ public final class Rendering
             @Override
             public Vector3 get3DPositionAtCoordinates(double x, double y)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainInstance() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+                    return instanceManager.getMainInstance().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
                 }
                 else
                 {
@@ -260,9 +260,9 @@ public final class Rendering
             @Override
             public Vector3 getViewingDirection(double x, double y)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainInstance() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getViewingDirection(x, y);
+                    return instanceManager.getMainInstance().getSceneViewportModel().getViewingDirection(x, y);
                 }
                 else
                 {
@@ -273,9 +273,9 @@ public final class Rendering
             @Override
             public Vector3 getViewportCenter()
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainInstance() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getViewportCenter();
+                    return instanceManager.getMainInstance().getSceneViewportModel().getViewportCenter();
                 }
                 else
                 {
@@ -286,9 +286,9 @@ public final class Rendering
             @Override
             public Vector2 projectPoint(Vector3 point)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainInstance() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().projectPoint(point);
+                    return instanceManager.getMainInstance().getSceneViewportModel().projectPoint(point);
                 }
                 else
                 {
@@ -299,9 +299,9 @@ public final class Rendering
             @Override
             public float getLightWidgetScale()
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainInstance() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getLightWidgetScale();
+                    return instanceManager.getMainInstance().getSceneViewportModel().getLightWidgetScale();
                 }
                 else
                 {
@@ -339,7 +339,7 @@ public final class Rendering
                 try
                 {
                     // reload program
-                    instanceManager.getLoadedInstance().reloadShaders();
+                    instanceManager.getMainInstance().reloadShaders();
                 }
                 catch (RuntimeException e)
                 {

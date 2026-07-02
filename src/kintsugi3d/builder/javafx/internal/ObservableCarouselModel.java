@@ -43,34 +43,56 @@ public class ObservableCarouselModel implements CarouselModel
 
     private final ObservableList<CarouselItem> carouselItems = FXCollections.observableArrayList();
 
+    private final DoubleProperty carouselHeight = new SimpleDoubleProperty(DEFAULT_CARD_HEIGHT);
     private final DoubleProperty carouselCardHeight = new SimpleDoubleProperty(DEFAULT_CARD_HEIGHT);
 
     // Auto-calculate card width from card height, preserving aspect ratio.
     private final DoubleBinding carouselCardWidth =
-        carouselCardHeight.multiply((double)DEFAULT_CARD_WIDTH / (double)DEFAULT_CARD_HEIGHT);
+        carouselCardHeight.multiply((double) DEFAULT_CARD_WIDTH / (double) DEFAULT_CARD_HEIGHT);
 
     public ObservableCarouselModel()
     {
-        carouselCardHeight.addListener((observable, oldValue, newValue) ->
+        // Wait for the global state to be initialized.
+        Platform.runLater(() ->
         {
-            ProjectInstance<?> instance = Global.state().getIOModel().getLoadedInstance();
-            if (instance != null)
-            {
-                CanvasSize mainViewSize = Global.state().getMainCanvasModel().getCanvas().getSize();
-                int carouselHeight = (int) Math.round(carouselCardHeight.get()); // TODO include margins?
-
-                instance.setSafeRegion(
-                    new IntVector2(0, carouselHeight),
-                    new IntVector2(mainViewSize.width, mainViewSize.height));
-            }
-
-            // TODO need to also refresh safe regions for cards
-//            for (CarouselItem item : carouselItems)
-//            {
-//                Global.state().getCanvasListModel().getCanvas(item.getShader())
-//                    .setSafeRegion(0, 0, (int)Math.round(getCarouselCardWidth()), getCardSafeEndY());
-//            }
+            // Adjust safe region for main view when window is resized.
+            Global.state().getMainCanvasModel().addCanvasChangedListener(
+                framebufferCanvas -> framebufferCanvas.addCanvasSizeListener(
+                    (canvas, width, height) -> refreshMainViewSafeRegion(canvas.getSize())));
         });
+        
+        carouselHeight.addListener((observable, oldValue, newValue) ->
+        {
+            // Refresh safe region for main view
+            refreshMainViewSafeRegion();
+
+            // Also refresh safe regions for cards
+            for (CarouselItem item : carouselItems)
+            {
+                ProjectInstance<?> carouselInstance = Global.state().getIOModel().getInstanceForShader(item.getShader());
+                carouselInstance.setSafeRegion(
+                    new IntVector2(0, 0),
+                    new IntVector2((int)Math.round(getCarouselCardWidth()), getCardSafeEndY()));
+            }
+        });
+    }
+
+    private void refreshMainViewSafeRegion()
+    {
+        refreshMainViewSafeRegion(Global.state().getMainCanvasModel().getCanvas().getSize());
+    }
+
+    private void refreshMainViewSafeRegion(CanvasSize mainViewSize)
+    {
+        ProjectInstance<?> instance = Global.state().getIOModel().getMainInstance();
+        if (instance != null)
+        {
+            int height = (int) Math.round(carouselHeight.get());
+
+            instance.setSafeRegion(
+                new IntVector2(0, height),
+                new IntVector2(mainViewSize.width, mainViewSize.height));
+        }
     }
 
     /**
@@ -81,6 +103,16 @@ public class ObservableCarouselModel implements CarouselModel
     public ObservableList<CarouselItem> getCarouselItems()
     {
         return carouselItems;
+    }
+
+    public double getCarouselHeight()
+    {
+        return carouselHeight.get();
+    }
+
+    public DoubleProperty carouselHeightProperty()
+    {
+        return carouselHeight;
     }
 
     public double getCarouselCardHeight()
@@ -119,8 +151,8 @@ public class ObservableCarouselModel implements CarouselModel
             // Set up the rendering backend for the card.
             // GPU resource allocation will happen within a Rendering.runLater call on the graphcs thread.
             Global.state().getCanvasListModel().createCanvas(shader,
-                (int)Math.round(getCarouselCardWidth()), (int)Math.round(getCarouselCardHeight()),
-                0, 0, (int)Math.round(getCarouselCardWidth()), getCardSafeEndY(),
+                (int) Math.round(getCarouselCardWidth()), (int) Math.round(getCarouselCardHeight()),
+                0, 0, (int) Math.round(getCarouselCardWidth()), getCardSafeEndY(),
                 framebufferCanvas ->
                 {
                     // Create a CanvasModel for connecting JavaFX to the backend.
@@ -131,7 +163,7 @@ public class ObservableCarouselModel implements CarouselModel
                     // Use Platform runLater to set up the card on the JavaFX side.
                     Platform.runLater(() ->
                     {
-                         // This will trigger the FXML to load via observer and subsequently connect to the backend.
+                        // This will trigger the FXML to load via observer and subsequently connect to the backend.
                         carouselItems.add(new CarouselItem(shader, canvas));
                     });
                 });
@@ -158,6 +190,12 @@ public class ObservableCarouselModel implements CarouselModel
 
             // Clean up the rendering backend for the card.
             Global.state().getCanvasListModel().removeCanvas(shader);
+
+            if (carouselItems.isEmpty())
+            {
+                // Recenter main view if the carousel is gone.
+                refreshMainViewSafeRegion();
+            }
         }
     }
 
@@ -167,12 +205,18 @@ public class ObservableCarouselModel implements CarouselModel
     @Override
     public void clearCarousel()
     {
-        // Remove all shaders from rendering backend.
-        for (CarouselItem item : carouselItems)
+        if (!carouselItems.isEmpty())
         {
-            Global.state().getCanvasListModel().removeCanvas(item.getShader());
-        }
+            // Remove all shaders from rendering backend.
+            for (CarouselItem item : carouselItems)
+            {
+                Global.state().getCanvasListModel().removeCanvas(item.getShader());
+            }
 
-        carouselItems.clear();
+            carouselItems.clear();
+
+            // Recenter main view now that the carousel is gone.
+            refreshMainViewSafeRegion();
+        }
     }
 }
