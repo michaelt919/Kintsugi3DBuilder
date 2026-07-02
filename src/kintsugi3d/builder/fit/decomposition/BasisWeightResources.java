@@ -11,11 +11,17 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +31,8 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     implements Resource, ContextBound<ContextType>, Croppable<BasisWeightResources<ContextType>>
 {
     private final ContextType context;
+
+    Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
     public Texture3D<ContextType> weightMaps;
     public final Texture2D<ContextType> weightMask;
@@ -161,6 +169,38 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     public BasisWeightResources<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
     {
         return new BasisWeightResources<>(weightMaps.crop(x, y, cropWidth, cropHeight), weightMask.crop(x, y, cropWidth, cropHeight));
+    }
+
+
+    public void refreshTexture(int weightmapIndex, ViewSet viewSet)
+    {
+        Rendering.runLater(() ->
+        {
+            try
+            {
+                weightMaps.loadLayer(weightmapIndex, new File(viewSet.getSupportingFilesDirectory(),
+                    TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")), true);
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error refreshing card", e);
+            }
+        });
+    }
+
+    public void replaceWeightmap(ReplaceData data)
+    {
+        Rendering.runLater(() ->
+        {
+            try
+            {
+                weightMaps.loadLayer(data.getWeightmapIndex(), data.getNewTexture(), true);
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error refreshing card", e);
+            }
+        });
     }
 
     @Override

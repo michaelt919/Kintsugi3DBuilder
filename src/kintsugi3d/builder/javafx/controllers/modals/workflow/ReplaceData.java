@@ -20,6 +20,7 @@ public class ReplaceData
 {
     private TextureResources<?> resources;
     private TextureDetails key;
+    private int weightmapIndex;
     private File currentTexture;
     private File newTexture;
 
@@ -37,9 +38,18 @@ public class ReplaceData
         this.currentTexture = currentTexture;
     }
 
+    public ReplaceData(TextureResources<?> resources, int weightmapIndex, File currentTexture)
+    {
+        this.resources = resources;
+        this.weightmapIndex = weightmapIndex;
+        this.currentTexture = currentTexture;
+    }
+
     public TextureResources<?> getResources() { return resources; }
 
     public TextureDetails getKey() { return key; }
+
+    public int getWeightmapIndex() { return weightmapIndex; }
 
     public File getCurrentTexture()
     {

@@ -22,6 +22,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,8 +80,20 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
         {
             LOG.error("Error confirming texture replace", e);
         }
-        data.getResources().replaceTexture(data);
-        Global.state().getTabModels().getTab("Textures").refreshCards(card -> Objects.equals(card.getTitle(), data.getKey().friendlyName));
+        // Replacing texture
+        if (data.getKey() != null)
+        {
+            data.getResources().replaceTexture(data);
+            Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+                Objects.equals(card.getTitle(), data.getKey().friendlyName));
+        }
+        // Replacing weightmap
+        else
+        {
+            data.getResources().getBasisWeightResources().replaceWeightmap(data);
+            Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+                Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(data.getWeightmapIndex(), "PNG")));
+        }
         return true;
     }
 

@@ -11,6 +11,8 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
