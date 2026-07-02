@@ -129,7 +129,7 @@ public class CarouselController
                         }
                     }
                 }
-                scrollBarCheck();
+                mainBox.widthProperty().addListener((obs, oldVal, newVal) -> scrollBarCheck());
             });
 
         //Checks for change in height/resize for the carousel and will allocate space accordingly
@@ -151,11 +151,7 @@ public class CarouselController
         //Detects when the carousel space in mainWindow changes
         Platform.runLater(() -> {
             Region container = (Region) mainBox.getParent().getParent();
-
-            container.widthProperty().addListener((observable, oldWidth, newWidth) -> {
-                scrollBarCheck();
-            });
-            scrollBarCheck();
+            container.widthProperty().addListener((obs, oldVal, newVal) -> scrollBarCheck());
         });
     }
 
