@@ -132,6 +132,7 @@ public class MainWindowController
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
     @FXML private SideBarController leftBarController;
+//    @FXML private RightBarController rightBarController;
     @FXML private CarouselController carouselController;
 
     @FXML private Label shaderName;
@@ -170,7 +171,7 @@ public class MainWindowController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         this.leftBarController.init(javaFXState.getTabModels());
-        this.carouselController.init(javaFXState.getCarouselModel());
+        this.carouselController.init(javaFXState.getCarouselModel(), this);
 
         initExportRenderMenu();
         initToggleGroups();
@@ -807,5 +808,16 @@ public class MainWindowController
     public void hotSwap()
     {
         ProjectIO.getInstance().hotSwap(window);
+    }
+
+    public double getRightTabWidth()
+    {
+        return 0; // TODO uncomment when using details panel.
+//        return rightBarController.getTabWidth();
+    }
+
+    public double getLeftTabWidth()
+    {
+        return leftBarController.getTabWidth();
     }
 }

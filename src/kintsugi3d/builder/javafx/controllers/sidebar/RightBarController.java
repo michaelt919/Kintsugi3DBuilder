@@ -24,17 +24,14 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.Map.Entry;
 
-public class SideBarController
+public class RightBarController
 {
     private static final int DEFAULT_WIDTH = 400;
     private static final int MINIMIZED_WIDTH = 23;
@@ -44,11 +41,12 @@ public class SideBarController
     //Alternative LOWER_BOUND: 62
     private static final int LOWER_BOUND = 322;
 
-    @FXML private HBox buttonBox;
+    @FXML
+    private HBox buttonBox;
     @FXML private VBox mainBox;
     @FXML private Button minimizeButton;
-    @FXML private Label workspaceLabel;
-    @FXML private HBox workspaceBox;
+    @FXML private Label detailsLabel;
+    @FXML private HBox detailsBox;
 
     // needed to remove tabs
     private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
@@ -58,8 +56,9 @@ public class SideBarController
     private final List<RadioButton> buttons = new ArrayList<>(8);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
+
     private ObservableTabsModel tabModels;
-    private String lastSelectedTabLabel;
+    private String lastSelectedTabLabel = null;
     private boolean minimized = false;
 
     public Node getRootNode()
@@ -103,7 +102,9 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
+
         resizeWidth(DEFAULT_WIDTH);
+
     }
 
     private void removeTab(String key)
@@ -149,10 +150,9 @@ public class SideBarController
         RadioButton button = new RadioButton(name);
 
         // Set sizing
-        double buttonHeight = 32.0;
-        button.setMinHeight(buttonHeight);
-        button.setMaxHeight(buttonHeight);
-        button.setPrefHeight(buttonHeight);
+        button.setMinHeight(32.0);
+        button.setMaxHeight(32.0);
+        button.setPrefHeight(32.0);
         button.setMaxWidth(Double.MAX_VALUE);  // Equivalent to 1.7976931348623157E308
 
         // Set properties
@@ -160,13 +160,13 @@ public class SideBarController
         button.setSelected(false);
         button.setStyle("-fx-alignment: center;");
         button.getStyleClass().add("stripped-radio-button");
-        button.setTextAlignment(TextAlignment.CENTER);
+        button.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
 
         // Add to ToggleGroup
         button.setToggleGroup(tabToggleGroup);
 
         // Allow the button to grow horizontally in an HBox
-        HBox.setHgrow(button, Priority.ALWAYS);
+        HBox.setHgrow(button, javafx.scene.layout.Priority.ALWAYS);
 
         buttons.add(button);
 
@@ -230,9 +230,9 @@ public class SideBarController
      */
     public void mouseMoved(MouseEvent event)
     {
-        if (event.getX() > (mainBox.getWidth() - RESIZE_WIDTH))
+        if (event.getX() <= RESIZE_WIDTH)
         {
-            mainBox.setCursor(Cursor.E_RESIZE);
+            mainBox.setCursor(Cursor.W_RESIZE);
         }
         else
         {
@@ -251,20 +251,20 @@ public class SideBarController
     @FXML
     public void mouseDragged(MouseEvent event)
     {
-        double newWidth = event.getX();
+        double newWidth = mainBox.getWidth()-event.getX();
 
         //decimal at end is percentage of screen it can be dragged to
         double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * 0.45;
 
         //will only preform actions after this method if the cursor is resize cursor
-        if (!mainBox.getCursor().equals(Cursor.E_RESIZE))
+        if (!mainBox.getCursor().equals(Cursor.W_RESIZE))
         {
             return;
         }
 
         if (minimized) //if in minimized state
         {
-            if (newWidth >= MINIMIZED_WIDTH)
+            if (newWidth >= 23)
             {
                 resizeWidth(newWidth);
 
@@ -320,7 +320,7 @@ public class SideBarController
     {
         if (lastSelectedTabLabel == null)
         {
-            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
+            for (Map.Entry<String, RadioButton> entry : buttonMap.entrySet())
             {
                 RadioButton button = entry.getValue();
 
@@ -347,29 +347,35 @@ public class SideBarController
     }
 
     /**
-     * Hides all the tabs and features of the workspace then will set the mainBox size
+     * Hides all the tabs and features of the detail space then will set the mainBox size
      * to 23 pixels. Removes the features abilities to take up space when it hides
      * them. Sets minimized to true and changes minimize button text to "+".
      */
     private void minimize()
     {
-        resizeWidth(MINIMIZED_WIDTH);
-
-        buttonBox.setVisible(false);
-        workspaceLabel.setVisible(false);
-
-        hideAllTabs();
-
-        for (Node child: workspaceBox.getChildren())
+        if (buttonBox.getChildren().isEmpty())
         {
-            if (!Objects.equals(child, minimizeButton))
+            resizeWidth(MINIMIZED_WIDTH);
+
+            buttonBox.setVisible(false);
+            buttonBox.setManaged(false);
+            detailsLabel.setVisible(false);
+            detailsLabel.setManaged(false);
+
+            hideAllTabs();
+
+            for (Node child : detailsBox.getChildren())
             {
-                child.setManaged(false);
+                if (!Objects.equals(child, minimizeButton))
+                {
+                    child.setVisible(false);
+                    child.setManaged(false);
+                }
             }
+            minimizeButton.setText("+");
+
+            minimized = true;
         }
-        minimizeButton.setTranslateX(-4);
-        minimizeButton.setText("+");
-        minimized = true;
     }
 
     /**
@@ -379,16 +385,18 @@ public class SideBarController
     private void maximize()
     {
         buttonBox.setVisible(true);
-        workspaceLabel.setVisible(true);
+        buttonBox.setManaged(true);
+        detailsLabel.setVisible(true);
+        detailsLabel.setManaged(true);
 
         restoreTab();
 
-        for (Node child: workspaceBox.getChildren())
+        for (Node child: detailsBox.getChildren())
         {
+            child.setVisible(true);
             child.setManaged(true);
         }
 
-        minimizeButton.setTranslateX(0);
         minimizeButton.setText("-");
         minimized = false;
     }
@@ -397,16 +405,14 @@ public class SideBarController
      * Used to condense code. Resizes mainBox according to parameter width.
      * @param width
      */
-    private void resizeWidth(double width)
-    {
+    private void resizeWidth(double width){
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
     }
-
     public void refreshTabs()
     {
         tabControllers.forEach(CardTabController::refreshCardList);
     }
-    public double getTabWidth() {return mainBox.getWidth();}
+    public double getTabWidth(){ return mainBox.getWidth(); }
 }
