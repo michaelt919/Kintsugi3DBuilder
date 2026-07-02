@@ -198,7 +198,7 @@
 
 .button:dark-button {
     -fx-background-radius: 0;
-    -fx-padding: 4 8 4 8;
+    -fx-padding: 0 4 0 4;
 }
 
 .scroll-bar .increment-button,

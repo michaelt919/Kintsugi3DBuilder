@@ -27,7 +27,7 @@
                 <HBox spacing="16.0" style="-fx-padding: 0px 0px 0px 16px;">
                     <ImageView fitWidth="72" fitHeight="72" preserveRatio="true" fx:id="currentImageView"/>
                     <VBox alignment="CENTER">
-                        <HBox maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
+                        <HBox maxWidth="740.0" maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
                             <VBox alignment="CENTER_LEFT" style="-fx-background-color: #383838;">
                                 <padding>
                                     <Insets left="4" right="4"/>
@@ -42,14 +42,18 @@
                 <HBox spacing="16.0" style="-fx-padding: 0px 0px 0px 16px;">
                     <ImageView fitWidth="72" fitHeight="72" preserveRatio="true" fx:id="newImageView"/>
                     <VBox alignment="CENTER">
-                        <HBox maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
+                        <HBox  maxWidth="740.0" maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
                             <VBox alignment="CENTER_LEFT" style="-fx-background-color: #383838;">
                                 <padding>
                                     <Insets left="4" right="4"/>
                                 </padding>
                                 <Label styleClass="wireframeBodyLarge" fx:id="newPath" text="C>/Test/Url/example_texture.png"/>
                             </VBox>
-                            <Button fx:id="newFileButton" onAction="#openFileBrowser" styleClass="wireframeBodyLarge" textAlignment="CENTER" text="Open" style="fx-padding: 0px"/>
+                           <!-- Tile pane prevents button from being resized -->
+                            <TilePane prefColumns="1">
+                                <Button fx:id="newFileButton" onAction="#openFileBrowser" styleClass="wireframeBodyLarge"
+                                        textOverrun="CLIP" textAlignment="CENTER" text="Open" style="fx-padding: 0px"/>
+                            </TilePane>
                         </HBox>
                     </VBox>
                 </HBox>
