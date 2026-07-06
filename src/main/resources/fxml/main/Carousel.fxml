@@ -83,13 +83,13 @@
             </HBox>
         </VBox>
         <Region fx:id="resizeHandle"
-                AnchorPane.bottomAnchor="-5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                AnchorPane.topAnchor="-5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
                 prefHeight="8.0" minHeight="8.0" maxHeight="8.0"
                 style="-fx-cursor: s-resize; -fx-background-color: transparent;"
                 onMousePressed="#mousePressed"
                 onMouseDragged="#mouseDragged"
                 onMouseReleased="#mouseReleased"/>
-        <HBox pickOnBounds="false" minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.bottomAnchor="-30.0">
+        <HBox pickOnBounds="false" minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="-30.0">
             <Button
                     fx:id = "miniButton"
                     text = "-"

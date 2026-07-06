@@ -219,7 +219,7 @@ public class CarouselController
             return;
         }
 
-        double difference = event.getSceneY() - dragStartY;
+        double difference = dragStartY - event.getSceneY();
         double newHeight = initialHeight + difference;
         double upperBound = mainBox.getParent().getScene().getWindow().getHeight() * 0.50;
 
