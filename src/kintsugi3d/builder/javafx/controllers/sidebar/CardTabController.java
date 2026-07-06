@@ -123,10 +123,9 @@ public class CardTabController
         filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
     }
 
-    public void initialize()
-    {
-        scrollpane.heightProperty().addListener((obs, oldVal, newVal) -> vbox.requestLayout());
-        scrollpane.widthProperty().addListener((obs, oldVal, newVal) -> vbox.requestLayout());
+    public void initialize(){
+        scrollpane.heightProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
+        scrollpane.widthProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
     }
 
     private void updateSummary()
