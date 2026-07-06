@@ -159,9 +159,10 @@ public class ObservableCarouselModel implements CarouselModel
         // Remember scroll position
         double currentScrollPosition = carouselController.getHBarValue();
 
-        // Clear and refresh the carousel.
-        carouselItems.clear();
-        carouselItems.addAll(container);
+        // Replace all items in the carousel as a single change for optimization (allows the controller to reuse cards).
+        carouselItems.setAll(container);
+//        carouselItems.clear();
+//        carouselItems.addAll(container);
 
         // Set scroll position after carousel is refreshed.
         Platform.runLater(() -> carouselController.setHBarPosition(currentScrollPosition));
