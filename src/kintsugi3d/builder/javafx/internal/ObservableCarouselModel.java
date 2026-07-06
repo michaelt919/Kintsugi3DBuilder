@@ -19,6 +19,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController;
+import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
 import kintsugi3d.builder.state.CanvasModel;
 import kintsugi3d.builder.state.CanvasModelImpl;
 import kintsugi3d.builder.state.CarouselItem;
@@ -141,78 +142,73 @@ public class ObservableCarouselModel implements CarouselModel
 
         carouselItems.clear();
     }
-    @Override
-    public void moveCardLeft(CarouselCardController card)
+
+    private void swapCards(int index1, int index2, CarouselController carouselController)
     {
         ObservableList<CarouselItem> container = FXCollections.observableArrayList();
-        int cardIndex = 0;
-        CarouselItem leftCard = null;
-        CarouselItem moveCard = null;
-        UserShader shader = card.getShader();
+        container.addAll(carouselItems);
 
+        // Card to move found and is not the first in the list.
+        // Get card from the old container at the location to the left.
+        CarouselItem temp = carouselItems.get(index1);
+
+        // Swap cards in the new container.
+        container.set(index1, carouselItems.get(index2));
+        container.set(index2, temp);
+
+        // Remember scroll position
+        double currentScrollPosition = carouselController.getHBarValue();
+
+        // Clear and refresh the carousel.
+        carouselItems.clear();
+        carouselItems.addAll(container);
+
+        // Set scroll position after carousel is refreshed.
+        Platform.runLater(() -> carouselController.setHBarPosition(currentScrollPosition));
+    }
+
+    private CarouselItem findCardByShader(UserShader shader)
+    {
         for(CarouselItem item : carouselItems)
         {
+            // Check if the current item's shader matches this card.
             if (shader.equals(item.getShader()))
             {
-                cardIndex = carouselItems.indexOf(item);
-                moveCard = item;
+                return item;
             }
-            container.add(item);
         }
-        if (cardIndex != 0)
+        
+        return null;
+    }
+
+    public void moveCardLeft(CarouselCardController card)
+    {
+        CarouselItem moveCard = findCardByShader(card.getShader());
+        CarouselController carouselController = card.getCarouselController();
+
+        if (moveCard != null)
         {
-            leftCard = carouselItems.get(cardIndex-1);
-        }
-        if (leftCard != null)
-        {
-            container.set(cardIndex-1, moveCard);
-            container.set(cardIndex, leftCard);
-
-            double currentScrollPosition = card.getHBarValue();
-
-            carouselItems.clear();
-            carouselItems.addAll(container);
-
-            Platform.runLater(() -> {
-                card.setHBarValue(currentScrollPosition);
-            });
+            int cardIndex = carouselItems.indexOf(moveCard);
+            if (cardIndex > 0)
+            {
+                swapCards(cardIndex - 1, cardIndex, carouselController);
+            }
         }
     }
-    @Override
+
     public void moveCardRight(CarouselCardController card)
     {
-        ObservableList<CarouselItem> container = FXCollections.observableArrayList();
-        int cardIndex = 0;
-        CarouselItem rightCard = null;
-        CarouselItem moveCard = null;
-        UserShader shader = card.getShader();
+        CarouselItem moveCard = findCardByShader(card.getShader());
+        CarouselController carouselController = card.getCarouselController();
 
-        for (CarouselItem item : carouselItems)
+        if (moveCard != null)
         {
-            if (shader.equals(item.getShader()))
+            int cardIndex = carouselItems.indexOf(moveCard);
+
+            if (cardIndex < carouselItems.size() - 1)
             {
-                cardIndex = carouselItems.indexOf(item);
-                moveCard = item;
+                swapCards(cardIndex + 1, cardIndex, carouselController);
             }
-            container.add(item);
-        }
-        if ((carouselItems.size() - 1) != cardIndex)
-        {
-            rightCard = carouselItems.get(cardIndex + 1);
-        }
-        if (rightCard != null)
-        {
-            container.set(cardIndex + 1, moveCard);
-            container.set(cardIndex, rightCard);
-
-            double currentScrollPosition = card.getHBarValue();
-
-            carouselItems.clear();
-            carouselItems.addAll(container);
-
-            Platform.runLater(() -> {
-                card.setHBarValue(currentScrollPosition);
-            });
         }
     }
 }

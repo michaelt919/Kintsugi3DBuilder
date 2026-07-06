@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController;
 import kintsugi3d.builder.state.scene.UserShader;
 
 import java.util.List;
@@ -22,6 +21,4 @@ public interface CarouselModel
     void addToCarousel(UserShader shader);
     void removeFromCarousel(UserShader shader);
     void clearCarousel();
-    void moveCardLeft(CarouselCardController card);
-    void moveCardRight(CarouselCardController card);
 }

@@ -20,7 +20,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.state.CarouselModel;
+import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.state.ReadonlyCanvasModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.javafx.FramebufferView;
@@ -46,7 +46,7 @@ public class CarouselCardController
     @FXML private Button moveLeft;
     @FXML private Button moveRight;
 
-    private CarouselModel carouselModel;
+    private ObservableCarouselModel carouselModel;
     private CarouselController carousel;
     private UserShader shader;
 
@@ -80,7 +80,7 @@ public class CarouselCardController
      * and changes the label to have the name of the shader
      * @param shader
      */
-    public void init(CarouselModel carouselModel, UserShader shader, CarouselController carousel)
+    public void init(ObservableCarouselModel carouselModel, UserShader shader, CarouselController carousel)
     {
         this.carouselModel = carouselModel;
         this.carousel = carousel;
@@ -153,23 +153,34 @@ public class CarouselCardController
             carouselModel.removeFromCarousel(shader);
         }
     }
+
     @FXML public void showMoveButtons()
     {
         buttonBox.setVisible(true);
     }
+
     @FXML public void hideMoveButtons()
     {
         buttonBox.setVisible(false);
     }
+
     @FXML public void moveCarouselCardLeft()
     {
-        Global.state().getCarouselModel().moveCardLeft(this);
+        carouselModel.moveCardLeft(this);
     }
+
     @FXML public void moveCarouselCardRight()
     {
-        Global.state().getCarouselModel().moveCardRight(this);
+        carouselModel.moveCardRight(this);
     }
-    public UserShader getShader(){ return shader;}
-    public double getHBarValue(){ return carousel.getHBarValue();}
-    public void setHBarValue(double pos) { carousel.setHBarPosition(pos);}
+
+    public UserShader getShader()
+    {
+        return shader;
+    }
+
+    public CarouselController getCarouselController()
+    {
+        return carousel;
+    }
 }
