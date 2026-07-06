@@ -9,36 +9,35 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.workflow;
+package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
 
-public class ReplaceData
+public class ImageReplaceData
 {
-    private TextureResources<?> resources;
+    private final TextureResources<?> resources;
     private TextureDetails key;
     private int weightmapIndex;
     private File currentTexture;
     private File newTexture;
 
-    public ReplaceData()
+    public ImageReplaceData()
     {
         this.resources = null;
         this.currentTexture = null;
         this.newTexture = null;
     }
 
-    public ReplaceData(TextureResources<?> resources, TextureDetails key, File currentTexture)
+    public ImageReplaceData(TextureResources<?> resources, TextureDetails key, File currentTexture)
     {
         this.resources = resources;
         this.key = key;
         this.currentTexture = currentTexture;
     }
 
-    public ReplaceData(TextureResources<?> resources, int weightmapIndex, File currentTexture)
+    public ImageReplaceData(TextureResources<?> resources, int weightmapIndex, File currentTexture)
     {
         this.resources = resources;
         this.weightmapIndex = weightmapIndex;

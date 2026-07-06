@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.workflow;
+package kintsugi3d.builder.javafx.controllers.modals.workspace;
 
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
@@ -17,12 +17,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ImageReplaceData;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
-public class ReplaceModelController extends DataReceiverPageControllerBase<ReplaceData>
+public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplaceData>
 {
     @FXML private Pane root;
     @FXML private ImageView currentImageView;
@@ -44,10 +46,9 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
 
     private final FileChooser replacementFileChooser = new FileChooser();
     private Image currentImage;
-    private Image newImage;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplaceModelController.class);
-    private ReplaceData data;
+    private static final Logger LOG = LoggerFactory.getLogger(ReplaceImageController.class);
+    private ImageReplaceData data;
 
     @Override
     public Region getRootNode() { return root; }
@@ -73,28 +74,46 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     @Override
     public boolean confirm()
     {
-        try
+        // Texture replacement must happen on graphics thread.
+        Rendering.runLater(() ->
         {
-            Files.copy(data.getNewTexture().toPath(), data.getCurrentTexture().toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
-        catch (IOException | RuntimeException e)
-        {
-            LOG.error("Error confirming texture replace", e);
-        }
-        // Replacing texture
-        if (data.getKey() != null)
-        {
-            data.getResources().replaceTexture(data);
-            Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-                Objects.equals(card.getTitle(), data.getKey().friendlyName));
-        }
-        // Replacing weightmap
-        else
-        {
-            data.getResources().getBasisWeightResources().replaceWeightmap(data);
-            Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-                Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(data.getWeightmapIndex(), "PNG")));
-        }
+            try
+            {
+                // Replacing texture
+                if (data.getKey() != null)
+                {
+                    // Try to load the texture
+                    data.getResources().replaceTextureWithSpecificFile(data.getKey(), data.getNewTexture());
+
+                    // If load was successful, then copy the file into the project files directory.
+                    Files.copy(data.getNewTexture().toPath(), data.getCurrentTexture().toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                    // Finally, attempt to refresh the card (including thumbnail from the version saved to disk).
+                    Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+                        Objects.equals(card.getTitle(), data.getKey().friendlyName));
+                }
+                // Replacing weightmap
+                else
+                {
+                    // Try to load the texture
+                    data.getResources().getBasisWeightResources()
+                        .replaceWeightMapWithSpecificFile(data.getWeightmapIndex(), data.getNewTexture());
+
+                    // If load was successful, then copy the file into the project files directory.
+                    Files.copy(data.getNewTexture().toPath(), data.getCurrentTexture().toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                    // Finally, attempt to refresh the card  (including thumbnail from the version saved to disk).
+                    Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+                        Objects.equals(card.getInternalName(),
+                            TextureResources.getUnpackedWeightMapFilename(data.getWeightmapIndex(), "PNG")));
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                ExceptionHandling.error("Error replacing texture", e);
+            }
+        });
+
         return true;
     }
 
@@ -109,7 +128,7 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
             }
             else
             {
-                newImage = new Image(data.getNewTexture().toURI().toString(), 72, 72, false, false);
+                Image newImage = new Image(data.getNewTexture().toURI().toString(), 72, 72, false, false);
                 newImageView.setImage(newImage);
                 newPath.setText(data.getNewTexture().getPath());
             }
@@ -127,7 +146,7 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
     }
 
     @Override
-    public void receiveData(ReplaceData newData)
+    public void receiveData(ImageReplaceData newData)
     {
         this.data = newData;
 
@@ -143,5 +162,4 @@ public class ReplaceModelController extends DataReceiverPageControllerBase<Repla
         data.setNewTexture(replacementFileChooser.showOpenDialog(root.getScene().getWindow()));
         updateNewTexture();
     }
-
 }

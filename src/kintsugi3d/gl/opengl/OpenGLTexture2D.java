@@ -656,12 +656,6 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     }
 
     @Override
-    public void refresh(File texture, boolean flipVertical) throws IOException
-    {
-        load(texture, flipVertical);
-    }
-
-    @Override
     public void load(ReadonlyNativeVectorBuffer data)
     {
         if (data.getCount() != width * height)

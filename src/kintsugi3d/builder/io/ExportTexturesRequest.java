@@ -48,7 +48,7 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
     private static ExportSettings getExportSettingsFromProject()
     {
         GeneralSettingsModel projectSettings = Global.state().getIOModel()
-            .validateHandler()
+            .validateProjectInstance()
             .getLoadedViewSet().getProjectSettings();
 
         ExportSettings exportSettings = new ExportSettings();

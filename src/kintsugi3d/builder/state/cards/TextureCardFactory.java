@@ -12,14 +12,14 @@
 package kintsugi3d.builder.state.cards;
 
 import javafx.application.Platform;
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
-import kintsugi3d.builder.javafx.core.ExperienceManager;
+import kintsugi3d.builder.core.ImageReplaceData;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
-import kintsugi3d.builder.javafx.experience.ReplaceModel;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.Texture2D;
@@ -145,7 +145,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 //                }),
                 Map.of(
                     "Refresh Texture", () -> refreshTexture(key, weightmapIndex),
-                    "Replace Texture", () -> replaceTexture(key, weightmapIndex)
+                    "Replace Texture...", () -> replaceTexture(key, weightmapIndex)
                 )));
         }
         catch (IOException|RuntimeException e)
@@ -246,43 +246,55 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private void refreshTexture(TextureDetails key, int weightmapIndex)
     {
+        // Texture replacement must happen on graphics thread.
+        Rendering.runLater(() ->
+        {
+            TextureResources<?> resources = instance.getResources().getTextureResources();
 
-        TextureResources<?> resources = instance.getResources().getTextureResources();
-        // texture
-        if (key != null)
-        {
-            if (instance.getResources() != null)
+            try
             {
-                resources.refreshTexture(key, instance.getViewSet());
-                lastUsedCardsModel.refreshCards(card -> Objects.equals(card.getTitle(), key.friendlyName));
+                // texture
+                if (key != null)
+                {
+                    if (instance.getResources() != null)
+                    {
+                        resources.replaceTextureWithDefaultFile(key, instance.getViewSet().getSupportingFilesDirectory());
+                        lastUsedCardsModel.refreshCards(card -> Objects.equals(card.getTitle(), key.friendlyName));
+                    }
+                }
+                // Weightmap
+                else if (weightmapIndex != -1)
+                {
+                    resources.getBasisWeightResources().replaceWeightMapWithDefaultFile(
+                        weightmapIndex, instance.getViewSet().getSupportingFilesDirectory());
+                    lastUsedCardsModel.refreshCards(card ->
+                        Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+                }
             }
-        }
-        // Weightmap
-        else if (weightmapIndex != -1)
-        {
-            resources.getBasisWeightResources().refreshTexture(weightmapIndex, instance.getViewSet());
-            lastUsedCardsModel.refreshCards(card -> Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
-        }
+            catch (IOException | RuntimeException e)
+            {
+                ExceptionHandling.error("Error refreshing texture", e);
+            }
+        });
     }
 
     private void replaceTexture(TextureDetails key, int weightmapIndex)
     {
         Platform.runLater(() ->
         {
-            ReplaceData data;
+            ImageReplaceData data;
             if (key != null)
             {
-                data = new ReplaceData(instance.getResources().getTextureResources(), key,
-                    new File(Global.state().getIOModel().validateHandler().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getTextureFilename(key.name, "PNG")));
+                data = new ImageReplaceData(instance.getResources().getTextureResources(), key,
+                    new File(Global.state().getIOModel().validateProjectInstance().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getTextureFilename(key.name, "PNG")));
             }
             else
             {
-                data = new ReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
-                    new File(Global.state().getIOModel().validateHandler().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+                data = new ImageReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
+                    new File(Global.state().getIOModel().validateProjectInstance().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
             }
-            ReplaceModel model= (ReplaceModel) ExperienceManager.getInstance().getExperience("ReplaceModel");
-            model.setCurrentData(data);
-            model.tryOpen();
+
+            Global.state().getIOModel().getLoadedProjectInstance().invokeUserImageReplacement(data);
         });
     }
 

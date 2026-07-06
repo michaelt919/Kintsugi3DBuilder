@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
-<VBox spacing="10.0" fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" style="-fx-padding: 16px 24px 52px 24px;" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceModelController">
+<VBox spacing="10.0" fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workspace.ReplaceImageController">
     <VBox spacing="8.0">
         <HBox alignment="CENTER_LEFT" spacing="16.0">
             <Label styleClass="wireframeTitle"  text="Replace Texture..."/>

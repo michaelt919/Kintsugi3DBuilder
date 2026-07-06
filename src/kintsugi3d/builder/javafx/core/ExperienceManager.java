@@ -41,7 +41,7 @@ public final class ExperienceManager
         experiences.put("Log", new Log());
         experiences.put("SystemSettings", new SystemSettings());
         experiences.put("About", new About());
-        experiences.put("ReplaceModel", new ReplaceModel());
+        experiences.put("ReplaceModel", new ReplaceImage());
     }
 
     public static ExperienceManager getInstance()
