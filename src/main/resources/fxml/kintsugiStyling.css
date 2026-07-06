@@ -201,6 +201,11 @@
     -fx-padding: 0 4 0 4;
 }
 
+.button:dark-button:hover {
+    -fx-text-fill: #CECECE;
+    -fx-background-color: #383838;
+}
+
 .scroll-bar .increment-button,
 .scroll-bar .decrement-button {
     -fx-background-insets: 0;
@@ -558,7 +563,8 @@
             #CECECE,
             #CECECE;
 }
-.button:pressed{
+.button:pressed,
+.button:dark-button:pressed {
     -fx-background-color: #CECECE;
     -fx-text-fill: #383838;
     -fx-background-color:

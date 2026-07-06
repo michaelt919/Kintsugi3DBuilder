@@ -248,7 +248,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
     {
 
         TextureResources<?> resources = instance.getResources().getTextureResources();
-        // Texture
+        // texture
         if (key != null)
         {
             if (instance.getResources() != null)
