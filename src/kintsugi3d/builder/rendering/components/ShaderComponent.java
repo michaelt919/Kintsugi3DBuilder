@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -33,6 +33,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
     private Drawable<ContextType> drawable;
 
     private final SceneViewportModel sceneViewportModel;
+
     private final String sceneObjectTag;
 
     /**
@@ -60,6 +61,11 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
     protected ShaderComponent(ContextType context)
     {
         this(context, null, null);
+    }
+
+    protected final String getSceneObjectTag()
+    {
+        return sceneObjectTag;
     }
 
     @Override

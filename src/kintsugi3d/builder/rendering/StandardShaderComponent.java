@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,10 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.Map.Entry;
 
 public abstract class StandardShaderComponent<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
@@ -97,7 +95,8 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
                             settingsDefines.get(resourceDefine.getKey()).orElse(resourceDefine.getValue())
                             : resourceDefine.getValue())))
             {
-                LOG.info("Updating compiled render settings.");
+                LOG.info("Updating compiled render settings.  Shader: {}.  Object tag: {}.",
+                    fragmentShaderFile, getSceneObjectTag());
                 reloadShaders();
             }
         }
@@ -127,7 +126,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     {
         ProgramBuilder<ContextType> programBuilder = resources.getShaderProgramBuilder();
 
-        for (Map.Entry<String, Optional<Object>> defineEntry : defineMap.entrySet())
+        for (Entry<String, Optional<Object>> defineEntry : defineMap.entrySet())
         {
             if (defineEntry.getValue().isPresent())
             {
@@ -245,7 +244,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
                 resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
                     .times(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                     .getXYZ().length();
-            getDrawable().program().setUniform("lightIntensityVirtual[" + lightIndex + ']',
+            getDrawable().program().setUniform(String.format("lightIntensityVirtual[%d]", lightIndex),
                 controllerLightIntensity.times(lightDistance * lightDistance * resources.getViewSet().getLightIntensity(0).y / (lightScale * lightScale)));
 
 
@@ -271,17 +270,17 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
         Vector3 lightPos = lightMatrixInverse.times(Vector4.ORIGIN).getXYZ();
 
-        program.setUniform("lightPosVirtual[" + lightIndex + ']', lightPos);
+        program.setUniform(String.format("lightPosVirtual[%d]", lightIndex), lightPos);
 
         if (lightingResources != null)
         {
-            program.setUniform("lightMatrixVirtual[" + lightIndex + ']', lightingResources.getLightProjection(lightIndex).times(lightMatrix));
+            program.setUniform(String.format("lightMatrixVirtual[%d]", lightIndex), lightingResources.getLightProjection(lightIndex).times(lightMatrix));
         }
-        program.setUniform("lightOrientationVirtual[" + lightIndex + ']',
+        program.setUniform(String.format("lightOrientationVirtual[%d]", lightIndex),
                 lightMatrixInverse.times(new Vector4(0.0f, 0.0f, -1.0f, 0.0f)).getXYZ().normalized());
-        program.setUniform("lightSpotSizeVirtual[" + lightIndex + ']',
+        program.setUniform(String.format("lightSpotSizeVirtual[%d]", lightIndex),
                 (float)Math.sin(sceneModel.getLightingModel().getLightPrototype(lightIndex).getSpotSize()));
-        program.setUniform("lightSpotTaperVirtual[" + lightIndex + ']', sceneModel.getLightingModel().getLightPrototype(lightIndex).getSpotTaper());
+        program.setUniform(String.format("lightSpotTaperVirtual[%d]", lightIndex), sceneModel.getLightingModel().getLightPrototype(lightIndex).getSpotTaper());
     }
 
     private void setupUnlit(Matrix4 model)
@@ -337,6 +336,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
     public void setExtraFragmentShaderDefines(Map<String, Optional<Object>> fragmentShaderDefines)
     {
-        this.fragmentShaderDefines = fragmentShaderDefines;
+        this.fragmentShaderDefines = Collections.unmodifiableMap(fragmentShaderDefines);
     }
 }

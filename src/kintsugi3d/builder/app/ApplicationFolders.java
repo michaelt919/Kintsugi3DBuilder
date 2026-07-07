@@ -25,6 +25,7 @@ public class ApplicationFolders
 
     /**
      * Get the long-term application data folder for the current os and user.
+     *
      * @return application folder
      */
     public static Path getUserAppDirectory()
@@ -59,6 +60,7 @@ public class ApplicationFolders
     /**
      * Get the folder most appropriate for storing small temporary files. May overlap with the long-term
      * application data folder, and could be overwritten between sessions.
+     *
      * @return cache application folder
      */
     public static Path getUserCacheDirectory()
@@ -88,6 +90,7 @@ public class ApplicationFolders
 
     /**
      * Get an application folder based on the current os that is not user dependent.
+     *
      * @return system app folder
      */
     public static Path getSystemAppDirectory()
@@ -108,12 +111,15 @@ public class ApplicationFolders
     /**
      * Get the folder that the application is currently installed to. Will return null
      * if the app is not installed as a system app.
+     *
      * @return installation directory
      */
     public static Path getInstallationDirectory()
     {
-        //TODO
-        return null;
+        // TODO create a more robust installation directory solution
+        // Technically only gets the working directory of the application
+        // I'm not sure if this changes throughout the application's lifecycle
+        return Paths.get(new File("").getAbsolutePath());
     }
 
     public static Path getPreviewImagesRootDirectory()
@@ -125,7 +131,7 @@ public class ApplicationFolders
         }
         else
         {
-        return getUserCacheDirectory().resolve("preview");
+            return getUserCacheDirectory().resolve("preview");
         }
     }
 
