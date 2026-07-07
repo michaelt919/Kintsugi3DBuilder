@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.state.settings;
 
-import kintsugi3d.builder.io.gltf.ExportType;
+import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
 

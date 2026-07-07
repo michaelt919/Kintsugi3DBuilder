@@ -9,10 +9,11 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.gltf;
+package kintsugi3d.builder.io;
 
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
-import kintsugi3d.builder.io.gltf.usdz.USDZExporterFactory;
+import kintsugi3d.builder.io.usdz.USDZExporterFactory;
 
 public enum ExportType
 {

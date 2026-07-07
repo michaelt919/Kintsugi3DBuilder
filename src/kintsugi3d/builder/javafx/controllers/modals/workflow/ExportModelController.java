@@ -12,8 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.application.Platform;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
@@ -22,17 +20,14 @@ import javafx.stage.FileChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
-import kintsugi3d.builder.io.gltf.ExportType;
-import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
-import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsManager;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.function.Function;
 
 public class ExportModelController extends ProjectSettingsControllerBase
 {

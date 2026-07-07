@@ -9,13 +9,12 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.gltf.usdz;
+package kintsugi3d.builder.io.usdz;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
-import kintsugi3d.builder.rendering.StandardShaderComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
