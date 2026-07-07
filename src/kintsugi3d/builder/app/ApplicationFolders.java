@@ -122,6 +122,11 @@ public class ApplicationFolders
         return Paths.get(new File("").getAbsolutePath());
     }
 
+    public static Path getAdditionalBinDirectory()
+    {
+        return getInstallationDirectory().resolve("bin");
+    }
+
     public static Path getPreviewImagesRootDirectory()
     {
         Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getPreviewImagesDirectory();

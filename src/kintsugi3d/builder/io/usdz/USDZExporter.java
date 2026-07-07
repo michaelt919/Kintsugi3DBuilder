@@ -22,13 +22,20 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 public class USDZExporter extends MaterialExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
+    // private static final String SCRIPT_LOCATION = "/home/nathan/Documents/Kintsugi3DBuilder/bin/";
+    private static final Path SCRIPT_LOCATION = ApplicationFolders.getAdditionalBinDirectory();
+
     private File outputPath;
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
@@ -58,41 +65,54 @@ public class USDZExporter extends MaterialExporter
     @Override
     protected void postExport()
     {
+        // glb texture_extension normal diffuse specular roughness
         try
         {
-            String installLocation = ApplicationFolders.getInstallationDirectory().toString();
-            LOG.info(installLocation);
+            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, getTextureFileFormat());
+            String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, getTextureFileFormat());
+            String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, getTextureFileFormat());
+            String roughness = getTextureFilename(StandardTexture.ROUGHNESS.texName, getTextureFileFormat());
 
-            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, "PNG");
-            String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, "PNG");
-            String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, "PNG");
-            String roughness = getTextureFilename(StandardTexture.ROUGHNESS.texName, "PNG");
-            String pythonExecutable;
-            String script;
+            String executable = "";
+            String glob;
 
+            // Get the wildcarded application name for the exporter
             switch (OperatingSystem.getCurrentOS())
             {
                 case WINDOWS:
-                    // may need to set up a python install toolchain
-                    pythonExecutable = installLocation + "\\python\\windows\\python.exe";
-
-                    ProcessBuilder installPackages = new ProcessBuilder(
-                        pythonExecutable,
-                        "-m pip install -r requirements.txt"
-                    );
-                    installPackages.directory(new File(installLocation + "\\python"));
-                    installPackages.start();
-
-                    script = installLocation + "\\python\\scripts\\converter.py";
+                    glob = "usdz-exporter*windows.exe";
                     break;
+
+                case MACOS:
+                    glob = "usdz-exporter*macos";
+                    break;
+
+                case UNIX:
+                    glob = "usdz-exporter*linux";
+                    break;
+
                 default:
-                    throw new Exception();
+                    throw new IllegalStateException("OS environment not suppoerted.");
             }
 
+            // Attempt to realize path for the exporter application
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(SCRIPT_LOCATION, glob))
+            {
+                for (Path entry : stream)
+                {
+                    executable = entry.toAbsolutePath().toString();
+                    break;
+                }
 
+                if (executable.isEmpty())
+                {
+                    throw new IllegalStateException("Could not find USDZ exporter binary.");
+                }
+            }
+
+            // Define a new process to start the exporter
             ProcessBuilder pb = new ProcessBuilder(
-                pythonExecutable,
-                script,
+                executable,
                 getFilename(),
                 getTextureFileFormat(),
                 normal,
@@ -101,23 +121,32 @@ public class USDZExporter extends MaterialExporter
                 roughness
             );
 
+            // Change the working directory of the exporter to the output path
             pb.directory(outputPath);
             Process process = pb.start();
 
+            // Initialize a logger for the exporter log output
             try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
             {
                 reader.lines().forEachOrdered(LOG::info);
             }
 
+            // If the exporter didn't exit with a 0, an error occurred
             if (process.waitFor() != 0)
             {
-                throw new Exception();
+                throw new IllegalArgumentException("Passed files don't match requirements.");
             }
         }
-        catch (Exception e)
+        catch (IllegalArgumentException |
+               IllegalStateException e)
         {
-            LOG.error("Could not export USDZ file.");
+            LOG.error(e.getMessage());
+        }
+        catch (IOException |
+               InterruptedException e)
+        {
+            LOG.error(e.getMessage());
         }
     }
 
