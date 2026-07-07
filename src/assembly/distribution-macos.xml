@@ -52,6 +52,7 @@
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
         </file>
+
     </files>
     <fileSets>
         <fileSet>
@@ -70,6 +71,14 @@
             <directory>${project.basedir}/jre-macos-x64</directory>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/jre</outputDirectory>
             <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/bin</directory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/bin</outputDirectory>
+            <fileMode>0755</fileMode>
+            <includes>
+                <include>**/*macos</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>
