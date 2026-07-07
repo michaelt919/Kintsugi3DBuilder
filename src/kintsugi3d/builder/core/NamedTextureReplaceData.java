@@ -15,53 +15,36 @@ import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
-public abstract class ImageReplaceData
+public class NamedTextureReplaceData extends ImageReplaceData
 {
-    private final TextureResources<?> resources;
-    private File currentImage;
-    private File newImage;
+    private TextureDetails key;
 
-    public ImageReplaceData()
+    @Override
+    public void replace() throws IOException
     {
-        this.resources = null;
-        this.currentImage = null;
-        this.newImage = null;
+        getResources().replaceTextureWithSpecificFile(key, getNewImage());
     }
 
-    public ImageReplaceData(TextureResources resources)
+    @Override
+    public void refreshCards()
     {
-        this.resources = resources;
-        this.currentImage = null;
-        this.newImage = null;
+        Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+            Objects.equals(card.getTitle(), key.friendlyName));
     }
 
-    public abstract void replace() throws IOException;
-
-    public abstract void refreshCards();
-
-    public final TextureResources<?> getResources()
+    public NamedTextureReplaceData(TextureResources resources, TextureDetails key, File currentImage)
     {
-        return resources;
+        super(resources);
+        this.key = key;
+        setCurrentImage(currentImage);
     }
 
-    public final File getCurrentImage()
+    public TextureDetails getKey()
     {
-        return currentImage;
+        return key;
     }
 
-    final void setCurrentImage(File currentTexture)
-    {
-        this.currentImage = currentTexture;
-    }
 
-    public final File getNewImage()
-    {
-        return newImage;
-    }
-
-    public final void setNewImage(File newImage)
-    {
-        this.newImage = newImage;
-    }
 }

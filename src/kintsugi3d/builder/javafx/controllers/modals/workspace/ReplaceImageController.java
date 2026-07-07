@@ -79,34 +79,14 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
         {
             try
             {
-                // Replacing texture
-                if (data.getKey() != null)
-                {
-                    // Try to load the texture
-                    data.getResources().replaceTextureWithSpecificFile(data.getKey(), data.getNewTexture());
+                // Try to load the texture
+                data.replace();
 
-                    // If load was successful, then copy the file into the project files directory.
-                    Files.copy(data.getNewTexture().toPath(), data.getCurrentTexture().toPath(), StandardCopyOption.REPLACE_EXISTING);
+                // If load was successful, then copy the file into the project files directory.
+                Files.copy(data.getNewImage().toPath(), data.getCurrentImage().toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-                    // Finally, attempt to refresh the card (including thumbnail from the version saved to disk).
-                    Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-                        Objects.equals(card.getTitle(), data.getKey().friendlyName));
-                }
-                // Replacing weightmap
-                else
-                {
-                    // Try to load the texture
-                    data.getResources().getBasisWeightResources()
-                        .replaceWeightMapWithSpecificFile(data.getWeightmapIndex(), data.getNewTexture());
-
-                    // If load was successful, then copy the file into the project files directory.
-                    Files.copy(data.getNewTexture().toPath(), data.getCurrentTexture().toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-                    // Finally, attempt to refresh the card  (including thumbnail from the version saved to disk).
-                    Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-                        Objects.equals(card.getInternalName(),
-                            TextureResources.getUnpackedWeightMapFilename(data.getWeightmapIndex(), "PNG")));
-                }
+                // Finally, attempt to refresh the card (including thumbnail from the version saved to disk).
+                data.refreshCards();
             }
             catch (IOException | RuntimeException e)
             {
@@ -121,16 +101,16 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
     {
         if (data != null)
         {
-            if (data.getNewTexture() == null)
+            if (data.getNewImage() == null)
             {
                 newImageView.setImage(currentImage);
-                newPath.setText(data.getCurrentTexture().getPath());
+                newPath.setText(data.getCurrentImage().getPath());
             }
             else
             {
-                Image newImage = new Image(data.getNewTexture().toURI().toString(), 72, 72, false, false);
+                Image newImage = new Image(data.getNewImage().toURI().toString(), 72, 72, false, false);
                 newImageView.setImage(newImage);
-                newPath.setText(data.getNewTexture().getPath());
+                newPath.setText(data.getNewImage().getPath());
             }
         }
     }
@@ -150,16 +130,16 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
     {
         this.data = newData;
 
-        currentImage = new Image(data.getCurrentTexture().toURI().toString(), 72, 72, false, false);
+        currentImage = new Image(data.getCurrentImage().toURI().toString(), 72, 72, false, false);
         currentImageView.setImage(currentImage);
-        currentPath.setText(data.getCurrentTexture().getPath());
+        currentPath.setText(data.getCurrentImage().getPath());
         updateNewTexture();
     }
 
     @FXML
     public void openFileBrowser()
     {
-        data.setNewTexture(replacementFileChooser.showOpenDialog(root.getScene().getWindow()));
+        data.setNewImage(replacementFileChooser.showOpenDialog(root.getScene().getWindow()));
         updateNewTexture();
     }
 }

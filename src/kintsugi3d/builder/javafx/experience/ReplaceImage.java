@@ -24,7 +24,7 @@ public class ReplaceImage extends ExperienceBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ReplaceImage.class);
 
-    private ImageReplaceData currentData = new ImageReplaceData();
+    private ImageReplaceData currentData;
 
     public ReplaceImage()
     {
