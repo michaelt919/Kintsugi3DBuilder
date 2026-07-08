@@ -13,7 +13,7 @@ package kintsugi3d.builder.resources.project.stream;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
-import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.ReadableFramebuffer;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
 
@@ -24,11 +24,11 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
 {
     private final int viewCount;
     private final Drawable<ContextType> drawable;
-    private final Framebuffer<ContextType> framebuffer;
+    private final ReadableFramebuffer<ContextType> framebuffer;
     private final int attachmentCount;
     private final ColorNativeBufferList[] framebufferData;
 
-    SequentialViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
+    SequentialViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
         this.viewCount = viewCount;
         this.drawable = drawable;

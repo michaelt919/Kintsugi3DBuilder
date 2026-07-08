@@ -17,7 +17,7 @@ package kintsugi3d.gl.core;
  *
  * @param <ContextType> The type of the GL context that the FBO is associated with.
  */
-public interface FramebufferObject<ContextType extends Context<ContextType>> extends Framebuffer<ContextType>, Resource
+public interface FramebufferObject<ContextType extends Context<ContextType>> extends ReadableFramebuffer<ContextType>, Resource
 {
     Texture2D<ContextType> getColorAttachmentTexture(int index);
     Texture2D<ContextType> getDepthAttachmentTexture();

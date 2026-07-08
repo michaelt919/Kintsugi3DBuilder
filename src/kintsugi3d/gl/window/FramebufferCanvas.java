@@ -20,7 +20,8 @@ import java.util.function.Consumer;
 
 public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     extends CanvasBase<ContextType>
-    implements ControllableCanvas3D<ContextType>, PollableCanvas3D<ContextType>, SwapObservable<Framebuffer<ContextType>>
+    implements ControllableCanvas3D<ContextType>, PollableCanvas3D<ContextType>,
+                SwapObservable<ReadableFramebuffer<ContextType>>, ResizeObservable<Framebuffer<ContextType>>
 {
     private final DoubleFramebufferObject<ContextType> framebuffer;
 
@@ -54,9 +55,15 @@ public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void addSwapListener(Consumer<Framebuffer<ContextType>> listener)
+    public void addSwapListener(Consumer<ReadableFramebuffer<ContextType>> listener)
     {
         this.framebuffer.addSwapListener(listener);
+    }
+
+    @Override
+    public void addResizeListener(Consumer<Framebuffer<ContextType>> listener)
+    {
+        this.framebuffer.addResizeListener(listener);
     }
 
     @Override

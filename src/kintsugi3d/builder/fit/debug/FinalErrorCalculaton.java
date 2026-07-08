@@ -97,7 +97,7 @@ public final class FinalErrorCalculaton
                         })
                         .average().orElse(0.0)); // mean
 
-                LOG.info("Normal map ground truth RMSE: " + rmse);
+                LOG.info("Normal map ground truth RMSE: {}", rmse);
 
                 // Print out RMSE for normal map ground truth
                 rmseOut.println("Normal map ground truth RMSE: " + rmse);
@@ -131,7 +131,7 @@ public final class FinalErrorCalculaton
             finalErrorCalcProgram.setUniform("sRGB", false);
 
             // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
-            Framebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
+            ReadableFramebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
 
             rmseOut.println("Final RMSE with final diffuse estimate (linear): " +
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
@@ -161,7 +161,7 @@ public final class FinalErrorCalculaton
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
         ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+        TextureResources<ContextType> specularFit, ReadableFramebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws IOException
     {
         try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory);
@@ -192,7 +192,7 @@ public final class FinalErrorCalculaton
     }
 
     private static <ContextType extends Context<ContextType>>
-    double runFinalErrorCalculation(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    double runFinalErrorCalculation(Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int viewCount)
     {
         WeightedError errorTotal = new WeightedError(0, 0);
 

@@ -76,7 +76,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
         }
     }
 
-    public Framebuffer<ContextType> getFramebuffer()
+    public ReadableFramebuffer<ContextType> getFramebuffer()
     {
         return fbo;
     }

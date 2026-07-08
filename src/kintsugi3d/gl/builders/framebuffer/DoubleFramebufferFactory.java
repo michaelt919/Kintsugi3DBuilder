@@ -12,6 +12,8 @@
 package kintsugi3d.gl.builders.framebuffer;
 
 import kintsugi3d.gl.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +21,8 @@ import java.util.function.Consumer;
 
 public final class DoubleFramebufferFactory
 {
+    private static final Logger LOG = LoggerFactory.getLogger(DoubleFramebufferFactory.class);
+
     private DoubleFramebufferFactory()
     {
     }
@@ -30,14 +34,14 @@ public final class DoubleFramebufferFactory
     }
 
     private static class DoubleFramebufferObjectImpl<ContextType extends Context<ContextType>>
-        implements DoubleFramebufferObject<ContextType>, Framebuffer<ContextType>
+        implements DoubleFramebufferObject<ContextType>
     {
         private final ContextType context;
         private FramebufferObject<ContextType> fbo1;
         private FramebufferObject<ContextType> fbo2;
 
-        private Framebuffer<ContextType> frontFBO;
-        private Framebuffer<ContextType> backFBO;
+        private ReadableFramebuffer<ContextType> frontFBO;
+        private ReadableFramebuffer<ContextType> backFBO;
 
         private int width;
         private int height;
@@ -45,7 +49,8 @@ public final class DoubleFramebufferFactory
         private int newWidth;
         private int newHeight;
 
-        private final Collection<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
+        private final Collection<Consumer<ReadableFramebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
+        private final Collection<Consumer<Framebuffer<ContextType>>> resizeListeners = new ArrayList<>(1);
 
         DoubleFramebufferObjectImpl(ContextType context, int initWidth, int initHeight)
         {
@@ -96,6 +101,12 @@ public final class DoubleFramebufferFactory
                         .createFramebufferObject();
 
                     this.backFBO = fbo2;
+                }
+
+                // Notify listeners with the resized back buffer
+                for (Consumer<Framebuffer<ContextType>> l : resizeListeners)
+                {
+                    l.accept(backFBO);
                 }
             }
         }
@@ -168,7 +179,7 @@ public final class DoubleFramebufferFactory
 
         @Override
         public void blitColorAttachmentFromFramebufferViewport(int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
-            FramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+            ReadableFramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
         {
             backFBO.blitColorAttachmentFromFramebufferViewport(drawAttachmentIndex, destX, destY, destWidth, destHeight,
                 readFramebuffer, readAttachmentIndex, linearFiltering);
@@ -176,21 +187,21 @@ public final class DoubleFramebufferFactory
 
         @Override
         public void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
-            FramebufferViewport<ContextType> readFramebuffer)
+            ReadableFramebufferViewport<ContextType> readFramebuffer)
         {
             backFBO.blitDepthAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
         }
 
         @Override
         public void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
-            FramebufferViewport<ContextType> readFramebuffer)
+            ReadableFramebufferViewport<ContextType> readFramebuffer)
         {
             backFBO.blitStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
         }
 
         @Override
         public void blitDepthStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
-            FramebufferViewport<ContextType> readFramebuffer)
+            ReadableFramebufferViewport<ContextType> readFramebuffer)
         {
             backFBO.blitDepthStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
         }
@@ -230,25 +241,37 @@ public final class DoubleFramebufferFactory
         @Override
         public void swapBuffers()
         {
-            Framebuffer<ContextType> tmp = backFBO;
+            // Swap the buffers
+            ReadableFramebuffer<ContextType> tmp = backFBO;
             backFBO = frontFBO;
             frontFBO = tmp;
 
+            // Update size
             width = newWidth;
             height = newHeight;
 
+            LOG.info("Framebuffer size: {}x{}", width, height);
+
+            // Resize the new back buffer if requested
             resize();
 
-            for (Consumer<Framebuffer<ContextType>> l : swapListeners)
+            // Notify listeners with the new front buffer
+            for (Consumer<ReadableFramebuffer<ContextType>> l : swapListeners)
             {
                 l.accept(frontFBO);
             }
         }
 
         @Override
-        public void addSwapListener(Consumer<Framebuffer<ContextType>> listener)
+        public void addSwapListener(Consumer<ReadableFramebuffer<ContextType>> listener)
         {
             this.swapListeners.add(listener);
+        }
+
+        @Override
+        public void addResizeListener(Consumer<Framebuffer<ContextType>> listener)
+        {
+            this.resizeListeners.add(listener);
         }
 
         @Override

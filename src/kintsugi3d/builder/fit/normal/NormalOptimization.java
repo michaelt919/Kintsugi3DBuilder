@@ -185,7 +185,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            Framebuffer<ContextType> contextTypeFramebuffer = estimateNormals.getFrontFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer = estimateNormals.getFrontFramebuffer();
             contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG",
                 new File(outputDirectory, TextureResources.getTextureFilename(StandardTexture.NORMAL_MAP, "PNG")));
         }

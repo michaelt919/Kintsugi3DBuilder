@@ -12,13 +12,14 @@
 package kintsugi3d.gl.opengl;
 
 import kintsugi3d.gl.builders.base.FramebufferObjectBuilderBase;
-import kintsugi3d.gl.core.FramebufferAttachment;
-import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.*;
 import org.lwjgl.BufferUtils;
 
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
+import java.text.MessageFormat;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
@@ -186,15 +187,148 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     }
 
     @Override
+    public FramebufferSize getSize()
+    {
+        return new FramebufferSize(this.width, this.height);
+    }
+
+    @Override
     public Contents getContents()
     {
         return this.contents;
     }
 
     @Override
-    public FramebufferSize getSize()
+    public FramebufferReadContents<OpenGLContext> getReadContents()
     {
-        return new FramebufferSize(this.width, this.height);
+        return getContents();
+    }
+
+    @Override
+    public ColorTextureReader getTextureReaderForColorAttachment(int attachmentIndex)
+    {
+        return new ColorTextureReaderBase()
+        {
+            @Override
+            public int getWidth()
+            {
+                return getSize().width;
+            }
+
+            @Override
+            public int getHeight()
+            {
+                return getSize().height;
+            }
+
+            @Override
+            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                // use BGRA because due to byte order differences it ends up being ARGB
+                glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
+                OpenGLContext.errorCheck();
+            }
+
+            @Override
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, destination);
+                OpenGLContext.errorCheck();
+            }
+
+            @Override
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, destination);
+                OpenGLContext.errorCheck();
+            }
+        };
+    }
+
+    @Override
+    public DepthTextureReader getTextureReaderForDepthAttachment()
+    {
+        return new DepthTextureReaderBase()
+        {
+            @Override
+            public int getWidth()
+            {
+                return getSize().width;
+            }
+
+            @Override
+            public int getHeight()
+            {
+                return getSize().height;
+            }
+
+            @Override
+            public void read(ShortBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height)
+                {
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
+                }
+
+                getReadContents().bindForRead(0);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 2);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, destination);
+                OpenGLContext.errorCheck();
+            }
+        };
     }
 
     @Override

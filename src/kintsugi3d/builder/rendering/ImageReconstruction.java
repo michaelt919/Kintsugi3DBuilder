@@ -188,7 +188,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 }
 
                 @Override
-                public Framebuffer<ContextType> getReconstructionFramebuffer()
+                public ReadableFramebuffer<ContextType> getReconstructionFramebuffer()
                 {
                     return reconstructionFramebuffer;
                 }
