@@ -20,24 +20,34 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
+import kintsugi3d.builder.javafx.core.RecentProjects;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CacheSettingsController implements SystemSettingsControllerBase
 {
     @FXML private Label previewImageCacheLabel;
     @FXML private Label specularFitCacheLabel;
+    @FXML private Label cacheSize;
 
     @Override
     public void initializeSettingsPage(Window parentWindow, JavaFXState state)
     {
         previewImageCacheLabel.setText(ApplicationFolders.getPreviewImagesRootDirectory().toString());
         specularFitCacheLabel.setText(ApplicationFolders.getFitCacheRootDirectory().toString());
+        long fitSize = getDirectorySize(ApplicationFolders.getFitCacheRootDirectory().toFile());
+        long previewSize = getDirectorySize(ApplicationFolders.getPreviewImagesRootDirectory().toFile());
+        double sizeInGB = (double) (fitSize + previewSize) / (1024 * 1024 * 1024);
+        cacheSize.setText("Cache Size: " + String.format("%.2f", sizeInGB) + "GB");
     }
 
     @FXML private void openDirectory(MouseEvent e){
@@ -91,7 +101,10 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         assert directory.isDirectory();
         File[] projects = directory.listFiles();
         assert projects != null;
-
+        deletePreviewCacheFiles(directory, projects);
+    }
+    private void deletePreviewCacheFiles(File directory, File[] projects)
+    {
         for (File project : projects)
         {
             assert project.isDirectory();
@@ -125,7 +138,11 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         assert directory.isDirectory();
         File[] projects = directory.listFiles();
         assert projects != null;
+        deleteFitCacheFiles(directory, projects);
+    }
 
+    private void deleteFitCacheFiles(File directory, File[] projects)
+    {
         for (File project : projects)
         {
             assert project.isDirectory();
@@ -173,6 +190,122 @@ public class CacheSettingsController implements SystemSettingsControllerBase
 
             project.delete(); // Will only work if directory is empty.
         }
+    }
+
+    @FXML public void cleanUpNonRecentCache()
+    {
+        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
+        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
+
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Clear Old Cache Files");
+        confirm.setHeaderText("Confirm cache clean up?");
+        confirm.setContentText("This will permanently remove all old files in " + previewCacheDir + " and " + fitCacheDir
+            + " and cannot be undone.  Are you sure?");
+
+        confirm.showAndWait().ifPresent(response ->
+        {
+            if (response.equals(ButtonType.OK))
+            {
+                clearNonRecentPreviewCache(previewCacheDir, 5);
+                clearNonRecentFitCache(fitCacheDir, 5);
+            }
+        });
+    }
+
+    private void clearNonRecentPreviewCache(File directory, int numProjectsToKeep)
+    {
+        assert directory.isDirectory();
+//        File[] projects = directory.listFiles();
+//        assert projects != null;
+        // Select only cache directories that are not in the recently opened projects welcome dialogue.
+        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+        List<UUID> recentUUIDs = getRecentUUIDs(numProjectsToKeep);
+        for (UUID recentUUID : recentUUIDs)
+        {
+            String cachePathFromUUID = directory + File.separator + recentUUID.toString();
+            // Traverse backwards to not skip indices from removal
+            for (int i = oldProjects.size() - 1; i >= 0; i--)
+            {
+                if (oldProjects.get(i).toString().equals(cachePathFromUUID))
+                {
+                    oldProjects.remove(i);
+                }
+            }
+        }
+        // Perform cache deletion on directories still in oldProjects.
+        File[] oldProjectsArr = new File[oldProjects.size()];
+        oldProjectsArr = oldProjects.toArray(oldProjectsArr);
+        deletePreviewCacheFiles(directory, oldProjectsArr);
+    }
+
+    private void clearNonRecentFitCache(File directory, int numProjectsToKeep)
+    {
+        assert directory.isDirectory();
+//        File[] projects = directory.listFiles();
+//        assert projects != null;
+        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+        List<UUID> recentUUIDs = getRecentUUIDs(numProjectsToKeep);
+        for (UUID recentUUID : recentUUIDs)
+        {
+            String cachePathFromUUID = directory + File.separator + recentUUID.toString();
+            // Traverse backwards to not skip indices from removal
+            for (int i = oldProjects.size() - 1; i >= 0; i--)
+            {
+                if (oldProjects.get(i).toString().equals(cachePathFromUUID))
+                {
+                    oldProjects.remove(i);
+                }
+            }
+        }
+        // Perform cache deletion on directories still in oldProjects.
+        File[] oldProjectsArr = new File[oldProjects.size()];
+        oldProjectsArr = oldProjects.toArray(oldProjectsArr);
+        deleteFitCacheFiles(directory, oldProjectsArr);
+    }
+
+    private List<UUID> getRecentUUIDs(int numProjectsToKeep)
+    {
+        List<String> recentProjects = RecentProjects.getItemsFromRecentsFile().stream().limit(numProjectsToKeep).collect(Collectors.toList());
+        // Load view sets of recent projects to get their UUID.
+        List<UUID> recentUUIDs = new ArrayList<>(recentProjects.size());
+        for (String recentProject : recentProjects)
+        {
+            try
+            {
+                String projectName = recentProject.substring(recentProject.lastIndexOf(File.separator) + 1);
+                ViewSet viewSet = ViewSetReaderFromVSET.getInstance()
+                    .readFromFile(new File(recentProject + ".files" + File.separator + projectName + ".vset")).finish();
+                recentUUIDs.add(viewSet.getUUID());
+            }
+            catch (IOException e)
+            {
+                ExceptionHandling.error("Failed to open project directory", e);
+            }
+
+        }
+        return recentUUIDs;
+    }
+
+    private static long getDirectorySize(File directory)
+    {
+        long length = 0;
+        File[] files = directory.listFiles();
+        if (files != null)
+        {
+            for (File file : files)
+            {
+                if (file.isFile())
+                {
+                    length += file.length();
+                }
+                else
+                {
+                    length += getDirectorySize(file);
+                }
+            }
+        }
+        return length;
     }
 
 //    // Not using this since it scares me.

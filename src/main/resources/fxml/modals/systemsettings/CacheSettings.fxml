@@ -19,7 +19,9 @@
       stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
+    <Label fx:id="cacheSize" styleClass="wireframeBody" text="N/A"/>
     <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Clear Cache"/>
+    <Button mnemonicParsing="false" onAction="#cleanUpNonRecentCache" styleClass="wireframeBodyLarge" text="Clean Up Cache"/>
     <TitledPane styleClass="titled-pane, wireframeBody" text="Cache Path">
         <VBox spacing="8.0" styleClass="cache-settings-root">
             <padding>
