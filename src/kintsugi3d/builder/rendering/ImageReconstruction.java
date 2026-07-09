@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -157,7 +157,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             render(viewSet, viewIndex, incidentRadianceDrawable, incidentRadianceFramebuffer);
 
             // create new native buffer if necessary
-            FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSize(); // should be the same as reconstruction size
+            FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSizeForRead(); // should be the same as reconstruction size
             if (incidentRadianceBuffer == null || incidentRadianceBuffer.capacity() != incidentRadianceSize.width * incidentRadianceSize.height * 4)
             {
                 incidentRadianceBuffer = BufferUtils.createFloatBuffer(incidentRadianceSize.width * incidentRadianceSize.height * 4);
@@ -220,7 +220,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                     render(viewSet, index, drawable, reconstructionFramebuffer);
 
                     // create new native buffer if necessary
-                    FramebufferSize framebufferSize = reconstructionFramebuffer.getSize(); // should be the same as reconstruction size
+                    FramebufferSize framebufferSize = reconstructionFramebuffer.getSizeForRead(); // should be the same as reconstruction size
                     if (reconstructionBuffer == null || reconstructionBuffer.capacity() != framebufferSize.width * framebufferSize.height * 4)
                     {
                         reconstructionBuffer = BufferUtils.createFloatBuffer(framebufferSize.width * framebufferSize.height * 4);

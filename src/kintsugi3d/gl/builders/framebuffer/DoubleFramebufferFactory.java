@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -112,6 +112,12 @@ public final class DoubleFramebufferFactory
         }
 
         @Override
+        public FramebufferSize getSizeForRead()
+        {
+            return frontFBO.getSize();
+        }
+
+        @Override
         public FramebufferReadContents<ContextType> getReadContents()
         {
             return this.frontFBO.getReadContents();
@@ -132,7 +138,7 @@ public final class DoubleFramebufferFactory
         @Override
         public FramebufferSize getSize()
         {
-            return frontFBO.getSize();
+            return backFBO.getSize();
         }
 
         @Override
@@ -249,8 +255,6 @@ public final class DoubleFramebufferFactory
             // Update size
             width = newWidth;
             height = newHeight;
-
-            LOG.info("Framebuffer size: {}x{}", width, height);
 
             // Resize the new back buffer if requested
             resize();

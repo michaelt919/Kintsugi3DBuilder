@@ -62,14 +62,15 @@ public class ObservableCarouselModel implements CarouselModel
         {
             // Adjust safe region for main view when window is resized.
             Global.state().getMainCanvasModel().addCanvasChangedListener(
-                framebufferCanvas -> framebufferCanvas.addCanvasSizeListener(
-                    (canvas, width, height) -> refreshMainViewSafeRegion(canvas.getSize())));
+                // Bind directly to framebuffer size (not canvas size)
+                // to ensure that its always in sync with the rendering framebuffer and reduce jittering.
+                framebufferCanvas -> framebufferCanvas.addFramebufferSizeListener(
+                    (canvas, width, height) ->
+                        refreshMainViewSafeRegion(canvas.getSizeForDisplay())));
         });
         
         carouselHeight.addListener((observable, oldValue, newValue) ->
         {
-            LOG.info("Carousel height listener ({})", newValue);
-
             // Refresh safe region for main view
             refreshMainViewSafeRegion();
         });
@@ -77,7 +78,7 @@ public class ObservableCarouselModel implements CarouselModel
 
     private void refreshMainViewSafeRegion()
     {
-        refreshMainViewSafeRegion(Global.state().getMainCanvasModel().getCanvas().getSize());
+        refreshMainViewSafeRegion(Global.state().getMainCanvasModel().getCanvas().getSizeForDisplay());
     }
 
     private void refreshMainViewSafeRegion(CanvasSize mainViewSize)
@@ -160,7 +161,6 @@ public class ObservableCarouselModel implements CarouselModel
                     framebufferCanvas.addResizeListener(framebuffer ->
                     {
                         FramebufferSize size = framebuffer.getSize();
-                        LOG.info("Carousel card height: {}", size.height);
 
                         // Refresh safe region for card
                         ProjectInstance<?> carouselInstance = Global.state().getIOModel().getInstanceForShader(shader);

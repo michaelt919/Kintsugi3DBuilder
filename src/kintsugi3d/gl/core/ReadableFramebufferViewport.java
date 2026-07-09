@@ -24,11 +24,11 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
 {
     private static class ReadContents<ContextType extends Context<ContextType>> implements FramebufferReadContents<ContextType>
     {
-        private final FramebufferViewport<ContextType> framebufferViewport;
+        private final ReadableFramebufferViewport<ContextType> framebufferViewport;
 
         private final FramebufferReadContents<ContextType> fullFramebufferContents;
 
-        ReadContents(FramebufferViewport<ContextType> framebufferViewport, FramebufferReadContents<ContextType> fullFramebufferContents)
+        ReadContents(ReadableFramebufferViewport<ContextType> framebufferViewport, FramebufferReadContents<ContextType> fullFramebufferContents)
         {
             this.framebufferViewport = framebufferViewport;
             this.fullFramebufferContents = fullFramebufferContents;
@@ -43,7 +43,7 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
         @Override
         public FramebufferSize getSize()
         {
-            return framebufferViewport.getSize();
+            return framebufferViewport.getSizeForRead();
         }
 
         @Override
@@ -69,6 +69,12 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
     }
 
     @Override
+    public FramebufferSize getSizeForRead()
+    {
+        return getSize();
+    }
+
+    @Override
     public FramebufferReadContents<ContextType> getReadContents()
     {
         return new ReadContents<>(this, readableFramebuffer.getReadContents());
@@ -82,13 +88,13 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
             @Override
             public int getWidth()
             {
-                return getSize().width;
+                return getSizeForRead().width;
             }
 
             @Override
             public int getHeight()
             {
-                return getSize().height;
+                return getSizeForRead().height;
             }
 
             @Override
@@ -122,13 +128,13 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
             @Override
             public int getWidth()
             {
-                return getSize().width;
+                return getSizeForRead().width;
             }
 
             @Override
             public int getHeight()
             {
-                return getSize().height;
+                return getSizeForRead().height;
             }
 
             @Override

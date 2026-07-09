@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -305,7 +305,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         readFramebuffer.getReadContents().bindForRead(readAttachmentIndex);
 
         IntVector2 srcOffset = readFramebuffer.getOffset();
-        FramebufferSize srcSize = readFramebuffer.getSize();
+        FramebufferSize srcSize = readFramebuffer.getSizeForRead();
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_COLOR_BUFFER_BIT, linearFiltering ? GL_LINEAR : GL_NEAREST);
@@ -320,7 +320,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
 
         IntVector2 srcOffset = readFramebuffer.getOffset();
-        FramebufferSize srcSize = readFramebuffer.getSize();
+        FramebufferSize srcSize = readFramebuffer.getSizeForRead();
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -335,7 +335,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
 
         IntVector2 srcOffset = readFramebuffer.getOffset();
-        FramebufferSize srcSize = readFramebuffer.getSize();
+        FramebufferSize srcSize = readFramebuffer.getSizeForRead();
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_STENCIL_BUFFER_BIT, GL_NEAREST);
@@ -350,7 +350,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
 
         IntVector2 srcOffset = readFramebuffer.getOffset();
-        FramebufferSize srcSize = readFramebuffer.getSize();
+        FramebufferSize srcSize = readFramebuffer.getSizeForRead();
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);

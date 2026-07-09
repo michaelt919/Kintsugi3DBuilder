@@ -16,11 +16,29 @@ import kintsugi3d.gl.vecmath.IntVector2;
 public interface ReadableFramebuffer<ContextType extends Context<ContextType>> extends Framebuffer<ContextType>
 {
     /**
+     * Gets the size of the framebuffer for write/draw operations.
+     * Depending on the implementation, this may be different than the size reported by getSizeForRead(),
+     * for instance, in a double-buffered context where the back buffer has been resized
+     * but the front buffer still possesses the old dimensions.
+     * @return
+     */
+    @Override
+    FramebufferSize getSize();
+
+    /**
+     * Gets the size of the framebuffer for read operations.
+     * Depending on the implementation, this may be different than the size reported by getSize(),
+     * for instance, in a double-buffered context where the back buffer has been resized
+     * but the front buffer still possesses the old dimensions.
+     * @return
+     */
+    FramebufferSize getSizeForRead();
+
+    /**
      * Gets a representation of the contents of this framebuffer fr reading.
      * @return A handle that can be used to perform operations that retrieve the contents of this framebuffer.
      */
     FramebufferReadContents<ContextType> getReadContents();
-
 
     /**
      * Gets an object that encapsulates read capabilities for this texture as a color texture.

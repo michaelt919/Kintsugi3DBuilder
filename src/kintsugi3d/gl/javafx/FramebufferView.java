@@ -292,7 +292,7 @@ public final class FramebufferView extends Region
         if (canvas != null)
         {
             handleWindowEvent(); // sets canvas size and applies vertical flip to imageView
-            CanvasSize canvasSize = canvas.getSize();
+            CanvasSize canvasSize = canvas.getSizeForDisplay();
 
             if (canvasSize.width > 0 && canvasSize.height > 0) // Writeable image allocation will fail if zero.
             {
@@ -312,7 +312,7 @@ public final class FramebufferView extends Region
                 synchronized (backCopyBufferLock)
                 {
                     // Read from FBO and record size in case this frame gets consumed by an earlier thread.
-                    backCopyBufferSize = frontFBO.getSize();
+                    backCopyBufferSize = frontFBO.getSizeForRead();
 
                     if (backCopyBuffer == null || backCopyBuffer.capacity() != backCopyBufferSize.width * backCopyBufferSize.height * 4)
                     {
@@ -451,7 +451,6 @@ public final class FramebufferView extends Region
 
         if (canvas != null)
         {
-            LOG.info("Handle window event ({}x{})", width, height);
             canvas.changeBounds(new CanvasPosition(x, y), new CanvasSize(width, height));
         }
     }

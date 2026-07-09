@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -77,30 +77,37 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         // Query height and width of screen to set center point
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-        int xAdj = windowSpec.getX();
-        if (xAdj < 0)
+        if (vidmode != null)
         {
-            xAdj = (vidmode.width() - windowSpec.getWidth()) / 2;
-        }
+            int xAdj = windowSpec.getX();
+            if (xAdj < 0)
+            {
+                xAdj = (vidmode.width() - windowSpec.getWidth()) / 2;
+            }
 
-        int yAdj = windowSpec.getY();
-        if (yAdj < 0)
+            int yAdj = windowSpec.getY();
+            if (yAdj < 0)
+            {
+                yAdj = (vidmode.height() - windowSpec.getHeight()) / 2;
+            }
+
+            glfwSetWindowPos(handle, xAdj, yAdj);
+        }
+        else
         {
-            yAdj = (vidmode.height() - windowSpec.getHeight()) / 2;
+            LOG.error("Could not query screen size.");
         }
-
-        glfwSetWindowPos(handle, xAdj, yAdj);
 
         glfwMakeContextCurrent(handle);
         glfwSwapInterval(1);
 
         GL.createCapabilities(); // Make a valid OpenGL Context
-        LOG.info("OpenGL version: " + glGetString(GL_VERSION));
-        LOG.info("LWJGL version: " +
-                Version.VERSION_MAJOR + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
-                (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
+        LOG.info("OpenGL version: {}", glGetString(GL_VERSION));
+        LOG.info("LWJGL version: {}.{}.{}{}",
+                Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
+            Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
-        LOG.info("GLFW version: " + glfwGetVersionString());
+        LOG.info("GLFW version: {}", glfwGetVersionString());
 
         this.context = createDefaultFramebuffer == null ?
             contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);
@@ -211,6 +218,12 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         int width = widthBuffer.get(0);
         int height = heightBuffer.get(0);
         return new CanvasSize(width, height);
+    }
+
+    @Override
+    public CanvasSize getSizeForDisplay()
+    {
+        return getSize();
     }
 
     @Override

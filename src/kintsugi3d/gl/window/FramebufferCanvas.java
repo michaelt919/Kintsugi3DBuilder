@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -49,9 +49,14 @@ public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     private FramebufferCanvas(DoubleFramebufferObject<ContextType> framebuffer)
     {
         this.framebuffer = framebuffer;
-        FramebufferSize fboSize = framebuffer.getSize();
+        FramebufferSize fboSize = framebuffer.getSizeForRead();
         this.canvasSize = new CanvasSize(fboSize.width, fboSize.height);
         Arrays.fill(buttonStates, MouseButtonState.RELEASED);
+
+        // Setup framebuffer size event to be bound directly to the backend framebuffer.
+        framebuffer.addResizeListener(fbo ->
+            eventCollector.framebufferSize(l ->
+                l.framebufferResized(this, fbo.getSize().width, fbo.getSize().height)));
     }
 
     @Override
@@ -110,6 +115,13 @@ public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     public CanvasSize getSize()
     {
         return canvasSize;
+    }
+
+    @Override
+    public CanvasSize getSizeForDisplay()
+    {
+        FramebufferSize sizeForRead = framebuffer.getSizeForRead();
+        return new CanvasSize(sizeForRead.width, sizeForRead.height);
     }
 
     @Override
@@ -233,16 +245,21 @@ public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     @Override
     public void changeBounds(CanvasPosition position, CanvasSize size)
     {
-        framebuffer.requestResize(size.width, size.height);
-        eventCollector.canvasSize(l -> l.canvasResized(this, size.width, size.height));
-        eventCollector.framebufferSize(l -> l.framebufferResized(this, size.width, size.height));
+        // Store the new size
         canvasSize = size;
+
+        // Report the event on the frontend.
+        eventCollector.canvasSize(l -> l.canvasResized(this, size.width, size.height));
 
         if (canvasPosition == null || position.x != canvasPosition.x || position.y != canvasPosition.y)
         {
-            eventCollector.canvasPos(l -> l.canvasMoved(this, position.x, position.y));
+            // Also update position
             canvasPosition = position;
+            eventCollector.canvasPos(l -> l.canvasMoved(this, position.x, position.y));
         }
+
+        // Request that the backend framebuffer actually change size.
+        framebuffer.requestResize(size.width, size.height);
     }
 
     @Override

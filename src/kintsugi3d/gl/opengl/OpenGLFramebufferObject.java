@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -143,7 +143,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
 
         this.width = width;
         this.height = height;
-        this.ownedAttachments = new ArrayList<>();
+        this.ownedAttachments = new ArrayList<>(colorAttachments.length + 1);
         this.colorAttachments = new OpenGLFramebufferAttachment[colorAttachments.length];
         this.depthAttachment = depthAttachment;
         this.stencilAttachment = stencilAttachment;
@@ -199,6 +199,12 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     }
 
     @Override
+    public FramebufferSize getSizeForRead()
+    {
+        return getSize();
+    }
+
+    @Override
     public FramebufferReadContents<OpenGLContext> getReadContents()
     {
         return getContents();
@@ -212,13 +218,13 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
             @Override
             public int getWidth()
             {
-                return getSize().width;
+                return getSizeForRead().width;
             }
 
             @Override
             public int getHeight()
             {
-                return getSize().height;
+                return getSizeForRead().height;
             }
 
             @Override
@@ -298,13 +304,13 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
             @Override
             public int getWidth()
             {
-                return getSize().width;
+                return getSizeForRead().width;
             }
 
             @Override
             public int getHeight()
             {
-                return getSize().height;
+                return getSizeForRead().height;
             }
 
             @Override

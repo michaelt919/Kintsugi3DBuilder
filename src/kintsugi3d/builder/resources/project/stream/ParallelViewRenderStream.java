@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -52,7 +52,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
         this.maxRunningThreads = maxRunningThreads;
         unusedColorBuffers = IntStream.range(0, maxRunningThreads)
             .mapToObj(i -> IntStream.range(0, attachmentCount)
-                .mapToObj(j -> new ColorNativeBufferList(framebuffer.getSize().width * framebuffer.getSize().height))
+                .mapToObj(j -> new ColorNativeBufferList(framebuffer.getSizeForRead().width * framebuffer.getSizeForRead().height))
                 .toArray(ColorNativeBufferList[]::new))
             .collect(Collectors.toCollection(ArrayDeque::new));
     }
