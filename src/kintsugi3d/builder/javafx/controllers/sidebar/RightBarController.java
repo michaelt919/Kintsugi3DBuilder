@@ -24,12 +24,14 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
-import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
+import javafx.scene.text.TextAlignment;
+import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
 
-import java.io.IOException;
+
 import java.util.*;
+import java.util.Map.Entry;
 
 public class RightBarController
 {
@@ -41,12 +43,14 @@ public class RightBarController
     //Alternative LOWER_BOUND: 62
     private static final int LOWER_BOUND = 322;
 
-    @FXML
-    private HBox buttonBox;
+    @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
     @FXML private Button minimizeButton;
     @FXML private Label detailsLabel;
     @FXML private HBox detailsBox;
+    @FXML private VBox imageDetails;
+
+    @FXML private ImageDetailsController imageDetailsController;
 
     // needed to remove tabs
     private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
@@ -57,7 +61,6 @@ public class RightBarController
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
 
-    private ObservableTabsModel tabModels;
     private String lastSelectedTabLabel = null;
     private boolean minimized = false;
 
@@ -66,83 +69,10 @@ public class RightBarController
         return mainBox;
     }
 
-    public void init(ObservableTabsModel tabModels)
+    public void init(ObservableUserShaderModel shaderModel)
     {
-        this.tabModels = tabModels;
-
-        tabModels.getAllTabs().forEach(this::addTab);
-
-        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel>) change ->
-        {
-            if (change.wasAdded())
-            {
-                addTab(change.getValueAdded());
-            }
-
-            if (change.wasRemoved())
-            {
-                removeTab(change.getValueRemoved().getModelLabel());
-            }
-
-            // Refresh whether tabs are visible any time the tabs model is updated.
-            if (tabModels.getAllTabs().size() < 2)
-            {
-                buttonBox.setVisible(false);
-                buttonBox.setManaged(false);
-            }
-            else
-            {
-                buttonBox.setVisible(true);
-                buttonBox.setManaged(true);
-            }
-
-            // Select the first tab if no tab is selected.
-            if (!tabModels.getAllTabs().isEmpty() && (tabToggleGroup.getSelectedToggle() == null))
-            {
-                buttons.get(0).setSelected(true);
-            }
-        });
-
+        imageDetailsController.init("C:\\Users\\schmuckij3299\\OneDrive - University of Wisconsin-Stout\\Kintsugi3D_Model\\Statue.k3d.files\\File_Not_Found.png");
         resizeWidth(DEFAULT_WIDTH);
-
-    }
-
-    private void removeTab(String key)
-    {
-        // Remove button and the tab itself from the maps and their actual containers.
-        RadioButton button = buttonMap.remove(key);
-        buttonBox.getChildren().remove(button);
-        mainBox.getChildren().remove(tabMap.remove(key));
-        buttons.remove(button);
-
-        if (Objects.equals(tabToggleGroup.getSelectedToggle(), button))
-        {
-            if (this.tabModels.getAllTabs().isEmpty())
-            {
-                // Deselect if no tabs remain.
-                tabToggleGroup.selectToggle(null);
-            }
-            else
-            {
-                // Select a tab if we deleted the selected one.
-                buttons.get(0).setSelected(true);
-            }
-        }
-    }
-
-    private void addTab(ObservableCardsModel model)
-    {
-        RadioButton newButton = createButton(model.getModelLabel());
-        VBox newTab = createTab(model);
-
-        buttonBox.getChildren().add(newButton);
-        mainBox.getChildren().add(newTab);
-
-        buttonMap.put(model.getModelLabel(), newButton);
-        tabMap.put(model.getModelLabel(), newTab);
-
-        newTab.visibleProperty().bind(newButton.selectedProperty());
-        newTab.managedProperty().bind(newButton.selectedProperty());
     }
 
     private RadioButton createButton(String name)
@@ -150,9 +80,10 @@ public class RightBarController
         RadioButton button = new RadioButton(name);
 
         // Set sizing
-        button.setMinHeight(32.0);
-        button.setMaxHeight(32.0);
-        button.setPrefHeight(32.0);
+        double buttonHeight = 32.0;
+        button.setMinHeight(buttonHeight);
+        button.setMaxHeight(buttonHeight);
+        button.setPrefHeight(buttonHeight);
         button.setMaxWidth(Double.MAX_VALUE);  // Equivalent to 1.7976931348623157E308
 
         // Set properties
@@ -160,38 +91,17 @@ public class RightBarController
         button.setSelected(false);
         button.setStyle("-fx-alignment: center;");
         button.getStyleClass().add("stripped-radio-button");
-        button.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        button.setTextAlignment(TextAlignment.CENTER);
 
         // Add to ToggleGroup
         button.setToggleGroup(tabToggleGroup);
 
         // Allow the button to grow horizontally in an HBox
-        HBox.setHgrow(button, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(button, Priority.ALWAYS);
 
         buttons.add(button);
 
         return button;
-    }
-
-    private VBox createTab(ObservableCardsModel model)
-    {
-        VBox newTab = null;
-        FXMLLoader loader = new FXMLLoader();
-        try
-        {
-            loader.setLocation(getClass().getResource("/fxml/main/leftpanel/CardTab.fxml"));
-            newTab = loader.load();
-            CardTabController newTabController = loader.getController();
-
-            tabControllers.add(newTabController);
-
-            newTabController.init(model);
-        }
-        catch (IOException e)
-        {
-            // throw new RuntimeException(e);
-        }
-        return newTab;
     }
 
     public void setVisibility(boolean visible)
@@ -264,7 +174,7 @@ public class RightBarController
 
         if (minimized) //if in minimized state
         {
-            if (newWidth >= 23)
+            if (newWidth >= MINIMIZED_WIDTH)
             {
                 resizeWidth(newWidth);
 
@@ -320,7 +230,7 @@ public class RightBarController
     {
         if (lastSelectedTabLabel == null)
         {
-            for (Map.Entry<String, RadioButton> entry : buttonMap.entrySet())
+            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
             {
                 RadioButton button = entry.getValue();
 
@@ -353,29 +263,29 @@ public class RightBarController
      */
     private void minimize()
     {
-        if (buttonBox.getChildren().isEmpty())
+        imageDetails.setManaged(false);
+        imageDetails.setVisible(false);
+
+        resizeWidth(MINIMIZED_WIDTH);
+
+        buttonBox.setVisible(false);
+        buttonBox.setManaged(false);
+        detailsLabel.setVisible(false);
+        detailsLabel.setManaged(false);
+
+        hideAllTabs();
+
+        for (Node child : detailsBox.getChildren())
         {
-            resizeWidth(MINIMIZED_WIDTH);
-
-            buttonBox.setVisible(false);
-            buttonBox.setManaged(false);
-            detailsLabel.setVisible(false);
-            detailsLabel.setManaged(false);
-
-            hideAllTabs();
-
-            for (Node child : detailsBox.getChildren())
+            if (!Objects.equals(child, minimizeButton))
             {
-                if (!Objects.equals(child, minimizeButton))
-                {
-                    child.setVisible(false);
-                    child.setManaged(false);
-                }
+                child.setVisible(false);
+                child.setManaged(false);
             }
-            minimizeButton.setText("+");
-
-            minimized = true;
         }
+        minimizeButton.setText("+");
+
+        minimized = true;
     }
 
     /**
@@ -384,6 +294,9 @@ public class RightBarController
      */
     private void maximize()
     {
+        imageDetails.setManaged(true);
+        imageDetails.setVisible(true);
+
         buttonBox.setVisible(true);
         buttonBox.setManaged(true);
         detailsLabel.setVisible(true);
@@ -405,14 +318,11 @@ public class RightBarController
      * Used to condense code. Resizes mainBox according to parameter width.
      * @param width
      */
-    private void resizeWidth(double width){
+    private void resizeWidth(double width)
+    {
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
-    }
-    public void refreshTabs()
-    {
-        tabControllers.forEach(CardTabController::refreshCardList);
     }
     public double getTabWidth(){ return mainBox.getWidth(); }
 }

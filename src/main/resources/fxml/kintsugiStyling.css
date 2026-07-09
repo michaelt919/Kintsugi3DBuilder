@@ -158,6 +158,7 @@
 .tab,
 .tab .tab-label,
 .stripped-radio-button,
+.right-stripped-radio-button,
 .text-field
 {
     -fx-text-fill: #CECECE;
@@ -596,8 +597,23 @@
   -fx-pref-width: 0;
   -fx-max-width: 0;
 }
+.right-stripped-radio-button > .radio {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0px;
+    -fx-padding: 0.0em; /* 4 8 4 8 */
+
+    -fx-min-width: 0;
+    -fx-pref-width: 0;
+    -fx-max-width: 0;
+}
+
 .stripped-radio-button:selected > .radio > .dot {
   -fx-background-color: transparent;
+}
+
+.right-stripped-radio-button:selected > .radio > .dot {
+    -fx-background-color: transparent;
 }
 
 .stripped-radio-button {
@@ -606,6 +622,13 @@
 
 .stripped-radio-button:selected {
   -fx-background-color: #383838
+}
+.right-stripped-radio-button {
+    -fx-background-color: #383838
+
+}
+.right-stripped-radio-button:selected {
+    -fx-background-color: #202020
 }
 
 /* Styling for the scroll bar in left pane */

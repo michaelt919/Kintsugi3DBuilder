@@ -42,4 +42,11 @@
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox fx:id="buttonBox" styleClass="tabButtonBox" prefHeight="31.0" prefWidth="462.0" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER">
     </HBox>
+    <StackPane alignment="TOP_CENTER">
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+
+        <fx:include fx:id="imageDetails" source="ImageDetails.fxml"/>
+    </StackPane>
 </VBox>

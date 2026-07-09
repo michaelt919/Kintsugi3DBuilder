@@ -74,7 +74,10 @@ public final class JavaFXState
         return cameraViewListModel;
     }
 
-    public ObservableTabsModel getTabModels() { return tabModels; }
+    public ObservableTabsModel getTabModels()
+    {
+        return tabModels;
+    }
 
     public ObservableLoadOptionsModel getLoadOptionsModel()
     {
