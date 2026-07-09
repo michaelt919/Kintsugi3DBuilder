@@ -75,7 +75,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
-    private final List<Consumer<ProjectInstance<ContextType>>> instanceLoadCallbacks
+    private final List<Consumer<ProjectInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
     private File loadedProjectFile;
@@ -101,7 +101,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
      *
      * @param callback to add
      */
-    public void addInstanceLoadCallback(Consumer<ProjectInstance<ContextType>> callback)
+    @Override
+    public void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback)
     {
         synchronized (instanceLoadCallbacks)
         {
@@ -151,6 +152,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     public ViewSet getLoadedViewSet()
     {
         return loadedViewSet;
+    }
+
+    @Override
+    public ProjectInstance<?> getLoadedProjectInstance()
+    {
+        return projectInstance;
     }
 
     @Override
@@ -276,7 +283,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             }
 
             // Invoke callbacks
-            for (Consumer<ProjectInstance<ContextType>> callback : instanceLoadCallbacks)
+            for (Consumer<ProjectInstance<?>> callback : instanceLoadCallbacks)
             {
                 callback.accept(projectInstance);
             }

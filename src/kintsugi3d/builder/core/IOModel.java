@@ -207,9 +207,19 @@ public class IOModel
         this.handler.addViewSetLoadCallback(callback);
     }
 
+    public void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback)
+    {
+        this.handler.addProjectInstanceLoadCallback(callback);
+    }
+
     public ViewSet getLoadedViewSet()
     {
         return this.handler.getLoadedViewSet();
+    }
+
+    public ProjectInstance<?> getLoadedProjectInstance()
+    {
+        return this.handler.getLoadedProjectInstance();
     }
 
     public File getLoadedProjectFile()
@@ -426,18 +436,23 @@ public class IOModel
         this.handler.unload();
     }
 
-    public boolean hasValidHandler()
+    public boolean hasLoadedProjectInstance()
     {
         return this.handler != null && this.handler.isInstanceLoaded();
+    }
+
+    public boolean hasValidHandler()
+    {
+        return this.handler != null;
     }
 
     /**
      * Checks if this has a valid project instance loaded.  Otherwise, throws an IllegalStateException.
      * @return This model if it has a valid project instance.
      */
-    public IOModel validateHandler()
+    public IOModel validateProjectInstance()
     {
-        if (!hasValidHandler())
+        if (!hasLoadedProjectInstance())
         {
             throw new IllegalStateException("No project loaded.");
         }

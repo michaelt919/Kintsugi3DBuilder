@@ -16,6 +16,8 @@ import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +29,8 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<TextureResources<ContextType>>
 {
     int WEIGHTS_PER_PACKED_CHANNEL = 4;
+
+    Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
     Map<TextureDetails, Texture2D<ContextType>> getTextures();
 
@@ -467,4 +471,26 @@ public interface TextureResources<ContextType extends Context<ContextType>>
       * @param materialIndex
      */
     void deleteBasisMaterial(int materialIndex);
+
+    /**
+     * Refreshes a texture specified by key using the default location for the given texture.
+     * @param key The TextureDetails used to choose which texture to refresh.
+     * @param parentDirectory
+     * @throws IOException
+     */
+    default void replaceTextureWithDefaultFile(TextureDetails key, File parentDirectory) throws IOException
+    {
+        getTextures().get(key).load(new File(parentDirectory, key.name + ".png"), true);
+    }
+
+    /**
+     * Replaces a texture by key with a specific file.
+     * @param key
+     * @param newTextureFile
+     * @throws IOException
+     */
+    default void replaceTextureWithSpecificFile(TextureDetails key, File newTextureFile) throws IOException
+    {
+        getTextures().get(key).load(newTextureFile, true);
+    }
 }

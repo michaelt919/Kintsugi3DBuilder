@@ -32,7 +32,11 @@ public interface IOHandler
     ProjectInstance<?> getInstanceForShader(UserShader shader);
 
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
+    void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback);
+
     ViewSet getLoadedViewSet();
+    ProjectInstance<?> getLoadedProjectInstance();
+
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);

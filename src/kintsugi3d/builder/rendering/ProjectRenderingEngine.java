@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.gltf.ModelExporter;
+import kintsugi3d.builder.core.ImageReplaceData;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements ProjectInstance<ContextType>
@@ -82,6 +84,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
+
+    private Consumer<ImageReplaceData> userImageReplaceHandler;
 
     private boolean loaded = false;
 
@@ -651,5 +655,20 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 LOG.error("Error occurred during glTF export:", e);
             }
         }
+    }
+
+    @Override
+    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
+    {
+        if (userImageReplaceHandler != null)
+        {
+            userImageReplaceHandler.accept(imageReplaceData);
+        }
+    }
+
+    @Override
+    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
+    {
+        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

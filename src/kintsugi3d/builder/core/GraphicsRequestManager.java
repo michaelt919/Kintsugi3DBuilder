@@ -79,7 +79,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         if (instanceManager.getMainInstance() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-            instanceManager.addInstanceLoadCallback(instance -> addBackgroundGraphicsRequest(request));
+            instanceManager.addProjectInstanceLoadCallback(instance -> addBackgroundGraphicsRequest(request));
         }
         else
         {
@@ -91,7 +91,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     if (instanceManager.getMainInstance() == null)
                     {
                         // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-                        instanceManager.addInstanceLoadCallback(instance -> addBackgroundGraphicsRequest(request));
+                        instanceManager.addProjectInstanceLoadCallback(instance -> addBackgroundGraphicsRequest(request));
                     }
                     else
                     {
@@ -133,7 +133,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         if (instanceManager.getMainInstance() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-            instanceManager.addInstanceLoadCallback(instance -> addGraphicsRequest(request));
+            instanceManager.addProjectInstanceLoadCallback(instance -> addGraphicsRequest(request));
         }
         else
         {
@@ -150,7 +150,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     if (instanceManager.getMainInstance() == null)
                     {
                         // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-                        instanceManager.addInstanceLoadCallback(instance -> addGraphicsRequest(request));
+                        instanceManager.addProjectInstanceLoadCallback(instance -> addGraphicsRequest(request));
                     }
                     else
                     {

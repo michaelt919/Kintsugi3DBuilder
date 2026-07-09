@@ -66,7 +66,7 @@ public class ProjectSettingsManager
 
     public void refresh()
     {
-        if (Global.state().getIOModel().hasValidHandler())
+        if (Global.state().getIOModel().hasLoadedProjectInstance())
         {
             this.projectSettingsModel = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
         }
