@@ -71,7 +71,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
     private static SpecularFitSettings getSettingsFromProject()
     {
         GeneralSettingsModel projectSettings = Global.state().getIOModel()
-            .validateProjectInstance()
+            .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 
         // Start with texture size
@@ -130,7 +130,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
      *                   If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
         throws UserCancellationException
     {
         try
@@ -243,8 +243,8 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
                     try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt"), StandardCharsets.UTF_8))
                     // Text file containing error information
                     {
-                        rmseOut.println("basis, " + reconstructionRMSE);
-                        rmseOut.println("reflectivity, " + fittedRMSE);
+                        rmseOut.printf("basis, %s%n", reconstructionRMSE);
+                        rmseOut.printf("reflectivity, %s%n", fittedRMSE);
                     }
                 }
             }

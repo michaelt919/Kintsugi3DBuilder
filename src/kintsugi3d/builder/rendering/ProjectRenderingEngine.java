@@ -14,7 +14,6 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.gltf.ModelExporter;
-import kintsugi3d.builder.core.ImageReplaceData;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -47,7 +46,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements ProjectInstance<ContextType>
+    extends InteractiveRenderableBase<ContextType> implements RenderableInstance<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
 

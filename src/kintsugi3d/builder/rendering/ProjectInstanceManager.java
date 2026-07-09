@@ -63,7 +63,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         = new HashMap<>(8);
 
     private ViewSet loadedViewSet;
-    private ProjectInstance<ContextType> projectInstance;
+    private RenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -75,7 +75,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
-    private final List<Consumer<ProjectInstance<?>>> instanceLoadCallbacks
+    private final List<Consumer<RenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
     private File loadedProjectFile;
@@ -102,7 +102,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
      * @param callback to add
      */
     @Override
-    public void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
         synchronized (instanceLoadCallbacks)
         {
@@ -143,21 +143,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public boolean isInstanceLoaded()
+    public boolean isRenderableLoaded()
     {
-        return projectInstance != null;
+        return renderableInstance != null;
     }
 
     @Override
     public ViewSet getLoadedViewSet()
     {
         return loadedViewSet;
-    }
-
-    @Override
-    public ProjectInstance<?> getLoadedProjectInstance()
-    {
-        return projectInstance;
     }
 
     @Override
@@ -229,7 +223,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        ProjectInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
+        RenderableInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -268,13 +262,13 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 });
 
                 // Check for an old instance just to be safe
-                if (projectInstance != null)
+                if (renderableInstance != null)
                 {
-                    projectInstance.close();
+                    renderableInstance.close();
                 }
 
                 // Use the new instance as the active instance if initialization was successful
-                projectInstance = newInstance;
+                renderableInstance = newInstance;
             }
             catch (InitializationException e)
             {
@@ -283,9 +277,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             }
 
             // Invoke callbacks
-            for (Consumer<ProjectInstance<?>> callback : instanceLoadCallbacks)
+            for (Consumer<RenderableInstance<?>> callback : instanceLoadCallbacks)
             {
-                callback.accept(projectInstance);
+                callback.accept(renderableInstance);
             }
 
             // Clear the list of callbacks for the next load.
@@ -429,7 +423,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ProjectRenderingEngine<ContextType> renderView =
-            new ProjectRenderingEngine<>(projectInstance.getID(), context, projectInstance.getResources());
+            new ProjectRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
         renderView.setSafeRegion(safeStartPixel, safeEndPixel);
         initializeSceneModel(renderView.getSceneModel());
 
@@ -471,7 +465,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectRenderingEngine<ContextType> getInstanceForShader(UserShader shader)
+    public ProjectRenderingEngine<ContextType> getRenderableForShader(UserShader shader)
     {
         return renderViewMap.get(shader).getRenderable();
     }
@@ -490,18 +484,18 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void requestFragmentShader(File shaderFile)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
         }
     }
 
     @Override
     public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
         }
     }
 
@@ -512,9 +506,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectInstance<ContextType> getMainInstance()
+    public RenderableInstance<ContextType> getMainRenderable()
     {
-        return projectInstance;
+        return renderableInstance;
     }
 
     @Override
@@ -526,9 +520,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            return projectInstance.getViewSet().getLuminanceEncoding().encodeFunction;
+            return renderableInstance.getViewSet().getLuminanceEncoding().encodeFunction;
         }
         else
         {
@@ -540,73 +534,73 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+            renderableInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
         }
     }
 
     @Override
     public void clearTonemapping()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().clearTonemapping();
+            renderableInstance.getDynamicResourceManager().clearTonemapping();
         }
     }
 
     @Override
     public void requestLightIntensityCalibration()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            Rendering.runLater(() -> projectInstance.getResources().calibrateLightIntensities());
+            Rendering.runLater(() -> renderableInstance.getResources().calibrateLightIntensities());
         }
     }
 
     @Override
     public void applyLightCalibration()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().setLightCalibration(
-                projectInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
+            renderableInstance.getDynamicResourceManager().setLightCalibration(
+                renderableInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
     {
         this.cameraViewListModel = cameraViewListModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+            renderableInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
         }
     }
 
     public void setObjectModel(ReadonlyObjectPoseModel objectModel)
     {
         this.objectModel = objectModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setObjectModel(objectModel);
+            renderableInstance.getSceneModel().setObjectModel(objectModel);
         }
     }
 
     public void setCameraModel(ReadonlyViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setCameraModel(cameraModel);
+            renderableInstance.getSceneModel().setCameraModel(cameraModel);
         }
     }
 
     public void setLightingModel(ReadonlyLightingEnvironmentModel lightingModel)
     {
         this.lightingModel = lightingModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setLightingModel(lightingModel);
+            renderableInstance.getSceneModel().setLightingModel(lightingModel);
         }
     }
 
@@ -618,22 +612,22 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     public void setSettingsModel(ReadonlyGeneralSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setSettingsModel(settingsModel);
+            renderableInstance.getSceneModel().setSettingsModel(settingsModel);
         }
     }
 
     @Override
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
-        return projectInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
+        return renderableInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
     }
 
     @Override
     public void loadBackplate(File backplateFile) throws FileNotFoundException
     {
-        projectInstance.getDynamicResourceManager().loadBackplate(backplateFile);
+        renderableInstance.getDynamicResourceManager().loadBackplate(backplateFile);
     }
 
     @Override
@@ -645,8 +639,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
-        if (projectInstance == null || projectInstance.getResources() == null
-            || projectInstance.getResources().getTextureResources() == null)
+        if (renderableInstance == null || renderableInstance.getResources() == null
+            || renderableInstance.getResources().getTextureResources() == null)
         {
             if (finishedCallback != null)
             {
@@ -657,7 +651,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         {
             Rendering.runLater(() ->
             {
-                projectInstance.getResources().getTextureResources().saveAll(materialDirectory);
+                renderableInstance.getResources().getTextureResources().saveAll(materialDirectory);
 
                 if (finishedCallback != null)
                 {
@@ -670,9 +664,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void saveGLTF(File outputDirectory, ExportSettings settings)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.saveGLTF(outputDirectory, settings);
+            renderableInstance.saveGLTF(outputDirectory, settings);
         }
     }
 
@@ -691,10 +685,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            if (projectInstance != null)
+            if (renderableInstance != null)
             {
-                projectInstance.close();
-                projectInstance = null;
+                renderableInstance.close();
+                renderableInstance = null;
                 loadedViewSet = null;
 
                 Global.state().getProjectModel().setProjectLoaded(false);
@@ -708,36 +702,36 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void initialize() throws InitializationException
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.initialize();
+            renderableInstance.initialize();
         }
     }
 
     @Override
     public void update()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.update();
+            renderableInstance.update();
         }
     }
 
     @Override
     public void draw(Framebuffer<ContextType> framebuffer)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.draw(framebuffer);
+            renderableInstance.draw(framebuffer);
         }
     }
 
     @Override
     public void close()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.close();
+            renderableInstance.close();
 
             Global.state().getProjectModel().setProjectOpen(false);
             Global.state().getProjectModel().clearProjectName();

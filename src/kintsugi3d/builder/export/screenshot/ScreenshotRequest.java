@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,12 +13,13 @@ package kintsugi3d.builder.export.screenshot;
 
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 public class ScreenshotRequest implements ObservableProjectGraphicsRequest
 {
@@ -80,7 +81,7 @@ public class ScreenshotRequest implements ObservableProjectGraphicsRequest
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+        RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (
@@ -99,7 +100,7 @@ public class ScreenshotRequest implements ObservableProjectGraphicsRequest
             renderable.draw(framebuffer, null, null, 320, 180);
 
             exportFile.getParentFile().mkdirs();
-            String fileNameLowerCase = exportFile.getName().toLowerCase();
+            String fileNameLowerCase = exportFile.getName().toLowerCase(Locale.ROOT);
             if (fileNameLowerCase.endsWith(".png"))
             {
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);

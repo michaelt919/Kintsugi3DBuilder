@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.
  */
-public interface ProjectInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
+public interface RenderableInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
     /**
      * Sets the safe region for the target framebuffer.

@@ -162,6 +162,7 @@ public class IOModel
             return processing;
         }
     }
+
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
     private ReadonlyLoadOptionsModel imageLoadOptionsModel;
@@ -192,14 +193,9 @@ public class IOModel
         this.imageLoadOptionsModel = imageLoadOptionsModel;
     }
 
-    public ProjectInstance<?> getMainInstance()
+    public RenderableInstance<?> getRenderableForShader(UserShader shader)
     {
-        return this.handler.getMainInstance();
-    }
-
-    public ProjectInstance<?> getInstanceForShader(UserShader shader)
-    {
-        return this.handler.getInstanceForShader(shader);
+        return this.handler.getRenderableForShader(shader);
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
@@ -207,9 +203,9 @@ public class IOModel
         this.handler.addViewSetLoadCallback(callback);
     }
 
-    public void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
-        this.handler.addProjectInstanceLoadCallback(callback);
+        this.handler.addMainRenderableLoadCallback(callback);
     }
 
     public ViewSet getLoadedViewSet()
@@ -217,9 +213,9 @@ public class IOModel
         return this.handler.getLoadedViewSet();
     }
 
-    public ProjectInstance<?> getLoadedProjectInstance()
+    public RenderableInstance<?> getMainRenderable()
     {
-        return this.handler.getLoadedProjectInstance();
+        return this.handler.getMainRenderable();
     }
 
     public File getLoadedProjectFile()
@@ -436,9 +432,9 @@ public class IOModel
         this.handler.unload();
     }
 
-    public boolean hasLoadedProjectInstance()
+    public boolean hasLoadedRenderable()
     {
-        return this.handler != null && this.handler.isInstanceLoaded();
+        return this.handler != null && this.handler.isRenderableLoaded();
     }
 
     public boolean hasValidHandler()
@@ -450,9 +446,9 @@ public class IOModel
      * Checks if this has a valid project instance loaded.  Otherwise, throws an IllegalStateException.
      * @return This model if it has a valid project instance.
      */
-    public IOModel validateProjectInstance()
+    public IOModel validateRenderable()
     {
-        if (!hasLoadedProjectInstance())
+        if (!hasLoadedRenderable())
         {
             throw new IllegalStateException("No project loaded.");
         }

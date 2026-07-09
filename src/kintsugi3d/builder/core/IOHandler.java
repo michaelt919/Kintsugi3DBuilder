@@ -27,15 +27,14 @@ import java.util.function.DoubleUnaryOperator;
 
 public interface IOHandler
 {
-    boolean isInstanceLoaded();
-    ProjectInstance<?> getMainInstance();
-    ProjectInstance<?> getInstanceForShader(UserShader shader);
+    ViewSet getLoadedViewSet();
+
+    boolean isRenderableLoaded();
+    RenderableInstance<?> getMainRenderable();
+    RenderableInstance<?> getRenderableForShader(UserShader shader);
 
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
-    void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback);
-
-    ViewSet getLoadedViewSet();
-    ProjectInstance<?> getLoadedProjectInstance();
+    void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
 
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);

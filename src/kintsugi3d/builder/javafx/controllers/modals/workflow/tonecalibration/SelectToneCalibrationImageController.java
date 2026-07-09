@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,6 +16,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Objects;
 import java.util.Optional;
 
 public class SelectToneCalibrationImageController extends NonDataPageControllerBase
@@ -119,10 +121,10 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @Override
     public boolean advance()
     {
-        ViewSet viewSet = Global.state().getIOModel().validateProjectInstance().getLoadedViewSet();
+        ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
 
         File imageFile = null;
-        if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
+        if (Objects.equals(buttonGroup.getSelectedToggle(), primaryViewImageButton))
         {
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
             try
@@ -135,7 +137,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
                 return false;
             }
         }
-        else if (buttonGroup.getSelectedToggle() == selectImageFileButton)
+        else if (Objects.equals(buttonGroup.getSelectedToggle(), selectImageFileButton))
         {
             imageFile = selectedImageFile.get();
         }
@@ -144,10 +146,10 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         {
             if (viewSet.hasCustomLuminanceEncoding())
             {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "This will clear any previous tone calibration values!");
+                Alert alert = new Alert(AlertType.CONFIRMATION, "This will clear any previous tone calibration values!");
                 alert.setHeaderText("Change tone calibration image?");
                 Optional<ButtonType> confirmResult = alert.showAndWait();
-                if (confirmResult.isEmpty() || confirmResult.get() != ButtonType.OK)
+                if (confirmResult.isEmpty() || !Objects.equals(confirmResult.get(), ButtonType.OK))
                 {
                     return false;
                 }
@@ -162,7 +164,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         // Skip is selected if and only if there is no previous image (i.e. button is actually labelled "Skip")
         // and the button itself is selected.
         // Thus is there is a previous image or the button is not selected, some image has been selected.
-        if ((buttonGroup.getSelectedToggle() != previousImageButton || hasPreviousColorCheckerImage()) && !viewSet.hasCustomLuminanceEncoding())
+        if ((!Objects.equals(buttonGroup.getSelectedToggle(), previousImageButton) || hasPreviousColorCheckerImage()) && !viewSet.hasCustomLuminanceEncoding())
         {
             // Skip was not selected and view set doesn't currently have a luminance encoding:
             // Give it a "dummy" encoding so that the checkbox is selected by default on the next page.
@@ -188,7 +190,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         }
         else
         {
-            ViewSet viewSet = Global.state().getIOModel().validateProjectInstance().getLoadedViewSet();
+            ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageDirectory());
         }
         File temp = imageFileChooser.showOpenDialog(rootPane.getScene().getWindow());
@@ -201,6 +203,6 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
     private void refreshImageLabel()
     {
-        selectImageFileLabel.setText("Selected: " + selectedImageFile.get().getName());
+        selectImageFileLabel.setText(String.format("Selected: %s", selectedImageFile.get().getName()));
     }
 }
