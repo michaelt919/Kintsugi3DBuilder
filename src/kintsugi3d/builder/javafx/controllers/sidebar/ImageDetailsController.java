@@ -505,5 +505,4 @@ public class ImageDetailsController
         stackPane.setPrefHeight(Region.USE_COMPUTED_SIZE);
         stackPane.setMaxHeight(Region.USE_COMPUTED_SIZE);
     }
-
 }
