@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,7 +14,7 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.SampledLuminanceEncoding;
 import kintsugi3d.gl.core.*;
 
-public final class LuminanceMapResources<ContextType extends Context<ContextType>> implements Resource
+public final class LuminanceMapResources<ContextType extends Context<ContextType>> implements Resource, ReadonlyLuminanceMapResources<ContextType>
 {
     private final ContextType context;
 
@@ -50,6 +50,7 @@ public final class LuminanceMapResources<ContextType extends Context<ContextType
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
+    @Override
     public Texture1D<ContextType> getLuminanceMap()
     {
         return luminanceMap;
@@ -58,6 +59,7 @@ public final class LuminanceMapResources<ContextType extends Context<ContextType
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
+    @Override
     public Texture1D<ContextType> getInverseLuminanceMap()
     {
         return inverseLuminanceMap;
@@ -84,6 +86,7 @@ public final class LuminanceMapResources<ContextType extends Context<ContextType
         }
     }
 
+    @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
         if (this.luminanceMap == null)

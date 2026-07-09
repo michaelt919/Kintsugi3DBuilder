@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -50,8 +50,8 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
      * @throws FileNotFoundException
      */
     public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
-        Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
+                                          BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
+                                          Supplier<ReadonlyTexture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws IOException
     {
         // Inherit from base class to facilitate initial fit.

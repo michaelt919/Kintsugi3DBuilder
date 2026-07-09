@@ -9,18 +9,23 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.gl.geometry;
 
-import kintsugi3d.builder.rendering.RenderableInstanceManager;
-import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.gl.window.FramebufferCanvas;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ContextBound;
+import kintsugi3d.gl.core.Drawable;
+import kintsugi3d.gl.core.Program;
 
-import java.util.function.Consumer;
-
-public interface CanvasListModel
+public interface ReadonlyGeometryResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
-    void setInstanceManager(RenderableInstanceManager<?> instanceManager);
-    void createCanvas(UserShader shader, int width, int height, int safeStartX, int safeStartY, int safeEndX, int safeEndY,
-                      Consumer<FramebufferCanvas<?>> framebufferCallback);
-    void removeCanvas(UserShader shader);
+    /**
+     * Creates a Drawable using this instance's geometry resources, and the specified shader program.
+     * @param program The program to use to construct the Drawable.
+     * @return A Drawable for rendering this instance using the specified shader program.
+     */
+    Drawable<ContextType> createDrawable(Program<ContextType> program);
+
+    GeometryFramebuffer<ContextType> createGeometryFramebuffer(int width, int height);
+
+    boolean isNull();
 }

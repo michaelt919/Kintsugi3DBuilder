@@ -53,12 +53,12 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
      */
     GeometryFramebuffer(GeometryResources<ContextType> geometry, int width, int height) throws IOException
     {
-        this(geometry.context, width, height);
+        this(geometry.getContext(), width, height);
 
         context.getState().disableBackFaceCulling();
 
         // Use a shader program to initialize the framebuffer once
-        try(ProgramObject<ContextType> program = geometry.context.getShaderProgramBuilder()
+        try(ProgramObject<ContextType> program = geometry.getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/geomBuffers.frag"))
             .createProgram();

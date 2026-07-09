@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -43,7 +43,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
     }
 
-    public Texture2D<ContextType> undistort(Texture2D<ContextType> inputImage, DistortionProjection distortion)
+    public Texture2D<ContextType> undistort(ReadonlyTexture2D<ContextType> inputImage, DistortionProjection distortion)
     {
         drawable.program().setTexture("inputImage", inputImage);
         drawable.program().setUniform("viewportSize", new Vector2(distortion.width, distortion.height));

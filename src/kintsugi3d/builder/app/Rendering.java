@@ -15,7 +15,7 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.core.MultithreadState;
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.rendering.RenderableInstanceManager;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
@@ -225,7 +225,7 @@ public final class Rendering
         toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
         toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
-        ProjectInstanceManager<OpenGLContext> instanceManager = new ProjectInstanceManager<>(context);
+        RenderableInstanceManager<OpenGLContext> instanceManager = new RenderableInstanceManager<>(context);
 
         SceneViewportModel sceneViewportModel = Global.state().getSceneViewportModel();
 

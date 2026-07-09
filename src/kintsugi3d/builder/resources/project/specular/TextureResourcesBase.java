@@ -71,7 +71,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     {
         try
         {
-            Texture2D<ContextType> tex = getTexture(texName);
+            ReadonlyTexture2D<ContextType> tex = getTexture(texName);
             if (tex != null)
             {
                 tex.getColorTextureReader().saveToFile(format, new File(outputDirectory,

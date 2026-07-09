@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,19 +12,25 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ContextBound;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.geometry.ReadonlyGeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 
-public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>>
+import java.util.List;
+
+public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
     /**
      * The graphics context associated with this instance.
      *  @return The graphics context
      */
+    @Override
     ContextType getContext();
 
     /**
@@ -38,6 +44,26 @@ public interface ReadonlyGraphicsResources<ContextType extends Context<ContextTy
      * @return A read-only view of the geometry
      */
     ReadonlyVertexGeometry getGeometry();
+
+    ReadonlyGeometryResources<ContextType> getGeometryResources();
+
+    /**
+     * Diffuse, normal, specular, roughness maps, etc.
+     * @return
+     */
+    ReadonlyTextureResources<ContextType> getTextureResources();
+
+    /**
+     * 1D textures for encoding and decoding
+     * @return
+     */
+    ReadonlyLuminanceMapResources<ContextType> getLuminanceMapResources();
+
+    /**
+     * Gets a read-only view of the whole list of camera weights
+     * @return
+     */
+    List<Float> getCameraWeights();
 
     /**
      * Gets the weight associated with a given view/camera (determined by the distance from other views).
@@ -74,5 +100,8 @@ public interface ReadonlyGraphicsResources<ContextType extends Context<ContextTy
      */
     Drawable<ContextType> createDrawable(Program<ContextType> program);
 
-    GraphicsStreamFactory<ContextType> streamFactory();
+    default GraphicsStreamFactory<ContextType> streamFactory()
+    {
+        return new GraphicsStreamFactory<>(this);
+    }
 }

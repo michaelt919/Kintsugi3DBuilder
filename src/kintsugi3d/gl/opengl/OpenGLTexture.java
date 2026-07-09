@@ -31,7 +31,8 @@ import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL44.*;
 
-abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment {
+abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment, Resource
+{
     protected final OpenGLContext context;
 
     private final int textureId;

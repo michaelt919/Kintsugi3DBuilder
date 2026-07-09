@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,16 +13,14 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Vector3;
 
-import java.util.List;
-
-public interface GraphicsResources<ContextType extends Context<ContextType>> extends Resource, ReadonlyGraphicsResources<ContextType>
+public interface GraphicsResources<ContextType extends Context<ContextType>>
+    extends Resource, ReadonlyGraphicsResources<ContextType>
 {
     /**
      * The view set that these resources were loaded from.
@@ -36,24 +34,13 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
         return getGeometryResources().geometry;
     }
 
-    /**
-     * Gets a read-only view of the whole list of camera weights
-     * @return
-     */
-    List<Float> getCameraWeights();
-
+    @Override
     GeometryResources<ContextType> getGeometryResources();
 
-    /**
-     * Diffuse, normal, specular, roughness maps
-     * @return
-     */
+    @Override
     TextureResources<ContextType> getTextureResources();
 
-    /**
-     * 1D textures for encoding and decoding
-     * @return
-     */
+    @Override
     LuminanceMapResources<ContextType> getLuminanceMapResources();
 
     /**
@@ -62,7 +49,6 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      * @param encodedLuminanceValues
      */
     void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
-
 
     /**
      * Clear the luminance map in the view set and free its corresponding textures.
@@ -87,10 +73,4 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      * @param lightIntensity The default light intensity to apply to lights with an intensity of zero
      */
     void initializeLightIntensities(Vector3 lightIntensity);
-
-    @Override
-    default GraphicsStreamFactory<ContextType> streamFactory()
-    {
-        return new GraphicsStreamFactory<>(this);
-    }
 }

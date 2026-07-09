@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,7 +30,7 @@ public class Lights<ContextType extends Context<ContextType>> extends ShaderComp
     private final SceneViewportModel sceneViewportModel;
     private final SceneModel sceneModel;
 
-    private Texture2D<ContextType> lightTexture;
+    private ReadonlyTexture2D<ContextType> lightTexture;
 
     public Lights(ContextType context, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
     {

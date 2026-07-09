@@ -177,12 +177,12 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         }
     }
 
-    public Texture2D<ContextType> getAlbedoMap()
+    public ReadonlyTexture2D<ContextType> getAlbedoMap()
     {
         return framebuffer == null ? null : framebuffer.getColorAttachmentTexture(0);
     }
 
-    public Texture2D<ContextType> getORMMap()
+    public ReadonlyTexture2D<ContextType> getORMMap()
     {
         return framebuffer == null ? null : framebuffer.getColorAttachmentTexture(1);
     }

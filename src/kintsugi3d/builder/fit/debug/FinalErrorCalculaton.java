@@ -61,7 +61,7 @@ public final class FinalErrorCalculaton
     public <ContextType extends Context<ContextType>> void validateNormalMap(
         GraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit, PrintStream rmseOut)
     {
-        Texture2D<ContextType> priorNormalMap = resources.getTextureResources().getTexture(StandardTexture.NORMAL_MAP);
+        ReadonlyTexture2D<ContextType> priorNormalMap = resources.getTextureResources().getTexture(StandardTexture.NORMAL_MAP);
         if (CALCULATE_NORMAL_RMSE && priorNormalMap != null)
         {
             try (ProgramObject<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()

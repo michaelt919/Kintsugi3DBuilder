@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,14 +17,9 @@ package kintsugi3d.gl.core;
  *
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
-public interface Texture1D<ContextType extends Context<ContextType>> extends Texture<ContextType>, FramebufferAttachment<ContextType>
+public interface Texture1D<ContextType extends Context<ContextType>>
+    extends Resource, ReadonlyTexture1D<ContextType>, FramebufferAttachment<ContextType>
 {
-    /**
-     * Gets the width of the texture.
-     * @return The width of the texture.
-     */
-    int getWidth();
-
     /**
      * Sets the texture wrap modes.
      * @param wrap The wrap mode.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,7 +15,7 @@ import kintsugi3d.gl.builders.TextureBuilder;
 import kintsugi3d.gl.builders.framebuffer.*;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Texture2D;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +26,18 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
     protected final int width;
     protected final int height;
 
-    private final List<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>> colorAttachmentFormats = new ArrayList<>(8);
+    private final List<TextureBuilder<ContextType, ? extends ReadonlyTexture2D<ContextType>>> colorAttachmentFormats = new ArrayList<>(8);
 
-    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthAttachmentBuilder;
-    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> stencilAttachmentBuilder;
-    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthStencilAttachmentBuilder;
+    private TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> depthAttachmentBuilder;
+    private TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> stencilAttachmentBuilder;
+    private TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> depthStencilAttachmentBuilder;
 
     protected int getColorAttachmentCount()
     {
         return colorAttachmentFormats.size();
     }
 
-    protected TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> getColorAttachmentBuilder(int index)
+    protected TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> getColorAttachmentBuilder(int index)
     {
         return colorAttachmentFormats.get(index);
     }
@@ -57,17 +57,17 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
         return this.depthStencilAttachmentBuilder != null;
     }
 
-    protected TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> getDepthAttachmentBuilder()
+    protected TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> getDepthAttachmentBuilder()
     {
         return this.depthAttachmentBuilder;
     }
 
-    protected TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> getStencilAttachmentBuilder()
+    protected TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> getStencilAttachmentBuilder()
     {
         return this.stencilAttachmentBuilder;
     }
 
-    protected TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> getDepthStencilAttachmentBuilder()
+    protected TextureBuilder<? super ContextType, ? extends ReadonlyTexture2D<? super ContextType>> getDepthStencilAttachmentBuilder()
     {
         return this.depthStencilAttachmentBuilder;
     }

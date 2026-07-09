@@ -9,18 +9,17 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.rendering.RenderableInstanceManager;
-import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.gl.window.FramebufferCanvas;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.ReadonlyTexture1D;
 
-import java.util.function.Consumer;
-
-public interface CanvasListModel
+public interface ReadonlyLuminanceMapResources<ContextType extends Context<ContextType>>
 {
-    void setInstanceManager(RenderableInstanceManager<?> instanceManager);
-    void createCanvas(UserShader shader, int width, int height, int safeStartX, int safeStartY, int safeEndX, int safeEndY,
-                      Consumer<FramebufferCanvas<?>> framebufferCallback);
-    void removeCanvas(UserShader shader);
+    ReadonlyTexture1D<ContextType> getLuminanceMap();
+
+    ReadonlyTexture1D<ContextType> getInverseLuminanceMap();
+
+    void setupShaderProgram(Program<ContextType> program);
 }

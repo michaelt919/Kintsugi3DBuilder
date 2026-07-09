@@ -50,10 +50,10 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class ProjectInstanceManager<ContextType extends Context<ContextType>>
+public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements IOHandler
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectInstanceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RenderableInstanceManager.class);
 
     private final ContextType context;
 
@@ -110,7 +110,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public ProjectInstanceManager(ContextType context)
+    public RenderableInstanceManager(ContextType context)
     {
         this.context = context;
     }

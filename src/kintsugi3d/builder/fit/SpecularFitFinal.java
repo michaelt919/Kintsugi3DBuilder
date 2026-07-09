@@ -19,6 +19,7 @@ import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
 
 import java.io.File;
@@ -118,7 +119,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         // Load failed; try to initialize based on diffuse map resolution
         if (managedTextures.containsKey(StandardTexture.DIFFUSE_COLOR.details))
         {
-            Texture2D<ContextType> diffuseMap = managedTextures.get(StandardTexture.DIFFUSE_COLOR.details);
+            ReadonlyTexture2D<ContextType> diffuseMap = managedTextures.get(StandardTexture.DIFFUSE_COLOR.details);
             if (diffuseMap != null)
             {
                 return AlbedoORMOptimization.createWithoutOcclusion(getContext(),

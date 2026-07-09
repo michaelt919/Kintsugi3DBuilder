@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements RenderableInstance<ContextType>
@@ -83,8 +82,6 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
-
-    private Consumer<ImageReplaceData> userImageReplaceHandler;
 
     private boolean loaded = false;
 
@@ -654,20 +651,5 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 LOG.error("Error occurred during glTF export:", e);
             }
         }
-    }
-
-    @Override
-    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
-    {
-        if (userImageReplaceHandler != null)
-        {
-            userImageReplaceHandler.accept(imageReplaceData);
-        }
-    }
-
-    @Override
-    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
-    {
-        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

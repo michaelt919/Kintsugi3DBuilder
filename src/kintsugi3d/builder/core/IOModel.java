@@ -167,6 +167,8 @@ public class IOModel
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
     private ReadonlyLoadOptionsModel imageLoadOptionsModel;
 
+    private Consumer<ImageReplaceData> userImageReplaceHandler;
+
     public ProgressMonitor getProgressMonitor()
     {
         return progressMonitor;
@@ -176,6 +178,7 @@ public class IOModel
     {
         return handler;
     }
+
 
     public void setLoadingHandler(IOHandler handler)
     {
@@ -454,5 +457,28 @@ public class IOModel
         }
 
         return this;
+    }
+
+    /**
+     * Invokes the specified handler for when the user is expected to specify a new image to replace an existing image resource.
+     * Typically, this will be handled by a user interface module such as JavaFX.
+     * @param imageReplaceData
+     */
+    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
+    {
+        if (userImageReplaceHandler != null)
+        {
+            userImageReplaceHandler.accept(imageReplaceData);
+        }
+    }
+
+    /**
+     * Specifies a handler for when the user is expected to specify a new image to replace an existing image resource.
+     * Typically, this will be handled by a user interface module such as JavaFX.
+     * @param userImageReplaceHandler
+     */
+    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
+    {
+        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.core.Texture2D;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture3D;
 
 public class TextureResolution
@@ -39,7 +39,7 @@ public class TextureResolution
      * @param texture
      * @return
      */
-    public static TextureResolution of(Texture2D<?> texture)
+    public static TextureResolution of(ReadonlyTexture2D<? extends kintsugi3d.gl.core.Context<?>> texture)
     {
         return new TextureResolution(texture.getWidth(), texture.getHeight());
     }

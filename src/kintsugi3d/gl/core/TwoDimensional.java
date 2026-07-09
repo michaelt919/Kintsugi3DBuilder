@@ -9,18 +9,21 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.gl.core;
 
-import kintsugi3d.builder.rendering.RenderableInstanceManager;
-import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.gl.window.FramebufferCanvas;
-
-import java.util.function.Consumer;
-
-public interface CanvasListModel
+public interface TwoDimensional
 {
-    void setInstanceManager(RenderableInstanceManager<?> instanceManager);
-    void createCanvas(UserShader shader, int width, int height, int safeStartX, int safeStartY, int safeEndX, int safeEndY,
-                      Consumer<FramebufferCanvas<?>> framebufferCallback);
-    void removeCanvas(UserShader shader);
+    /**
+     * Gets the width of the object.
+     *
+     * @return The width of the object.
+     */
+    int getWidth();
+
+    /**
+     * Gets the height of the object.
+     *
+     * @return The height of the object.
+     */
+    int getHeight();
 }

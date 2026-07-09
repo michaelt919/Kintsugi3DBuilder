@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.rendering.RenderableInstanceManager;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -21,10 +21,10 @@ import java.util.function.Consumer;
 
 public class CanvasListModelImpl implements CanvasListModel
 {
-    private ProjectInstanceManager<?> instanceManager;
+    private RenderableInstanceManager<?> instanceManager;
 
     @Override
-    public void setInstanceManager(ProjectInstanceManager<?> instanceManager)
+    public void setInstanceManager(RenderableInstanceManager<?> instanceManager)
     {
         this.instanceManager = instanceManager;
     }

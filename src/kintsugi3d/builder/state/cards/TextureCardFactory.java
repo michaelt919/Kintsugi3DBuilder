@@ -22,7 +22,7 @@ import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.gl.core.Texture2D;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.util.ImageFinder;
@@ -56,7 +56,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         this.instance = instance;
     }
 
-    private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, TextureDetails details)
+    private ProjectDataCard createSimpleTextureCard(ReadonlyTexture2D<? extends kintsugi3d.gl.core.Context<?>> texture, TextureDetails details)
     {
         //2. File name for the .pngs
         String fileName = TextureResources.getTextureFilename(details.name, "PNG");
@@ -178,7 +178,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 for (var entry : textures.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).collect(Collectors.toList()))
                 {
                     TextureDetails key = entry.getKey();
-                    Texture2D<?> texture = entry.getValue();
+                    ReadonlyTexture2D<? extends kintsugi3d.gl.core.Context<?>> texture = entry.getValue();
                     textureCards.add(createSimpleTextureCard(texture, key));
                 }
             }
@@ -294,7 +294,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
                     new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
             }
 
-            Global.state().getIOModel().getMainRenderable().invokeUserImageReplacement(data);
+            Global.state().getIOModel().invokeUserImageReplacement(data);
         });
     }
 

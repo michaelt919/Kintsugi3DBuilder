@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public interface TextureResources<ContextType extends Context<ContextType>>
-    extends AutoCloseable, ContextBound<ContextType>, Blittable<TextureResources<ContextType>>
+    extends Blittable<TextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, Resource
 {
     int WEIGHTS_PER_PACKED_CHANNEL = 4;
 
@@ -62,10 +62,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     BasisWeightResources<ContextType> getBasisWeightResources();
 
-    @Override
-    void close(); // no exception
-
-    private <SourceType extends Blittable<?>> void blitCroppedAndScaledSingle(
+    private <SourceType extends TwoDimensional> void blitCroppedAndScaledSingle(
         Blittable<SourceType> destTex, int destX, int destY, int destWidth, int destHeight,
         TextureResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
         boolean linearFiltering)
@@ -135,8 +132,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
                 readSource, readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
         }
     }
-
-    void setupShaderProgram(Program<ContextType> program);
 
     static <ContextType extends Context<ContextType>> TextureResources<ContextType> makeNull(ContextType context)
     {
@@ -224,35 +219,16 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     /**
      * Saves a texture to the filesystem in the specified format.
      *
-     * @param texName          The name of the texture to save.
-     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory  The directory in which to save the texture.
-     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
-     */
-    void saveTexture(String texName, String format, File outputDirectory, String filenameOverride);
-
-    /**
-     * Saves a texture to the filesystem in the specified format.
-     *
      * @param tex              The texture to save.
      * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
      * @param outputDirectory  The directory in which to save the texture.
      * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
      */
-    default void saveTexture(StandardTexture tex, String format,  File outputDirectory, String filenameOverride)
+    @Override
+    default void saveTexture(StandardTexture tex, String format, File outputDirectory, String filenameOverride)
     {
         saveTexture(tex.details.name, format, outputDirectory, filenameOverride);
     }
-
-    /**
-     * Saves weight map textures to the filesystem in the specified format,
-     * with four weight maps packed into a single image in the RGBA channels.
-     *
-     * @param format            The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory   The directory in which to save the textures.
-     * @param filenamePrefix    A string to be prepended to each weightmap's filename.
-     */
-    void savePackedWeightMaps(String format, File outputDirectory, String filenamePrefix);
 
     /**
      * Saves packed weight map textures to the filesystem in the specified format
@@ -261,19 +237,11 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
      * @param outputDirectory The directory in which to save the textures.
      */
+    @Override
     default void savePackedWeightMaps(String format, File outputDirectory)
     {
         savePackedWeightMaps(format, outputDirectory, "");
     }
-
-    /**
-     * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images.
-     *
-     * @param format            The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory   The directory in which to save the textures.
-     * @param filenamePrefix    A string to be prepended to each weightmap's filename.
-     */
-    void saveUnpackedWeightMaps(String format, File outputDirectory, String filenamePrefix);
 
     /**
      * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images, using default filenames.
@@ -281,24 +249,18 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
      * @param outputDirectory The directory in which to save the textures.
      */
+    @Override
     default void saveUnpackedWeightMaps(String format, File outputDirectory)
     {
         saveUnpackedWeightMaps(format, outputDirectory, "");
     }
 
     /**
-     * Saves the basis function to the filesystem as a CSV file.
-     *
-     * @param outputDirectory  The directory in which to save the basis functions.
-     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
-     */
-    void saveBasisFunctions(File outputDirectory, String filenameOverride);
-
-    /**
      * Saves basis function textures to the filesystem with a default filename.
      *
      * @param outputDirectory The directory in which to save the basis functions.
      */
+    @Override
     default void saveBasisFunctions(File outputDirectory)
     {
         saveBasisFunctions(outputDirectory, null);
@@ -373,6 +335,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
      *                        This can be set to the empty string "" to use just the base / default names.
      */
+    @Override
     default void saveNamedTextures(Iterable<String> texNames, String format, File outputDirectory, String filenamePrefix)
     {
         for (String name : texNames)
@@ -388,6 +351,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
      *                        This can be set to the empty string "" to use just the base / default names.
      */
+    @Override
     default void saveAllNamedTextures(String format, File outputDirectory, String filenamePrefix)
     {
         saveNamedTextures(getTextures().keySet().stream().map(t -> t.name).collect(Collectors.toList()),
@@ -401,6 +365,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
      * @param outputDirectory
      */
+    @Override
     default void saveAll(String format, File outputDirectory)
     {
         saveAllNamedTextures(format, outputDirectory, "");
@@ -414,6 +379,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      *
      * @param outputDirectory
      */
+    @Override
     default void saveAll(File outputDirectory)
     {
         saveAll("PNG", outputDirectory);

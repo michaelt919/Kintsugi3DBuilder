@@ -15,7 +15,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.rendering.RenderableInstanceManager;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.GraphicsRequest;
 import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
@@ -33,7 +33,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private final Collection<Runnable> requestAddedListeners = new ArrayList<>(1);
-    private ProjectInstanceManager<ContextType> instanceManager;
+    private RenderableInstanceManager<ContextType> instanceManager;
     private ProgressMonitor progressMonitor;
 
     public GraphicsRequestManager(ContextType context)
@@ -47,7 +47,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         return requestList.isEmpty();
     }
 
-    public void setInstanceManager(ProjectInstanceManager<ContextType> instanceManager)
+    public void setInstanceManager(RenderableInstanceManager<ContextType> instanceManager)
     {
         this.instanceManager = instanceManager;
     }

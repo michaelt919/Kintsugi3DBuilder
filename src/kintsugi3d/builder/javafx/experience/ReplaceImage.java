@@ -37,7 +37,7 @@ public class ReplaceImage extends ExperienceBase
         if (ioModel.hasValidHandler()) // might not be valid immediately as the rendering thread is booting up
         {
             ioModel.addMainRenderableLoadCallback(instance ->
-                instance.setUserImageReplaceHandler(replaceData ->
+                ioModel.setUserImageReplaceHandler(replaceData ->
                 {
                     this.currentData = replaceData;
                     this.tryOpen();

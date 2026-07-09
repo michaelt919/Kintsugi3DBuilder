@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,9 +20,9 @@ package kintsugi3d.gl.core;
 public interface FramebufferObject<ContextType extends Context<ContextType>> extends ReadableFramebuffer<ContextType>, Resource
 {
     Texture2D<ContextType> getColorAttachmentTexture(int index);
-    Texture2D<ContextType> getDepthAttachmentTexture();
-    Texture2D<ContextType> getStencilAttachmentTexture();
-    Texture2D<ContextType> getDepthStencilAttachmentTexture();
+    ReadonlyTexture2D<ContextType> getDepthAttachmentTexture();
+    ReadonlyTexture2D<ContextType> getStencilAttachmentTexture();
+    ReadonlyTexture2D<ContextType> getDepthStencilAttachmentTexture();
 
     void setColorAttachment(int index, FramebufferAttachment<ContextType> attachment);
     void setDepthAttachment(FramebufferAttachment<ContextType> attachment);
