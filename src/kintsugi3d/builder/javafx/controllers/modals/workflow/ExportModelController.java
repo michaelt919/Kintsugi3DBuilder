@@ -68,7 +68,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
             SquareResolution::new, SquareResolution::getSize);
         bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
 
-        File loadedProjectFile = Global.state().getIOModel().validateHandler().getLoadedProjectFile();
+        File loadedProjectFile = Global.state().getIOModel().validateProjectInstance().getLoadedProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());

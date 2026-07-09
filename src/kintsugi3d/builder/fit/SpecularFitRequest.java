@@ -71,7 +71,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
     private static SpecularFitSettings getSettingsFromProject()
     {
         GeneralSettingsModel projectSettings = Global.state().getIOModel()
-            .validateHandler()
+            .validateProjectInstance()
             .getLoadedViewSet().getProjectSettings();
 
         // Start with texture size

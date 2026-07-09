@@ -751,7 +751,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private boolean hasValidIOModel()
     {
-        return Global.state().getIOModel().hasValidHandler();
+        return Global.state().getIOModel().hasLoadedProjectInstance();
     }
 
 //    public void ExitEyeDropper(){

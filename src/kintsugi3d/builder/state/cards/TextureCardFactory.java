@@ -11,9 +11,14 @@
 
 package kintsugi3d.builder.state.cards;
 
+import javafx.application.Platform;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.core.ImageReplaceData;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
@@ -36,6 +41,8 @@ public class TextureCardFactory implements ProjectDataCardFactory
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureCardFactory.class);
 
+    private CardsModel lastUsedCardsModel;
+
     private final ProjectInstance<?> instance;
 
     private File textureImage;
@@ -44,7 +51,10 @@ public class TextureCardFactory implements ProjectDataCardFactory
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(ProjectInstance<?> instance) {this.instance = instance;}
+    public TextureCardFactory(ProjectInstance<?> instance)
+    {
+        this.instance = instance;
+    }
 
     private ProjectDataCard createSimpleTextureCard(Texture2D<?> texture, TextureDetails details)
     {
@@ -54,7 +64,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(details.friendlyName, "rendermodes/viewTextureSimple.frag",
             Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", details.name))));
 
-        return createProjectDataCard(fileName, textureShader, details.purpose);
+        return createProjectDataCard(fileName, textureShader, details.purpose, details, -1);
     }
 
     private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
@@ -67,7 +77,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         UserShader textureShader = new UserShader(friendlyName, "rendermodes/viewTextureWeights.frag",
             Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
 
-        return createProjectDataCard(fileName, textureShader, String.format("Weight Map %d", weightmapIndex));
+        return createProjectDataCard(fileName, textureShader, String.format("Weight Map %d", weightmapIndex), null, weightmapIndex);
     }
 
     /**
@@ -79,7 +89,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
      * @param purpose
      * @return projectDataCard
      */
-    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose)
+    private ProjectDataCard createProjectDataCard(String fileName, UserShader shader, String purpose, TextureDetails key, int weightmapIndex)
     {
         // Base Location where the .pngs and thumbnails folder are.
         File baseDirectory = instance.getViewSet().getSupportingFilesDirectory();
@@ -124,7 +134,19 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 put("Resolution", res);
                 put("Size", (int) (((double) textureImage.length() / (1024.0 * 1024.0))*1000.0) + " KB");
                 put("Purpose", purpose);
-            }});
+            }}
+            , List.of(
+                // this was causing duplicated buttons
+//                Map.of(
+//                "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
+//                "Send to Carousel", () ->
+//                {
+//                    Global.state().getCarouselModel().addToCarousel(shader);
+//                }),
+                Map.of(
+                    "Refresh Texture", () -> refreshTexture(key, weightmapIndex),
+                    "Replace Texture...", () -> replaceTexture(key, weightmapIndex)
+                )));
         }
         catch (IOException|RuntimeException e)
         {
@@ -143,6 +165,8 @@ public class TextureCardFactory implements ProjectDataCardFactory
     @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
+        lastUsedCardsModel = cardsModel;
+
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
         if (instance.getResources() != null)
         {
@@ -175,7 +199,103 @@ public class TextureCardFactory implements ProjectDataCardFactory
     @Override
     public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
     {
-        LOG.warn("refreshCards not implemented for textures.");
-        return Map.of();
+        Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
+
+        List<ProjectDataCard> cardsList = cardsModel.getCardList();
+        Iterable<TextureDetails> details = new ArrayList<>(instance.getResources().getTextureResources().getTextures().keySet());
+
+        for (ProjectDataCard card : cardsList)
+        {
+            if (filter.test(card)) // Check whether the card is in the filter
+            {
+                // Check if card is texture first
+                String detailsName = removeExt(card.getInternalName());
+                TextureDetails key = new TextureDetails(detailsName);
+                boolean found = false;
+                for (TextureDetails d : details)
+                {
+                    if (d.name.equals(detailsName))
+                    {
+                        key = d;
+                        found = true;
+                    }
+                }
+                if (found)
+                {
+                    changes.put(card, createSimpleTextureCard(instance.getResources().getTextureResources().getTexture(detailsName), key));
+                }
+                // Couldn't find card in textures so should be a weightmap instead
+                else
+                {
+                    String cardName = removeExt(card.getInternalName());
+                    int weightmapIndex = Integer.parseInt(cardName.substring(cardName.length() - 2));
+                    changes.put(card, createWeightmapCard(instance.getResources().getTextureResources(), weightmapIndex));
+                }
+
+            }
+        }
+
+        return changes;
     }
+
+    public static String removeExt(String fileName)
+    {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
+    }
+
+    private void refreshTexture(TextureDetails key, int weightmapIndex)
+    {
+        // Texture replacement must happen on graphics thread.
+        Rendering.runLater(() ->
+        {
+            TextureResources<?> resources = instance.getResources().getTextureResources();
+
+            try
+            {
+                // texture
+                if (key != null)
+                {
+                    if (instance.getResources() != null)
+                    {
+                        resources.replaceTextureWithDefaultFile(key, instance.getViewSet().getSupportingFilesDirectory());
+                        lastUsedCardsModel.refreshCards(card -> Objects.equals(card.getTitle(), key.friendlyName));
+                    }
+                }
+                // Weightmap
+                else if (weightmapIndex != -1)
+                {
+                    resources.getBasisWeightResources().replaceWeightMapWithDefaultFile(
+                        weightmapIndex, instance.getViewSet().getSupportingFilesDirectory());
+                    lastUsedCardsModel.refreshCards(card ->
+                        Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                ExceptionHandling.error("Error refreshing texture", e);
+            }
+        });
+    }
+
+    private void replaceTexture(TextureDetails key, int weightmapIndex)
+    {
+        Platform.runLater(() ->
+        {
+            ImageReplaceData data;
+            if (key != null)
+            {
+                data = new ImageReplaceData(instance.getResources().getTextureResources(), key,
+                    new File(Global.state().getIOModel().validateProjectInstance().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getTextureFilename(key.name, "PNG")));
+            }
+            else
+            {
+                data = new ImageReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
+                    new File(Global.state().getIOModel().validateProjectInstance().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+            }
+
+            Global.state().getIOModel().getLoadedProjectInstance().invokeUserImageReplacement(data);
+        });
+    }
+
 }

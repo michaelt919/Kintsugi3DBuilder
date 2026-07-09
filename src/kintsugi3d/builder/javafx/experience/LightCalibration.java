@@ -26,6 +26,6 @@ public class LightCalibration extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        this.<LightCalibrationController>openPagedModel("/fxml/modals/workflow/LightCalibration.fxml");
+        this.<LightCalibrationController>openPagedModal("/fxml/modals/workflow/LightCalibration.fxml");
     }
 }
