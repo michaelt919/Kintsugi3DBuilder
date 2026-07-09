@@ -66,6 +66,10 @@ Section "Kintsugi 3D Builder (required)" SectionApp
     SetOutPath "$INSTDIR\bin"
     File /r "bin\*"
 
+    ; Include scripts
+    SetOutPath "$INSTDIR\scripts"
+    File /r "scripts\*"
+
     ; Write install directory registry key
     WriteRegStr HKLM "SOFTWARE\Kintsugi3DBuilder" "Install_Dir" "$INSTDIR"
 

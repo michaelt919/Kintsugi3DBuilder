@@ -80,5 +80,10 @@
                 <include>**/*macos</include>
             </includes>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/scripts</directory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/scripts</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
     </fileSets>
 </assembly>

@@ -50,5 +50,9 @@
                 <include>**/*windows.exe</include>
             </includes>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/scripts</directory>
+            <outputDirectory>scripts</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>
