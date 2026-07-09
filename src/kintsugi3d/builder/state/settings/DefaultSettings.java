@@ -50,6 +50,14 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("isotropyFactor", 0.0f, true);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
+
+        // Cache cleaning options
+        settingsModel.createBooleanSetting("sizePromptEnabled", true, true);
+        settingsModel.createNumericSetting("cacheSizeLimit", 32.0f, true);
+        settingsModel.createBooleanSetting("recentPromptEnabled", false, true);
+        settingsModel.createNumericSetting("recentProjectLimit", 5, true);
+        settingsModel.createBooleanSetting("fileAgePromptEnabled", false, true);
+        settingsModel.createNumericSetting("fileAgeLimit", 30, true);
     }
 
     public static void applyProjectDefaults(GeneralSettingsModel settingsModel)

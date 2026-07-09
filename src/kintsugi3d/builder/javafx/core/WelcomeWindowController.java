@@ -28,6 +28,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -122,6 +123,24 @@ public class WelcomeWindowController
                 shouldBeHidden.removeListener(windowHide);
             }
         });
+
+        // Prompt user to clear cache if conditions are met
+        if (CacheSettingsController.checkForPrompt())
+        {
+            Alert prompt = new Alert(AlertType.CONFIRMATION);
+            prompt.setTitle("Clean Cache?");
+            prompt.setHeaderText("Clean up old cache files?");
+            prompt.setContentText("The cache has exceeded set limits and is " + String.format("%.2f", CacheSettingsController.getCacheSize())
+                + "GB in size. Would you like to clean up and remove old files?");
+
+            prompt.showAndWait().ifPresent(response ->
+            {
+                if (response.equals(ButtonType.OK))
+                {
+                    CacheSettingsController.cleanUpCache();
+                }
+            });
+        }
     }
 
     /**
