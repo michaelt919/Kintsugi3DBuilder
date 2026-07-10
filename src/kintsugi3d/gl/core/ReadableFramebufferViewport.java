@@ -157,6 +157,7 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
     @Override
     public ReadableFramebufferViewport<ContextType> getViewport(int x, int y, int width, int height)
     {
-        return new ReadableFramebufferViewport<>(this, new IntVector2(x, y), new FramebufferSize(width, height));
+        return new ReadableFramebufferViewport<>(this,
+            new IntVector2(x + this.getOffset().x, y + this.getOffset().y), new FramebufferSize(width, height));
     }
 }
