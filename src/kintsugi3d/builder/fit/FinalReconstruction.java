@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         this.reconstructionSettings = reconstructionSettings;
     }
 
-    public List<Map<String, ColorAppearanceRMSE>> reconstruct(TextureResources<ContextType> specularFit,
+    public List<Map<String, ColorAppearanceRMSE>> reconstruct(ReadonlyTextureResources<ContextType> specularFit,
                                                               Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
                                                               ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
                                                               File debugDirectory, File groundTruthDirectory)

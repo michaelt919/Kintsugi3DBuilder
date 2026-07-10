@@ -42,7 +42,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private final Texture2D<ContextType> occlusionMap;
 
     public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithOcclusion(
-        Texture2D<ContextType> occlusionMap, TextureResolution settings)
+        ReadonlyTexture2D<ContextType> occlusionMap, TextureResolution settings)
         throws IOException
     {
         return new AlbedoORMOptimization<>(occlusionMap.getContext(), occlusionMap, settings);
@@ -55,10 +55,18 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         return new AlbedoORMOptimization<>(context, null, resolution);
     }
 
-    private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureResolution settings)
+    private AlbedoORMOptimization(ContextType context, ReadonlyTexture2D<ContextType> occlusionMap, TextureResolution settings)
         throws IOException
     {
-        this.occlusionMap = occlusionMap;
+        if (occlusionMap != null)
+        {
+            this.occlusionMap = occlusionMap.copy();
+        }
+        else
+        {
+            this.occlusionMap = null;
+        }
+
         estimationProgram = createProgram(context, occlusionMap != null);
         framebuffer = context.buildFramebufferObject(settings.width, settings.height)
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)

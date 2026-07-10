@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,6 +22,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
@@ -150,6 +152,34 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             public void save(File outputDirectory, String filenameOverride)
             {
                 SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory, filenameOverride);
+            }
+
+            @Override
+            public MaterialBasis copy()
+            {
+                List<double[]> redBasis = IntStream.range(0, count)
+                    .mapToObj(b ->
+                        IntStream.range(0, resolution)
+                            .mapToDouble(m -> evaluateSpecularRed(b, m))
+                            .toArray())
+                    .collect(Collectors.toList());
+
+                List<double[]> greenBasis = IntStream.range(0, count)
+                    .mapToObj(b ->
+                        IntStream.range(0, resolution)
+                            .mapToDouble(m -> evaluateSpecularGreen(b, m))
+                            .toArray())
+                    .collect(Collectors.toList());
+
+                List<double[]> blueBasis = IntStream.range(0, count)
+                    .mapToObj(b ->
+                        IntStream.range(0, resolution)
+                            .mapToDouble(m -> evaluateSpecularBlue(b, m))
+                            .toArray())
+                    .collect(Collectors.toList());
+
+                return new SimpleMaterialBasis(
+                    diffuseAlbedos.toArray(DoubleVector3[]::new), redBasis, greenBasis, blueBasis);
             }
         };
     }

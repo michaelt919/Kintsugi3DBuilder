@@ -14,6 +14,7 @@ package kintsugi3d.builder.io.gltf;
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,8 @@ public class MaterialExporter
     {
         this.textureFileFormat = textureFileFormat;
     }
-    public TextureResources<?> getTextureResources()
+
+    public ReadonlyTextureResources<?> getTextureResources()
     {
         return textureResources;
     }

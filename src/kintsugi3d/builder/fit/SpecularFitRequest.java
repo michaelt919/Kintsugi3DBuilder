@@ -20,7 +20,7 @@ import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
@@ -201,7 +201,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
     }
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
-        ReadonlyGraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit)
+        ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit)
         throws IOException
     {
         if (settings.getOutputDirectory() != null)

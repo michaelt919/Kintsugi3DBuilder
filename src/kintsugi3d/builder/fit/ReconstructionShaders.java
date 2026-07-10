@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 
@@ -35,7 +35,7 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit,
+            ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
             SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
@@ -46,7 +46,7 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit,
+            ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
             SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,

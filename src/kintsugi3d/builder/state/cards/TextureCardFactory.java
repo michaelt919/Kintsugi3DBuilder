@@ -20,6 +20,7 @@ import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.Context;
@@ -68,7 +69,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         return createProjectDataCard(fileName, textureShader, details.purpose, details, -1);
     }
 
-    private ProjectDataCard createWeightmapCard(TextureResources<?> resources, int weightmapIndex)
+    private ProjectDataCard createWeightmapCard(ReadonlyTextureResources<? extends Context<?>> resources, int weightmapIndex)
     {
         // File name for the .pngs
         String fileName = TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG");
@@ -171,7 +172,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
         if (instance.getResources() != null)
         {
-            TextureResources<?> resources = instance.getResources().getTextureResources();
+            ReadonlyTextureResources<? extends Context<?>> resources = instance.getResources().getTextureResources();
 
             var textures = resources.getTextures();
             if (textures != null)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -18,6 +18,7 @@ import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -41,6 +42,7 @@ import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.function.BiConsumer;
 
 /**
@@ -276,7 +278,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> TextureResources<ContextType> reoptimizeTexturesWithCache(
-        ImageCache<ContextType> cache, TextureResources<ContextType> original, ProgressMonitor monitor)
+        ImageCache<ContextType> cache, ReadonlyTextureResources<ContextType> original, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -293,13 +295,13 @@ public class SpecularFitProcess
             monitor.setStage(0, "Performing high-res fit...");
         }
 
-        MaterialBasis basis = original.getBasisResources().getBasis();
+        MaterialBasis basis = original.getBasisResources().getBasis().copy();
         return optimizeFitWithCacheHelper(cache, monitor, original, basis, start);
     }
 
     private <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> optimizeFitWithCacheHelper(
-        ImageCache<ContextType> cache, ProgressMonitor monitor, TextureResources<ContextType> reference,
-        MaterialBasis basis, Instant start) throws IOException, UserCancellationException
+        ImageCache<ContextType> cache, ProgressMonitor monitor, ReadonlyTextureResources<ContextType> reference,
+        MaterialBasis basis, Temporal start) throws IOException, UserCancellationException
     {
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
@@ -373,7 +375,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
-        Blittable<TextureResources<ContextType>> fullResolutionDestination,
+        Blittable<ReadonlyTextureResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
         MaterialBasis basis,
         File inputNormalMapFile,

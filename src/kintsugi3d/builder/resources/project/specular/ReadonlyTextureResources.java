@@ -15,16 +15,14 @@ import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.ContextBound;
-import kintsugi3d.gl.core.Program;
-import kintsugi3d.gl.core.ReadonlyTexture2D;
+import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public interface ReadonlyTextureResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
+public interface ReadonlyTextureResources<ContextType extends Context<ContextType>>
+    extends ContextBound<ContextType>, TwoDimensional
 {
     Map<TextureDetails, ? extends ReadonlyTexture2D<ContextType>> getTextures();
 

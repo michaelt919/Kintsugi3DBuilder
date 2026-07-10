@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
@@ -59,7 +59,7 @@ public final class FinalErrorCalculaton
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        GraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit, PrintStream rmseOut)
+        GraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit, PrintStream rmseOut)
     {
         ReadonlyTexture2D<ContextType> priorNormalMap = resources.getTextureResources().getTexture(StandardTexture.NORMAL_MAP);
         if (CALCULATE_NORMAL_RMSE && priorNormalMap != null)
@@ -111,7 +111,7 @@ public final class FinalErrorCalculaton
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
         ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
+        ReadonlyTextureResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
         try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory);
@@ -161,7 +161,7 @@ public final class FinalErrorCalculaton
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
         ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureResources<ContextType> specularFit, ReadableFramebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+        ReadonlyTextureResources<ContextType> specularFit, ReadableFramebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws IOException
     {
         try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory);

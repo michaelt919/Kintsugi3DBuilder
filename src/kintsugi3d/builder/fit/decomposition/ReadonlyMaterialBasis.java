@@ -60,4 +60,6 @@ public interface ReadonlyMaterialBasis
     int getSpecularResolution();
 
     void save(File outputDirectory, String filenameOverride);
+
+    MaterialBasis copy();
 }

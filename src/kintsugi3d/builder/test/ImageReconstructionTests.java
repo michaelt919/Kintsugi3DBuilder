@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,7 +30,7 @@ import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesAnalytic;
 import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
@@ -117,6 +117,7 @@ class ImageReconstructionTests
             System.out.println(MessageFormat.format("[{0}/{1}] {2}", stage, stageCount, message));
         }
 
+        @Override
         public void advanceStage(String message)
         {
             setStage(stage + 1, message);
@@ -952,7 +953,7 @@ class ImageReconstructionTests
     }
 
     private void testFitSynthetic(ViewSet viewSet, Function<ProgramBuilder<OpenGLContext>, ProgramBuilder<OpenGLContext>> injectDefines,
-                                  Consumer<TextureResources<?>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
+                                  Consumer<ReadonlyTextureResources<? extends Context<?>>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
     {
         try (GraphicsResources<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry)
         {

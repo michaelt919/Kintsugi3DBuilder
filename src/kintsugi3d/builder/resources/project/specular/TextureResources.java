@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public interface TextureResources<ContextType extends Context<ContextType>>
-    extends Blittable<TextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, ManagedResource
+    extends Blittable<ReadonlyTextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, ManagedResource
 {
     int WEIGHTS_PER_PACKED_CHANNEL = 4;
 
@@ -70,7 +70,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     private <SourceType extends TwoDimensional> void blitCroppedAndScaledSingle(
         Blittable<SourceType> destTex, int destX, int destY, int destWidth, int destHeight,
-        TextureResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
+        ReadonlyTextureResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
         boolean linearFiltering)
     {
         if (destTex != null && srcTex != null)
@@ -117,7 +117,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      */
     @Override
     default void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight,
-                                      TextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
+                                      ReadonlyTextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
         // Blit each individual texture -- i.e. diffuse, normal, specular reflectivity, specular roughness
         for (var texEntry : getTextures().entrySet())
@@ -225,7 +225,9 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight, TextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
+            public void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight,
+                                             ReadonlyTextureResources<ContextType> readSource, int srcX, int srcY,
+                                             int srcWidth, int srcHeight, boolean linearFiltering)
             {
                 // Do nothing
             }

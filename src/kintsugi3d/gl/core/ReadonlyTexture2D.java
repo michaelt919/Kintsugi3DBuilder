@@ -56,7 +56,7 @@ public interface ReadonlyTexture2D<ContextType extends Context<ContextType>>
      * Copies this texture, creating a new resource with identical contents.
      * @return The new resource containing a copy of the texture
      */
-    default ReadonlyTexture2D<ContextType> copy()
+    default Texture2D<ContextType> copy()
     {
         return this.crop(0, 0, this.getWidth(), this.getHeight());
     }

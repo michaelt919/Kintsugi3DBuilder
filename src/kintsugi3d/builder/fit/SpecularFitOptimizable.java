@@ -19,6 +19,7 @@ import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStream;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
@@ -118,7 +119,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-        TextureResources<ContextType> specularFit, ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> errorCalcProgram)
+        ReadonlyTextureResources<ContextType> specularFit, ReadonlyGraphicsResources<ContextType> resources, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
