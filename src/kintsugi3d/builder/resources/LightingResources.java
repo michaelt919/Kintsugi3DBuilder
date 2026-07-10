@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable
+public class LightingResources<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(LightingResources.class);
     private final ContextType context;
@@ -110,16 +110,16 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
     /**
      * Assumes ownership of the backplate texture
-     * @param backplateTexture
+     * @param newBackplateTexture
      */
-    public void takeBackplateTexture(Texture2D<ContextType> backplateTexture)
+    public void takeBackplateTexture(Texture2D<ContextType> newBackplateTexture)
     {
         if (this.backplateTexture != null)
         {
             this.backplateTexture.close();
         }
 
-        this.backplateTexture = backplateTexture;
+        this.backplateTexture = newBackplateTexture;
     }
 
     public Cubemap<ContextType> getEnvironmentMap()
@@ -189,7 +189,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         return Matrix4.perspective(fov, 1.0f, nearPlane, farPlane);
     }
 
-    public Texture3D<ContextType> getShadowMaps()
+    public ReadonlyTexture3D<ContextType> getShadowMaps()
     {
         return shadowMaps;
     }
@@ -289,7 +289,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
         if (shadowDrawable != null)
         {
-            kintsugi3d.gl.core.ManagedResource.this.close();
+            shadowDrawable.close();
             shadowDrawable = null;
         }
 

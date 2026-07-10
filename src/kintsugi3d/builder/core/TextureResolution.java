@@ -11,8 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.core.ReadonlyTexture2D;
-import kintsugi3d.gl.core.Texture3D;
+import kintsugi3d.gl.core.TwoDimensional;
 
 public class TextureResolution
 {
@@ -39,17 +38,7 @@ public class TextureResolution
      * @param texture
      * @return
      */
-    public static TextureResolution of(ReadonlyTexture2D<? extends kintsugi3d.gl.core.Context<?>> texture)
-    {
-        return new TextureResolution(texture.getWidth(), texture.getHeight());
-    }
-
-    /**
-     * Bundles width and height of a texture; ignores depth
-     * @param texture
-     * @return
-     */
-    public static TextureResolution of(Texture3D<?> texture)
+    public static TextureResolution of(TwoDimensional texture)
     {
         return new TextureResolution(texture.getWidth(), texture.getHeight());
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Function;
 
-public class NormalOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public class NormalOptimization<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(NormalOptimization.class);
     private final ShaderBasedOptimization<ContextType> estimateNormals;
@@ -102,15 +102,9 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             LOG.debug("Smoothing normals...");
         });
 
-        estimateNormals.addPostUpdateCallback(framebuffer ->
-        {
-            LOG.debug("DONE!");
-        });
+        estimateNormals.addPostUpdateCallback(framebuffer -> LOG.debug("DONE!"));
 
-        smoothNormals.addPostUpdateCallback(framebuffer ->
-        {
-            LOG.debug("DONE!");
-        });
+        smoothNormals.addPostUpdateCallback(framebuffer -> LOG.debug("DONE!"));
     }
 
     @Override

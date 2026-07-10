@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,7 +16,7 @@ import kintsugi3d.gl.core.*;
 import java.io.File;
 import java.io.IOException;
 
-public class ShaderHoleFill<ContextType extends Context<ContextType>> implements AutoCloseable
+public class ShaderHoleFill<ContextType extends Context<ContextType>> implements ManagedResource
 {
     // Hole fill program
     private final ProgramObject<ContextType> program;
@@ -45,7 +45,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
     public void close()
     {
         program.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        drawable.close();
         rect.close();
     }
 
@@ -62,7 +62,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
             // Loop over input / output channels
             for (int j = 0; j < initFrontFramebuffer.getColorAttachmentCount(); j++)
             {
-                program.setTexture("input" + j, frontFramebuffer.getColorAttachmentTexture(j));
+                program.setTexture(String.format("input%d", j), frontFramebuffer.getColorAttachmentTexture(j));
             }
 
             drawable.draw(backFramebuffer);

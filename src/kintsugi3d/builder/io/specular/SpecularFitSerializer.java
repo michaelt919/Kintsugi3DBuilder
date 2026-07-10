@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,10 +12,11 @@
 package kintsugi3d.builder.io.specular;
 
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
+import kintsugi3d.builder.fit.decomposition.ReadonlyMaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.gl.core.Texture3D;
+import kintsugi3d.gl.core.ReadonlyTexture3D;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +73,7 @@ public final class SpecularFitSerializer
             }
         }
     }
-    public static void saveWeightImages(Texture3D<?> basisWeights, File outputDirectory)
+    public static void saveWeightImages(ReadonlyTexture3D<?> basisWeights, File outputDirectory)
     {
         for (int b = 0; b < basisWeights.getDepth(); b++)
         {
@@ -89,7 +90,7 @@ public final class SpecularFitSerializer
     }
 
     public static void serializeBasisFunctions(
-        int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
+        int basisCount, int microfacetDistributionResolution, ReadonlyMaterialBasis basis, File outputDirectory, String filenameOverride)
     {
         // Text file format
         try (PrintStream out = new PrintStream(new File(outputDirectory,

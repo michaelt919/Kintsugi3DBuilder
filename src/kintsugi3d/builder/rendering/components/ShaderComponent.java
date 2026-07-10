@@ -100,7 +100,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
 
             if (this.drawable != null)
             {
-                kintsugi3d.gl.core.ManagedResource.this.close();
+                this.drawable.close();
             }
 
             this.drawable = createDrawable(this.program);
@@ -127,7 +127,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
 
         if (drawable != null)
         {
-            kintsugi3d.gl.core.ManagedResource.this.close();
+            drawable.close();
             drawable = null;
         }
 

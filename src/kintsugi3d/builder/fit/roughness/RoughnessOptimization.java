@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,16 +14,14 @@ package kintsugi3d.builder.fit.roughness;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.resources.project.specular.SpecularTextures;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ManagedResource;
 
 import java.io.File;
 
-public interface RoughnessOptimization<ContextType extends Context<ContextType>> extends SpecularTextures<ContextType>, AutoCloseable
+public interface RoughnessOptimization<ContextType extends Context<ContextType>> extends SpecularTextures<ContextType>, ManagedResource
 {
     void setInputWeights(BasisWeightResources<ContextType> weightResources);
     void clear();
     void execute();
     void saveTextures(File outputDirectory);
-
-    @Override
-    void close();
 }

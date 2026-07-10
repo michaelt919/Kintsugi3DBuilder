@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
-public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
+public class ImageReconstruction<ContextType extends Context<ContextType>> implements ManagedResource, Iterable<ReconstructionView<ContextType>>
 {
     private final ReadonlyViewSet viewSet;
     private final IntFunction<ColorImage> groundTruthLoader;
@@ -381,6 +381,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public void close()
     {
         incidentRadianceProgram.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        incidentRadianceDrawable.close();
     }
 }

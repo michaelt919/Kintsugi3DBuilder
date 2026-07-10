@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,7 +28,7 @@ import java.util.function.Function;
  * This class is primarily designed for the iterative portion of the algorithm, i.e. when using Levenberg-Marquardt or some other iterative method.
  * @param <ContextType> The type of the graphics context.
  */
-public class ShaderBasedOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public class ShaderBasedOptimization<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private final ProgramObject<ContextType> estimationProgram;
     private final FramebufferObject<ContextType> framebuffer1;
@@ -88,7 +88,7 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         if (!finished) // program will be already closed if finished
         {
             estimationProgram.close();
-            kintsugi3d.gl.core.ManagedResource.this.close();
+            estimationDrawable.close();
         }
 
         // Make sure that if the object is "finished", the framebuffer to close is not the back framebuffer.

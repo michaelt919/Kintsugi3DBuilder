@@ -14,6 +14,7 @@ package kintsugi3d.builder.fit.finalize;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -26,7 +27,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
-public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(AlbedoORMOptimization.class);
 
@@ -125,7 +126,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         }
     }
 
-    public void execute(TextureResources<ContextType> specularFit)
+    public void execute(ReadonlyTextureResources<ContextType> specularFit)
     {
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getTexture(StandardTexture.DIFFUSE_COLOR));
@@ -158,7 +159,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
 
         if (drawable != null)
         {
-            kintsugi3d.gl.core.ManagedResource.this.close();
+            drawable.close();
         }
 
         if (framebuffer != null)

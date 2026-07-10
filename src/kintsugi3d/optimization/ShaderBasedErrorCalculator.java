@@ -128,7 +128,7 @@ public final class ShaderBasedErrorCalculator<ContextType extends Context<Contex
 
         if (drawable != null)
         {
-            kintsugi3d.gl.core.ManagedResource.this.close();
+            drawable.close();
             drawable = null;
         }
 

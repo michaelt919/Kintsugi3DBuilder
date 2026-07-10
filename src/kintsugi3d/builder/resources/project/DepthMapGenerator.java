@@ -108,6 +108,6 @@ public final class DepthMapGenerator<ContextType extends Context<ContextType>> i
     public void close()
     {
         depthRenderingProgram.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        depthDrawable.close();
     }
 }

@@ -16,7 +16,7 @@ import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ShaderHoleFill;
@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
 
@@ -80,7 +80,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return builder.createFramebufferObject();
     }
 
-    public void execute(TextureResources<ContextType> specularFit)
+    public void execute(ReadonlyTextureResources<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.getBasisResources().useWithShaderProgram(estimationProgram);
@@ -137,7 +137,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     public void close()
     {
         estimationProgram.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        drawable.close();
         framebuffer.close();
     }
 

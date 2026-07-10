@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
 
-public class BasisImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
+public class BasisImageCreator<ContextType extends Context<ContextType>> implements ManagedResource
 {
     // Program for drawing basis functions as supplemental output
     private final ProgramObject<ContextType> program;
@@ -49,12 +49,12 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void createImages(TextureResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(ReadonlyTextureResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
         specularFit.getBasisResources().useWithShaderProgram(program);
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
 
-        MaterialBasis basis = specularFit.getBasisResources().getBasis();
+        ReadonlyMaterialBasis basis = specularFit.getBasisResources().getBasis();
 
         // Save basis functions in image format.
         for (int i = 0; i < basis.getMaterialCount(); i++)
@@ -76,7 +76,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
     public void close()
     {
         program.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        drawable.close();
         rect.close();
         framebuffer.close();
     }

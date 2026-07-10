@@ -20,7 +20,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ImageUndistorter<ContextType extends Context<ContextType>> implements AutoCloseable
+public class ImageUndistorter<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private final Context<ContextType> context;
     private final ProgramObject<ContextType> program;
@@ -105,7 +105,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
     public void close()
     {
         program.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        drawable.close();
         rect.close();
     }
 

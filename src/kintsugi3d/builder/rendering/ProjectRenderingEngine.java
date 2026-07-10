@@ -502,7 +502,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             if (simpleTexDrawable != null)
             {
-                kintsugi3d.gl.core.ManagedResource.this.close();
+                simpleTexDrawable.close();
                 simpleTexDrawable = null;
             }
 

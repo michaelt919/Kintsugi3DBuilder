@@ -69,7 +69,7 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
     public void close()
     {
         program.close();
-        kintsugi3d.gl.core.ManagedResource.this.close();
+        drawable.close();
         rect.close();
         framebuffer.close();
     }

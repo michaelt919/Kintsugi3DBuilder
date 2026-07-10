@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -24,7 +24,7 @@ import java.util.function.*;
  * and a resource that manages its own shader program and framebuffer object and can be auto-closed.
  * @param <ContextType>
  */
-public class GraphicsStreamResource<ContextType extends Context<ContextType>> implements GraphicsStream<ColorList[]>, AutoCloseable
+public class GraphicsStreamResource<ContextType extends Context<ContextType>> implements GraphicsStream<ColorList[]>, ManagedResource
 {
     private final ProgramObject<ContextType> program;
     private final FramebufferObject<ContextType> framebuffer;
