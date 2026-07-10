@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,6 +29,10 @@ import java.util.Map;
 
 public class LightWidgets<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
+    public static final String AZIMUTH_TAG_FORMAT = "Light.%d.Azimuth";
+    public static final String INCLINATION_TAG_FORMAT = "Light.%d.Inclination";
+    public static final String DISTANCE_TAG_FORMAT = "Light.%d.Distance";
+
     private final SceneViewportModel sceneViewportModel;
     private final SceneModel sceneModel;
 
@@ -42,33 +46,48 @@ public class LightWidgets<ContextType extends Context<ContextType>> extends Shad
 
         for (int i = 0; i < sceneModel.getLightingModel().getMaxLightCount(); i++)
         {
-            sceneViewportModel.addSceneObjectType("Light." + i + ".Azimuth");
-            sceneViewportModel.addSceneObjectType("Light." + i + ".Inclination");
-            sceneViewportModel.addSceneObjectType("Light." + i + ".Distance");
+            sceneViewportModel.addSceneObjectType(getAzimuthTag(i));
+            sceneViewportModel.addSceneObjectType(getInclinationTag(i));
+            sceneViewportModel.addSceneObjectType(getDistanceTag(i));
         }
     }
 
-    @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    private static String getAzimuthTag(int i)
     {
-        return context.getShaderProgramBuilder()
+        return String.format(AZIMUTH_TAG_FORMAT, i);
+    }
+
+    private static String getInclinationTag(int i)
+    {
+        return String.format(INCLINATION_TAG_FORMAT, i);
+    }
+
+    private static String getDistanceTag(int i)
+    {
+        return String.format(DISTANCE_TAG_FORMAT, i);
+    }
+
+    @Override
+    protected ProgramObject<ContextType> createProgram() throws IOException
+    {
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
         return Map.of("position",
-            context.createVertexBuffer()
+            getContext().createVertexBuffer()
                 .setData(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(3, 3, -1, -1, 0, 1, -1, 0, 0, 1, 0)));
     }
 
-    public void refreshWidgetInfo(LightWidgetInfo[] widgetInfo)
+    public void refreshWidgetInfo(LightWidgetInfo[] newWidgetInfo)
     {
-        this.widgetInfo = widgetInfo;
+        this.widgetInfo = newWidgetInfo.clone();
     }
 
     @Override
@@ -168,7 +187,7 @@ public class LightWidgets<ContextType extends Context<ContextType>> extends Shad
                     if (sceneModel.getLightingModel().getLightWidgetModel(i).isAzimuthWidgetVisible() &&
                         (Math.abs(widgetInfo[i].lightDisplacementWorld.x) > 0.001f || Math.abs(widgetInfo[i].lightDisplacementWorld.z) > 0.001f))
                     {
-                        getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Azimuth"));
+                        getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID(String.format(AZIMUTH_TAG_FORMAT, i)));
 
                         getDrawable().program().setUniform("model_view",
                             Matrix4.translate(arrow1PositionR)
@@ -195,7 +214,7 @@ public class LightWidgets<ContextType extends Context<ContextType>> extends Shad
 
                     if (sceneModel.getLightingModel().getLightWidgetModel(i).isInclinationWidgetVisible())
                     {
-                        getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Inclination"));
+                        getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID(String.format(INCLINATION_TAG_FORMAT, i)));
 
                         if (Math.PI / 2 - widgetInfo[i].inclination > 0.01f)
                         {
@@ -226,7 +245,7 @@ public class LightWidgets<ContextType extends Context<ContextType>> extends Shad
 
                     if (sceneModel.getLightingModel().getLightWidgetModel(i).isDistanceWidgetVisible())
                     {
-                        getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Distance"));
+                        getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID(String.format(DISTANCE_TAG_FORMAT, i)));
 
                         getDrawable().program().setUniform("model_view",
                             Matrix4.translate(arrow3PositionL)

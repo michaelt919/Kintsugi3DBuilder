@@ -76,7 +76,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
     public void close()
     {
         program.close();
-        drawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
         rect.close();
         framebuffer.close();
     }

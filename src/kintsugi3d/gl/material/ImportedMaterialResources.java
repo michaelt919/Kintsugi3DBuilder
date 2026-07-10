@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -26,7 +26,7 @@ import java.util.Map;
 
 // TODO Use more information from the material.  Currently just pulling texture names.
 // TODO use glTF instead of / in addition to OBJ material?
-public class ImportedMaterialResources<ContextType extends Context<ContextType>> implements ContextBound<ContextType>, Resource
+public class ImportedMaterialResources<ContextType extends Context<ContextType>> implements ContextBound<ContextType>, ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImportedMaterialResources.class);
 

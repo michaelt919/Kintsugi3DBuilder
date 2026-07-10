@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 public class GeometryResources<ContextType extends Context<ContextType>>
-    implements ReadonlyGeometryResources<ContextType>, Resource
+    implements ReadonlyGeometryResources<ContextType>, ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(GeometryResources.class);
 

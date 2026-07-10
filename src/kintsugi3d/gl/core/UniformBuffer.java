@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
  *
  * @param <ContextType> The type of the GL context that the index buffer object is associated with.
  */
-public interface UniformBuffer<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
+public interface UniformBuffer<ContextType extends Context<ContextType>> extends ManagedResource, ContextBound<ContextType>
 {
     /**
      * Sets the content of the uniform buffer from a raw ByteBuffer.

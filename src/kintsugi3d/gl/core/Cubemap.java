@@ -16,7 +16,7 @@ package kintsugi3d.gl.core;
  * @author Michael Tetzlaff
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
-public interface Cubemap <ContextType extends Context<ContextType>> extends Texture<ContextType>, Resource
+public interface Cubemap <ContextType extends Context<ContextType>> extends Texture<ContextType>, ManagedResource
 {
     /**
      * Gets the length in pixels along a side of one of the cubemap's faces.

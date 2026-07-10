@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,13 +11,13 @@
 
 package kintsugi3d.gl.opengl;
 
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.core.VertexBuffer;
 import kintsugi3d.gl.exceptions.NoSpecifiedVertexBuffersException;
 
 import static org.lwjgl.opengl.GL30.*;
 
-class OpenGLVertexArray implements Resource
+class OpenGLVertexArray implements ManagedResource
 {
     protected final OpenGLContext context;
 

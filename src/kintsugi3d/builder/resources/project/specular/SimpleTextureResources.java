@@ -49,14 +49,14 @@ public class SimpleTextureResources<ContextType extends Context<ContextType>>
     public int getWidth()
     {
         // TODO validation that textures all have the same resolution?
-        return basisWeightResources.weightMaps.getWidth();
+        return basisWeightResources.getWeightMaps().getWidth();
     }
 
     @Override
     public int getHeight()
     {
         // TODO validation that textures all have the same resolution?
-        return basisWeightResources.weightMaps.getHeight();
+        return basisWeightResources.getWeightMaps().getHeight();
     }
 
     @Override

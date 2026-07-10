@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,6 +17,7 @@ import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.state.scene.BackgroundMode;
+import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 
@@ -38,18 +39,18 @@ public class Environment<ContextType extends Context<ContextType>> extends Shade
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
@@ -68,7 +69,7 @@ public class Environment<ContextType extends Context<ContextType>> extends Shade
 
             getDrawable().program().setUniform("sRGBEncoded",
                 lightingResources.getEnvironmentMap().isInternalFormatCompressed() ||
-                    lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != ColorFormat.DataType.FLOATING_POINT);
+                    lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT);
 
             getContext().getState().disableDepthTest();
             getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);

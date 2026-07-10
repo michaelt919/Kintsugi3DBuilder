@@ -23,43 +23,49 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public interface TextureResources<ContextType extends Context<ContextType>>
-    extends Blittable<TextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, Resource
+    extends Blittable<TextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, ManagedResource
 {
     int WEIGHTS_PER_PACKED_CHANNEL = 4;
 
     Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
-    Map<TextureDetails, Texture2D<ContextType>> getTextures();
+    @Override
+    Map<TextureDetails, ? extends Texture2D<ContextType>> getTextures();
 
     /**
      * Returns a map containing only the standard textures
      * @return
      */
-    default Map<StandardTexture, Texture2D<ContextType>> getStandardTextures()
+    @Override
+    default Map<StandardTexture, ? extends Texture2D<ContextType>> getStandardTextures()
     {
         return StandardTexture.convertObjectMapToEnumMap(getTextures());
     }
 
+    @Override
     default Texture2D<ContextType> getTexture(String texName)
     {
         return getTextures().get(new TextureDetails(texName));
     }
 
+    @Override
     default Texture2D<ContextType> getTexture(TextureDetails tex)
     {
         return getTextures().get(tex);
     }
 
+    @Override
     default Texture2D<ContextType> getTexture(StandardTexture tex)
     {
         return getTextures().get(tex.details);
     }
 
+    @Override
     BasisResources<ContextType> getBasisResources();
 
+    @Override
     BasisWeightResources<ContextType> getBasisWeightResources();
 
     private <SourceType extends TwoDimensional> void blitCroppedAndScaledSingle(
@@ -126,11 +132,51 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         // Blit weight maps, weight mask -- handled separately
         if (this.getBasisWeightResources() != null && readSource.getBasisWeightResources() != null)
         {
-            blitCroppedAndScaledSingle(this.getBasisWeightResources().weightMaps, destX, destY, destWidth, destHeight,
-                readSource, readSource.getBasisWeightResources().weightMaps, srcX, srcY, srcWidth, srcHeight, linearFiltering);
-            blitCroppedAndScaledSingle(this.getBasisWeightResources().weightMask, destX, destY, destWidth, destHeight,
-                readSource, readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            blitCroppedAndScaledSingle(this.getBasisWeightResources().getWeightMaps(), destX, destY, destWidth, destHeight,
+                readSource, readSource.getBasisWeightResources().getWeightMaps(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            blitCroppedAndScaledSingle(this.getBasisWeightResources().getWeightMask(), destX, destY, destWidth, destHeight,
+                readSource, readSource.getBasisWeightResources().getWeightMask(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         }
+    }
+
+    default Texture2D<ContextType> loadTexture(String texName, File directory) throws IOException
+    {
+        return loadTexture(texName, directory, getContext());
+    }
+
+    default Texture2D<ContextType> loadTexture(StandardTexture tex, File directory) throws IOException
+    {
+        return loadTexture(tex.details.name, directory, getContext());
+    }
+
+    /**
+     * Deletes one of the basis materials.
+     * This will cause the basis materials, weight maps, and thumbnail images to be automatically re-saved
+     * to the project's supporting files directory.
+     * @param materialIndex
+     */
+    void deleteBasisMaterial(int materialIndex);
+
+    /**
+     * Refreshes a texture specified by key using the default location for the given texture.
+     * @param key The TextureDetails used to choose which texture to refresh.
+     * @param parentDirectory
+     * @throws IOException
+     */
+    default void replaceTextureWithDefaultFile(TextureDetails key, File parentDirectory) throws IOException
+    {
+        getTextures().get(key).load(new File(parentDirectory, key.name + ".png"), true);
+    }
+
+    /**
+     * Replaces a texture by key with a specific file.
+     * @param key
+     * @param newTextureFile
+     * @throws IOException
+     */
+    default void replaceTextureWithSpecificFile(TextureDetails key, File newTextureFile) throws IOException
+    {
+        getTextures().get(key).load(newTextureFile, true);
     }
 
     static <ContextType extends Context<ContextType>> TextureResources<ContextType> makeNull(ContextType context)
@@ -216,56 +262,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         };
     }
 
-    /**
-     * Saves a texture to the filesystem in the specified format.
-     *
-     * @param tex              The texture to save.
-     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory  The directory in which to save the texture.
-     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
-     */
-    @Override
-    default void saveTexture(StandardTexture tex, String format, File outputDirectory, String filenameOverride)
-    {
-        saveTexture(tex.details.name, format, outputDirectory, filenameOverride);
-    }
-
-    /**
-     * Saves packed weight map textures to the filesystem in the specified format
-     * with four weight maps packed into a single image in the RGBA channels, using default filenames.
-     *
-     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory The directory in which to save the textures.
-     */
-    @Override
-    default void savePackedWeightMaps(String format, File outputDirectory)
-    {
-        savePackedWeightMaps(format, outputDirectory, "");
-    }
-
-    /**
-     * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images, using default filenames.
-     *
-     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory The directory in which to save the textures.
-     */
-    @Override
-    default void saveUnpackedWeightMaps(String format, File outputDirectory)
-    {
-        saveUnpackedWeightMaps(format, outputDirectory, "");
-    }
-
-    /**
-     * Saves basis function textures to the filesystem with a default filename.
-     *
-     * @param outputDirectory The directory in which to save the basis functions.
-     */
-    @Override
-    default void saveBasisFunctions(File outputDirectory)
-    {
-        saveBasisFunctions(outputDirectory, null);
-    }
-
     static String getTextureFilename(StandardTexture tex, String format)
     {
         return getTextureFilename(tex.details.name, format);
@@ -327,64 +323,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return String.format("%sbasisFunctions.csv", filenamePrefix);
     }
 
-    /**
-     * Saves the specified named textures to the filesystem as images in the specified format.
-     * @param texNames        The names of the textures to save.
-     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory The directory in which to save the textures.
-     * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
-     *                        This can be set to the empty string "" to use just the base / default names.
-     */
-    @Override
-    default void saveNamedTextures(Iterable<String> texNames, String format, File outputDirectory, String filenamePrefix)
-    {
-        for (String name : texNames)
-        {
-            saveTexture(name, format, outputDirectory, getTextureFilename(name, format, filenamePrefix));
-        }
-    }
-
-    /**
-     * Saves all named textures (but not weight maps) to the filesystem as images in the specified format.
-     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory The directory in which to save the textures.
-     * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
-     *                        This can be set to the empty string "" to use just the base / default names.
-     */
-    @Override
-    default void saveAllNamedTextures(String format, File outputDirectory, String filenamePrefix)
-    {
-        saveNamedTextures(getTextures().keySet().stream().map(t -> t.name).collect(Collectors.toList()),
-            format, outputDirectory, filenamePrefix);
-    }
-
-    /**
-     * Saves all resources to the specified output directory with the specified image format, using default filenames.
-     * This includes all named textures, as well as basis functions and both packed and unpacked weight maps.
-     *
-     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
-     * @param outputDirectory
-     */
-    @Override
-    default void saveAll(String format, File outputDirectory)
-    {
-        saveAllNamedTextures(format, outputDirectory, "");
-        saveBasisFunctions(outputDirectory, null);
-        savePackedWeightMaps(format, outputDirectory, "");
-        saveUnpackedWeightMaps(format, outputDirectory, "");
-    }
-
-    /**
-     * Saves all resources to the specified output directory in PNG format using default filenames.
-     *
-     * @param outputDirectory
-     */
-    @Override
-    default void saveAll(File outputDirectory)
-    {
-        saveAll("PNG", outputDirectory);
-    }
-
     static File getTextureFile(StandardTexture t, File directory)
     {
         return getTextureFile(t.details.name, directory);
@@ -418,45 +356,5 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     Texture2D<ContextType> loadTexture(StandardTexture tex, File directory, ContextType context) throws IOException
     {
         return loadTexture(tex.details.name, directory, context);
-    }
-
-    default Texture2D<ContextType> loadTexture(String texName, File directory) throws IOException
-    {
-        return loadTexture(texName, directory, getContext());
-    }
-
-    default Texture2D<ContextType> loadTexture(StandardTexture tex, File directory) throws IOException
-    {
-        return loadTexture(tex.details.name, directory, getContext());
-    }
-
-    /**
-     * Deletes one of the basis materials.
-     * This will cause the basis materials, weight maps, and thumbnail images to be automatically re-saved
-     * to the project's supporting files directory.
-      * @param materialIndex
-     */
-    void deleteBasisMaterial(int materialIndex);
-
-    /**
-     * Refreshes a texture specified by key using the default location for the given texture.
-     * @param key The TextureDetails used to choose which texture to refresh.
-     * @param parentDirectory
-     * @throws IOException
-     */
-    default void replaceTextureWithDefaultFile(TextureDetails key, File parentDirectory) throws IOException
-    {
-        getTextures().get(key).load(new File(parentDirectory, key.name + ".png"), true);
-    }
-
-    /**
-     * Replaces a texture by key with a specific file.
-     * @param key
-     * @param newTextureFile
-     * @throws IOException
-     */
-    default void replaceTextureWithSpecificFile(TextureDetails key, File newTextureFile) throws IOException
-    {
-        getTextures().get(key).load(newTextureFile, true);
     }
 }

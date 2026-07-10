@@ -105,7 +105,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
     public void close()
     {
         program.close();
-        drawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
         rect.close();
     }
 

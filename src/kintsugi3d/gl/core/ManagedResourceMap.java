@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,22 +13,22 @@ package kintsugi3d.gl.core;
 
 import java.util.*;
 
-public class ResourceMap<K, V extends Resource> implements Resource, Map<K, V>
+public class ManagedResourceMap<K, V extends ManagedResource> implements ManagedResource, Map<K, V>
 {
     private final Map<K, V> base;
 
     @SuppressWarnings("CollectionWithoutInitialCapacity")
-    public ResourceMap()
+    public ManagedResourceMap()
     {
         base = new HashMap<>();
     }
 
-    public ResourceMap(int initialCapacity)
+    public ManagedResourceMap(int initialCapacity)
     {
         base = new HashMap<>(initialCapacity);
     }
 
-    public ResourceMap(int initialCapacity, int loadFactor)
+    public ManagedResourceMap(int initialCapacity, int loadFactor)
     {
         base = new HashMap<>(initialCapacity, loadFactor);
     }

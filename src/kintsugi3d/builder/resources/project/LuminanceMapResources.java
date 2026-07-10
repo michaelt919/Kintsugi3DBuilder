@@ -14,7 +14,7 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.SampledLuminanceEncoding;
 import kintsugi3d.gl.core.*;
 
-public final class LuminanceMapResources<ContextType extends Context<ContextType>> implements Resource, ReadonlyLuminanceMapResources<ContextType>
+public final class LuminanceMapResources<ContextType extends Context<ContextType>> implements ManagedResource, ReadonlyLuminanceMapResources<ContextType>
 {
     private final ContextType context;
 

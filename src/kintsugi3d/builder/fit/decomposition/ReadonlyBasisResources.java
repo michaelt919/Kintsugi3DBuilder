@@ -11,7 +11,14 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-public interface MaterialBasis extends ReadonlyMaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ContextBound;
+import kintsugi3d.gl.core.Program;
+
+public interface ReadonlyBasisResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
-    void deleteMaterial(int b);
+    ReadonlyMaterialBasis getBasis();
+    int getBasisCount();
+    int getBasisResolution();
+    void useWithShaderProgram(Program<ContextType> program);
 }

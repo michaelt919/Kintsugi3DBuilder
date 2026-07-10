@@ -18,7 +18,7 @@ package kintsugi3d.gl.core;
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
 public interface Texture1D<ContextType extends Context<ContextType>>
-    extends Resource, ReadonlyTexture1D<ContextType>, FramebufferAttachment<ContextType>
+    extends ManagedResource, ReadonlyTexture1D<ContextType>, FramebufferAttachment<ContextType>
 {
     /**
      * Sets the texture wrap modes.

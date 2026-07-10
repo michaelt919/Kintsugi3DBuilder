@@ -14,13 +14,13 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Vector3;
 
 public interface GraphicsResources<ContextType extends Context<ContextType>>
-    extends Resource, ReadonlyGraphicsResources<ContextType>
+    extends ManagedResource, ReadonlyGraphicsResources<ContextType>
 {
     /**
      * The view set that these resources were loaded from.

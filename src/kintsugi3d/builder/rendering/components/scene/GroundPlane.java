@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -38,15 +38,15 @@ public class GroundPlane<ContextType extends Context<ContextType>> extends Stand
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
-    protected Drawable<ContextType> createDrawable(Program<ContextType> program)
+    protected Drawable<ContextType> createDrawable(Program<ContextType> drawableProgram)
     {
-        Drawable<ContextType> drawable = super.createDrawable(program);
+        Drawable<ContextType> drawable = super.createDrawable(drawableProgram);
         drawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
         return drawable;
     }

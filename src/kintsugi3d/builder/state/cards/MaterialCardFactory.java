@@ -15,7 +15,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
@@ -115,7 +115,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         if (instance.getResources() != null)
         {
             TextureResources<?> resources = instance.getResources().getTextureResources();
-            BasisResources<?> basisResources = resources.getBasisResources();
+            ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
             if (basisResources != null)
             {
                 return IntStream.range(0, basisResources.getBasisCount())

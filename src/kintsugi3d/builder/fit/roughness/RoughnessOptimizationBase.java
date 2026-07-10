@@ -111,7 +111,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     public void close()
     {
         specularRoughnessFitProgram.close();
-        specularRoughnessFitDrawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
         rect.close();
     }
 }

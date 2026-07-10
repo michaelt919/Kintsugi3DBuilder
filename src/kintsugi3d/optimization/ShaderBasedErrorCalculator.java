@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,7 +17,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-public final class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
+public final class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements ManagedResource
 {
     // Compare fitted models against actual photographs
     private ProgramObject<ContextType> program;
@@ -128,7 +128,7 @@ public final class ShaderBasedErrorCalculator<ContextType extends Context<Contex
 
         if (drawable != null)
         {
-            drawable.close();
+            kintsugi3d.gl.core.ManagedResource.this.close();
             drawable = null;
         }
 

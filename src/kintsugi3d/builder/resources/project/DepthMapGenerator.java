@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -26,7 +26,7 @@ import java.io.IOException;
  * Encapsulates the process of generating a depth map for occlusion / shadow culling with image-based rendering
  * @param <ContextType>
  */
-public final class DepthMapGenerator<ContextType extends Context<ContextType>> implements Resource
+public final class DepthMapGenerator<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private final ProgramObject<ContextType> depthRenderingProgram;
     private final Drawable<ContextType> depthDrawable;
@@ -108,6 +108,6 @@ public final class DepthMapGenerator<ContextType extends Context<ContextType>> i
     public void close()
     {
         depthRenderingProgram.close();
-        depthDrawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
     }
 }

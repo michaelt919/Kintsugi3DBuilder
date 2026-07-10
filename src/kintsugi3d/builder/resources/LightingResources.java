@@ -289,7 +289,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
         if (shadowDrawable != null)
         {
-            shadowDrawable.close();
+            kintsugi3d.gl.core.ManagedResource.this.close();
             shadowDrawable = null;
         }
 

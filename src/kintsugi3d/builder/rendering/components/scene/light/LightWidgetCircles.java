@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -40,23 +40,23 @@ public class LightWidgetCircles<ContextType extends Context<ContextType>> extend
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "circle.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
-    public void refreshWidgetInfo(LightWidgetInfo[] widgetInfo)
+    public void refreshWidgetInfo(LightWidgetInfo[] newWidgetInfo)
     {
-        this.widgetInfo = widgetInfo;
+        this.widgetInfo = newWidgetInfo.clone();
     }
 
     @Override
@@ -92,11 +92,16 @@ public class LightWidgetCircles<ContextType extends Context<ContextType>> extend
                         circleProgram.setUniform("maxAngle",
                             (float) (sceneModel.getLightingModel().getLightWidgetModel(i).isAzimuthWidgetSelected() ?
                                 Math.PI : widgetInfo[i].azimuthArrowRotation));
-                        circleProgram.setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Azimuth"));
+                        circleProgram.setUniform("objectID",
+                            sceneViewportModel.lookupSceneObjectID(String.format(LightWidgets.AZIMUTH_TAG_FORMAT, i)));
                         circleProgram.setUniform("color",
                             new Vector3(sceneModel.getLightingModel().getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f));
                         circleProgram.setUniform("model_view",
-                            Matrix4.translate(widgetInfo[i].lightCenter.plus(widgetInfo[i].azimuthRotationAxis.times(widgetInfo[i].widgetDisplacement.dot(widgetInfo[i].azimuthRotationAxis))))
+                            Matrix4.translate(
+                                    widgetInfo[i].lightCenter
+                                        .plus(widgetInfo[i].azimuthRotationAxis
+                                            .times(widgetInfo[i].widgetDisplacement
+                                                .dot(widgetInfo[i].azimuthRotationAxis))))
                                 .times(cameraViewport.getView().getUpperLeft3x3().asMatrix4())
                                 .times(Matrix4.scale(2 * widgetInfo[i].lightDistanceAtInclination))
                                 .times(Matrix4.rotateX(-Math.PI / 2))
@@ -110,7 +115,8 @@ public class LightWidgetCircles<ContextType extends Context<ContextType>> extend
                         circleProgram.setUniform("maxAngle",
                             (float) (sceneModel.getLightingModel().getLightWidgetModel(i).isInclinationWidgetSelected() ?
                                 Math.PI / 2 : widgetInfo[i].inclinationArrowRotation));
-                        circleProgram.setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Inclination"));
+                        circleProgram.setUniform("objectID",
+                            sceneViewportModel.lookupSceneObjectID(String.format(LightWidgets.INCLINATION_TAG_FORMAT, i)));
                         circleProgram.setUniform("color",
                             new Vector3(sceneModel.getLightingModel().getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f));
                         circleProgram.setUniform("model_view",

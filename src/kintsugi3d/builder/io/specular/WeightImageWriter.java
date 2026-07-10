@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,13 +12,13 @@
 package kintsugi3d.builder.io.specular;
 
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
 
-public class WeightImageWriter<ContextType extends Context<ContextType>> implements Resource
+public class WeightImageWriter<ContextType extends Context<ContextType>> implements ManagedResource
 {
 
     private final int weightsPerImage;
@@ -48,7 +48,7 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void saveImages(TextureResources<ContextType> specularFit, String format,
+    public void saveImages(ReadonlyTextureResources<ContextType> specularFit, String format,
                            File outputDirectory, String... filenames) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
@@ -69,7 +69,7 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
     public void close()
     {
         program.close();
-        drawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
         rect.close();
         framebuffer.close();
     }

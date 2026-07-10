@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -40,17 +40,17 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
         // Vertex buffers come from the GraphicsResources and don't need to be created.
         return Collections.emptyMap();
     }
 
     @Override
-    protected Drawable<ContextType> createDrawable(Program<ContextType> program)
+    protected Drawable<ContextType> createDrawable(Program<ContextType> drawableProgram)
     {
         // Use GraphicsResources to create a drawable with all the available vertex buffers.
-        return resources.createDrawable(program);
+        return resources.createDrawable(drawableProgram);
     }
 
     private ReadonlyNativeVectorBuffer generateViewWeights(Matrix4 targetView)
@@ -58,7 +58,7 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
                 .generateWeights(resources,
-                    new AbstractList<Integer>()
+                    new AbstractList<>()
                     {
                         @Override
                         public Integer get(int index)
@@ -96,9 +96,9 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
         }
     }
 
-    public void overrideViewIndexBuffer(UniformBuffer<ContextType> viewIndexBufferOverride)
+    public void overrideViewIndexBuffer(UniformBuffer<ContextType> newViewIndexBufferOverride)
     {
-        this.viewIndexBufferOverride = viewIndexBufferOverride;
+        this.viewIndexBufferOverride = newViewIndexBufferOverride;
     }
 
     @Override

@@ -28,7 +28,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
 
     private final ContextType context;
     private Map<String, VertexBuffer<ContextType>> vertexBuffers;
-    private final Collection<Resource> otherResources = new ArrayList<>(8);
+    private final Collection<ManagedResource> otherManagedResources = new ArrayList<>(8);
     private ProgramObject<ContextType> program;
     private Drawable<ContextType> drawable;
 
@@ -71,7 +71,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
     @Override
     public void initialize()
     {
-        this.vertexBuffers = createVertexBuffers(context);
+        this.vertexBuffers = createVertexBuffers();
         reloadShaders();
     }
 
@@ -80,7 +80,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
     {
         try
         {
-            ProgramObject<ContextType> newProgram = createProgram(context);
+            ProgramObject<ContextType> newProgram = createProgram();
 
             if (this.program != null)
             {
@@ -100,7 +100,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
 
             if (this.drawable != null)
             {
-                this.drawable.close();
+                kintsugi3d.gl.core.ManagedResource.this.close();
             }
 
             this.drawable = createDrawable(this.program);
@@ -127,7 +127,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
 
         if (drawable != null)
         {
-            drawable.close();
+            kintsugi3d.gl.core.ManagedResource.this.close();
             drawable = null;
         }
 
@@ -136,9 +136,9 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
             vertexBuffer.close();
         }
 
-        for (Resource resource : otherResources)
+        for (ManagedResource managedResource : otherManagedResources)
         {
-            resource.close();
+            managedResource.close();
         }
     }
 
@@ -162,25 +162,26 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
      * Shader program is automatically managed and does not need to manually be added as a resource.
      * @return
      */
-    protected abstract ProgramObject<ContextType> createProgram(ContextType context) throws IOException;
+    protected abstract ProgramObject<ContextType> createProgram() throws IOException;
 
     /**
      * Override to provide vertex buffers.
      * Vertex buffers are automatically managed and do not need to manually be added as resources.
      * @return
      */
-    protected abstract Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context);
+    protected abstract Map<String, VertexBuffer<ContextType>> createVertexBuffers();
+
     /**
      * Override to customize drawable creation.
      */
-    protected Drawable<ContextType> createDrawable(Program<ContextType> program)
+    protected Drawable<ContextType> createDrawable(Program<ContextType> drawableProgram)
     {
-        return context.createDrawable(program);
+        return context.createDrawable(drawableProgram);
     }
 
-    protected <ResourceType extends Resource> ResourceType resource(ResourceType resource)
+    protected <ResourceType extends ManagedResource> ResourceType resource(ResourceType resource)
     {
-        this.otherResources.add(resource);
+        this.otherManagedResources.add(resource);
         return resource;
     }
 }

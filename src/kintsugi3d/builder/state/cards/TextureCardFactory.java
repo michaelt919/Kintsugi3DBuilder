@@ -17,11 +17,12 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ImageReplaceData;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -56,7 +57,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
         this.instance = instance;
     }
 
-    private ProjectDataCard createSimpleTextureCard(ReadonlyTexture2D<? extends kintsugi3d.gl.core.Context<?>> texture, TextureDetails details)
+    private ProjectDataCard createSimpleTextureCard(ReadonlyTexture2D<? extends Context<?>> texture, TextureDetails details)
     {
         //2. File name for the .pngs
         String fileName = TextureResources.getTextureFilename(details.name, "PNG");
@@ -178,12 +179,12 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 for (var entry : textures.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).collect(Collectors.toList()))
                 {
                     TextureDetails key = entry.getKey();
-                    ReadonlyTexture2D<? extends kintsugi3d.gl.core.Context<?>> texture = entry.getValue();
+                    ReadonlyTexture2D<?> texture = entry.getValue();
                     textureCards.add(createSimpleTextureCard(texture, key));
                 }
             }
 
-            BasisResources<?> basisResources = resources.getBasisResources();
+            ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
             if (basisResources != null)
             {
                 for (int i = 0; i < basisResources.getBasisCount(); i++)

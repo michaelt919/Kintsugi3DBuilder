@@ -12,7 +12,6 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
@@ -20,7 +19,6 @@ import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
-import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.gl.core.UniformBuffer;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
@@ -36,7 +34,6 @@ import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map.Entry;
 import java.util.stream.IntStream;
 
 final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
@@ -458,11 +455,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
     }
 
-    public void replaceTextureResources(TextureResources<ContextType> textureResources)
+    public void replaceTextureResources(TextureResources<ContextType> newTextureResources)
     {
         this.textureResources.close();
 
-        this.textureResources = textureResources == null ? TextureResources.makeNull(context) : textureResources;
+        this.textureResources = newTextureResources == null ? TextureResources.makeNull(context) : newTextureResources;
     }
 
     /**
@@ -493,7 +490,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         // The defines can be overridden by the actual shader.
         ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context);
 
-        for (Entry<TextureDetails, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
+        for (var entry : textureResources.getTextures().entrySet())
         {
             builder.define(
                 String.format("TEXTURE_%s", entry.getKey().name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "_")),

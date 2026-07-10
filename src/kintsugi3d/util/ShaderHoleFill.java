@@ -45,7 +45,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
     public void close()
     {
         program.close();
-        drawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
         rect.close();
     }
 

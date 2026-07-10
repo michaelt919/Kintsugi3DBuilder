@@ -31,7 +31,7 @@ import java.util.function.Function;
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
 public interface Texture3D<ContextType extends Context<ContextType>>
-    extends Resource, Blittable<ReadonlyTexture3D<ContextType>>, ReadonlyTexture3D<ContextType>
+    extends ManagedResource, Blittable<ReadonlyTexture3D<ContextType>>, ReadonlyTexture3D<ContextType>
 {
     /**
      * Sets the texture wrap modes.
@@ -256,7 +256,7 @@ public interface Texture3D<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            public void readARGB(ByteBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -264,12 +264,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, readWidth, readHeight);
                 }
             }
 
             @Override
-            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -277,12 +277,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, readWidth, readHeight);
                 }
             }
 
             @Override
-            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -290,7 +290,7 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, readWidth, readHeight);
                 }
             }
         };

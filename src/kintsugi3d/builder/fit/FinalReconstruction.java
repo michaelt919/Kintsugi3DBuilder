@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -70,9 +70,9 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             reconstructionViewSet = resources.getViewSet();
         }
 
-        try (@SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ResourceMap<String, ProgramObject<ContextType>> programMap
-                = new ResourceMap<>(reconstructionProgramBuilders.size());
-            ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
+        try (@SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ManagedResourceMap<String, ProgramObject<ContextType>> programMap
+                = new ManagedResourceMap<>(reconstructionProgramBuilders.size());
+             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
                 reconstructionViewSet,
                 builder -> builder
                     .addColorAttachment(ColorFormat.RGBA32F)

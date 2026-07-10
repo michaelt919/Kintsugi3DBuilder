@@ -158,7 +158,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
 
         if (drawable != null)
         {
-            drawable.close();
+            kintsugi3d.gl.core.ManagedResource.this.close();
         }
 
         if (framebuffer != null)

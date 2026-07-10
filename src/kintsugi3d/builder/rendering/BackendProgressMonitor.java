@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.state.cards.TabsManager;
 
 class BackendProgressMonitor implements ProgressMonitor
@@ -127,10 +127,10 @@ class BackendProgressMonitor implements ProgressMonitor
 
         if (isProcessed())
         {
-            BasisWeightResources<?> basisWeightResources =
+            ReadonlyBasisWeightResources<?> basisWeightResources =
                 instance.getResources().getTextureResources().getBasisWeightResources();
 
-            Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.weightMaps.getWidth());
+            Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.getWeightMaps().getWidth());
         }
         else
         {

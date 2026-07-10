@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,7 +20,7 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
  *
  * @param <ContextType> The type of the GL context that the index buffer object is associated with.
  */
-public interface VertexBuffer<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
+public interface VertexBuffer<ContextType extends Context<ContextType>> extends ManagedResource, ContextBound<ContextType>
 {
     /**
      * Gets the number of vertices in the vertex buffer.

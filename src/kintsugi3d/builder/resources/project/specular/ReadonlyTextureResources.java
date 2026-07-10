@@ -12,14 +12,50 @@
 package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ContextBound;
 import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 
 import java.io.File;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public interface ReadonlyTextureResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
+    Map<TextureDetails, ? extends ReadonlyTexture2D<ContextType>> getTextures();
+
+    /**
+     * Returns a map containing only the standard textures
+     * @return
+     */
+    default Map<StandardTexture, ? extends ReadonlyTexture2D<ContextType>> getStandardTextures()
+    {
+        return StandardTexture.convertObjectMapToEnumMap(getTextures());
+    }
+
+    default ReadonlyTexture2D<ContextType> getTexture(String texName)
+    {
+        return getTextures().get(new TextureDetails(texName));
+    }
+
+    default ReadonlyTexture2D<ContextType> getTexture(TextureDetails tex)
+    {
+        return getTextures().get(tex);
+    }
+
+    default ReadonlyTexture2D<ContextType> getTexture(StandardTexture tex)
+    {
+        return getTextures().get(tex.details);
+    }
+
+    ReadonlyBasisResources<ContextType> getBasisResources();
+
+    ReadonlyBasisWeightResources<ContextType> getBasisWeightResources();
+
     void setupShaderProgram(Program<ContextType> program);
 
     /**
@@ -32,7 +68,18 @@ public interface ReadonlyTextureResources<ContextType extends Context<ContextTyp
      */
     void saveTexture(String texName, String format, File outputDirectory, String filenameOverride);
 
-    void saveTexture(StandardTexture tex, String format, File outputDirectory, String filenameOverride);
+    /**
+     * Saves a texture to the filesystem in the specified format.
+     *
+     * @param tex              The texture to save.
+     * @param format           The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory  The directory in which to save the texture.
+     * @param filenameOverride The filename to use.  If set to null, a default filename will be provided.
+     */
+    default void saveTexture(StandardTexture tex, String format, File outputDirectory, String filenameOverride)
+    {
+        saveTexture(tex.details.name, format, outputDirectory, filenameOverride);
+    }
 
     /**
      * Saves weight map textures to the filesystem in the specified format,
@@ -44,7 +91,17 @@ public interface ReadonlyTextureResources<ContextType extends Context<ContextTyp
      */
     void savePackedWeightMaps(String format, File outputDirectory, String filenamePrefix);
 
-    void savePackedWeightMaps(String format, File outputDirectory);
+    /**
+     * Saves packed weight map textures to the filesystem in the specified format
+     * with four weight maps packed into a single image in the RGBA channels, using default filenames.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the textures.
+     */
+    default void savePackedWeightMaps(String format, File outputDirectory)
+    {
+        savePackedWeightMaps(format, outputDirectory, "");
+    }
 
     /**
      * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images.
@@ -55,7 +112,16 @@ public interface ReadonlyTextureResources<ContextType extends Context<ContextTyp
      */
     void saveUnpackedWeightMaps(String format, File outputDirectory, String filenamePrefix);
 
-    void saveUnpackedWeightMaps(String format, File outputDirectory);
+    /**
+     * Saves unpacked weight map textures to the filesystem in the specified format as grayscale images, using default filenames.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the textures.
+     */
+    default void saveUnpackedWeightMaps(String format, File outputDirectory)
+    {
+        saveUnpackedWeightMaps(format, outputDirectory, "");
+    }
 
     /**
      * Saves the basis function to the filesystem as a CSV file.
@@ -65,13 +131,67 @@ public interface ReadonlyTextureResources<ContextType extends Context<ContextTyp
      */
     void saveBasisFunctions(File outputDirectory, String filenameOverride);
 
-    void saveBasisFunctions(File outputDirectory);
+    /**
+     * Saves basis function textures to the filesystem with a default filename.
+     *
+     * @param outputDirectory The directory in which to save the basis functions.
+     */
+    default void saveBasisFunctions(File outputDirectory)
+    {
+        saveBasisFunctions(outputDirectory, null);
+    }
 
-    void saveNamedTextures(Iterable<String> texNames, String format, File outputDirectory, String filenamePrefix);
+    /**
+     * Saves the specified named textures to the filesystem as images in the specified format.
+     * @param texNames        The names of the textures to save.
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the textures.
+     * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
+     *                        This can be set to the empty string "" to use just the base / default names.
+     */
+    default void saveNamedTextures(Iterable<String> texNames, String format, File outputDirectory, String filenamePrefix)
+    {
+        for (String name : texNames)
+        {
+            saveTexture(name, format, outputDirectory, TextureResources.getTextureFilename(name, format, filenamePrefix));
+        }
+    }
 
-    void saveAllNamedTextures(String format, File outputDirectory, String filenamePrefix);
+    /**
+     * Saves all named textures (but not weight maps) to the filesystem as images in the specified format.
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory The directory in which to save the textures.
+     * @param filenamePrefix  A prefix to attach to each file (i.e. the name of the project).
+     *                        This can be set to the empty string "" to use just the base / default names.
+     */
+    default void saveAllNamedTextures(String format, File outputDirectory, String filenamePrefix)
+    {
+        saveNamedTextures(getTextures().keySet().stream().map(t -> t.name).collect(Collectors.toList()),
+            format, outputDirectory, filenamePrefix);
+    }
 
-    void saveAll(String format, File outputDirectory);
+    /**
+     * Saves all resources to the specified output directory with the specified image format, using default filenames.
+     * This includes all named textures, as well as basis functions and both packed and unpacked weight maps.
+     *
+     * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
+     * @param outputDirectory
+     */
+    default void saveAll(String format, File outputDirectory)
+    {
+        saveAllNamedTextures(format, outputDirectory, "");
+        saveBasisFunctions(outputDirectory, null);
+        savePackedWeightMaps(format, outputDirectory, "");
+        saveUnpackedWeightMaps(format, outputDirectory, "");
+    }
 
-    void saveAll(File outputDirectory);
+    /**
+     * Saves all resources to the specified output directory in PNG format using default filenames.
+     *
+     * @param outputDirectory
+     */
+    default void saveAll(File outputDirectory)
+    {
+        saveAll("PNG", outputDirectory);
+    }
 }

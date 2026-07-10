@@ -14,7 +14,7 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
@@ -154,7 +154,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             else
             {
                 BasisSettings basisSettings = settings.getSpecularBasisSettings();
-                BasisResources<ContextType> basisResources = resources.getTextureResources().getBasisResources();
+                ReadonlyBasisResources<ContextType> basisResources = resources.getTextureResources().getBasisResources();
                 basisSettings.setBasisCount(basisResources.getBasisCount());
                 basisSettings.setBasisResolution(basisResources.getBasisResolution());
 

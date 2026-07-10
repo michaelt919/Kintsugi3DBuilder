@@ -36,9 +36,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     private static final Logger LOG = LoggerFactory.getLogger(StandardShaderComponent.class);
     private final LightingResources<ContextType> lightingResources;
 
-
     protected final GraphicsResourcesImageSpace<ContextType> resources;
-
     protected final SceneModel sceneModel;
 
     private boolean lightCalibrationMode = false;
@@ -46,7 +44,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     // Set default shader to be the untextured IBR shader
     private File fragmentShaderFile;
     private Map<String, Optional<Object>> fragmentShaderDefines;
-
 
     protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)
@@ -65,9 +62,8 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             new File(new File("shaders", "rendermodes"), "ibrUntextured.frag"));
     }
 
-
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
         return loadMainProgram(getPreprocessorDefines());
     }
@@ -102,9 +98,9 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         }
     }
 
-    public void useFragmentShader(File fragmentShaderFile)
+    public void useFragmentShader(File newFragmentShaderFile)
     {
-        this.fragmentShaderFile = fragmentShaderFile;
+        this.fragmentShaderFile = newFragmentShaderFile;
         reloadShaders();
     }
 

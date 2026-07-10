@@ -12,7 +12,7 @@
 package kintsugi3d.gl.core;
 
 @FunctionalInterface
-public interface Croppable<ResourceType extends Resource>
+public interface Croppable<ResourceType extends ManagedResource>
 {
     /**
      * Creates a new resource that contains a cropped region of this resource.

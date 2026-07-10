@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  * For use i.e. with projtex_single.frag
  */
-public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements Resource
+public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private final ReadonlyViewSet viewSet;
     private final int viewIndex;

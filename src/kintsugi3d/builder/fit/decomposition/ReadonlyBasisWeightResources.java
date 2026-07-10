@@ -11,7 +11,12 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-public interface MaterialBasis extends ReadonlyMaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
+import kintsugi3d.gl.core.*;
+
+public interface ReadonlyBasisWeightResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>, Croppable<BasisWeightResources<ContextType>>
 {
-    void deleteMaterial(int b);
+    ReadonlyTexture3D<ContextType> getWeightMaps();
+    ReadonlyTexture2D<ContextType> getWeightMask();
+
+    void useWithShaderProgram(Program<ContextType> program);
 }

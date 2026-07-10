@@ -28,7 +28,7 @@ import java.nio.ShortBuffer;
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
 public interface Texture2D<ContextType extends Context<ContextType>>
-    extends Resource, FramebufferAttachment<ContextType>,
+    extends ManagedResource, FramebufferAttachment<ContextType>,
             Blittable<ReadonlyTexture2D<ContextType>>, ReadonlyTexture2D<ContextType>
 {
     /**
@@ -105,7 +105,7 @@ public interface Texture2D<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            public void readARGB(ByteBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -113,12 +113,12 @@ public interface Texture2D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture2D.this);
-                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, readWidth, readHeight);
                 }
             }
 
             @Override
-            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -126,12 +126,12 @@ public interface Texture2D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture2D.this);
-                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, readWidth, readHeight);
                 }
             }
 
             @Override
-            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -139,7 +139,7 @@ public interface Texture2D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture2D.this);
-                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, readWidth, readHeight);
                 }
             }
         };

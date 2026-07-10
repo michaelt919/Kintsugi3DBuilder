@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class LightCenters<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
+    private static final String SCENE_OBJECT_TAG_FORMAT = "Light.%d.Center";
+
     private final SceneViewportModel sceneViewportModel;
     private final SceneModel sceneModel;
 
@@ -40,8 +42,13 @@ public class LightCenters<ContextType extends Context<ContextType>> extends Shad
 
         for (int i = 0; i < sceneModel.getLightingModel().getMaxLightCount(); i++)
         {
-            sceneViewportModel.addSceneObjectType("Light." + i + ".Center");
+            sceneViewportModel.addSceneObjectType(getSceneObjectTag(i));
         }
+    }
+
+    private static String getSceneObjectTag(int i)
+    {
+        return String.format(SCENE_OBJECT_TAG_FORMAT, i);
     }
 
     @Override
@@ -57,18 +64,18 @@ public class LightCenters<ContextType extends Context<ContextType>> extends Shad
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "grayscaleTexture.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
@@ -94,7 +101,7 @@ public class LightCenters<ContextType extends Context<ContextType>> extends Shad
                 if (sceneModel.getLightingModel().isLightWidgetEnabled(i)
                     && sceneModel.getLightingModel().getLightWidgetModel(i).isCenterWidgetVisible())
                 {
-                    this.getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Center"));
+                    this.getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID(getSceneObjectTag(i)));
 
                     Vector3 lightCenter = cameraViewport.getView().times(this.sceneModel.getLightingModel().getLightCenter(i).times(sceneModel.getScale()).asPosition()).getXYZ();
 

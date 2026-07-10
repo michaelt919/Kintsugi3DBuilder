@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,7 @@ package kintsugi3d.gl.interactive;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 
 /**
  * An interface used with the InteractiveGraphics object to coordinate the initialization,
@@ -22,7 +22,7 @@ import kintsugi3d.gl.core.Resource;
  * @author Michael Tetzlaff
  * @see InteractiveGraphics
  */
-public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends Resource
+public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends ManagedResource
 {
     /**
      * Gets the application managing this renderable.

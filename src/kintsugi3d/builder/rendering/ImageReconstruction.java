@@ -381,6 +381,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public void close()
     {
         incidentRadianceProgram.close();
-        incidentRadianceDrawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
     }
 }

@@ -121,13 +121,15 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     @Override
     public int getWidth()
     {
-        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getWidth();
+        return basisWeightResources == null || basisWeightResources.getWeightMaps() == null ?
+            0 : basisWeightResources.getWeightMaps().getWidth();
     }
 
     @Override
     public int getHeight()
     {
-        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getHeight();
+        return basisWeightResources == null || basisWeightResources.getWeightMaps() == null ?
+            0 : basisWeightResources.getWeightMaps().getHeight();
     }
 
     @Override
@@ -151,7 +153,8 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
 
     protected int getSpecularTextureCount()
     {
-        return roughnessOptimization == null ? 0 : 2;
+        //noinspection VariableNotUsedInsideIf
+        return (roughnessOptimization == null) ? 0 : 2;
     }
 
     protected Map<StandardTexture, Texture2D<ContextType>> getStandardSpecularTextures()
@@ -163,7 +166,8 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
 
     protected Map<TextureDetails, Texture2D<ContextType>> getSpecularTextures()
     {
-        return roughnessOptimization == null ? Map.of() : StandardTexture.convertEnumMapToObjectMap(getStandardSpecularTextures());
+        //noinspection VariableNotUsedInsideIf
+        return (roughnessOptimization == null) ? Map.of() : StandardTexture.convertEnumMapToObjectMap(getStandardSpecularTextures());
     }
 
     /**

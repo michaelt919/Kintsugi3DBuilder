@@ -137,7 +137,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     public void close()
     {
         estimationProgram.close();
-        drawable.close();
+        kintsugi3d.gl.core.ManagedResource.this.close();
         framebuffer.close();
     }
 
