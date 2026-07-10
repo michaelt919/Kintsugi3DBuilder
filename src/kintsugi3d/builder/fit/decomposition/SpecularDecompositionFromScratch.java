@@ -159,21 +159,21 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             {
                 List<double[]> redBasis = IntStream.range(0, count)
                     .mapToObj(b ->
-                        IntStream.range(0, resolution)
+                        IntStream.range(0, resolution + 1)
                             .mapToDouble(m -> evaluateSpecularRed(b, m))
                             .toArray())
                     .collect(Collectors.toList());
 
                 List<double[]> greenBasis = IntStream.range(0, count)
                     .mapToObj(b ->
-                        IntStream.range(0, resolution)
+                        IntStream.range(0, resolution + 1)
                             .mapToDouble(m -> evaluateSpecularGreen(b, m))
                             .toArray())
                     .collect(Collectors.toList());
 
                 List<double[]> blueBasis = IntStream.range(0, count)
                     .mapToObj(b ->
-                        IntStream.range(0, resolution)
+                        IntStream.range(0, resolution + 1)
                             .mapToDouble(m -> evaluateSpecularBlue(b, m))
                             .toArray())
                     .collect(Collectors.toList());
