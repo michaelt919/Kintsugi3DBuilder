@@ -16,7 +16,7 @@ import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.util.KNNViewWeightGenerator;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -33,8 +33,8 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     private UniformBuffer<ContextType> viewIndexBufferOverride;
     private UniformBuffer<ContextType> weightBuffer;
 
-    public RenderingSubject(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel,
-        SceneModel sceneModel, LightingResources<ContextType> lightingResources)
+    public RenderingSubject(ReadonlyGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel,
+                            SceneModel sceneModel, LightingResources<ContextType> lightingResources)
     {
         super (resources, sceneViewportModel, "RenderingSubject", sceneModel, lightingResources);
     }

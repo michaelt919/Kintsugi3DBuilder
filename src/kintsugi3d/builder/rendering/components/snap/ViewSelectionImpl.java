@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,6 @@ package kintsugi3d.builder.rendering.components.snap;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -21,10 +20,10 @@ public class ViewSelectionImpl implements ViewSelection
 {
     private static final float FRUSTUM_VISUALIZATION_SCALE = 0.1f;
 
-    private final ViewSet viewSet;
+    private final ReadonlyViewSet viewSet;
     private final SceneModel sceneModel;
 
-    public ViewSelectionImpl(ViewSet viewSet, SceneModel sceneModel)
+    public ViewSelectionImpl(ReadonlyViewSet viewSet, SceneModel sceneModel)
     {
         this.viewSet = viewSet;
         this.sceneModel = sceneModel;

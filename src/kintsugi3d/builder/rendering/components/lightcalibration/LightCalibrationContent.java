@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,7 +16,7 @@ import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.UniformBuffer;
@@ -28,13 +28,13 @@ import kintsugi3d.gl.vecmath.Vector3;
 public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
 {
     private final ContextType context;
-    private final GraphicsResourcesImageSpace<ContextType> resources;
+    private final ReadonlyGraphicsResourcesImageSpace<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;
 
     private RenderingSubject<ContextType> renderingSubject;
 
-    public LightCalibrationContent(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationContent(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();

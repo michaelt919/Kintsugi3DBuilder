@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -36,7 +36,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     private static final Logger LOG = LoggerFactory.getLogger(StandardShaderComponent.class);
     private final LightingResources<ContextType> lightingResources;
 
-    protected final GraphicsResourcesImageSpace<ContextType> resources;
+    protected final ReadonlyGraphicsResources<ContextType> resources;
     protected final SceneModel sceneModel;
 
     private boolean lightCalibrationMode = false;
@@ -45,7 +45,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     private File fragmentShaderFile;
     private Map<String, Optional<Object>> fragmentShaderDefines;
 
-    protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
+    protected StandardShaderComponent(ReadonlyGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)
     {
         super(resources.getContext(), sceneViewportModel, sceneObjectTag);
@@ -55,7 +55,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         this.fragmentShaderFile = fragmentShaderFile;
     }
 
-    protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
+    protected StandardShaderComponent(ReadonlyGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources)
     {
         this(resources, sceneViewportModel, sceneObjectTag, sceneModel, lightingResources,

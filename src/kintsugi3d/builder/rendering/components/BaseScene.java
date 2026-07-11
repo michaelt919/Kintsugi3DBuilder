@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,7 +21,7 @@ import kintsugi3d.builder.rendering.components.scene.Environment;
 import kintsugi3d.builder.rendering.components.scene.Grid;
 import kintsugi3d.builder.rendering.components.scene.GroundPlane;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -39,11 +39,11 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
     protected final ContextType context;
     protected final SceneModel sceneModel;
     protected final SceneViewportModel sceneViewportModel;
-    protected final List<RenderedComponent<ContextType>> components = new ArrayList<>();
-    protected final GraphicsResourcesImageSpace<ContextType> resources;
+    protected final List<RenderedComponent<ContextType>> components = new ArrayList<>(5);
+    protected final ReadonlyGraphicsResourcesImageSpace<ContextType> resources;
     private RenderingSubject<ContextType> renderingSubject;
 
-    public BaseScene(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+    public BaseScene(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();
         this.sceneModel = sceneModel;
@@ -138,7 +138,7 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
             {
                 otherComponent.close();
             }
-            catch (Exception e)
+            catch (RuntimeException e)
             {
                 LOG.error("Error occurred while closing scene:", e);
             }

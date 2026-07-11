@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,12 +16,12 @@ import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.scene.camera.CameraWidgetGroup;
 import kintsugi3d.builder.rendering.components.scene.light.LightVisualsGroup;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 
 public class StandardScene<ContextType extends Context<ContextType>> extends BaseScene<ContextType>
 {
-    public StandardScene(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+    public StandardScene(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         super(resources, sceneModel, sceneViewportModel);
     }
