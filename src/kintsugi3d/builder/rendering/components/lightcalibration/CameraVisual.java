@@ -15,7 +15,6 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -27,11 +26,11 @@ import java.util.Map;
 
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final GraphicsResources<ContextType> resources;
+    private final ReadonlyGraphicsResourcesImageSpace<ContextType> resources;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(GraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraVisual(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel)
     {
         super(resources.getContext(), sceneViewportModel, "CameraVisual");
         this.resources = resources;
@@ -55,31 +54,26 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof ReadonlyGraphicsResourcesImageSpace<?>)
-        {
-            ReadonlyGraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (ReadonlyGraphicsResourcesImageSpace<ContextType>) resources;
+        FramebufferSize size = framebuffer.getSize();
 
-            FramebufferSize size = framebuffer.getSize();
+        this.getContext().getState().disableBackFaceCulling();
 
-            this.getContext().getState().disableBackFaceCulling();
+        this.getContext().getState().disableDepthWrite();
+        this.getContext().getState().enableDepthTest();
 
-            this.getContext().getState().disableDepthWrite();
-            this.getContext().getState().enableDepthTest();
+        Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
+        Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-            Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-            Vector3 frustumDims = viewSelection.getFrustumDimensions();
+        this.getProgram().setTexture("viewImages", resources.getImageTextures());
+        this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
+        this.getProgram().setUniform("model_view",
+            cameraViewport.getView().times(snapViewInverse)
+                .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
+        this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
+        this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
-            this.getProgram().setTexture("viewImages", resourcesImgSpace.getImageTextures());
-            this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
-            this.getProgram().setUniform("model_view",
-                cameraViewport.getView().times(snapViewInverse)
-                    .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
-            this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
-            this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
-
-            this.getContext().getState().enableDepthWrite();
-            this.getContext().getState().enableDepthTest();
-        }
+        this.getContext().getState().enableDepthWrite();
+        this.getContext().getState().enableDepthTest();
     }
 
     public ViewSelection getViewSelection()

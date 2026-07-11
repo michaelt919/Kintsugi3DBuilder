@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,6 +20,7 @@ import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
@@ -27,23 +28,20 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
 {
     private int cameraIndex;
 
-    private ViewSelection selection;
+    private final ReadonlyGraphicsResources<ContextType> resources;
+    private final SceneModel sceneModel;
 
-    private GraphicsResourcesImageSpace<ContextType> resources;
-    private SceneModel sceneModel;
-    private SceneViewportModel sceneViewportModel;
-
-    private CameraVisual<ContextType> cameraVisual;
-    private CameraFrustum<ContextType> cameraFrustum;
+    private final CameraVisual<ContextType> cameraVisual;
+    private final CameraFrustum<ContextType> cameraFrustum;
 
     public CameraWidgetGroup(GraphicsResourcesImageSpace<ContextType> resources,
                              SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;
         this.sceneModel = sceneModel;
-        this.sceneViewportModel = sceneViewportModel;
 
-        selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel){
+        ViewSelection selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel)
+        {
             @Override
             public int getSelectedViewIndex()
             {
@@ -53,7 +51,7 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
 
         cameraVisual = new CameraVisual<>(resources, sceneViewportModel);
         cameraVisual.setViewSelection(selection);
-        cameraFrustum = new CameraFrustum<>(resources, sceneViewportModel);
+        cameraFrustum = new CameraFrustum<>(resources.getContext(), sceneViewportModel);
         cameraFrustum.setViewSelection(selection);
     }
 
