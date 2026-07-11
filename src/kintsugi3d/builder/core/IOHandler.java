@@ -30,13 +30,14 @@ public interface IOHandler
     ViewSet getLoadedViewSet();
 
     boolean isRenderableLoaded();
-    RenderableInstance<?> getMainRenderable();
-    RenderableInstance<?> getRenderableForShader(UserShader shader);
+    ImageBasedRenderable<?> getMainRenderable();
+    ImageBasedRenderable<?> getRenderableForShader(UserShader shader);
 
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
-    void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
+    void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback);
 
     File getLoadedProjectFile();
+
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);

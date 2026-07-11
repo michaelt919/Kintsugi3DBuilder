@@ -11,74 +11,101 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.vecmath.Vector3;
 
+import java.io.IOException;
 import java.util.List;
 
 public abstract class GraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResources<ContextType>
 {
-    private final GraphicsResourcesCommon<ContextType> sharedResources;
+    private final GraphicsResourcesCommon<ContextType> commonResources;
 
     /**
      * Only one instance will be the owner of the shared resources (typicaly created when a project is loaded)
      */
     private final boolean ownerOfSharedResources;
 
-    GraphicsResourcesBase(GraphicsResourcesCommon<ContextType> sharedResources, boolean ownerOfSharedResources)
+    GraphicsResourcesBase(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfSharedResources)
     {
-        this.sharedResources = sharedResources;
+        this.commonResources = commonResources;
         this.ownerOfSharedResources = ownerOfSharedResources;
     }
 
-    GraphicsResourcesCommon<ContextType> getSharedResources()
+    GraphicsResourcesCommon<ContextType> getCommonResources()
     {
-        return sharedResources;
+        return commonResources;
     }
 
     @Override
     public final ContextType getContext()
     {
-        return sharedResources.getContext();
+        return commonResources.getContext();
     }
 
     @Override
     public final ViewSet getViewSet()
     {
-        return sharedResources.getViewSet();
+        return commonResources.getViewSet();
     }
 
     @Override
     public float getCameraWeight(int index)
     {
-        return sharedResources.getCameraWeight(index);
+        return commonResources.getCameraWeight(index);
     }
 
     @Override
     public List<Float> getCameraWeights()
     {
-        return sharedResources.getCameraWeights();
+        return commonResources.getCameraWeights();
     }
 
     @Override
     public final GeometryResources<ContextType> getGeometryResources()
     {
-        return sharedResources.getGeometryResources();
+        return commonResources.getGeometryResources();
     }
 
     @Override
     public final TextureResources<ContextType> getTextureResources()
     {
-        return sharedResources.getTextureResources();
+        return commonResources.getTextureResources();
     }
 
     @Override
     public final LuminanceMapResources<ContextType> getLuminanceMapResources()
     {
-        return sharedResources.getLuminanceMapResources();
+        return commonResources.getLuminanceMapResources();
+    }
+
+    @Override
+    public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
+        throws IOException
+    {
+        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex,
+            getViewSet().findFullResImageFile(viewIndex), getGeometry(), loadOptions);
+    }
+
+    @Override
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
+    {
+        settings.setCacheFolderName(getViewSet().getUUID().toString());
+
+        ImageCache<ContextType> cache = new ImageCache<>(this, settings);
+
+        if (!cache.isInitialized())
+        {
+            cache.initialize(monitor);
+        }
+
+        return cache;
     }
 
     @Override
@@ -86,7 +113,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     {
         this.getViewSet().setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 
-        sharedResources.updateLuminanceMap();
+        commonResources.updateLuminanceMap();
     }
 
     @Override
@@ -94,7 +121,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     {
         this.getViewSet().clearLuminanceEncoding();
 
-        sharedResources.updateLuminanceMap();
+        commonResources.updateLuminanceMap();
     }
 
     @Override
@@ -105,13 +132,13 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
             this.getViewSet().setLightPosition(i, lightCalibration);
         }
 
-        sharedResources.updateLightData();
+        commonResources.updateLightData();
     }
 
     @Override
     public void replaceTextureResources(TextureResources<ContextType> textureResources)
     {
-        sharedResources.replaceTextureResources(textureResources);
+        commonResources.replaceTextureResources(textureResources);
     }
 
     @Override
@@ -122,15 +149,15 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
             this.getViewSet().setLightIntensity(i, lightIntensity);
         }
 
-        this.sharedResources.updateLightData();
+        this.commonResources.updateLightData();
     }
 
     @Override
     public void close()
     {
-        if (this.ownerOfSharedResources && this.sharedResources != null)
+        if (this.ownerOfSharedResources && this.commonResources != null)
         {
-            this.sharedResources.close();
+            this.commonResources.close();
         }
     }
 }

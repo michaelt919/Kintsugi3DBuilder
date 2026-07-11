@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -146,7 +146,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
         // and should apply globally as defaults, but only for texture-space source photos.
         // The shader will not reload automatically when these change.
         // The defines can be overridden by the actual shader.
-        return getSharedResources().getShaderProgramBuilder()
+        return getCommonResources().getShaderProgramBuilder()
             .define("GEOMETRY_TEXTURES_ENABLED", true)
             .define("GEOMETRY_MODE", GeometryMode.RECTANGLE)
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.TEXTURE_SPACE);
@@ -155,7 +155,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        getSharedResources().setupShaderProgram(program);
+        getCommonResources().setupShaderProgram(program);
         geometryTextures.setupShaderProgram(program);
         program.setTexture("viewImages", textureArray);
     }
@@ -163,7 +163,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
     @Override
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
-        Drawable<ContextType> drawable = getSharedResources().getContext().createDrawable(program);
+        Drawable<ContextType> drawable = getCommonResources().getContext().createDrawable(program);
         drawable.addVertexBuffer("position", rectangle);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         return drawable;

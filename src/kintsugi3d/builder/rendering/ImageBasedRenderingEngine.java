@@ -44,10 +44,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements RenderableInstance<ContextType>
+public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
+    extends InteractiveRenderableBase<ContextType> implements ImageBasedRenderable<ContextType>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageBasedRenderingEngine.class);
 
     private final ContextType context;
 
@@ -85,7 +85,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
     private boolean loaded = false;
 
-    ProjectRenderingEngine(String id, ContextType context, Builder<ContextType> resourceBuilder)
+    ImageBasedRenderingEngine(String id, ContextType context, Builder<ContextType> resourceBuilder)
     {
         this.id = id;
         this.context = context;
@@ -95,7 +95,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         this.sceneViewportModel = createSceneViewportModel(this.sceneModel);
     }
 
-    ProjectRenderingEngine(String id, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
+    ImageBasedRenderingEngine(String id, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
     {
         this.id = id;
         this.context = context;
@@ -136,11 +136,13 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         return this.dynamicResourceLoader;
     }
 
+    @Override
     public IntVector2 getSafeStartPixel()
     {
         return safeStartPixel;
     }
 
+    @Override
     public IntVector2 getSafeEndPixel()
     {
         return safeEndPixel;

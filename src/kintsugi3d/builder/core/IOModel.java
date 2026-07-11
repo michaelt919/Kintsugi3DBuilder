@@ -196,7 +196,7 @@ public class IOModel
         this.imageLoadOptionsModel = imageLoadOptionsModel;
     }
 
-    public RenderableInstance<?> getRenderableForShader(UserShader shader)
+    public ImageBasedRenderable<?> getRenderableForShader(UserShader shader)
     {
         return this.handler.getRenderableForShader(shader);
     }
@@ -206,7 +206,7 @@ public class IOModel
         this.handler.addViewSetLoadCallback(callback);
     }
 
-    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback)
     {
         this.handler.addMainRenderableLoadCallback(callback);
     }
@@ -216,7 +216,7 @@ public class IOModel
         return this.handler.getLoadedViewSet();
     }
 
-    public RenderableInstance<?> getMainRenderable()
+    public ImageBasedRenderable<?> getMainRenderable()
     {
         return this.handler.getMainRenderable();
     }

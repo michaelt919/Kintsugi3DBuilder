@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -35,7 +35,7 @@ public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>>
         // and should apply globally as defaults, but only for analytic / "fake" source photos.
         // The shader will not reload automatically when these change.
         // The defines can be overridden by the actual shader.
-        return getSharedResources().getShaderProgramBuilder()
+        return getCommonResources().getShaderProgramBuilder()
                 .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
                 .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
                 .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.ANALYTIC);
@@ -44,7 +44,7 @@ public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>>
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        getSharedResources().setupShaderProgram(program);
+        getCommonResources().setupShaderProgram(program);
     }
 
     @Override

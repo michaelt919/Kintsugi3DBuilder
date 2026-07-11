@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
@@ -130,7 +130,8 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
      *                   If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(
+        ImageBasedRenderable<ContextType> renderable, ProgressMonitor monitor)
         throws UserCancellationException
     {
         try
@@ -145,11 +146,12 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
             // Perform the specular fit
             SpecularFitProcess process = new SpecularFitProcess(settings);
-            GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
+            GraphicsResources<ContextType> resources = renderable.getResources();
 
             if (settings.shouldOptimizeBasis())
             {
-                process.optimizeFitWithCache(resources, monitor);
+                // Runs the fit (long process) and then replaces the old material resources / textures
+                resources.replaceTextureResources(process.optimizeFitWithCache(resources, monitor));
             }
             else
             {
@@ -158,7 +160,8 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
                 basisSettings.setBasisCount(basisResources.getBasisCount());
                 basisSettings.setBasisResolution(basisResources.getBasisResolution());
 
-                process.reoptimizeTexturesWithCache(resources, monitor);
+                // Runs the fit (long process) and then replaces the old material resources / textures
+                resources.replaceTextureResources(process.reoptimizeTexturesWithCache(resources, monitor));
             }
 
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed

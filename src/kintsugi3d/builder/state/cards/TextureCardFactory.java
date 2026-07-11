@@ -14,8 +14,8 @@ package kintsugi3d.builder.state.cards;
 import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ImageBasedRenderable;
 import kintsugi3d.builder.core.ImageReplaceData;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
@@ -45,7 +45,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private CardsModel lastUsedCardsModel;
 
-    private final RenderableInstance<?> instance;
+    private final ImageBasedRenderable<?> instance;
 
     private File textureImage;
     /**
@@ -53,7 +53,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(RenderableInstance<?> instance)
+    public TextureCardFactory(ImageBasedRenderable<?> instance)
     {
         this.instance = instance;
     }

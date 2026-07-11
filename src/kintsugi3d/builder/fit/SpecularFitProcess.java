@@ -66,8 +66,8 @@ public class SpecularFitProcess
         return new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> void optimizeFitWithCache(
-        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> TextureResources<ContextType> optimizeFitWithCache(
+        ReadonlyGraphicsResources<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -84,27 +84,24 @@ public class SpecularFitProcess
         Duration duration = Duration.between(start, Instant.now());
         LOG.info("Cache found / generated in: {}", duration);
 
-        // Runs the fit (long process) and then replaces the old material resources / textures
-        TextureResources<ContextType> result = optimizeFitWithCache(cache, monitor);
-        resources.replaceTextureResources(result);
+        return optimizeFitWithCache(cache, monitor);
     }
 
-    public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(
-        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> TextureResources<ContextType> reoptimizeTexturesWithCache(
+        ReadonlyGraphicsResources<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         // Get cache (should already be generated).
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), null);
 
-        // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceTextureResources(reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor));
+        return reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor);
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
-        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        ReadonlyGraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
         throws IOException
     {
-        ViewSet viewSet = resources.getViewSet();
+        ReadonlyViewSet viewSet = resources.getViewSet();
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
         try(ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             viewSet,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -46,7 +46,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImageCache.class);
     private final ContextType context;
-    private final GraphicsResourcesImageSpace<ContextType> resources;
+    private final GraphicsResourcesBase<ContextType> resources;
     private final ImageCacheSettings settings;
 
     private final File sampledDir;
@@ -54,7 +54,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private boolean initialized = false;
 
-    ImageCache(GraphicsResourcesImageSpace<ContextType> resources, ImageCacheSettings settings)
+    ImageCache(GraphicsResourcesBase<ContextType> resources, ImageCacheSettings settings)
     {
         this.context = resources.getContext();
         this.resources = resources;
@@ -403,7 +403,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
         try
         {
-            return new GraphicsResourcesTextureSpace<>(resources.getSharedResources(), this::createSampledGeometryTextures,
+            return new GraphicsResourcesTextureSpace<>(resources.getCommonResources(), this::createSampledGeometryTextures,
                 sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(), monitor);
         }
         catch (IOException e)
@@ -431,7 +431,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
      */
     public TextureBlockResourceFactory<ContextType> createBlockResourceFactory()
     {
-        return new TextureBlockResourceFactory<>(resources.getSharedResources(), this);
+        return new TextureBlockResourceFactory<>(resources.getCommonResources(), this);
     }
 
     private int getHighResIndexForSample(int sampleIndex)

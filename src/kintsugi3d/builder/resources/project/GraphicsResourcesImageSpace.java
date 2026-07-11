@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -51,41 +51,46 @@ import java.util.stream.IntStream;
  * @param <ContextType>
  */
 public final class GraphicsResourcesImageSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
-    implements GraphicsResourcesCacheable<ContextType>
+    implements ReadonlyGraphicsResourcesImageSpace<ContextType>
 {
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesImageSpace.class);
+
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
-    public final UniformBuffer<ContextType> cameraProjectionBuffer;
+    private final UniformBuffer<ContextType> cameraProjectionBuffer;
 
     /**
      * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
      */
-    public final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+    private final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
 
     /**
      * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
      */
-    public final Texture3D<ContextType> colorTextures;
+    private final Texture3D<ContextType> imageTextures;
 
     /**
      * A depth texture array containing a depth image for every view.
      */
-    public final Texture3D<ContextType> depthTextures;
+    private final Texture3D<ContextType> depthTextures;
 
     /**
      * A depth texture array containing a shadow map for every view.
      */
-    public final Texture3D<ContextType> shadowTextures;
+    private final Texture3D<ContextType> shadowTextures;
 
     /**
      * A GPU buffer containing the matrices that were used for each shadow map in the shadowTextures array.
      */
-    public final UniformBuffer<ContextType> shadowMatrixBuffer;
+    private final UniformBuffer<ContextType> shadowMatrixBuffer;
 
+    /**
+     * The distance from the camera to the centroid in the primary view.
+     * This is frequently used to calibrate scale in Kintsugi 3D Builder.
+     */
     private final double primaryViewDistance;
 
     public static final class Builder<ContextType extends Context<ContextType>>
@@ -107,7 +112,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
         private void updateViewSetFromImageLoadOptions()
         {
-            if (this.imageLoadOptions != null)
+            if (this.imageLoadOptions != null && this.viewSet != null)
             {
                 this.viewSet.setPreviewImageResolution(imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
                 String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
@@ -116,11 +121,11 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             }
         }
 
-        public Builder<ContextType> setOrientationView(String orientationViewName, double rotation)
+        public Builder<ContextType> setOrientationView(String newOrientationViewName, double rotation)
         {
-            this.orientationViewName = orientationViewName;
+            this.orientationViewName = newOrientationViewName;
 
-            if (orientationViewName == null)
+            if (newOrientationViewName == null)
             {
                 this.viewSet.setOrientationViewIndex(-1);
             }
@@ -132,11 +137,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         public Builder<ContextType> setImageLoadOptions(ReadonlyLoadOptionsModel imageLoadOptions)
         {
             this.imageLoadOptions = imageLoadOptions;
-
-            if (this.viewSet != null)
-            {
-                updateViewSetFromImageLoadOptions();
-            }
+            updateViewSetFromImageLoadOptions();
 
             return this;
         }
@@ -147,10 +148,10 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             return this;
         }
 
-        public Builder<ContextType> setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+        public Builder<ContextType> setTonemapping(double[] newLinearLuminanceValues, byte[] newEncodedLuminanceValues)
         {
-            this.linearLuminanceValues = Arrays.copyOf(linearLuminanceValues, linearLuminanceValues.length);
-            this.encodedLuminanceValues = Arrays.copyOf(encodedLuminanceValues, encodedLuminanceValues.length);
+            this.linearLuminanceValues = Arrays.copyOf(newLinearLuminanceValues, newLinearLuminanceValues.length);
+            this.encodedLuminanceValues = Arrays.copyOf(newEncodedLuminanceValues, newEncodedLuminanceValues.length);
             return this;
         }
 
@@ -188,9 +189,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, ViewSetLoadOptions viewSetLoadOptions) throws Exception
         {
             // Load view set
-            this.viewSet = reader.readFromFile(cameraFile, viewSetLoadOptions)
-                .finish();
-
+            this.viewSet = reader.readFromFile(cameraFile, viewSetLoadOptions).finish();
             updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
@@ -204,7 +203,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
             throws IOException, MeshImportException, XMLStreamException, MissingImagesException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles()).finish();
+            this.viewSet = ViewSetReaderFromAgisoftXML
+                .loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles())
+                .finish();
             updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
@@ -350,7 +351,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
                 context.getTextureFactory().build2DColorTextureArray(width, height, viewSet.getCombinedCameraPoseCount());
             loadOptions.configureColorTextureBuilder(textureArrayBuilder);
-            colorTextures = textureArrayBuilder.createTexture();
+            imageTextures = textureArrayBuilder.createTexture();
 
             if (progressMonitor != null)
             {
@@ -370,7 +371,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 {
                     File imageFile = findOrGeneratePreviewImageFile(i);
 
-                    this.colorTextures.loadLayer(i, imageFile, true);
+                    this.imageTextures.loadLayer(i, imageFile, true);
                 }
                 catch (FileNotFoundException e)
                 {
@@ -388,7 +389,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
         else
         {
-            this.colorTextures = null;
+            this.imageTextures = null;
         }
 
         if (progressMonitor != null)
@@ -501,6 +502,12 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
     }
 
+    @Override
+    public ReadonlyTexture3D<ContextType> getImageTextures()
+    {
+        return imageTextures;
+    }
+
     private static <ContextType extends Context<ContextType>> double getMinDepthFromFBO(ReadableFramebuffer<ContextType> depthFramebuffer, double nearPlane, double farPlane)
     {
         double minDepth = farPlane;
@@ -607,7 +614,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         // Determine shader defines here that should apply globally as defaults, but only for image-space source photos.
         // The shader will not reload automatically when these change.
         // The defines can be overridden by the actual shader.
-        ProgramBuilder<ContextType> builder = getSharedResources().getShaderProgramBuilder()
+        ProgramBuilder<ContextType> builder = getCommonResources().getShaderProgramBuilder()
             .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE); // should default to this, but just in case
@@ -630,11 +637,11 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        getSharedResources().setupShaderProgram(program);
+        getCommonResources().setupShaderProgram(program);
 
-        if (this.colorTextures != null)
+        if (this.imageTextures != null)
         {
-            program.setTexture("viewImages", this.colorTextures);
+            program.setTexture("viewImages", this.imageTextures);
         }
 
         if ((this.cameraProjectionBuffer != null) && (this.cameraProjectionIndexBuffer != null))
@@ -669,17 +676,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         return getGeometryResources().createDrawable(program);
     }
 
-    /**
-     * Gets the distance from the camera to the centroid in the primary view.
-     * This is frequently used to calibrate scale in Kintsugi 3D Builder.
-     *
-     * @return The camera distance in the primary view.
-     */
-    public double getPrimaryViewDistance()
-    {
-        return primaryViewDistance;
-    }
-
     public void calibrateLightIntensities()
     {
         if (getViewSet().getProjectSettings().getBoolean("infiniteLightSources"))
@@ -697,36 +693,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             initializeLightIntensities(new Vector3(1.0f));
             LOG.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?).");
         }
-    }
-
-    /**
-     * Creates a resource for just a single view, using the default image for that view but with custom load options
-     *
-     * @param viewIndex
-     * @param loadOptions
-     * @return
-     * @throws IOException
-     */
-    public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
-        throws IOException
-    {
-        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex,
-            getViewSet().findFullResImageFile(viewIndex), getGeometry(), loadOptions);
-    }
-
-    @Override
-    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
-    {
-        settings.setCacheFolderName(getViewSet().getUUID().toString());
-
-        ImageCache<ContextType> cache = new ImageCache<>(this, settings);
-
-        if (!cache.isInitialized())
-        {
-            cache.initialize(monitor);
-        }
-
-        return cache;
     }
 
     /**
@@ -898,9 +864,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             this.cameraProjectionIndexBuffer.close();
         }
 
-        if (this.colorTextures != null)
+        if (this.imageTextures != null)
         {
-            this.colorTextures.close();
+            this.imageTextures.close();
         }
 
         if (this.depthTextures != null)

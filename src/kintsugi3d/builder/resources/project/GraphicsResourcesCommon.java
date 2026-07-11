@@ -36,42 +36,42 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.IntStream;
 
-final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
+final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> implements ShaderProgramFactory<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
     /**
      * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to determine view vectors, and for performing projective texture mapping with an image-space implementation.
      */
-    public final UniformBuffer<ContextType> cameraPoseBuffer;
+    private final UniformBuffer<ContextType> cameraPoseBuffer;
 
     /**
      * A GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light
      * fields).
      * Assumed by convention to be in camera space.
      */
-    public final UniformBuffer<ContextType> lightPositionBuffer;
+    private final UniformBuffer<ContextType> lightPositionBuffer;
 
     /**
      * A GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light
      * fields).
      */
-    public final UniformBuffer<ContextType> lightIntensityBuffer;
+    private final UniformBuffer<ContextType> lightIntensityBuffer;
 
     /**
      * A GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
      */
-    public final UniformBuffer<ContextType> lightIndexBuffer;
+    private final UniformBuffer<ContextType> lightIndexBuffer;
 
     /**
      * A GPU buffer containing the weights associated with all the views (determined by the distance from other views).
      */
-    public final UniformBuffer<ContextType> cameraWeightBuffer;
+    private final UniformBuffer<ContextType> cameraWeightBuffer;
 
     /**
      * A GPU buffer containing the indices of enabled and non-deleted cameras
      */
-    public final UniformBuffer<ContextType> viewIndexBuffer;
+    private final UniformBuffer<ContextType> viewIndexBuffer;
 
     /**
      * Contains the VBOs for positions, tex-coords, normals, and tangents
@@ -347,6 +347,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         return cameraWeights;
     }
 
+    @Override
     public ContextType getContext()
     {
         return context;
@@ -481,6 +482,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
+    @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
         boolean basisEnabled = textureResources.getBasisResources() != null
@@ -511,6 +513,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         return builder;
     }
 
+    @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
         viewSet.setupShaderProgram(program);

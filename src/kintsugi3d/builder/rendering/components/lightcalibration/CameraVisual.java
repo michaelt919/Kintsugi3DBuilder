@@ -16,7 +16,7 @@ import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.resources.project.GraphicsResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -55,9 +55,9 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof GraphicsResourcesImageSpace)
+        if (resources instanceof ReadonlyGraphicsResourcesImageSpace<?>)
         {
-            GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>)resources;
+            ReadonlyGraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (ReadonlyGraphicsResourcesImageSpace<ContextType>) resources;
 
             FramebufferSize size = framebuffer.getSize();
 
@@ -69,7 +69,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
             Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
             Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-            this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
+            this.getProgram().setTexture("viewImages", resourcesImgSpace.getImageTextures());
             this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
             this.getProgram().setUniform("model_view",
                 cameraViewport.getView().times(snapViewInverse)

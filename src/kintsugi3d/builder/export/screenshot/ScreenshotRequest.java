@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.export.screenshot;
 
+import kintsugi3d.builder.core.ImageBasedRenderable;
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
@@ -81,7 +81,7 @@ public class ScreenshotRequest implements ObservableProjectGraphicsRequest
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+        ImageBasedRenderable<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (

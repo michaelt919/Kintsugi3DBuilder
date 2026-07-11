@@ -12,18 +12,18 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.ImageBasedRenderable;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.state.cards.TabsManager;
 
 class BackendProgressMonitor implements ProgressMonitor
 {
-    private final RenderableInstance<?> instance;
+    private final ImageBasedRenderable<?> instance;
     private final ProgressMonitor base;
 
-    BackendProgressMonitor(RenderableInstance<?> instance, ProgressMonitor base)
+    BackendProgressMonitor(ImageBasedRenderable<?> instance, ProgressMonitor base)
     {
         this.instance = instance;
         this.base = base;

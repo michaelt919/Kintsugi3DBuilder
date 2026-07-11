@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.ImageBasedRenderable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ public class TabsManager
 
     private final List<TabInfo> factories = new ArrayList<>(4);
 
-    public TabsManager(RenderableInstance<?> instance)
+    public TabsManager(ImageBasedRenderable<?> instance)
     {
         factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance.getViewSet()), null));
         factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),

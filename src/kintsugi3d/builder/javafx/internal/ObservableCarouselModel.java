@@ -18,7 +18,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.ImageBasedRenderable;
 import kintsugi3d.builder.state.CanvasModel;
 import kintsugi3d.builder.state.CanvasModelImpl;
 import kintsugi3d.builder.state.CarouselItem;
@@ -83,7 +83,7 @@ public class ObservableCarouselModel implements CarouselModel
 
     private void refreshMainViewSafeRegion(CanvasSize mainViewSize)
     {
-        RenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
+        ImageBasedRenderable<?> instance = Global.state().getIOModel().getMainRenderable();
         if (instance != null)
         {
             int height = (int) Math.round(carouselHeight.get());
@@ -163,7 +163,7 @@ public class ObservableCarouselModel implements CarouselModel
                         FramebufferSize size = framebuffer.getSize();
 
                         // Refresh safe region for card
-                        RenderableInstance<?> carouselInstance = Global.state().getIOModel().getRenderableForShader(shader);
+                        ImageBasedRenderable<?> carouselInstance = Global.state().getIOModel().getRenderableForShader(shader);
                         carouselInstance.setSafeRegion(
                             new IntVector2(0, 0),
                             new IntVector2(size.width, getCardSafeEndY(size.height)));

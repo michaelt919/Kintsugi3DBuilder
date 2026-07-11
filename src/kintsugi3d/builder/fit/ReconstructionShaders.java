@@ -26,7 +26,7 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getIncidentRadianceProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/imgspace.vert"),
@@ -35,8 +35,8 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
-            SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
+        SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
@@ -46,8 +46,8 @@ public final class ReconstructionShaders
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
-            ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
-            SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
+        SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),

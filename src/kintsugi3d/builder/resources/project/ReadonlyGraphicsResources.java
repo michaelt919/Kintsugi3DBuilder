@@ -11,20 +11,22 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
-import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.ContextBound;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.geometry.ReadonlyGeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 
+import java.io.IOException;
 import java.util.List;
 
-public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
+public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>> extends ShaderProgramFactory<ContextType>
 {
     /**
      * The graphics context associated with this instance.
@@ -74,25 +76,6 @@ public interface ReadonlyGraphicsResources<ContextType extends Context<ContextTy
     float getCameraWeight(int index);
 
     /**
-     * Gets a shader program builder with any required preprocessor defines automatically injected based on the
-     * characteristics of this instance.
-     *
-     * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
-     * added as well as any additional application-specific preprocessor definitions.
-     */
-    ProgramBuilder<ContextType> getShaderProgramBuilder();
-
-    /**
-     * Sets up a shader program to use this instance's graphics resources.
-     * While the geometry is generally associated with a Drawable using the createDrawable function,
-     * this method binds all of the textures and associated data like camera poses, light positions, etc.
-     * to the shader program's uniform variables.
-     *
-     * @param program The shader program to set up using this instance's resources.
-     */
-    void setupShaderProgram(Program<ContextType> program);
-
-    /**
      * Creates a Drawable using this instance's geometry resources, and the specified shader program.
      *
      * @param program The program to use to construct the Drawable.
@@ -104,4 +87,16 @@ public interface ReadonlyGraphicsResources<ContextType extends Context<ContextTy
     {
         return new GraphicsStreamFactory<>(this);
     }
+    /**
+     * Creates a resource for just a single view, using the default image for that view but with custom load options
+     *
+     * @param viewIndex
+     * @param loadOptions
+     * @return
+     * @throws IOException
+     */
+    SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
+        throws IOException;
+
+    ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
 }

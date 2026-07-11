@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,7 @@ package kintsugi3d.builder.export.general;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.gl.core.*;
 
@@ -135,7 +135,7 @@ abstract class RenderRequestBase implements ObservableProjectGraphicsRequest
     }
 
     protected <ContextType extends Context<ContextType>> ProgramObject<ContextType> createProgram(
-        GraphicsResourcesImageSpace<ContextType> resources) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources) throws IOException
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
 
@@ -164,7 +164,7 @@ abstract class RenderRequestBase implements ObservableProjectGraphicsRequest
     }
 
     protected static <ContextType extends Context<ContextType>> Drawable<ContextType>
-        createDrawable(Program<ContextType> program, GraphicsResourcesImageSpace<ContextType> resources)
+        createDrawable(Program<ContextType> program, ReadonlyGraphicsResources<ContextType> resources)
     {
         return resources.createDrawable(program);
     }

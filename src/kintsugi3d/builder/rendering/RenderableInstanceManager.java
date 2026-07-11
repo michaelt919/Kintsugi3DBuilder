@@ -57,13 +57,13 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
 
     private final ContextType context;
 
-    private final RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViews
+    private final RefreshableCollection<RenderRefreshable<ContextType, ? extends ImageBasedRenderable<ContextType>>> renderViews
         = new RefreshableCollection<>();
-    private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
+    private final Map<UserShader, RenderRefreshable<ContextType, ImageBasedRenderable<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
     private ViewSet loadedViewSet;
-    private RenderableInstance<ContextType> renderableInstance;
+    private ImageBasedRenderable<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -75,7 +75,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
-    private final List<Consumer<RenderableInstance<?>>> instanceLoadCallbacks
+    private final List<Consumer<ImageBasedRenderable<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
     private File loadedProjectFile;
@@ -102,7 +102,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
      * @param callback to add
      */
     @Override
-    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback)
     {
         synchronized (instanceLoadCallbacks)
         {
@@ -223,7 +223,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        RenderableInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
+        ImageBasedRenderable<ContextType> newInstance = new ImageBasedRenderingEngine<>(id, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -277,7 +277,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
             }
 
             // Invoke callbacks
-            for (Consumer<RenderableInstance<?>> callback : instanceLoadCallbacks)
+            for (Consumer<ImageBasedRenderable<?>> callback : instanceLoadCallbacks)
             {
                 callback.accept(renderableInstance);
             }
@@ -411,7 +411,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> getRenderViews()
+    public RefreshableCollection<RenderRefreshable<ContextType, ? extends ImageBasedRenderable<ContextType>>> getRenderViews()
     {
         return renderViews;
     }
@@ -422,8 +422,8 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
-        ProjectRenderingEngine<ContextType> renderView =
-            new ProjectRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
+        ImageBasedRenderingEngine<ContextType> renderView =
+            new ImageBasedRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
         renderView.setSafeRegion(safeStartPixel, safeEndPixel);
         initializeSceneModel(renderView.getSceneModel());
 
@@ -434,7 +434,8 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
                 DoubleFramebufferFactory.create(context, initialSize.width, initialSize.height);
 
             // Create and initialize refreshable, which will manage the framebuffer object
-            var refreshable = RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
+            RenderRefreshable<ContextType, ImageBasedRenderable<ContextType>> refreshable =
+                RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
 
             try
             {
@@ -465,7 +466,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectRenderingEngine<ContextType> getRenderableForShader(UserShader shader)
+    public ImageBasedRenderable<ContextType> getRenderableForShader(UserShader shader)
     {
         return renderViewMap.get(shader).getRenderable();
     }
@@ -506,7 +507,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public RenderableInstance<ContextType> getMainRenderable()
+    public ImageBasedRenderable<ContextType> getMainRenderable()
     {
         return renderableInstance;
     }

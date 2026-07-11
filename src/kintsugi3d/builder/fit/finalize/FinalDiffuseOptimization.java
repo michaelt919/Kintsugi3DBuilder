@@ -51,7 +51,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     private final Drawable<ContextType> drawable;
 
     public FinalDiffuseOptimization(ReadonlyGraphicsResources<ContextType> resources,
-        SpecularFitProgramFactory<ContextType> programFactory, TextureResolution settings, boolean includeConstant)
+                                    SpecularFitProgramFactory<ContextType> programFactory, TextureResolution settings, boolean includeConstant)
         throws IOException
     {
         this.context = resources.getContext();
@@ -153,7 +153,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createDiffuseEstimationProgram(
-            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuse.frag"));

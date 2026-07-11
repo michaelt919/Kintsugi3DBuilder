@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -34,8 +34,8 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         this.basisSettings = basisSettings;
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
-        File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(
+        ReadonlyGraphicsResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
         ProgramBuilder<ContextType> builder = resources.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, vertexShader)
@@ -58,14 +58,15 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
                 .define("BASIS_RESOLUTION", basisSettings.getBasisResolution());
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyGraphicsResources<ContextType> resources,
-        File vertexShader, File fragmentShader)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(
+        ReadonlyGraphicsResources<ContextType> resources, File vertexShader, File fragmentShader)
     {
         return getShaderProgramBuilder(resources, vertexShader, fragmentShader, true);
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
-        File vertexShader, File fragmentShader, boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
+    public ProgramObject<ContextType> createProgram(
+        ReadonlyGraphicsResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests,
+        Map<String, Object> additionalDefines)
         throws IOException
     {
         // Common definitions for all specular fitting related shaders.
@@ -87,21 +88,22 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         return program;
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
-        File vertexShader, File fragmentShader, Map<String, Object> additionalDefines)
+    public ProgramObject<ContextType> createProgram(
+        ReadonlyGraphicsResources<ContextType> resources, File vertexShader, File fragmentShader, Map<String, Object> additionalDefines)
         throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, true, additionalDefines);
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
-        File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws IOException
+    public ProgramObject<ContextType> createProgram(
+        ReadonlyGraphicsResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
+        throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
     }
 
-    public ProgramObject<ContextType> createProgram(ReadonlyGraphicsResources<ContextType> resources,
-        File vertexShader, File fragmentShader) throws IOException
+    public ProgramObject<ContextType> createProgram(
+        ReadonlyGraphicsResources<ContextType> resources, File vertexShader, File fragmentShader) throws IOException
     {
         return createProgram(resources, vertexShader, fragmentShader, true);
     }

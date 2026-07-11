@@ -619,7 +619,7 @@ public final class Rendering
                     requestQueue.addBackgroundGraphicsRequest(new ProjectGraphicsRequest()
                     {
                         @Override
-                        public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> instance)
+                        public <ContextType extends Context<ContextType>> void executeRequest(ImageBasedRenderable<ContextType> instance)
                         {
                             WindowSynchronization.getInstance().quitWithoutConfirmation();
                         }

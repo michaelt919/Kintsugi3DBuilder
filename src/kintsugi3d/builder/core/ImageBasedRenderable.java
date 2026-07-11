@@ -28,8 +28,12 @@ import java.io.File;
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.
  */
-public interface RenderableInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
+public interface ImageBasedRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
+    IntVector2 getSafeStartPixel();
+
+    IntVector2 getSafeEndPixel();
+
     /**
      * Sets the safe region for the target framebuffer.
      * Essential content will bre rendered within this region.
