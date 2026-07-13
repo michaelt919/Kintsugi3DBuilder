@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,7 +30,7 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
     @Override
     public void loadForViewSelection(Consumer<ViewSelectionModel> onLoadComplete)
     {
-        ViewSet currentViewSet = Global.state().getIOModel().validateProjectInstance().getLoadedViewSet();
+        ViewSet currentViewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
         setViewSelectionModel(new GenericViewSelectionModel("Current Project", currentViewSet));
 
         if (currentViewSet.getOrientationViewIndex() >= 0)

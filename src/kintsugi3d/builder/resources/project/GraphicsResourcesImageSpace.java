@@ -501,7 +501,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
     }
 
-    private static <ContextType extends Context<ContextType>> double getMinDepthFromFBO(Framebuffer<ContextType> depthFramebuffer, double nearPlane, double farPlane)
+    private static <ContextType extends Context<ContextType>> double getMinDepthFromFBO(ReadableFramebuffer<ContextType> depthFramebuffer, double nearPlane, double farPlane)
     {
         double minDepth = farPlane;
 

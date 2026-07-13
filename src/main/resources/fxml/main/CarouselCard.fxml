@@ -16,14 +16,18 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="160.0"
+<?import javafx.scene.shape.SVGPath?>
+<AnchorPane fx:id = "carouselCard"
+            prefHeight="160.0"
             prefWidth="210"
             minHeight = "-Infinity"
             minWidth = "-Infinity"
             style = "-fx-background-color: #3C3C3C;"
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController">
+            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController"
+            onMouseEntered="#showMoveButtons"
+            onMouseExited="#hideMoveButtons">
     <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     <Button fx:id = "closeButton"
             onAction = "#closeCard"
@@ -38,6 +42,27 @@
             text = "x"
             style = "-fx-background-color: #A1A1A1; -fx-font-size: 12px; -fx-padding: 0px; -fx-text-fill: black; -fx-alignment: center;">
     </Button>
+    <HBox fx:id = "buttonBox" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" visible = "false">
+        <Button fx:id = "moveLeft" minHeight = "50" maxHeight = "50" style = "-fx-padding: 3px; -fx-background-color: #202020" opacity=".75" onAction="#moveCarouselCardLeft">
+            <graphic>
+                <SVGPath content="M12,5 L5,20 L12,35"
+                         stroke="lightgrey" strokeWidth="4.0"
+                         strokeLineCap="ROUND"
+                         strokeLineJoin="ROUND"
+                         fill="TRANSPARENT" />
+            </graphic>
+        </Button>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id = "moveRight" minHeight = "50" maxHeight = "50" style = " -fx-padding: 3px; -fx-background-color: #202020" opacity=".75" onAction="#moveCarouselCardRight">
+            <graphic>
+                <SVGPath content="M5,5 L12,20 L5,35"
+                         stroke="lightgrey" strokeWidth="4.0"
+                         strokeLineCap="ROUND"
+                         strokeLineJoin="ROUND"
+                         fill="TRANSPARENT" />
+            </graphic>
+        </Button>
+    </HBox>
     <HBox   prefHeight="30"
             minHeight="30"
             maxHeight="30"

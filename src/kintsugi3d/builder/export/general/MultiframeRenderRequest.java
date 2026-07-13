@@ -13,7 +13,7 @@ package kintsugi3d.builder.export.general;
 
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
@@ -53,7 +53,7 @@ class MultiframeRenderRequest extends RenderRequestBase
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();

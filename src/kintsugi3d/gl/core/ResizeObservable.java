@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,11 +14,11 @@ package kintsugi3d.gl.core;
 import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface SwapObservable<SwapType>
+public interface ResizeObservable<ResizeType>
 {
     /**
-     * Add a listener that will be called whenever a swap occurs, consuming a reference to the SwapType that is now front.
-     * @param listener The listener that runs when a swap occurs with a reference to the front SwapType.
+     * Add a listener that will be called whenever a resize occurs, consuming a reference to the ResizeType that was just resized.
+     * @param listener The listener that runs when a resize occurs with a reference to the resized ResizeType.
      */
-    void addSwapListener(Consumer<SwapType> listener);
+    void addResizeListener(Consumer<ResizeType> listener);
 }

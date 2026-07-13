@@ -40,15 +40,15 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
     private CardsModel lastUsedCardsModel;
 
-    private final ProjectInstance<?> instance;
+    private final RenderableInstance<?> instance;
 
     private File textureImage;
     /**
-     * TextureCardFactory is the constructor for this class takes a ProjectInstance and
+     * TextureCardFactory is the constructor for this class takes a RenderableInstance and
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(ProjectInstance<?> instance)
+    public TextureCardFactory(RenderableInstance<?> instance)
     {
         this.instance = instance;
     }
@@ -284,16 +284,18 @@ public class TextureCardFactory implements ProjectDataCardFactory
             if (key != null)
             {
                 data = new NamedTextureReplaceData(instance.getResources().getTextureResources(), key,
-                    new File(Global.state().getIOModel().validateProjectInstance().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getTextureFilename(key.name, "PNG")));
+                    new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
+                        TextureResources.getTextureFilename(key.name, "PNG")));
             }
             // Replacing weightmap
             else
             {
                 data = new WeightmapReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
-                    new File(Global.state().getIOModel().validateProjectInstance().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+                    new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
+                        TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
             }
 
-            Global.state().getIOModel().getLoadedProjectInstance().invokeUserImageReplacement(data);
+            Global.state().getIOModel().getMainRenderable().invokeUserImageReplacement(data);
         });
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -24,6 +24,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -49,17 +50,14 @@ import org.slf4j.LoggerFactory;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController extends NonDataPageControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(EyedropperController.class);
 
-    private static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    private static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
@@ -133,9 +131,9 @@ public class EyedropperController extends NonDataPageControllerBase
         isCropping = false;
         canResetCrop = false;
 
-        selectedColors = new ArrayList<>();
+        selectedColors = new ArrayList<>(6);
 
-        colorSelectTxtFields = new ArrayList<>();
+        colorSelectTxtFields = new ArrayList<>(6);
         colorSelectTxtFields.add(txtField1);
         colorSelectTxtFields.add(txtField2);
         colorSelectTxtFields.add(txtField3);
@@ -143,7 +141,7 @@ public class EyedropperController extends NonDataPageControllerBase
         colorSelectTxtFields.add(txtField5);
         colorSelectTxtFields.add(txtField6);
 
-        finalSelectRectangles = new ArrayList<>();
+        finalSelectRectangles = new ArrayList<>(6);
         finalSelectRectangles.add(finalSelectRect1);
         finalSelectRectangles.add(finalSelectRect2);
         finalSelectRectangles.add(finalSelectRect3);
@@ -217,6 +215,7 @@ public class EyedropperController extends NonDataPageControllerBase
                     // If somehow a trivial encoding was previously stored, this could be considered a bit of "housekeeping"
                     // as that encoding has no effect and could have a small impact on memory usage / performance
                     double[] prevLinearLuminanceValues = viewSet.getLinearLuminanceValues();
+                    //noinspection FloatingPointEquality
                     if (prevEncodedLuminanceValues.length == 1 && prevLinearLuminanceValues[0] == 1.0 && (0x00FF & prevEncodedLuminanceValues[0]) == 255)
                     {
                         // If the user cancels, this indicates that we should clear the luminance encoding on the view set
@@ -350,7 +349,7 @@ public class EyedropperController extends NonDataPageControllerBase
             Color averageColor = getAvgColorFromSelection();
 
             // Set the color label text
-            colorLabel.setText("Selected Tone [0-255]: " + Math.round(getGreyScaleDouble(averageColor)));
+            colorLabel.setText(String.format("Selected Tone [0-255]: %d", Math.round(getGreyScaleDouble(averageColor))));
 
             //display average color to user, change text for corresponding text field
             addSelectedColor(averageColor);
@@ -416,7 +415,7 @@ public class EyedropperController extends NonDataPageControllerBase
         double width = selectionRectangle.getWidth();
         double height = selectionRectangle.getHeight();
 
-        javafx.scene.image.PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
+        PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
 
         Rectangle2D viewport = colorPickerImgView.getViewport();
         if (viewport == null)
@@ -425,7 +424,7 @@ public class EyedropperController extends NonDataPageControllerBase
         }
 
         double scaleFactor;
-        if (viewport == getDefaultViewport(colorPickerImgView))
+        if (viewport.equals(getDefaultViewport(colorPickerImgView)))
         {//use this scaleFactor when image is not cropped
             scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
         }
@@ -481,7 +480,7 @@ public class EyedropperController extends NonDataPageControllerBase
         return calculateAverageColor(selectedColors);
     }
 
-    private double calculateImgViewCroppedScaleFactor(ImageView imageView)
+    private static double calculateImgViewCroppedScaleFactor(ImageView imageView)
     {
         Rectangle2D viewport = imageView.getViewport();
         if (viewport.getWidth() > viewport.getHeight())
@@ -494,7 +493,7 @@ public class EyedropperController extends NonDataPageControllerBase
         }
     }
 
-    private double calculateImgViewScaleFactor(ImageView imgView)
+    private static double calculateImgViewScaleFactor(ImageView imgView)
     {
         //getWidth() and getHeight() refer to the full resolution image
         //fitWidth() and fitHeight() refer to the image in the window
@@ -508,7 +507,7 @@ public class EyedropperController extends NonDataPageControllerBase
         }
     }
 
-    private Color calculateAverageColor(List<Color> colors)
+    private static Color calculateAverageColor(Collection<Color> colors)
     {
         double redSum = 0;
         double greenSum = 0;
@@ -529,7 +528,7 @@ public class EyedropperController extends NonDataPageControllerBase
         return Color.color(averageRed, averageGreen, averageBlue);
     }
 
-    private double getGreyScaleDouble(Color color)
+    private static double getGreyScaleDouble(Color color)
     {
         //new calculation uses weighted scaling
         double redVal = color.getRed();
@@ -613,7 +612,7 @@ public class EyedropperController extends NonDataPageControllerBase
             greyScale = 0;
         }
 
-        double val = greyScale / (255);
+        double val = greyScale / 255;
         rect.setFill(new Color(val, val, val, 1));
         rect.setVisible(true);
     }
@@ -749,9 +748,9 @@ public class EyedropperController extends NonDataPageControllerBase
         txtField6.setText(Integer.toString(0x00FF & newEncodedLuminanceValues[5]));
     }
 
-    private boolean hasValidIOModel()
+    private static boolean hasValidIOModel()
     {
-        return Global.state().getIOModel().hasLoadedProjectInstance();
+        return Global.state().getIOModel().hasLoadedRenderable();
     }
 
 //    public void ExitEyeDropper(){
@@ -767,8 +766,7 @@ public class EyedropperController extends NonDataPageControllerBase
         if (!multiImageWarningShown)
         {
             Alert alert = new Alert(AlertType.WARNING,
-                "Warning: using multiple images for tone calibration can result in inconsistencies in tone interpretation.  "
-                    + "To be used for advanced workflows only.",
+                "Warning: using multiple images for tone calibration can result in inconsistencies in tone interpretation.  To be used for advanced workflows only.",
                 ButtonType.OK, ButtonType.CANCEL);
             alert.setGraphic(null);
             var result = alert.showAndWait();
@@ -786,7 +784,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", VALID_EXTENSIONS));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         try
@@ -795,7 +793,7 @@ public class EyedropperController extends NonDataPageControllerBase
         }
         catch (NullPointerException e)
         {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please load a model before using the color checker.");
+            Alert alert = new Alert(AlertType.ERROR, "Please load a model before using the color checker.");
             alert.setGraphic(null);
             alert.show();
             return;
@@ -813,12 +811,11 @@ public class EyedropperController extends NonDataPageControllerBase
             RecentProjects.setMostRecentDirectory(file.getParentFile());
 
             //convert tiff image if necessary
-            if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?"))
+            if (file.getAbsolutePath().toLowerCase(Locale.ROOT).matches(".*\\.tiff?"))
             {
-                BufferedImage bufferedImage;
                 try
                 {
-                    bufferedImage = ImageHelper.read(file).getBufferedImage();
+                    BufferedImage bufferedImage = ImageHelper.read(file).getBufferedImage();
                     colorPickerImgView.setImage(SwingFXUtils.toFXImage(bufferedImage, null));
                 }
                 catch (IOException e)
@@ -844,12 +841,11 @@ public class EyedropperController extends NonDataPageControllerBase
             //fileChooser.setInitialFileName("colorPickerImage");
 
             //This saves the file to the location path listed
-            String path = file.getPath();
             try
             {
-                getState().getProjectModel().setColorCheckerFile(new File(path));
+                getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
             }
-            catch (Exception e)
+            catch (RuntimeException e)
             {
                 LOG.error("Could not save file");
             }

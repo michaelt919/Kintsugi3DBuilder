@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.state.scene.UserShader;
 import org.slf4j.Logger;
@@ -33,14 +33,14 @@ public class ShaderCardFactory implements ProjectDataCardFactory
 {
     private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
 
-    private final ProjectInstance<?> instance;
+    private final RenderableInstance<?> instance;
 
     /**
-     * ShaderCardFactory is the constructor for this class takes a ProjectInstance and
+     * ShaderCardFactory is the constructor for this class takes a RenderableInstance and
      * assigns it to private variable in class
      * @param instance
      */
-    public ShaderCardFactory(ProjectInstance<?> instance)
+    public ShaderCardFactory(RenderableInstance<?> instance)
     {
         this.instance = instance;
     }

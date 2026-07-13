@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,7 @@ package kintsugi3d.builder.resources.project.stream;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
-import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.ReadableFramebuffer;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     private static final Logger LOG = LoggerFactory.getLogger(ParallelViewRenderStream.class);
     private final int viewCount;
     private final Drawable<ContextType> drawable;
-    private final Framebuffer<ContextType> framebuffer;
+    private final ReadableFramebuffer<ContextType> framebuffer;
     private final int attachmentCount;
     private final int maxRunningThreads;
 
@@ -42,7 +42,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     private final Deque<ColorNativeBufferList[]> unusedColorBuffers;
 
 
-    ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount,
+    ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount,
         int maxRunningThreads)
     {
         this.viewCount = viewCount;
@@ -52,12 +52,12 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
         this.maxRunningThreads = maxRunningThreads;
         unusedColorBuffers = IntStream.range(0, maxRunningThreads)
             .mapToObj(i -> IntStream.range(0, attachmentCount)
-                .mapToObj(j -> new ColorNativeBufferList(framebuffer.getSize().width * framebuffer.getSize().height))
+                .mapToObj(j -> new ColorNativeBufferList(framebuffer.getSizeForRead().width * framebuffer.getSizeForRead().height))
                 .toArray(ColorNativeBufferList[]::new))
             .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
-    ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
+    ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
         this(viewCount, drawable, framebuffer, attachmentCount, DEFAULT_MAX_RUNNING_THREADS);
     }

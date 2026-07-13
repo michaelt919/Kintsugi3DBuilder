@@ -142,7 +142,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private void selectSampleLocations(Framebuffer<ContextType> fbo) throws IOException
+    private void selectSampleLocations(ReadableFramebuffer<ContextType> fbo) throws IOException
     {
 
         try (ProgramObject<ContextType> maskProgram = context.getShaderProgramBuilder()
@@ -262,7 +262,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private void buildCache(Framebuffer<ContextType> fbo, ProgressMonitor monitor)
+    private void buildCache(ReadableFramebuffer<ContextType> fbo, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
@@ -465,21 +465,21 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 GeometryFramebuffer.createEmpty(context, settings.getSampledSize(), settings.getSampledSize());
 
             // Sample position buffer
-            Framebuffer<ContextType> contextTypeFramebuffer2 = geomTexturesFullRes.getFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer2 = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getPositionTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
                         contextTypeFramebuffer2.getTextureReaderForColorAttachment(0).readFloatingPointRGBA())));
 
             // Sample normal buffer
-            Framebuffer<ContextType> contextTypeFramebuffer1 = geomTexturesFullRes.getFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer1 = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getNormalTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
                         contextTypeFramebuffer1.getTextureReaderForColorAttachment(1).readFloatingPointRGBA())));
 
             // Sample tangent buffer
-            Framebuffer<ContextType> contextTypeFramebuffer = geomTexturesFullRes.getFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getTangentTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
