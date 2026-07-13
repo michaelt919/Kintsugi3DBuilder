@@ -71,7 +71,7 @@
                     <Insets bottom="4.0" left="4.0" right="4.0" top="5.0" />
                 </padding>
                 <Button
-                        fx:id = "minimizeButton"
+                        fx:id = "maximizeButton"
                         alignment="CENTER"
                         text = "+"
                         maxHeight="15"

@@ -48,7 +48,6 @@ public class CarouselController
     @FXML private HBox containerHBox;
     @FXML private ScrollPane carouselScrollPane;
     @FXML private AnchorPane mainBox;
-    @FXML private Button minimizeButton;
     @FXML private Region resizeHandle;
     @FXML private HBox buttonBox;
     @FXML private VBox minimizeBar;
