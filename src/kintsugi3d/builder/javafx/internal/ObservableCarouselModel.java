@@ -88,11 +88,11 @@ public class ObservableCarouselModel implements CarouselModel
         RenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
         if (instance != null)
         {
-            int height = (int) Math.round(carouselHeight.get());
+            int carouselHeightRounded = (int) Math.round(carouselHeight.get());
 
             instance.setSafeRegion(
-                new IntVector2(0, height),
-                new IntVector2(mainViewSize.width, mainViewSize.height));
+                new IntVector2(0, 0),
+                new IntVector2(mainViewSize.width, mainViewSize.height - carouselHeightRounded));
         }
     }
 
