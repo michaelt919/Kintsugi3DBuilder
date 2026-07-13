@@ -438,7 +438,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         // make the previous result mutable and add non-standard textures
         Map<TextureDetails, Texture2D<ContextType>> textures = new HashMap<>(standardTextures);
         textures.putAll(diffuseOptimization.getNonStandardTextures());
-        return textures;
+        return Collections.unmodifiableMap(textures);
     }
 
     /**

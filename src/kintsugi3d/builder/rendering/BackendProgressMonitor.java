@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -23,7 +23,7 @@ class BackendProgressMonitor implements ProgressMonitor
     private final ProjectInstance<?> instance;
     private final ProgressMonitor base;
 
-    public BackendProgressMonitor(ProjectInstance<?> instance, ProgressMonitor base)
+    BackendProgressMonitor(ProjectInstance<?> instance, ProgressMonitor base)
     {
         this.instance = instance;
         this.base = base;
@@ -123,7 +123,7 @@ class BackendProgressMonitor implements ProgressMonitor
 
         Global.state().getProjectModel().setProjectLoaded(true);
         Global.state().getProjectModel().setProjectProcessed(isProcessed());
-        Global.state().getProjectModel().setModelSize(instance.getActiveGeometry().getBoundingBoxSize());
+        Global.state().getProjectModel().setModelSize(instance.getGeometry().getBoundingBoxSize());
 
         if (isProcessed())
         {

@@ -16,6 +16,8 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +27,8 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     implements Resource, ContextBound<ContextType>, Croppable<BasisWeightResources<ContextType>>
 {
     private final ContextType context;
+
+    Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
     public Texture3D<ContextType> weightMaps;
     public final Texture2D<ContextType> weightMask;
@@ -161,6 +165,28 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     public BasisWeightResources<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
     {
         return new BasisWeightResources<>(weightMaps.crop(x, y, cropWidth, cropHeight), weightMask.crop(x, y, cropWidth, cropHeight));
+    }
+
+
+    /**
+     * Replaces weightmap by loading the file with a default, expected filename in a specified directory.
+     * @param weightmapIndex
+     * @param parentDirectory
+     */
+    public void replaceWeightMapWithDefaultFile(int weightmapIndex, File parentDirectory) throws IOException
+    {
+        replaceWeightMapWithSpecificFile(weightmapIndex,
+            new File(parentDirectory, TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+    }
+
+    /**
+     * Replaces weightmap by loading a specified file.
+     * @param weightmapIndex
+     * @param newTextureFile
+     */
+    public void replaceWeightMapWithSpecificFile(int weightmapIndex, File newTextureFile) throws IOException
+    {
+        weightMaps.loadLayer(weightmapIndex, newTextureFile, true);
     }
 
     @Override

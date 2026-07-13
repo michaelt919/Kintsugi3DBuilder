@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,6 +22,7 @@ import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Matrix4;
 
 import java.io.File;
+import java.util.function.Consumer;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
@@ -78,13 +79,13 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
      *
      * @return The view set.
      */
-    ViewSet getActiveViewSet();
+    ViewSet getViewSet();
 
     /**
      * Gets the geometry mesh for the currently loaded object.
      * @return The geometry mesh.
      */
-    ReadonlyVertexGeometry getActiveGeometry();
+    ReadonlyVertexGeometry getGeometry();
 
     /**
      * Gets the scene model (object, camera, and lights)
@@ -138,16 +139,16 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
     /**
      * Saves the glTF file.
      * Various export settings are available, including the ability to toggle whether textures are saved automatically.
-     * Typically, there are three scenarios in which this might be called.<br/><br/>
+     * Typically, there are three scenarios in which this might be called.<br><br>
      * 1) When specular fit / process textures finishes, export the glTF model so that it can be previewed in Kintsugi 3D Viewer.
      *      In this scenario, typically it should be configured to not re-export the textures
-     *      since the specular fit process saves textures automatically as it processes them.<br/><br/>
+     *      since the specular fit process saves textures automatically as it processes them.<br><br>
      * 2) When the project is saved, similarly export the glTF model so that it can be previewed in Kintsugi 3D Viewer.
      *      In this scenario, texture saving should be the responsibility of the code module that also handles loading
      *      so that projects can successfully find the texture files.
      *      Ideally this matches the texture filenames specified in the glTF model
      *      so that the Kintsugi 3D Viewer can load them successfully --
-     *      but this is a lower priority than ensuring that Kintsugi 3D Builder projects open correctly.<br/><br/>
+     *      but this is a lower priority than ensuring that Kintsugi 3D Builder projects open correctly.<br><br>
      * 3) When exporting the project, save the glTF model for use in Kintsugi 3D Viewer, Sketchfab, etc.
      *      This is the one scenario in which the glTF model export should also handle texture export --
      *      since the primary purpose is for transmission to Kintsugi 3D Viewer, Sketchfab and so on,
@@ -162,4 +163,18 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
      * @param finishedCallback
      */
     void saveGLTF(File outputDirectory, String filename, ExportSettings settings, Runnable finishedCallback);
+
+    /**
+     * Invokes the specified handler for when the user is expected to specify a new image to replace an existing image resource.
+     * Typically, this will be handled by a user interface module such as JavaFX.
+     * @param imageReplaceData
+     */
+    void invokeUserImageReplacement(ImageReplaceData imageReplaceData);
+
+    /**
+     * Specifies a handler for when the user is expected to specify a new image to replace an existing image resource.
+     * Typically, this will be handled by a user interface module such as JavaFX.
+     * @param userImageReplaceHandler
+     */
+    void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler);
 }

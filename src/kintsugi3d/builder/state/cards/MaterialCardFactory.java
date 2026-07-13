@@ -21,6 +21,8 @@ import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,11 +30,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class MaterialCardFactory implements ProjectDataCardFactory
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
+
     private final ProjectInstance<?> instance;
 
     public MaterialCardFactory(ProjectInstance<?> instance)
@@ -46,7 +51,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         try
         {
             thumbnailPath = ImageFinder.getInstance().findImageFile(
-                new File(instance.getActiveViewSet().getThumbnailImageDirectory(),
+                new File(instance.getViewSet().getThumbnailImageDirectory(),
                     BasisImageCreator.getBasisImageFilename(cardIndex))).toString();
         }
         catch (FileNotFoundException e)
@@ -58,13 +63,9 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
             cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
-        return new ShaderDataCard(String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
+        return new ShaderDataCard(String.format("%d", cardIndex), String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
-                    "View Material", () -> Global.state().getUserShaderModel().setUserShader(shader),
-                    "Send to Carousel", () ->
-                        Global.state().getCarouselModel().addToCarousel(VisualizationShaders.getForBasisMaterial(
-                            VisualizationShaders.BASIS_MATERIAL_WEIGHTED, cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL)),
                     "Highlight Material", () ->
                     {
                         UserShader prevShader = Global.state().getUserShaderModel().getUserShader();
@@ -125,5 +126,12 @@ public class MaterialCardFactory implements ProjectDataCardFactory
 
         // If not yet initialized, return empty list.
         return List.of();
+    }
+
+    @Override
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    {
+        LOG.warn("refreshCards not implemented for textures.");
+        return Map.of();
     }
 }

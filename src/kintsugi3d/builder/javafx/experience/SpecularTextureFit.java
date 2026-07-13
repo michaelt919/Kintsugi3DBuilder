@@ -24,6 +24,6 @@ public class SpecularTextureFit extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        openPagedModel("/fxml/modals/workflow/SpecularTexturesFit.fxml");
+        openPagedModal("/fxml/modals/workflow/SpecularTexturesFit.fxml");
     }
 }

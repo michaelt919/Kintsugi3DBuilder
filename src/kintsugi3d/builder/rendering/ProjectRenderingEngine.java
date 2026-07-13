@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.gltf.ModelExporter;
+import kintsugi3d.builder.core.ImageReplaceData;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -45,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements ProjectInstance<ContextType>
@@ -81,6 +83,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
+
+    private Consumer<ImageReplaceData> userImageReplaceHandler;
 
     private boolean loaded = false;
 
@@ -160,7 +164,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            ViewSelection viewSelection = new ViewSelectionImpl(getActiveViewSet(), sceneModel);
+            ViewSelection viewSelection = new ViewSelectionImpl(getViewSet(), sceneModel);
 
             lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, viewSelection, sceneViewportModel);
             lightCalibration.initialize();
@@ -249,7 +253,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     {
         if (resources.getGeometry() != null)
         {
-            ReadonlyViewSet viewSet = getActiveViewSet();
+            ReadonlyViewSet viewSet = getViewSet();
 
             if (viewSet != null)
             {
@@ -482,13 +486,13 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ReadonlyVertexGeometry getActiveGeometry()
+    public ReadonlyVertexGeometry getGeometry()
     {
         return this.resources.getGeometry();
     }
 
     @Override
-    public ViewSet getActiveViewSet()
+    public ViewSet getViewSet()
     {
         return this.resources.getViewSet();
     }
@@ -536,7 +540,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     {
         if (outputDirectory != null)
         {
-            if (getActiveGeometry() == null)
+            if (getGeometry() == null)
             {
                 throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
             }
@@ -555,7 +559,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
                 // Scale to imported scale from the photogrammetry project if that exists, otherwise at the original, raw scale
                 // ViewSet should default to scale of 1.0 if nothing was imported.
-                ViewSet viewSet = getActiveViewSet();
+                ViewSet viewSet = getViewSet();
                 if (viewSet != null)
                 {
                     transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
@@ -563,7 +567,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
                 TextureResources<ContextType> textureResources = resources.getTextureResources();
 
-                ModelExporter exporter = ModelExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                ModelExporter exporter = ModelExporter.fromVertexGeometry(getGeometry(), transform);
                 settings.applyToExporter(exporter, textureResources, filename);
 
                 File modelFile = new File(outputDirectory, filename);
@@ -589,5 +593,20 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 LOG.error("Error occurred during glTF export:", e);
             }
         }
+    }
+
+    @Override
+    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
+    {
+        if (userImageReplaceHandler != null)
+        {
+            userImageReplaceHandler.accept(imageReplaceData);
+        }
+    }
+
+    @Override
+    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
+    {
+        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

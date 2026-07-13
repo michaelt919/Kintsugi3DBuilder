@@ -134,11 +134,11 @@ public final class FinalErrorCalculaton
             Framebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
 
             rmseOut.println("Final RMSE with final diffuse estimate (linear): " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
 
             finalErrorCalcProgram.setUniform("sRGB", true);
             rmseOut.println("Final RMSE with final diffuse estimate (sRGB): " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
 
             // Calculate error using the GGX fit rather than the basis functions.
             calculateGGXRMSE(resources, programFactory, specularFit, scratchFramebuffer, rmseOut);
@@ -171,11 +171,11 @@ public final class FinalErrorCalculaton
             ggxErrorCalcProgram.setUniform("sRGB", false);
 
             rmseOut.println("RMSE for GGX fit (linear): " +
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
 
             ggxErrorCalcProgram.setUniform("sRGB", true);
             rmseOut.println("RMSE for GGX fit (sRGB): " +
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
         }
     }
 

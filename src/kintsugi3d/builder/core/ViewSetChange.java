@@ -9,14 +9,23 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.internal;
+package kintsugi3d.builder.core;
 
-import javafx.collections.ObservableList;
-import kintsugi3d.builder.state.scene.UserShader;
+import java.io.File;
 
-public interface CarouselModel
+public class ViewSetChange
 {
-    ObservableList<UserShader> getCarouselShaders();
-    void addToCarousel(UserShader shader);
-    void clearCarousel();
+    public enum Type
+    {
+        ADDED, REMOVED, MODIFIED
+    }
+
+    public final Type type;
+    public final File image;
+
+    public ViewSetChange(Type type, File image)
+    {
+        this.type = type;
+        this.image = image;
+    }
 }

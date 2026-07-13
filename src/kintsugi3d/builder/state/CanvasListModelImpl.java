@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,19 +29,9 @@ public class CanvasListModelImpl implements CanvasListModel
     }
 
     @Override
-    public void createCanvas(UserShader shader, int width, int height, Consumer<FramebufferCanvas<?>> canvasChangedListener)
+    public void createCanvas(UserShader shader, int width, int height, Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
-        instanceManager.addRenderView(shader, new FramebufferSize(width, height),
-            framebufferCanvas ->
-            {
-                CanvasModel canvas = new CanvasModelImpl();
-
-                // Add listener before setting canvas to make sure that JavaFX has a chance to register its callback.
-                canvas.addCanvasChangedListener(canvasChangedListener);
-
-                // Once the callback is set up, now we can set the canvas.
-                canvas.setCanvas(framebufferCanvas);
-            });
+        instanceManager.addRenderView(shader, new FramebufferSize(width, height), framebufferCallback);
     }
 
     @Override

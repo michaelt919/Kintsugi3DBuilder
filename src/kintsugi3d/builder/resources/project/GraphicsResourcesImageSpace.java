@@ -324,7 +324,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             true);
 
         // Read the images from a file
-        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageDirectory() != null) && (viewSet.getCameraPoseCount() > 0))
+        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageDirectory() != null) && (viewSet.getCombinedCameraPoseCount() > 0))
         {
             Date timestamp = new Date();
 
@@ -348,21 +348,21 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             }
 
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
-                context.getTextureFactory().build2DColorTextureArray(width, height, viewSet.getCameraPoseCount());
+                context.getTextureFactory().build2DColorTextureArray(width, height, viewSet.getCombinedCameraPoseCount());
             loadOptions.configureColorTextureBuilder(textureArrayBuilder);
             colorTextures = textureArrayBuilder.createTexture();
 
             if (progressMonitor != null)
             {
                 progressMonitor.setStage(0, "Loading preview-resolution images...");
-                progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
+                progressMonitor.setMaxProgress(viewSet.getCombinedCameraPoseCount());
             }
 
-            for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+            for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i + 1, viewSet.getCameraPoseCount()));
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i + 1, viewSet.getCombinedCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
@@ -381,7 +381,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
             if (progressMonitor != null)
             {
-                progressMonitor.setProgress(viewSet.getCameraPoseCount(), "All images loaded.");
+                progressMonitor.setProgress(viewSet.getCombinedCameraPoseCount(), "All images loaded.");
             }
 
             LOG.info("View Set textures loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
@@ -440,11 +440,11 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                         // Build depth textures for each view
                         this.depthTextures =
                             context.getTextureFactory().build2DDepthTextureArray(
-                                    loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+                                    loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCombinedCameraPoseCount())
                                 .createTexture();
 
                         // Render each depth texture
-                        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                        for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
                         {
                             depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
                             depthMapGenerator.generateDepthMap(viewSet, i, depthRenderingFBO);
@@ -488,7 +488,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         {
             shadowTextures =
                 context.getTextureFactory()
-                    .build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.getViewSet().getCameraPoseCount())
+                    .build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.getViewSet().getCombinedCameraPoseCount())
                     .createTexture();
             shadowMatrixBuffer = context.createUniformBuffer();
 
@@ -530,10 +530,10 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 )
             {
                 // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-                NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.getViewSet().getCameraPoseCount());
+                NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.getViewSet().getCombinedCameraPoseCount());
 
                 // Render each depth texture
-                for (int i = 0; i < this.getViewSet().getCameraPoseCount(); i++)
+                for (int i = 0; i < this.getViewSet().getCombinedCameraPoseCount(); i++)
                 {
                     depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
                     Matrix4 shadowMatrix = depthMapGenerator.generateShadowMap(getViewSet(), i, depthRenderingFBO);
@@ -844,17 +844,17 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             if (previewImages.needsUndistortion())
             {
                 // Distortion exists; undistort
-                LOG.info("Undistorting image {}/{}", poseIndex, getViewSet().getCameraPoseCount());
+                LOG.info("Undistorting image {}/{}", poseIndex, getViewSet().getCombinedCameraPoseCount());
             }
             else if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
             {
-                LOG.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCameraPoseCount());
+                LOG.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCombinedCameraPoseCount());
             }
             else
             {
                 // No distortion or preview dimensions, just use the original image
                 LOG.warn("Using full resolution image {}/{} : No distortion and preview width and/or preview height are 0",
-                    poseIndex, getViewSet().getCameraPoseCount());
+                    poseIndex, getViewSet().getCombinedCameraPoseCount());
             }
 
             previewImages.tryCreateMissingFiles(getContext());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,7 +21,7 @@ import java.util.List;
 
 public abstract class GraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResources<ContextType>
 {
-    private GraphicsResourcesCommon<ContextType> sharedResources;
+    private final GraphicsResourcesCommon<ContextType> sharedResources;
 
     /**
      * Only one instance will be the owner of the shared resources (typicaly created when a project is loaded)
@@ -131,7 +131,6 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
         if (this.ownerOfSharedResources && this.sharedResources != null)
         {
             this.sharedResources.close();
-            this.sharedResources = null;
         }
     }
 }

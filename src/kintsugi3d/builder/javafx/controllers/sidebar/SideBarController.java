@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -19,19 +19,34 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
+import java.util.Map.Entry;
 
 public class SideBarController
 {
+    private static final int DEFAULT_WIDTH = 400;
+    private static final int MINIMIZED_WIDTH = 23;
+
+    private static final double RESIZE_WIDTH = 5.0;
+
+    //Alternative LOWER_BOUND: 62
+    private static final int LOWER_BOUND = 322;
+
     @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
     @FXML private Button minimizeButton;
@@ -47,11 +62,8 @@ public class SideBarController
     private final List<RadioButton> buttons = new ArrayList<>(8);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
-    private static final double RESIZE_WIDTH = 5.0;
-    //Alternative LOWER_BOUND: 62
-    private static final int LOWER_BOUND = 322;
     private ObservableTabsModel tabModels;
-    private String lastSelectedTabLabel = null;
+    private String lastSelectedTabLabel;
     private boolean minimized = false;
 
     public Node getRootNode()
@@ -95,8 +107,7 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
-        mainBox.setPrefWidth(400);
-        mainBox.setMaxWidth(400);
+        resizeWidth(DEFAULT_WIDTH);
     }
 
     private void removeTab(String key)
@@ -142,9 +153,10 @@ public class SideBarController
         RadioButton button = new RadioButton(name);
 
         // Set sizing
-        button.setMinHeight(32.0);
-        button.setMaxHeight(32.0);
-        button.setPrefHeight(32.0);
+        double buttonHeight = 32.0;
+        button.setMinHeight(buttonHeight);
+        button.setMaxHeight(buttonHeight);
+        button.setPrefHeight(buttonHeight);
         button.setMaxWidth(Double.MAX_VALUE);  // Equivalent to 1.7976931348623157E308
 
         // Set properties
@@ -152,13 +164,13 @@ public class SideBarController
         button.setSelected(false);
         button.setStyle("-fx-alignment: center;");
         button.getStyleClass().add("stripped-radio-button");
-        button.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        button.setTextAlignment(TextAlignment.CENTER);
 
         // Add to ToggleGroup
         button.setToggleGroup(tabToggleGroup);
 
         // Allow the button to grow horizontally in an HBox
-        HBox.setHgrow(button, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(button, Priority.ALWAYS);
 
         buttons.add(button);
 
@@ -205,7 +217,7 @@ public class SideBarController
     {
         if (minimized)
         {
-            resizeWidth(400);
+            resizeWidth(DEFAULT_WIDTH);
 
             maximize();
         }
@@ -246,7 +258,7 @@ public class SideBarController
         double newWidth = event.getX();
 
         //decimal at end is percentage of screen it can be dragged to
-        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * .50;
+        double upperBound = mainBox.getParent().getScene().getWindow().getWidth() * 0.45;
 
         //will only preform actions after this method if the cursor is resize cursor
         if (!mainBox.getCursor().equals(Cursor.E_RESIZE))
@@ -256,7 +268,7 @@ public class SideBarController
 
         if (minimized) //if in minimized state
         {
-            if (newWidth >= 23)
+            if (newWidth >= MINIMIZED_WIDTH)
             {
                 resizeWidth(newWidth);
 
@@ -267,7 +279,7 @@ public class SideBarController
             }
             else
             {
-                resizeWidth(23);
+                resizeWidth(MINIMIZED_WIDTH);
             }
         }
         else
@@ -300,7 +312,7 @@ public class SideBarController
     {
         if (minimized)
         {
-            resizeWidth(23);
+            resizeWidth(MINIMIZED_WIDTH);
         }
     }
 
@@ -312,7 +324,7 @@ public class SideBarController
     {
         if (lastSelectedTabLabel == null)
         {
-            for (Map.Entry<String, RadioButton> entry : buttonMap.entrySet())
+            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
             {
                 RadioButton button = entry.getValue();
 
@@ -346,7 +358,7 @@ public class SideBarController
     private void minimize()
     {
         if (!buttonBox.getChildren().isEmpty()){
-            resizeWidth(23);
+            resizeWidth(MINIMIZED_WIDTH);
 
             buttonBox.setVisible(false);
             buttonBox.setManaged(false);
@@ -397,13 +409,16 @@ public class SideBarController
      * Used to condense code. Resizes mainBox according to parameter width.
      * @param width
      */
-    private void resizeWidth(double width){
+    private void resizeWidth(double width)
+    {
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
     }
+
     public void refreshTabs()
     {
         tabControllers.forEach(CardTabController::refreshCardList);
     }
+    public double getTabWidth() {return mainBox.getWidth();}
 }

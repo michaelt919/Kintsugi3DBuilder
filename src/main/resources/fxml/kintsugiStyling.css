@@ -77,6 +77,7 @@
 /********************************************************************************/
 
 .modal-root,
+.button:dark-button,
 .content-root,
 .cameraviewlist,
 .context-menu,
@@ -93,6 +94,14 @@
 .split-menu-button .label,
 .titled-pane > .title{
     -fx-text-fill: #202020;
+}
+
+.button:disabled,
+.toggle-button:disabled,
+.card-background:disabled .label:disabled,
+.split-menu-button:disabled .label:disabled,
+.titled-pane:disabled > .title{
+    -fx-text-fill: #383838;
 }
 
 .button, .toggle-button,
@@ -141,6 +150,7 @@
  }
 
 .check-box,
+.button:dark-button,
 .label,
 .list-view,
 .list-cell,
@@ -150,6 +160,7 @@
 .tab,
 .tab .tab-label,
 .stripped-radio-button,
+.right-stripped-radio-button,
 .text-field
 {
     -fx-text-fill: #CECECE;
@@ -184,6 +195,16 @@
 .button, .toggle-button {
     -fx-background-radius: 0;
     -fx-padding: 8 16 8 16; /* top right bottom left */
+}
+
+.button:dark-button {
+    -fx-background-radius: 0;
+    -fx-padding: 0 4 0 4;
+}
+
+.button:dark-button:hover {
+    -fx-text-fill: #CECECE;
+    -fx-background-color: #383838;
 }
 
 .scroll-bar .increment-button,
@@ -488,9 +509,9 @@
 /* Card Component */
 .card-background {
     -fx-background-color:
-            #ADADAD,
-            #ADADAD,
-            #ADADAD;
+            #CECECE,
+            #CECECE,
+            #CECECE;
     -fx-background-insets:
             2,
             4,
@@ -499,9 +520,17 @@
 
 .card-background:hover {
     -fx-background-color:
-            #CECECE,
-            #CECECE,
-            #CECECE;
+            #EEEEEE,
+            #EEEEEE,
+            #EEEEEE;
+}
+
+.card-background:disabled{
+    -fx-background-color: #ADADAD;
+}
+
+.card-background:disabled:hover {
+    -fx-background-color: #EEEEEE
 }
 .card-background:pressed {
     -fx-background-color:
@@ -531,11 +560,13 @@
 .button:hover{
     -fx-text-fill: #383838;
     -fx-background-color:
-            #ffffff,
-            #ffffff,
-            #ffffff;
+            #CECECE,
+            #CECECE,
+            #CECECE;
 }
-.button:pressed{
+.button:pressed,
+.button:dark-button:pressed {
+    -fx-background-color: #CECECE;
     -fx-text-fill: #383838;
     -fx-background-color:
             #1A1A1A,
@@ -579,8 +610,23 @@
   -fx-pref-width: 0;
   -fx-max-width: 0;
 }
+.right-stripped-radio-button > .radio {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0px;
+    -fx-padding: 0.0em; /* 4 8 4 8 */
+
+    -fx-min-width: 0;
+    -fx-pref-width: 0;
+    -fx-max-width: 0;
+}
+
 .stripped-radio-button:selected > .radio > .dot {
   -fx-background-color: transparent;
+}
+
+.right-stripped-radio-button:selected > .radio > .dot {
+    -fx-background-color: transparent;
 }
 
 .stripped-radio-button {
@@ -589,6 +635,13 @@
 
 .stripped-radio-button:selected {
   -fx-background-color: #383838
+}
+.right-stripped-radio-button {
+    -fx-background-color: #383838
+
+}
+.right-stripped-radio-button:selected {
+    -fx-background-color: #202020
 }
 
 /* Styling for the scroll bar in left pane */
@@ -706,4 +759,9 @@
     -fx-border-style: solid;
     -fx-border-width: 1px;
     -fx-background-color: #000000;
+}
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-pick-on-bounds: false;
 }

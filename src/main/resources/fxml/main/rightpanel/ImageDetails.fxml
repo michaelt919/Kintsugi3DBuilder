@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.shape.*?>
+<VBox fx:id = "detailBox"
+      xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController"
+      style = "-fx-background-color: #202020"
+      minWidth="0.0"
+      maxHeight="-Infinity"
+      alignment="TOP_CENTER">
+    <padding>
+        <Insets left="4" right="4" top="4" bottom="0"/>
+    </padding>
+    <StackPane fx:id="stackPane"
+               alignment="TOP_LEFT"
+               pickOnBounds="false"
+               minHeight="0.0"
+               onMousePressed="#startSelection"
+               onMouseDragged="#dragSelection"
+               onMouseReleased="#endSelection">
+
+        <ImageView fx:id="displayImage"
+                   preserveRatio="true"
+                   onScroll="#scrolling"
+                   StackPane.alignment="TOP_LEFT"/>
+        <Rectangle fx:id="selectionBox"
+                   fill="TRANSPARENT"
+                   stroke="GOLD"
+                   strokeWidth="2"
+                   visible="false"
+                   StackPane.alignment="TOP_LEFT" />
+    </StackPane>
+    <HBox fx:id="buttonRow" spacing = "4.0" minHeight = "0.0" maxHeight="40">
+        <padding>
+            <Insets top="4" right="0" bottom="4" left="0"/>
+        </padding>
+    </HBox>
+</VBox>

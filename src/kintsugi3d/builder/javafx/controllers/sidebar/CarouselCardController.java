@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,17 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
-import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
+import kintsugi3d.builder.state.ReadonlyCanvasModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.javafx.FramebufferView;
 
@@ -27,24 +32,23 @@ import kintsugi3d.gl.javafx.FramebufferView;
  */
 public class CarouselCardController
 {
-    private int cardWidth = 210;
-    private int cardHeight = 160;
-
-    @FXML private FramebufferView framebufferView;
-
-    @FXML
-    private CheckBox selectedCheckbox;
-
-    @FXML
-    private Label shaderName;
-
-    private UserShader currentShader;
-
     private static final UserShader DEFAULT_SHADER_UNPROCESSED =
         new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
 
     private static final UserShader DEFAULT_SHADER_PROCESSED =
         new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
+
+    @FXML private FramebufferView framebufferView;
+    @FXML private CheckBox selectedCheckbox;
+    @FXML private Label shaderName;
+    @FXML private HBox buttonBox;
+    @FXML private AnchorPane carouselCard;
+    @FXML private Button moveLeft;
+    @FXML private Button moveRight;
+
+    private ObservableCarouselModel carouselModel;
+    private CarouselController carousel;
+    private UserShader shader;
 
     /**
      * If the checkbox is selected it will apply the shader that is assigned to the card.
@@ -56,7 +60,7 @@ public class CarouselCardController
     {
         if (selectedCheckbox.isSelected())
         {
-            Global.state().getUserShaderModel().setUserShader(currentShader);
+            Global.state().getUserShaderModel().setUserShader(shader);
         }
         else
         {
@@ -76,10 +80,13 @@ public class CarouselCardController
      * and changes the label to have the name of the shader
      * @param shader
      */
-    public void initData(UserShader shader)
+    public void init(ObservableCarouselModel carouselModel, UserShader shader, CarouselController carousel)
     {
-        this.currentShader = shader;
-        shaderName.setText(currentShader.getFriendlyName());
+        this.carouselModel = carouselModel;
+        this.carousel = carousel;
+        this.shader = shader;
+
+        shaderName.setText(this.shader.getFriendlyName());
 
         /*
         Works like a listener in that it detects if there were any changes to the
@@ -88,15 +95,24 @@ public class CarouselCardController
         */
         Global.state().getUserShaderModel().registerHandler(this::updateCheckboxState);
         updateCheckboxState(Global.state().getUserShaderModel().getUserShader());
+    }
+    public void initialize()
+    {
+        buttonBox.translateYProperty().bind(carouselCard.heightProperty().divide(2.0).subtract(buttonBox.heightProperty().divide(2.0)));
 
-        // Creating the canvas requires layout to determine card size
-        // so put this in a Platform.runLater to ensure that the card has a non-zero size.
-        Platform.runLater(() ->
-        {
-            // Set up the rendering backend for the card.
-            Global.state().getCanvasListModel().createCanvas(shader,
-                cardWidth, cardHeight, framebufferView::setCanvas);
-        });
+        Tooltip leftTip = new Tooltip();
+        Tooltip rightTip = new Tooltip();
+        leftTip.setText("Move Card Left");
+        rightTip.setText("Move Card Right");
+        leftTip.setShowDelay(Duration.millis(10));
+        rightTip.setShowDelay(Duration.millis(10));
+        moveLeft.setTooltip(leftTip);
+        moveRight.setTooltip(rightTip);
+    }
+
+    public void setupCanvas(ReadonlyCanvasModel canvasModel)
+    {
+        framebufferView.setCanvas(canvasModel.getCanvas());
     }
 
     /**
@@ -105,7 +121,7 @@ public class CarouselCardController
      */
     private void updateCheckboxState(UserShader activeShader)
     {
-        selectedCheckbox.setSelected(currentShader != null && currentShader.equals(activeShader));
+        selectedCheckbox.setSelected(shader != null && shader.equals(activeShader));
     }
 
     /**
@@ -115,14 +131,14 @@ public class CarouselCardController
     @FXML
     public void closeCard()
     {
-        if (currentShader != null)
+        if (shader != null)
         {
             /*
             If the shader that is currently applied is assigned to the card that is being closed,
             It will change the shader back to the default shader. Afterwords it will remove the
             cards shader from the global carousel shaders list.
              */
-            if (currentShader.equals(Global.state().getUserShaderModel().getUserShader()))
+            if (shader.equals(Global.state().getUserShaderModel().getUserShader()))
             {
                 if(Global.state().getProjectModel().isProjectProcessed())
                 {
@@ -133,10 +149,38 @@ public class CarouselCardController
                     Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_UNPROCESSED);
                 }
             }
-            Global.state().getCarouselModel().getCarouselShaders().remove(currentShader);
 
-            // Clean up the rendering backend for the card.
-            Global.state().getCanvasListModel().removeCanvas(currentShader);
+            carouselModel.removeFromCarousel(shader);
         }
+    }
+
+    @FXML public void showMoveButtons()
+    {
+        buttonBox.setVisible(true);
+    }
+
+    @FXML public void hideMoveButtons()
+    {
+        buttonBox.setVisible(false);
+    }
+
+    @FXML public void moveCarouselCardLeft()
+    {
+        carouselModel.moveCardLeft(this);
+    }
+
+    @FXML public void moveCarouselCardRight()
+    {
+        carouselModel.moveCardRight(this);
+    }
+
+    public UserShader getShader()
+    {
+        return shader;
+    }
+
+    public CarouselController getCarouselController()
+    {
+        return carousel;
     }
 }

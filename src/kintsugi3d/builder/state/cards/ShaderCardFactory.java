@@ -11,26 +11,27 @@
 
 package kintsugi3d.builder.state.cards;
 
-import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ProjectInstance;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.state.scene.UserShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
 the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
-shaders will be available for the user to use. On the shader cards there are two buttons
-"Add to Carousel" and "View Shader," Add to carousel will send the shader to a carousel
-for easier use for user. View Shader will apply the shader to the model.
+shaders will be available for the user to use.
  */
 public class ShaderCardFactory implements ProjectDataCardFactory
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
 
     private final ProjectInstance<?> instance;
 
@@ -47,8 +48,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
     /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
     the title of the shader and the file name. Returns ProjectDataCard of the shader
-    (single card). This is also where View Shader and Send to Carousel button and
-    code are located.
+    (single card).
      @param title
      @param fileName
      @return
@@ -58,19 +58,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
         //Creates shader with given title and filename
         UserShader shader = new UserShader(title, fileName);
 
-        return new ShaderDataCard(shader, MainApplication.ICON_PATH, Map.of(), Map.of(
-            "View Shader", () ->
-            {
-                //Sets the model to the shader
-                Global.state().getUserShaderModel().setUserShader(shader);
-            },
-            "Send to Carousel", () ->
-            {
-                //Creates new shader with title and filename
-                UserShader newCarouselShader = new UserShader(title, fileName);
-                //Adds the shader to the carousel
-                Global.state().getCarouselModel().addToCarousel(newCarouselShader);
-            }));
+        return new ShaderDataCard(fileName, shader, MainApplication.ICON_PATH);
     }
     /**
     createAllCards will call createCard for all the shaders and will
@@ -105,5 +93,12 @@ public class ShaderCardFactory implements ProjectDataCardFactory
             shaderDataCards.add(createCard("Weight maps (combined)", "rendermodes/weightmaps/weightmapCombination.frag"));
         }
         return shaderDataCards;
+    }
+
+    @Override
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    {
+        LOG.warn("refreshCards not implemented for textures.");
+        return Map.of();
     }
 }

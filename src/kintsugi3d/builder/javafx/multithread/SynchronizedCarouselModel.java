@@ -11,61 +11,44 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import javafx.collections.ObservableList;
-import javafx.collections.FXCollections;
-import kintsugi3d.builder.javafx.internal.CarouselModel;
+import javafx.application.Platform;
+import kintsugi3d.builder.state.CarouselItem;
+import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
-/*
-This class is for the global state, so we can have a list of shaders in the carousel.
-Has two methods, one to get an arraylist of the shaders currently in the carousel.
-And another to add a shader to the carousel list.
- */
+
+import java.util.Collections;
+import java.util.List;
+
 public class SynchronizedCarouselModel implements CarouselModel
 {
-    private final ObservableList<UserShader> carouselShaders = FXCollections.observableArrayList();
+    private final CarouselModel base;
 
-    /**
-     * returns the list of shaders currently held in global carousel model.
-     * @return
-     */
-    @Override
-    public ObservableList<UserShader> getCarouselShaders()
+    public SynchronizedCarouselModel(CarouselModel base)
     {
-        return carouselShaders;
+        this.base = base;
     }
-    /**
-     * Looks through the existing shaders if the parameter shader is already
-     * in carousel it will not add the shader. If it is not it will add
-     * shader to carouselShaders list.
-     * @param shader
-     */
+
+    @Override
+    public List<CarouselItem> getCarouselItems()
+    {
+        return Collections.unmodifiableList(base.getCarouselItems());
+    }
+
     @Override
     public void addToCarousel(UserShader shader)
     {
-        boolean alreadyInCarousel = false;
-
-        //For loop looks through List for any that match the shader
-        //that is trying to be sent to carousel
-        for (UserShader element : carouselShaders)
-        {
-            if (shader.equals(element))
-            {
-                //if one matches:
-                alreadyInCarousel = true;
-            }
-        }
-
-        //Prevents duplicate shaders in carousel / if the shaders don't match
-        //then shader is sent to carousel
-        if (!alreadyInCarousel)
-        {
-            carouselShaders.add(shader);
-        }
+        Platform.runLater(() -> base.addToCarousel(shader));
     }
 
-    /**
-     * Clears all the shaders in carouselShaders list.
-     */
     @Override
-    public void clearCarousel() { carouselShaders.clear(); }
+    public void removeFromCarousel(UserShader shader)
+    {
+        Platform.runLater(() -> base.removeFromCarousel(shader));
+    }
+
+    @Override
+    public void clearCarousel()
+    {
+        Platform.runLater(base::clearCarousel);
+    }
 }
