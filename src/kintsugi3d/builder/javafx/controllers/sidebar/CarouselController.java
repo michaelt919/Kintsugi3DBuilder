@@ -16,6 +16,7 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -30,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /*
     This is the controller for the carousel it does quite a few things.
@@ -48,7 +51,6 @@ public class CarouselController
     @FXML private HBox containerHBox;
     @FXML private ScrollPane carouselScrollPane;
     @FXML private AnchorPane mainBox;
-    @FXML private Button minimizeButton;
     @FXML private Region resizeHandle;
     @FXML private HBox buttonBox;
     @FXML private VBox minimizeBar;
@@ -84,49 +86,21 @@ public class CarouselController
                 // Once change happens, the while loop looks at what next change is
                 while (change.next())
                 {
-                    // If an element was added, loadCarouselCard is called with the additional shader
-                    if (change.wasAdded())
+                    // Keep track of removed cards that might be reusable if they were moved somewhere else in the list.
+                    Map<CarouselItem, Node> removedCards = new HashMap<>(change.getRemovedSize());
+
+                    // Handle removal first, to avoid complicated indexing math
+                    // and also compile a list of cards that might be reusable.
+                    if (change.wasRemoved())
                     {
-                        for (CarouselItem addedItem : change.getAddedSubList())
+                        // If an element was removed, we remove the element from the container
+                        for (int i = 0; i < change.getRemovedSize(); i++)
                         {
-                            // Dynamically load the FXML for every shader added to the model
-                            CarouselCardController carouselCard = loadCarouselCard(addedItem.getShader());
-
-                            if (carouselCard == null)
-                            {
-                                // Card load failed; clean up backend.
-                                Global.state().getCanvasListModel().removeCanvas(addedItem.getShader());
-                            }
-                            else
-                            {
-                                // Force layout so that the ImageView has real dimensions when connecting to the backend.
-                                mainBox.layout();
-
-                                // Wait for layout.
-                                Platform.runLater(() ->
-                                {
-                                    // Connect the backend to the JavaFX frontend.
-                                    carouselCard.setupCanvas(addedItem.getCanvasModel());
-                                });
-                            }
+                            removedCards.put(change.getRemoved().get(i), containerHBox.getChildren().get(change.getFrom()));
+                            containerHBox.getChildren().remove(change.getFrom());
                         }
-                        Platform.runLater(() -> carouselScrollPane.setHvalue(1.0));
 
-                        //If carousel is minimized it will maximize it
-                        if (minimized){ maximize(); }
-                        //Calculates how big to make mainBox based on amount of carouselCards
-                        totalWidth += carouselModel.getCarouselCardWidth() + containerHBox.getSpacing();
-                        mainBox.setMaxWidth(totalWidth);
-                        mainBox.setMouseTransparent(false);
-                    }
-                    // If an element was removed, we remove the element from the container
-                    else if (change.wasRemoved())
-                    {
-                        for (CarouselItem removedItem : change.getRemoved())
-                        {
-                            containerHBox.getChildren().removeIf(node -> removedItem.getShader().equals(node.getUserData()));
-                        }
-                        //Re-Calculates mainBox width after removing card space from total width
+                        // Re-calculates mainBox width after removing card space from total width
                         totalWidth -= carouselModel.getCarouselCardWidth() + containerHBox.getSpacing();
                         mainBox.setMaxWidth(totalWidth);
 
@@ -134,6 +108,59 @@ public class CarouselController
                         {
                             mainBox.setMouseTransparent(true);
                         }
+                    }
+
+                    // If an element was added, loadCarouselCard is called with the additional shader
+                    if (change.wasAdded())
+                    {
+                        for (int i = change.getFrom(); i < change.getTo(); i++)
+                        {
+                            CarouselItem addedItem = carouselModel.getCarouselItems().get(i);
+
+                            // Remove from temporary map while retrieving existing card, if it exists
+                            Node existingCard = removedCards.remove(addedItem);
+
+                            if (existingCard != null)
+                            {
+                                // Use existing card if found
+                                containerHBox.getChildren().add(existingCard);
+                            }
+                            else
+                            {
+                                // Dynamically load the FXML for every shader added to the model
+                                CarouselCardController carouselCard = loadCarouselCard(addedItem.getShader());
+
+                                if (carouselCard == null)
+                                {
+                                    // Card load failed; clean up backend.
+                                    Global.state().getCanvasListModel().removeCanvas(addedItem.getShader());
+                                }
+                                else
+                                {
+                                    // Force layout so that the ImageView has real dimensions when connecting to the backend.
+                                    mainBox.layout();
+
+                                    // Wait for layout.
+                                    Platform.runLater(() ->
+                                    {
+                                        // Connect the backend to the JavaFX frontend.
+                                        carouselCard.setupCanvas(addedItem.getCanvasModel());
+                                    });
+                                }
+                            }
+                        }
+                        Platform.runLater(() -> carouselScrollPane.setHvalue(1.0));
+
+                        // If carousel is minimized it will maximize it
+                        if (minimized)
+                        {
+                            maximize();
+                        }
+
+                        // Calculates how big to make mainBox based on amount of carouselCards
+                        totalWidth += carouselModel.getCarouselCardWidth() + containerHBox.getSpacing();
+                        mainBox.setMaxWidth(totalWidth);
+                        mainBox.setMouseTransparent(false);
                     }
                 }
                 mainBox.widthProperty().addListener((obs, oldVal, newVal) -> scrollBarCheck());
@@ -178,7 +205,7 @@ public class CarouselController
             card.setUserData(shader);
 
             CarouselCardController cardController = loader.getController();
-            cardController.init(carouselModel, shader);
+            cardController.init(carouselModel, shader, this);
 
             HBox.setHgrow(card, Priority.ALWAYS);
 
@@ -224,7 +251,7 @@ public class CarouselController
             return;
         }
 
-        double difference = event.getSceneY() - dragStartY;
+        double difference = dragStartY - event.getSceneY();
         double newHeight = initialHeight + difference;
         double upperBound = mainBox.getParent().getScene().getWindow().getHeight() * 0.50;
 
@@ -423,4 +450,6 @@ public class CarouselController
             }
         });
     }
+    public double getHBarValue(){ return carouselScrollPane.getHvalue();}
+    public void setHBarPosition(double pos){ carouselScrollPane.setHvalue(pos);}
 }

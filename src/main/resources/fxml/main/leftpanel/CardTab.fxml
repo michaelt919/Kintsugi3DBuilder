@@ -45,12 +45,12 @@
     </HBox>
     <ScrollPane fx:id="scrollpane" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS" minWidth="0.0">
         <VBox fx:id="vbox" spacing="5.0" style="-fx-background-color: #202020">
+            <padding>
+                <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+            </padding>
         </VBox>
         <VBox.margin>
             <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
         </VBox.margin>
-        <padding>
-            <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
-        </padding>
     </ScrollPane>
 </VBox>
