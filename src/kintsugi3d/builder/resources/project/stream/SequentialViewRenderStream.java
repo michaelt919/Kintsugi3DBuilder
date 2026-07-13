@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,7 @@ package kintsugi3d.builder.resources.project.stream;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
-import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.ReadableFramebuffer;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
 
@@ -24,18 +24,18 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
 {
     private final int viewCount;
     private final Drawable<ContextType> drawable;
-    private final Framebuffer<ContextType> framebuffer;
+    private final ReadableFramebuffer<ContextType> framebuffer;
     private final int attachmentCount;
     private final ColorNativeBufferList[] framebufferData;
 
-    SequentialViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
+    SequentialViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
         this.viewCount = viewCount;
         this.drawable = drawable;
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;
         this.framebufferData = IntStream.range(0, attachmentCount)
-            .mapToObj(i -> new ColorNativeBufferList(framebuffer.getSize().width * framebuffer.getSize().height))
+            .mapToObj(i -> new ColorNativeBufferList(framebuffer.getSizeForRead().width * framebuffer.getSizeForRead().height))
             .toArray(ColorNativeBufferList[]::new);
     }
 

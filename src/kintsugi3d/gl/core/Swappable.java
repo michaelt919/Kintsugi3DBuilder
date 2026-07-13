@@ -11,6 +11,7 @@
 
 package kintsugi3d.gl.core;
 
+@FunctionalInterface
 public interface Swappable
 {
     /**

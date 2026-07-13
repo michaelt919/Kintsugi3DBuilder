@@ -46,7 +46,7 @@ public class PreviewImageGenerator
         viewSet.getPreviewImageDirectory().mkdirs(); // Create preview directory
         new File(viewSet.getSupportingFilesDirectory(), "thumbnails").mkdirs(); // Create thumbnail directory
 
-        progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
+        progressMonitor.setMaxProgress(viewSet.getCombinedCameraPoseCount());
 
         return new PreviewImageGenerator(viewSet, progressMonitor);
     }
@@ -64,7 +64,7 @@ public class PreviewImageGenerator
 
     int getViewCount()
     {
-        return viewSet.getCameraPoseCount();
+        return viewSet.getCombinedCameraPoseCount();
     }
 
     void allowUserCancellation() throws UserCancellationException
@@ -83,7 +83,7 @@ public class PreviewImageGenerator
     void waitAndFinish() throws IOException, UserCancellationException
     {
         // Wait for all threads to finish
-        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getCameraPoseCount())
+        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getCombinedCameraPoseCount())
         {
             Thread.onSpinWait();
         }

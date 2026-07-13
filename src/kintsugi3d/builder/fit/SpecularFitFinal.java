@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,8 +12,10 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
+import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
@@ -33,7 +35,7 @@ import java.util.stream.Collectors;
  */
 public final class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
-    private final Map<String, Texture2D<ContextType>> managedTextures;
+    private final Map<TextureDetails, Texture2D<ContextType>> managedTextures;
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
@@ -55,7 +57,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         managedTextures.putAll(original.getTextures().entrySet().stream()
             .filter(entry -> 
                 // Skip specular color and roughness maps that are handled by SpecularFitBase:
-                !StandardTexture.SPECULAR_COLOR.texName.equals(entry.getKey()) && !StandardTexture.ROUGHNESS.texName.equals(entry.getKey()))
+                !StandardTexture.SPECULAR_COLOR.details.equals(entry.getKey()) && !StandardTexture.ROUGHNESS.details.equals(entry.getKey()))
             .collect(Collectors.toMap(Entry::getKey,
                 entry -> context.getTextureFactory()
                     .build2DColorTexture(textureResolution.width, textureResolution.height)
@@ -86,7 +88,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         addStandardTexture(StandardTexture.ERROR, priorSolutionDirectory);
 
         // TODO store a list of non-standard textures in the project file rather than hard-coding here.
-        addTexture("constant", priorSolutionDirectory);
+        addTexture(FinalDiffuseOptimization.CONSTANT_TRANSLUCENCY_MAP, priorSolutionDirectory);
 
         AlbedoORMOptimization<ContextType> albedoORMOptimizationTemp = null;
         try
@@ -114,9 +116,9 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     private AlbedoORMOptimization<ContextType> albedoDiffuseFallback() throws IOException
     {
         // Load failed; try to initialize based on diffuse map resolution
-        if (managedTextures.containsKey(StandardTexture.DIFFUSE_COLOR.texName))
+        if (managedTextures.containsKey(StandardTexture.DIFFUSE_COLOR.details))
         {
-            Texture2D<ContextType> diffuseMap = managedTextures.get(StandardTexture.DIFFUSE_COLOR.texName);
+            Texture2D<ContextType> diffuseMap = managedTextures.get(StandardTexture.DIFFUSE_COLOR.details);
             if (diffuseMap != null)
             {
                 return AlbedoORMOptimization.createWithoutOcclusion(getContext(),
@@ -130,29 +132,29 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     private void addStandardTexture(StandardTexture standardTex, File priorSolutionDirectory) throws IOException
     {
         // Load texture file
-        Texture2D<ContextType> texture = loadTexture(standardTex.texName, priorSolutionDirectory);
+        Texture2D<ContextType> texture = loadTexture(standardTex.details.name, priorSolutionDirectory);
 
         if (texture != null)
         {
-            managedTextures.put(standardTex.texName, texture);
+            managedTextures.put(standardTex.details, texture);
         }
     }
 
-    private void addTexture(String texName, File priorSolutionDirectory) throws IOException
+    private void addTexture(TextureDetails textureDetails, File priorSolutionDirectory) throws IOException
     {
         // Load texture file
-        Texture2D<ContextType> texture = loadTexture(texName, priorSolutionDirectory);
+        Texture2D<ContextType> texture = loadTexture(textureDetails.name, priorSolutionDirectory);
 
         if (texture != null)
         {
-            managedTextures.put(texName, texture);
+            managedTextures.put(textureDetails, texture);
         }
     }
 
     @Override
-    public Map<String, Texture2D<ContextType>> getTextures()
+    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
     {
-        Map<String, Texture2D<ContextType>> mergedMaps =
+        Map<TextureDetails, Texture2D<ContextType>> mergedMaps =
             new HashMap<>(getSpecularTextureCount() + managedTextures.size() + albedoORMOptimization.getTextureCount());
         mergedMaps.putAll(getSpecularTextures());
         mergedMaps.putAll(managedTextures);

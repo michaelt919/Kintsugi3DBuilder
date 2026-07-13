@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -71,7 +71,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
     private static SpecularFitSettings getSettingsFromProject()
     {
         GeneralSettingsModel projectSettings = Global.state().getIOModel()
-            .validateHandler()
+            .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 
         // Start with texture size
@@ -130,13 +130,13 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
      *                   If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
         throws UserCancellationException
     {
         try
         {
             // Set the output directory based on the view set's texture fit file path
-            settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesDirectory());
+            settings.setOutputDirectory(renderable.getViewSet().getSupportingFilesDirectory());
 
             if (monitor != null)
             {
@@ -176,7 +176,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
             // Save textures and basis functions
             // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
-            resources.getTextureResources().saveAll(renderable.getActiveViewSet().getSupportingFilesDirectory());
+            resources.getTextureResources().saveAll(renderable.getViewSet().getSupportingFilesDirectory());
 
             // Perform reconstruction
             //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
@@ -243,8 +243,8 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
                     try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt"), StandardCharsets.UTF_8))
                     // Text file containing error information
                     {
-                        rmseOut.println("basis, " + reconstructionRMSE);
-                        rmseOut.println("reflectivity, " + fittedRMSE);
+                        rmseOut.printf("basis, %s%n", reconstructionRMSE);
+                        rmseOut.printf("reflectivity, %s%n", fittedRMSE);
                     }
                 }
             }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.Insets?>
+<VBox spacing="10.0" fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workspace.ReplaceImageController">
+    <VBox spacing="8.0">
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeTitle"  text="Replace Texture..."/>
+        </HBox>
+        <VBox style="-fx-padding: 0px 16px 0px 16px;">
+            <VBox spacing="8.0">
+                <Label styleClass="wireframeSubtitle" text="Existing File Path"/>
+                <HBox spacing="16.0" style="-fx-padding: 0px 0px 0px 16px;">
+                    <ImageView fitWidth="72" fitHeight="72" preserveRatio="true" fx:id="currentImageView"/>
+                    <VBox alignment="CENTER">
+                        <HBox maxWidth="740.0" maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
+                            <VBox alignment="CENTER_LEFT" style="-fx-background-color: #383838;">
+                                <padding>
+                                    <Insets left="4" right="4"/>
+                                </padding>
+                                <Label styleClass="wireframeBodyLarge" fx:id="currentPath"/>
+                            </VBox>
+<!--                            <Button fx:id="currentFileButton" styleClass="wireframeBody" textAlignment="CENTER" text="..."/>-->
+                        </HBox>
+                    </VBox>
+                </HBox>
+                <Label styleClass="wireframeSubtitle" text="New File Path"/>
+                <HBox spacing="16.0" style="-fx-padding: 0px 0px 0px 16px;">
+                    <ImageView fitWidth="72" fitHeight="72" preserveRatio="true" fx:id="newImageView"/>
+                    <VBox alignment="CENTER">
+                        <HBox  maxWidth="740.0" maxHeight="32.0" style="-fx-padding: 4px 8px 4px 8px; -fx-background-color: #CECECE" spacing="8.0">
+                            <VBox alignment="CENTER_LEFT" style="-fx-background-color: #383838;">
+                                <padding>
+                                    <Insets left="4" right="4"/>
+                                </padding>
+                                <Label styleClass="wireframeBodyLarge" fx:id="newPath" text="C>/Test/Url/example_texture.png"/>
+                            </VBox>
+                           <!-- Tile pane prevents button from being resized -->
+                            <TilePane prefColumns="1">
+                                <Button fx:id="newFileButton" onAction="#openFileBrowser" styleClass="wireframeBodyLarge"
+                                        textOverrun="CLIP" textAlignment="CENTER" text="Open" style="fx-padding: 0px"/>
+                            </TilePane>
+                        </HBox>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </VBox>
+    </VBox>
+</VBox>

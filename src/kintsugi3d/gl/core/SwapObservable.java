@@ -13,12 +13,12 @@ package kintsugi3d.gl.core;
 
 import java.util.function.Consumer;
 
+@FunctionalInterface
 public interface SwapObservable<SwapType>
 {
-
     /**
-     * Add a listener that will be called whenever a swap occurs.
-     * @param listener The listener that runs when a swap occurs.
+     * Add a listener that will be called whenever a swap occurs, consuming a reference to the SwapType that is now front.
+     * @param listener The listener that runs when a swap occurs with a reference to the front SwapType.
      */
     void addSwapListener(Consumer<SwapType> listener);
 }

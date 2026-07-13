@@ -18,7 +18,8 @@ import java.util.function.Consumer;
  * @param <ContextType>
  */
 public interface DoubleFramebufferObject<ContextType extends Context<ContextType>>
-    extends DoubleFramebuffer<ContextType>, Swappable, SwapObservable<Framebuffer<ContextType>>, Resource
+    extends DoubleFramebuffer<ContextType>, ReadableFramebuffer<ContextType>, Swappable,
+            SwapObservable<ReadableFramebuffer<ContextType>>, ResizeObservable<Framebuffer<ContextType>>, Resource
 {
     /**
      * Request that the FBOs be resized.
@@ -28,9 +29,19 @@ public interface DoubleFramebufferObject<ContextType extends Context<ContextType
     void requestResize(int width, int height);
 
     /**
-     * Add a listener that will be called whenever the framebuffers swap.
-     * @param listener The listener that runs when a framebuffer swap occurs.
+     * Add a listener that will be called whenever the framebuffers swap,
+     * consuming a reference to the new front framebuffer.
+     * @param listener The listener that runs when a framebuffer swap occurs with a reference to the front framebuffer.
      */
     @Override
-    void addSwapListener(Consumer<Framebuffer<ContextType>> listener);
+    void addSwapListener(Consumer<ReadableFramebuffer<ContextType>> listener);
+
+    /**
+     * Add a listener that will be called whenever the framebuffer is resized,
+     * consuming a reference to the back framebuffer that was just resized.
+     *
+     * @param listener The listener that runs when a framebuffer is resized with a reference to the resized back framebuffer.
+     */
+    @Override
+    void addResizeListener(Consumer<Framebuffer<ContextType>> listener);
 }

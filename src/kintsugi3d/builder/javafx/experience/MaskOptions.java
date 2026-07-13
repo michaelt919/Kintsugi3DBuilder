@@ -26,6 +26,6 @@ public class MaskOptions extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        this.<MaskOptionsController>openPagedModel("/fxml/modals/workflow/MaskOptions.fxml");
+        this.<MaskOptionsController>openPagedModal("/fxml/modals/workflow/MaskOptions.fxml");
     }
 }

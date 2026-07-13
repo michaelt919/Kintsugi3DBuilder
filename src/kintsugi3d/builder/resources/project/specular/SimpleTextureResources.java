@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.Context;
@@ -24,7 +25,7 @@ import java.util.Map;
 public class SimpleTextureResources<ContextType extends Context<ContextType>>
     extends TextureResourcesBase<ContextType>
 {
-    private final Map<String, Texture2D<ContextType>> textures = new HashMap<>(StandardTexture.values().length);
+    private final Map<TextureDetails, Texture2D<ContextType>> textures = new HashMap<>(StandardTexture.values().length);
     private BasisResources<ContextType> basisResources;
     private BasisWeightResources<ContextType> basisWeightResources;
 
@@ -59,19 +60,24 @@ public class SimpleTextureResources<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public Map<String, Texture2D<ContextType>> getTextures()
+    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
     {
         return Collections.unmodifiableMap(textures);
     }
 
     public void setTexture(String texName, Texture2D<ContextType> texture)
     {
-        textures.put(texName, texture);
+        textures.put(new TextureDetails(texName), texture);
+    }
+
+    public void setTexture(TextureDetails textureDetails, Texture2D<ContextType> texture)
+    {
+        textures.put(textureDetails, texture);
     }
 
     public void setTexture(StandardTexture standardTex, Texture2D<ContextType> texture)
     {
-        textures.put(standardTex.texName, texture);
+        textures.put(standardTex.details, texture);
     }
 
     @Override

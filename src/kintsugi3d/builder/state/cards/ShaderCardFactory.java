@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,32 +11,36 @@
 
 package kintsugi3d.builder.state.cards;
 
-import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.state.scene.UserShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 /**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
 the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
-shaders will be available for the user to use. On the shader cards there are two buttons
-"Add to Carousel" and "View Shader," Add to carousel will send the shader to a carousel
-for easier use for user. View Shader will apply the shader to the model.
+shaders will be available for the user to use.
  */
-public class ShaderCardFactory implements ProjectDataCardFactory {
+public class ShaderCardFactory implements ProjectDataCardFactory
+{
+    private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
 
-    private final ProjectInstance<?> instance;
+    private final RenderableInstance<?> instance;
 
     /**
-     * ShaderCardFactory is the constructor for this class takes a ProjectInstance and
+     * ShaderCardFactory is the constructor for this class takes a RenderableInstance and
      * assigns it to private variable in class
      * @param instance
      */
-    public ShaderCardFactory(ProjectInstance<?> instance)
+    public ShaderCardFactory(RenderableInstance<?> instance)
     {
         this.instance = instance;
     }
@@ -44,46 +48,17 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
     /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
     the title of the shader and the file name. Returns ProjectDataCard of the shader
-    (single card). This is also where View Shader and Send to Carousel button and
-    code are located.
+    (single card).
      @param title
      @param fileName
      @return
     */
-    public ProjectDataCard createCard(String title, String fileName){
+    public static ProjectDataCard createCard(String title, String fileName)
+    {
+        //Creates shader with given title and filename
+        UserShader shader = new UserShader(title, fileName);
 
-        return new ProjectDataCard(title, MainApplication.ICON_PATH, Map.of(), Map.of("View Shader", ()->{
-            //Creates shader with given title and filename
-            UserShader shaderView = new UserShader(title, fileName);
-
-            //Sets the model to the shader
-            Global.state().getUserShaderModel().setUserShader(shaderView);
-
-        },"Send to Carousel", ()-> {
-
-            //list of shaders currently in carousel
-            ObservableList<UserShader> current = Global.state().getCarouselModel().getCarouselShaders();
-
-            //Shader that is trying to be sent to carousel
-            UserShader newCarouselShader = new UserShader(title, fileName);
-
-            boolean alreadyInCarousel = false;
-
-            //For loop looks through Arraylist for any that match the shader
-            //that is trying to be sent to carousel
-            for (UserShader element : current){
-                if (newCarouselShader.equals(element)){
-                    //if one matches:
-                    alreadyInCarousel = true;
-                }
-            }
-
-            //Prevents duplicate shaders in carousel / if the shaders don't match
-            //then shader is sent to carousel
-            if (!alreadyInCarousel){
-                Global.state().getCarouselModel().addShader(newCarouselShader);
-            }
-        }));
+        return new ShaderDataCard(fileName, shader, MainApplication.ICON_PATH);
     }
     /**
     createAllCards will call createCard for all the shaders and will
@@ -92,16 +67,18 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
      @param cardsModel
      @return
      */
+    @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         // shaderDataCards is an arraylist that will hold all shaders user can use
-        List<ProjectDataCard> shaderDataCards = new ArrayList<ProjectDataCard>();
+        List<ProjectDataCard> shaderDataCards = new ArrayList<>(9);
         shaderDataCards.add(createCard("Simple specular", "rendermodes/simpleSpecular.frag"));
         shaderDataCards.add(createCard("Normal mapped", "rendermodes/normalMapped.frag"));
         shaderDataCards.add(createCard("Textured Lambertian", "rendermodes/texturedLambertian.frag"));
 
         //if model is not processed these shaders are not shown
-       if (Global.state().getProjectModel().isProjectProcessed()){
+       if (Global.state().getProjectModel().isProjectProcessed())
+       {
             shaderDataCards.add(createCard("Material (metallicity)", "rendermodes/texturedORMMaterial.frag"));
             shaderDataCards.add(createCard("Material (reflectivity)", "rendermodes/texturedMaterial.frag"));
             shaderDataCards.add(createCard("Material (basis)", "rendermodes/basisMaterial.frag"));
@@ -110,10 +87,18 @@ public class ShaderCardFactory implements ProjectDataCardFactory {
         shaderDataCards.add(createCard("Image-based", "rendermodes/ibrUntextured.frag"));
 
         //if model is not processed these shaders are not shown
-        if (Global.state().getProjectModel().isProjectProcessed()){
+        if (Global.state().getProjectModel().isProjectProcessed())
+        {
             shaderDataCards.add(createCard("Image-based with textures", "rendermodes/ibrTextured.frag"));
             shaderDataCards.add(createCard("Weight maps (combined)", "rendermodes/weightmaps/weightmapCombination.frag"));
         }
         return shaderDataCards;
+    }
+
+    @Override
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    {
+        LOG.warn("refreshCards not implemented for textures.");
+        return Map.of();
     }
 }

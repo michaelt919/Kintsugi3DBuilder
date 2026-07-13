@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,7 @@ package kintsugi3d.builder.export.general;
 
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 
@@ -51,7 +51,7 @@ class SingleFrameRenderRequest extends RenderRequestBase
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
@@ -66,11 +66,11 @@ class SingleFrameRenderRequest extends RenderRequestBase
                 monitor.setProcessName("Generic Export");
             }
 
-            program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
+            program.setUniform("model_view", renderable.getViewSet().getCameraPose(0));
             program.setUniform("projection",
-                renderable.getActiveViewSet().getCameraProjectionForViewIndex(0)
-                    .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
-                        renderable.getActiveViewSet().getRecommendedFarPlane()));
+                renderable.getViewSet().getCameraProjectionForViewIndex(0)
+                    .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
+                        renderable.getViewSet().getRecommendedFarPlane()));
 
             render(drawable, framebuffer);
 

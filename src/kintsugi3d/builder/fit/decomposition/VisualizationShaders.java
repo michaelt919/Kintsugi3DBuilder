@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,17 +17,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class VisualizationShaders
+public final class VisualizationShaders
 {
-    public static final String WEIGHT_MAP_GRAYSCALE = "rendermodes/weightmaps/weightmapSingle.frag";
-    public static final String WEIGHT_MAP_SUPERIMPOSED = "rendermodes/weightmaps/weightmapOverlay.frag";
-    public static final String BASIS_MATERIAL = "rendermodes/basisMaterialSingle.frag";
     public static final String BASIS_MATERIAL_WEIGHTED = "rendermodes/basisMaterialWeightedSingle.frag";
 
-    public static UserShader getForBasisMaterial(String filename, int materialIndex)
+    public static final String FORMAT_PALETTE_MATERIAL= "Palette material %d";
+    public static final String FORMAT_WEIGHTMAP= "Weight map %d";
+
+    private VisualizationShaders()
+    {
+    }
+
+    public static UserShader getForBasisMaterial(String filename, int materialIndex, String friendlyNameFormat)
     {
         Map<String, Optional<Object>> defines = new HashMap<>(1);
         defines.put("WEIGHTMAP_INDEX", Optional.of(materialIndex));
-        return new UserShader(String.format("Palette material %d", materialIndex), filename, defines);
+        return new UserShader(String.format(friendlyNameFormat, materialIndex), filename, defines);
     }
 }

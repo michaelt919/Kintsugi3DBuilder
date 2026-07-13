@@ -57,7 +57,7 @@ public final class MakeViewSet
     {
         ReadonlyViewSet viewSet = makeViewSet(Integer.parseInt(args[0]), Float.parseFloat(args[1]),
             Float.parseFloat(args[2]), Float.parseFloat(args[3]), Float.parseFloat(args[4]), Float.parseFloat(args[5]));
-        try (PrintStream out = new PrintStream(String.format(args[6], viewSet.getCameraPoseCount()), StandardCharsets.UTF_8))
+        try (PrintStream out = new PrintStream(String.format(args[6], viewSet.getCombinedCameraPoseCount()), StandardCharsets.UTF_8))
         {
             ViewSetWriterToVSET.getInstance().writeToStream(viewSet, out);
         }

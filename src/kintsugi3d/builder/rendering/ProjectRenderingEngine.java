@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -33,9 +33,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
-import kintsugi3d.gl.vecmath.Matrix3;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.*;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +43,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements ProjectInstance<ContextType>
+    extends InteractiveRenderableBase<ContextType> implements RenderableInstance<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
 
@@ -79,8 +78,13 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel sceneViewportModel;
 
+    private IntVector2 safeStartPixel;
+    private IntVector2 safeEndPixel;
+
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
+
+    private Consumer<ImageReplaceData> userImageReplaceHandler;
 
     private boolean loaded = false;
 
@@ -135,6 +139,30 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         return this.dynamicResourceLoader;
     }
 
+    public IntVector2 getSafeStartPixel()
+    {
+        return safeStartPixel;
+    }
+
+    public IntVector2 getSafeEndPixel()
+    {
+        return safeEndPixel;
+    }
+
+    @Override
+    public void setSafeRegion(IntVector2 safeStartPixel, IntVector2 safeEndPixel)
+    {
+        this.safeStartPixel = safeStartPixel;
+        this.safeEndPixel = safeEndPixel;
+    }
+
+    @Override
+    public void clearSafeRegion()
+    {
+        this.safeStartPixel = null;
+        this.safeEndPixel = null;
+    }
+
     @Override
     public void initialize() throws InitializationException
     {
@@ -160,7 +188,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            ViewSelection viewSelection = new ViewSelectionImpl(getActiveViewSet(), sceneModel);
+            ViewSelection viewSelection = new ViewSelectionImpl(getViewSet(), sceneModel);
 
             lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, viewSelection, sceneViewportModel);
             lightCalibration.initialize();
@@ -249,7 +277,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     {
         if (resources.getGeometry() != null)
         {
-            ReadonlyViewSet viewSet = getActiveViewSet();
+            ReadonlyViewSet viewSet = getViewSet();
 
             if (viewSet != null)
             {
@@ -335,7 +363,44 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             FramebufferSize size = framebuffer.getSize();
 
-            Matrix4 projection = projectionOverride != null ? projectionOverride : getProjectionMatrix(size);
+            Matrix4 projection;
+
+            if (projectionOverride != null)
+            {
+                projection = projectionOverride;
+            }
+            else if (safeStartPixel != null && safeEndPixel != null)
+            {
+                FramebufferSize safeSize = new FramebufferSize(
+                    safeEndPixel.x - safeStartPixel.x,
+                    safeEndPixel.y - safeStartPixel.y);
+
+                projection =
+                    // After scaling from safe clip space to actual FBO clip space,
+                    // translate the origin to the location of the safe clip space center in FBO clip space.
+                    // This translation needs to be in normalized device coordinates [-1, 1].
+                    // Adding the start and end pixels then dividing by the FBO size, then subtracting 1
+                    // effectively gives us the center point in NDC
+                    // (dividing by two would have given the center point in a [0, 1] range,
+                    // which is cancelled out by multiplying by 2 before subtracting 1 to get to NDC)
+                    Matrix4.translate(
+                        safeStartPixel.asFloatingPoint().plus(safeEndPixel.asFloatingPoint())
+                            .dividedBy(new Vector2(size.width, size.height))
+                            .minus(new Vector2(1.0f))
+                            .negated()
+                            .asVector3())
+                    // If the safe region is smaller than the full framebuffer, then scale down in clip space accordingly
+                    // so that the content that should be visible is contained within that region.
+                    .times(Matrix4.scale(
+                        (float)safeSize.width / (float)size.width,
+                        (float)safeSize.height / (float)size.height,
+                        1.0f))
+                    .times(getProjectionMatrix(safeSize));
+            }
+            else
+            {
+                projection = getProjectionMatrix(size);
+            }
 
             int fboWidth = size.width;
             int fboHeight = size.height;
@@ -482,13 +547,13 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ReadonlyVertexGeometry getActiveGeometry()
+    public ReadonlyVertexGeometry getGeometry()
     {
         return this.resources.getGeometry();
     }
 
     @Override
-    public ViewSet getActiveViewSet()
+    public ViewSet getViewSet()
     {
         return this.resources.getViewSet();
     }
@@ -536,7 +601,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     {
         if (outputDirectory != null)
         {
-            if (getActiveGeometry() == null)
+            if (getGeometry() == null)
             {
                 throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
             }
@@ -555,7 +620,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
                 // Scale to imported scale from the photogrammetry project if that exists, otherwise at the original, raw scale
                 // ViewSet should default to scale of 1.0 if nothing was imported.
-                ViewSet viewSet = getActiveViewSet();
+                ViewSet viewSet = getViewSet();
                 if (viewSet != null)
                 {
                     transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
@@ -563,7 +628,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
                 TextureResources<ContextType> textureResources = resources.getTextureResources();
 
-                ModelExporter exporter = ModelExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                ModelExporter exporter = ModelExporter.fromVertexGeometry(getGeometry(), transform);
                 settings.applyToExporter(exporter, textureResources, filename);
 
                 File modelFile = new File(outputDirectory, filename);
@@ -589,5 +654,20 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 LOG.error("Error occurred during glTF export:", e);
             }
         }
+    }
+
+    @Override
+    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
+    {
+        if (userImageReplaceHandler != null)
+        {
+            userImageReplaceHandler.accept(imageReplaceData);
+        }
+    }
+
+    @Override
+    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
+    {
+        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

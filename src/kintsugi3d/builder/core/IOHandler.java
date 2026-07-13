@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -27,9 +27,15 @@ import java.util.function.DoubleUnaryOperator;
 
 public interface IOHandler
 {
-    boolean isInstanceLoaded();
-    void addViewSetLoadCallback(Consumer<ViewSet> callback);
     ViewSet getLoadedViewSet();
+
+    boolean isRenderableLoaded();
+    RenderableInstance<?> getMainRenderable();
+    RenderableInstance<?> getRenderableForShader(UserShader shader);
+
+    void addViewSetLoadCallback(Consumer<ViewSet> callback);
+    void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
+
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
@@ -38,7 +44,6 @@ public interface IOHandler
     void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
-
     void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
@@ -46,7 +51,6 @@ public interface IOHandler
 
     void saveToVSETFile(File vsetFile) throws IOException;
     void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
-
     void saveGLTF(File outputDirectory, ExportSettings settings);
 
     void unload();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,28 +13,32 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
-import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class ObservableTabsModel implements TabsModel
 {
     private final ObservableMap<String, ObservableCardsModel> tabs;
+    private final ObservableCarouselModel carouselModel;
 
-    public ObservableTabsModel()
+    public ObservableTabsModel(ObservableCarouselModel carouselModel)
     {
+        this.carouselModel = carouselModel;
+
         Map<String, ObservableCardsModel> cardsModels = new LinkedHashMap<>(4);
-        tabs = FXCollections.observableMap(cardsModels);
+        this.tabs = FXCollections.observableMap(cardsModels);
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory)
+    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
     {
-        ObservableCardsModel newTab = new ObservableCardsModel(tabName);
-        List<ProjectDataCard> dataCards = cardFactory.createAllCards(newTab);
-        newTab.setCardList(dataCards);
+        ObservableCardsModel newTab = new ObservableCardsModel(tabName, path, cardFactory, carouselModel);
+        newTab.initialize();
         tabs.put(tabName, newTab);
     }
 
@@ -42,6 +46,9 @@ public class ObservableTabsModel implements TabsModel
     public void clearTabs()
     {
         tabs.clear();
+
+        // Also clear carousel as its contents will be invalidated if the tabs are gone.
+        carouselModel.clearCarousel();
     }
 
     @Override

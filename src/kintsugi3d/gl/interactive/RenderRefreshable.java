@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,41 +11,60 @@
 
 package kintsugi3d.gl.interactive;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.DoubleFramebuffer;
-import kintsugi3d.gl.core.DoubleFramebufferObject;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.*;
 
 import java.util.List;
 
-public final class RenderRefreshable<ContextType extends Context<ContextType>> implements Refreshable
+public final class RenderRefreshable
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    implements Refreshable, ContextBound<ContextType>
 {
     private final ContextType context;
-    private final InteractiveRenderable<ContextType> renderable;
+    private final RenderableType renderable;
     private final DoubleFramebuffer<ContextType> framebuffer;
     private final Iterable<Resource> managedResources;
 
     private boolean initialized = false;
 
-    public static <ContextType extends Context<ContextType>> RenderRefreshable<ContextType> createWithManagedFrambufferObject(
-        ContextType context, InteractiveRenderable<ContextType> renderable, DoubleFramebufferObject<ContextType> framebuffer)
+    public static
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    RenderRefreshable<ContextType, RenderableType> createWithManagedFrambufferObject(
+        ContextType context, RenderableType renderable, DoubleFramebufferObject<ContextType> framebuffer)
     {
         return new RenderRefreshable<>(context, renderable, framebuffer, List.of(renderable, framebuffer));
     }
 
-    public static <ContextType extends Context<ContextType>> RenderRefreshable<ContextType> createWithDefaultFrambufferObject(
-        ContextType context, InteractiveRenderable<ContextType> renderable)
+    public static
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    RenderRefreshable<ContextType, RenderableType>  createWithDefaultFrambufferObject(
+        ContextType context, RenderableType renderable)
     {
         return new RenderRefreshable<>(context, renderable, context.getDefaultFramebuffer(), List.of(renderable));
     }
 
-    private RenderRefreshable(ContextType context, InteractiveRenderable<ContextType> renderable,
+    private RenderRefreshable(ContextType context, RenderableType renderable,
                              DoubleFramebuffer<ContextType> framebuffer, Iterable<Resource> managedResources)
     {
         this.context = context;
         this.renderable = renderable;
         this.framebuffer = framebuffer;
         this.managedResources = managedResources;
+    }
+
+    @Override
+    public ContextType getContext()
+    {
+        return context;
+    }
+
+    public RenderableType getRenderable()
+    {
+        return this.renderable;
+    }
+
+    public DoubleFramebuffer<ContextType> getFramebuffer()
+    {
+        return this.framebuffer;
     }
 
     @Override
