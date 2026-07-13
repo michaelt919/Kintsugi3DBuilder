@@ -9,31 +9,42 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.export.simpleanimation;
+package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Objects;
 
-public final class OrbitAnimationRequest extends AnimationRequest
+public class NamedTextureReplaceData extends ImageReplaceData
 {
-    protected static class Builder extends BuilderBase
-    {
-        @Override
-        public OrbitAnimationRequest create()
-        {
-            return new OrbitAnimationRequest(getWidth(), getHeight(), getFrameCount(), getExportPath());
-        }
-    }
+    private TextureDetails key;
 
-    private OrbitAnimationRequest(int width, int height, int frameCount, File exportPath)
+    @Override
+    public void replace() throws IOException
     {
-        super(width, height, frameCount, exportPath);
+        getResources().replaceTextureWithSpecificFile(key, getNewImage());
     }
 
     @Override
-    protected Matrix4 getViewMatrix(int frame, Matrix4 baseViewMatrix)
+    public void refreshCards()
     {
-        return baseViewMatrix.times(Matrix4.rotateY(frame * 2 * Math.PI / this.getFrameCount()));
+        Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+            Objects.equals(card.getTitle(), key.friendlyName));
     }
+
+    public NamedTextureReplaceData(TextureResources resources, TextureDetails key, File currentImage)
+    {
+        super(resources);
+        this.key = key;
+        setCurrentImage(currentImage);
+    }
+
+    public TextureDetails getKey()
+    {
+        return key;
+    }
+
+
 }

@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -172,35 +168,25 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     }
 
 
-    public void refreshTexture(int weightmapIndex, ViewSet viewSet)
+    /**
+     * Replaces weightmap by loading the file with a default, expected filename in a specified directory.
+     * @param weightmapIndex
+     * @param parentDirectory
+     */
+    public void replaceWeightMapWithDefaultFile(int weightmapIndex, File parentDirectory) throws IOException
     {
-        Rendering.runLater(() ->
-        {
-            try
-            {
-                weightMaps.loadLayer(weightmapIndex, new File(viewSet.getSupportingFilesDirectory(),
-                    TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")), true);
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error refreshing card", e);
-            }
-        });
+        replaceWeightMapWithSpecificFile(weightmapIndex,
+            new File(parentDirectory, TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
     }
 
-    public void replaceWeightmap(ReplaceData data)
+    /**
+     * Replaces weightmap by loading a specified file.
+     * @param weightmapIndex
+     * @param newTextureFile
+     */
+    public void replaceWeightMapWithSpecificFile(int weightmapIndex, File newTextureFile) throws IOException
     {
-        Rendering.runLater(() ->
-        {
-            try
-            {
-                weightMaps.loadLayer(data.getWeightmapIndex(), data.getNewTexture(), true);
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error refreshing card", e);
-            }
-        });
+        weightMaps.loadLayer(weightmapIndex, newTextureFile, true);
     }
 
     @Override

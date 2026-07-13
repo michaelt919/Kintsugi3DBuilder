@@ -19,16 +19,31 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Matrix4;
 
 import java.io.File;
+import java.util.function.Consumer;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.
  */
-public interface ProjectInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
+public interface RenderableInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
+    /**
+     * Sets the safe region for the target framebuffer.
+     * Essential content will bre rendered within this region.
+     * @param safeStartPixel
+     * @param safeEndPixel
+     */
+    void setSafeRegion(IntVector2 safeStartPixel, IntVector2 safeEndPixel);
+
+    /**
+     * Clears the safe region so that the whole framebuffer is considered safe.
+     */
+    void clearSafeRegion();
+
     /**
      * Draw the object using the current settings and selections in the 3D viewport,
      * potentially in subdivisions to avoid graphics card timeouts.
@@ -162,4 +177,18 @@ public interface ProjectInstance<ContextType extends Context<ContextType>> exten
      * @param finishedCallback
      */
     void saveGLTF(File outputDirectory, String filename, ExportSettings settings, Runnable finishedCallback);
+
+    /**
+     * Invokes the specified handler for when the user is expected to specify a new image to replace an existing image resource.
+     * Typically, this will be handled by a user interface module such as JavaFX.
+     * @param imageReplaceData
+     */
+    void invokeUserImageReplacement(ImageReplaceData imageReplaceData);
+
+    /**
+     * Specifies a handler for when the user is expected to specify a new image to replace an existing image resource.
+     * Typically, this will be handled by a user interface module such as JavaFX.
+     * @param userImageReplaceHandler
+     */
+    void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler);
 }

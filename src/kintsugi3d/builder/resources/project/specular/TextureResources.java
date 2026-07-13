@@ -11,13 +11,10 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
-import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -475,39 +472,25 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      */
     void deleteBasisMaterial(int materialIndex);
 
-
     /**
      * Refreshes a texture specified by key using the default location for the given texture.
      * @param key The TextureDetails used to choose which texture to refresh.
-     * @param viewSet
+     * @param parentDirectory
      * @throws IOException
      */
-    default void refreshTexture(TextureDetails key, ViewSet viewSet)
+    default void replaceTextureWithDefaultFile(TextureDetails key, File parentDirectory) throws IOException
     {
-        Rendering.runLater(() ->
-        {
-            try
-            {
-                getTextures().get(key).refresh(new File(viewSet.getSupportingFilesDirectory(), key.name + ".png"), true);
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error refreshing card", e);
-            }
-        });
+        getTextures().get(key).load(new File(parentDirectory, key.name + ".png"), true);
     }
 
-    default void replaceTexture(ReplaceData data)
+    /**
+     * Replaces a texture by key with a specific file.
+     * @param key
+     * @param newTextureFile
+     * @throws IOException
+     */
+    default void replaceTextureWithSpecificFile(TextureDetails key, File newTextureFile) throws IOException
     {
-        Rendering.runLater(() -> {
-            try
-            {
-                getTextures().get(data.getKey()).load(data.getNewTexture(), true);
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error replacing card", e);
-            }
-        });
+        getTextures().get(key).load(newTextureFile, true);
     }
 }

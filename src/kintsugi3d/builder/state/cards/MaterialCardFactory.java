@@ -13,7 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
@@ -38,9 +38,9 @@ public class MaterialCardFactory implements ProjectDataCardFactory
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
-    private final ProjectInstance<?> instance;
+    private final RenderableInstance<?> instance;
 
-    public MaterialCardFactory(ProjectInstance<?> instance)
+    public MaterialCardFactory(RenderableInstance<?> instance)
     {
         this.instance = instance;
     }

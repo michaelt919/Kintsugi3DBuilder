@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -34,13 +34,9 @@ import java.util.function.Function;
 
 public class ProjectSettingsManager
 {
-    public GeneralSettingsModel projectSettingsModel;
-    public final ObservableGeneralSettingsModel localSettingsModel = getDefaultSettingsModel();
-    public final Set<String> trackedSettings = new HashSet<String>();
-
-    public ProjectSettingsManager()
-    {
-    }
+    private GeneralSettingsModel projectSettingsModel;
+    private final ObservableGeneralSettingsModel localSettingsModel = getDefaultSettingsModel();
+    private final Set<String> trackedSettings = new HashSet<>(8);
 
     public static ObservableGeneralSettingsModel getDefaultSettingsModel()
     {
@@ -66,7 +62,7 @@ public class ProjectSettingsManager
 
     public void refresh()
     {
-        if (Global.state().getIOModel().hasValidHandler())
+        if (Global.state().getIOModel().hasLoadedRenderable())
         {
             this.projectSettingsModel = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
         }

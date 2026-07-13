@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,9 +14,11 @@ package kintsugi3d.builder.javafx.controllers.modals.workflow;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
@@ -55,7 +57,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
         StaticUtilities.makeSquareResolutionComboBox(minimumTextureResolutionComboBox);
 
         objFileChooser.setTitle("Save project");
-        objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("GLTF file", "*.glb"));
 
         // Enable min. texture resolution combo box when LODs are enabled.
         minimumTextureResolutionComboBox.disableProperty()
@@ -68,7 +70,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
             SquareResolution::new, SquareResolution::getSize);
         bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
 
-        File loadedProjectFile = Global.state().getIOModel().validateHandler().getLoadedProjectFile();
+        File loadedProjectFile = Global.state().getIOModel().validateRenderable().getLoadedProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());
@@ -102,7 +104,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
                         //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
                         Platform.runLater(() ->
                         {
-                            Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
+                            Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
                                 "Export Complete!");
                             saveInfo.setTitle("Export successful");
                             saveInfo.setHeaderText(exportLocationFile.getName());

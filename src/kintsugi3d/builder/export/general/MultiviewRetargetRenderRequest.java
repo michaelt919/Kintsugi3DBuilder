@@ -11,16 +11,14 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.function.Consumer;
 
@@ -56,7 +54,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+        RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile).finish();
 

@@ -9,28 +9,16 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.experience;
+package kintsugi3d.gl.core;
 
-import kintsugi3d.builder.javafx.controllers.modals.workflow.ReplaceData;
+import java.util.function.Consumer;
 
-import java.io.IOException;
-
-public class ReplaceModel extends ExperienceBase
+@FunctionalInterface
+public interface ResizeObservable<ResizeType>
 {
-    ReplaceData currentData = new ReplaceData();
-
-    public void setCurrentData(ReplaceData newData)
-    {
-        this.currentData = newData;
-    }
-
-    @Override
-    public String getName() { return "Replace Texture"; }
-
-    @Override
-    protected void open() throws IOException
-    {
-//        this.openPagedModal("/fxml/modals/workflow/ReplaceModel.fxml");
-        this.buildPagedModal(currentData).then("/fxml/modals/workflow/ReplaceModel.fxml").finish();
-    }
+    /**
+     * Add a listener that will be called whenever a resize occurs, consuming a reference to the ResizeType that was just resized.
+     * @param listener The listener that runs when a resize occurs with a reference to the resized ResizeType.
+     */
+    void addResizeListener(Consumer<ResizeType> listener);
 }
