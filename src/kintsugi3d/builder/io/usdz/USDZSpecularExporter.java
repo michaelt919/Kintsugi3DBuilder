@@ -68,10 +68,10 @@ public class USDZSpecularExporter extends MaterialExporter
         // glb texture_extension normal diffuse specular roughness
         try
         {
-            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, getTextureFileFormat());
-            String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, getTextureFileFormat());
-            String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, getTextureFileFormat());
-            String roughness = getTextureFilename(StandardTexture.ROUGHNESS.texName, getTextureFileFormat());
+            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat());
+            String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.details.name, getTextureFileFormat());
+            String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.details.name, getTextureFileFormat());
+            String roughness = getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat());
 
             String executable = "";
             String glob;

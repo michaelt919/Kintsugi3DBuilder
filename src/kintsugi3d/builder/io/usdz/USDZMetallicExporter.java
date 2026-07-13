@@ -59,9 +59,9 @@ public class USDZMetallicExporter extends MaterialExporter
         // glb texture_extension normal diffuse specular roughness
         try
         {
-            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, getTextureFileFormat());
-            String albedo = getTextureFilename(StandardTexture.ALBEDO.texName, getTextureFileFormat());
-            String orm = getTextureFilename(StandardTexture.ORM.texName, getTextureFileFormat());
+            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat());
+            String albedo = getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat());
+            String orm = getTextureFilename(StandardTexture.ORM.details.name, getTextureFileFormat());
 
             String executable = "";
             String glob;
