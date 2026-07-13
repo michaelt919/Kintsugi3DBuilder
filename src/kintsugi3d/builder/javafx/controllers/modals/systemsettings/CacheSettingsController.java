@@ -428,7 +428,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     {
         long fitSize = getDirectorySize(ApplicationFolders.getFitCacheRootDirectory().toFile());
         long previewSize = getDirectorySize(ApplicationFolders.getPreviewImagesRootDirectory().toFile());
-        return (double) (fitSize + previewSize) / (1024 * 1024 * 1024);
+        return (double) (fitSize + previewSize) / (1024 * 1024 * 1024); // Size returned in GB.
     }
 
     private static int getNumCachedProjects()
@@ -447,13 +447,13 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         List<File> cacheFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(previewCacheDir.listFiles())));
         cacheFiles.addAll(Arrays.asList(Objects.requireNonNull(fitCacheDir.listFiles())));
 
+        Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
+            .atZone(ZoneId.systemDefault()).toInstant();
         for (File dir : cacheFiles)
         {
             try
             {
                 Instant lastAccess = Files.getLastModifiedTime(dir.toPath()).toInstant();
-                Instant limit =  LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
-                    .atZone(ZoneId.systemDefault()).toInstant();
                 if (lastAccess.isBefore(limit))
                 {
                     return true;
@@ -467,6 +467,10 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         return false;
     }
 
+    /**
+     * Check if any cache cleanup prompts are selected and return true if any of their conditions are met.
+     * @return
+     */
     public static boolean checkForPrompt()
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
