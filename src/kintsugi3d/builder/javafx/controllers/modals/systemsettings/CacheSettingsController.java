@@ -11,8 +11,11 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -36,6 +39,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -54,6 +58,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     @FXML private Label previewImageCacheLabel;
     @FXML private Label specularFitCacheLabel;
     @FXML private Label cacheSize;
+    @FXML private Button cleanCacheButton;
 
     private static final Logger LOG = LoggerFactory.getLogger(CacheSettingsController.class);
 
@@ -62,7 +67,11 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     {
         previewImageCacheLabel.setText(ApplicationFolders.getPreviewImagesRootDirectory().toString());
         specularFitCacheLabel.setText(ApplicationFolders.getFitCacheRootDirectory().toString());
-        cacheSize.setText("Cache Size: " + String.format("%.2f", getCacheSize()) + "GB");
+
+        // Calculate size on another thread to prevent delay in opening page
+        // (have to use Platform.runLater for it to actually change the ui).
+        new Thread(() ->
+            Platform.runLater(() -> cacheSize.setText(String.format("Cache Size: %.2fGB", getCacheSize())))).start();
 
         bind(state.getSettingsModel());
     }
@@ -89,9 +98,9 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         Label label = (Label) e.getSource();
         File file = new File(label.getText());
         if (!file.exists()){
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType ok = new ButtonType("OK", ButtonData.CANCEL_CLOSE);
 
-            Alert alert = new Alert(Alert.AlertType.NONE, "Cache path not found: " + label.getText(), ok);
+            Alert alert = new Alert(AlertType.NONE, String.format("Cache path not found: %s", label.getText()), ok);
 
             alert.setTitle("Cache path not found");
             alert.show();
@@ -114,113 +123,208 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Clear Cache");
         confirm.setHeaderText("Confirm cache clear?");
-        confirm.setContentText("This will permanently remove all files in " + previewCacheDir + " and " + fitCacheDir
-            + " and cannot be undone.  Are you sure?");
+        confirm.setContentText(String.format("This will permanently remove all files in %s and %s and cannot be undone.  Are you sure?",
+            previewCacheDir, fitCacheDir));
 
         confirm.showAndWait().ifPresent(response ->
         {
             if (response.equals(ButtonType.OK))
             {
-                clearPreviewCache(previewCacheDir);
-                clearFitCache(fitCacheDir);
+                try
+                {
+                    clearPreviewCache(previewCacheDir);
+                    clearFitCache(fitCacheDir);
+                }
+                catch(IOException e)
+                {
+                    LOG.error(e.toString());
+                }
             }
         });
     }
 
-    private static void clearPreviewCache(File directory)
+    private static void clearPreviewCache(File directory) throws IOException
     {
-        assert directory.isDirectory();
+        if (!directory.isDirectory())
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
+        }
         File[] projects = directory.listFiles();
-        assert projects != null;
+        if (projects == null)
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
+        }
         deletePreviewCacheFiles(directory, projects);
     }
 
-    private static void clearFitCache(File directory)
+    private static void clearFitCache(File directory) throws IOException
     {
-        assert directory.isDirectory();
+        if (!directory.isDirectory())
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
+        }
         File[] projects = directory.listFiles();
-        assert projects != null;
+        if (projects == null)
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
+        }
         deleteFitCacheFiles(directory, projects);
     }
 
-    private static void deletePreviewCacheFiles(File directory, File[] projects)
+    private static void deletePreviewCacheFiles(File directory, File[] projects) throws IOException
     {
         for (File project : projects)
         {
-            assert project.isDirectory();
+            if (!project.isDirectory())
+            {
+                throw new NotDirectoryException(String.format("Invalid directory: %s", project.getAbsolutePath()));
+            }
             File[] resolutions = project.listFiles();
-            assert resolutions != null;
+            if (resolutions == null)
+            {
+                throw new NotDirectoryException(String.format("Invalid directory: %s", project.getAbsolutePath()));
+            }
 
             for (File resolution : resolutions)
             {
-                assert resolution.isDirectory();
+                if (!resolution.isDirectory())
+                {
+                    throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
+                }
                 File[] images = resolution.listFiles();
-                assert images != null;
+                if (images == null)
+                {
+
+                    throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
+                }
 
                 for (File image : images)
                 {
                     // Extra check due to danger of this operation
                     String imgName = image.toString();
-                    assert imgName.startsWith(directory.toString());
-                    assert imgName.toLowerCase(Locale.ROOT).endsWith(".png");
-                    image.delete();
+                    if (!imgName.startsWith(directory.toString()))
+                    {
+                        throw new IOException(String.format("Invalid image: %s", image.getAbsolutePath()));
+                    }
+                    if (!imgName.toLowerCase(Locale.ROOT).endsWith(".png"))
+                    {
+                        throw new IOException(String.format("Invalid image format: %s", image.getAbsolutePath()));
+                    }
+                    if (!image.delete())
+                    {
+                        throw new IOException(String.format("Image couldn't be deleted: %s", image.getAbsolutePath()));
+                    }
                 }
 
-                resolution.delete(); // Will only work if directory is empty.
+                if (!resolution.delete()) // Will only work if directory is empty.
+                {
+                    throw new IOException(String.format("Directory couldn't be deleted: %s", resolution.getAbsolutePath()));
+                }
             }
 
-            project.delete(); // Will only work if directory is empty.
+            if (!project.delete()) // Will only work if directory is empty.
+            {
+                throw new IOException(String.format("Directory couldn't be deleted: %s", project.getAbsolutePath()));
+            }
         }
     }
 
-    private static void deleteFitCacheFiles(File directory, File[] projects)
+    private static void deleteFitCacheFiles(File directory, File[] projects) throws IOException
     {
         for (File project : projects)
         {
-            assert project.isDirectory();
+            if (!project.isDirectory())
+            {
+                throw new NotDirectoryException(String.format("Invalid directory: %s", project.getAbsolutePath()));
+            }
             File[] resolutions = project.listFiles();
-            assert resolutions != null;
+            if (resolutions == null)
+            {
+                throw new NotDirectoryException(String.format("Invalid directory: %s", project.getAbsolutePath()));
+            }
 
             for (File resolution : resolutions)
             {
-                assert resolution.isDirectory();
+                if (!resolution.isDirectory())
+                {
+                    throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
+                }
 
                 // debug.png
                 File debugImg = new File(resolution, "debug.png");
-                assert debugImg.toString().startsWith(directory.toString());
-                debugImg.delete();
+                if (!debugImg.toString().startsWith(directory.toString()))
+                {
+                    throw new IOException(String.format("Invalid debug image: %s", debugImg.getAbsolutePath()));
+                }
+                if (!debugImg.delete())
+                {
+                    throw new IOException(String.format("Image couldn't be deleted: %s", debugImg.getAbsolutePath()));
+                }
 
                 // sampleLocations.txt
                 File sampleLocations = new File(resolution, "sampleLocations.txt");
-                assert sampleLocations.toString().startsWith(directory.toString());
-                sampleLocations.delete();
+                if (!sampleLocations.toString().startsWith(directory.toString()))
+                {
+                    throw new IOException(String.format("Invalid sample locations: %s", sampleLocations.getAbsolutePath()));
+                }
+                if (!sampleLocations.delete())
+                {
+                    throw new IOException(String.format("Directory couldn't be deleted: %s", sampleLocations.getAbsolutePath()));
+                }
 
                 // Everything left should be chunks folders (including the sampled folder)
                 File[] chunks = resolution.listFiles();
-                assert chunks != null;
+                if  (chunks == null)
+                {
+                    throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
+                }
 
                 for (File chunk : chunks)
                 {
-                    assert chunk.isDirectory();
+                    if (!chunk.isDirectory())
+                    {
+                        throw new NotDirectoryException(String.format("Invalid chunk: %s", chunk.getAbsolutePath()));
+                    }
                     File[] images = chunk.listFiles();
-                    assert images != null;
+                    if (images == null)
+                    {
+                        throw new  NotDirectoryException(String.format("Invalid chunk: %s", chunk.getAbsolutePath()));
+                    }
 
                     for (File image : images)
                     {
                         // Extra check due to danger of this operation
                         String imgName = image.toString();
-                        assert imgName.startsWith(directory.toString());
-                        assert imgName.toLowerCase(Locale.ROOT).endsWith(".png");
-                        image.delete();
+                        if (!imgName.startsWith(directory.toString()))
+                        {
+                            throw new IOException(String.format("Invalid image: %s", image.getAbsolutePath()));
+                        }
+                        if (!imgName.toLowerCase(Locale.ROOT).endsWith(".png"))
+                        {
+                            throw new IOException(String.format("Invalid image format: %s", image.getAbsolutePath()));
+                        }
+                        if (!image.delete())
+                        {
+                            throw new IOException(String.format("Image couldn't be deleted: %s", image.getAbsolutePath()));
+                        }
                     }
 
-                    chunk.delete();
+                    if (!chunk.delete())
+                    {
+                        throw new IOException(String.format("Directory couldn't be deleted: %s", chunk.getAbsolutePath()));
+                    }
                 }
 
-                resolution.delete(); // Will only work if directory is empty.
+                if (!resolution.delete()) // Will only work if directory is empty.
+                {
+                    throw new IOException(String.format("Directory couldn't be deleted: %s", resolution.getAbsolutePath()));
+                }
             }
 
-            project.delete(); // Will only work if directory is empty.
+            if (!project.delete()) // Will only work if directory is empty.
+            {
+                throw new IOException(String.format("Directory couldn't be deleted: %s", project.getAbsolutePath()));
+            }
         }
     }
 
@@ -235,7 +339,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
         if (settingsModel.getBoolean("sizePromptEnabled"))
         {
-            // TODO: add new deletion system for size
+            //TODO: use clean up old for size prompt
         }
         if (settingsModel.getBoolean("recentPromptEnabled"))
         {
@@ -255,30 +359,41 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Clear Old Cache Files");
         confirm.setHeaderText("Confirm cache clean up?");
-        confirm.setContentText("This will permanently remove all old files in " + previewCacheDir + " and " + fitCacheDir
-            + " and cannot be undone.  Are you sure?");
+        confirm.setContentText(String.format("This will permanently remove all old files in %s and %s and cannot be undone.  Are you sure?",
+            previewCacheDir, fitCacheDir));
 
         confirm.showAndWait().ifPresent(response ->
         {
             if (response.equals(ButtonType.OK))
             {
-                clearNonRecentPreviewCache(previewCacheDir, numProjectsToKeep);
-                clearNonRecentFitCache(fitCacheDir, numProjectsToKeep);
+                new Thread(() ->
+                {
+                    try
+                    {
+                        clearNonRecentPreviewCache(previewCacheDir, numProjectsToKeep);
+                        clearNonRecentFitCache(fitCacheDir, numProjectsToKeep);
+                    }
+                    catch (IOException e)
+                    {
+                        LOG.error("Error while deleting cache files", e);
+                    }
+                }).start();
             }
         });
     }
 
-    private static void clearNonRecentPreviewCache(File directory, int numProjectsToKeep)
+    private static void clearNonRecentPreviewCache(File directory, int numProjectsToKeep) throws IOException
     {
-        assert directory.isDirectory();
-//        File[] projects = directory.listFiles();
-//        assert projects != null;
+        if (!directory.isDirectory())
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+        }
         // Select only cache directories that are not in the recently opened projects welcome dialogue.
         List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         List<UUID> recentUUIDs = getRecentUUIDs(numProjectsToKeep);
         for (UUID recentUUID : recentUUIDs)
         {
-            String cachePathFromUUID = directory + File.separator + recentUUID.toString();
+            String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
             // Traverse backwards to not skip indices from removal
             for (int i = oldProjects.size() - 1; i >= 0; i--)
             {
@@ -294,14 +409,17 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         deletePreviewCacheFiles(directory, oldProjectsArr);
     }
 
-    private static void clearNonRecentFitCache(File directory, int numProjectsToKeep)
+    private static void clearNonRecentFitCache(File directory, int numProjectsToKeep) throws IOException
     {
-        assert directory.isDirectory();
+        if (!directory.isDirectory())
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+        }
         List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         List<UUID> recentUUIDs = getRecentUUIDs(numProjectsToKeep);
         for (UUID recentUUID : recentUUIDs)
         {
-            String cachePathFromUUID = directory + File.separator + recentUUID.toString();
+            String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
             // Traverse backwards to not skip indices from removal
             for (int i = oldProjects.size() - 1; i >= 0; i--)
             {
@@ -348,22 +466,35 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Clear Old Cache Files");
         confirm.setHeaderText("Confirm cache clean up?");
-        confirm.setContentText("This will permanently remove all old files in " + previewCacheDir + " and " + fitCacheDir
-            + " and cannot be undone.  Are you sure?");
+        confirm.setContentText(String.format("This will permanently remove all old files in %s and %s and cannot be undone.  Are you sure?",
+            previewCacheDir, fitCacheDir));
 
         confirm.showAndWait().ifPresent(response ->
         {
             if (response.equals(ButtonType.OK))
             {
-                clearOldFitCache(fitCacheDir, dayLimit);
-                clearOldPreviewCache(previewCacheDir, dayLimit);
+                new Thread(() ->
+                {
+                    try
+                    {
+                        clearOldFitCache(fitCacheDir, dayLimit);
+                        clearOldPreviewCache(previewCacheDir, dayLimit);
+                    }
+                    catch (IOException e)
+                    {
+                        LOG.error("Error while deleting cache files", e);
+                    }
+                }).start();
             }
         });
     }
 
-    private static void clearOldPreviewCache(File directory, int dayLimit)
+    private static void clearOldPreviewCache(File directory, int dayLimit) throws IOException
     {
-        assert directory.isDirectory();
+        if (!directory.isDirectory())
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+        }
         List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         filterOldCacheFiles(oldProjects, dayLimit);
         // Perform cache deletion on directories still in oldProjects.
@@ -372,9 +503,12 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         deletePreviewCacheFiles(directory, oldProjectsArr);
     }
 
-    private static void clearOldFitCache(File directory, int dayLimit)
+    private static void clearOldFitCache(File directory, int dayLimit) throws IOException
     {
-        assert directory.isDirectory();
+        if (!directory.isDirectory())
+        {
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+        }
         List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         filterOldCacheFiles(oldProjects, dayLimit);
         // Perform cache deletion on directories still in oldProjects.
@@ -493,6 +627,31 @@ public class CacheSettingsController implements SystemSettingsControllerBase
             return checkOldFilesExist();
         }
         return false;
+    }
+
+    class CacheThread implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            String originalLabel = cleanCacheButton.getText();
+            cleanCacheButton.setText("In Progress...");
+//            GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
+//            if (settingsModel.getBoolean("sizePromptEnabled"))
+//            {
+//                //TODO: use clean up old for size prompt
+//            }
+//            if (settingsModel.getBoolean("recentPromptEnabled"))
+//            {
+//                cleanUpNonRecentCache(settingsModel.getInt("recentProjectLimit"));
+//            }
+//            if (settingsModel.getBoolean("fileAgePromptEnabled"))
+//            {
+//                cleanOldCacheFiles(settingsModel.getInt("fileAgeLimit"));
+//            }
+            cleanUpCache();
+            cleanCacheButton.setText(originalLabel);
+        }
     }
 
 //    // Not using this since it scares me.

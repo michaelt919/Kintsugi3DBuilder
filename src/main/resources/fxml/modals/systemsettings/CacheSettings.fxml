@@ -16,26 +16,25 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
-<VBox alignment="TOP_CENTER" spacing="32.0" styleClass="content-root"
+<VBox alignment="TOP_CENTER" spacing="16.0" styleClass="content-root" fillWidth="false"
       stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
-    <Label fx:id="cacheSize" styleClass="wireframeBody" text="N/A"/>
-    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Clear Cache"/>
-    <Button mnemonicParsing="false" onAction="#cleanUpCacheButton" styleClass="wireframeBodyLarge" text="Clean Up Cache"/>
+    <Label fx:id="cacheSize" styleClass="wireframeBody" text="Cache Size: calculating..."/>
+    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Delete Entire Cache"/>
+    <Button mnemonicParsing="false" fx:id="cleanCacheButton" onAction="#cleanUpCacheButton" styleClass="wireframeBodyLarge" text="Clean Up Cache"/>
     <VBox spacing="8" alignment="CENTER">
-        <Label styleClass="wireframeBody" text="Clean Up Settings"/>
-        <HBox spacing="8" alignment="CENTER">
+        <HBox spacing="8" alignment="CENTER_LEFT">
             <CheckBox fx:id="sizeCheck"/>
             <Label text="Prompt over cache size: "/>
             <TextField fx:id="numGB"/>
         </HBox>
-        <HBox spacing="8" alignment="CENTER">
+        <HBox spacing="8">
             <CheckBox fx:id="recentCheck"/>
             <Label text="Prompt over recent projects: "/>
             <TextField fx:id="numRecent"/>
         </HBox>
-        <HBox spacing="8" alignment="CENTER">
+        <HBox spacing="8">
             <CheckBox fx:id="timeCheck"/>
             <Label text="Prompt over days old: "/>
             <TextField fx:id="numDays"/>
