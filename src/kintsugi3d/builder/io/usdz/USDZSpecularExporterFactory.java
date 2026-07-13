@@ -15,23 +15,23 @@ import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public class USDZExporterFactory implements MaterialExporterFactory
+public class USDZSpecularExporterFactory implements MaterialExporterFactory
 {
-    private static final USDZExporterFactory INSTANCE = new USDZExporterFactory();
+    private static final USDZSpecularExporterFactory INSTANCE = new USDZSpecularExporterFactory();
 
-    public static USDZExporterFactory getInstance()
+    public static USDZSpecularExporterFactory getInstance()
     {
         return INSTANCE;
     }
 
-    private USDZExporterFactory()
+    private USDZSpecularExporterFactory()
     {
     }
 
     @Override
     public MaterialExporter getExporter(TextureResources<?> resources)
     {
-        USDZExporter exporter = new USDZExporter();
+        USDZSpecularExporter exporter = new USDZSpecularExporter();
         exporter.setTextureResources(resources);
         return exporter;
     }

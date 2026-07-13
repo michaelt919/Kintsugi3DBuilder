@@ -30,9 +30,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 
-public class USDZExporter extends MaterialExporter
+public class USDZSpecularExporter extends MaterialExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(USDZSpecularExporter.class);
     // private static final String SCRIPT_LOCATION = "/home/nathan/Documents/Kintsugi3DBuilder/bin/";
     private static final Path SCRIPT_LOCATION = ApplicationFolders.getAdditionalBinDirectory();
 
@@ -139,11 +139,8 @@ public class USDZExporter extends MaterialExporter
             }
         }
         catch (IllegalArgumentException |
-               IllegalStateException e)
-        {
-            LOG.error(e.getMessage());
-        }
-        catch (IOException |
+               IllegalStateException |
+               IOException |
                InterruptedException e)
         {
             LOG.error(e.getMessage());

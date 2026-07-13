@@ -9,28 +9,30 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io;
+package kintsugi3d.builder.io.usdz;
 
+import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
-import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
-import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public enum ExportType
+public class USDZMetallicExporterFactory implements MaterialExporterFactory
 {
-    GLTF(Kintsugi3DViewerExporterFactory.getInstance()),
-    USDZ_SPECULAR(USDZSpecularExporterFactory.getInstance()),
-    USDZ_METALLIC(USDZMetallicExporterFactory.getInstance());
-
-    private final MaterialExporterFactory factory;
-
-    ExportType(MaterialExporterFactory factory)
+    private static final USDZMetallicExporterFactory INSTANCE = new USDZMetallicExporterFactory();
+    public static USDZMetallicExporterFactory getInstance()
     {
-        this.factory = factory;
+        return INSTANCE;
     }
 
-    public MaterialExporterFactory getFactory()
+    private USDZMetallicExporterFactory()
     {
-        return factory;
+
+    }
+
+    @Override
+    public MaterialExporter getExporter(TextureResources<?> resources)
+    {
+        USDZMetallicExporter exporter = new USDZMetallicExporter();
+        exporter.setTextureResources(resources);
+        return exporter;
     }
 }
