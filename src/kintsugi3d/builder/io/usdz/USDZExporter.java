@@ -92,7 +92,7 @@ public class USDZExporter extends MaterialExporter
                     break;
 
                 default:
-                    throw new IllegalStateException("OS environment not suppoerted.");
+                    throw new IllegalStateException("OS environment not supported.");
             }
 
             // Attempt to realize path for the exporter application
@@ -113,12 +113,12 @@ public class USDZExporter extends MaterialExporter
             // Define a new process to start the exporter
             ProcessBuilder pb = new ProcessBuilder(
                 executable,
-                getFilename(),
-                getTextureFileFormat(),
-                normal,
-                diffuse,
-                specular,
-                roughness
+                "--model", getFilename(),
+                "--format", getTextureFileFormat(),
+                "--normal", normal,
+                "--diffuse", diffuse,
+                "--specular", specular,
+                "--roughness", roughness
             );
 
             // Change the working directory of the exporter to the output path
