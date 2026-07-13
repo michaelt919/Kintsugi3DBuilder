@@ -11,19 +11,24 @@
 
 package kintsugi3d.builder.io;
 
+import kintsugi3d.builder.io.blender.BlenderExporterFactory;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.io.usdz.USDZExporterFactory;
 
 public enum ExportType
 {
-    GLTF(Kintsugi3DViewerExporterFactory.getInstance()),
-    USDZ(USDZExporterFactory.getInstance());
+    GLTF("glTF", Kintsugi3DViewerExporterFactory.getInstance()),
+    USDZ("USDZ", USDZExporterFactory.getInstance()),
+    BLENDER_EEVEE("Blender (EEVEE)", BlenderExporterFactory.getInstance()),
+    BLENDER_CYCLES("Blender (Cycles)", BlenderExporterFactory.getInstance());
 
+    private final String friendlyName;
     private final MaterialExporterFactory factory;
 
-    ExportType(MaterialExporterFactory factory)
+    ExportType(String friendlyName, MaterialExporterFactory factory)
     {
+        this.friendlyName = friendlyName;
         this.factory = factory;
     }
 
