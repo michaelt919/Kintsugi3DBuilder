@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
@@ -76,26 +77,24 @@ public class ExportModelController extends ProjectSettingsControllerBase
         exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
         objFileChooser.getExtensionFilters().setAll(getLocalSettingsModel().get("exportType", ExportType.class).getFilter());
 
-        // Add object listeners
+        // Update extension filters based on the selected export type.
         exportTypeComboBox.valueProperty().addListener(
             (obs, oldValue, newValue) ->
-            {
-                getProjectSettingsModel().set("exportType", newValue);
-                objFileChooser.getExtensionFilters().setAll(newValue.getFilter());
-            });
-
-        getLocalSettingsModel().getObjectProperty("exportType", ExportType.class).addListener(
-            (obs, oldValue, newValue) -> {
-                exportTypeComboBox.setValue(newValue);
-                objFileChooser.getExtensionFilters().setAll(newValue.getFilter());
-            });
+                objFileChooser.getExtensionFilters().setAll(newValue.getFilter()));
 
         // Bind settings
+        bindObjectComboBox(exportTypeComboBox, "exportType", ExportType.class);
         bindTextComboBox(formatComboBox, "textureFormat");
         bindBooleanSetting(generateLowResolutionCheckBox, "exportLODEnabled");
         bindNumericComboBox(minimumTextureResolutionComboBox, "minimumLODSize",
             SquareResolution::new, SquareResolution::getSize);
         bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
+
+        BooleanBinding gltfSelected =
+            exportTypeComboBox.getSelectionModel().selectedItemProperty().isEqualTo(ExportType.GLTF);
+
+        generateLowResolutionCheckBox.disableProperty().bind(gltfSelected.not());
+        openViewerOnceCheckBox.disableProperty().bind(gltfSelected.not());
 
         File loadedProjectFile = Global.state().getIOModel().validateRenderable().getLoadedProjectFile();
         if (loadedProjectFile != null)
