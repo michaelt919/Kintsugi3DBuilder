@@ -609,7 +609,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
             LOG.info("Starting glTF export...");
             if(progressMonitor != null)
             {
-                progressMonitor.setProcessName("glTF Export");
+                progressMonitor.setProcessName("Model Export");
             }
 
             try

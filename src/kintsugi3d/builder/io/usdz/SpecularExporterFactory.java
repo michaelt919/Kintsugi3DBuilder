@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,23 +15,23 @@ import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public class USDZMetallicExporterFactory implements MaterialExporterFactory
+public final class SpecularExporterFactory implements MaterialExporterFactory
 {
-    private static final USDZMetallicExporterFactory INSTANCE = new USDZMetallicExporterFactory();
-    public static USDZMetallicExporterFactory getInstance()
+    private static final SpecularExporterFactory INSTANCE = new SpecularExporterFactory();
+
+    public static SpecularExporterFactory getInstance()
     {
         return INSTANCE;
     }
 
-    private USDZMetallicExporterFactory()
+    private SpecularExporterFactory()
     {
-
     }
 
     @Override
     public MaterialExporter getExporter(TextureResources<?> resources)
     {
-        USDZMetallicExporter exporter = new USDZMetallicExporter();
+        USDZExporter exporter = new USDZExporter(false);
         exporter.setTextureResources(resources);
         return exporter;
     }

@@ -12,19 +12,16 @@
 package kintsugi3d.builder.io;
 
 import javafx.stage.FileChooser.ExtensionFilter;
-import kintsugi3d.builder.io.blender.BlenderExporterFactory;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
-import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
-import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
+import kintsugi3d.builder.io.usdz.MetallicExporterFactory;
+import kintsugi3d.builder.io.usdz.SpecularExporterFactory;
 
 public enum ExportType
 {
     GLTF("glTF", Kintsugi3DViewerExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb")),
-    USDZ_SPECULAR("USDZ (Specular)", USDZSpecularExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
-    USDZ_METALLIC("USDZ (Metallic)", USDZMetallicExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
-    BLENDER_EEVEE("Blender (EEVEE)", BlenderExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb")),
-    BLENDER_CYCLES("Blender (Cycles)", BlenderExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb"));
+    USDZ_SPECULAR("USDZ (Specular)", SpecularExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
+    USDZ_METALLIC("USDZ (Metallic)", MetallicExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz"));
 
     private final String friendlyName;
     private final MaterialExporterFactory factory;
@@ -39,11 +36,18 @@ public enum ExportType
 
     public MaterialExporterFactory getFactory()
     {
-        return factory;
+        return this.factory;
     }
+
 
     public ExtensionFilter getFilter()
     {
         return filter;
+    }
+
+    @Override
+    public String toString()
+    {
+        return this.friendlyName;
     }
 }

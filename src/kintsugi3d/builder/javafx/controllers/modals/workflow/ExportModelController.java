@@ -18,6 +18,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.util.StringConverter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
@@ -34,20 +36,14 @@ public class ExportModelController extends ProjectSettingsControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
-    //Initialize all the variables in the FXML file
-    @FXML
-    private Pane root;
+    // Initialize all the variables in the FXML file
+    @FXML private Pane root;
 
-    @FXML
-    private ComboBox<ExportType> exportTypeComboBox;
-    @FXML
-    private ComboBox<String> formatComboBox;
-    @FXML
-    private CheckBox generateLowResolutionCheckBox;
-    @FXML
-    private CheckBox openViewerOnceCheckBox;
-    @FXML
-    private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
+    @FXML private ComboBox<ExportType> exportTypeComboBox;
+    @FXML private ComboBox<String> formatComboBox;
+    @FXML private CheckBox generateLowResolutionCheckBox;
+    @FXML private CheckBox openViewerOnceCheckBox;
+    @FXML private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
 
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
@@ -70,13 +66,30 @@ public class ExportModelController extends ProjectSettingsControllerBase
             .bind(generateLowResolutionCheckBox.selectedProperty().not());
 
         // Bind the export type to the request
-        exportTypeComboBox.getItems().addAll(ExportType.values());
+        exportTypeComboBox.getItems().setAll(ExportType.values());
 
         // Set initial value from defaultSettings
         exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
         objFileChooser.getExtensionFilters().setAll(getLocalSettingsModel().get("exportType", ExportType.class).getFilter());
 
-        // Add object listeners
+        // Friendly display name
+        exportTypeComboBox.setConverter(new StringConverter<>()
+        {
+            @Override
+            public String toString(ExportType type)
+            {
+                return (type != null) ? type.toString() : "";
+            }
+
+            @Override
+            public ExportType fromString(String string)
+            {
+                // Not strictly needed unless the ComboBox is editable
+                return null;
+            }
+        });
+
+        // Add object listeners for dual binding
         exportTypeComboBox.valueProperty().addListener(
             (obs, oldValue, newValue) ->
             {
