@@ -35,8 +35,13 @@ public class BlenderExporter extends MaterialExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(BlenderExporter.class);
     private static final Path SCRIPT_LOCATION = ApplicationFolders.getAdditionalScriptsDirectory();
+    private final boolean cycles;
     private File outputPath;
-    private boolean cycles = false;
+
+    public BlenderExporter(boolean cycles)
+    {
+        this.cycles = cycles;
+    }
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
@@ -65,86 +70,100 @@ public class BlenderExporter extends MaterialExporter
     @Override
     protected void postExport()
     {
-        try
+        // Command list for the ProcessBuilder
+        List<String> command = new ArrayList<>();
+
+        // Find Blender
+        switch (OperatingSystem.getCurrentOS())
         {
-            // Command list for the ProcessBuilder
-            List<String> command = new ArrayList<>();
+            case WINDOWS:
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of("C:\\Program Files\\Blender Foundation\\"), "Blender*"))
+                {
+                    Path path = stream.iterator().next();
 
-            switch (OperatingSystem.getCurrentOS())
-            {
-                case WINDOWS:
-                    try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of("C:\\Program Files\\Blender Foundation\\"), "Blender*"))
+                    if (!Files.exists(path))
                     {
-                        String path = "";
-                        for (Path entry : stream)
-                        {
-                            path = entry.toAbsolutePath().toString();
-                            break;
-                        }
-
-                        if (path.isEmpty())
-                        {
-                            throw new IllegalStateException("Could not find Blender.");
-                        }
-
-                        command.add(path + "\\blender.exe");
+                        LOG.error("Could not find Blender.");
+                        return;
                     }
 
-                    break;
+                    command.add(path.resolve("blender.exe").toString());
+                }
+                catch (IOException e)
+                {
+                    LOG.error(e.getMessage());
+                    return;
+                }
+                break;
 
-                case MACOS:
-                    command.add("/Applications/Blender.app/Contents/MacOS/Blender");
-                    break;
+            case MACOS:
+                command.add("/Applications/Blender.app/Contents/MacOS/Blender");
+                break;
 
-                case UNIX:
-                    command.add("bash");
-                    command.add("-c");
-                    command.add("blender");
-                    break;
+            case UNIX:
+                command.add("bash");
+                command.add("-c");
+                command.add("blender");
+                break;
 
-                default:
-                    throw new IllegalStateException("OS environment not supported.");
-            }
+            default:
+                LOG.error("OS environment not supported.");
+                return;
+        }
 
-            command.add("--python");
-            command.add(SCRIPT_LOCATION + "/open-blender.py");
-            command.add("--model");
-            command.add(outputPath.getAbsolutePath() + "/" + getFilename());
-            command.add("--normal");
-            command.add(outputPath.getAbsolutePath() + "/" + getTextureFilename(StandardTexture.NORMAL_MAP.texName, getTextureFileFormat()));
-            command.add("--diffuse");
-            command.add(outputPath.getAbsolutePath() + "/" + getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, getTextureFileFormat()));
-            command.add("--specular");
-            command.add(outputPath.getAbsolutePath() + "/" + getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, getTextureFileFormat()));
-            command.add("--roughness");
-            command.add(outputPath.getAbsolutePath() + "/" + getTextureFilename(StandardTexture.ROUGHNESS.texName, getTextureFileFormat()));
-            if (cycles)
-            {
-                command.add("--use-cycles");
-            }
+        command.add("-b");
+        command.add("-P");
+        command.add(SCRIPT_LOCATION + "/open-blender.py");
+        command.add("--");
+        command.add("--model");
+        command.add(getFilename());
+        command.add("--normal");
+        command.add(new File(outputPath,
+            getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat())).getPath());
+        command.add("--diffuse");
+        command.add(new File(outputPath,
+            getTextureFilename(StandardTexture.DIFFUSE_COLOR.details.name, getTextureFileFormat())).getPath());
+        command.add("--specular");
+        command.add(new File(outputPath,
+            getTextureFilename(StandardTexture.SPECULAR_COLOR.details.name, getTextureFileFormat())).getPath());
+        command.add("--roughness");
+        command.add(new File(outputPath,
+            getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat())).getPath());
 
-            ProcessBuilder pb = new ProcessBuilder(command);
+        if (cycles)
+        {
+            command.add("--use-cycles");
+        }
 
-            // Change the working directory of the exporter to the output path
-            pb.directory(outputPath);
+        ProcessBuilder pb = new ProcessBuilder(command);
+
+        // Change the working directory of the exporter to the output path
+        pb.directory(outputPath);
+        pb.redirectErrorStream(true);
+        try
+        {
             Process process = pb.start();
 
             // Initialize a logger for the exporter log output
-            try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
-            {
-                reader.lines().forEachOrdered(LOG::info);
-            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+            reader.lines().forEachOrdered(LOG::info);
 
             // If the exporter didn't exit with a 0, an error occurred
             if (process.waitFor() != 0)
             {
-                throw new IllegalArgumentException("Passed files don't match requirements.");
+                LOG.error("Passed files don't match requirements.");
+                return;
             }
         }
-        catch (IllegalStateException | InterruptedException | IOException e)
+        catch (IOException e)
         {
-            LOG.error(e.getMessage());
+            LOG.error("Couldn't open Blender.");
+            return;
+        }
+        catch (InterruptedException e)
+        {
+            LOG.error("Process was interrupted.");
+            return;
         }
     }
 

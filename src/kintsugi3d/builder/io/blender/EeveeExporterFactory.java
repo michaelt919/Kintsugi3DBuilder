@@ -15,23 +15,22 @@ import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public class BlenderExporterFactory implements MaterialExporterFactory
+public final class EeveeExporterFactory implements MaterialExporterFactory
 {
-    private static final BlenderExporterFactory INSTANCE = new BlenderExporterFactory();
+    private static final EeveeExporterFactory INSTANCE = new EeveeExporterFactory();
 
-    public static BlenderExporterFactory getInstance() {
+    public static EeveeExporterFactory getInstance() {
         return INSTANCE;
     }
 
-    private BlenderExporterFactory()
+    private EeveeExporterFactory()
     {
     }
-
 
     @Override
     public MaterialExporter getExporter(TextureResources<?> resources)
     {
-        BlenderExporter exporter = new BlenderExporter();
+        BlenderExporter exporter = new BlenderExporter(false);
         exporter.setTextureResources(resources);
         return exporter;
     }
