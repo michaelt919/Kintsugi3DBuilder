@@ -526,9 +526,12 @@ public class CacheSettingsController implements SystemSettingsControllerBase
             try
             {
                 String projectName = recentProject.substring(recentProject.lastIndexOf(File.separator) + 1);
-                ViewSet viewSet = ViewSetReaderFromVSET.getInstance()
-                    .readFromFile(new File(recentProject + ".files" + File.separator + projectName + ".vset")).finish();
-                recentUUIDs.add(viewSet.getUUID());
+                File vsetFile = new File(recentProject + ".files" + File.separator + projectName + ".vset");
+                if (vsetFile.exists()) // Might not exist anymore, in which case it's not considered recent.
+                {
+                    ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
+                    recentUUIDs.add(viewSet.getUUID());
+                }
             }
             catch (IOException e)
             {
