@@ -25,7 +25,7 @@ public class PhotoLightingSettingsController implements SystemSettingsController
     @FXML private CheckBox visibleLightWidgetsCheckBox;
 
     @Override
-    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    public void initializePage(Window parentWindow, JavaFXState state)
     {
         // Disable option for light widgets if relighting is disabled.
         visibleLightWidgetsCheckBox.disableProperty().bind(relightingCheckBox.selectedProperty().not());

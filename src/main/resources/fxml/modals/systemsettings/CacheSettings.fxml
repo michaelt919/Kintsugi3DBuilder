@@ -20,24 +20,24 @@
       stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
-    <Label fx:id="cacheSize" styleClass="wireframeBody" text="Cache Size: calculating..."/>
+    <Label fx:id="cacheSizeLabel" styleClass="wireframeBody" text="Cache Size: (calculating...)"/>
     <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Delete Entire Cache"/>
     <Button mnemonicParsing="false" fx:id="cleanCacheButton" onAction="#cleanUpCacheButton" styleClass="wireframeBodyLarge" text="Clean Up Cache"/>
     <VBox spacing="8" alignment="CENTER">
+<!--        <HBox spacing="8" alignment="CENTER_LEFT">-->
+<!--            <CheckBox styleClass="wireframeBody" fx:id="sizeCheck"/>-->
+<!--            <Label styleClass="wireframeBody"  text="Prompt over cache size: "/>-->
+<!--            <TextField styleClass="wireframeBody" fx:id="numGB"/>-->
+<!--        </HBox>-->
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <CheckBox fx:id="sizeCheck"/>
-            <Label text="Prompt over cache size: "/>
-            <TextField fx:id="numGB"/>
+            <CheckBox styleClass="wireframeBody" fx:id="recentCheck"/>
+            <Label styleClass="wireframeBody" text="Keep only the most recent projects: "/>
+            <TextField styleClass="wireframeBody" fx:id="numRecent"/>
         </HBox>
-        <HBox spacing="8">
-            <CheckBox fx:id="recentCheck"/>
-            <Label text="Prompt over recent projects: "/>
-            <TextField fx:id="numRecent"/>
-        </HBox>
-        <HBox spacing="8">
-            <CheckBox fx:id="timeCheck"/>
-            <Label text="Prompt over days old: "/>
-            <TextField fx:id="numDays"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <CheckBox styleClass="wireframeBody" fx:id="timeCheck"/>
+            <Label styleClass="wireframeBody" text="Remove after number of days: "/>
+            <TextField styleClass="wireframeBody" fx:id="numDays"/>
         </HBox>
     </VBox>
     <TitledPane styleClass="titled-pane, wireframeBody" text="Cache Path">

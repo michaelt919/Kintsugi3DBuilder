@@ -124,23 +124,29 @@ public class WelcomeWindowController
             }
         });
 
-        // Prompt user to clear cache if conditions are met
-        if (CacheSettingsController.checkForPrompt())
-        {
-            Alert prompt = new Alert(AlertType.CONFIRMATION);
-            prompt.setTitle("Clean Cache?");
-            prompt.setHeaderText("Clean up old cache files?");
-            prompt.setContentText("The cache has exceeded set limits and is " + String.format("%.2f", CacheSettingsController.getCacheSize())
-                + "GB in size. Would you like to clean up and remove old files?");
+        LOG.info("Checking for cache cleanup...");
 
-            prompt.showAndWait().ifPresent(response ->
+        // Prompt user to clear cache if conditions are met
+        CacheSettingsController.requestPromptForCacheCleanup(
+            promptCacheSize ->
             {
-                if (response.equals(ButtonType.OK))
+                LOG.info("Cache size: {}GB", promptCacheSize);
+
+                Alert prompt = new Alert(AlertType.CONFIRMATION);
+                prompt.setTitle("Clean Cache?");
+                prompt.setHeaderText("Clean up old cache files?");
+                prompt.setContentText(String.format("The cache for Kintsugi 3D Builder contains older files that can be removed to free up disk space. Currently, the total size of the cache is %.2fGB. Would you like to clean up the cache by removing older files?",
+                    promptCacheSize));
+
+                prompt.showAndWait().ifPresent(response ->
                 {
-                    CacheSettingsController.cleanUpCache();
-                }
-            });
-        }
+                    if (response.equals(ButtonType.OK))
+                    {
+                        CacheSettingsController.cleanUpCache();
+                    }
+                });
+            },
+            promptCacheSize -> LOG.info("No cache cleanup needed (Size: {}GB)", promptCacheSize));
     }
 
     /**

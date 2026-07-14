@@ -40,7 +40,7 @@ public class ObjectVisualsController implements SystemSettingsControllerBase
     @FXML private CheckBox reduceViewportResCheckBox;
 
     @Override
-    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    public void initializePage(Window parentWindow, JavaFXState state)
     {
         // Disable width / height fields for depth maps if they are disabled.
         depthWidthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
