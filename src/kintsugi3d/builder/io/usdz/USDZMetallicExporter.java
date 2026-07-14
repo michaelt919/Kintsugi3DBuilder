@@ -41,19 +41,16 @@ public class USDZMetallicExporter extends MaterialExporter
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
     {
-
     }
 
     @StandardTextureExport(StandardTexture.ALBEDO)
     public void albedo(TextureInfo diffuse)
     {
-
     }
 
     @StandardTextureExport(StandardTexture.ORM)
     public void orm(TextureInfo specular)
     {
-
     }
 
     @Override
@@ -109,9 +106,9 @@ public class USDZMetallicExporter extends MaterialExporter
                 "--metallic",
                 "--model", getFilename(),
                 "--format", getTextureFileFormat(),
-                "--normal", tempPath + "/" + normal,
-                "--albedo", tempPath + "/" + albedo,
-                "--orm", tempPath + "/" + orm
+                "--normal", new File(tempPath, normal).getPath(),
+                "--albedo", new File(tempPath, albedo).getPath(),
+                "--orm", new File(tempPath, orm).getPath()
             );
 
             // Change the working directory of the exporter to the output path

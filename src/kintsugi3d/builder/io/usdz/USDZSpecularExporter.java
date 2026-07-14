@@ -44,19 +44,16 @@ public class USDZSpecularExporter extends MaterialExporter
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
     {
-
     }
 
     @StandardTextureExport(StandardTexture.DIFFUSE_COLOR)
     public void diffuse(TextureInfo diffuse)
     {
-
     }
 
     @StandardTextureExport(StandardTexture.SPECULAR_COLOR)
     public void specular(TextureInfo specular)
     {
-
     }
 
     @StandardTextureExport(StandardTexture.ROUGHNESS)
@@ -117,10 +114,10 @@ public class USDZSpecularExporter extends MaterialExporter
                 executable,
                 "--model", getFilename(),
                 "--format", getTextureFileFormat(),
-                "--normal", tempPath + "/" + normal,
-                "--diffuse", tempPath + "/" + diffuse,
-                "--specular", tempPath + "/" + specular,
-                "--roughness", tempPath + "/" + roughness
+                "--normal", new File(tempPath, normal).getPath(),
+                "--diffuse",  new File(tempPath, diffuse).getPath(),
+                "--specular",  new File(tempPath, specular).getPath(),
+                "--roughness",  new File(tempPath, roughness).getPath()
             );
 
             // Change the working directory of the exporter to the output path
