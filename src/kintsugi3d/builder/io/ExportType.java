@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.io;
 
+import javafx.stage.FileChooser.ExtensionFilter;
+import kintsugi3d.builder.io.blender.BlenderExporterFactory;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
@@ -18,25 +20,30 @@ import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
 
 public enum ExportType
 {
-    GLTF(Kintsugi3DViewerExporterFactory.getInstance()),
-    USDZ_SPECULAR(USDZSpecularExporterFactory.getInstance()),
-    USDZ_METALLIC(USDZMetallicExporterFactory.getInstance());
-    GLTF("glTF", Kintsugi3DViewerExporterFactory.getInstance()),
-    USDZ("USDZ", USDZExporterFactory.getInstance()),
-    BLENDER_EEVEE("Blender (EEVEE)", BlenderExporterFactory.getInstance()),
-    BLENDER_CYCLES("Blender (Cycles)", BlenderExporterFactory.getInstance());
+    GLTF("glTF", Kintsugi3DViewerExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb")),
+    USDZ_SPECULAR("USDZ (Specular)", USDZSpecularExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
+    USDZ_METALLIC("USDZ (Metallic)", USDZMetallicExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
+    BLENDER_EEVEE("Blender (EEVEE)", BlenderExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb")),
+    BLENDER_CYCLES("Blender (Cycles)", BlenderExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb"));
 
     private final String friendlyName;
     private final MaterialExporterFactory factory;
+    private final ExtensionFilter filter;
 
-    ExportType(String friendlyName, MaterialExporterFactory factory)
+    ExportType(String friendlyName, MaterialExporterFactory factory, ExtensionFilter filter)
     {
         this.friendlyName = friendlyName;
         this.factory = factory;
+        this.filter = filter;
     }
 
     public MaterialExporterFactory getFactory()
     {
         return factory;
+    }
+
+    public ExtensionFilter getFilter()
+    {
+        return filter;
     }
 }

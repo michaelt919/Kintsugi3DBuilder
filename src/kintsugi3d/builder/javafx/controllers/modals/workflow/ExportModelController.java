@@ -18,7 +18,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
@@ -36,13 +35,19 @@ public class ExportModelController extends ProjectSettingsControllerBase
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
     //Initialize all the variables in the FXML file
-    @FXML private Pane root;
+    @FXML
+    private Pane root;
 
-    @FXML private ComboBox<ExportType> exportTypeComboBox;
-    @FXML private ComboBox<String> formatComboBox;
-    @FXML private CheckBox generateLowResolutionCheckBox;
-    @FXML private CheckBox openViewerOnceCheckBox;
-    @FXML private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
+    @FXML
+    private ComboBox<ExportType> exportTypeComboBox;
+    @FXML
+    private ComboBox<String> formatComboBox;
+    @FXML
+    private CheckBox generateLowResolutionCheckBox;
+    @FXML
+    private CheckBox openViewerOnceCheckBox;
+    @FXML
+    private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
 
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
@@ -59,7 +64,6 @@ public class ExportModelController extends ProjectSettingsControllerBase
         StaticUtilities.makeSquareResolutionComboBox(minimumTextureResolutionComboBox);
 
         objFileChooser.setTitle("Save project");
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("GLTF file", "*.glb"));
 
         // Enable min. texture resolution combo box when LODs are enabled.
         minimumTextureResolutionComboBox.disableProperty()
@@ -67,14 +71,24 @@ public class ExportModelController extends ProjectSettingsControllerBase
 
         // Bind the export type to the request
         exportTypeComboBox.getItems().addAll(ExportType.values());
+
+        // Set initial value from defaultSettings
         exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
+        objFileChooser.getExtensionFilters().setAll(getLocalSettingsModel().get("exportType", ExportType.class).getFilter());
+
+        // Add object listeners
         exportTypeComboBox.valueProperty().addListener(
             (obs, oldValue, newValue) ->
-                getProjectSettingsModel().set("exportType", newValue));
+            {
+                getProjectSettingsModel().set("exportType", newValue);
+                objFileChooser.getExtensionFilters().setAll(newValue.getFilter());
+            });
 
         getLocalSettingsModel().getObjectProperty("exportType", ExportType.class).addListener(
-            (obs, oldValue, newValue) ->
-                exportTypeComboBox.setValue(newValue));
+            (obs, oldValue, newValue) -> {
+                exportTypeComboBox.setValue(newValue);
+                objFileChooser.getExtensionFilters().setAll(newValue.getFilter());
+            });
 
         // Bind settings
         bindTextComboBox(formatComboBox, "textureFormat");
