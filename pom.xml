@@ -13,7 +13,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>1.5.2</version>
+    <version>1.5.3</version>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src</sourceDirectory>
@@ -447,12 +447,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.21.4</version>
+            <version>2.21.5</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.21.4</version>
+            <version>2.21.5</version>
         </dependency>
         <dependency>
             <groupId>de.javagl</groupId>
