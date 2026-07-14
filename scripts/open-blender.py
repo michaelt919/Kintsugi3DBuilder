@@ -1,6 +1,7 @@
 import argparse
 import sys
 import bpy
+import os
 
 
 def parse_args():
@@ -104,6 +105,13 @@ def main():
         if model is not None:
                 model.data.materials.clear()
                 model.data.materials.append(material)
+
+        # Overwrite the glb with an actual blend file
+        bpy.ops.wm.save_as_mainfile(filepath=args.model, check_existing=False)
+
+        # Remove the "backup file" (glb file) if it exists
+        if os.path.exists(args.model + '1'):
+            os.remove(args.model + '1')
 
 
 if __name__ == '__main__':
