@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.io;
 
+import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
@@ -18,19 +19,25 @@ import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
 
 public enum ExportType
 {
-    GLTF(Kintsugi3DViewerExporterFactory.getInstance()),
-    USDZ_SPECULAR(USDZSpecularExporterFactory.getInstance()),
-    USDZ_METALLIC(USDZMetallicExporterFactory.getInstance());
+    GLTF(Kintsugi3DViewerExporterFactory.getInstance(), new FileChooser.ExtensionFilter("glTF file", "*.glb")),
+    USDZ_SPECULAR(USDZSpecularExporterFactory.getInstance(), new FileChooser.ExtensionFilter("USDZ file", "*.usdz")),
+    USDZ_METALLIC(USDZMetallicExporterFactory.getInstance(), new FileChooser.ExtensionFilter("USDZ file", "*.usdz"));
 
     private final MaterialExporterFactory factory;
+    private final FileChooser.ExtensionFilter filter;
 
-    ExportType(MaterialExporterFactory factory)
+    ExportType(MaterialExporterFactory factory, FileChooser.ExtensionFilter filter)
     {
         this.factory = factory;
+        this.filter = filter;
     }
 
     public MaterialExporterFactory getFactory()
     {
         return factory;
+    }
+    public FileChooser.ExtensionFilter getFilter()
+    {
+        return filter;
     }
 }

@@ -14,6 +14,7 @@ package kintsugi3d.builder.io.usdz;
 import de.javagl.jgltf.impl.v2.TextureInfo;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.OperatingSystem;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 
 
 public class USDZSpecularExporter extends MaterialExporter
@@ -37,6 +39,7 @@ public class USDZSpecularExporter extends MaterialExporter
     private static final Path SCRIPT_LOCATION = ApplicationFolders.getAdditionalBinDirectory();
 
     private File outputPath;
+    private File tempPath;
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
@@ -59,7 +62,6 @@ public class USDZSpecularExporter extends MaterialExporter
     @StandardTextureExport(StandardTexture.ROUGHNESS)
     public void roughness(TextureInfo roughness)
     {
-
     }
 
     @Override
@@ -115,10 +117,10 @@ public class USDZSpecularExporter extends MaterialExporter
                 executable,
                 "--model", getFilename(),
                 "--format", getTextureFileFormat(),
-                "--normal", normal,
-                "--diffuse", diffuse,
-                "--specular", specular,
-                "--roughness", roughness
+                "--normal", tempPath + "/" + normal,
+                "--diffuse", tempPath + "/" + diffuse,
+                "--specular", tempPath + "/" + specular,
+                "--roughness", tempPath + "/" + roughness
             );
 
             // Change the working directory of the exporter to the output path
@@ -137,6 +139,14 @@ public class USDZSpecularExporter extends MaterialExporter
             {
                 throw new IllegalArgumentException("Passed files don't match requirements.");
             }
+
+            // Cleanup temp files
+            Files.walk(tempPath.toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+            // Only if I can't get context ".usdz" working
+            // Files.deleteIfExists(new File(outputPath, getFilename()).toPath());
         }
         catch (IllegalArgumentException |
                IllegalStateException |
@@ -151,8 +161,8 @@ public class USDZSpecularExporter extends MaterialExporter
     @Override
     public void saveTextures(File outputDirectory)
     {
-        super.saveTextures(outputDirectory);
-
         outputPath = outputDirectory;
+        tempPath = new File(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory(), "temp");
+        super.saveTextures(tempPath);
     }
 }
