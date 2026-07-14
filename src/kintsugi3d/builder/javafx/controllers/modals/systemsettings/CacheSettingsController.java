@@ -125,11 +125,8 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                 .otherwise(cacheSizeTextBase))
             .otherwise(new ReadOnlyStringWrapper("Cache Size: (calculating...)")));
 
-//        if (cacheSizeGB.get() < 0)
-        {
-            // Request a refresh of the cache size without an explicit callback.
-            requestCacheSizeRefresh();
-        }
+        // Request a refresh of the cache size without an explicit callback.
+        requestCacheSizeRefresh();
 
         bind(state.getSettingsModel());
     }

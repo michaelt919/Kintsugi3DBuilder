@@ -17,6 +17,10 @@ import kintsugi3d.util.ShadingParameterMode;
 
 public final class DefaultSettings
 {
+    private DefaultSettings()
+    {
+    }
+
     public static void applyGlobalDefaults(GeneralSettingsModel settingsModel)
     {
         // Application state
@@ -53,11 +57,11 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
 
         // Cache cleaning options
-        settingsModel.createBooleanSetting("sizePromptEnabled", true, true);
+        settingsModel.createBooleanSetting("sizePromptEnabled", false, true);
         settingsModel.createNumericSetting("cacheSizeLimit", 32.0f, true);
-        settingsModel.createBooleanSetting("recentPromptEnabled", false, true);
-        settingsModel.createNumericSetting("recentProjectLimit", 5, true);
-        settingsModel.createBooleanSetting("fileAgePromptEnabled", false, true);
+        settingsModel.createBooleanSetting("recentPromptEnabled", true, true);
+        settingsModel.createNumericSetting("recentProjectLimit", 20, true);
+        settingsModel.createBooleanSetting("fileAgePromptEnabled", true, true);
         settingsModel.createNumericSetting("fileAgeLimit", 30, true);
     }
 

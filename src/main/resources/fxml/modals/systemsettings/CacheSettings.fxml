@@ -24,7 +24,7 @@
     <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Delete Entire Cache"/>
     <Button mnemonicParsing="false" fx:id="cleanCacheButton" onAction="#cleanUpCacheButton" styleClass="wireframeBodyLarge" text="Clean Up Cache"/>
     <VBox spacing="8" alignment="CENTER">
-        <HBox spacing="8" alignment="CENTER_LEFT">
+        <HBox spacing="8" alignment="CENTER_LEFT" visible="false" managed="false">
             <CheckBox styleClass="wireframeBody" fx:id="sizeCheck"/>
             <Label styleClass="wireframeBody"  text="Prompt over cache size: "/>
             <TextField styleClass="wireframeBody" fx:id="numGB"/>
