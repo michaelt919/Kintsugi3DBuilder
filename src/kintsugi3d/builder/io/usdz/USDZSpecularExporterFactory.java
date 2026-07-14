@@ -9,37 +9,30 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.app;
+package kintsugi3d.builder.io.usdz;
 
-public enum OperatingSystem
+import kintsugi3d.builder.io.gltf.MaterialExporter;
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
+
+public class USDZSpecularExporterFactory implements MaterialExporterFactory
 {
-    UNKNOWN,
-    WINDOWS,
-    MACOS,
-    UNIX;
+    private static final USDZSpecularExporterFactory INSTANCE = new USDZSpecularExporterFactory();
 
-    private static final String OS = System.getProperty("os.name").toLowerCase();
-
-    public static OperatingSystem getCurrentOS()
+    public static USDZSpecularExporterFactory getInstance()
     {
-        // Windows
-        if (OS.contains("win"))
-        {
-            return WINDOWS;
-        }
+        return INSTANCE;
+    }
 
-        // Mac OS
-        if (OS.contains("mac"))
-        {
-            return MACOS;
-        }
+    private USDZSpecularExporterFactory()
+    {
+    }
 
-        // Linux and Unix
-        if (OS.contains("nix") || OS.contains("nux") || OS.contains("aix"))
-        {
-            return UNIX;
-        }
-
-        return UNKNOWN;
+    @Override
+    public MaterialExporter getExporter(TextureResources<?> resources)
+    {
+        USDZSpecularExporter exporter = new USDZSpecularExporter();
+        exporter.setTextureResources(resources);
+        return exporter;
     }
 }

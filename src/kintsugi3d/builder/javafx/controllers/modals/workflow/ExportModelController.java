@@ -22,6 +22,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
+import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -37,6 +38,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
     //Initialize all the variables in the FXML file
     @FXML private Pane root;
 
+    @FXML private ComboBox<ExportType> exportTypeComboBox;
     @FXML private ComboBox<String> formatComboBox;
     @FXML private CheckBox generateLowResolutionCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
@@ -62,6 +64,17 @@ public class ExportModelController extends ProjectSettingsControllerBase
         // Enable min. texture resolution combo box when LODs are enabled.
         minimumTextureResolutionComboBox.disableProperty()
             .bind(generateLowResolutionCheckBox.selectedProperty().not());
+
+        // Bind the export type to the request
+        exportTypeComboBox.getItems().addAll(ExportType.values());
+        exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
+        exportTypeComboBox.valueProperty().addListener(
+            (obs, oldValue, newValue) ->
+                getProjectSettingsModel().set("exportType", newValue));
+
+        getLocalSettingsModel().getObjectProperty("exportType", ExportType.class).addListener(
+            (obs, oldValue, newValue) ->
+                exportTypeComboBox.setValue(newValue));
 
         // Bind settings
         bindTextComboBox(formatComboBox, "textureFormat");
