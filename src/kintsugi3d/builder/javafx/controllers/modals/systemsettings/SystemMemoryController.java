@@ -40,7 +40,7 @@ public class SystemMemoryController implements SystemSettingsControllerBase
     private Launch4jConfiguration configuration;
 
     @Override
-    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    public void initializePage(Window parentWindow, JavaFXState state)
     {
         try
         {

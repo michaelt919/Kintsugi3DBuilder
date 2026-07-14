@@ -14,6 +14,8 @@ package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 
-public interface SystemSettingsControllerBase {
-    void initializeSettingsPage(Window parentWindow, JavaFXState state);
+@FunctionalInterface
+public interface SystemSettingsControllerBase
+{
+    void initializePage(Window parentWindow, JavaFXState state);
 }

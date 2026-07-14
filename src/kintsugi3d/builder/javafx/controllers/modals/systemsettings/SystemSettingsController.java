@@ -68,7 +68,7 @@ public class SystemSettingsController
 
                 //initialize controller
                 SystemSettingsControllerBase controller = loader.getController();
-                controller.initializeSettingsPage(parentWindow, state);
+                controller.initializePage(parentWindow, state);
             }
             catch (IOException e)
             {
