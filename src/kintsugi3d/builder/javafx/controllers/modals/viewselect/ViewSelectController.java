@@ -24,6 +24,7 @@ import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
 import kintsugi3d.builder.javafx.util.ImageThreadable;
+import kintsugi3d.builder.javafx.util.ScrollBarHelper;
 
 import java.io.File;
 import java.util.*;
@@ -84,6 +85,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             .addListener((a, b, c) -> selectImageInTreeView());
 
         setCanAdvance(true);
+        ScrollBarHelper.scrollbarFix(chunkTreeView);
     }
 
     @Override

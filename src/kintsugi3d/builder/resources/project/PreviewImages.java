@@ -75,7 +75,7 @@ class PreviewImages
             markCreated();
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
                 MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
-                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                    finishedCount.get() + failedCount.get(), viewSet.getCombinedCameraPoseCount()));
 
             fullResImage = null; // skip for faster loading
         }
@@ -276,7 +276,7 @@ class PreviewImages
         {
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
                 MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
-                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                    finishedCount.get() + failedCount.get(), viewSet.getCombinedCameraPoseCount()));
 
             missingPreview = false;
             missingThumbnail = false;

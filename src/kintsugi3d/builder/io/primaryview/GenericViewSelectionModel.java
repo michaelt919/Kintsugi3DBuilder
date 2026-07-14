@@ -41,7 +41,7 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     @Override
     public List<View> getViews()
     {
-        return IntStream.range(0, viewSet.getCameraPoseCount())
+        return IntStream.range(0, viewSet.getCombinedCameraPoseCount())
             .mapToObj(i -> new View(viewSet.getImageFileName(i)))
             .collect(Collectors.toUnmodifiableList());
     }
@@ -56,7 +56,7 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     @Override
     public Optional<String> findFullResImagePath(String imageName)
     {
-        for (int i = 0; i < viewSet.getImageFiles().size(); ++i)
+        for (int i = 0; i < viewSet.getAllImageFiles().size(); ++i)
         {
             String fileName = viewSet.getImageFileName(i);
             if (fileName.matches(".*" + imageName + ".*"))

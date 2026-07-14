@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,9 +12,23 @@
 package kintsugi3d.builder.state.cards;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
-@FunctionalInterface
 public interface ProjectDataCardFactory
 {
+    /**
+     * Creates all cards from scratch.
+     * @param cardsModel
+     * @return
+     */
     List<ProjectDataCard> createAllCards(CardsModel cardsModel);
+
+    /**
+     * Returns a map from the original card to its replacement after refresh.
+     * @param cardsModel
+     * @param filter
+     * @return
+     */
+    Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter);
 }

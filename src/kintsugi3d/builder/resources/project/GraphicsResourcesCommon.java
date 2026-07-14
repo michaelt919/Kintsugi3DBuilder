@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
@@ -71,6 +72,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
     /**
+     * A GPU buffer containing the indices of enabled and non-deleted cameras
+     */
+    public final UniformBuffer<ContextType> viewIndexBuffer;
+
+    /**
      * Contains the VBOs for positions, tex-coords, normals, and tangents
      */
     private final GeometryResources<ContextType> geometryResources;
@@ -89,6 +95,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     {
         this.context = context;
         this.viewSet = viewSet;
+
+        if (viewSet != null)
+        {
+            viewSet.registerObserver(change -> updateViewIndicesData());
+        }
 
         // Store the poses in a uniform buffer
         if (viewSet != null && viewSet.getCameraPoseData() != null)
@@ -133,6 +144,16 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             lightIndexBuffer = null;
         }
 
+        // Store the view indices in a uniform buffer
+        if (viewSet != null && viewSet.getViewIndexData() != null)
+        {
+            viewIndexBuffer = context.createUniformBuffer().setData(viewSet.getViewIndexData());
+        }
+        else
+        {
+            viewIndexBuffer = null;
+        }
+
         // Luminance map texture
         if (viewSet != null && viewSet.hasCustomLuminanceEncoding())
         {
@@ -153,7 +174,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
                 this.cameraWeightBuffer = context.createUniformBuffer()
                         .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                1, viewSet.getCameraPoseCount(), this.cameraWeights));
+                                1, viewSet.getCombinedCameraPoseCount(), this.cameraWeights));
 
                 ImportedMaterial material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
@@ -182,35 +203,35 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                     if (material.getDiffuseMap() == null || material.getDiffuseMap().getMapName() == null)
                     {
                         MaterialColorMap diffuseMap = new MaterialColorMap();
-                        diffuseMap.setMapName(prefix + ".png");
+                        diffuseMap.setMapName(String.format("%s.png", prefix));
                         material.setDiffuseMap(diffuseMap);
                     }
 
                     if (material.getNormalMap() == null || material.getNormalMap().getMapName() == null)
                     {
                         MaterialTextureMap normalMap = new MaterialTextureMap();
-                        normalMap.setMapName(prefix + "_normal.png");
+                        normalMap.setMapName(String.format("%s_normal.png", prefix));
                         material.setNormalMap(normalMap);
                     }
 
                     if (material.getAmbientOcclusionMap() == null || material.getAmbientOcclusionMap().getMapName() == null)
                     {
                         MaterialScalarMap aoMap = new MaterialScalarMap();
-                        aoMap.setMapName(prefix + "_occlusion.png");
+                        aoMap.setMapName(String.format("%s_occlusion.png", prefix));
                         material.setAmbientOcclusionMap(aoMap);
                     }
 
                     if (material.getSpecularMap() == null || material.getSpecularMap().getMapName() == null)
                     {
                         MaterialColorMap specularMap = new MaterialColorMap();
-                        specularMap.setMapName(prefix + "_Ks.png");
+                        specularMap.setMapName(String.format("%s_Ks.png", prefix));
                         material.setSpecularMap(specularMap);
                     }
 
                     if (material.getRoughnessMap() == null || material.getRoughnessMap().getMapName() == null)
                     {
                         MaterialScalarMap roughnessMap = new MaterialScalarMap();
-                        roughnessMap.setMapName(prefix + "_Pr.png");
+                        roughnessMap.setMapName(String.format("%s_Pr.png", prefix));
                         material.setRoughnessMap(roughnessMap);
                     }
 
@@ -255,25 +276,25 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
     {
-        float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
+        float[] cameraWeights = new float[viewSet.getCombinedCameraPoseCount()];
 
-        Vector3[] viewDirections = IntStream.range(0, viewSet.getCameraPoseCount())
+        Vector3[] viewDirections = IntStream.range(0, viewSet.getCombinedCameraPoseCount())
                 .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
                         .minus(geometry.getCentroid()).normalized())
                 .toArray(Vector3[]::new);
 
-        int[] totals = new int[viewSet.getCameraPoseCount()];
-        int targetSampleCount = viewSet.getCameraPoseCount() * 256;
+        int[] totals = new int[viewSet.getCombinedCameraPoseCount()];
+        int targetSampleCount = viewSet.getCombinedCameraPoseCount() * 256;
         double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
         int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
 
         // Find the view with the greatest distance from any other view.
         // Directions that are further from any view than distance will be ignored in the view weight calculation.
         double maxMinDistance = 0.0;
-        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+        for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
         {
             double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < viewSet.getCameraPoseCount(); j++)
+            for (int j = 0; j < viewSet.getCombinedCameraPoseCount(); j++)
             {
                 if (i != j)
                 {
@@ -299,7 +320,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
                 double minDistance = maxMinDistance;
                 int minIndex = -1;
-                for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+                for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
                 {
                     double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
                     if (distance < minDistance)
@@ -320,10 +341,10 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         LOG.info("View weights:");
 
-        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+        for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            LOG.info(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
+            LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);
         }
 
         return cameraWeights;
@@ -426,6 +447,17 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
     }
 
+    /**
+     * Refresh the view index data in the uniform buffers using the current values in the view set.
+     */
+    public void updateViewIndicesData()
+    {
+        if (viewIndexBuffer != null)
+        {
+            viewIndexBuffer.setData(viewSet.getViewIndexData());
+        }
+    }
+
     public void replaceTextureResources(TextureResources<ContextType> textureResources)
     {
         this.textureResources.close();
@@ -461,14 +493,16 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         // The defines can be overridden by the actual shader.
         ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context);
 
-        for (Entry<String, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
+        for (Entry<TextureDetails, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
         {
             builder.define(
-                String.format("TEXTURE_%s", entry.getKey().toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "_")),
+                String.format("TEXTURE_%s", entry.getKey().name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "_")),
                 entry.getValue() != null);
         }
 
-        builder.define("BASIS_ENABLED", basisEnabled);
+        builder
+            .define("USE_VIEW_INDICES", true)
+            .define("BASIS_ENABLED", basisEnabled);
 
         if (basisEnabled)
         {
@@ -501,6 +535,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             program.setUniformBuffer("LightIndices", this.lightIndexBuffer);
         }
 
+        if (this.viewIndexBuffer != null)
+        {
+            program.setUniformBuffer("ViewIndices", this.viewIndexBuffer);
+        }
+
         getLuminanceMapResources().setupShaderProgram(program);
         getTextureResources().setupShaderProgram(program);
     }
@@ -515,5 +554,6 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         this.geometryResources.close();
         this.textureResources.close();
         this.luminanceMapResources.close();
+        this.viewIndexBuffer.close();
     }
 }

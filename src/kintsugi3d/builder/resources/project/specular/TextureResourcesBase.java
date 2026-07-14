@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -51,7 +51,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             useTextureSafe(program,
                 // Sanitize texture names when being used as shader variables:
                 // replace one or more non-alphanumeric characters with underscore.
-                String.format("tex_%s", entry.getKey().replaceAll("[^A-Za-z0-9]+", "_")),
+                String.format("tex_%s", entry.getKey().name.replaceAll("[^A-Za-z0-9]+", "_")),
                 entry.getValue());
         }
 
@@ -71,7 +71,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     {
         try
         {
-            Texture2D<ContextType> tex = getTextures().get(texName);
+            Texture2D<ContextType> tex = getTexture(texName);
             if (tex != null)
             {
                 tex.getColorTextureReader().saveToFile(format, new File(outputDirectory,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,15 +11,9 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.gl.window.Canvas3D;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
-import java.util.function.Consumer;
-
-public interface CanvasModel
+public interface CanvasModel extends ReadonlyCanvasModel
 {
-    Canvas3D<?> getCanvas();
     void setCanvas(FramebufferCanvas<?> canvas);
-
-    void addCanvasChangedListener(Consumer<FramebufferCanvas<?>> listener);
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -134,40 +134,13 @@
                     <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false" text="Weight maps (combined)" toggleGroup="$renderGroup">
                         <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                     </RadioMenuItem>
-                    <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
-                        <userData>rendermodes/weightmaps/weightmapSingle.frag</userData>
+                    <Menu fx:id="weightmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
+                        <userData>rendermodes/viewTextureWeights.frag</userData>
                     </Menu>
-                    <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">
-                        <userData>rendermodes/weightmaps/weightmapOverlay.frag</userData>
-                    </Menu>
-                    <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
-                        <userData>rendermodes/basisMaterialSingle.frag</userData>
-                    </Menu>
-                    <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material x weights">
+                    <Menu fx:id="paletteMaterialWeightedMenu" mnemonicParsing="false" text="Basis material palette">
                         <userData>rendermodes/basisMaterialWeightedSingle.frag</userData>
                     </Menu>
-                    <Menu mnemonicParsing="false" text="Texture Visualizations">
-                        <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/normalMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="Albedo map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/albedoMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="roughnessTexture" mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/roughnessMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="metallicityTexture" mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/metallicMap.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="diffuseTexture" mnemonicParsing="false" text="Diffuse color map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/diffuseColor.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="specularTexture" mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/specularColor.frag</userData>
-                        </RadioMenuItem>
-                        <RadioMenuItem fx:id="errorTexture" mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
-                            <userData>rendermodes/maps/errorMap.frag</userData>
-                        </RadioMenuItem>
+                    <Menu fx:id = "texturesMenu" mnemonicParsing="false" text="Textures">
                     </Menu>
                 </Menu>
                 <Menu text="Help">
@@ -192,10 +165,12 @@
         <HBox VBox.vgrow="ALWAYS">
             <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
             <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml" />
-
-            <AnchorPane HBox.hgrow="ALWAYS">
+            <AnchorPane HBox.hgrow="ALWAYS" minWidth = "0">
                 <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                <fx:include fx:id = "Carousel" source = "Carousel.fxml" VBox.vgrow = "ALWAYS" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                <HBox fx:id = "carouselContainer" pickOnBounds="false" AnchorPane.bottomAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="0">
+                    <fx:include fx:id="carousel" source="Carousel.fxml"  AnchorPane.bottomAnchor="0.0" HBox.hgrow="ALWAYS"/>
+                    <fx:include fx:id = "transparentContainer" source = "TransparentContainer.fxml" VBox.vgrow="ALWAYS" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+                </HBox>
                 <AnchorPane fx:id="miniProgressPane" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
                     <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
                         <cursor>
@@ -218,8 +193,9 @@
                         </StackPane>
                     </HBox>
                 </AnchorPane>
-                <Label fx:id="shaderName" style="-fx-background-color: #383838; -fx-label-padding: 10;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.leftAnchor="32.0" AnchorPane.bottomAnchor="32.0" />
+                <Label fx:id="shaderName" style="-fx-background-color: #383838; -fx-label-padding: 10;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="32.0" />
             </AnchorPane>
+<!--            <fx:include fx:id="rightBar" source="rightpanel/RightBar.fxml" AnchorPane.rightAnchor="0.0"/>-->
         </HBox>
     </VBox>
 </AnchorPane>

@@ -142,7 +142,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private void selectSampleLocations(Framebuffer<ContextType> fbo) throws IOException
+    private void selectSampleLocations(ReadableFramebuffer<ContextType> fbo) throws IOException
     {
 
         try (ProgramObject<ContextType> maskProgram = context.getShaderProgramBuilder()
@@ -262,7 +262,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private void buildCache(Framebuffer<ContextType> fbo, ProgressMonitor monitor)
+    private void buildCache(ReadableFramebuffer<ContextType> fbo, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
@@ -281,15 +281,15 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setMaxProgress(resources.getViewSet().getCameraPoseCount());
+                monitor.setMaxProgress(resources.getViewSet().getCombinedCameraPoseCount());
             }
 
             // Loop over the images, processing each one at a time
-            for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
+            for (int k = 0; k < resources.getViewSet().getCombinedCameraPoseCount(); k++)
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCombinedCameraPoseCount()));
                     monitor.allowUserCancellation();
                 }
 
@@ -389,7 +389,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setProgress(resources.getViewSet().getCameraPoseCount(), "All images completed.");
+                monitor.setProgress(resources.getViewSet().getCombinedCameraPoseCount(), "All images completed.");
             }
         }
     }
@@ -465,21 +465,21 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 GeometryFramebuffer.createEmpty(context, settings.getSampledSize(), settings.getSampledSize());
 
             // Sample position buffer
-            Framebuffer<ContextType> contextTypeFramebuffer2 = geomTexturesFullRes.getFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer2 = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getPositionTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
                         contextTypeFramebuffer2.getTextureReaderForColorAttachment(0).readFloatingPointRGBA())));
 
             // Sample normal buffer
-            Framebuffer<ContextType> contextTypeFramebuffer1 = geomTexturesFullRes.getFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer1 = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getNormalTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
                         contextTypeFramebuffer1.getTextureReaderForColorAttachment(1).readFloatingPointRGBA())));
 
             // Sample tangent buffer
-            Framebuffer<ContextType> contextTypeFramebuffer = geomTexturesFullRes.getFramebuffer();
+            ReadableFramebuffer<ContextType> contextTypeFramebuffer = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getTangentTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),

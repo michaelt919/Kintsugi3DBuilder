@@ -92,7 +92,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
             }
 
-            List<Map<String, ColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getCameraPoseCount());
+            List<Map<String, ColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getCombinedCameraPoseCount());
 
             // Run the reconstruction and save the results to file
             for (ReconstructionView<ContextType> view : reconstruction)
@@ -128,7 +128,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    private void saveImageToFile(File outputDirectory, int k, Framebuffer<ContextType> framebuffer)
+    private void saveImageToFile(File outputDirectory, int k, ReadableFramebuffer<ContextType> framebuffer)
     {
         try
         {
@@ -141,7 +141,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    private void saveImageToFile(File outputDirectory, String filename, Framebuffer<ContextType> framebuffer)
+    private void saveImageToFile(File outputDirectory, String filename, ReadableFramebuffer<ContextType> framebuffer)
     {
         try
         {

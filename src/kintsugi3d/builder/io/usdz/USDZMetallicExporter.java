@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,13 +29,10 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-
-public class USDZExporter extends MaterialExporter
+public class USDZMetallicExporter extends MaterialExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
-    // private static final String SCRIPT_LOCATION = "/home/nathan/Documents/Kintsugi3DBuilder/bin/";
+    private static final Logger LOG = LoggerFactory.getLogger(USDZMetallicExporter.class);
     private static final Path SCRIPT_LOCATION = ApplicationFolders.getAdditionalBinDirectory();
-
     private File outputPath;
 
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
@@ -44,20 +41,14 @@ public class USDZExporter extends MaterialExporter
 
     }
 
-    @StandardTextureExport(StandardTexture.DIFFUSE_COLOR)
-    public void diffuse(TextureInfo diffuse)
+    @StandardTextureExport(StandardTexture.ALBEDO)
+    public void albedo(TextureInfo diffuse)
     {
 
     }
 
-    @StandardTextureExport(StandardTexture.SPECULAR_COLOR)
-    public void specular(TextureInfo specular)
-    {
-
-    }
-
-    @StandardTextureExport(StandardTexture.ROUGHNESS)
-    public void roughness(TextureInfo roughness)
+    @StandardTextureExport(StandardTexture.ORM)
+    public void orm(TextureInfo specular)
     {
 
     }
@@ -68,10 +59,9 @@ public class USDZExporter extends MaterialExporter
         // glb texture_extension normal diffuse specular roughness
         try
         {
-            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.texName, getTextureFileFormat());
-            String diffuse = getTextureFilename(StandardTexture.DIFFUSE_COLOR.texName, getTextureFileFormat());
-            String specular = getTextureFilename(StandardTexture.SPECULAR_COLOR.texName, getTextureFileFormat());
-            String roughness = getTextureFilename(StandardTexture.ROUGHNESS.texName, getTextureFileFormat());
+            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat());
+            String albedo = getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat());
+            String orm = getTextureFilename(StandardTexture.ORM.details.name, getTextureFileFormat());
 
             String executable = "";
             String glob;
@@ -92,7 +82,7 @@ public class USDZExporter extends MaterialExporter
                     break;
 
                 default:
-                    throw new IllegalStateException("OS environment not suppoerted.");
+                    throw new IllegalStateException("OS environment not supported.");
             }
 
             // Attempt to realize path for the exporter application
@@ -113,12 +103,12 @@ public class USDZExporter extends MaterialExporter
             // Define a new process to start the exporter
             ProcessBuilder pb = new ProcessBuilder(
                 executable,
-                getFilename(),
-                getTextureFileFormat(),
-                normal,
-                diffuse,
-                specular,
-                roughness
+                "--metallic",
+                "--model", getFilename(),
+                "--format", getTextureFileFormat(),
+                "--normal", normal,
+                "--albedo", albedo,
+                "--orm", orm
             );
 
             // Change the working directory of the exporter to the output path
@@ -139,11 +129,8 @@ public class USDZExporter extends MaterialExporter
             }
         }
         catch (IllegalArgumentException |
-               IllegalStateException e)
-        {
-            LOG.error(e.getMessage());
-        }
-        catch (IOException |
+               IllegalStateException |
+               IOException |
                InterruptedException e)
         {
             LOG.error(e.getMessage());

@@ -54,7 +54,11 @@
 #endif // !ANALYTIC_MODE
 
 #include <colorappearance/material.glsl>
-#line 58 3101
+
+// overlay.glsl includes material.glsl so much be listed after material #define overrides
+#include "overlay.glsl"
+
+#line 59 3101
 
 float geom(float roughness, LightingParameters l)
 {
@@ -111,7 +115,7 @@ float geom(float roughness, LightingParameters l)
 #include "sort.glsl"
 #endif
 
-#line 110 3101
+#line 116 3101
 
 uniform vec3 holeFillColor;
 
@@ -549,11 +553,6 @@ vec3 global(ViewingParameters v, Material m)
 vec3 diffuse(LightingParameters l, Material m)
 {
     return m.diffuseColor;
-}
-
-vec3 emissive(Material m)
-{
-    return vec3(0.0);
 }
 
 #include "subjectMain.glsl"

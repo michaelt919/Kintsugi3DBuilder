@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,12 +12,14 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.beans.binding.BooleanBinding;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -30,6 +32,7 @@ import kintsugi3d.builder.state.cards.ProjectDataCard;
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 public class CardController
@@ -55,6 +58,12 @@ public class CardController
         this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();
         this.setCardVisibility(false);
+
+        if (dataCard.isDisabled())
+        {
+            dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
+            cardTitle.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
+        }
 
         cardTitle.setText(dataCard.getTitle());
 
@@ -93,10 +102,16 @@ public class CardController
             Label caption = new Label(value);
             caption.getStyleClass().add("wireframeCaption");
             caption.setWrapText(true);
-            caption.setPrefWidth(200);
+            caption.setPrefWidth(350);
 
             textContent.getChildren().add(label);
             textContent.getChildren().add(caption);
+
+            Tooltip tooltip = new Tooltip(caption.getText());
+            tooltip.setWrapText(true);
+            tooltip.setMaxWidth(500);
+            Tooltip.install(caption, tooltip);
+
             VBox.setMargin(caption, new Insets(0, 0, 8, 4));
         });
 
@@ -108,7 +123,7 @@ public class CardController
             separator.getStyleClass().add("card-separator");
             separator.setPadding(new Insets(16.0, 8.0, 16, 8.0)); // Top, Right, Bottom, Left
             buttonBox.getChildren().add(separator);
-            group.forEach((label, action) ->
+            group.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry ->
             {
                 HBox hBox = new HBox();
                 hBox.setAlignment(Pos.TOP_CENTER);
@@ -121,13 +136,19 @@ public class CardController
 //                imageView.setPreserveRatio(true);
 
                 // Button
-                Button button = new Button(label);
+                Button button = new Button(entry.getKey());
                 button.setGraphicTextGap(8.0);
                 button.setMnemonicParsing(false);
                 button.getStyleClass().add("card-button");
                 button.getStyleClass().add("wireframeBodyStrong");
                 button.getStylesheets().add("file:./kintsugiStyling.css");
-                button.setOnAction(event -> action.run());
+                button.setOnAction(event -> {
+
+                    /*If uncommented will make it so after a button is clicked
+                      boarder will remain to show it is selected*/
+                    //button.getStyleClass().add("activated");
+                    entry.getValue().run();
+                });
 
                 HBox.setMargin(button, new Insets(0, 0, 8, 0));
                 hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
@@ -161,6 +182,7 @@ public class CardController
                 mainImage.setImage(preview);
             }
         });
+        mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
     }
 
     public void setCardVisibility(boolean visibility)
@@ -176,15 +198,15 @@ public class CardController
     @FXML
     public void cardClicked()
     {
-//        if (cameraCardsModel.isSelected(cardId))
-//        {
-//            cameraCardsModel.deselectCard(cardId);
-//        }
-//        else
-//        {
-//            cameraCardsModel.selectCard(cardId);
-//        }
-
+        /*
+        if (cameraCardsModel.isSelected(cardId))
+        {
+            cameraCardsModel.deselectCard(cardId);
+        }
+        else
+        {
+            cameraCardsModel.selectCard(cardId);
+        } */
         if (cardsModel.isExpanded(cardId))
         {
             cardsModel.collapseCard(cardId);

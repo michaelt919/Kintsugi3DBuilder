@@ -234,9 +234,9 @@ public final class Rendering
             @Override
             public Object getObjectAtCoordinates(double x, double y)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainRenderable() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getObjectAtCoordinates(x, y);
+                    return instanceManager.getMainRenderable().getSceneViewportModel().getObjectAtCoordinates(x, y);
                 }
                 else
                 {
@@ -247,9 +247,9 @@ public final class Rendering
             @Override
             public Vector3 get3DPositionAtCoordinates(double x, double y)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainRenderable() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+                    return instanceManager.getMainRenderable().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
                 }
                 else
                 {
@@ -260,9 +260,9 @@ public final class Rendering
             @Override
             public Vector3 getViewingDirection(double x, double y)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainRenderable() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getViewingDirection(x, y);
+                    return instanceManager.getMainRenderable().getSceneViewportModel().getViewingDirection(x, y);
                 }
                 else
                 {
@@ -273,9 +273,9 @@ public final class Rendering
             @Override
             public Vector3 getViewportCenter()
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainRenderable() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getViewportCenter();
+                    return instanceManager.getMainRenderable().getSceneViewportModel().getViewportCenter();
                 }
                 else
                 {
@@ -286,9 +286,9 @@ public final class Rendering
             @Override
             public Vector2 projectPoint(Vector3 point)
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainRenderable() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().projectPoint(point);
+                    return instanceManager.getMainRenderable().getSceneViewportModel().projectPoint(point);
                 }
                 else
                 {
@@ -299,9 +299,9 @@ public final class Rendering
             @Override
             public float getLightWidgetScale()
             {
-                if (instanceManager.getLoadedInstance() != null)
+                if (instanceManager.getMainRenderable() != null)
                 {
-                    return instanceManager.getLoadedInstance().getSceneViewportModel().getLightWidgetScale();
+                    return instanceManager.getMainRenderable().getSceneViewportModel().getLightWidgetScale();
                 }
                 else
                 {
@@ -339,7 +339,7 @@ public final class Rendering
                 try
                 {
                     // reload program
-                    instanceManager.getLoadedInstance().reloadShaders();
+                    instanceManager.getMainRenderable().reloadShaders();
                 }
                 catch (RuntimeException e)
                 {
@@ -500,8 +500,6 @@ public final class Rendering
                                     // (such as refocusing using a window other than the main window).
                                     waitForRenderingWork.wait(UNFOCUSED_TIMEOUT_MILLIS);
                                 }
-
-                                LOG.info("Wait ended");
                             }
                             catch (InterruptedException e)
                             {
@@ -621,7 +619,7 @@ public final class Rendering
                     requestQueue.addBackgroundGraphicsRequest(new ProjectGraphicsRequest()
                     {
                         @Override
-                        public <ContextType extends Context<ContextType>> void executeRequest(ProjectInstance<ContextType> instance)
+                        public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> instance)
                         {
                             WindowSynchronization.getInstance().quitWithoutConfirmation();
                         }

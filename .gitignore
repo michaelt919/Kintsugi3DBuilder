@@ -93,5 +93,6 @@ target/*
 # Project-specific
 *.log
 /jre*
+bin/
 /viewer
 /test-output/

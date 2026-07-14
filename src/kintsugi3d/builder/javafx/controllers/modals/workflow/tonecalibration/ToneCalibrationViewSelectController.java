@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration;
 
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ViewSet;
@@ -30,7 +31,7 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
     @Override
     public boolean advance()
     {
-        ViewSet viewSet = Global.state().getIOModel().validateHandler().getLoadedViewSet();
+        ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
 
         int viewIndex = viewSet.findIndexOfView(getSelectedViewName());
         if (viewIndex == viewSet.getPrimaryViewIndex())
@@ -41,7 +42,7 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
 
         if (viewSet.hasCustomLuminanceEncoding())
         {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "This will clear any previous tone calibration values!");
+            Alert alert = new Alert(AlertType.CONFIRMATION, "This will clear any previous tone calibration values!");
             alert.setHeaderText("Change tone calibration view?");
             Optional<ButtonType> confirmResult = alert.showAndWait();
             if (confirmResult.isEmpty() || !confirmResult.get().equals(ButtonType.OK))

@@ -192,8 +192,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
                             new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
 
-                        unorderedCameraPoseList.add(newPose);
-                        break;
+                       unorderedCameraPoseList.add(newPose);
+                       break;
                     }
                     case "d": // Legacy format; generally used with synthetic data
                     case "D": // Legacy format from older IBRelight projects from PhotoScan / Metashape
@@ -300,6 +300,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         break;
                     }
                     case "v":
+                    case "vd":
                     {
                         int poseId = scanner.nextInt();
                         int projectionId = scanner.nextInt();
@@ -307,6 +308,16 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
                         String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
 
+                        if (id.equals("vd"))
+                        {
+                            // commit as disabled
+                            builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
+                                .setCurrentCameraProjectionIndex(projectionId)
+                                .setCurrentLightIndex(lightId)
+                                .setCurrentImageFile(new File(imgFilename))
+                                .commitCurrentCameraPoseAsDisabled();
+                            break;
+                        }
                         builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -76,7 +76,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
         }
     }
 
-    public Framebuffer<ContextType> getFramebuffer()
+    public ReadableFramebuffer<ContextType> getFramebuffer()
     {
         return fbo;
     }
@@ -117,13 +117,13 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
     @Override
     public int getWidth()
     {
-        return fbo.getSize().width;
+        return fbo.getSizeForRead().width;
     }
 
     @Override
     public int getHeight()
     {
-        return fbo.getSize().height;
+        return fbo.getSizeForRead().height;
     }
 
     @Override
@@ -137,7 +137,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
     @Override
     public GeometryTextures<ContextType> createViewportCopy(int x, int y, int viewportWidth, int viewportHeight)
     {
-        GeometryFramebuffer<ContextType> viewportFBO = GeometryFramebuffer.createEmpty(context, viewportWidth, viewportHeight);
+        GeometryFramebuffer<ContextType> viewportFBO = createEmpty(context, viewportWidth, viewportHeight);
 
         // Copy positions
         viewportFBO.getFramebuffer().blitColorAttachmentFromFramebuffer(0,

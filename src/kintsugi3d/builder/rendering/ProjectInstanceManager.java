@@ -24,6 +24,7 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
@@ -33,6 +34,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
 import kintsugi3d.gl.interactive.RefreshableCollection;
 import kintsugi3d.gl.interactive.RenderRefreshable;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.FramebufferCanvas;
@@ -55,11 +57,13 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     private final ContextType context;
 
-    private final RefreshableCollection<RenderRefreshable<ContextType>> renderViews = new RefreshableCollection<>();
-    private final Map<UserShader, RenderRefreshable<ContextType>> renderViewMap = new HashMap<>(8);
+    private final RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViews
+        = new RefreshableCollection<>();
+    private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
+        = new HashMap<>(8);
 
     private ViewSet loadedViewSet;
-    private ProjectInstance<ContextType> projectInstance;
+    private RenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -71,7 +75,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
-    private final List<Consumer<ProjectInstance<ContextType>>> instanceLoadCallbacks
+    private final List<Consumer<RenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
     private File loadedProjectFile;
@@ -97,7 +101,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
      *
      * @param callback to add
      */
-    public void addInstanceLoadCallback(Consumer<ProjectInstance<ContextType>> callback)
+    @Override
+    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
         synchronized (instanceLoadCallbacks)
         {
@@ -138,9 +143,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public boolean isInstanceLoaded()
+    public boolean isRenderableLoaded()
     {
-        return projectInstance != null;
+        return renderableInstance != null;
     }
 
     @Override
@@ -177,21 +182,21 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
-        ViewSet newViewSet = builder.getViewSet();
-        int cameraCount = newViewSet.getCameraPoseCount();
+        loadedViewSet = builder.getViewSet();
+        int cameraCount = loadedViewSet.getCombinedCameraPoseCount();
         if (cameraCount > 1024 && progressMonitor != null)
         {
             IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
             progressMonitor.warn(e);
         }
-        boolean hasUnsupportedCorrections = newViewSet.hasUnsupportedCorrections();
+        boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
         if (hasUnsupportedCorrections && progressMonitor != null)
         {
             IOException e = new IOException("This project uses 'Fit additional corrections' which are not supported.");
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = newViewSet.getImageFiles();
+        List<File> imgFiles = loadedViewSet.getAllImageFiles();
         List<String> imgFileNames = new ArrayList<>(imgFiles.size());
 
         imgFiles.forEach(file -> imgFileNames.add(file.getName()));
@@ -199,7 +204,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
-        invokeViewSetLoadCallbacks(newViewSet);
+        invokeViewSetLoadCallbacks(loadedViewSet);
 
         if (progressMonitor != null)
         {
@@ -218,7 +223,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        ProjectInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
+        RenderableInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -228,25 +233,42 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            // Wait to actually set the loaded view set until we're about to actually initialize the corresponding instance.
-            loadedViewSet = newViewSet;
-
-            // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
-            new TabsManager(newViewSet, newInstance).rebuildTabs();
-
             // If a new instance was just loaded, initialize it.
             try
             {
                 newInstance.initialize();
 
-                // Check for an old instance just to be safe
-                if (projectInstance != null)
+                // Wait to refresh the tabs manager until we're about to actually initialize the new instance.
+                TabsManager tabsManager = new TabsManager(newInstance);
+                tabsManager.rebuildTabs();
+
+                // Register observer for changes to the Photos tab
+                loadedViewSet.registerObserver(change ->
                 {
-                    projectInstance.close();
+                    CardsModel photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS);
+
+                    switch (change.type)
+                    {
+                        case ADDED:
+                            tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
+                            break;
+                        case REMOVED:
+                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            break;
+                        case MODIFIED:
+                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            break;
+                    }
+                });
+
+                // Check for an old instance just to be safe
+                if (renderableInstance != null)
+                {
+                    renderableInstance.close();
                 }
 
                 // Use the new instance as the active instance if initialization was successful
-                projectInstance = newInstance;
+                renderableInstance = newInstance;
             }
             catch (InitializationException e)
             {
@@ -255,9 +277,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             }
 
             // Invoke callbacks
-            for (Consumer<ProjectInstance<ContextType>> callback : instanceLoadCallbacks)
+            for (Consumer<RenderableInstance<?>> callback : instanceLoadCallbacks)
             {
-                callback.accept(projectInstance);
+                callback.accept(renderableInstance);
             }
 
             // Clear the list of callbacks for the next load.
@@ -389,18 +411,20 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public RefreshableCollection<RenderRefreshable<ContextType>> getRenderViews()
+    public RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> getRenderViews()
     {
         return renderViews;
     }
 
     public void addRenderView(UserShader shader, FramebufferSize initialSize,
-                              Consumer<FramebufferCanvas<ContextType>> framebufferCallback)
+                              IntVector2 safeStartPixel, IntVector2 safeEndPixel,
+                              Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ProjectRenderingEngine<ContextType> renderView =
-            new ProjectRenderingEngine<>(projectInstance.getID(), context, projectInstance.getResources());
+            new ProjectRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
+        renderView.setSafeRegion(safeStartPixel, safeEndPixel);
         initializeSceneModel(renderView.getSceneModel());
 
         Rendering.runLater(() ->
@@ -410,8 +434,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 DoubleFramebufferFactory.create(context, initialSize.width, initialSize.height);
 
             // Create and initialize refreshable, which will manage the framebuffer object
-            RenderRefreshable<ContextType> refreshable = RenderRefreshable.createWithManagedFrambufferObject(
-                context, renderView, framebuffer);
+            var refreshable = RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
 
             try
             {
@@ -422,7 +445,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             }
             catch (InitializationException e)
             {
-                LOG.error("Error initialing render view for shader: {}", shader.getFriendlyName(), e);
+                LOG.error("Error initialing render view for shader: {}", shader.getFullName(), e);
             }
 
             // Set to use the specified shader.
@@ -441,9 +464,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         });
     }
 
+    @Override
+    public ProjectRenderingEngine<ContextType> getRenderableForShader(UserShader shader)
+    {
+        return renderViewMap.get(shader).getRenderable();
+    }
+
     public void removeRenderView(UserShader shader)
     {
-        RenderRefreshable<ContextType> renderViewToRemove = renderViewMap.get(shader);
+        var renderViewToRemove = renderViewMap.get(shader);
 
         if (renderViewToRemove != null)
         {
@@ -455,18 +484,18 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void requestFragmentShader(File shaderFile)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
         }
     }
 
     @Override
     public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
         }
     }
 
@@ -476,9 +505,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         requestFragmentShader(userShader.getFile(), userShader.getDefines());
     }
 
-    public ProjectInstance<ContextType> getLoadedInstance()
+    @Override
+    public RenderableInstance<ContextType> getMainRenderable()
     {
-        return projectInstance;
+        return renderableInstance;
     }
 
     @Override
@@ -490,9 +520,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            return projectInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+            return renderableInstance.getViewSet().getLuminanceEncoding().encodeFunction;
         }
         else
         {
@@ -504,73 +534,73 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+            renderableInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
         }
     }
 
     @Override
     public void clearTonemapping()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().clearTonemapping();
+            renderableInstance.getDynamicResourceManager().clearTonemapping();
         }
     }
 
     @Override
     public void requestLightIntensityCalibration()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            Rendering.runLater(() -> projectInstance.getResources().calibrateLightIntensities());
+            Rendering.runLater(() -> renderableInstance.getResources().calibrateLightIntensities());
         }
     }
 
     @Override
     public void applyLightCalibration()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getDynamicResourceManager().setLightCalibration(
-                projectInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
+            renderableInstance.getDynamicResourceManager().setLightCalibration(
+                renderableInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
     {
         this.cameraViewListModel = cameraViewListModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+            renderableInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
         }
     }
 
     public void setObjectModel(ReadonlyObjectPoseModel objectModel)
     {
         this.objectModel = objectModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setObjectModel(objectModel);
+            renderableInstance.getSceneModel().setObjectModel(objectModel);
         }
     }
 
     public void setCameraModel(ReadonlyViewpointModel cameraModel)
     {
         this.cameraModel = cameraModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setCameraModel(cameraModel);
+            renderableInstance.getSceneModel().setCameraModel(cameraModel);
         }
     }
 
     public void setLightingModel(ReadonlyLightingEnvironmentModel lightingModel)
     {
         this.lightingModel = lightingModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setLightingModel(lightingModel);
+            renderableInstance.getSceneModel().setLightingModel(lightingModel);
         }
     }
 
@@ -582,22 +612,22 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     public void setSettingsModel(ReadonlyGeneralSettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.getSceneModel().setSettingsModel(settingsModel);
+            renderableInstance.getSceneModel().setSettingsModel(settingsModel);
         }
     }
 
     @Override
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
-        return projectInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
+        return renderableInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
     }
 
     @Override
     public void loadBackplate(File backplateFile) throws FileNotFoundException
     {
-        projectInstance.getDynamicResourceManager().loadBackplate(backplateFile);
+        renderableInstance.getDynamicResourceManager().loadBackplate(backplateFile);
     }
 
     @Override
@@ -609,8 +639,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
-        if (projectInstance == null || projectInstance.getResources() == null
-            || projectInstance.getResources().getTextureResources() == null)
+        if (renderableInstance == null || renderableInstance.getResources() == null
+            || renderableInstance.getResources().getTextureResources() == null)
         {
             if (finishedCallback != null)
             {
@@ -621,7 +651,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         {
             Rendering.runLater(() ->
             {
-                projectInstance.getResources().getTextureResources().saveAll(materialDirectory);
+                renderableInstance.getResources().getTextureResources().saveAll(materialDirectory);
 
                 if (finishedCallback != null)
                 {
@@ -634,9 +664,9 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void saveGLTF(File outputDirectory, ExportSettings settings)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.saveGLTF(outputDirectory, settings);
+            renderableInstance.saveGLTF(outputDirectory, settings);
         }
     }
 
@@ -649,22 +679,22 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         renderViewMap.clear();
         renderViews.clear();
 
+        // Empty sidebar; will be repopulated when another project is opened.
+        Global.state().getTabModels().clearTabs();
+
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
-            if (projectInstance != null)
+            if (renderableInstance != null)
             {
-                projectInstance.close();
-                projectInstance = null;
+                renderableInstance.close();
+                renderableInstance = null;
                 loadedViewSet = null;
 
                 Global.state().getProjectModel().setProjectLoaded(false);
                 Global.state().getProjectModel().setProjectProcessed(false);
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
-
-                // Empty sidebar; will be repopulated when another project is opened.
-                Global.state().getTabModels().clearTabs();
             }
         });
     }
@@ -672,36 +702,36 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void initialize() throws InitializationException
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.initialize();
+            renderableInstance.initialize();
         }
     }
 
     @Override
     public void update()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.update();
+            renderableInstance.update();
         }
     }
 
     @Override
     public void draw(Framebuffer<ContextType> framebuffer)
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.draw(framebuffer);
+            renderableInstance.draw(framebuffer);
         }
     }
 
     @Override
     public void close()
     {
-        if (projectInstance != null)
+        if (renderableInstance != null)
         {
-            projectInstance.close();
+            renderableInstance.close();
 
             Global.state().getProjectModel().setProjectOpen(false);
             Global.state().getProjectModel().clearProjectName();

@@ -51,7 +51,7 @@ vec3 diffuse(LightingParameters l, Material m)
     return diffuseColors[WEIGHTMAP_INDEX].rgb;
 }
 
-vec3 emissive(Material m)
+vec3 emissive(Material m) // no overlay for material visualization
 {
     return vec3(0.0);
 }

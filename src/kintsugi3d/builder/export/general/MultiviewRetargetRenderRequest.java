@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,16 +11,14 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.function.Consumer;
 
@@ -56,7 +54,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        ProjectInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
+        RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile).finish();
 
@@ -69,7 +67,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+            for (int i = 0; i < targetViewSet.getCombinedCameraPoseCount(); i++)
             {
                 if (monitor != null)
                 {
@@ -85,7 +83,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
                 render(drawable, framebuffer);
 
                 String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
-                    renderable.getActiveViewSet().getImageFileName(i), "png");
+                    renderable.getViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
@@ -93,8 +91,8 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress((double) i / (double) resources.getViewSet().getCombinedCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCombinedCameraPoseCount()));
                 }
             }
         }
