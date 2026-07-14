@@ -34,6 +34,7 @@ import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
+import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import org.slf4j.Logger;
@@ -55,10 +56,10 @@ import java.util.stream.Collectors;
 
 public class CacheSettingsController implements SystemSettingsControllerBase
 {
-//    @FXML private CheckBox sizeCheck;
+    @FXML private CheckBox sizeCheck;
     @FXML private CheckBox recentCheck;
     @FXML private CheckBox timeCheck;
-//    @FXML private TextField numGB;
+    @FXML private TextField numGB;
     @FXML private TextField numRecent;
     @FXML private TextField numDays;
     @FXML private Label previewImageCacheLabel;
@@ -135,12 +136,12 @@ public class CacheSettingsController implements SystemSettingsControllerBase
 
     public void bind(ObservableGeneralSettingsModel injectedSettingsModel)
     {
-//        sizeCheck.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("sizePromptEnabled"));
+        sizeCheck.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("sizePromptEnabled"));
         recentCheck.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("recentPromptEnabled"));
         timeCheck.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("fileAgePromptEnabled"));
 
-//        numGB.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("cacheSizeLimit"),
-//            new SafeFloatStringConverter(32.0f));
+        numGB.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("cacheSizeLimit"),
+            new SafeFloatStringConverter(32.0f));
         numRecent.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("recentProjectLimit"),
             new SafeNumberStringConverter(5));
         numDays.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("fileAgeLimit"),
@@ -401,30 +402,17 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         cleanUpCache();
     }
 
-    // need to have it work with settings
     public static void cleanUpCache()
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-        if (settingsModel.getBoolean("sizePromptEnabled"))
+        if (settingsModel.getBoolean("recentPromptEnabled") || settingsModel.getBoolean("fileAgePromptEnabled")
+            || settingsModel.getBoolean("sizePromptEnabled"))
         {
-            //TODO: use clean up old for size prompt
-        }
-        else if (settingsModel.getBoolean("recentPromptEnabled") && settingsModel.getBoolean("fileAgePromptEnabled"))
-        {
-            cleanUpOldAndNonRecentCache(settingsModel.getInt("recentProjectLimit"), settingsModel.getInt("fileAgeLimit"));
-        }
-        else if (settingsModel.getBoolean("recentPromptEnabled"))
-        {
-            cleanUpNonRecentCache(settingsModel.getInt("recentProjectLimit"));
-        }
-        else if (settingsModel.getBoolean("fileAgePromptEnabled"))
-        {
-            cleanOldCacheFiles(settingsModel.getInt("fileAgeLimit"));
+            cleanUpBothCaches();
         }
     }
 
-    // Bandaid fix for now
-    private static void cleanUpOldAndNonRecentCache(int numProjectsToKeep, int dayLimit)
+    private static void cleanUpBothCaches()
     {
         File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
         File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
@@ -443,10 +431,11 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                 {
                     try
                     {
-                        clearNonRecentPreviewCache(previewCacheDir, numProjectsToKeep);
-                        clearNonRecentFitCache(fitCacheDir, numProjectsToKeep);
-                        clearOldPreviewCache(previewCacheDir, dayLimit);
-                        clearOldFitCache(fitCacheDir, dayLimit);
+                        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
+                        int numProjectsToKeep = settingsModel.getInt("recentProjectLimit");
+                        int dayLimit = settingsModel.getInt("fileAgeLimit");
+                        cleanCacheSubDir(previewCacheDir, numProjectsToKeep, dayLimit);
+                        cleanCacheSubDir(fitCacheDir, numProjectsToKeep, dayLimit);
                         requestCacheSizeRefresh();
                     }
                     catch (IOException e)
@@ -458,39 +447,42 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         });
     }
 
-    private static void cleanUpNonRecentCache(int numProjectsToKeep)
+    public static void cleanCacheSubDir(File directory, int numProjectsToKeep, int dayLimit) throws IOException
     {
-        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
-        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
-
-        Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Clear Old Cache Files");
-        confirm.setHeaderText("Confirm cache clean up?");
-        confirm.setContentText(String.format("This will permanently remove files in %s and %s and cannot be undone.  Are you sure?",
-            previewCacheDir, fitCacheDir));
-
-        confirm.showAndWait().ifPresent(response ->
+        if (!directory.isDirectory())
         {
-            if (response.equals(ButtonType.OK))
-            {
-                new Thread(() ->
-                {
-                    try
-                    {
-                        clearNonRecentPreviewCache(previewCacheDir, numProjectsToKeep);
-                        clearNonRecentFitCache(fitCacheDir, numProjectsToKeep);
-                        requestCacheSizeRefresh();
-                    }
-                    catch (IOException e)
-                    {
-                        handleCacheCleanupError(e);
-                    }
-                }).start();
-            }
-        });
+            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+        }
+        // Select only cache directories that are not in the recently opened projects welcome dialogue.
+        Set<File> deletableProjects = new HashSet<>(0);
+        List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
+        if (settingsModel.getBoolean("recentPromptEnabled"))
+        {
+            filterByRecentProjectLimit(directory, nonRecentProjects, numProjectsToKeep);
+            deletableProjects.addAll(nonRecentProjects);
+        }
+        if (settingsModel.getBoolean("fileAgePromptEnabled")
+            || (settingsModel.getBoolean("sizePromptEnabled") && (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit"))))
+        {
+            filterByFileAgeLimit(oldProjects, dayLimit);
+            deletableProjects.addAll(oldProjects);
+        }
+        // Perform cache deletion on directories still in oldProjects.
+        File[] deletableProjectsArr = new File[deletableProjects.size()];
+        deletableProjectsArr = deletableProjects.toArray(deletableProjectsArr);
+        if ("preview".equals(directory.getName()))
+        {
+            deletePreviewCacheFiles(directory, deletableProjectsArr);
+        }
+        else if ("fit".equals(directory.getName()))
+        {
+            deleteFitCacheFiles(directory, deletableProjectsArr);
+        }
     }
 
-    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects, int numProjectsToKeep) throws IOException
+    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects, int numProjectsToKeep)
     {
         List<UUID> recentUUIDs = getRecentUUIDs(numProjectsToKeep);
         for (UUID recentUUID : recentUUIDs)
@@ -507,32 +499,24 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         }
     }
 
-    private static void clearNonRecentPreviewCache(File directory, int numProjectsToKeep) throws IOException
+    private static void filterByFileAgeLimit(List<File> projects, int dayLimit)
     {
-        if (!directory.isDirectory())
+        for (int i = projects.size() - 1; i >= 0; i--)
         {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+            try
+            {
+                Instant lastModified = Files.getLastModifiedTime(projects.get(i).toPath()).toInstant();
+                Instant limit =  LocalDateTime.now().minusDays(dayLimit).atZone(ZoneId.systemDefault()).toInstant();
+                if (lastModified.isAfter(limit))
+                {
+                    projects.remove(i);
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error while finding cache file for cleanup", e);
+            }
         }
-        // Select only cache directories that are not in the recently opened projects welcome dialogue.
-        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-        // Perform cache deletion on directories still in oldProjects.
-        File[] oldProjectsArr = new File[oldProjects.size()];
-        oldProjectsArr = oldProjects.toArray(oldProjectsArr);
-        deletePreviewCacheFiles(directory, oldProjectsArr);
-    }
-
-    private static void clearNonRecentFitCache(File directory, int numProjectsToKeep) throws IOException
-    {
-        if (!directory.isDirectory())
-        {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
-        }
-        // Select only cache directories that are not in the recently opened projects welcome dialogue.
-        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-        // Perform cache deletion on directories still in oldProjects.
-        File[] oldProjectsArr = new File[oldProjects.size()];
-        oldProjectsArr = oldProjects.toArray(oldProjectsArr);
-        deleteFitCacheFiles(directory, oldProjectsArr);
     }
 
     private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
@@ -556,86 +540,6 @@ public class CacheSettingsController implements SystemSettingsControllerBase
 
         }
         return recentUUIDs;
-    }
-
-    private static void cleanOldCacheFiles(int dayLimit)
-    {
-        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
-        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
-
-        Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Clear Old Cache Files");
-        confirm.setHeaderText("Confirm cache clean up?");
-        confirm.setContentText(String.format("This will permanently remove files in %s and %s and cannot be undone.  Are you sure?",
-            previewCacheDir, fitCacheDir));
-
-        confirm.showAndWait().ifPresent(response ->
-        {
-            if (response.equals(ButtonType.OK))
-            {
-                new Thread(() ->
-                {
-                    try
-                    {
-                        clearOldFitCache(fitCacheDir, dayLimit);
-                        clearOldPreviewCache(previewCacheDir, dayLimit);
-                        requestCacheSizeRefresh();
-                    }
-                    catch (IOException e)
-                    {
-                        handleCacheCleanupError(e);
-                    }
-                }).start();
-            }
-        });
-    }
-
-    private static void clearOldPreviewCache(File directory, int dayLimit) throws IOException
-    {
-        if (!directory.isDirectory())
-        {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
-        }
-        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-        filterOldCacheFiles(oldProjects, dayLimit);
-        // Perform cache deletion on directories still in oldProjects.
-        File[] oldProjectsArr = new File[oldProjects.size()];
-        oldProjectsArr = oldProjects.toArray(oldProjectsArr);
-        deletePreviewCacheFiles(directory, oldProjectsArr);
-    }
-
-    private static void clearOldFitCache(File directory, int dayLimit) throws IOException
-    {
-        if (!directory.isDirectory())
-        {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
-        }
-        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-        filterOldCacheFiles(oldProjects, dayLimit);
-        // Perform cache deletion on directories still in oldProjects.
-        File[] oldProjectsArr = new File[oldProjects.size()];
-        oldProjectsArr = oldProjects.toArray(oldProjectsArr);
-        deleteFitCacheFiles(directory, oldProjectsArr);
-    }
-
-    private static void filterOldCacheFiles(Collection<File> projects, int dayLimit)
-    {
-        for (File dir : projects)
-        {
-            try
-            {
-                Instant lastAccess = Files.getLastModifiedTime(dir.toPath()).toInstant();
-                Instant limit =  LocalDateTime.now().minusDays(dayLimit).atZone(ZoneId.systemDefault()).toInstant();
-                if (lastAccess.isAfter(limit))
-                {
-                    projects.remove(dir);
-                }
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error while finding cache file for cleanup", e);
-            }
-        }
     }
 
     private static long getDirectorySize(File directory)
@@ -858,13 +762,13 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                                                Consumer<Double> noCleanupNeededWithCacheSizeGB)
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-//        if (settingsModel.getBoolean("sizePromptEnabled"))
-//        {
-//            if (cacheSize > settingsModel.getFloat("cacheSizeLimit"))
-//            {
-//                promptWithCacheSizeGB.accept(newCacheSize);
-//            }
-//        }
+        if (settingsModel.getBoolean("sizePromptEnabled"))
+        {
+            if (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit"))
+            {
+                promptWithCacheSizeGB.accept(newCacheSize);
+            }
+        }
         if (settingsModel.getBoolean("recentPromptEnabled"))
         {
             if (getNumCachedProjects() > settingsModel.getInt("recentProjectLimit"))
@@ -882,31 +786,6 @@ public class CacheSettingsController implements SystemSettingsControllerBase
 
         // If the cache does not need to be cleaned up, then fire the "no cleanup needed" callback.
         noCleanupNeededWithCacheSizeGB.accept(newCacheSize);
-    }
-
-    class CacheThread implements Runnable
-    {
-        @Override
-        public void run()
-        {
-            String originalLabel = cleanCacheButton.getText();
-            cleanCacheButton.setText("In Progress...");
-//            GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-//            if (settingsModel.getBoolean("sizePromptEnabled"))
-//            {
-//                //TODO: use clean up old for size prompt
-//            }
-//            if (settingsModel.getBoolean("recentPromptEnabled"))
-//            {
-//                cleanUpNonRecentCache(settingsModel.getInt("recentProjectLimit"));
-//            }
-//            if (settingsModel.getBoolean("fileAgePromptEnabled"))
-//            {
-//                cleanOldCacheFiles(settingsModel.getInt("fileAgeLimit"));
-//            }
-            cleanUpCache();
-            cleanCacheButton.setText(originalLabel);
-        }
     }
 
 //    // Not using this since it scares me.
