@@ -58,6 +58,7 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
         exportSettings.setShouldAppendModelNameToTextures(true); // Give textures better filenames for export
 
         // Settings affected by modal and stored in project
+        exportSettings.setExporterFactory(projectSettings.get("exportType", ExportType.class).getFactory());
         exportSettings.setShouldGenerateLowResTextures(projectSettings.getBoolean("exportLODEnabled"));
         exportSettings.setMinimumTextureResolution(projectSettings.getInt("minimumLODSize"));
         exportSettings.setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnExportComplete"));
