@@ -75,7 +75,7 @@ public final class Kintsugi3DBuilder
         System.setProperty("glass.disableThreadChecks", "true");
         //TODO see com.sun.glass.ui.Application.java line 434
 
-        if (System.getProperty("os.name").toLowerCase().startsWith("mac"))
+        if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
         {
             // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
             Configuration.GLFW_LIBRARY_NAME.set("glfw_async");

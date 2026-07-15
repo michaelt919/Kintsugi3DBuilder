@@ -13,10 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ImageBasedRenderable;
-import kintsugi3d.builder.core.ImageReplaceData;
-import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
@@ -255,7 +252,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
 
             try
             {
-                // texture
+                // Texture
                 if (key != null)
                 {
                     if (instance.getResources() != null)
@@ -285,15 +282,19 @@ public class TextureCardFactory implements ProjectDataCardFactory
         Platform.runLater(() ->
         {
             ImageReplaceData data;
+            // Replacing texture
             if (key != null)
             {
-                data = new ImageReplaceData(instance.getResources().getTextureResources(), key,
-                    new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getTextureFilename(key.name, "PNG")));
+                data = new NamedTextureReplaceData(instance.getResources().getTextureResources(), key,
+                    new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
+                        TextureResources.getTextureFilename(key.name, "PNG")));
             }
+            // Replacing weightmap
             else
             {
-                data = new ImageReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
-                    new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(), TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+                data = new WeightmapReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
+                    new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
+                        TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
             }
 
             Global.state().getIOModel().invokeUserImageReplacement(data);

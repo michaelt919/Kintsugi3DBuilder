@@ -11,11 +11,16 @@
 
 package kintsugi3d.builder.state.settings;
 
+import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
 
 public final class DefaultSettings
 {
+    private DefaultSettings()
+    {
+    }
+
     public static void applyGlobalDefaults(GeneralSettingsModel settingsModel)
     {
         // Application state
@@ -50,6 +55,14 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("isotropyFactor", 0.0f, true);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
+
+        // Cache cleaning options
+        settingsModel.createBooleanSetting("sizePromptEnabled", false, true);
+        settingsModel.createNumericSetting("cacheSizeLimit", 32.0f, true);
+        settingsModel.createBooleanSetting("recentPromptEnabled", true, true);
+        settingsModel.createNumericSetting("recentProjectLimit", 20, true);
+        settingsModel.createBooleanSetting("fileAgePromptEnabled", true, true);
+        settingsModel.createNumericSetting("fileAgeLimit", 30, true);
     }
 
     public static void applyProjectDefaults(GeneralSettingsModel settingsModel)
@@ -83,6 +96,7 @@ public final class DefaultSettings
         settingsModel.createBooleanSetting("openViewerOnProcessingComplete", false);
 
         // Export options
+        settingsModel.createObjectSetting("exportType", ExportType.GLTF);
         settingsModel.createObjectSetting("textureFormat", "PNG");
         settingsModel.createBooleanSetting("exportLODEnabled", false);
         settingsModel.createNumericSetting("minimumLODSize", 256);

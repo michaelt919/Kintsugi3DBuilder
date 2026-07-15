@@ -39,7 +39,7 @@ public class AdvPhotoViewController implements SystemSettingsControllerBase
     private ObservableGeneralSettingsModel settingsModel;
 
     @Override
-    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    public void initializePage(Window parentWindow, JavaFXState state)
     {
         // Weight exponent and isotropy factor only matter when Buehler algorithm is not being used.
         weightExponentSlider.disableProperty().bind(buehlerCheckBox.selectedProperty());

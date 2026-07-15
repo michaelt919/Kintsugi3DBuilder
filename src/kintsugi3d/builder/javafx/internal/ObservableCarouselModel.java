@@ -19,6 +19,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ImageBasedRenderable;
+import kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController;
+import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
 import kintsugi3d.builder.state.CanvasModel;
 import kintsugi3d.builder.state.CanvasModelImpl;
 import kintsugi3d.builder.state.CarouselItem;
@@ -68,7 +70,7 @@ public class ObservableCarouselModel implements CarouselModel
                     (canvas, width, height) ->
                         refreshMainViewSafeRegion(canvas.getSizeForDisplay())));
         });
-        
+
         carouselHeight.addListener((observable, oldValue, newValue) ->
         {
             // Refresh safe region for main view
@@ -86,11 +88,11 @@ public class ObservableCarouselModel implements CarouselModel
         ImageBasedRenderable<?> instance = Global.state().getIOModel().getMainRenderable();
         if (instance != null)
         {
-            int height = (int) Math.round(carouselHeight.get());
+            int carouselHeightRounded = (int) Math.round(carouselHeight.get());
 
             instance.setSafeRegion(
-                new IntVector2(0, height),
-                new IntVector2(mainViewSize.width, mainViewSize.height));
+                new IntVector2(0, 0),
+                new IntVector2(mainViewSize.width, mainViewSize.height - carouselHeightRounded));
         }
     }
 
@@ -231,6 +233,76 @@ public class ObservableCarouselModel implements CarouselModel
 
             // Recenter main view now that the carousel is gone.
             refreshMainViewSafeRegion();
+        }
+    }
+
+    private void swapCards(int index1, int index2, CarouselController carouselController)
+    {
+        ObservableList<CarouselItem> container = FXCollections.observableArrayList();
+        container.addAll(carouselItems);
+
+        // Card to move found and is not the first in the list.
+        // Get card from the old container at the location to the left.
+        CarouselItem temp = carouselItems.get(index1);
+
+        // Swap cards in the new container.
+        container.set(index1, carouselItems.get(index2));
+        container.set(index2, temp);
+
+        // Remember scroll position
+        double currentScrollPosition = carouselController.getHBarValue();
+
+        // Replace all items in the carousel as a single change for optimization (allows the controller to reuse cards).
+        carouselItems.setAll(container);
+//        carouselItems.clear();
+//        carouselItems.addAll(container);
+
+        // Set scroll position after carousel is refreshed.
+        Platform.runLater(() -> carouselController.setHBarPosition(currentScrollPosition));
+    }
+
+    private CarouselItem findCardByShader(UserShader shader)
+    {
+        for(CarouselItem item : carouselItems)
+        {
+            // Check if the current item's shader matches this card.
+            if (shader.equals(item.getShader()))
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    public void moveCardLeft(CarouselCardController card)
+    {
+        CarouselItem moveCard = findCardByShader(card.getShader());
+        CarouselController carouselController = card.getCarouselController();
+
+        if (moveCard != null)
+        {
+            int cardIndex = carouselItems.indexOf(moveCard);
+            if (cardIndex > 0)
+            {
+                swapCards(cardIndex - 1, cardIndex, carouselController);
+            }
+        }
+    }
+
+    public void moveCardRight(CarouselCardController card)
+    {
+        CarouselItem moveCard = findCardByShader(card.getShader());
+        CarouselController carouselController = card.getCarouselController();
+
+        if (moveCard != null)
+        {
+            int cardIndex = carouselItems.indexOf(moveCard);
+
+            if (cardIndex < carouselItems.size() - 1)
+            {
+                swapCards(cardIndex + 1, cardIndex, carouselController);
+            }
         }
     }
 }
