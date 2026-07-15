@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state.settings;
 
+import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
@@ -63,6 +64,22 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("recentProjectLimit", 20, true);
         settingsModel.createBooleanSetting("fileAgePromptEnabled", true, true);
         settingsModel.createNumericSetting("fileAgeLimit", 30, true);
+
+        // External application options
+        switch (OperatingSystem.getCurrentOS())
+        {
+            case WINDOWS:
+                settingsModel.createObjectSetting("blenderLocation", "C:\\Program Files\\Blender Foundation\\Blender 5.1\\blender.exe");
+                break;
+
+            case MACOS:
+                settingsModel.createObjectSetting("blenderLocation", "/Applications/Blender.app/Contents/MacOS/Blender");
+                break;
+
+            default:
+                settingsModel.createObjectSetting("blenderLocation", "");
+                break;
+        }
     }
 
     public static void applyProjectDefaults(GeneralSettingsModel settingsModel)
