@@ -13,7 +13,7 @@ package kintsugi3d.builder.io.blender;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.OperatingSystem;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,44 +71,15 @@ public class BlenderExporter extends MaterialExporter
         // Command list for the ProcessBuilder
         List<String> command = new ArrayList<>();
 
-        // Find Blender
-        switch (OperatingSystem.getCurrentOS())
+        // Get blender from settings
+        File blenderLocation = new File(Global.state().getSettingsModel().get("blenderLocation", String.class));
+        if (!blenderLocation.exists() || !blenderLocation.canExecute())
         {
-            case WINDOWS:
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of("C:\\Program Files\\Blender Foundation\\"), "Blender*"))
-                {
-                    Path path = stream.iterator().next();
-
-                    if (!Files.exists(path))
-                    {
-                        LOG.error("Could not find Blender.");
-                        return;
-                    }
-
-                    command.add(path.resolve("blender.exe").toString());
-                }
-                catch (IOException e)
-                {
-                    LOG.error(e.getMessage());
-                    return;
-                }
-                break;
-
-            case MACOS:
-                command.add("/Applications/Blender.app/Contents/MacOS/Blender");
-                break;
-
-            case UNIX:
-                command.add("bash");
-                command.add("-c");
-                command.add("blender");
-                break;
-
-            default:
-                LOG.error("OS environment not supported.");
-                return;
+            LOG.error("Can't find Blender, check Application Settings.");
+            return;
         }
 
+        command.add(blenderLocation.getPath());
         command.add("-b");
         command.add("-P");
         command.add(SCRIPT_LOCATION + "/open-blender.py");
