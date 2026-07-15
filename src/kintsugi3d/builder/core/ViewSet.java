@@ -346,13 +346,19 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         public Builder commitCurrentCameraPose()
         {
-            if (maskFile == null)
+            if (maskFile == null && !maskMap.isEmpty())
             {
-                maskFile = maskMap.get(result.viewSetDataCollection.getViewSetData().size() - 1);
+                // We haven't committed this view yet, so size of the view set data will just be the current index.
+                maskFile = maskMap.get(result.viewSetDataCollection.getViewSetData().size());
             }
+
             ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f),
                 cameraProjectionIndex, lightIndex, result.viewSetDataCollection.getViewSetData().size(), imageFile, maskFile, new ViewRMSE());
             result.viewSetDataCollection.getViewSetData().add(currentCamera);
+
+            // Reset maskFile to null for the next camera pose.
+            maskFile = null;
+
             return this;
         }
 
