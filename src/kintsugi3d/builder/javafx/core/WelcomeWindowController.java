@@ -28,7 +28,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController;
+import kintsugi3d.builder.core.Global;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -127,7 +127,7 @@ public class WelcomeWindowController
         LOG.info("Checking for cache cleanup...");
 
         // Prompt user to clear cache if conditions are met
-        CacheSettingsController.requestPromptForCacheCleanup(
+        Global.state().getCacheModel().requestPromptForCacheCleanup(
             promptCacheSize ->
             {
                 LOG.info("Cache size: {}GB", promptCacheSize);
@@ -142,7 +142,7 @@ public class WelcomeWindowController
                 {
                     if (response.equals(ButtonType.OK))
                     {
-                        CacheSettingsController.cleanUpCache();
+                        Global.state().getCacheModel().cleanUpCache();
                     }
                 });
             },

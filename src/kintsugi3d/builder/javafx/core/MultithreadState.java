@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.core;
 
+import kintsugi3d.builder.core.CacheModel;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
@@ -40,6 +41,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final CanvasModel mainCanvasModel;
     private final CanvasListModel canvasListModel;
     private final IOModel ioModel;
+    private final CacheModel cacheModel;
 
     private final TabsModel tabsModel;
 
@@ -68,7 +70,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        // add cache model
+        cacheModel = new CacheModel();
     }
 
     @Override
@@ -152,5 +154,11 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     public CarouselModel getCarouselModel()
     {
         return carouselModel;
+    }
+
+    @Override
+    public CacheModel getCacheModel()
+    {
+        return cacheModel;
     }
 }

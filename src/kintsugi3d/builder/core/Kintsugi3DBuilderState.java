@@ -50,5 +50,5 @@ public interface Kintsugi3DBuilderState
     ProjectModel getProjectModel();
     CarouselModel getCarouselModel();
 
-    // add get cache model
+    CacheModel getCacheModel();
 }
