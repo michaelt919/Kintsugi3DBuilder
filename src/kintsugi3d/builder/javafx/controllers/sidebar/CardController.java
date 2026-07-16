@@ -11,20 +11,21 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.DoubleBinding;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
@@ -49,6 +50,11 @@ public class CardController
 
     @FXML private VBox buttonBox;
 
+    @FXML private CheckBox selectionBox;
+    @FXML private Rectangle hoverRectangle;
+
+    private String filePath;
+    private String fileName;
     private UUID cardId;
     private ObservableCardsModel cardsModel;
     private Image preview;
@@ -58,6 +64,14 @@ public class CardController
         this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();
         this.setCardVisibility(false);
+        filePath = dataCard.getFilePath();
+        fileName = dataCard.getTitle();
+
+        if (filePath == null) //if file path is null it disables the checkboxes for the icons
+        {
+            selectionBox.setVisible(false);
+            selectionBox.setManaged(false);
+        }
 
         if (dataCard.isDisabled())
         {
@@ -183,6 +197,9 @@ public class CardController
             }
         });
         mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
+
+        createBindings(cardIcon, selectionBox); //easy method to bind Checkbox to ImageView
+        createBindings(cardIcon, hoverRectangle);//easy method to bind Rectangle to ImageView
     }
 
     public void setCardVisibility(boolean visibility)
@@ -234,5 +251,101 @@ public class CardController
     public VBox getCard()
     {
         return dataCardPane;
+    }
+
+    /**
+     *This Method is connected to the checkboxes. Whenever a box is selected or unselected
+     * This method does addSelected to global tab models.
+     */
+    @FXML
+    public void sendToDetail()
+    {
+        Global.state().getTabModels().addSelected(filePath, fileName);
+    }
+
+    /**
+     * createBindings() will bind the checkbox width and height to imageviews width and height.
+     * The method calls create imageBindings to find the proper width
+     * and height needed to bind to the width properties of checkBox.
+     * @param iView
+     * @param cBox
+     */
+    private void createBindings(ImageView iView, CheckBox cBox)
+    {
+        //Gets double binding from createImageBinding methods
+        DoubleBinding imageWidth = createImageBindingWidth(iView);
+        DoubleBinding imageHeight = createImageBindingHeight(iView);
+
+        //Binds all three width properties
+        cBox.prefWidthProperty().bind(imageWidth);
+        cBox.minWidthProperty().bind(imageWidth);
+        cBox.maxWidthProperty().bind(imageWidth);
+
+        //binds all three height properties
+        cBox.prefHeightProperty().bind(imageHeight);
+        cBox.minHeightProperty().bind(imageHeight);
+        cBox.maxHeightProperty().bind(imageHeight);
+    }
+
+    /**
+     * Almost the same as the createBindings for checkBoxes, but it uses only a single width property
+     * for rectangles.
+     * @param iView
+     * @param rBox
+     */
+    private void createBindings(ImageView iView, Rectangle rBox)
+    {
+        rBox.widthProperty().bind(createImageBindingWidth(iView));
+
+        rBox.heightProperty().bind(createImageBindingHeight(iView));
+    }
+
+    /**
+     * Gets the doubleBinding needed for binding width from an imageView
+     * @param iView
+     * @return
+     */
+    private DoubleBinding createImageBindingWidth(ImageView iView)
+    {
+        return Bindings.createDoubleBinding(() -> iView.getLayoutBounds().getWidth(), iView.layoutBoundsProperty());
+    }
+
+    /**
+     * Gets the doubleBinding needed for binding height from an imageView
+     * @param iView
+     * @return
+     */
+    private DoubleBinding createImageBindingHeight(ImageView iView)
+    {
+        return Bindings.createDoubleBinding(() -> iView.getLayoutBounds().getHeight(), iView.layoutBoundsProperty());
+    }
+
+    /**
+     * Whenever the mouse enters selectionBox this method is called, and it will set the visibility
+     * of hoverRectangle to true (which makes the icon a bit lighter)
+     * These methods don't activate if selectionBox is hidden/disbled (filePath == null)
+     */
+    @FXML
+    public void hoverStart()
+    {
+        hoverRectangle.setVisible(true);
+    }
+
+    /**
+     * Whenever the mouse exits selectionBox this method is called, and it will set the visibility
+     * of hoverRectangle to false (which makes the icon go back to normal)
+     */
+    @FXML
+    public void hoverEnd()
+    {
+        hoverRectangle.setVisible(false);
+    }
+
+    /**
+     * Sets the selectionBox state to false
+     */
+    public void updateCheckBox()
+    {
+        selectionBox.setSelected(false);
     }
 }

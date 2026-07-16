@@ -58,7 +58,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
         //Creates shader with given title and filename
         UserShader shader = new UserShader(title, fileName);
 
-        return new ShaderDataCard(fileName, shader, MainApplication.ICON_PATH);
+        return new ShaderDataCard(fileName, shader, MainApplication.ICON_PATH, null);
     }
     /**
     createAllCards will call createCard for all the shaders and will

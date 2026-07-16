@@ -30,6 +30,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
@@ -107,6 +108,18 @@ public class SideBarController
                 buttons.get(0).setSelected(true);
             }
         });
+
+        //Listener Detects when a new button has been toggled.
+        tabToggleGroup.selectedToggleProperty().addListener((observable, oldToggle, newToggle) ->
+        {
+            Global.state().getTabModels().clearSelected(); //Clears list of filePaths from selection list
+
+            for (CardTabController tab : tabControllers) //Each tab in tabControllers
+            {
+                tab.updateCardCheckBoxes();
+            }
+        });
+
         resizeWidth(DEFAULT_WIDTH);
     }
 

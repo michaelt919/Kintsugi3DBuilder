@@ -58,4 +58,24 @@ public class SynchronizedTabsModel implements TabsModel
 
         return wrapped;
     }
+
+    /**
+     * Calls addSelected in ObservableTabsModel with filePath and fileName
+     * @param filePath
+     * @param fileName
+     */
+    @Override
+    public void addSelected(String filePath, String fileName)
+    {
+        Platform.runLater(() -> base.addSelected(filePath, fileName));
+    }
+
+    /**
+     * Calls clearSelected in ObservableTabsModel
+     */
+    @Override
+    public void clearSelected()
+    {
+        Platform.runLater(base::clearSelected);
+    }
 }

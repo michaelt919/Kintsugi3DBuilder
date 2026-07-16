@@ -765,3 +765,33 @@
     -fx-background: transparent;
     -fx-pick-on-bounds: false;
 }
+#selectionBox {
+    -fx-padding: 0; /*Check Box padding*/
+    -fx-alignment: TOP_LEFT; /*Check Box Alignment*/
+    -fx-line-spacing: 0; /*Check Box spacing between elements*/
+}
+#selectionBox .box {
+    -fx-background-color: transparent; /*Check Box background*/
+
+    /*Check Box mark space*/
+    -fx-pref-width: 12px;
+    -fx-pref-height: 12px;
+    -fx-min-width: 12px;
+    -fx-min-height: 12px;
+    -fx-max-width: 12px;
+    -fx-max-height: 12px;
+}
+#selectionBox .mark {
+    /*Check mark actual shape*/
+    -fx-shape: "M 1 5.5 C 1 4.7, 1.7 4, 2.5 4 C 2.9 4, 3.3 4.2, 3.5 4.5 L 5 6 L 8.5 2.5 C 8.7 2.2, 9.1 2, 9.5 2 C 10.3 2, 11 2.7, 11 3.5 C 11 3.9, 10.8 4.3, 10.5 4.5 L 6 9 C 5.5 9.5, 4.5 9.5, 4 9 L 1.5 6.5 C 1.2 6.2, 1 5.9, 1 5.5 Z";
+    -fx-scale-x: .8; /*Check mark width scale*/
+    -fx-scale-y: .8; /*Check mark height scale*/
+
+    -fx-background-color: transparent; /*Check mark background when not selected*/
+    -fx-effect: null; /*Check mark outline when not selected*/
+
+}
+#selectionBox:selected .mark {
+    -fx-background-color: #CECECE; /*Check mark background when selected*/
+    -fx-effect: dropshadow(three-pass-box, black, .75, .75, 0, 0); /*Check mark black outline*/
+}

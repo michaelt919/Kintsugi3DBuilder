@@ -128,7 +128,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
             String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
-            return new ShaderDataCard(fileName, shader, thumbnailPath, new LinkedHashMap<>()
+            return new ShaderDataCard(fileName, shader, thumbnailPath, textureImage.getPath(), new LinkedHashMap<>()
             {{
                 put("File Name", textureImage.getName());
                 put("Resolution", res);
@@ -166,7 +166,6 @@ public class TextureCardFactory implements ProjectDataCardFactory
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         lastUsedCardsModel = cardsModel;
-
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
         if (instance.getResources() != null)
         {

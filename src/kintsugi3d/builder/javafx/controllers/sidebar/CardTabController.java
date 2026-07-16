@@ -409,4 +409,16 @@ public class CardTabController
     {
         path = cardsModel.getPath();
     }
+
+    /**
+     * Calls card.updateCheckBox() on every CardController. The method will set the checkboxes to
+     * deselect state.
+     */
+    public void updateCardCheckBoxes()
+    {
+        for (CardController card : cardControllers) //Each card in cardControllers
+        {
+            card.updateCheckBox();
+        }
+    }
 }

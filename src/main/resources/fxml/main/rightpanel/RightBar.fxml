@@ -40,7 +40,12 @@
         </StackPane>
     </HBox>
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-    <HBox fx:id="buttonBox" styleClass="tabButtonBox" prefHeight="31.0" prefWidth="462.0" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER">
+    <HBox fx:id = "textBox" prefHeight="31" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER" alignment="CENTER_LEFT">
+        <padding>
+            <Insets bottom="0.0" left="8.0" right="0.0" top="8.0" />
+        </padding>
+        <Label fx:id = "imageNameSpace" text = "Image Name: " style = "-fx-font-weight: bold;" visible="false"/>
+        <Label fx:id = "imageName" text = ""/>
     </HBox>
     <StackPane alignment="TOP_CENTER">
         <padding>

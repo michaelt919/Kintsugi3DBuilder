@@ -17,6 +17,8 @@ public interface TabsModel
 {
     void addTab(String tabName, ProjectDataCardFactory cardFactory, String path);
     void clearTabs();
+    void addSelected(String filePath, String fileName);
+    void clearSelected();
     CardsModel getTab(String label);
     Map<String, ? extends CardsModel> getTabsMap();
 }

@@ -12,9 +12,8 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -27,9 +26,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
 
 
+import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -43,74 +44,74 @@ public class RightBarController
     //Alternative LOWER_BOUND: 62
     private static final int LOWER_BOUND = 322;
 
-    @FXML private HBox buttonBox;
     @FXML private VBox mainBox;
     @FXML private Button minimizeButton;
     @FXML private Label detailsLabel;
     @FXML private HBox detailsBox;
     @FXML private VBox imageDetails;
+    @FXML private Label imageName;
+    @FXML private Label imageNameSpace;
 
     @FXML private ImageDetailsController imageDetailsController;
 
     // needed to remove tabs
     private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
-    private final Map<String, Pane> tabMap = new HashMap<>(8);
-
-    private final ToggleGroup tabToggleGroup = new ToggleGroup();
-    private final List<RadioButton> buttons = new ArrayList<>(8);
-    private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
-
 
     private String lastSelectedTabLabel = null;
     private boolean minimized = false;
+    private boolean isLoaded = false;
 
     public Node getRootNode()
     {
         return mainBox;
     }
 
-    public void init(ObservableUserShaderModel shaderModel)
+    public void init(ObservableTabsModel tabsModel, ObservableUserShaderModel shaderModel)
     {
-        imageDetailsController.init("C:\\Users\\schmuckij3299\\OneDrive - University of Wisconsin-Stout\\Kintsugi3D_Model\\Statue.k3d.files\\File_Not_Found.png");
+        //Listener for any changes to selectedCards in tabModels
+        tabsModel.getAllCards().addListener((ListChangeListener<String>) change ->
+        {
+            while (change.next()) //While something has been changed
+            {
+                if (tabsModel.getAllCards().isEmpty()) //If list is empty
+                {
+                    //Calls setImage() with null (Will not display panel)
+                    imageDetailsController.setImage(null);
+
+                    //Image Name will not be displayed
+                    imageName.setText("");
+                    imageNameSpace.setVisible(false);
+                    isLoaded = false;
+                }
+                else if (tabsModel.getAllCards().size() == 1)//If list size equals 1
+                {
+                    //Sends filePath to imageDetailsController setImage(String fileName)
+                    imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(0));
+                }
+                else
+                {
+                    //Sends filePath to imageDetailsController setImage(String fileName)
+                    imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(tabsModel.getAllCards().size()-1));
+                }
+            }
+        });
+
         resizeWidth(DEFAULT_WIDTH);
     }
 
-    private RadioButton createButton(String name)
+    private void imageDetailFunctions(ObservableTabsModel tabsModel, String filePath)
     {
-        RadioButton button = new RadioButton(name);
+        imageDetailsController.setImage(filePath);
 
-        // Set sizing
-        double buttonHeight = 32.0;
-        button.setMinHeight(buttonHeight);
-        button.setMaxHeight(buttonHeight);
-        button.setPrefHeight(buttonHeight);
-        button.setMaxWidth(Double.MAX_VALUE);  // Equivalent to 1.7976931348623157E308
+        //Sets Friendly Name from filePath
+        imageNameSpace.setVisible(true);
+        Platform.runLater(()->imageName.setText(tabsModel.getFileName(filePath)));
+        isLoaded = true;
 
-        // Set properties
-        button.setMnemonicParsing(false);
-        button.setSelected(false);
-        button.setStyle("-fx-alignment: center;");
-        button.getStyleClass().add("stripped-radio-button");
-        button.setTextAlignment(TextAlignment.CENTER);
-
-        // Add to ToggleGroup
-        button.setToggleGroup(tabToggleGroup);
-
-        // Allow the button to grow horizontally in an HBox
-        HBox.setHgrow(button, Priority.ALWAYS);
-
-        buttons.add(button);
-
-        return button;
-    }
-
-    public void setVisibility(boolean visible)
-    {
-        mainBox.setVisible(visible);
-        mainBox.setManaged(visible);
-        if (visible)
+        if (minimized)
         {
-            Platform.runLater(() -> tabControllers.forEach(CardTabController::updateViewportVisibility));
+            resizeWidth(DEFAULT_WIDTH);
+            maximize();
         }
     }
 
@@ -206,6 +207,7 @@ public class RightBarController
                 resizeWidth(upperBound);
             }
         }
+        mainBox.requestLayout();
     }
 
     /**
@@ -223,40 +225,6 @@ public class RightBarController
     }
 
     /**
-     * This function hides tabs like shaders, materials, etc. It also remembers the
-     * tab that was currently being displayed to the user.
-     */
-    private void hideAllTabs()
-    {
-        if (lastSelectedTabLabel == null)
-        {
-            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
-            {
-                RadioButton button = entry.getValue();
-
-                if (button.isSelected())
-                {
-                    lastSelectedTabLabel = entry.getKey();
-                }
-                button.setSelected(false);
-            }
-        }
-    }
-
-    /**
-     * Will select the tab that was last displayed to the user.
-     */
-    private void restoreTab()
-    {
-        if (lastSelectedTabLabel != null)
-        {
-            RadioButton lastTab = buttonMap.get(lastSelectedTabLabel);
-            lastTab.setSelected(true);
-            lastSelectedTabLabel = null;
-        }
-    }
-
-    /**
      * Hides all the tabs and features of the detail space then will set the mainBox size
      * to 23 pixels. Removes the features abilities to take up space when it hides
      * them. Sets minimized to true and changes minimize button text to "+".
@@ -266,14 +234,15 @@ public class RightBarController
         imageDetails.setManaged(false);
         imageDetails.setVisible(false);
 
+        imageName.setManaged(false);
+        imageName.setVisible(false);
+        imageNameSpace.setManaged(false);
+        imageNameSpace.setVisible(false);
+
         resizeWidth(MINIMIZED_WIDTH);
 
-        buttonBox.setVisible(false);
-        buttonBox.setManaged(false);
         detailsLabel.setVisible(false);
         detailsLabel.setManaged(false);
-
-        hideAllTabs();
 
         for (Node child : detailsBox.getChildren())
         {
@@ -294,15 +263,19 @@ public class RightBarController
      */
     private void maximize()
     {
-        imageDetails.setManaged(true);
-        imageDetails.setVisible(true);
+        if (isLoaded)
+        {
+            imageDetails.setManaged(true);
+            imageDetails.setVisible(true);
 
-        buttonBox.setVisible(true);
-        buttonBox.setManaged(true);
+            imageName.setManaged(true);
+            imageName.setVisible(true);
+            imageNameSpace.setManaged(true);
+            imageNameSpace.setVisible(true);
+        }
+
         detailsLabel.setVisible(true);
         detailsLabel.setManaged(true);
-
-        restoreTab();
 
         for (Node child: detailsBox.getChildren())
         {

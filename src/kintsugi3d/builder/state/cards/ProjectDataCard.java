@@ -19,6 +19,7 @@ import java.util.UUID;
 public class ProjectDataCard
 {
     private final String internalName;
+    private String filePath;
     private final UUID cardId;
     private final String title;
     private final String imagePath;
@@ -26,7 +27,7 @@ public class ProjectDataCard
     private final List<? extends Map<String, Runnable>> actionGroups;
     private boolean isDisabled = false; // TODO: consider getting from viewset
 
-    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, List<? extends Map<String, Runnable>> actionGroups)
+    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, List<? extends Map<String, Runnable>> actionGroups, String filePath)
     {
         this.internalName = internalName;
         this.cardId = UUID.randomUUID();
@@ -34,21 +35,23 @@ public class ProjectDataCard
         this.imagePath = imagePath;
         this.textFields = Collections.unmodifiableMap(textFields);
         this.actionGroups = Collections.unmodifiableList(actionGroups);
+        this.filePath = filePath;
     }
 
-    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions, boolean isDisabled)
+    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions, boolean isDisabled, String filePath)
     {
-        this(internalName, title, imagePath, textFields, List.of(actions));
+        this(internalName, title, imagePath, textFields, List.of(actions), filePath);
         this.isDisabled = isDisabled;
+        this.filePath = filePath;
     }
     public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
     {
-        this(internalName, title, imagePath, textFields, List.of(actions));
+        this(internalName, title, imagePath, textFields, List.of(actions), null);
     }
 
     public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields)
     {
-        this(internalName, title, imagePath, textFields, List.of());
+        this(internalName, title, imagePath, textFields, List.of(), null);
     }
 
     public ProjectDataCard(String internalName, String title, String imagePath)
@@ -102,4 +105,9 @@ public class ProjectDataCard
     public boolean isDisabled() { return isDisabled; }
 
     public void setIsDisabled(boolean isDisabled) { this.isDisabled = isDisabled; }
+
+    public String getFilePath()
+    {
+        return filePath;
+    }
 }

@@ -52,35 +52,38 @@ public class ShaderDataCard extends ProjectDataCard
             "Send to Carousel", sendToCarousel);
     }
 
-    public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, Map<String, String> textFields,
+    public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, String filePath, Map<String, String> textFields,
                           Collection<? extends Map<String, Runnable>> actionGroups)
     {
         super(internalName, title, imagePath, textFields,
-            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
+            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()), filePath);
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields,
+    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath, Map<String, String> textFields,
                           Collection<? extends Map<String, Runnable>> actionGroups)
     {
-        this(internalName, shader.getFriendlyName(), shader, imagePath, textFields, actionGroups);
+        // FIX: Swapped 'filePath' position to match the primary constructor above
+        this(internalName, shader.getFriendlyName(), shader, imagePath, filePath, textFields, actionGroups);
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
+    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath, Map<String, String> textFields, Map<String, Runnable> actions)
     {
-        super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader), actions));
+        super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader), actions), filePath);
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields)
+    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath, Map<String, String> textFields)
     {
-        super(internalName, shader.getFriendlyName(), imagePath, textFields, getActionMap(shader));
+        // FIX: Wrapped getActionMap in List.of() to match List<? extends Map> signature
+        super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader)), filePath);
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath)
+    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath)
     {
-        super(internalName, shader.getFriendlyName(), imagePath, Map.of(), getActionMap(shader));
+        // FIX: Wrapped getActionMap in List.of() to match List<? extends Map> signature
+        super(internalName, shader.getFriendlyName(), imagePath, Map.of(), List.of(getActionMap(shader)), filePath);
         this.shader = shader;
     }
 

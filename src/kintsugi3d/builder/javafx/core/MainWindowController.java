@@ -172,7 +172,7 @@ public class MainWindowController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         this.leftBarController.init(javaFXState.getTabModels());
-        this.rightBarController.init(javaFXState.getUserShaderModel());
+        this.rightBarController.init(javaFXState.getTabModels(), javaFXState.getUserShaderModel());
         this.carouselController.init(javaFXState.getCarouselModel(), this);
 
         initExportRenderMenu();

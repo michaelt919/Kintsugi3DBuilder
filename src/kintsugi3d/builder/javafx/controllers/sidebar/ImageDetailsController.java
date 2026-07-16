@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -52,28 +53,17 @@ public class ImageDetailsController
 
     private static final double MAX_ZOOM_SIZE = 10.0;
     private static final double MAX_IMAGE_SIZE = 372.0;
-    /**
-     * Takes in the filename from the Right Bar controller to use as an image in this panel. Then it creates
-     * buttons and sizes them to the panel width accordingly.
-     * @param fileName
-     */
-    public void init(String fileName)
-    {
-        //Creates file from the fileName/filePath
-        File imageFile = new File(fileName);
 
-        //If file exists
-        if (imageFile.exists())
-        {
-            originalImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
-            currentImage = originalImage; //Current image gets set to the original image
-            displayImage.setImage(originalImage); //ImageView is set to originalImage
-        }
-        else
-        {
-            //System error message if the image is not found
-            System.err.println("Error: File not found at " + imageFile.getAbsolutePath());
-        }
+    /**
+     * Called when controller is created.
+     * Calls setImage() with null.
+     * Creates buttons using createButtons(), then binds their width to be equal.
+     * Display Image is always the size of detailBox minus 8 for padding.
+     * Adds clip to prevent long crop images.
+     */
+    public void initialize()
+    {
+        setImage(null); //Sets default state to not shown.
 
         createButtons(); // Creates all buttons using method. Can add new buttons there as well.
 
@@ -82,16 +72,8 @@ public class ImageDetailsController
             //Bind buttons to each other so they all take up same size
             ((RadioButton) button).prefWidthProperty().bind(buttonRow.widthProperty().subtract(
                 buttonRow.getSpacing()*buttonRow.getChildren().size()).divide(
-                    buttonRow.getChildren().size()));
+                buttonRow.getChildren().size()));
         }
-    }
-
-    /**
-     * Called when controller is created. It will bind the displayimage with detailBox width
-     * minus padding size. Clips image if it's too tall.
-     */
-    public void initialize()
-    {
         //Image bound to detailBox width minus 8
         displayImage.fitWidthProperty().bind(detailBox.widthProperty().subtract(8.0));
 
@@ -101,6 +83,42 @@ public class ImageDetailsController
         clip.heightProperty().bind(stackPane.heightProperty());
 
         stackPane.setClip(clip); //Clip assigned to stackPane
+    }
+
+    /**
+     * Takes in the filePath from the Right Bar controller to use as an image in this panel.
+     * If filePath is null it will instead hide the detailsBox
+     * @param
+     */
+    public void setImage(String filePath)
+    {
+        if (filePath != null)
+        {
+            detailBox.setVisible(true);
+            buttonRow.setVisible(true);
+            stackPane.setVisible(true);
+
+            File imageFile = new File(filePath); //Creates file from the filePath
+
+            if (imageFile.exists()) //If file exists
+            {
+                originalImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
+                currentImage = originalImage; //Current image gets set to the original image
+                displayImage.setImage(originalImage); //ImageView is set to originalImage
+                Platform.runLater(this::reset);
+            }
+            else
+            {
+                //System error message if the image is not found
+                System.err.println("Error: File not found at " + imageFile.getAbsolutePath());
+            }
+        }
+        else
+        {
+            detailBox.setVisible(false);
+            buttonRow.setVisible(false);
+            stackPane.setVisible(false);
+        }
     }
 
     /**

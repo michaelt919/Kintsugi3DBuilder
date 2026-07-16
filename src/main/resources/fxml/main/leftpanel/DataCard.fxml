@@ -5,10 +5,21 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.control.CheckBox?>
 <VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
     <VBox id="border_box" fx:id="borderBox">
         <HBox alignment="CENTER_LEFT" stylesheets="@../../kintsugiStyling.css">
-            <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="32.0" preserveRatio="true" />
+            <StackPane alignment="TOP_LEFT">
+                <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="32.0" preserveRatio="true"/>
+                <Rectangle fx:id = "hoverRectangle" opacity=".2" fill="WHITE" visible = "false" mouseTransparent="true"/>
+                <CheckBox fx:id="selectionBox"
+                          alignment="TOP_LEFT"
+                          onAction="#sendToDetail"
+                          onMouseEntered="#hoverStart"
+                          onMouseExited="#hoverEnd"
+                          style="-fx-background-color: transparent; -fx-padding: 0;">
+                </CheckBox>
+            </StackPane>
             <Label id="texture_title" fx:id="cardTitle" styleClass="wireframeBodyStrong" text="Texture Type" HBox.hgrow="ALWAYS">
                 <HBox.margin>
                     <Insets left="8.0" />

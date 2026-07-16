@@ -78,7 +78,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
                             () -> Rendering.runLater(() -> viewSet.deleteCamera(view.imageFile))),
                     "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(view.imageFile))
                 ),
-                view.isDisabled
+                view.isDisabled, fullResFile.getPath()
             );
         }
         catch (RuntimeException|IOException e)

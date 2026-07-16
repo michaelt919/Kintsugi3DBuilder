@@ -12,19 +12,20 @@
 package kintsugi3d.builder.javafx.internal;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ObservableTabsModel implements TabsModel
 {
     private final ObservableMap<String, ObservableCardsModel> tabs;
     private final ObservableCarouselModel carouselModel;
+    ObservableList<String> selectedCards = FXCollections.observableArrayList();
+    List<String> selectedCardNames = new ArrayList<>();
+
 
     public ObservableTabsModel(ObservableCarouselModel carouselModel)
     {
@@ -61,6 +62,58 @@ public class ObservableTabsModel implements TabsModel
     public Map<String, ObservableCardsModel> getTabsMap()
     {
         return Collections.unmodifiableMap(tabs);
+    }
+
+    /**
+     * Adds the given fileName to selectedCards if it is not already there.
+     * If it is there it will remove it.
+     * @param fileName
+     */
+    @Override
+    public void addSelected(String filePath, String fileName)
+    {
+        boolean found = false; //Initializes to false
+        if (selectedCards != null)
+        {
+            for (String current : selectedCards) //Every fileName in selectedCards
+            {
+                if (current.equals(filePath)) //If a fileName in selectedCards matches given fileName
+                {
+                    selectedCards.remove(filePath); //Remove fileName from selected cards
+                    selectedCardNames.remove(fileName);
+                    found = true; //Make found true
+                }
+            }
+            if (!found) //If fileName was not found
+            {
+                selectedCards.add(filePath); //Add fileName to selected Cards
+                selectedCardNames.add(fileName);
+            }
+        }
+    }
+
+    /**
+     * Clears all fileNames from selected
+     */
+    @Override
+    public void clearSelected()
+    {
+        selectedCards.clear();
+        selectedCardNames.clear();
+    }
+
+    /**
+     * Returns the observable list of fileNames
+     * @return
+     */
+    public ObservableList<String> getAllCards()
+    {
+        return selectedCards;
+    }
+
+    public String getFileName(String filePath)
+    {
+        return selectedCardNames.get(selectedCards.indexOf(filePath));
     }
 
     public Collection<ObservableCardsModel> getAllTabs()
