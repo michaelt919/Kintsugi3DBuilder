@@ -169,6 +169,7 @@ Section "Uninstall"
     ; Remove cache
     RMDir /r "$LOCALAPPDATA\Kintsugi3DBuilder\fit"
     RMDir /r "$LOCALAPPDATA\Kintsugi3DBuilder\preview"
+    RMDir /r "$LOCALAPPDATA\Kintsugi3DBuilder"
 
     ; Remove Desktop Shortcut
     Delete "$DESKTOP\Kintsugi 3D Builder.lnk"
