@@ -180,7 +180,10 @@ public class CarouselController
         //Detects when the carousel space in mainWindow changes
         Platform.runLater(() -> {
             Region container = (Region) mainBox.getParent().getParent();
-            container.widthProperty().addListener((obs, oldVal, newVal) -> scrollBarCheck());
+            container.widthProperty().addListener((obs, oldVal, newVal) -> {
+                scrollBarCheck();
+                mainBox.requestLayout();
+            });
         });
     }
 
