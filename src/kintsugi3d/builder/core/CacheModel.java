@@ -86,7 +86,7 @@ public class CacheModel
         pendingCacheSizeCallbacks = new ArrayList<>(1);
         CACHE_SIZE_CALC_THREAD_LOCK = new Object();
         cacheSizeCalcThread = null;
-//        projectSizes = new HashMap<>(getNumCachedProjects());
+        projectSizes = new HashMap<>(getNumCachedProjects());
     }
 
     private void handleCacheCleanupError(IOException e)
