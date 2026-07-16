@@ -21,8 +21,9 @@
         <VBox fx:id="eydropperImageRoot" alignment="CENTER" spacing="16.0">
             <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No tone selected" />
             <StackPane maxHeight="350.0" maxWidth="350.0" minHeight="350.0" minWidth="350.0" prefHeight="350.0" prefWidth="350.0">
-                <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
-                <Pane onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased">
+                <ImageView visible = "false" managed = "false" fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" pickOnBounds="true" preserveRatio="true" />
+                <fx:include fx:id="imageDetails" source="../../main/rightpanel/ImageDetails.fxml"/>
+                <Pane visible = "false" managed = "false" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased">
                     <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
                 </Pane>
                 <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge" text="Choose Image...">

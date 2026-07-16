@@ -39,6 +39,7 @@ import kintsugi3d.builder.core.SampledLuminanceEncoding;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
+import kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.util.ImageHelper;
@@ -65,6 +66,8 @@ public class EyedropperController extends NonDataPageControllerBase
 
     @FXML private VBox eydropperImageRoot;
     @FXML private GridPane curveValuesRoot;
+
+    @FXML private ImageDetailsController imageDetailsController;
 
     @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
     @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
@@ -818,6 +821,7 @@ public class EyedropperController extends NonDataPageControllerBase
                 BufferedImage bufferedImage;
                 try
                 {
+                    imageDetailsController.setImage(file.getPath());
                     bufferedImage = ImageHelper.read(file).getBufferedImage();
                     colorPickerImgView.setImage(SwingFXUtils.toFXImage(bufferedImage, null));
                 }
@@ -830,6 +834,7 @@ public class EyedropperController extends NonDataPageControllerBase
             {
                 selectedFile.set(new Image(file.toURI().toString()));
                 colorPickerImgView.setImage(selectedFile.get());
+                imageDetailsController.setImage(file.getPath());
             }
 
             //update buttons
