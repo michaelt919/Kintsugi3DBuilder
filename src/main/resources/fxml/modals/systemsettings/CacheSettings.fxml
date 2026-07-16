@@ -21,10 +21,9 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController">
     <Label fx:id="cacheSizeLabel" styleClass="wireframeBody" text="Cache Size: (calculating...)"/>
-    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Delete Entire Cache"/>
     <Button mnemonicParsing="false" fx:id="cleanCacheButton" onAction="#cleanUpCacheButton" styleClass="wireframeBodyLarge" text="Clean Up Cache"/>
     <VBox spacing="8" alignment="CENTER">
-        <HBox spacing="8" alignment="CENTER_LEFT" visible="false" managed="false">
+        <HBox spacing="8" alignment="CENTER_LEFT">
             <CheckBox styleClass="wireframeBody" fx:id="sizeCheck"/>
             <Label styleClass="wireframeBody"  text="Prompt over cache size: "/>
             <TextField styleClass="wireframeBody" fx:id="numGB"/>
@@ -68,4 +67,5 @@
                     text="Set Cache Path" visible="false"/>
         </VBox>
     </TitledPane>
+    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="wireframeBodyLarge" text="Delete Entire Cache"/>
 </VBox>

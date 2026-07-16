@@ -47,14 +47,14 @@ public class CacheModel
      * This should ONLY be modified in one place, via the requestCacheSizeRefresh method.
      * Otherwise, there would be bad race conditions.
      */
-    private final DoubleProperty cacheSizeGB = new SimpleDoubleProperty(-1); // -1 signifies uninitialized.
+    private final DoubleProperty cacheSizeGB; // -1 signifies uninitialized.
 
     /**
      * This should ONLY be modified in one place, via the requestCacheSizeRefresh method.
      * Otherwise, there would be bad race conditions.
      * The intention is for this to just be used for UI display purposes, not internal thread synchronization logic.
      */
-    private final BooleanProperty cacheSizeCalcInProgress = new SimpleBooleanProperty(false);
+    private final BooleanProperty cacheSizeCalcInProgress;
 
     /**
      * Use a separate property for handling one-shot listeners
@@ -62,20 +62,32 @@ public class CacheModel
      * Important: should only be accessed in blocks synchronized on CACHE_SIZE_CALC_THREAD_LOCK
      * to prevent concurrent modification issues.
      */
-    private final List<ChangeListener<Number>> pendingCacheSizeCallbacks = new ArrayList<>(1);
+    private final List<ChangeListener<Number>> pendingCacheSizeCallbacks;
 
     /**
      * Lock for multithreaded cache size calculation.
      */
-    private final Object CACHE_SIZE_CALC_THREAD_LOCK = new Object();
+    private final Object CACHE_SIZE_CALC_THREAD_LOCK;
 
     /**
      * This thread will be set to a non-null value while running, and null otherwise
      * to prevent multiple thread running simultaneously.
      */
-    private volatile Thread cacheSizeCalcThread = null;
+    private volatile Thread cacheSizeCalcThread;
+
+    private final Map<String, Long> projectSizes;
 
     private final Logger LOG = LoggerFactory.getLogger(CacheModel.class);
+
+    public CacheModel()
+    {
+        cacheSizeGB = new SimpleDoubleProperty(-1); // -1 signifies uninitialized.
+        cacheSizeCalcInProgress = new SimpleBooleanProperty(false);
+        pendingCacheSizeCallbacks = new ArrayList<>(1);
+        CACHE_SIZE_CALC_THREAD_LOCK = new Object();
+        cacheSizeCalcThread = null;
+//        projectSizes = new HashMap<>(getNumCachedProjects());
+    }
 
     private void handleCacheCleanupError(IOException e)
     {
@@ -91,7 +103,7 @@ public class CacheModel
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Clear Cache");
         confirm.setHeaderText("Confirm cache clear?");
-        confirm.setContentText(String.format("This will permanently remove all files in %s and %s and cannot be undone.  Are you sure?",
+        confirm.setContentText(String.format("This will permanently remove all files in %s and %s, including the ones for your current project, and cannot be undone.  Are you sure?",
             previewCacheDir, fitCacheDir));
 
         confirm.showAndWait().ifPresent(response ->
@@ -330,11 +342,8 @@ public class CacheModel
                 {
                     try
                     {
-                        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-                        int numProjectsToKeep = settingsModel.getInt("recentProjectLimit");
-                        int dayLimit = settingsModel.getInt("fileAgeLimit");
-                        cleanCacheSubDir(previewCacheDir, numProjectsToKeep, dayLimit);
-                        cleanCacheSubDir(fitCacheDir, numProjectsToKeep, dayLimit);
+                        cleanCacheSubDir(previewCacheDir);
+                        cleanCacheSubDir(fitCacheDir);
                         requestCacheSizeRefresh();
                     }
                     catch (IOException e)
@@ -346,7 +355,7 @@ public class CacheModel
         });
     }
 
-    public void cleanCacheSubDir(File directory, int numProjectsToKeep, int dayLimit) throws IOException
+    private void cleanCacheSubDir(File directory) throws IOException
     {
         if (!directory.isDirectory())
         {
@@ -356,34 +365,45 @@ public class CacheModel
         Set<File> deletableProjects = new HashSet<>(0);
         List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+        List<File> oldestProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
         if (settingsModel.getBoolean("recentPromptEnabled"))
         {
-            filterByRecentProjectLimit(directory, nonRecentProjects, numProjectsToKeep);
+            filterByRecentProjectLimit(directory, nonRecentProjects);
             deletableProjects.addAll(nonRecentProjects);
         }
-        if (settingsModel.getBoolean("fileAgePromptEnabled")
-            || (settingsModel.getBoolean("sizePromptEnabled") && (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit"))))
+        if (settingsModel.getBoolean("fileAgePromptEnabled"))
         {
-            filterByFileAgeLimit(oldProjects, dayLimit);
+            filterByFileAgeLimit(oldProjects);
             deletableProjects.addAll(oldProjects);
+        }
+        List<File> oppositeDeletableProjects = new ArrayList<>(0);
+        if (settingsModel.getBoolean("sizePromptEnabled") && (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit")))
+        {
+            oppositeDeletableProjects = filterBySizeLimit(oldestProjects, directory);
+            deletableProjects.addAll(oldestProjects);
         }
         // Perform cache deletion on directories still in oldProjects.
         File[] deletableProjectsArr = new File[deletableProjects.size()];
         deletableProjectsArr = deletableProjects.toArray(deletableProjectsArr);
+        File[] oppositeDeletableProjectsArr = new File[oppositeDeletableProjects.size()];
+        oppositeDeletableProjectsArr = oppositeDeletableProjects.toArray(oppositeDeletableProjectsArr);
         if ("preview".equals(directory.getName()))
         {
             deletePreviewCacheFiles(directory, deletableProjectsArr);
+            // Make sure to delete the files created from cleaning based on size, otherwise deletable
+            deleteFitCacheFiles(ApplicationFolders.getFitCacheRootDirectory().toFile(), oppositeDeletableProjectsArr);
         }
         else if ("fit".equals(directory.getName()))
         {
             deleteFitCacheFiles(directory, deletableProjectsArr);
+            deletePreviewCacheFiles(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), oppositeDeletableProjectsArr);
         }
     }
 
-    private void filterByRecentProjectLimit(File directory, List<File> oldProjects, int numProjectsToKeep)
+    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
     {
-        List<UUID> recentUUIDs = getRecentUUIDs(numProjectsToKeep);
+        List<UUID> recentUUIDs = getRecentUUIDs(Global.state().getSettingsModel().getInt("recentProjectLimit"));
         for (UUID recentUUID : recentUUIDs)
         {
             String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
@@ -398,14 +418,15 @@ public class CacheModel
         }
     }
 
-    private void filterByFileAgeLimit(List<File> projects, int dayLimit)
+    private void filterByFileAgeLimit(List<File> projects)
     {
         for (int i = projects.size() - 1; i >= 0; i--)
         {
             try
             {
                 Instant lastModified = Files.getLastModifiedTime(projects.get(i).toPath()).toInstant();
-                Instant limit =  LocalDateTime.now().minusDays(dayLimit).atZone(ZoneId.systemDefault()).toInstant();
+                Instant limit =  LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
+                    .atZone(ZoneId.systemDefault()).toInstant();
                 if (lastModified.isAfter(limit))
                 {
                     projects.remove(i);
@@ -416,6 +437,46 @@ public class CacheModel
                 LOG.error("Error while finding cache file for cleanup", e);
             }
         }
+    }
+
+    private List<File> filterBySizeLimit(List<File> projects, File directory)
+    {
+        List<File> keptProjects = new ArrayList<>(projects.size());
+        keptProjects.addAll(projects);
+        keptProjects.sort(Comparator.comparingLong(File::lastModified)); // sorts oldest first
+        long freedSpace = 0;
+        do
+        {
+            freedSpace += projectSizes.get(projects.get(0).getName());
+            keptProjects.remove(0);
+        } while ((getCacheSizeGB() - ((double) freedSpace * (1024 * 1024 * 1024)))
+            > Global.state().getSettingsModel().getDouble("cacheSizeLimit"));
+        projects.removeIf(keptProjects::contains);
+        // Need to also get the matching cache for the project in the other dir
+        List<File> oppositeCacheList = new ArrayList<>(projects.size());
+        if ("fit".equals(directory.getName()))
+        {
+            for (File project : projects)
+            {
+                File oppositeFile = new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), project.getName());
+                if (oppositeFile.exists())
+                {
+                    projects.add(oppositeFile);
+                }
+            }
+        }
+        else if ("preview".equals(directory.getName()))
+        {
+            for (File project : projects)
+            {
+                File oppositeFile = new File(ApplicationFolders.getFitCacheRootDirectory().toFile(), project.getName());
+                if (oppositeFile.exists())
+                {
+                    oppositeCacheList.add(oppositeFile);
+                }
+            }
+        }
+        return oppositeCacheList;
     }
 
     private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
@@ -444,7 +505,7 @@ public class CacheModel
         return recentUUIDs;
     }
 
-    private long getDirectorySize(File directory)
+    private long getDirectorySize(File directory, String project)
     {
         if (!Objects.equals(Thread.currentThread(), cacheSizeCalcThread))
         {
@@ -460,10 +521,18 @@ public class CacheModel
                 if (file.isFile())
                 {
                     length += file.length();
+                    projectSizes.put(project, ((projectSizes.get(project) == null) ? 0 : projectSizes.get(project)) + file.length());
                 }
                 else
                 {
-                    length += getDirectorySize(file);
+                    if (project == null)
+                    {
+                        length += getDirectorySize(file, file.getName());
+                    }
+                    else
+                    {
+                        length += getDirectorySize(file, project);
+                    }
                 }
             }
         }
@@ -603,8 +672,8 @@ public class CacheModel
 
     private double calcCacheSize()
     {
-        long fitSize = getDirectorySize(ApplicationFolders.getFitCacheRootDirectory().toFile());
-        long previewSize = getDirectorySize(ApplicationFolders.getPreviewImagesRootDirectory().toFile());
+        long fitSize = getDirectorySize(ApplicationFolders.getFitCacheRootDirectory().toFile(), null);
+        long previewSize = getDirectorySize(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), null);
         return (double) (fitSize + previewSize) / (1024 * 1024 * 1024); // Size in GB.
     }
 
