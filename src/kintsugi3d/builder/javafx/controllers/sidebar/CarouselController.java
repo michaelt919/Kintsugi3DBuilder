@@ -181,8 +181,8 @@ public class CarouselController
         Platform.runLater(() -> {
             Region container = (Region) mainBox.getParent().getParent();
             container.widthProperty().addListener((obs, oldVal, newVal) -> {
-                scrollBarCheck();
                 mainBox.requestLayout();
+                scrollBarCheck();
             });
         });
     }
