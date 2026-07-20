@@ -16,6 +16,11 @@ import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public final class DefaultSettings
 {
     private DefaultSettings()
@@ -69,7 +74,21 @@ public final class DefaultSettings
         switch (OperatingSystem.getCurrentOS())
         {
             case WINDOWS:
-                settingsModel.createObjectSetting("blenderLocation", "C:\\Program Files\\Blender Foundation\\Blender 5.1\\blender.exe");
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of("C:\\Program Files\\Blender Foundation\\"), "Blender*"))
+                {
+                    Path path = stream.iterator().next();
+
+                    if (!Files.exists(path))
+                    {
+                        throw new IOException("Could not find Blender.");
+                    }
+
+                    settingsModel.createObjectSetting("blenderLocation", path.resolve("blender.exe").toString());
+                }
+                catch (IOException e)
+                {
+                    settingsModel.createObjectSetting("blenderLocation", "");
+                }
                 break;
 
             case MACOS:
