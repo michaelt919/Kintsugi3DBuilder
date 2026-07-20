@@ -34,6 +34,8 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     private SimpleMatrix specularGreen;
     private SimpleMatrix specularBlue;
 
+    private List<String> names;
+
     public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
     {
         super(textureResolution, basisSettings.getBasisCount());
@@ -55,6 +57,8 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         specularBlue = new SimpleMatrix(
             this.basisSettings.getBasisResolution() + 1,
             this.basisSettings.getBasisCount(), DMatrixRMaj.class);
+
+        names = IntStream.range(0, diffuseAlbedos.size()).mapToObj(String::valueOf).collect(Collectors.toList());
     }
 
     @Override
@@ -70,6 +74,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         {
             private int count = basisSettings.getBasisCount();
             private final int resolution = basisSettings.getBasisResolution();
+
+            @Override
+            public String getName(int b)
+            {
+                return names.get(b);
+            }
 
             @Override
             public DoubleVector3 getDiffuseColor(int b)
@@ -120,7 +130,14 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                 specularGreen = removeColumn(specularGreen, b);
                 specularBlue = removeColumn(specularBlue, b);
                 diffuseAlbedos.remove(b);
+                names.remove(b);
                 count--;
+            }
+
+            @Override
+            public void disableMaterial(int b)
+            {
+
             }
 
             private SimpleMatrix removeColumn(SimpleMatrix m, int b)

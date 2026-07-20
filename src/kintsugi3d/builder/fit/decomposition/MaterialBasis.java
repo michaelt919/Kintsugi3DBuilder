@@ -14,4 +14,6 @@ package kintsugi3d.builder.fit.decomposition;
 public interface MaterialBasis extends ReadonlyMaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
     void deleteMaterial(int b);
+
+    void disableMaterial(int b);
 }

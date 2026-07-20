@@ -91,6 +91,11 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         refreshGraphicsResources();
     }
 
+    public void disableBasisMaterial(int materialIndex)
+    {
+        basis.disableMaterial(materialIndex);
+    }
+
     private void refreshGraphicsResources()
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();

@@ -26,6 +26,8 @@ public interface ReadonlyMaterialBasis
      */
     DoubleVector3 getDiffuseColor(int b);
 
+    String getName(int b);
+
     List<DoubleVector3> getDiffuseColors();
 
     /**

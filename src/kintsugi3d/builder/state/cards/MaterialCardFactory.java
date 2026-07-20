@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state.cards;
 
+import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ImageBasedRenderable;
@@ -63,7 +64,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
             cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
-        return new ShaderDataCard(String.format("%d", cardIndex), String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
+        return new ShaderDataCard(resources.getBasisResources().getBasis().getName(cardIndex),
+            String.format("Material %s", resources.getBasisResources().getBasis().getName(cardIndex)), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
                     "Highlight Material", () ->
@@ -93,7 +95,12 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                         Global.state().getUserShaderModel().setUserShader(
                             new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
-                Map.of("Delete Material", () ->
+                Map.of("Disable Material", () -> Rendering.runLater(() ->
+                    {
+                        // TODO: add disable call here.
+//                        resources.delete
+                    }),
+                    "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
                         {
@@ -104,7 +111,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
                             {
                                 // hard reset of cards list to re-number, etc.
-                                cardsModel.setCardList(createAllCards(cardsModel));
+                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
                             }
                         })))));
     }
@@ -131,7 +138,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
     @Override
     public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
     {
-        LOG.warn("refreshCards not implemented for textures.");
+        LOG.warn("refreshCards not implemented for materials.");
         return Map.of();
     }
 }

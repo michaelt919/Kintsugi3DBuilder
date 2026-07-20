@@ -29,6 +29,8 @@ public class SimpleMaterialBasis implements MaterialBasis
     private final List<double[]> greenBasis;
     private final List<double[]> blueBasis;
 
+    private final List<String> names;
+
     private int materialCount;
     private final int specularResolution;
 
@@ -38,6 +40,7 @@ public class SimpleMaterialBasis implements MaterialBasis
         redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
         greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
         blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
+        names = IntStream.range(0, materialCount).mapToObj(String::valueOf).collect(Collectors.toList());
         this.materialCount = materialCount;
         this.specularResolution = specularResolution;
     }
@@ -51,6 +54,13 @@ public class SimpleMaterialBasis implements MaterialBasis
         this.blueBasis = blueBasis;
         this.materialCount = redBasis.size();
         this.specularResolution = redBasis.get(0).length - 1;
+        names = IntStream.range(0, materialCount).mapToObj(String::valueOf).collect(Collectors.toList());
+    }
+
+    @Override
+    public String getName(int b)
+    {
+        return names.get(b);
     }
 
     @Override
@@ -102,6 +112,7 @@ public class SimpleMaterialBasis implements MaterialBasis
         greenBasis.remove(b);
         blueBasis.remove(b);
         diffuseColors.remove(b);
+        names.remove(b);
         materialCount--;
     }
 
@@ -116,6 +127,12 @@ public class SimpleMaterialBasis implements MaterialBasis
     {
         return new SimpleMaterialBasis(diffuseColors.toArray(DoubleVector3[]::new),
             List.copyOf(redBasis), List.copyOf(greenBasis), List.copyOf(blueBasis));
+    }
+
+    @Override
+    public void disableMaterial(int b)
+    {
+        MaterialBasis disabledBasis = copy();
     }
 
     /**
