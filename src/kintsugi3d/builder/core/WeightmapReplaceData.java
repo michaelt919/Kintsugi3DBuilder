@@ -12,56 +12,38 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.gl.core.Texture;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
-public abstract class ImageReplaceData
+public class WeightmapReplaceData extends ImageReplaceData
 {
-    private final TextureResources<?> resources;
-    private File currentImage;
-    private File newImage;
+    private int weightmapIndex;
 
-    public ImageReplaceData()
+    @Override
+    public void replace() throws IOException
     {
-        this.resources = null;
-        this.currentImage = null;
-        this.newImage = null;
+        getResources().getBasisWeightResources().replaceWeightMapWithSpecificFile(weightmapIndex, getNewImage());
     }
 
-    public ImageReplaceData(TextureResources resources)
+    @Override
+    public void refreshCards()
     {
-        this.resources = resources;
-        this.currentImage = null;
-        this.newImage = null;
+        Global.state().getTabModels().getTab("Textures").refreshCards(card ->
+            Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(getWeightmapIndex(), "PNG")));
     }
 
-    public abstract void replace() throws IOException;
-
-    public abstract void refreshCards();
-
-    public final TextureResources<?> getResources()
+    public WeightmapReplaceData(TextureResources resources, int weightmapIndex, File currentImage)
     {
-        return resources;
+        super(resources);
+        this.weightmapIndex = weightmapIndex;
+        setCurrentImage(currentImage);
     }
 
-    public final File getCurrentImage()
+    public int getWeightmapIndex()
     {
-        return currentImage;
-    }
-
-    final void setCurrentImage(File currentTexture)
-    {
-        this.currentImage = currentTexture;
-    }
-
-    public final File getNewImage()
-    {
-        return newImage;
-    }
-
-    public final void setNewImage(File newImage)
-    {
-        this.newImage = newImage;
+        return weightmapIndex;
     }
 }

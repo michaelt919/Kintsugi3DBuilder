@@ -145,4 +145,9 @@ public abstract class ProjectSettingsControllerBase extends NonDataPageControlle
     {
         projectSettingsManager.bindTextComboBox(comboBox, settingName);
     }
+
+    protected <T> void bindObjectComboBox(ComboBox<T> comboBox, String settingName, Class<T> objectClass)
+    {
+        projectSettingsManager.bindObjectComboBox(comboBox, settingName, objectClass);
+    }
 }

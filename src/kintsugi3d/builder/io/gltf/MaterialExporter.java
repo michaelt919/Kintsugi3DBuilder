@@ -15,6 +15,7 @@ import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import kintsugi3d.builder.core.StandardTexture;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,8 @@ public class MaterialExporter
     private int minLODSize = Integer.MAX_VALUE;
     private String textureFilePrefix = "";
     private String textureFileFormat;
+    private String filename;
+    private boolean combineWeights;
 
     private TextureResources<?> textureResources;
 
@@ -60,6 +63,26 @@ public class MaterialExporter
     public final void setAsset(GltfAssetV2 asset)
     {
         this.asset = asset;
+    }
+
+    public void setCombineWeights(boolean combineWeights)
+    {
+        this.combineWeights = combineWeights;
+    }
+
+    public boolean shouldCombineWeights()
+    {
+        return this.combineWeights;
+    }
+
+    public void setFilename(String filename)
+    {
+        this.filename = filename;
+    }
+
+    public String getFilename()
+    {
+        return this.filename;
     }
 
     public int getMinLODSize()
@@ -331,7 +354,7 @@ public class MaterialExporter
         return occlusionInfo;
     }
 
-    private String getTextureFilename(String name, String format)
+    protected String getTextureFilename(String name, String format)
     {
         return TextureResources.getTextureFilename(name, format, textureFilePrefix);
     }

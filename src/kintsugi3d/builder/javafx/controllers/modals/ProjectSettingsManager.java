@@ -167,18 +167,32 @@ public class ProjectSettingsManager
     {
         trackSetting(settingName);
 
-        // Manually bind resolution both ways as a combo box.
+        // Manually bind both ways as a combo box.
         comboBox.valueProperty().addListener(
             (obs, oldValue, newValue) ->
                 localSettingsModel.set(settingName, extractText.apply(newValue)));
         localSettingsModel.getObjectProperty(settingName, String.class).addListener(
             (obs, oldValue, newValue) ->
                 comboBox.setValue(choiceConstructor.apply(newValue)));
-        comboBox.setValue(choiceConstructor.apply(settingName));
+        comboBox.setValue(choiceConstructor.apply(localSettingsModel.get(settingName, String.class)));
     }
 
     public void bindTextComboBox(ComboBox<String> comboBox, String settingName)
     {
         bindTextComboBox(comboBox, settingName, Function.identity(), Function.identity());
+    }
+
+    public <T> void bindObjectComboBox(ComboBox<T> comboBox, String settingName, Class<T> objectClass)
+    {
+        trackSetting(settingName);
+
+        // Manually bind both ways as a combo box.
+        comboBox.valueProperty().addListener(
+            (obs, oldValue, newValue) ->
+                localSettingsModel.set(settingName, newValue));
+        localSettingsModel.getObjectProperty(settingName, objectClass).addListener(
+            (obs, oldValue, newValue) ->
+                comboBox.setValue(newValue));
+        comboBox.setValue(localSettingsModel.get(settingName, objectClass));
     }
 }

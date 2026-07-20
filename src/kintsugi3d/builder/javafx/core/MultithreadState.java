@@ -68,6 +68,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
+        // add cache model
     }
 
     @Override
