@@ -31,6 +31,12 @@ public class SimpleMaterialBasis implements MaterialBasis
 
     private final List<String> names;
 
+    private final List<DoubleVector3> disabledDiffuseColors;
+    private final List<double[]> disabledRedBasis;
+    private final List<double[]> disabledGreenBasis;
+    private final List<double[]> disabledBlueBasis;
+    private final List<String> disabledNames;
+
     private int materialCount;
     private final int specularResolution;
 
@@ -41,6 +47,13 @@ public class SimpleMaterialBasis implements MaterialBasis
         greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
         blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
         names = IntStream.range(0, materialCount).mapToObj(String::valueOf).collect(Collectors.toList());
+
+        disabledDiffuseColors = new ArrayList<>(0);
+        disabledRedBasis = new ArrayList<>(0);
+        disabledGreenBasis = new ArrayList<>(0);
+        disabledBlueBasis = new ArrayList<>(0);
+        disabledNames = new ArrayList<>(0);
+
         this.materialCount = materialCount;
         this.specularResolution = specularResolution;
     }
@@ -55,6 +68,12 @@ public class SimpleMaterialBasis implements MaterialBasis
         this.materialCount = redBasis.size();
         this.specularResolution = redBasis.get(0).length - 1;
         names = IntStream.range(0, materialCount).mapToObj(String::valueOf).collect(Collectors.toList());
+
+        disabledDiffuseColors = new ArrayList<>(0);
+        disabledRedBasis = new ArrayList<>(0);
+        disabledGreenBasis = new ArrayList<>(0);
+        disabledBlueBasis = new ArrayList<>(0);
+        disabledNames = new ArrayList<>(0);
     }
 
     @Override
@@ -132,7 +151,55 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public void disableMaterial(int b)
     {
-        MaterialBasis disabledBasis = copy();
+        // get persistent name
+        int name = names.indexOf(Integer.toString(b));
+        if (name != -1)
+        {
+            int index = Math.min(name, disabledNames.size());
+            // copy to disabled lists
+            disabledRedBasis.add(index, redBasis.get(name));
+            disabledGreenBasis.add(index, greenBasis.get(name));
+            disabledBlueBasis.add(index, blueBasis.get(name));
+            disabledDiffuseColors.add(index, diffuseColors.get(name));
+            disabledNames.add(index, names.get(name));
+            // remove from enabled lists
+            redBasis.remove(name);
+            greenBasis.remove(name);
+            blueBasis.remove(name);
+            diffuseColors.remove(name);
+            names.remove(name);
+            materialCount--;
+        }
+    }
+
+    @Override
+    public void enableMaterial(int b)
+    {
+        // get persistent name
+        int name = disabledNames.indexOf(Integer.toString(b));
+        if (name != -1)
+        {
+            int index = Math.min(name, names.size());
+            // add to enabled lists
+            redBasis.add(index, disabledRedBasis.get(name));
+            greenBasis.add(index, disabledGreenBasis.get(name));
+            blueBasis.add(index, disabledBlueBasis.get(name));
+            diffuseColors.add(index, disabledDiffuseColors.get(name));
+            names.add(index, disabledNames.get(name));
+            // remove from disabled lists
+            disabledRedBasis.remove(name);
+            disabledGreenBasis.remove(name);
+            disabledBlueBasis.remove(name);
+            disabledDiffuseColors.remove(name);
+            disabledNames.remove(name);
+            materialCount++;
+        }
+    }
+
+    @Override
+    public boolean getIsEnabled(int b)
+    {
+        return names.contains(Integer.toString(b));
     }
 
     /**

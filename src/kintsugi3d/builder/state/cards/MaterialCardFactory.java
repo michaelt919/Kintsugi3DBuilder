@@ -95,11 +95,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                         Global.state().getUserShaderModel().setUserShader(
                             new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
-                Map.of("Disable Material", () -> Rendering.runLater(() ->
-                    {
-                        // TODO: add disable call here.
-//                        resources.delete
-                    }),
+                Map.of("Toggle Disabled", () -> Rendering.runLater(() -> resources.getBasisResources().toggleBasisMaterial(cardIndex)),
                     "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources

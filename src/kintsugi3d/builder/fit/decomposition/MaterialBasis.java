@@ -16,4 +16,8 @@ public interface MaterialBasis extends ReadonlyMaterialBasis // TODO: avoid use 
     void deleteMaterial(int b);
 
     void disableMaterial(int b);
+
+    void enableMaterial(int b);
+
+    boolean getIsEnabled(int b);
 }

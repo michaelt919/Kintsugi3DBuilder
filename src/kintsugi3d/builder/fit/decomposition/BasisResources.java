@@ -94,6 +94,30 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public void disableBasisMaterial(int materialIndex)
     {
         basis.disableMaterial(materialIndex);
+        basisCount--;
+//        refreshGraphicsResources();
+    }
+
+    public void enableBasisMaterial(int materialIndex)
+    {
+        basis.enableMaterial(materialIndex);
+        basisCount++;
+//        refreshGraphicsResources();
+    }
+
+    public void toggleBasisMaterial(int materialIndex)
+    {
+        if (basis.getIsEnabled(materialIndex))
+        {
+            disableBasisMaterial(materialIndex);
+            basisCount--;
+        }
+        else
+        {
+            enableBasisMaterial(materialIndex);
+            basisCount++;
+        }
+        refreshGraphicsResources();
     }
 
     private void refreshGraphicsResources()

@@ -34,7 +34,14 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     private SimpleMatrix specularGreen;
     private SimpleMatrix specularBlue;
 
-    private List<String> names;
+    private final List<String> names;
+
+    private final List<DoubleVector3> disabledDiffuseAlbedos;
+    private SimpleMatrix disabledSpecularRed;
+    private SimpleMatrix disabledSpecularGreen;
+    private SimpleMatrix disabledSpecularBlue;
+
+    private final List<String> disabledNames;
 
     public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
     {
@@ -42,6 +49,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         this.basisSettings = basisSettings;
 
         diffuseAlbedos = new ArrayList<>(this.basisSettings.getBasisCount());
+        disabledDiffuseAlbedos = new ArrayList<>(0);
 
         for (int i = 0; i < this.basisSettings.getBasisCount(); i++)
         {
@@ -58,7 +66,18 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             this.basisSettings.getBasisResolution() + 1,
             this.basisSettings.getBasisCount(), DMatrixRMaj.class);
 
+        disabledSpecularRed = new SimpleMatrix(
+            this.basisSettings.getBasisResolution() + 1,
+            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
+        disabledSpecularGreen = new SimpleMatrix(
+            this.basisSettings.getBasisResolution() + 1,
+            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
+        disabledSpecularBlue = new SimpleMatrix(
+            this.basisSettings.getBasisResolution() + 1,
+            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
+
         names = IntStream.range(0, diffuseAlbedos.size()).mapToObj(String::valueOf).collect(Collectors.toList());
+        disabledNames = new ArrayList<>(0);
     }
 
     @Override
@@ -137,7 +156,53 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public void disableMaterial(int b)
             {
+                int name = names.indexOf(Integer.toString(b));
+                if (name != -1)
+                {
+                    int index = Math.min(name, disabledNames.size());
+                    // add to disabled lists
+                    disabledSpecularRed = addColumn(disabledSpecularRed, specularRed, name);
+                    disabledSpecularGreen = addColumn(disabledSpecularGreen, specularGreen, name);
+                    disabledSpecularBlue = addColumn(disabledSpecularBlue, specularBlue, name);
+                    disabledDiffuseAlbedos.add(index, diffuseAlbedos.get(name));
+                    disabledNames.add(index, names.get(name));
+                    // remove from enabled lists
+                    specularRed = removeColumn(specularRed, name);
+                    specularGreen = removeColumn(specularGreen, name);
+                    specularBlue = removeColumn(specularBlue, name);
+                    diffuseAlbedos.remove(name);
+                    names.remove(name);
+                    count--;
+                }
+            }
 
+            @Override
+            public void enableMaterial(int b)
+            {
+                int name = disabledNames.indexOf(Integer.toString(b));
+                if (name != -1)
+                {
+                    int index = Math.min(name, names.size());
+                    // add to enabled lists
+                    specularRed = addColumn(specularRed, disabledSpecularRed, name);
+                    specularGreen = addColumn(specularGreen, disabledSpecularGreen, name);
+                    specularBlue = addColumn(specularBlue, disabledSpecularBlue, name);
+                    diffuseAlbedos.add(index, disabledDiffuseAlbedos.get(name));
+                    names.add(index, disabledNames.get(name));
+                    // remove from disabled lists
+                    disabledSpecularRed = removeColumn(disabledSpecularRed, name);
+                    disabledSpecularGreen = removeColumn(disabledSpecularGreen, name);
+                    disabledSpecularBlue = removeColumn(disabledSpecularBlue, name);
+                    disabledDiffuseAlbedos.remove(name);
+                    disabledNames.remove(name);
+                    count++;
+                }
+            }
+
+            @Override
+            public boolean getIsEnabled(int b)
+            {
+                return names.contains(Integer.toString(b));
             }
 
             private SimpleMatrix removeColumn(SimpleMatrix m, int b)
@@ -159,6 +224,37 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                     for (int i = 0; i < m.numRows(); i++)
                     {
                         result.set(i, j, m.get(i, j + 1));
+                    }
+                }
+
+                return result;
+            }
+
+            private SimpleMatrix addColumn(SimpleMatrix m, SimpleMatrix source, int b)
+            {
+                SimpleMatrix result = new SimpleMatrix(m.numRows(), m.numCols() + 1, DMatrixRMaj.class);
+
+                // Columns before the one being added
+                for (int j = 0; j < b; j++)
+                {
+                    for (int i = 0; i < m.numRows(); i++)
+                    {
+                        result.set(i, j, m.get(i, j));
+                    }
+                }
+
+                // Column to add
+                for (int i = 0; i < m.numRows(); i++)
+                {
+                    result.set(i, b, source.get(i, b));
+                }
+
+                // Columns after the one being removed
+                for (int j = b + 1; j < result.numCols(); j++)
+                {
+                    for (int i = 0; i < m.numRows(); i++)
+                    {
+                        result.set(i, j, m.get(i, j - 1));
                     }
                 }
 
