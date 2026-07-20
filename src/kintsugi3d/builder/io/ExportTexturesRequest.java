@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,7 +14,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ProjectInstance;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -48,7 +48,7 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
     private static ExportSettings getExportSettingsFromProject()
     {
         GeneralSettingsModel projectSettings = Global.state().getIOModel()
-            .validateProjectInstance()
+            .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 
         ExportSettings exportSettings = new ExportSettings();
@@ -58,9 +58,13 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
         exportSettings.setShouldAppendModelNameToTextures(true); // Give textures better filenames for export
 
         // Settings affected by modal and stored in project
-        exportSettings.setShouldGenerateLowResTextures(projectSettings.getBoolean("exportLODEnabled"));
+        ExportType exportType = projectSettings.get("exportType", ExportType.class);
+        exportSettings.setExporterFactory(exportType.getFactory());
+        exportSettings.setShouldGenerateLowResTextures( // Only applies if glTF is selected.
+            exportType == ExportType.GLTF && projectSettings.getBoolean("exportLODEnabled"));
         exportSettings.setMinimumTextureResolution(projectSettings.getInt("minimumLODSize"));
-        exportSettings.setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnExportComplete"));
+        exportSettings.setShouldOpenViewerOnceComplete( // Only applies if glTF is selected.
+            exportType == ExportType.GLTF && projectSettings.getBoolean("openViewerOnExportComplete"));
         exportSettings.setTextureFormat(projectSettings.get("textureFormat", String.class));
 
         return exportSettings;
@@ -68,7 +72,7 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        ProjectInstance<ContextType> renderable, ProgressMonitor monitor)
+        RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
     {
         // Includes textures is shouldSaveTextures is true
         renderable.saveGLTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings, this::onSaveComplete);

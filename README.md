@@ -101,3 +101,4 @@ There are additional requirements for building the installer executable using th
 - The NSIS install folder must be added to your `PATH` environment variable.
 - A JRE must be located at `jre`. The `install` lifecycle *will fail* without the `jre` folder.
 - The Kintsugi 3D Viewer installer, `Kintsugi3DViewer.exe` must be located at `viewer/Kintsugi3DViewer.exe`. The `install` lifecycle *will fail* without this.  The source code for Kintsugi 3D Viewer can be found within [its own repository](https://github.com/UWStout/Kintsugi3DViewer).
+- The USDZ binaries for the build platform must be located in `bin/`. Releases can be found [here](https://github.com/PoctorDepper/usdz-exporter/releases).

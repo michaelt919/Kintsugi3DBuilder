@@ -13,12 +13,7 @@ package kintsugi3d.gl.core;
 
 import kintsugi3d.gl.vecmath.IntVector2;
 
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
-
-public final class FramebufferViewport<ContextType extends Context<ContextType>> implements Framebuffer<ContextType>
+public class FramebufferViewport<ContextType extends Context<ContextType>> implements Framebuffer<ContextType>
 {
     private static class DrawContents<ContextType extends Context<ContextType>> implements FramebufferDrawContents<ContextType>
     {
@@ -26,7 +21,7 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
 
         private final FramebufferDrawContents<ContextType> fullFramebufferContents;
 
-        public DrawContents(FramebufferViewport<ContextType> framebufferViewport, FramebufferDrawContents<ContextType> fullFramebufferContents)
+        DrawContents(FramebufferViewport<ContextType> framebufferViewport, FramebufferDrawContents<ContextType> fullFramebufferContents)
         {
             this.framebufferViewport = framebufferViewport;
             this.fullFramebufferContents = fullFramebufferContents;
@@ -63,42 +58,6 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
             fullFramebufferContents.bindNonColorAttachmentsForDraw();
         }
     }
-    private static class ReadContents<ContextType extends Context<ContextType>> implements FramebufferReadContents<ContextType>
-    {
-        private final FramebufferViewport<ContextType> framebufferViewport;
-
-        private final FramebufferReadContents<ContextType> fullFramebufferContents;
-
-        public ReadContents(FramebufferViewport<ContextType> framebufferViewport, FramebufferReadContents<ContextType> fullFramebufferContents)
-        {
-            this.framebufferViewport = framebufferViewport;
-            this.fullFramebufferContents = fullFramebufferContents;
-        }
-
-        @Override
-        public ContextType getContext()
-        {
-            return framebufferViewport.getContext();
-        }
-
-        @Override
-        public FramebufferSize getSize()
-        {
-            return framebufferViewport.getSize();
-        }
-
-        @Override
-        public void bindForRead(int attachmentIndex)
-        {
-            fullFramebufferContents.bindForRead(attachmentIndex);
-        }
-
-        @Override
-        public void bindNonColorAttachmentForRead()
-        {
-            fullFramebufferContents.bindNonColorAttachmentForRead();
-        }
-    }
 
     private final Framebuffer<ContextType> fullFramebuffer;
 
@@ -116,12 +75,6 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
     public ContextType getContext()
     {
         return fullFramebuffer.getContext();
-    }
-
-    @Override
-    public FramebufferReadContents<ContextType> getReadContents()
-    {
-        return new ReadContents<>(this, fullFramebuffer.getReadContents());
     }
 
     @Override
@@ -145,72 +98,6 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
     public int getColorAttachmentCount()
     {
         return fullFramebuffer.getColorAttachmentCount();
-    }
-
-    @Override
-    public ColorTextureReader getTextureReaderForColorAttachment(int attachmentIndex)
-    {
-        return new ColorTextureReaderBase()
-        {
-            @Override
-            public int getWidth()
-            {
-                return getSize().width;
-            }
-
-            @Override
-            public int getHeight()
-            {
-                return getSize().height;
-            }
-
-            @Override
-            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
-            {
-                fullFramebuffer.getTextureReaderForColorAttachment(attachmentIndex)
-                    .readARGB(destination, x + viewportOffset.x, y + viewportOffset.y, width, height);
-            }
-
-            @Override
-            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
-            {
-                fullFramebuffer.getTextureReaderForColorAttachment(attachmentIndex)
-                    .readFloatingPointRGBA(destination, x + viewportOffset.x, y + viewportOffset.y, width, height);
-            }
-
-            @Override
-            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
-            {
-                fullFramebuffer.getTextureReaderForColorAttachment(attachmentIndex)
-                    .readIntegerRGBA(destination, x + viewportOffset.x, y + viewportOffset.y, width, height);
-            }
-        };
-    }
-
-    @Override
-    public DepthTextureReader getTextureReaderForDepthAttachment()
-    {
-        return new DepthTextureReaderBase()
-        {
-            @Override
-            public int getWidth()
-            {
-                return getSize().width;
-            }
-
-            @Override
-            public int getHeight()
-            {
-                return getSize().height;
-            }
-
-            @Override
-            public void read(ShortBuffer destination, int x, int y, int width, int height)
-            {
-                fullFramebuffer.getTextureReaderForDepthAttachment()
-                    .read(destination, x + viewportOffset.x, y + viewportOffset.y, width, height);
-            }
-        };
     }
 
     @Override
@@ -247,7 +134,7 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
 
     @Override
     public void blitColorAttachmentFromFramebufferViewport(int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
-        FramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+        ReadableFramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
     {
         fullFramebuffer.blitColorAttachmentFromFramebufferViewport(
             drawAttachmentIndex, destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight,
@@ -256,7 +143,7 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
 
     @Override
     public void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
-        FramebufferViewport<ContextType> readFramebuffer)
+        ReadableFramebufferViewport<ContextType> readFramebuffer)
     {
         fullFramebuffer.blitDepthAttachmentFromFramebufferViewport(
             destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight, readFramebuffer);
@@ -264,7 +151,7 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
 
     @Override
     public void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
-        FramebufferViewport<ContextType> readFramebuffer)
+        ReadableFramebufferViewport<ContextType> readFramebuffer)
     {
         fullFramebuffer.blitStencilAttachmentFromFramebufferViewport(
             destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight, readFramebuffer);
@@ -272,7 +159,7 @@ public final class FramebufferViewport<ContextType extends Context<ContextType>>
 
     @Override
     public void blitDepthStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
-        FramebufferViewport<ContextType> readFramebuffer)
+        ReadableFramebufferViewport<ContextType> readFramebuffer)
     {
         fullFramebuffer.blitDepthStencilAttachmentFromFramebufferViewport(
             destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight, readFramebuffer);

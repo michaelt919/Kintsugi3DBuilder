@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -34,13 +34,9 @@ import java.util.function.Function;
 
 public class ProjectSettingsManager
 {
-    public GeneralSettingsModel projectSettingsModel;
-    public final ObservableGeneralSettingsModel localSettingsModel = getDefaultSettingsModel();
-    public final Set<String> trackedSettings = new HashSet<String>();
-
-    public ProjectSettingsManager()
-    {
-    }
+    private GeneralSettingsModel projectSettingsModel;
+    private final ObservableGeneralSettingsModel localSettingsModel = getDefaultSettingsModel();
+    private final Set<String> trackedSettings = new HashSet<>(8);
 
     public static ObservableGeneralSettingsModel getDefaultSettingsModel()
     {
@@ -66,7 +62,7 @@ public class ProjectSettingsManager
 
     public void refresh()
     {
-        if (Global.state().getIOModel().hasLoadedProjectInstance())
+        if (Global.state().getIOModel().hasLoadedRenderable())
         {
             this.projectSettingsModel = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
         }
@@ -171,18 +167,32 @@ public class ProjectSettingsManager
     {
         trackSetting(settingName);
 
-        // Manually bind resolution both ways as a combo box.
+        // Manually bind both ways as a combo box.
         comboBox.valueProperty().addListener(
             (obs, oldValue, newValue) ->
                 localSettingsModel.set(settingName, extractText.apply(newValue)));
         localSettingsModel.getObjectProperty(settingName, String.class).addListener(
             (obs, oldValue, newValue) ->
                 comboBox.setValue(choiceConstructor.apply(newValue)));
-        comboBox.setValue(choiceConstructor.apply(settingName));
+        comboBox.setValue(choiceConstructor.apply(localSettingsModel.get(settingName, String.class)));
     }
 
     public void bindTextComboBox(ComboBox<String> comboBox, String settingName)
     {
         bindTextComboBox(comboBox, settingName, Function.identity(), Function.identity());
+    }
+
+    public <T> void bindObjectComboBox(ComboBox<T> comboBox, String settingName, Class<T> objectClass)
+    {
+        trackSetting(settingName);
+
+        // Manually bind both ways as a combo box.
+        comboBox.valueProperty().addListener(
+            (obs, oldValue, newValue) ->
+                localSettingsModel.set(settingName, newValue));
+        localSettingsModel.getObjectProperty(settingName, objectClass).addListener(
+            (obs, oldValue, newValue) ->
+                comboBox.setValue(newValue));
+        comboBox.setValue(localSettingsModel.get(settingName, objectClass));
     }
 }

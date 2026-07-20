@@ -18,6 +18,10 @@
 <VBox fx:id="root" alignment="CENTER" fillWidth="false" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.ExportModelController">
     <VBox spacing="16.0">
         <HBox alignment="CENTER_LEFT" spacing="16.0">
+            <Label styleClass="wireframeBody" text="Export type: "/>
+            <ComboBox fx:id="exportTypeComboBox" styleClass="wireframeBody"/>
+        </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="16.0">
             <Label styleClass="wireframeBody" text="Texture format: " />
             <ComboBox fx:id="formatComboBox" styleClass="wireframeBody" promptText="Select format...">
                 <items>

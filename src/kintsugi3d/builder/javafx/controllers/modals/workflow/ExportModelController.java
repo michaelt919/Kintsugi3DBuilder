@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,14 +12,17 @@
 package kintsugi3d.builder.javafx.controllers.modals.workflow;
 
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
+import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -33,12 +36,19 @@ public class ExportModelController extends ProjectSettingsControllerBase
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
     //Initialize all the variables in the FXML file
-    @FXML private Pane root;
+    @FXML
+    private Pane root;
 
-    @FXML private ComboBox<String> formatComboBox;
-    @FXML private CheckBox generateLowResolutionCheckBox;
-    @FXML private CheckBox openViewerOnceCheckBox;
-    @FXML private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
+    @FXML
+    private ComboBox<ExportType> exportTypeComboBox;
+    @FXML
+    private ComboBox<String> formatComboBox;
+    @FXML
+    private CheckBox generateLowResolutionCheckBox;
+    @FXML
+    private CheckBox openViewerOnceCheckBox;
+    @FXML
+    private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
 
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
@@ -55,20 +65,38 @@ public class ExportModelController extends ProjectSettingsControllerBase
         StaticUtilities.makeSquareResolutionComboBox(minimumTextureResolutionComboBox);
 
         objFileChooser.setTitle("Save project");
-        objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
 
         // Enable min. texture resolution combo box when LODs are enabled.
         minimumTextureResolutionComboBox.disableProperty()
             .bind(generateLowResolutionCheckBox.selectedProperty().not());
 
+        // Bind the export type to the request
+        exportTypeComboBox.getItems().addAll(ExportType.values());
+
+        // Set initial value from defaultSettings
+        exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
+        objFileChooser.getExtensionFilters().setAll(getLocalSettingsModel().get("exportType", ExportType.class).getFilter());
+
+        // Update extension filters based on the selected export type.
+        exportTypeComboBox.valueProperty().addListener(
+            (obs, oldValue, newValue) ->
+                objFileChooser.getExtensionFilters().setAll(newValue.getFilter()));
+
         // Bind settings
+        bindObjectComboBox(exportTypeComboBox, "exportType", ExportType.class);
         bindTextComboBox(formatComboBox, "textureFormat");
         bindBooleanSetting(generateLowResolutionCheckBox, "exportLODEnabled");
         bindNumericComboBox(minimumTextureResolutionComboBox, "minimumLODSize",
             SquareResolution::new, SquareResolution::getSize);
         bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
 
-        File loadedProjectFile = Global.state().getIOModel().validateProjectInstance().getLoadedProjectFile();
+        BooleanBinding gltfSelected =
+            exportTypeComboBox.getSelectionModel().selectedItemProperty().isEqualTo(ExportType.GLTF);
+
+        generateLowResolutionCheckBox.disableProperty().bind(gltfSelected.not());
+        openViewerOnceCheckBox.disableProperty().bind(gltfSelected.not());
+
+        File loadedProjectFile = Global.state().getIOModel().validateRenderable().getLoadedProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());
@@ -102,7 +130,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
                         //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
                         Platform.runLater(() ->
                         {
-                            Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
+                            Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
                                 "Export Complete!");
                             saveInfo.setTitle("Export successful");
                             saveInfo.setHeaderText(exportLocationFile.getName());

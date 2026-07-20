@@ -14,59 +14,54 @@ package kintsugi3d.builder.core;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
+import java.io.IOException;
 
-public class ImageReplaceData
+public abstract class ImageReplaceData
 {
     private final TextureResources<?> resources;
-    private TextureDetails key;
-    private int weightmapIndex;
-    private File currentTexture;
-    private File newTexture;
+    private File currentImage;
+    private File newImage;
 
     public ImageReplaceData()
     {
         this.resources = null;
-        this.currentTexture = null;
-        this.newTexture = null;
+        this.currentImage = null;
+        this.newImage = null;
     }
 
-    public ImageReplaceData(TextureResources<?> resources, TextureDetails key, File currentTexture)
+    public ImageReplaceData(TextureResources resources)
     {
         this.resources = resources;
-        this.key = key;
-        this.currentTexture = currentTexture;
+        this.currentImage = null;
+        this.newImage = null;
     }
 
-    public ImageReplaceData(TextureResources<?> resources, int weightmapIndex, File currentTexture)
+    public abstract void replace() throws IOException;
+
+    public abstract void refreshCards();
+
+    public final TextureResources<?> getResources()
     {
-        this.resources = resources;
-        this.weightmapIndex = weightmapIndex;
-        this.currentTexture = currentTexture;
+        return resources;
     }
 
-    public TextureResources<?> getResources() { return resources; }
-
-    public TextureDetails getKey() { return key; }
-
-    public int getWeightmapIndex() { return weightmapIndex; }
-
-    public File getCurrentTexture()
+    public final File getCurrentImage()
     {
-        return currentTexture;
+        return currentImage;
     }
 
-    public void setCurrentTexture(File currentTexture)
+    final void setCurrentImage(File currentTexture)
     {
-        this.currentTexture = currentTexture;
+        this.currentImage = currentTexture;
     }
 
-    public File getNewTexture()
+    public final File getNewImage()
     {
-        return newTexture;
+        return newImage;
     }
 
-    public void setNewTexture(File newTexture)
+    public final void setNewImage(File newImage)
     {
-        this.newTexture = newTexture;
+        this.newImage = newImage;
     }
 }

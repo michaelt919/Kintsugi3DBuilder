@@ -930,7 +930,7 @@ class ImageReconstructionTests
     }
 
     private static ColorArrayImage renderGroundTruth(ReadonlyViewSet viewSet, int viewIndex,
-        Drawable<OpenGLContext> groundTruthDrawable, Framebuffer<OpenGLContext> groundTruthFBO)
+        Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
     {
         groundTruthDrawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
         groundTruthDrawable.program().setUniform("projection",

@@ -14,7 +14,6 @@ package kintsugi3d.builder.fit.settings;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.ModelExporter;
-import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporter;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
@@ -23,7 +22,6 @@ import java.util.Locale;
 public class ExportSettings
 {
     private boolean combineWeights = true;
-
     private MaterialExporterFactory exporterFactory = Kintsugi3DViewerExporterFactory.getInstance();
     private boolean exportTextures = false;
     private boolean appendModelNameToTextures = false;
@@ -117,13 +115,8 @@ public class ExportSettings
     {
         MaterialExporter materialExporter = exporterFactory.getExporter(textureResources);
         exporter.setMaterialExporter(materialExporter);
-
-        if (materialExporter instanceof Kintsugi3DViewerExporter)
-        {
-            // TODO figure out a less hacky way of doing this.
-            ((Kintsugi3DViewerExporter)materialExporter).setCombineWeights(combineWeights);
-        }
-
+        materialExporter.setFilename(filename);
+        materialExporter.setCombineWeights(combineWeights);
         materialExporter.setTextureFileFormat(textureFormat);
 
         if (generateLowResTextures)

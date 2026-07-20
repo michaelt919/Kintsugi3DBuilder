@@ -19,6 +19,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import kintsugi3d.builder.core.Global;
@@ -26,11 +27,11 @@ import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.scene.UserShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /*
@@ -42,6 +43,8 @@ import java.util.Map;
  */
 public class CarouselController
 {
+    private static final Logger LOG = LoggerFactory.getLogger(CarouselController.class);
+
     private static final int DEFAULT_HEIGHT = 180;
     private static final int MINIMIZED_HEIGHT = 23;
 
@@ -67,6 +70,8 @@ public class CarouselController
     {
         this.carouselModel = carouselModel;
         this.mainWindowBox = mainWindowBox;
+
+        carouselModel.carouselHeightProperty().bind(mainBox.heightProperty());
 
         // Bind carousel card height to the height of the JavaFX container.
         // Carousel card width will be auto-calculated from height.
@@ -206,8 +211,6 @@ public class CarouselController
             cardController.init(carouselModel, shader, this);
 
             HBox.setHgrow(card, Priority.ALWAYS);
-
-            carouselModel.carouselCardHeightProperty().bind(mainBox.heightProperty());
 
             card.prefWidthProperty().bind(carouselModel.carouselCardWidthProperty());
             card.maxWidthProperty().bind(carouselModel.carouselCardWidthProperty());
@@ -384,7 +387,7 @@ public class CarouselController
 
         if(wasScrollBarNeeded)
         {
-            carouselScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            carouselScrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         }
     }
 
@@ -442,11 +445,11 @@ public class CarouselController
 
             if (isScrollBarNeeded())
             {
-                carouselScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                carouselScrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
             }
             else
             {
-                carouselScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                carouselScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
             }
         });
     }

@@ -34,7 +34,7 @@ public class AutosaveSettingsController implements SystemSettingsControllerBase
     private Window parentWindow;
 
     @Override
-    public void initializeSettingsPage(Window parentWindow, JavaFXState state)
+    public void initializePage(Window parentWindow, JavaFXState state)
     {
         this.parentWindow = parentWindow;
 

@@ -18,6 +18,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.javafx.controllers.sidebar.CarouselCardController;
 import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
 import kintsugi3d.builder.state.CanvasModel;
@@ -25,6 +26,11 @@ import kintsugi3d.builder.state.CanvasModelImpl;
 import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.vecmath.IntVector2;
+import kintsugi3d.gl.window.CanvasSize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
@@ -35,16 +41,60 @@ And another to add a shader to the carousel list.
  */
 public class ObservableCarouselModel implements CarouselModel
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ObservableCarouselModel.class);
+
     public static final int DEFAULT_CARD_WIDTH = 210;
     public static final int DEFAULT_CARD_HEIGHT = 160;
 
+    public static final int CARD_SAFE_REGION_BOTTOM_MARGIN = 30;
+
     private final ObservableList<CarouselItem> carouselItems = FXCollections.observableArrayList();
 
+    private final DoubleProperty carouselHeight = new SimpleDoubleProperty(DEFAULT_CARD_HEIGHT);
     private final DoubleProperty carouselCardHeight = new SimpleDoubleProperty(DEFAULT_CARD_HEIGHT);
 
     // Auto-calculate card width from card height, preserving aspect ratio.
     private final DoubleBinding carouselCardWidth =
-        carouselCardHeight.multiply((double)DEFAULT_CARD_WIDTH / (double)DEFAULT_CARD_HEIGHT);
+        carouselCardHeight.multiply((double) DEFAULT_CARD_WIDTH / (double) DEFAULT_CARD_HEIGHT);
+
+    public ObservableCarouselModel()
+    {
+        // Wait for the global state to be initialized.
+        Platform.runLater(() ->
+        {
+            // Adjust safe region for main view when window is resized.
+            Global.state().getMainCanvasModel().addCanvasChangedListener(
+                // Bind directly to framebuffer size (not canvas size)
+                // to ensure that its always in sync with the rendering framebuffer and reduce jittering.
+                framebufferCanvas -> framebufferCanvas.addFramebufferSizeListener(
+                    (canvas, width, height) ->
+                        refreshMainViewSafeRegion(canvas.getSizeForDisplay())));
+        });
+
+        carouselHeight.addListener((observable, oldValue, newValue) ->
+        {
+            // Refresh safe region for main view
+            refreshMainViewSafeRegion();
+        });
+    }
+
+    private void refreshMainViewSafeRegion()
+    {
+        refreshMainViewSafeRegion(Global.state().getMainCanvasModel().getCanvas().getSizeForDisplay());
+    }
+
+    private void refreshMainViewSafeRegion(CanvasSize mainViewSize)
+    {
+        RenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
+        if (instance != null)
+        {
+            int carouselHeightRounded = (int) Math.round(carouselHeight.get());
+
+            instance.setSafeRegion(
+                new IntVector2(0, 0),
+                new IntVector2(mainViewSize.width, mainViewSize.height - carouselHeightRounded));
+        }
+    }
 
     /**
      * returns the list of items (shader + canvas backend reference) currently held in global carousel model.
@@ -54,6 +104,16 @@ public class ObservableCarouselModel implements CarouselModel
     public ObservableList<CarouselItem> getCarouselItems()
     {
         return carouselItems;
+    }
+
+    public double getCarouselHeight()
+    {
+        return carouselHeight.get();
+    }
+
+    public DoubleProperty carouselHeightProperty()
+    {
+        return carouselHeight;
     }
 
     public double getCarouselCardHeight()
@@ -89,12 +149,28 @@ public class ObservableCarouselModel implements CarouselModel
         // then shader is sent to carousel
         if (carouselItems.stream().noneMatch(item -> Objects.equals(item.getShader(), shader)))
         {
+            int initWidth = (int) Math.round(getCarouselCardWidth());
+            int initHeight = (int) Math.round(getCarouselCardHeight());
+
             // Set up the rendering backend for the card.
             // GPU resource allocation will happen within a Rendering.runLater call on the graphcs thread.
             Global.state().getCanvasListModel().createCanvas(shader,
-                (int)Math.round(getCarouselCardWidth()), (int)Math.round(getCarouselCardHeight()),
+                initWidth, initHeight,
+                0, 0, initWidth, getCardSafeEndY(initHeight),
                 framebufferCanvas ->
                 {
+                    // Bind directly to resize listener to ensure that we are synchronized with the buffer swap cycle.
+                    framebufferCanvas.addResizeListener(framebuffer ->
+                    {
+                        FramebufferSize size = framebuffer.getSize();
+
+                        // Refresh safe region for card
+                        RenderableInstance<?> carouselInstance = Global.state().getIOModel().getRenderableForShader(shader);
+                        carouselInstance.setSafeRegion(
+                            new IntVector2(0, 0),
+                            new IntVector2(size.width, getCardSafeEndY(size.height)));
+                    });
+
                     // Create a CanvasModel for connecting JavaFX to the backend.
                     CanvasModel canvas = new CanvasModelImpl();
                     canvas.setCanvas(framebufferCanvas);
@@ -103,11 +179,16 @@ public class ObservableCarouselModel implements CarouselModel
                     // Use Platform runLater to set up the card on the JavaFX side.
                     Platform.runLater(() ->
                     {
-                         // This will trigger the FXML to load via observer and subsequently connect to the backend.
+                        // This will trigger the FXML to load via observer and subsequently connect to the backend.
                         carouselItems.add(new CarouselItem(shader, canvas));
                     });
                 });
         }
+    }
+
+    private static int getCardSafeEndY(int fullHeight)
+    {
+        return fullHeight - CARD_SAFE_REGION_BOTTOM_MARGIN;
     }
 
     /**
@@ -125,6 +206,12 @@ public class ObservableCarouselModel implements CarouselModel
 
             // Clean up the rendering backend for the card.
             Global.state().getCanvasListModel().removeCanvas(shader);
+
+            if (carouselItems.isEmpty())
+            {
+                // Recenter main view if the carousel is gone.
+                refreshMainViewSafeRegion();
+            }
         }
     }
 
@@ -134,13 +221,19 @@ public class ObservableCarouselModel implements CarouselModel
     @Override
     public void clearCarousel()
     {
-        // Remove all shaders from rendering backend.
-        for (CarouselItem item : carouselItems)
+        if (!carouselItems.isEmpty())
         {
-            Global.state().getCanvasListModel().removeCanvas(item.getShader());
-        }
+            // Remove all shaders from rendering backend.
+            for (CarouselItem item : carouselItems)
+            {
+                Global.state().getCanvasListModel().removeCanvas(item.getShader());
+            }
 
-        carouselItems.clear();
+            carouselItems.clear();
+
+            // Recenter main view now that the carousel is gone.
+            refreshMainViewSafeRegion();
+        }
     }
 
     private void swapCards(int index1, int index2, CarouselController carouselController)
@@ -178,7 +271,7 @@ public class ObservableCarouselModel implements CarouselModel
                 return item;
             }
         }
-        
+
         return null;
     }
 

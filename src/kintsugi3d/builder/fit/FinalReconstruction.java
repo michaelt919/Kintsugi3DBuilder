@@ -128,7 +128,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    private void saveImageToFile(File outputDirectory, int k, Framebuffer<ContextType> framebuffer)
+    private void saveImageToFile(File outputDirectory, int k, ReadableFramebuffer<ContextType> framebuffer)
     {
         try
         {
@@ -141,7 +141,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    private void saveImageToFile(File outputDirectory, String filename, Framebuffer<ContextType> framebuffer)
+    private void saveImageToFile(File outputDirectory, String filename, ReadableFramebuffer<ContextType> framebuffer)
     {
         try
         {

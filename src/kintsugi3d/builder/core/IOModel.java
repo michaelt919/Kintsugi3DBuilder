@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,6 +16,7 @@ import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.EncodableColorImage;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -171,6 +172,11 @@ public class IOModel
         return progressMonitor;
     }
 
+    public IOHandler getLoadingHandler()
+    {
+        return handler;
+    }
+
     public void setLoadingHandler(IOHandler handler)
     {
         this.handler = handler;
@@ -187,14 +193,19 @@ public class IOModel
         this.imageLoadOptionsModel = imageLoadOptionsModel;
     }
 
+    public RenderableInstance<?> getRenderableForShader(UserShader shader)
+    {
+        return this.handler.getRenderableForShader(shader);
+    }
+
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
     {
         this.handler.addViewSetLoadCallback(callback);
     }
 
-    public void addProjectInstanceLoadCallback(Consumer<ProjectInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
-        this.handler.addProjectInstanceLoadCallback(callback);
+        this.handler.addMainRenderableLoadCallback(callback);
     }
 
     public ViewSet getLoadedViewSet()
@@ -202,9 +213,9 @@ public class IOModel
         return this.handler.getLoadedViewSet();
     }
 
-    public ProjectInstance<?> getLoadedProjectInstance()
+    public RenderableInstance<?> getMainRenderable()
     {
-        return this.handler.getLoadedProjectInstance();
+        return this.handler.getMainRenderable();
     }
 
     public File getLoadedProjectFile()
@@ -421,9 +432,9 @@ public class IOModel
         this.handler.unload();
     }
 
-    public boolean hasLoadedProjectInstance()
+    public boolean hasLoadedRenderable()
     {
-        return this.handler != null && this.handler.isInstanceLoaded();
+        return this.handler != null && this.handler.isRenderableLoaded();
     }
 
     public boolean hasValidHandler()
@@ -435,9 +446,9 @@ public class IOModel
      * Checks if this has a valid project instance loaded.  Otherwise, throws an IllegalStateException.
      * @return This model if it has a valid project instance.
      */
-    public IOModel validateProjectInstance()
+    public IOModel validateRenderable()
     {
-        if (!hasLoadedProjectInstance())
+        if (!hasLoadedRenderable())
         {
             throw new IllegalStateException("No project loaded.");
         }

@@ -24,7 +24,7 @@ public class ReplaceImage extends ExperienceBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ReplaceImage.class);
 
-    private ImageReplaceData currentData = new ImageReplaceData();
+    private ImageReplaceData currentData;
 
     public ReplaceImage()
     {
@@ -36,7 +36,7 @@ public class ReplaceImage extends ExperienceBase
         IOModel ioModel = Global.state().getIOModel();
         if (ioModel.hasValidHandler()) // might not be valid immediately as the rendering thread is booting up
         {
-            ioModel.addProjectInstanceLoadCallback(instance ->
+            ioModel.addMainRenderableLoadCallback(instance ->
                 instance.setUserImageReplaceHandler(replaceData ->
                 {
                     this.currentData = replaceData;
