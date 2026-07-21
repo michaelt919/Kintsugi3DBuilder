@@ -13,6 +13,7 @@ package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
@@ -305,12 +306,17 @@ public class ImageDetailsController
             double deltaY = currentMouseY - mousePressedY;
 
             // Scale coordinates matching actual pixel image amount
-            double displayWidth = stackPane.getWidth();
-            double scale = currentWidth / displayWidth;
+            Bounds bounds = displayImage.getBoundsInParent();
+
+            double renderedWidth = bounds.getWidth();
+            double renderedHeight = bounds.getHeight();
+
+            double scaleX = currentWidth / renderedWidth;
+            double scaleY = currentHeight / renderedHeight;
 
             //Target X and Y will contain the location on actual image after the scale we are trying to reach
-            double targetX = startViewportX - (deltaX * scale);
-            double targetY = startViewportY - (deltaY * scale);
+            double targetX = startViewportX - (deltaX * scaleX);
+            double targetY = startViewportY - (deltaY * scaleY);
 
             // Gets the max X and Y we can be at
             double maxX = currentImage.getWidth() - currentWidth;
@@ -394,11 +400,30 @@ public class ImageDetailsController
             double actualWidth = selectionBox.getWidth() * scaleX;
             double actualHeight = selectionBox.getHeight() * scaleY;
 
-            // Prevents the position from ever being out of bounds (Should already be accounted for, but just in case)
-            currentX = Math.max(0, Math.min(actualX, currentImage.getWidth() - actualWidth));
-            currentY = Math.max(0, Math.min(actualY, currentImage.getHeight() - actualHeight));
-            currentWidth = actualWidth;
-            currentHeight = actualHeight;
+            //Adjusts selection to keep the same aspect ratio. Will always be same size
+            double centerX = actualX + actualWidth / 2.0;
+            double centerY = actualY + actualHeight / 2.0;
+            double viewAspect = stackPane.getWidth() / stackPane.getHeight();
+            double viewportWidth = actualWidth;
+            double viewportHeight = actualHeight;
+
+            if (viewportWidth / viewportHeight < viewAspect)
+            {
+                viewportWidth = viewportHeight * viewAspect;
+            }
+            else
+            {
+                viewportHeight = viewportWidth / viewAspect;
+            }
+
+            currentX = centerX - viewportWidth / 2.0;
+            currentY = centerY - viewportHeight / 2.0;
+            currentWidth = viewportWidth;
+            currentHeight = viewportHeight;
+
+            //Clamps selection box to prevent out of bounds.
+            currentX = Math.max(0, Math.min(currentX, currentImage.getWidth() - currentWidth));
+            currentY = Math.max(0, Math.min(currentY, currentImage.getHeight() - currentHeight));
 
             // changes viewport to selection rectangle
             displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
