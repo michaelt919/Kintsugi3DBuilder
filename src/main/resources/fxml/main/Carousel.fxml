@@ -38,7 +38,10 @@
                     AnchorPane.rightAnchor="0.0"
                     AnchorPane.topAnchor="0.0"
                     vbarPolicy="NEVER"
+                    hbarPolicy="ALWAYS"
+                    styleClass="carousel-scroll-pane"
                     style="-fx-background-color: transparent;"
+                    id="carouselScrollPane"
                     fx:id = "carouselScrollPane">
             <content>
                 <HBox fx:id="containerHBox"
@@ -89,7 +92,7 @@
                 onMousePressed="#mousePressed"
                 onMouseDragged="#mouseDragged"
                 onMouseReleased="#mouseReleased"/>
-        <HBox pickOnBounds="false" minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="-30.0">
+        <HBox pickOnBounds="false" minHeight="20" maxHeight = "20" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="-20.0">
             <Button
                     fx:id = "miniButton"
                     text = "-"

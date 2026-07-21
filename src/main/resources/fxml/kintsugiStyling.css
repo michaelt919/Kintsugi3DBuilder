@@ -795,3 +795,9 @@
     -fx-background-color: #CECECE; /*Check mark background when selected*/
     -fx-effect: dropshadow(three-pass-box, black, .75, .75, 0, 0); /*Check mark black outline*/
 }
+#carouselScrollPane .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+#carouselScrollPane.hide-hbar .scroll-bar:horizontal {
+    -fx-opacity: 1.0;
+}
