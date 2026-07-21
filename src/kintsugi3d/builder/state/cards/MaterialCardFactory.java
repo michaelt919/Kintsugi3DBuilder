@@ -64,8 +64,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
             cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
-        return new ShaderDataCard(resources.getBasisResources().getBasis().getName(cardIndex),
-            String.format("Material %s", resources.getBasisResources().getBasis().getName(cardIndex)), shader, thumbnailPath, Map.of(),
+        return new ShaderDataCard(resources.getBasisResources().getBasis().getDisplayName(cardIndex),
+            String.format("Material %s", resources.getBasisResources().getBasis().getDisplayName(cardIndex)), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
                     "Highlight Material", () ->

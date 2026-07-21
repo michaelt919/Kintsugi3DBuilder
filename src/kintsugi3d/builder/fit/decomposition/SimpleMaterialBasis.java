@@ -35,6 +35,7 @@ public class SimpleMaterialBasis implements MaterialBasis
     private final List<double[]> disabledRedBasis;
     private final List<double[]> disabledGreenBasis;
     private final List<double[]> disabledBlueBasis;
+
     private final List<String> disabledNames;
 
     private int materialCount;
@@ -76,6 +77,28 @@ public class SimpleMaterialBasis implements MaterialBasis
         disabledNames = new ArrayList<>(0);
     }
 
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
+    public SimpleMaterialBasis(List<String> names, List<DoubleVector3> diffuseColors,
+                               List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis,
+                               List<String> disabledNames, List<DoubleVector3> disabledDiffuseColors,
+                               List<double[]> disabledRedBasis, List<double[]> disabledGreenBasis, List<double[]> disabledBlueBasis)
+    {
+        this.diffuseColors = diffuseColors;
+        this.redBasis = redBasis;
+        this.greenBasis = greenBasis;
+        this.blueBasis = blueBasis;
+        this.names = names;
+
+        this.disabledDiffuseColors = disabledDiffuseColors;
+        this.disabledRedBasis = disabledRedBasis;
+        this.disabledGreenBasis = disabledGreenBasis;
+        this.disabledBlueBasis = disabledBlueBasis;
+        this.disabledNames = disabledNames;
+
+        this.materialCount = redBasis.size() + disabledRedBasis.size();
+        this.specularResolution = redBasis.get(0).length - 1;
+    }
+
     @Override
     public String getName(int b)
     {
@@ -83,9 +106,31 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
+    public String getDisplayName(int cardIndex)
+    {
+        if (cardIndex < names.size())
+        {
+            return names.get(cardIndex);
+        }
+        else
+        {
+            return disabledNames.get(cardIndex - names.size());
+        }
+    }
+
+    @Override
     public DoubleVector3 getDiffuseColor(int b)
     {
-        return diffuseColors.get(b);
+        int index = names.indexOf(Integer.toString(b));
+        if (index != -1)
+        {
+            return diffuseColors.get(index);
+        }
+        else
+        {
+            index = disabledNames.indexOf(Integer.toString(b));
+            return disabledDiffuseColors.get(index);
+        }
     }
 
     @Override
@@ -97,19 +142,46 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public double evaluateSpecularRed(int b, int m)
     {
-        return redBasis.get(b)[m];
+        int index = names.indexOf(Integer.toString(b));
+        if (index != -1)
+        {
+            return redBasis.get(index)[m];
+        }
+        else
+        {
+            index = disabledNames.indexOf(Integer.toString(b));
+            return disabledRedBasis.get(index)[m];
+        }
     }
 
     @Override
     public double evaluateSpecularGreen(int b, int m)
     {
-        return greenBasis.get(b)[m];
+        int index = names.indexOf(Integer.toString(b));
+        if (index != -1)
+        {
+            return greenBasis.get(index)[m];
+        }
+        else
+        {
+            index = disabledNames.indexOf(Integer.toString(b));
+            return disabledGreenBasis.get(index)[m];
+        }
     }
 
     @Override
     public double evaluateSpecularBlue(int b, int m)
     {
-        return blueBasis.get(b)[m];
+        int index = names.indexOf(Integer.toString(b));
+        if (index != -1)
+        {
+            return blueBasis.get(index)[m];
+        }
+        else
+        {
+            index = disabledNames.indexOf(Integer.toString(b));
+            return disabledBlueBasis.get(index)[m];
+        }
     }
 
     @Override
@@ -138,12 +210,13 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public void save(File outputDirectory, String filenameOverride)
     {
-        SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory, filenameOverride);
+        SpecularFitSerializer.serializeBasisFunctions(redBasis.size() + disabledRedBasis.size(), specularResolution, this, outputDirectory, filenameOverride);
     }
 
     @Override
     public MaterialBasis copy()
     {
+        // TODO: add disabled lists copy support
         return new SimpleMaterialBasis(diffuseColors.toArray(DoubleVector3[]::new),
             List.copyOf(redBasis), List.copyOf(greenBasis), List.copyOf(blueBasis));
     }

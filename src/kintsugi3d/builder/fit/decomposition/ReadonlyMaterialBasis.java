@@ -28,6 +28,8 @@ public interface ReadonlyMaterialBasis
 
     String getName(int b);
 
+    String getDisplayName(int cardIndex);
+
     List<DoubleVector3> getDiffuseColors();
 
     /**
@@ -60,6 +62,8 @@ public interface ReadonlyMaterialBasis
     int getMaterialCount();
 
     int getSpecularResolution();
+
+    boolean getIsEnabled(int b);
 
     void save(File outputDirectory, String filenameOverride);
 

@@ -101,9 +101,31 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             }
 
             @Override
+            public String getDisplayName(int cardIndex)
+            {
+                if (cardIndex < names.size())
+                {
+                    return names.get(cardIndex);
+                }
+                else
+                {
+                    return disabledNames.get(cardIndex - names.size());
+                }
+            }
+
+            @Override
             public DoubleVector3 getDiffuseColor(int b)
             {
-                return diffuseAlbedos.get(b);
+                int index = names.indexOf(Integer.toString(b));
+                if (index != -1)
+                {
+                    return diffuseAlbedos.get(index);
+                }
+                else
+                {
+                    index = disabledNames.indexOf(Integer.toString(b));
+                    return disabledDiffuseAlbedos.get(index);
+                }
             }
 
             @Override
@@ -115,19 +137,46 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public double evaluateSpecularRed(int b, int m)
             {
-                return specularRed.get(m, b);
+                int index = names.indexOf(Integer.toString(b));
+                if (index != -1)
+                {
+                    return specularRed.get(m, index);
+                }
+                else
+                {
+                    index = disabledNames.indexOf(Integer.toString(b));
+                    return specularRed.get(m, index);
+                }
             }
 
             @Override
             public double evaluateSpecularGreen(int b, int m)
             {
-                return specularGreen.get(m, b);
+                int index = names.indexOf(Integer.toString(b));
+                if (index != -1)
+                {
+                    return specularGreen.get(m, index);
+                }
+                else
+                {
+                    index = disabledNames.indexOf(Integer.toString(b));
+                    return specularGreen.get(m, index);
+                }
             }
 
             @Override
             public double evaluateSpecularBlue(int b, int m)
             {
-                return specularBlue.get(m, b);
+                int index = names.indexOf(Integer.toString(b));
+                if (index != -1)
+                {
+                    return specularBlue.get(m, index);
+                }
+                else
+                {
+                    index = disabledNames.indexOf(Integer.toString(b));
+                    return specularBlue.get(m, index);
+                }
             }
 
             @Override

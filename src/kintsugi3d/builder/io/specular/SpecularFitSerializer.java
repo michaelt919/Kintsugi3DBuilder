@@ -98,7 +98,15 @@ public final class SpecularFitSerializer
         {
             for (int b = 0; b < basisCount; b++)
             {
-                out.printf("Red#%d", b);
+                boolean isEnabled = basis.getIsEnabled(b);
+                if (isEnabled)
+                {
+                    out.printf("Red#%d", b);
+                }
+                else
+                {
+                    out.printf("RedDisabled#%d", b);
+                }
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
@@ -106,7 +114,14 @@ public final class SpecularFitSerializer
                 }
                 out.println();
 
-                out.printf("Green#%d", b);
+                if (isEnabled)
+                {
+                    out.printf("Green#%d", b);
+                }
+                else
+                {
+                    out.printf("GreenDisabled#%d", b);
+                }
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
@@ -114,7 +129,14 @@ public final class SpecularFitSerializer
                 }
                 out.println();
 
-                out.printf("Blue#%d", b);
+                if (isEnabled)
+                {
+                    out.printf("Blue#%d", b);
+                }
+                else
+                {
+                    out.printf("BlueDisabled#%d", b);
+                }
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
@@ -125,8 +147,16 @@ public final class SpecularFitSerializer
 
             for (int b = 0; b < basisCount; b++)
             {
+
                 DoubleVector3 diffuseColor = basis.getDiffuseColor(b);
-                out.printf("Diffuse#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                if (basis.getIsEnabled(b))
+                {
+                    out.printf("Diffuse#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                }
+                else
+                {
+                    out.printf("DiffuseDisabled#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                }
                 out.println();
             }
         }
@@ -173,9 +203,15 @@ public final class SpecularFitSerializer
             {
                 in.useLocale(Locale.ROOT);
 
+                List<String> names = new ArrayList<>(8);
+                List<String> disabledNames = new ArrayList<>(8);
+
                 List<double[]> specularRedBasis = new ArrayList<>(8);
                 List<double[]> specularGreenBasis = new ArrayList<>(8);
                 List<double[]> specularBlueBasis = new ArrayList<>(8);
+                List<double[]> disabledSpecularRedBasis = new ArrayList<>(8);
+                List<double[]> disabledSpecularGreenBasis = new ArrayList<>(8);
+                List<double[]> disabledSpecularBlueBasis = new ArrayList<>(8);
 
                 in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
 
@@ -184,15 +220,23 @@ public final class SpecularFitSerializer
                 while (!currentTag.startsWith("Diffuse") && in.hasNext()) // stop at end of file or if diffuse albedos found
                 {
                     // Beginning a new basis function for each RGB component.
-                    specularRedBasis.add(new double[numElements]);
-                    specularGreenBasis.add(new double[numElements]);
-                    specularBlueBasis.add(new double[numElements]);
 
                     if (currentTag.equals(String.format("Red#%d", b)))
                     {
+                        names.add(Integer.toString(b));
+                        specularRedBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {
-                            specularRedBasis.get(b)[m] = in.nextDouble();
+                            specularRedBasis.get(specularRedBasis.size() - 1)[m] = in.nextDouble();
+                        }
+                    }
+                    else if (currentTag.equals(String.format("RedDisabled#%d", b)))
+                    {
+                        disabledNames.add(Integer.toString(b));
+                        disabledSpecularRedBasis.add(new double[numElements]);
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            disabledSpecularRedBasis.get(disabledSpecularRedBasis.size() - 1)[m] = in.nextDouble();
                         }
                     }
                     else
@@ -204,9 +248,18 @@ public final class SpecularFitSerializer
                     currentTag = in.next();
                     if (currentTag.equals(String.format("Green#%d", b)))
                     {
+                        specularGreenBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {
-                            specularGreenBasis.get(b)[m] = in.nextDouble();
+                            specularGreenBasis.get(specularGreenBasis.size() - 1)[m] = in.nextDouble();
+                        }
+                    }
+                    else if (currentTag.equals(String.format("GreenDisabled#%d", b)))
+                    {
+                        disabledSpecularGreenBasis.add(new double[numElements]);
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            disabledSpecularGreenBasis.get(disabledSpecularGreenBasis.size() - 1)[m] = in.nextDouble();
                         }
                     }
                     else
@@ -218,9 +271,18 @@ public final class SpecularFitSerializer
                     currentTag = in.next(); // "Blue#{b}"
                     if (currentTag.equals(String.format("Blue#%d", b)))
                     {
+                        specularBlueBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {
-                            specularBlueBasis.get(b)[m] = in.nextDouble();
+                            specularBlueBasis.get(specularBlueBasis.size() - 1)[m] = in.nextDouble();
+                        }
+                    }
+                    else if (currentTag.equals(String.format("BlueDisabled#%d", b)))
+                    {
+                        disabledSpecularBlueBasis.add(new double[numElements]);
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            disabledSpecularBlueBasis.get(disabledSpecularBlueBasis.size() - 1)[m] = in.nextDouble();
                         }
                     }
                     else
@@ -238,14 +300,19 @@ public final class SpecularFitSerializer
                     b++;
                 }
 
-                DoubleVector3[] diffuseBasis = new DoubleVector3[b]; // "b" is the number of specular basis functions from the earlier loop
+                List<DoubleVector3> diffuseBasis = new ArrayList<>(b); // "b" is the number of specular basis functions from the earlier loop
+                List<DoubleVector3> disabledDiffuseBasis = new ArrayList<>(b); // "b" is the number of specular basis functions from the earlier loop
                 int diffuseCount = 0;
 
                 while (in.hasNext()) // parse diffuse albedos if found
                 {
                     if (currentTag.equals(String.format("Diffuse#%d", diffuseCount)))
                     {
-                        diffuseBasis[diffuseCount] = new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble());
+                        diffuseBasis.add(new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
+                    }
+                    else if (currentTag.equals(String.format("DiffuseDisabled#%d", diffuseCount)))
+                    {
+                        disabledDiffuseBasis.add(new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
                     }
                     else
                     {
@@ -262,16 +329,18 @@ public final class SpecularFitSerializer
                     diffuseCount++;
                 }
 
-                while (diffuseCount < diffuseBasis.length)
+                while (diffuseCount < diffuseBasis.size())
                 {
                     // Default to black if not found
-                    diffuseBasis[diffuseCount] = DoubleVector3.ZERO;
+                    diffuseBasis.add(DoubleVector3.ZERO);
                     diffuseCount++;
                 }
 
                 return new SimpleMaterialBasis(
-                    diffuseBasis,
-                    specularRedBasis, specularGreenBasis, specularBlueBasis);
+                    names, diffuseBasis,
+                    specularRedBasis, specularGreenBasis, specularBlueBasis,
+                    disabledNames, disabledDiffuseBasis,
+                    disabledSpecularRedBasis, disabledSpecularGreenBasis, disabledSpecularBlueBasis);
             }
         }
         else
