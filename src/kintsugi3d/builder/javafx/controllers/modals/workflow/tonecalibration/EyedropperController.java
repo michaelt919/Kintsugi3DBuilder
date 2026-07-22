@@ -15,9 +15,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -28,6 +28,7 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -63,41 +64,43 @@ public class EyedropperController extends NonDataPageControllerBase
     private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
     @FXML private VBox eydropperImageRoot;
+    @FXML private VBox outerVbox;
+
     @FXML private GridPane curveValuesRoot;
 
-    @FXML private ImageDetailsController imageDetailsController;
-
-    @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
-    @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
-    @FXML private Button cropButton; //appears below the choose new image button --> hidden upon opening
+    @FXML private Pane selectionPane;
 
     @FXML private Rectangle selectionRectangle;
-
     @FXML private Rectangle finalSelectRect1, finalSelectRect2, finalSelectRect3, finalSelectRect4, finalSelectRect5, finalSelectRect6;
-    private List<Rectangle> finalSelectRectangles;
-
-    @FXML private Button button1, button2, button3, button4, button5, button6;
-
-    private boolean isCropping; // enabled by crop button and disabled when cropping is finished
-    private boolean isSelecting; // enabled by "Select Tone Patch" buttons and disabled when selection is finished
-    private boolean canResetCrop; // enabled when cropping is finished and disabled when crop is reset to default viewport
-    static final String DEFAULT_BUTTON_TEXT = "Select Tone Patch";
-
-    @FXML private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
-    private List<TextField> colorSelectTxtFields;
-
-    @FXML private Label colorLabel;
-
-    private List<Color> selectedColors;
-    @FXML private ImageView colorPickerImgView;
-    private final ObjectProperty<Image> selectedFile = new SimpleObjectProperty<>(null);
-
-    @FXML private VBox outerVbox;
 
     @FXML private CheckBox useCurveCheckbox;
     @FXML private CheckBox distanceCompensationCheckbox; // inverse-square attenuation
-    private final BooleanProperty infiniteLightSources = new SimpleBooleanProperty(); // opposite of distance compensation
     @FXML private CheckBox flatfieldCheckbox;
+
+    @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
+    @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
+    @FXML private Button button1, button2, button3, button4, button5, button6;
+
+    @FXML private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
+
+    @FXML private Label colorLabel;
+
+    @FXML private ImageDetailsController imageDetailsController;
+
+    private Button sourceButton;
+
+    private List<Rectangle> finalSelectRectangles;
+
+    private List<TextField> colorSelectTxtFields;
+
+    private List<Color> selectedColors;
+
+    static final String DEFAULT_BUTTON_TEXT = "Select Tone Patch";
+
+    private boolean isSelecting; // enabled by "Select Tone Patch" buttons and disabled when selection is finished
+
+    private final ObjectProperty<Image> selectedFile = new SimpleObjectProperty<>(null);
+    private final BooleanProperty infiniteLightSources = new SimpleBooleanProperty(); // opposite of distance compensation
 
     // For flatfield setting
     private final LiveProjectSettingsManager projectSettingsManager = new LiveProjectSettingsManager();
@@ -105,7 +108,8 @@ public class EyedropperController extends NonDataPageControllerBase
     // Use short to avoid sign issues
     private byte[] prevEncodedLuminanceValues;
 
-    private Button sourceButton;
+    private double anchorX;
+    private double anchorY;
 
     /**
      * Set to true after the first time the warning about using multiple images for tone calibration has been shown
@@ -127,12 +131,12 @@ public class EyedropperController extends NonDataPageControllerBase
     @Override
     public void initPage()
     {
-        colorPickerImgView.setPreserveRatio(true);
-        colorPickerImgView.setSmooth(true);
+        //Image settings/looks
+        imageDetailsController.getDisplayImage().setPreserveRatio(true);
+        imageDetailsController.getDisplayImage().setSmooth(true);
 
         isSelecting = false;
-        isCropping = false;
-        canResetCrop = false;
+        selectionPane.setMouseTransparent(true); //Prevent pane from absorbing clicks
 
         selectedColors = new ArrayList<>(6);
 
@@ -312,38 +316,86 @@ public class EyedropperController extends NonDataPageControllerBase
         return new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
     }
 
+    /**
+     * Shows selection rectangle
+     * Gets starting coordinates (anchorX & anchorY)
+     * Sets selection Rectangle to default values
+     * Clears selected colors
+     * @param event
+     */
     @FXML
     private void handleMousePressed(MouseEvent event)
     {
-        //TODO: IF USER SELECTS AREA OUTSIDE OF IMAGE, SHIFT SELECTION BOX INSIDE IMAGE
-        if (isSelecting || isCropping)
+        if (isSelecting) //In selection state
         {
+            //Get original pressed location and set selection rectangle to visible
             selectionRectangle.setVisible(true);
-            double x = event.getX();
-            double y = event.getY();
-            selectionRectangle.setX(x);
-            selectionRectangle.setY(y);
+            anchorX = event.getX();
+            anchorY = event.getY();
+
+            //Set selection rectangle to default values
+            selectionRectangle.setTranslateX(0);
+            selectionRectangle.setTranslateY(0);
+            selectionRectangle.setX(anchorX);
+            selectionRectangle.setY(anchorY);
             selectionRectangle.setWidth(0);
             selectionRectangle.setHeight(0);
+
+            //Clear selected colors
             selectedColors.clear();
         }
     }
 
+    /**
+     * If in selection state will update selection rectangle with new coordinates
+     * @param event
+     */
     @FXML
     private void handleMouseDragged(MouseEvent event)
     {
-        if (isSelecting || isCropping)
+        if (isSelecting) //In selection state
         {
-            double x = event.getX();
-            double y = event.getY();
-            double width = x - selectionRectangle.getX();
-            double height = y - selectionRectangle.getY();
+            //Current mouse locations
+            double currentMouseX = event.getX();
+            double currentMouseY = event.getY();
 
-            selectionRectangle.setWidth(width);
-            selectionRectangle.setHeight(height);
+            ImageView imageView = imageDetailsController.getDisplayImage(); //ImageView in imageDetails
+
+            // Takes image view coordinates and translates them to selectionPane coordinates
+            Bounds imgBoundsInSelectionPane = selectionPane.sceneToLocal(imageView.localToScene(imageView.getBoundsInLocal()));
+
+            //Max and min locations
+            double imageMinX = imgBoundsInSelectionPane.getMinX();
+            double imageMinY = imgBoundsInSelectionPane.getMinY();
+            double imageMaxX = imgBoundsInSelectionPane.getMaxX();
+            double imageMaxY = imgBoundsInSelectionPane.getMaxY();
+
+            // Clamp starting anchor dragging coordinates
+            double clampedStartX = Math.max(imageMinX, Math.min(anchorX, imageMaxX));
+            double clampedStartY = Math.max(imageMinY, Math.min(anchorY, imageMaxY));
+
+            double clampedMouseX = Math.max(imageMinX, Math.min(currentMouseX, imageMaxX));
+            double clampedMouseY = Math.max(imageMinY, Math.min(currentMouseY, imageMaxY));
+
+            // Lets selection box be in any direction always uses the min of current spot and
+            // original spot to find top left position then gets width and height normally
+            double boxX = Math.min(clampedStartX, clampedMouseX);
+            double boxY = Math.min(clampedStartY, clampedMouseY);
+            double boxWidth = Math.abs(clampedMouseX - clampedStartX);
+            double boxHeight = Math.abs(clampedMouseY - clampedStartY);
+
+            //Sets selection rectangle to the coordinates found above
+            selectionRectangle.setX(boxX);
+            selectionRectangle.setY(boxY);
+            selectionRectangle.setWidth(boxWidth);
+            selectionRectangle.setHeight(boxHeight);
         }
     }
 
+    /**
+     * If in selection state will get avg color from the selection rectangle and will give it
+     * color tone then displays color to user and hides the selection rectangle
+     */
     @FXML
     private void handleMouseReleased()
     {
@@ -354,130 +406,98 @@ public class EyedropperController extends NonDataPageControllerBase
             // Set the color label text
             colorLabel.setText(String.format("Selected Tone [0-255]: %d", Math.round(getGreyScaleDouble(averageColor))));
 
-            //display average color to user, change text for corresponding text field
+            //display average color to user
             addSelectedColor(averageColor);
-        }
 
-        if (isCropping)
+            selectionRectangle.setVisible(false); //Make selection rectangle invisible again
+        }
+    }
+
+    /**
+     * If overlay is active, selectionPane catches mouse events.
+     * If not active, ImageDetails catches mouse events
+     * @param active
+     */
+    private void setOverlayActive(boolean active)
+    {
+        selectionPane.setMouseTransparent(!active); //Mouse transparency set to opposite of active
+
+        //Also sets mouse transparency, but the method in image details reverses it again
+        //So while selection pane is active, image detail not active and vis-versa
+        imageDetailsController.setMouseInteractionEnabled(!active);
+
+        if (!active)//If active is false
         {
-            canResetCrop = true;
-            cropImage();
+            selectionRectangle.setVisible(false); //selection rectangle is not visible
         }
-    }
-
-    @FXML
-    private void enterCropMode()
-    {
-        //same button is used for cropping and resetting cropping
-        if (canResetCrop)
-        {//button text is "Reset Crop"
-            resetCrop();
-        }
-        else
-        {//button text is "Crop"
-            cropButton.setText("Cropping...");
-            cropButton.getStyleClass().add("button-selected");
-            isCropping = true;
-        }
-
-//        resetButtonsText();
-        isSelecting = false;
-        selectionRectangle.setVisible(false);
-    }
-
-    private void resetCrop()
-    {
-        resetViewport(colorPickerImgView);
-        cropButton.setText("Crop");
-        canResetCrop = false;
-    }
-
-    private void cropImage()
-    {
-        //get bounds of selection rectangle
-        //crop imageView accordingly
-        double scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
-        double width = selectionRectangle.getWidth() * scaleFactor;
-        double height = selectionRectangle.getHeight() * scaleFactor;
-        double x = (selectionRectangle.getX() - colorPickerImgView.getLayoutX()) * scaleFactor;
-        double y = (selectionRectangle.getY() - colorPickerImgView.getLayoutY()) * scaleFactor;
-
-        Rectangle2D view = new Rectangle2D(x, y, width, height);
-        colorPickerImgView.setViewport(view);
-        isCropping = false;
-        cropButton.setText("Reset Crop");
-        cropButton.getStyleClass().remove("button-selected");
-
-        selectionRectangle.setVisible(false);
     }
 
     private Color getAvgColorFromSelection()
     {
-        double x = selectionRectangle.getX();//(x, y) is the top left corner of the selectionRectangle in windowspace
-        double y = selectionRectangle.getY();
-        double width = selectionRectangle.getWidth();
-        double height = selectionRectangle.getHeight();
+        ImageView imageView = imageDetailsController.getDisplayImage(); //Image details imageview
 
-        PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
+        Image image = imageView.getImage(); //Actual Image
 
-        Rectangle2D viewport = colorPickerImgView.getViewport();
+        if (image == null) //If there is no image
+        {
+            return Color.BLACK; //Return 0 or Black
+        }
+
+        PixelReader pixelReader = image.getPixelReader();
+
+        Rectangle2D viewport = imageView.getViewport();
+
         if (viewport == null)
         {
-            viewport = resetViewport(colorPickerImgView);
+            viewport = resetViewport(imageView);
         }
 
-        double scaleFactor;
-        if (viewport.equals(getDefaultViewport(colorPickerImgView)))
-        {//use this scaleFactor when image is not cropped
-            scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
-        }
-        else
+        // Convert selectionRectangle bounds from selectionPane into ImageView coordinates
+        Bounds rectBoundsInPane = selectionRectangle.getBoundsInParent();
+        Bounds rectBoundsInImg = imageView.sceneToLocal(selectionPane.localToScene(rectBoundsInPane));
+
+        // ImageView coordinates to image pixel coordinates
+        double renderedWidth = imageView.getBoundsInLocal().getWidth();
+        double renderedHeight = imageView.getBoundsInLocal().getHeight();
+
+        if (renderedWidth <= 0 || renderedHeight <= 0) //No image / clicked on something else
         {
-            scaleFactor = calculateImgViewCroppedScaleFactor(colorPickerImgView);
+            return Color.BLACK;
         }
 
+        //Scale of viewport and rendered width
+        double scaleX = viewport.getWidth() / renderedWidth;
+        double scaleY = viewport.getHeight() / renderedHeight;
 
-        //getLayoutX(), getLayoutY() refer to top left corner of image in windowspace
-        double trueStartX = (x - colorPickerImgView.getLayoutX()) * scaleFactor;
-        double trueStartY = (y - colorPickerImgView.getLayoutY()) * scaleFactor;
+        //Pixel boundaries
+        double trueStartX = viewport.getMinX() + (rectBoundsInImg.getMinX() * scaleX);
+        double trueStartY = viewport.getMinY() + (rectBoundsInImg.getMinY() * scaleY);
+        double trueEndX   = viewport.getMinX() + (rectBoundsInImg.getMaxX() * scaleX);
+        double trueEndY   = viewport.getMinY() + (rectBoundsInImg.getMaxY() * scaleY);
 
-        double trueEndX = trueStartX + width * scaleFactor;
-        double trueEndY = trueStartY + height * scaleFactor;
+        // Clamp to valid image boundaries
+        int startX = Math.max(0, (int) Math.floor(trueStartX));
+        int startY = Math.max(0, (int) Math.floor(trueStartY));
+        int endX   = Math.min((int) Math.ceil(trueEndX), (int) image.getWidth());
+        int endY   = Math.min((int) Math.ceil(trueEndY), (int) image.getHeight());
 
-        trueStartX += viewport.getMinX();//viewport may be offset from the top left corner, this counters that offset
-        trueStartY += viewport.getMinY();
-        trueEndX += viewport.getMinX();
-        trueEndY += viewport.getMinY();
-
-        //read pixels from selected crop
         selectedColors.clear();
-        boolean badColorDetected = false;
-        for (int posX = (int) trueStartX; posX < trueEndX; posX++)
+
+        for (int posX = startX; posX < endX; posX++)
         {
-            for (int posY = (int) trueStartY; posY < trueEndY; posY++)
+            for (int posY = startY; posY < endY; posY++)
             {
-                try
+                if (viewport.contains(posX, posY))
                 {
-                    if (viewport.contains(posX, posY))
-                    {//only add color if it is inside the viewport (visible to user)
-                        Color color = pixelReader.getColor(posX, posY);
-                        selectedColors.add(color);
-                    }
-                    else
-                    {
-                        badColorDetected = true;
-                    }
-                }
-                catch (IndexOutOfBoundsException e)
-                {
-                    badColorDetected = true;
+                    selectedColors.add(pixelReader.getColor(posX, posY));
                 }
             }
         }
 
-        if (badColorDetected)
-        {//TODO: CHANGE SOLUTION TO THIS PROBLEM?
-            LOG.info("Some colors could not be added. Please confirm that your selection contains the desired colors.");
+        if (selectedColors.isEmpty())
+        {
+            LOG.warn("No pixels were selected.");
+            return Color.BLACK;
         }
 
         return calculateAverageColor(selectedColors);
@@ -577,9 +597,11 @@ public class EyedropperController extends NonDataPageControllerBase
 
             sourceButton.getStyleClass().remove("button-selected");
             sourceButton.setText(DEFAULT_BUTTON_TEXT);
+            sourceButton = null;
 
             isSelecting = false;
-            sourceButton = null;
+
+            setOverlayActive(false);
         }
     }
 
@@ -693,14 +715,6 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void enterColorSelectionMode(ActionEvent actionEvent)
     {
-
-        if (cropButton.getStyleClass().contains("button-selected"))
-        {
-            // In case crop had started but not finished
-            cropButton.setText("Crop");
-            cropButton.getStyleClass().remove("button-selected");
-        }
-
         if (sourceButton != null)
         {
             // In case we were already selecting a different patch?
@@ -717,20 +731,8 @@ public class EyedropperController extends NonDataPageControllerBase
         sourceButton.getStyleClass().add("button-selected");
 
         isSelecting = true;
-        isCropping = false;
+        setOverlayActive(true);
     }
-
-//    private Button resetButtonsText(){
-//        Button sourceButton = null;
-//        for (Button button: colorSelectButtons){
-//            if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
-//                sourceButton = button;
-//            }
-
-    //        }
-    //
-    //        return sourceButton;
-    //    }
 
     private void refreshToneValueTextFields(DoubleUnaryOperator luminanceEncoding)
     {
@@ -755,13 +757,6 @@ public class EyedropperController extends NonDataPageControllerBase
     {
         return Global.state().getIOModel().hasLoadedRenderable();
     }
-
-//    public void ExitEyeDropper(){
-//        if (exitCallback != null)
-//        {
-//            exitCallback.run();
-//        }
-//    }
 
     @FXML
     private void selectImage(ActionEvent actionEvent)
@@ -820,7 +815,6 @@ public class EyedropperController extends NonDataPageControllerBase
                 {
                     imageDetailsController.setImage(file.getPath());
                     BufferedImage bufferedImage = ImageHelper.read(file).getBufferedImage();
-                    colorPickerImgView.setImage(SwingFXUtils.toFXImage(bufferedImage, null));
                 }
                 catch (IOException e)
                 {
@@ -830,14 +824,12 @@ public class EyedropperController extends NonDataPageControllerBase
             else
             {
                 selectedFile.set(new Image(file.toURI().toString()));
-                colorPickerImgView.setImage(selectedFile.get());
                 imageDetailsController.setImage(file.getPath());
             }
 
             //update buttons
             chooseImageButton.setVisible(false);
             chooseNewImageButton.setVisible(true);
-            cropButton.setVisible(true);
 
             //testing the code for saving the file
             //Note: Code bellow saves the file however it's not audiomatic. The user has to select where to save it and name the file as well.
@@ -854,9 +846,6 @@ public class EyedropperController extends NonDataPageControllerBase
             {
                 LOG.error("Could not save file");
             }
-
-            //reset viewport and crop button text
-            resetCrop();
         }
     }
 

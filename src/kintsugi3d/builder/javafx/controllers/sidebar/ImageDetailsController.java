@@ -544,6 +544,25 @@ public class ImageDetailsController
         stackPane.setPrefHeight(Region.USE_COMPUTED_SIZE);
         stackPane.setMaxHeight(Region.USE_COMPUTED_SIZE);
     }
+
+    /**
+     * Returns the imageView display image
+     * @return
+     */
+    public ImageView getDisplayImage()
+    {
+        return displayImage;
+    }
+
+    /**
+     * Takes in a boolean and sets stack panes mouse transparency to the opposite
+     * @param enable
+     */
+    public void setMouseInteractionEnabled(boolean enable)
+    {
+        stackPane.setMouseTransparent(!enable);
+    }
+
     /* (This code is if you want to actually crop the image instead of changing the viewport)
     @FXML
     private void endSelection(MouseEvent event)
