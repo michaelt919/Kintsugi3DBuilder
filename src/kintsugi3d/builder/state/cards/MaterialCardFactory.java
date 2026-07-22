@@ -95,7 +95,11 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                         Global.state().getUserShaderModel().setUserShader(
                             new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
-                Map.of("Toggle Disabled", () -> Rendering.runLater(() -> resources.getBasisResources().toggleBasisMaterial(cardIndex)),
+                Map.of("Toggle Disabled", () ->
+                    {
+                        Rendering.runLater(() -> resources.getBasisResources().toggleBasisMaterial(cardIndex));
+                        Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+                    },
                     "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
@@ -109,7 +113,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                                 // hard reset of cards list to re-number, etc.
                                 Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
                             }
-                        })))));
+                        })))), !resources.getBasisResources().getBasis().getIsEnabled(cardIndex));
     }
 
     @Override

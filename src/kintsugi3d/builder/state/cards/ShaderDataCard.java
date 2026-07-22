@@ -60,6 +60,15 @@ public class ShaderDataCard extends ProjectDataCard
         this.shader = shader;
     }
 
+    public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, Map<String, String> textFields,
+                          Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
+    {
+        super(internalName, title, imagePath, textFields,
+            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
+        setIsDisabled(isDisabled);
+        this.shader = shader;
+    }
+
     public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields,
                           Collection<? extends Map<String, Runnable>> actionGroups)
     {

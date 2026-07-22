@@ -95,9 +95,9 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             private final int resolution = basisSettings.getBasisResolution();
 
             @Override
-            public String getName(int b)
+            public int getName(int b)
             {
-                return names.get(b);
+                return Integer.parseInt(names.get(b));
             }
 
             @Override
