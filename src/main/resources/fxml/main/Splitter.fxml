@@ -27,7 +27,7 @@
             managed = "false"
             fx:id = "splitPane">
     <Region fx:id = "testRegion" pickOnBounds="false" mouseTransparent="true" style = "-fx-background-color: blue;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0"/>
-    <HBox fx:id = "splitHBox" pickOnBounds = "false" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" alignment="CENTER" prefWidth="0">
+    <HBox fx:id = "splitHBox" pickOnBounds = "false" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="20" alignment="CENTER" prefWidth="0">
         <StackPane fx:id = "leftHandle"
                    prefHeight = "35"
                    maxHeight="35"
