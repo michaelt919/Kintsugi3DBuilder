@@ -285,6 +285,7 @@ public class RightBarController
 
         minimizeButton.setText("-");
         minimized = false;
+        Platform.runLater(()->detailsBox.requestLayout());
     }
 
     /**
@@ -296,6 +297,7 @@ public class RightBarController
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
+        Platform.runLater(()->detailsBox.requestLayout());
     }
     public double getTabWidth(){ return mainBox.getWidth(); }
 }
