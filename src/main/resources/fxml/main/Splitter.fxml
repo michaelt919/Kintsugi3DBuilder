@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.shape.SVGPath?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.SplitterController"
+            style = "-fx-background-color: null;"
+            pickOnBounds="false"
+            visible = "false"
+            managed = "false"
+            fx:id = "splitPane">
+    <Region fx:id = "testRegion" pickOnBounds="false" mouseTransparent="true" style = "-fx-background-color: blue;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0"/>
+    <HBox fx:id = "splitHBox" pickOnBounds = "false" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" alignment="CENTER" prefWidth="0">
+        <StackPane fx:id = "leftHandle"
+                   prefHeight = "35"
+                   maxHeight="35"
+                   prefWidth = "10"
+                   style="-fx-background-color: #CECECE; -fx-background-radius: 10 0 0 10;">
+            <SVGPath content="M12,5 L5,20 L12,35"
+                     stroke="black" strokeWidth="4.0"
+                     strokeLineCap="ROUND"
+                     strokeLineJoin="ROUND"
+                     fill="TRANSPARENT"
+                     scaleX="0.5"
+                     scaleY="0.5"/>
+        </StackPane>
+        <Region fx:id = "splitRegion"
+                prefWidth="5"
+                minWidth="5"
+                maxWidth="5"
+                maxHeight="1.7976931348623157E308"
+                HBox.hgrow="NEVER"
+                onMousePressed="#mousePressed"
+                onMouseDragged="#mouseDragged"
+                style="-fx-background-color: #CECECE; -fx-cursor: e-resize;"/>
+        <StackPane fx:id = "rightHandle"
+                   prefHeight = "35"
+                   maxHeight="35"
+                   prefWidth = "10"
+                   style="-fx-background-color: #CECECE; -fx-background-radius: 0 10 10 0;">
+            <SVGPath content="M5,5 L12,20 L5,35"
+                     stroke="black" strokeWidth="4.0"
+                     strokeLineCap="ROUND"
+                     strokeLineJoin="ROUND"
+                     fill="TRANSPARENT"
+                     scaleX="0.5"
+                     scaleY="0.5"/>
+        </StackPane>
+    </HBox>
+    <Button text = "x"
+            maxHeight="15"
+            minHeight="15"
+            maxWidth="15"
+            minWidth="15"
+            style="-fx-padding: 0;"
+            onAction = "#closeSplitter"
+            AnchorPane.rightAnchor="5"
+            AnchorPane.topAnchor="5"/>
+</AnchorPane>

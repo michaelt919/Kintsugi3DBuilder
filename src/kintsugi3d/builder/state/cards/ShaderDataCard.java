@@ -47,9 +47,16 @@ public class ShaderDataCard extends ProjectDataCard
             Global.state().getCarouselModel().addToCarousel(shader);
         };
 
+        Runnable sendToSplitView = () ->
+        {
+            //TODO: Add code for sending shader to split view
+            //Global.state().getSplitCanvasModel().setCanvas();
+        };
+
         return Map.of(
             "Send to Main View", viewShader,
-            "Send to Carousel", sendToCarousel);
+            "Send to Carousel", sendToCarousel,
+            "Send to Split View", sendToSplitView);
     }
 
     public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, String filePath, Map<String, String> textFields,
