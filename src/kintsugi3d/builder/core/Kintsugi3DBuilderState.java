@@ -41,6 +41,7 @@ public interface Kintsugi3DBuilderState
     GeneralSettingsModel getSettingsModel();
 
     CanvasModel getMainCanvasModel();
+    CanvasModel getSplitCanvasModel();
     CanvasListModel getCanvasListModel();
 
     SceneViewportModel getSceneViewportModel();

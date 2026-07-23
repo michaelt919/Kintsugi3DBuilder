@@ -38,6 +38,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final CanvasModel mainCanvasModel;
+    private final CanvasModel splitCanvasModel;
     private final CanvasListModel canvasListModel;
     private final IOModel ioModel;
 
@@ -65,6 +66,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
 
         sceneViewportModel = new SceneViewportModelImpl();
         mainCanvasModel = new CanvasModelImpl();
+        splitCanvasModel = new CanvasModelImpl();
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
@@ -128,6 +130,12 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     public CanvasModel getMainCanvasModel()
     {
         return mainCanvasModel;
+    }
+
+    @Override
+    public CanvasModel getSplitCanvasModel()
+    {
+        return splitCanvasModel;
     }
 
     @Override
