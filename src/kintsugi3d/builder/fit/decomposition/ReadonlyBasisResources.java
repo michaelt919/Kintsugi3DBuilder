@@ -19,6 +19,7 @@ public interface ReadonlyBasisResources<ContextType extends Context<ContextType>
 {
     ReadonlyMaterialBasis getBasis();
     int getBasisCount();
+    int getDisabledBasisCount();
     int getBasisResolution();
     void useWithShaderProgram(Program<ContextType> program);
 }

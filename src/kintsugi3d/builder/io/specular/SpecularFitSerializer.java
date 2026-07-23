@@ -203,8 +203,8 @@ public final class SpecularFitSerializer
             {
                 in.useLocale(Locale.ROOT);
 
-                List<String> names = new ArrayList<>(8);
-                List<String> disabledNames = new ArrayList<>(8);
+                List<Integer> names = new ArrayList<>(8);
+                List<Integer> disabledNames = new ArrayList<>(8);
 
                 List<double[]> specularRedBasis = new ArrayList<>(8);
                 List<double[]> specularGreenBasis = new ArrayList<>(8);
@@ -223,7 +223,7 @@ public final class SpecularFitSerializer
 
                     if (currentTag.equals(String.format("Red#%d", b)))
                     {
-                        names.add(Integer.toString(b));
+                        names.add(b);
                         specularRedBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {
@@ -232,7 +232,7 @@ public final class SpecularFitSerializer
                     }
                     else if (currentTag.equals(String.format("RedDisabled#%d", b)))
                     {
-                        disabledNames.add(Integer.toString(b));
+                        disabledNames.add(b);
                         disabledSpecularRedBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {

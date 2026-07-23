@@ -97,8 +97,11 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                     }),
                 Map.of("Toggle Disabled", () ->
                     {
-                        Rendering.runLater(() -> resources.getBasisResources().toggleBasisMaterial(cardIndex));
-                        Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+                        Rendering.runLater(() ->
+                            {
+                                resources.getBasisResources().toggleBasisMaterial(cardIndex);
+                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
+                            });
                     },
                     "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
@@ -111,7 +114,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
                             {
                                 // hard reset of cards list to re-number, etc.
-                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
                             }
                         })))), !resources.getBasisResources().getBasis().getIsEnabled(cardIndex));
     }
@@ -125,7 +128,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
             ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
             if (basisResources != null)
             {
-                return IntStream.range(0, basisResources.getBasisCount())
+                return IntStream.range(0, basisResources.getBasisCount() + basisResources.getDisabledBasisCount())
                     .mapToObj(i -> createCard(cardsModel, resources, i))
                     .collect(Collectors.toUnmodifiableList());
             }
@@ -138,7 +141,17 @@ public class MaterialCardFactory implements ProjectDataCardFactory
     @Override
     public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
     {
-        LOG.warn("refreshCards not implemented for materials.");
-        return Map.of();
+        Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
+
+        List<ProjectDataCard> cardsList = cardsModel.getCardList();
+        for (ProjectDataCard card : cardsList)
+        {
+            if (filter.test(card)) // Check whether the card is in the filter
+            {
+                changes.put(card, createCard(cardsModel, instance.getResources().getTextureResources(), Integer.parseInt(card.getInternalName())));
+            }
+        }
+
+        return changes;
     }
 }

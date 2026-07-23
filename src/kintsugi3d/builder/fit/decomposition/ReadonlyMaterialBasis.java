@@ -41,6 +41,8 @@ public interface ReadonlyMaterialBasis
      */
     double evaluateSpecularRed(int b, int m);
 
+    double evaluateEnabledSpecularRed(int b, int m);
+
     /**
      * Evaluates a green basis function
      *
@@ -49,6 +51,8 @@ public interface ReadonlyMaterialBasis
      * @return the value of green basis function b, at element m.
      */
     double evaluateSpecularGreen(int b, int m);
+
+    double evaluateEnabledSpecularGreen(int b, int m);
 
     /**
      * Evaluates a blue basis function
@@ -59,7 +63,11 @@ public interface ReadonlyMaterialBasis
      */
     double evaluateSpecularBlue(int b, int m);
 
+    double evaluateEnabledSpecularBlue(int b, int m);
+
     int getMaterialCount();
+
+    int getDisabledMaterialCount();
 
     int getSpecularResolution();
 

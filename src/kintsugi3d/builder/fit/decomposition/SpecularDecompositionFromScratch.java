@@ -92,6 +92,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         return new MaterialBasis()
         {
             private int count = basisSettings.getBasisCount();
+            private int disabledMaterialCount = 0;
             private final int resolution = basisSettings.getBasisResolution();
 
             @Override
@@ -103,29 +104,32 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public String getDisplayName(int cardIndex)
             {
-                if (cardIndex < names.size())
+                int index = names.indexOf(Integer.toString(cardIndex));
+                if (index != -1)
                 {
                     return names.get(cardIndex);
                 }
                 else
                 {
-                    return disabledNames.get(cardIndex - names.size());
+                    index = disabledNames.indexOf(Integer.toString(cardIndex));
+                    return disabledNames.get(index);
                 }
             }
 
             @Override
             public DoubleVector3 getDiffuseColor(int b)
             {
-                int index = names.indexOf(Integer.toString(b));
-                if (index != -1)
-                {
-                    return diffuseAlbedos.get(index);
-                }
-                else
-                {
-                    index = disabledNames.indexOf(Integer.toString(b));
-                    return disabledDiffuseAlbedos.get(index);
-                }
+//                int index = names.indexOf(Integer.toString(b));
+//                if (index != -1)
+//                {
+//                    return diffuseAlbedos.get(index);
+//                }
+//                else
+//                {
+//                    index = disabledNames.indexOf(Integer.toString(b));
+//                    return disabledDiffuseAlbedos.get(index);
+//                }
+                return diffuseAlbedos.get(b);
             }
 
             @Override
@@ -150,6 +154,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             }
 
             @Override
+            public double evaluateEnabledSpecularRed(int b, int m)
+            {
+                return specularRed.get(m, b);
+            }
+
+            @Override
             public double evaluateSpecularGreen(int b, int m)
             {
                 int index = names.indexOf(Integer.toString(b));
@@ -162,6 +172,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                     index = disabledNames.indexOf(Integer.toString(b));
                     return specularGreen.get(m, index);
                 }
+            }
+
+            @Override
+            public double evaluateEnabledSpecularGreen(int b, int m)
+            {
+                return specularGreen.get(m, b);
             }
 
             @Override
@@ -180,9 +196,21 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             }
 
             @Override
+            public double evaluateEnabledSpecularBlue(int b, int m)
+            {
+                return specularBlue.get(m, b);
+            }
+
+            @Override
             public int getMaterialCount()
             {
                 return count;
+            }
+
+            @Override
+            public int getDisabledMaterialCount()
+            {
+                return disabledMaterialCount;
             }
 
             @Override
@@ -194,11 +222,30 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public void deleteMaterial(int b)
             {
-                specularRed = removeColumn(specularRed, b);
-                specularGreen = removeColumn(specularGreen, b);
-                specularBlue = removeColumn(specularBlue, b);
-                diffuseAlbedos.remove(b);
-                names.remove(b);
+                int index = names.indexOf(Integer.toString(b));
+                if (index != -1)
+                {
+                    specularRed = removeColumn(specularRed, Integer.parseInt(names.get(index)));
+                    specularGreen = removeColumn(specularGreen, Integer.parseInt(names.get(index)));
+                    specularBlue = removeColumn(specularBlue, Integer.parseInt(names.get(index)));
+                    disabledSpecularRed = removeColumn(specularRed, Integer.parseInt(names.get(index)));
+                    disabledSpecularGreen = removeColumn(specularGreen, Integer.parseInt(names.get(index)));
+                    disabledSpecularBlue = removeColumn(specularBlue, Integer.parseInt(names.get(index)));
+                    names.remove(index);
+                    diffuseAlbedos.remove(index);
+                }
+                else
+                {
+                    index = disabledNames.indexOf(Integer.toString(b));
+                    disabledSpecularRed = removeColumn(specularRed, Integer.parseInt(disabledNames.get(index)));
+                    disabledSpecularGreen = removeColumn(specularGreen, Integer.parseInt(disabledNames.get(index)));
+                    disabledSpecularBlue = removeColumn(specularBlue, Integer.parseInt(disabledNames.get(index)));
+                    specularRed = removeColumn(specularRed, Integer.parseInt(disabledNames.get(index)));
+                    specularGreen = removeColumn(specularGreen, Integer.parseInt(disabledNames.get(index)));
+                    specularBlue = removeColumn(specularBlue, Integer.parseInt(disabledNames.get(index)));
+                    disabledDiffuseAlbedos.remove(index);
+                    disabledNames.remove(index);
+                }
                 count--;
             }
 
@@ -222,6 +269,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                     diffuseAlbedos.remove(name);
                     names.remove(name);
                     count--;
+                    disabledMaterialCount++;
                 }
             }
 
@@ -245,6 +293,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                     disabledDiffuseAlbedos.remove(name);
                     disabledNames.remove(name);
                     count++;
+                    disabledMaterialCount--;
                 }
             }
 

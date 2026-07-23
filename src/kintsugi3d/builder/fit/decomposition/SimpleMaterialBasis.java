@@ -126,10 +126,11 @@ public class SimpleMaterialBasis implements MaterialBasis
 //
 //    private final List<String> disabledNames;
 
-    private List<BasisData> basisList;
-    private List<BasisData> disabledBasisList;
+    private final List<BasisData> basisList;
+    private final List<BasisData> disabledBasisList;
 
     private int materialCount;
+    private int disabledMaterialCount;
     private final int specularResolution;
 
     public SimpleMaterialBasis(int materialCount, int specularResolution)
@@ -152,6 +153,7 @@ public class SimpleMaterialBasis implements MaterialBasis
         this.disabledBasisList=new ArrayList<>(materialCount);
 
         this.materialCount = materialCount;
+        this.disabledMaterialCount = 0;
         this.specularResolution = specularResolution;
     }
 
@@ -159,6 +161,7 @@ public class SimpleMaterialBasis implements MaterialBasis
     public SimpleMaterialBasis(DoubleVector3[] diffuseColors, List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis)
     {
         this.materialCount = redBasis.size();
+        this.disabledMaterialCount = 0;
         this.specularResolution = redBasis.get(0).length - 1;
 
 //        this.diffuseColors = new ArrayList<>(List.of(diffuseColors));
@@ -182,29 +185,31 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    public SimpleMaterialBasis(List<String> names, List<DoubleVector3> diffuseColors,
+    public SimpleMaterialBasis(List<Integer> names, List<DoubleVector3> diffuseColors,
                                List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis,
-                               List<String> disabledNames, List<DoubleVector3> disabledDiffuseColors,
+                               List<Integer> disabledNames, List<DoubleVector3> disabledDiffuseColors,
                                List<double[]> disabledRedBasis, List<double[]> disabledGreenBasis, List<double[]> disabledBlueBasis)
     {
-        this.materialCount = redBasis.size() + disabledRedBasis.size();
+        this.materialCount = redBasis.size();
         this.specularResolution = redBasis.get(0).length - 1;
 
         this.basisList = new ArrayList<>(materialCount);
-        this.basisList.addAll(IntStream.range(0, redBasis.size()).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
+        this.basisList.addAll(IntStream.range(0, materialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
         IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setDiffuseColor(diffuseColors.get(i)));
         IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setRedBasis(redBasis.get(i)));
         IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setGreenBasis(greenBasis.get(i)));
         IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setBlueBasis(blueBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setName(i));
+        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setName(names.get(i)));
 
         this.disabledBasisList = new ArrayList<>(materialCount);
-        this.disabledBasisList.addAll(IntStream.range(0, disabledRedBasis.size()).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
-        IntStream.range(0, disabledRedBasis.size()).forEach(i -> disabledBasisList.get(i).setDiffuseColor(diffuseColors.get(i)));
-        IntStream.range(0, disabledRedBasis.size()).forEach(i -> disabledBasisList.get(i).setRedBasis(redBasis.get(i)));
-        IntStream.range(0, disabledRedBasis.size()).forEach(i -> disabledBasisList.get(i).setGreenBasis(greenBasis.get(i)));
-        IntStream.range(0, disabledRedBasis.size()).forEach(i -> disabledBasisList.get(i).setBlueBasis(blueBasis.get(i)));
-        IntStream.range(0, disabledRedBasis.size()).forEach(i -> disabledBasisList.get(i).setName(i));
+        this.disabledMaterialCount = disabledRedBasis.size();
+        this.disabledBasisList.addAll(IntStream.range(0, disabledMaterialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setDiffuseColor(diffuseColors.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setRedBasis(redBasis.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setGreenBasis(greenBasis.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setBlueBasis(blueBasis.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setName(disabledNames.get(i)));
+        this.disabledBasisList.forEach(b -> b.setEnabled(false));
     }
 
     @Override
@@ -216,14 +221,7 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public String getDisplayName(int cardIndex)
     {
-        if (cardIndex < basisList.size())
-        {
-            return Integer.toString(basisList.get(cardIndex).getName());
-        }
-        else
-        {
-            return Integer.toString(basisList.get(cardIndex - basisList.size()).getName());
-        }
+        return Integer.toString(getAllBasisData().get(cardIndex).getName());
     }
 
     private List<BasisData> getAllBasisData()
@@ -276,6 +274,12 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
+    public double evaluateEnabledSpecularRed(int b, int m)
+    {
+        return basisList.get(b).getRedBasis()[m];
+    }
+
+    @Override
     public double evaluateSpecularGreen(int b, int m)
     {
 //        int index = names.indexOf(Integer.toString(b));
@@ -289,6 +293,12 @@ public class SimpleMaterialBasis implements MaterialBasis
 //            return disabledGreenBasis.get(index)[m];
 //        }
         return getAllBasisData().get(b).getGreenBasis()[m];
+    }
+
+    @Override
+    public double evaluateEnabledSpecularGreen(int b, int m)
+    {
+        return basisList.get(b).getGreenBasis()[m];
     }
 
     @Override
@@ -308,9 +318,21 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
+    public double evaluateEnabledSpecularBlue(int b, int m)
+    {
+        return basisList.get(b).getBlueBasis()[m];
+    }
+
+    @Override
     public int getMaterialCount()
     {
         return materialCount;
+    }
+
+    @Override
+    public int getDisabledMaterialCount()
+    {
+        return disabledMaterialCount;
     }
 
     @Override
@@ -327,25 +349,15 @@ public class SimpleMaterialBasis implements MaterialBasis
 //        blueBasis.remove(b);
 //        diffuseColors.remove(b);
 //        names.remove(b);
-        if (getAllBasisData().get(b).isEnabled())
+        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
+        if (inEnabledList.isPresent())
         {
-            for (BasisData basisData : basisList)
-            {
-                if (basisData.getName() == b)
-                {
-                    basisList.remove(basisData);
-                }
-            }
+            basisList.remove(inEnabledList.get());
         }
         else
         {
-            for (BasisData basisData : disabledBasisList)
-            {
-                if (basisData.getName() == b)
-                {
-                    disabledBasisList.remove(basisData);
-                }
-            }
+            Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
+            inDisabledList.ifPresent(disabledBasisList::remove);
         }
         materialCount--;
     }
@@ -387,6 +399,7 @@ public class SimpleMaterialBasis implements MaterialBasis
 //            diffuseColors.remove(name);
 //            names.remove(name);
             materialCount--;
+            disabledMaterialCount++;
         }
     }
 
@@ -397,7 +410,7 @@ public class SimpleMaterialBasis implements MaterialBasis
         Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
         if (inDisabledList.isPresent())
         {
-            int index = Math.min(b, disabledBasisList.size());
+            int index = Math.min(b, basisList.size());
             // add to enabled lists
             basisList.add(index, inDisabledList.get());
             basisList.get(index).setEnabled(true);
@@ -414,6 +427,7 @@ public class SimpleMaterialBasis implements MaterialBasis
 //            disabledDiffuseColors.remove(name);
 //            disabledNames.remove(name);
             materialCount++;
+            disabledMaterialCount--;
         }
     }
 

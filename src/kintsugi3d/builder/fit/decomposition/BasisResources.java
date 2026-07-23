@@ -73,6 +73,12 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     }
 
     @Override
+    public int getDisabledBasisCount()
+    {
+        return basis.getDisabledMaterialCount();
+    }
+
+    @Override
     public int getBasisResolution()
     {
         return basisResolution;
@@ -110,12 +116,10 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         if (basis.getIsEnabled(materialIndex))
         {
             disableBasisMaterial(materialIndex);
-            basisCount--;
         }
         else
         {
             enableBasisMaterial(materialIndex);
-            basisCount++;
         }
         refreshGraphicsResources();
     }
@@ -133,9 +137,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             for (int m = 0; m <= basisResolution; m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.basis.evaluateSpecularRed(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.basis.evaluateSpecularGreen(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.basis.evaluateSpecularBlue(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.basis.evaluateEnabledSpecularRed(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.basis.evaluateEnabledSpecularGreen(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.basis.evaluateEnabledSpecularBlue(b, m));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
@@ -183,9 +187,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
                 for (int m = 0; m <= basis.getSpecularResolution(); m++)
                 {
                     // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 0, basis.evaluateSpecularRed(b, m));
-                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 1, basis.evaluateSpecularGreen(b, m));
-                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 2, basis.evaluateSpecularBlue(b, m));
+                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 0, basis.evaluateEnabledSpecularRed(b, m));
+                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 1, basis.evaluateEnabledSpecularGreen(b, m));
+                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 2, basis.evaluateEnabledSpecularBlue(b, m));
                 }
             }
 
