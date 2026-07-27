@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
@@ -67,7 +68,7 @@ public class CacheModel
     /**
      * Lock for multithreaded cache size calculation.
      */
-    private final Object CACHE_SIZE_CALC_THREAD_LOCK;
+    private final Object cacheSizeCalcThreadLock;
 
     /**
      * This thread will be set to a non-null value while running, and null otherwise
@@ -77,19 +78,34 @@ public class CacheModel
 
     private final Map<String, Long> projectSizes;
 
-    private final Logger LOG = LoggerFactory.getLogger(CacheModel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CacheModel.class);
 
     public CacheModel()
     {
         cacheSizeGB = new SimpleDoubleProperty(-1); // -1 signifies uninitialized.
         cacheSizeCalcInProgress = new SimpleBooleanProperty(false);
         pendingCacheSizeCallbacks = new ArrayList<>(1);
-        CACHE_SIZE_CALC_THREAD_LOCK = new Object();
+        cacheSizeCalcThreadLock = new Object();
         cacheSizeCalcThread = null;
         projectSizes = new HashMap<>(getNumCachedProjects());
     }
 
-    private void handleCacheCleanupError(IOException e)
+    private static Map<File, Consumer<File[]>> getDeleteMethods()
+    {
+        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
+        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
+
+        return Map.of(
+            previewCacheDir, files -> tryDeletePreviewCacheFiles(previewCacheDir, files),
+            fitCacheDir, files -> tryDeleteFitCacheFiles(previewCacheDir, files));
+    }
+
+    private static Collection<File> getCleanableCacheDirectories()
+    {
+        return getDeleteMethods().keySet();
+    }
+
+    private static void handleCacheCleanupError(IOException e)
     {
         LOG.error(e.toString());
         ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
@@ -97,14 +113,13 @@ public class CacheModel
 
     public void clearCache()
     {
-        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
-        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
+        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
 
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Clear Cache");
         confirm.setHeaderText("Confirm cache clear?");
-        confirm.setContentText(String.format("This will permanently remove all files in %s and %s, including the ones for your current project, and cannot be undone.  Are you sure?",
-            previewCacheDir, fitCacheDir));
+        confirm.setContentText(String.format("This will permanently remove all files in %s, including the ones for your current project, and cannot be undone.  Are you sure?",
+            String.join(" and ", deleteMethods.keySet().stream().map(File::toString).toArray(String[]::new))));
 
         confirm.showAndWait().ifPresent(response ->
         {
@@ -112,8 +127,10 @@ public class CacheModel
             {
                 try
                 {
-                    clearPreviewCache(previewCacheDir);
-                    clearFitCache(fitCacheDir);
+                    for (var entry : deleteMethods.entrySet())
+                    {
+                        clearCache(entry.getKey(), entry.getValue());
+                    }
                     requestCacheSizeRefresh();
                 }
                 catch(IOException e)
@@ -124,7 +141,7 @@ public class CacheModel
         });
     }
 
-    private void clearPreviewCache(File directory) throws IOException
+    private static void clearCache(File directory, Consumer<File[]> deleteMethod) throws IOException
     {
         if (!directory.isDirectory())
         {
@@ -135,24 +152,10 @@ public class CacheModel
         {
             throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
         }
-        deletePreviewCacheFiles(directory, projects);
+        deleteMethod.accept(projects);
     }
 
-    private void clearFitCache(File directory) throws IOException
-    {
-        if (!directory.isDirectory())
-        {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
-        }
-        File[] projects = directory.listFiles();
-        if (projects == null)
-        {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
-        }
-        deleteFitCacheFiles(directory, projects);
-    }
-
-    private void deletePreviewCacheFiles(File directory, File[] projects) throws IOException
+    private static void deletePreviewCacheFiles(File directory, File[] projects) throws IOException
     {
         for (File project : projects)
         {
@@ -212,7 +215,19 @@ public class CacheModel
         }
     }
 
-    private void deleteFitCacheFiles(File directory, File[] projects) throws IOException
+    private static void tryDeletePreviewCacheFiles(File directory, File[] projects)
+    {
+        try
+        {
+            deletePreviewCacheFiles(directory, projects);
+        }
+        catch (IOException e)
+        {
+            handleCacheCleanupError(e);
+        }
+    }
+
+    private static void deleteFitCacheFiles(File directory, File[] projects) throws IOException
     {
         for (File project : projects)
         {
@@ -313,6 +328,18 @@ public class CacheModel
         }
     }
 
+    private static void tryDeleteFitCacheFiles(File directory, File[] projects)
+    {
+        try
+        {
+            deleteFitCacheFiles(directory, projects);
+        }
+        catch (IOException e)
+        {
+            handleCacheCleanupError(e);
+        }
+    }
+
     public void cleanUpCache()
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
@@ -325,14 +352,14 @@ public class CacheModel
 
     private void cleanUpBothCaches()
     {
-        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
-        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
+        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
 
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setTitle("Clear Old Cache Files");
         confirm.setHeaderText("Confirm cache clean up?");
-        confirm.setContentText(String.format("This will permanently remove files in %s and %s and cannot be undone.  Are you sure?",
-            previewCacheDir, fitCacheDir));
+
+        confirm.setContentText(String.format("This will permanently remove files in %s, and cannot be undone.  Are you sure?",
+            String.join(" and ", deleteMethods.keySet().stream().map(File::toString).toArray(String[]::new))));
 
         confirm.showAndWait().ifPresent(response ->
         {
@@ -342,9 +369,7 @@ public class CacheModel
                 {
                     try
                     {
-                        cleanCacheSubDir(previewCacheDir);
-                        cleanCacheSubDir(fitCacheDir);
-                        requestCacheSizeRefresh();
+                        cleanCacheSubDirs(deleteMethods);
                     }
                     catch (IOException e)
                     {
@@ -355,50 +380,65 @@ public class CacheModel
         });
     }
 
-    private void cleanCacheSubDir(File directory) throws IOException
+    /**
+     * Cleans up the cache based on user settings, and then refreshes the cache size.
+     * @param deleteMethods
+     * @throws IOException
+     */
+    private void cleanCacheSubDirs(Map<File, Consumer<File[]>> deleteMethods) throws IOException
     {
-        if (!directory.isDirectory())
-        {
-            throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
-        }
-        // Select only cache directories that are not in the recently opened projects welcome dialogue.
-        Set<File> deletableProjects = new HashSet<>(0);
-        List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-        List<File> oldestProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-        if (settingsModel.getBoolean("recentPromptEnabled"))
+
+        for (var deleteMethod : deleteMethods.entrySet())
         {
-            filterByRecentProjectLimit(directory, nonRecentProjects);
-            deletableProjects.addAll(nonRecentProjects);
+            File directory = deleteMethod.getKey();
+
+            if (!directory.isDirectory())
+            {
+                throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+            }
+            // Select only cache directories that are not in the recently opened projects welcome dialogue.
+            Set<File> deletableProjects = new HashSet<>(0);
+            List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+            List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+
+            if (settingsModel.getBoolean("recentPromptEnabled"))
+            {
+                filterByRecentProjectLimit(directory, nonRecentProjects);
+                deletableProjects.addAll(nonRecentProjects);
+            }
+
+            if (settingsModel.getBoolean("fileAgePromptEnabled"))
+            {
+                filterByFileAgeLimit(oldProjects);
+                deletableProjects.addAll(oldProjects);
+            }
+
+            // Perform cache deletion on directories still in oldProjects.
+            File[] deletableProjectsArr = new File[deletableProjects.size()];
+            deletableProjectsArr = deletableProjects.toArray(deletableProjectsArr);
+
+            deleteMethod.getValue().accept(deletableProjectsArr);
         }
-        if (settingsModel.getBoolean("fileAgePromptEnabled"))
+
+        // Recalculate the size of the cache after cleaning up files by age or by presence in recent files list.
+        // Even if we still need to remove more projects due to cache size limit, it is necessary to first refresh
+        // the cache size because a user could, in theory, delete one of the more recent projects from their hard drive
+        // and then purge the recent files list manually.  The non-recent cache cleanup will then delete that project's
+        // cache, meaning that it may be possible to keep the cache for one or more older projects that have not been
+        // deleted while keeping within the cache size limit.
+        // On the other hand, if the cache size limit is not enabled, this will just be the final refresh.
+        requestCacheSizeRefresh(cacheSize ->
         {
-            filterByFileAgeLimit(oldProjects);
-            deletableProjects.addAll(oldProjects);
-        }
-        List<File> oppositeDeletableProjects = new ArrayList<>(0);
-        if (settingsModel.getBoolean("sizePromptEnabled") && (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit")))
-        {
-            oppositeDeletableProjects = filterBySizeLimit(oldestProjects, directory);
-            deletableProjects.addAll(oldestProjects);
-        }
-        // Perform cache deletion on directories still in oldProjects.
-        File[] deletableProjectsArr = new File[deletableProjects.size()];
-        deletableProjectsArr = deletableProjects.toArray(deletableProjectsArr);
-        File[] oppositeDeletableProjectsArr = new File[oppositeDeletableProjects.size()];
-        oppositeDeletableProjectsArr = oppositeDeletableProjects.toArray(oppositeDeletableProjectsArr);
-        if ("preview".equals(directory.getName()))
-        {
-            deletePreviewCacheFiles(directory, deletableProjectsArr);
-            // Make sure to delete the files created from cleaning based on size, otherwise deletable
-            deleteFitCacheFiles(ApplicationFolders.getFitCacheRootDirectory().toFile(), oppositeDeletableProjectsArr);
-        }
-        else if ("fit".equals(directory.getName()))
-        {
-            deleteFitCacheFiles(directory, deletableProjectsArr);
-            deletePreviewCacheFiles(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), oppositeDeletableProjectsArr);
-        }
+            if (settingsModel.getBoolean("sizePromptEnabled") && (cacheSize > settingsModel.getFloat("cacheSizeLimit")))
+            {
+                // This method will keep deleting projects until we're within the cache size limit.
+                cleanUpBySizeLimit();
+
+                // Refresh the cache size again to display the final reduced size.
+                requestCacheSizeRefresh();
+            }
+        });
     }
 
     private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
@@ -418,7 +458,7 @@ public class CacheModel
         }
     }
 
-    private void filterByFileAgeLimit(List<File> projects)
+    private static void filterByFileAgeLimit(List<File> projects)
     {
         for (int i = projects.size() - 1; i >= 0; i--)
         {
@@ -439,44 +479,74 @@ public class CacheModel
         }
     }
 
-    private List<File> filterBySizeLimit(List<File> projects, File directory)
+    private void cleanUpBySizeLimit()
     {
-        List<File> keptProjects = new ArrayList<>(projects.size());
-        keptProjects.addAll(projects);
-        keptProjects.sort(Comparator.comparingLong(File::lastModified)); // sorts oldest first
+        Map<String, Collection<File>> cleanableCacheProjects = new HashMap<>(getNumCachedProjects());
+
+        // Build a mapping from project IDs to all cache directories associated with that project.
+        // This is necessary since a project might have one cache for a project but not another,
+        // but all need to be cleaned up when cleaning down to a size limit.
+        for (File directory : getDeleteMethods().keySet())
+        {
+            for (File projectCacheDir : Objects.requireNonNull(directory.listFiles()))
+            {
+                // The project cache directory name should be the same regardless of which cache (i.e. preview or fit) is being cleaned.
+                String projectID = projectCacheDir.getName();
+
+                // i.e. a list that will contain the fit and preview directories for a given project
+                Collection<File> projectDirList = cleanableCacheProjects.computeIfAbsent(
+                    // Create the ArrayList if not already in the map.
+                    projectID, id -> new ArrayList<>(getCleanableCacheDirectories().size()));
+
+                // Add the current directory to the list
+                projectDirList.add(projectCacheDir);
+            }
+        }
+
+        List<String> retainedProjectIDs =
+            cleanableCacheProjects.entrySet().stream()
+                .sorted(Comparator.comparingLong(
+                    (Entry<String, Collection<File>> entry) -> // sort with least recently modified (i.e. "oldest") first
+                        entry.getValue().stream()
+                            .mapToLong(File::lastModified).max() // find most recent modification over various cache directories (i.e. preview, fit)
+                            .orElse(0L)) // shouldn't really ever need the default
+                    .reversed()) // Reverse so that the oldest projects are now last.
+                .map(Entry::getKey) // Keep just the key / project ID
+                .collect(Collectors.toCollection(ArrayList<String>::new)); // Explicit ArrayList constructor to ensure mutability
+
+        double prevCacheSize = getCacheSizeGB();
         long freedSpace = 0;
         do
         {
-            freedSpace += projectSizes.get(projects.get(0).getName());
-            keptProjects.remove(0);
-        } while ((getCacheSizeGB() - ((double) freedSpace * (1024 * 1024 * 1024)))
-            > Global.state().getSettingsModel().getDouble("cacheSizeLimit"));
-        projects.removeIf(keptProjects::contains);
-        // Need to also get the matching cache for the project in the other dir
-        List<File> oppositeCacheList = new ArrayList<>(projects.size());
-        if ("fit".equals(directory.getName()))
-        {
-            for (File project : projects)
-            {
-                File oppositeFile = new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), project.getName());
-                if (oppositeFile.exists())
-                {
-                    projects.add(oppositeFile);
-                }
-            }
+            int oldestProjectIndex = retainedProjectIDs.size() - 1;
+            String oldestProjectID = retainedProjectIDs.get(oldestProjectIndex);
+            freedSpace += projectSizes.get(oldestProjectID);
+            retainedProjectIDs.remove(oldestProjectIndex);
+            // TODO if projectSizes doesn't contain the key, that indicates that somehow projectSizes got modified
+            // TODO (probably due to multithreading, and would indicate that it's a new project or that the table is being rebuilt)
+            // TODO right now a null pointer exception will be thrown; need to think more about how to handle this.
         }
-        else if ("preview".equals(directory.getName()))
+        while (!retainedProjectIDs.isEmpty() &&
+            (prevCacheSize - ((double) freedSpace * (1024 * 1024 * 1024)))
+                > Global.state().getSettingsModel().getDouble("cacheSizeLimit"));
+
+        // Convert to hash table for more efficient lookup.
+        Collection<String> retainedProjectIDSet = new HashSet<>(retainedProjectIDs);
+
+        Collection<File> cacheDirsToClean = cleanableCacheProjects.entrySet().stream()
+            // Skip any projects that were designated for retention.
+            .filter(entry -> !retainedProjectIDSet.contains(entry.getKey()))
+            // Flatten to a stream of individual cache directories (for a specific project and a specific cache type)
+            .flatMap(entry -> entry.getValue().stream())
+            .collect(Collectors.toList());
+
+        for (var deleteMethod : getDeleteMethods().entrySet())
         {
-            for (File project : projects)
-            {
-                File oppositeFile = new File(ApplicationFolders.getFitCacheRootDirectory().toFile(), project.getName());
-                if (oppositeFile.exists())
-                {
-                    oppositeCacheList.add(oppositeFile);
-                }
-            }
+            // Clean up just the directories that are under the specific cache type (i.e. fit, preview)
+            deleteMethod.getValue().accept(cacheDirsToClean.stream()
+                .filter(cacheDir -> Objects.equals(deleteMethod.getKey(), cacheDir.getParentFile()))
+                .toArray(File[]::new));
         }
-        return oppositeCacheList;
     }
 
     private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
@@ -505,7 +575,7 @@ public class CacheModel
         return recentUUIDs;
     }
 
-    private long getDirectorySize(File directory, String project)
+    private long getDirectorySize(File directory, String projectID)
     {
         if (!Objects.equals(Thread.currentThread(), cacheSizeCalcThread))
         {
@@ -521,17 +591,17 @@ public class CacheModel
                 if (file.isFile())
                 {
                     length += file.length();
-                    projectSizes.put(project, ((projectSizes.get(project) == null) ? 0 : projectSizes.get(project)) + file.length());
+                    projectSizes.put(projectID, ((projectSizes.get(projectID) == null) ? 0 : projectSizes.get(projectID)) + file.length());
                 }
                 else
                 {
-                    if (project == null)
+                    if (projectID == null)
                     {
                         length += getDirectorySize(file, file.getName());
                     }
                     else
                     {
-                        length += getDirectorySize(file, project);
+                        length += getDirectorySize(file, projectID);
                     }
                 }
             }
@@ -577,8 +647,7 @@ public class CacheModel
      */
     public void requestCacheSizeRefresh(DoubleConsumer cacheSizeGBCallback)
     {
-        //noinspection SynchronizationOnStaticField
-        synchronized (CACHE_SIZE_CALC_THREAD_LOCK)
+        synchronized (cacheSizeCalcThreadLock)
         {
             // Add one-shot listener with the specified callback before checking whether calculation is in progress.
             // Because cacheSizeGB should only be modified in one place (within a Platform.runLater fired by the worker thread),
@@ -620,8 +689,7 @@ public class CacheModel
                         {
                             // prevent race condition if another call to requestCacheSizeRefresh comes in
                             // while updating and cleaning up listeners.
-                            //noinspection SynchronizationOnStaticField
-                            synchronized (CACHE_SIZE_CALC_THREAD_LOCK)
+                            synchronized (cacheSizeCalcThreadLock)
                             {
                                 try
                                 {
@@ -649,8 +717,7 @@ public class CacheModel
                     {
                         LOG.error("Error calculating cache size", e);
 
-                        //noinspection SynchronizationOnStaticField
-                        synchronized (CACHE_SIZE_CALC_THREAD_LOCK)
+                        synchronized (cacheSizeCalcThreadLock)
                         {
                             // Discard any listeners that didn't fire since an exception was thrown.
                             pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
@@ -672,26 +739,37 @@ public class CacheModel
 
     private double calcCacheSize()
     {
-        long fitSize = getDirectorySize(ApplicationFolders.getFitCacheRootDirectory().toFile(), null);
-        long previewSize = getDirectorySize(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), null);
-        return (double) (fitSize + previewSize) / (1024 * 1024 * 1024); // Size in GB.
+        // Clear projectSizes so that all are effectively reset to zero.
+        // TODO think about how this will interact with multithreading?
+        projectSizes.clear();
+
+        // Calculates both the total cache size as well as individual project sizes.
+        return (double) getCleanableCacheDirectories().stream()
+            .mapToLong(dir -> getDirectorySize(dir, null))
+            .sum() / (1024 * 1024 * 1024); // Size in GB.
     }
 
+    /**
+     * Gets the most cached projects in each cache (i.e. preview, fit).
+     * Typically, each cache will have the same projects (or one might have a subset of the other).
+     * Theoretically, it is possible that each cache has unique projects, in which case the total
+     * after combining would be greater than what this method returns.
+     * The intention is that this is to be used as an upper bound for the number of projects in an individual cache,
+     * and will typically be close to, if not equal to, the number of projects in all caches combined.
+     * @return
+     */
     private static int getNumCachedProjects()
     {
-        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
-        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
-        int previewSize = Objects.requireNonNull(previewCacheDir.listFiles()).length;
-        int fitSize = Objects.requireNonNull(fitCacheDir.listFiles()).length;
-        return Math.max(previewSize, fitSize);
+        return getCleanableCacheDirectories().stream()
+            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
+            .max().orElse(0);
     }
 
-    private boolean checkOldFilesExist()
+    private static boolean checkOldFilesExist()
     {
-        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
-        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
-        Collection<File> cacheFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(previewCacheDir.listFiles())));
-        cacheFiles.addAll(Arrays.asList(Objects.requireNonNull(fitCacheDir.listFiles())));
+        Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
+            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
+            .collect(Collectors.toList());
 
         Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
             .atZone(ZoneId.systemDefault()).toInstant();

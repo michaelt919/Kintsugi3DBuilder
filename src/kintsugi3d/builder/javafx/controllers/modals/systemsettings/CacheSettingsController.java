@@ -24,6 +24,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.CacheModel;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
@@ -59,21 +60,22 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         previewImageCacheLabel.setText(ApplicationFolders.getPreviewImagesRootDirectory().toString());
         specularFitCacheLabel.setText(ApplicationFolders.getFitCacheRootDirectory().toString());
 
+        CacheModel cacheModel = Global.state().getCacheModel();
         StringBinding cacheSizeTextBase = Bindings.createStringBinding(
-            () -> String.format("Cache Size: %.2fGB", Global.state().getCacheModel().getCacheSizeGB()), Global.state().getCacheModel().getCacheSizeGBProperty());
+            () -> String.format("Cache Size: %.2fGB", cacheModel.getCacheSizeGB()), cacheModel.getCacheSizeGBProperty());
 
         // Three cases for cache size label:
         // 1. Cache size previously calculated
         // 2. Cache size previously calculated but being recalculated
         // 3. Cache size not yet calculated; calculation should be in progress.
-        cacheSizeLabel.textProperty().bind(Bindings.when(Global.state().getCacheModel().getCacheSizeGBProperty().greaterThanOrEqualTo(0.0))
-            .then(Bindings.when(Global.state().getCacheModel().getCacheSizeCalcInProgressProperty())
+        cacheSizeLabel.textProperty().bind(Bindings.when(cacheModel.getCacheSizeGBProperty().greaterThanOrEqualTo(0.0))
+            .then(Bindings.when(cacheModel.getCacheSizeCalcInProgressProperty())
                 .then(cacheSizeTextBase.concat(" (calculating...)"))
                 .otherwise(cacheSizeTextBase))
             .otherwise(new ReadOnlyStringWrapper("Cache Size: (calculating...)")));
 
         // Request a refresh of the cache size without an explicit callback.
-        Global.state().getCacheModel().requestCacheSizeRefresh();
+        cacheModel.requestCacheSizeRefresh();
 
         bind(state.getSettingsModel());
     }
