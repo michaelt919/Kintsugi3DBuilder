@@ -31,7 +31,7 @@ public class USDZMetallicExporterFactory implements MaterialExporterFactory
     @Override
     public MaterialExporter getExporter(TextureResources<?> resources)
     {
-        USDZMetallicExporter exporter = new USDZMetallicExporter();
+        USDZExporter exporter = new USDZExporter(true);
         exporter.setTextureResources(resources);
         return exporter;
     }

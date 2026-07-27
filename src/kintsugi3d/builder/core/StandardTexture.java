@@ -22,7 +22,7 @@ public enum StandardTexture
     DIFFUSE_COLOR(new TextureDetails("diffuse", "Diffuse map",
         "The RGB color of the surface's Lambertian diffuse reflectance.")),
     SPECULAR_COLOR(new TextureDetails("specular", "Specular map",
-            "The RGB color (F0) of the surface's Cook-Torrance / Schlick Fresnel specular reflection.")),
+        "The RGB color (F0) of the surface's Cook-Torrance / Schlick Fresnel specular reflection.")),
     NORMAL_MAP(new TextureDetails("normal", "Normal map",
         "A texture that encodes geometric detail absent from the mesh, used for lighting and shading.  Deviations from the mesh geometry are represented as colors that deviate from a light blue representing the mesh's surface orientation.")),
     ROUGHNESS(new TextureDetails("roughness", "Roughness map",
@@ -31,6 +31,9 @@ public enum StandardTexture
         "The RGB albedo color that combines both diffuse and specular color.  Useful in PBR rendering pipelines that don't support separate diffuse and specular textures.")),
     OCCLUSION(new TextureDetails("occlusion", "Occlusion map",
         "An imported occlusion map that represents how much ambient light can reach the surface based on neighboring geometry: cracks and crevices receive less ambient light than smooth surfaces.")),
+    METALLIC(new TextureDetails("metallic", "Metallic map",
+        // TODO give this a description
+        "Lorem ipsum et dolor.")),
     ORM(new TextureDetails("orm", "ORM map",
         "A texture with occlusion, roughness, and metallicity packed into the red, green, and blue channels, respectively.  Occlusion and roughness should be identical to the corresponding standalone textures.  Metallicity is useful in combination with an albedo map for PBR rendering pipelines that don't support separate diffuse and specular textures.  A metallicity of 0 (black) indicates that the albedo color is a diffuse color, while a metallicity of 1 (white) indicates that the albedo is a specular color, with intermediate values distributing the albedo proportionately between diffuse and specular.")),
     ERROR(new TextureDetails("error", "Error map",

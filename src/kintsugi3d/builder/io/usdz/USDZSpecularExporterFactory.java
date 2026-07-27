@@ -31,7 +31,7 @@ public class USDZSpecularExporterFactory implements MaterialExporterFactory
     @Override
     public MaterialExporter getExporter(TextureResources<?> resources)
     {
-        USDZSpecularExporter exporter = new USDZSpecularExporter();
+        USDZExporter exporter = new USDZExporter(false);
         exporter.setTextureResources(resources);
         return exporter;
     }
