@@ -384,20 +384,11 @@ public class SimpleMaterialBasis implements MaterialBasis
         {
             int index = Math.min(b, disabledBasisList.size());
             // copy to disabled lists
-            disabledBasisList.add(index, inEnabledList.get());
-            disabledBasisList.get(index).setEnabled(false);
-//            disabledRedBasis.add(index, redBasis.get(name));
-//            disabledGreenBasis.add(index, greenBasis.get(name));
-//            disabledBlueBasis.add(index, blueBasis.get(name));
-//            disabledDiffuseColors.add(index, diffuseColors.get(name));
-//            disabledNames.add(index, names.get(name));
+            disabledBasisList.add(inEnabledList.get());
+            disabledBasisList.get(disabledBasisList.size() - 1).setEnabled(false);
+            disabledBasisList.sort(Comparator.comparing(BasisData::getName));
             // remove from enabled lists
             basisList.remove(inEnabledList.get());
-//            redBasis.remove(name);
-//            greenBasis.remove(name);
-//            blueBasis.remove(name);
-//            diffuseColors.remove(name);
-//            names.remove(name);
             materialCount--;
             disabledMaterialCount++;
         }
@@ -410,22 +401,12 @@ public class SimpleMaterialBasis implements MaterialBasis
         Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
         if (inDisabledList.isPresent())
         {
-            int index = Math.min(b, basisList.size());
             // add to enabled lists
-            basisList.add(index, inDisabledList.get());
-            basisList.get(index).setEnabled(true);
-//            redBasis.add(index, disabledRedBasis.get(name));
-//            greenBasis.add(index, disabledGreenBasis.get(name));
-//            blueBasis.add(index, disabledBlueBasis.get(name));
-//            diffuseColors.add(index, disabledDiffuseColors.get(name));
-//            names.add(index, disabledNames.get(name));
+            basisList.add(inDisabledList.get());
+            basisList.get(basisList.size() - 1).setEnabled(true);
+            basisList.sort(Comparator.comparing(BasisData::getName));
             // remove from disabled lists
             disabledBasisList.remove(inDisabledList.get());
-//            disabledRedBasis.remove(name);
-//            disabledGreenBasis.remove(name);
-//            disabledBlueBasis.remove(name);
-//            disabledDiffuseColors.remove(name);
-//            disabledNames.remove(name);
             materialCount++;
             disabledMaterialCount--;
         }

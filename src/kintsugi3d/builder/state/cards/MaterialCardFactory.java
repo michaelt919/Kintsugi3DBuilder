@@ -27,10 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -96,25 +93,24 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
                 Map.of("Toggle Disabled", () ->
-                    {
                         Rendering.runLater(() ->
                             {
                                 resources.getBasisResources().toggleBasisMaterial(cardIndex);
                                 Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
-                            });
-                    },
+                            }),
                     "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
                         {
                             try
                             {
-                                resources.deleteBasisMaterial(cardIndex);
+                                resources.deleteBasisMaterial(Integer.parseInt(resources.getBasisResources().getBasis().getDisplayName(cardIndex)));
                             }
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
                             {
                                 // hard reset of cards list to re-number, etc.
-                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
+                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+//                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
                             }
                         })))), !resources.getBasisResources().getBasis().getIsEnabled(cardIndex));
     }
@@ -130,7 +126,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
             {
                 return IntStream.range(0, basisResources.getBasisCount() + basisResources.getDisabledBasisCount())
                     .mapToObj(i -> createCard(cardsModel, resources, i))
-                    .collect(Collectors.toUnmodifiableList());
+                    .sorted(Comparator.comparing(ProjectDataCard::getInternalName)).collect(Collectors.toUnmodifiableList());
+
             }
         }
 

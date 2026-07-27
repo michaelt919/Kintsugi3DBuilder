@@ -69,6 +69,10 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     @Override
     public int getBasisCount()
     {
+        if (basis != null)
+        {
+            return basis.getMaterialCount();
+        }
         return basisCount;
     }
 

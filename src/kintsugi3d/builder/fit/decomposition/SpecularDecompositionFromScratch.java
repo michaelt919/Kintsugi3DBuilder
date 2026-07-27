@@ -34,14 +34,14 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     private SimpleMatrix specularGreen;
     private SimpleMatrix specularBlue;
 
-    private final List<String> names;
+    private final List<Integer> names;
 
     private final List<DoubleVector3> disabledDiffuseAlbedos;
     private SimpleMatrix disabledSpecularRed;
     private SimpleMatrix disabledSpecularGreen;
     private SimpleMatrix disabledSpecularBlue;
 
-    private final List<String> disabledNames;
+    private final List<Integer> disabledNames;
 
     public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
     {
@@ -76,7 +76,8 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             this.basisSettings.getBasisResolution() + 1,
             this.basisSettings.getBasisCount(), DMatrixRMaj.class);
 
-        names = IntStream.range(0, diffuseAlbedos.size()).mapToObj(String::valueOf).collect(Collectors.toList());
+        names = new ArrayList<>(diffuseAlbedos.size());
+        IntStream.range(0, diffuseAlbedos.size()).forEach(names::add);
         disabledNames = new ArrayList<>(0);
     }
 
@@ -98,21 +99,21 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public int getName(int b)
             {
-                return Integer.parseInt(names.get(b));
+                return names.get(b);
             }
 
             @Override
             public String getDisplayName(int cardIndex)
             {
-                int index = names.indexOf(Integer.toString(cardIndex));
-                if (index != -1)
+                int index = names.indexOf(cardIndex);
+                if (index == -1)
                 {
-                    return names.get(cardIndex);
+                    index = disabledNames.indexOf(cardIndex);
+                    return Integer.toString(disabledNames.get(index));
                 }
                 else
                 {
-                    index = disabledNames.indexOf(Integer.toString(cardIndex));
-                    return disabledNames.get(index);
+                    return Integer.toString(names.get(cardIndex));
                 }
             }
 
@@ -141,16 +142,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public double evaluateSpecularRed(int b, int m)
             {
-                int index = names.indexOf(Integer.toString(b));
-                if (index != -1)
+                int index = names.indexOf(b);
+                if (index == -1)
                 {
-                    return specularRed.get(m, index);
+                    index = disabledNames.indexOf(b);
                 }
-                else
-                {
-                    index = disabledNames.indexOf(Integer.toString(b));
-                    return specularRed.get(m, index);
-                }
+                return specularRed.get(m, index);
             }
 
             @Override
@@ -162,16 +159,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public double evaluateSpecularGreen(int b, int m)
             {
-                int index = names.indexOf(Integer.toString(b));
-                if (index != -1)
+                int index = names.indexOf(b);
+                if (index == -1)
                 {
-                    return specularGreen.get(m, index);
+                    index = disabledNames.indexOf(b);
                 }
-                else
-                {
-                    index = disabledNames.indexOf(Integer.toString(b));
-                    return specularGreen.get(m, index);
-                }
+                return specularGreen.get(m, index);
             }
 
             @Override
@@ -183,16 +176,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public double evaluateSpecularBlue(int b, int m)
             {
-                int index = names.indexOf(Integer.toString(b));
-                if (index != -1)
+                int index = names.indexOf(b);
+                if (index == -1)
                 {
-                    return specularBlue.get(m, index);
+                    index = disabledNames.indexOf(b);
                 }
-                else
-                {
-                    index = disabledNames.indexOf(Integer.toString(b));
-                    return specularBlue.get(m, index);
-                }
+                return specularBlue.get(m, index);
             }
 
             @Override
@@ -222,29 +211,29 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public void deleteMaterial(int b)
             {
-                int index = names.indexOf(Integer.toString(b));
-                if (index != -1)
+                int index = names.indexOf(b);
+                if (index == -1)
                 {
-                    specularRed = removeColumn(specularRed, Integer.parseInt(names.get(index)));
-                    specularGreen = removeColumn(specularGreen, Integer.parseInt(names.get(index)));
-                    specularBlue = removeColumn(specularBlue, Integer.parseInt(names.get(index)));
-                    disabledSpecularRed = removeColumn(specularRed, Integer.parseInt(names.get(index)));
-                    disabledSpecularGreen = removeColumn(specularGreen, Integer.parseInt(names.get(index)));
-                    disabledSpecularBlue = removeColumn(specularBlue, Integer.parseInt(names.get(index)));
-                    names.remove(index);
-                    diffuseAlbedos.remove(index);
+                    index = disabledNames.indexOf(b);
+                    disabledSpecularRed = removeColumn(specularRed, disabledNames.get(index));
+                    disabledSpecularGreen = removeColumn(specularGreen, disabledNames.get(index));
+                    disabledSpecularBlue = removeColumn(specularBlue, disabledNames.get(index));
+                    specularRed = removeColumn(specularRed, disabledNames.get(index));
+                    specularGreen = removeColumn(specularGreen, disabledNames.get(index));
+                    specularBlue = removeColumn(specularBlue, disabledNames.get(index));
+                    disabledDiffuseAlbedos.remove(index);
+                    disabledNames.remove(index);
                 }
                 else
                 {
-                    index = disabledNames.indexOf(Integer.toString(b));
-                    disabledSpecularRed = removeColumn(specularRed, Integer.parseInt(disabledNames.get(index)));
-                    disabledSpecularGreen = removeColumn(specularGreen, Integer.parseInt(disabledNames.get(index)));
-                    disabledSpecularBlue = removeColumn(specularBlue, Integer.parseInt(disabledNames.get(index)));
-                    specularRed = removeColumn(specularRed, Integer.parseInt(disabledNames.get(index)));
-                    specularGreen = removeColumn(specularGreen, Integer.parseInt(disabledNames.get(index)));
-                    specularBlue = removeColumn(specularBlue, Integer.parseInt(disabledNames.get(index)));
-                    disabledDiffuseAlbedos.remove(index);
-                    disabledNames.remove(index);
+                    specularRed = removeColumn(specularRed, names.get(index));
+                    specularGreen = removeColumn(specularGreen, names.get(index));
+                    specularBlue = removeColumn(specularBlue, names.get(index));
+                    disabledSpecularRed = removeColumn(specularRed, names.get(index));
+                    disabledSpecularGreen = removeColumn(specularGreen, names.get(index));
+                    disabledSpecularBlue = removeColumn(specularBlue, names.get(index));
+                    names.remove(index);
+                    diffuseAlbedos.remove(index);
                 }
                 count--;
             }
@@ -252,10 +241,10 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public void disableMaterial(int b)
             {
-                int name = names.indexOf(Integer.toString(b));
+                int name = names.indexOf(b);
                 if (name != -1)
                 {
-                    int index = Math.min(name, disabledNames.size());
+                    int index = Math.min(names.get(name), disabledNames.size());
                     // add to disabled lists
                     disabledSpecularRed = addColumn(disabledSpecularRed, specularRed, name);
                     disabledSpecularGreen = addColumn(disabledSpecularGreen, specularGreen, name);
@@ -276,10 +265,10 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public void enableMaterial(int b)
             {
-                int name = disabledNames.indexOf(Integer.toString(b));
+                int name = disabledNames.indexOf(b);
                 if (name != -1)
                 {
-                    int index = Math.min(name, names.size());
+                    int index = Math.min(disabledNames.get(name), names.size());
                     // add to enabled lists
                     specularRed = addColumn(specularRed, disabledSpecularRed, name);
                     specularGreen = addColumn(specularGreen, disabledSpecularGreen, name);
@@ -300,7 +289,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public boolean getIsEnabled(int b)
             {
-                return names.contains(Integer.toString(b));
+                return names.contains(b);
             }
 
             private SimpleMatrix removeColumn(SimpleMatrix m, int b)
