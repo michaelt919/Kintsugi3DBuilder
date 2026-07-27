@@ -801,3 +801,6 @@
 #carouselScrollPane.hide-hbar .scroll-bar:horizontal {
     -fx-opacity: 1.0;
 }
+.dark-grey-slider .track{
+    -fx-background-color: #202020;
+}

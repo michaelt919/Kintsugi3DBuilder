@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<AnchorPane fx:id = "layersBox"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.TextureLayersController"
+            style = "-fx-background-color: #202020"
+            minWidth="0.0"
+            visible="false"
+            managed="false"
+            maxHeight="Infinity">
+    <padding>
+        <Insets left="2" right="2" bottom="2"/>
+    </padding>
+    <VBox   AnchorPane.topAnchor="0" AnchorPane.rightAnchor="2" AnchorPane.leftAnchor="2" AnchorPane.bottomAnchor="2"
+            style = "-fx-background-color: #383838">
+        <Label text = "Constraint Painting" style = "-fx-font-weight: bold; -fx-font-size: 10px">
+            <VBox.margin>
+                <Insets top = "6" left="8.0" bottom="10"/>
+            </VBox.margin>
+        </Label>
+        <HBox fx:id = "parentHBox" alignment="CENTER_LEFT">
+            <VBox.margin>
+                <Insets bottom="10"/>
+            </VBox.margin>
+            <HBox fx:id = "containerHBox1" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id = "undoButton" minHeight="15" maxHeight="15" minWidth="15" maxWidth="15" style="-fx-background-color: #202020"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id = "redoButton" minHeight="15" maxHeight="15" minWidth="15" maxWidth="15" style="-fx-background-color: #202020"/>
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+            <Region fx:id="separator1" minWidth="1" maxWidth="1" minHeight="20" maxHeight="20" style="-fx-background-color: #202020;"/>
+            <HBox fx:id = "containerHBox2" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id = "swapButton" minHeight="15" maxHeight="15" minWidth="15" maxWidth="15" style="-fx-background-color: #202020"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id = "eraseButton" minHeight="15" maxHeight="15" minWidth="15" maxWidth="15" style="-fx-background-color: #202020"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id = "fillButton" minHeight="15" maxHeight="15" minWidth="15" maxWidth="15" style="-fx-background-color: #202020"/>
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+            <Region fx:id="separator2" minWidth="1" maxWidth="1" minHeight="20" maxHeight="20" style="-fx-background-color: #202020;"/>
+            <HBox fx:id = "containerHBox3" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                <Region HBox.hgrow="ALWAYS" />
+                <HBox fx:id ="layerBlendBox" minHeight="15" maxHeight="15" style = "-fx-background-color: #202020;" alignment="CENTER">
+                    <padding>
+                        <Insets left="8.0" right="8.0"/>
+                    </padding>
+                    <Label text = "Layer Blend Type" style="-fx-font-size: 10px"/>
+                    <!--<Region HBox.hgrow="ALWAYS" />
+                    <Region minHeight="8" maxHeight="8" minWidth="15" maxWidth="15" style = "-fx-background-color: #CECECE;"/>-->
+                </HBox>
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+        </HBox>
+        <!--<HBox fx:id = "textureModificationBox">-->
+            <VBox fx:id = "sliderBox">
+                <HBox fx:id = "sizeRegion">
+                    <VBox spacing = "5">
+                        <padding>
+                            <Insets left="10.0" right="10.0"/>
+                        </padding>
+                        <Label text = "Size:" style="-fx-font-size: 10px"/>
+                        <Slider fx:id = "sizeSlider" styleClass="dark-grey-slider" min = "10" max = "100" value="100" majorTickUnit="50" minorTickCount="10" showTickMarks="true"/>
+                    </VBox>
+                    <HBox fx:id = "sizeLabelRegion" style = "-fx-background-color: #202020;" minHeight="20" maxHeight="20" alignment="CENTER">
+                        <HBox.margin>
+                            <Insets top="10"/>
+                        </HBox.margin>
+                        <Label fx:id = "sizeValue" text = "100%" style="-fx-font-size: 10px"/>
+                    </HBox>
+                </HBox>
+                <HBox fx:id = "featherRegion">
+                    <VBox spacing = "5">
+                        <padding>
+                            <Insets left="10.0" right="10.0"/>
+                        </padding>
+                        <Label text = "Feather:" style="-fx-font-size: 10px"/>
+                        <Slider fx:id = "featherSlider" styleClass="dark-grey-slider" min = "10" max = "100" value="100" majorTickUnit="50" minorTickCount="10" showTickMarks="true"/>
+                    </VBox>
+                    <HBox fx:id = "featherLabelRegion" style = "-fx-background-color: #202020;" minHeight="20" maxHeight="20" alignment="CENTER">
+                        <HBox.margin>
+                            <Insets top="10"/>
+                        </HBox.margin>
+                        <Label fx:id = "featherValue" text = "100%" style="-fx-font-size: 10px"/>
+                    </HBox>
+                </HBox>
+                <HBox fx:id = "opacityRegion">
+                    <VBox spacing = "5">
+                        <padding>
+                            <Insets left="10.0" right="10.0"/>
+                        </padding>
+                        <Label text = "Opacity:" style="-fx-font-size: 10px"/>
+                        <Slider fx:id = "opacitySlider" styleClass="dark-grey-slider" min = "0" max = "100" value="100" majorTickUnit="50" minorTickCount="10" showTickMarks="true"/>
+                    </VBox>
+                    <HBox fx:id = "opacityLabelRegion" style = "-fx-background-color: #202020;" minHeight="20" maxHeight="20" alignment="CENTER">
+                        <HBox.margin>
+                            <Insets top="10"/>
+                        </HBox.margin>
+                        <Label fx:id = "opacityValue" text = "100%" style="-fx-font-size: 10px"/>
+                    </HBox>
+                </HBox>
+            </VBox>
+            <!--
+            <StackPane>
+                <ImageView fx:id = "imagePreview" preserveRatio="true"/>
+            </StackPane> -->
+        <!--</HBox>-->
+    </VBox>
+</AnchorPane>

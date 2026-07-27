@@ -48,11 +48,13 @@ public class RightBarController
     @FXML private Button minimizeButton;
     @FXML private Label detailsLabel;
     @FXML private HBox detailsBox;
+    @FXML private HBox textBox;
     @FXML private VBox imageDetails;
     @FXML private Label imageName;
     @FXML private Label imageNameSpace;
 
     @FXML private ImageDetailsController imageDetailsController;
+    @FXML private TextureLayersController textureLayersController;
 
     // needed to remove tabs
     private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
@@ -77,25 +79,24 @@ public class RightBarController
                 {
                     //Calls setImage() with null (Will not display panel)
                     imageDetailsController.setImage(null);
+                    textureLayersController.setShown(false);
 
                     //Image Name will not be displayed
                     imageName.setText("");
-                    imageNameSpace.setVisible(false);
+                    textBox.setVisible(false);
+                    textBox.setManaged(false);
                     isLoaded = false;
-                }
-                else if (tabsModel.getAllCards().size() == 1)//If list size equals 1
-                {
-                    //Sends filePath to imageDetailsController setImage(String fileName)
-                    imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(0));
                 }
                 else
                 {
                     //Sends filePath to imageDetailsController setImage(String fileName)
                     imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(tabsModel.getAllCards().size()-1));
+                    textureLayersController.setShown(true);
+                    textBox.setVisible(true);
+                    textBox.setManaged(true);
                 }
             }
         });
-
         resizeWidth(DEFAULT_WIDTH);
     }
 
