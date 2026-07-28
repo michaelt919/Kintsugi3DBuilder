@@ -38,12 +38,15 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
 
 public class CacheModel
 {
+    public static final double BYTES_TO_GB = 1.0 / (1024.0 * 1024.0 * 1024.0);
+
     /**
      * This should ONLY be modified in one place, via the requestCacheSizeRefresh method.
      * Otherwise, there would be bad race conditions.
@@ -56,6 +59,8 @@ public class CacheModel
      * The intention is for this to just be used for UI display purposes, not internal thread synchronization logic.
      */
     private final BooleanProperty cacheSizeCalcInProgress;
+
+    private final AtomicBoolean cacheCleanupInProgress;
 
     /**
      * Use a separate property for handling one-shot listeners
@@ -76,7 +81,7 @@ public class CacheModel
      */
     private volatile Thread cacheSizeCalcThread;
 
-    private final Map<String, Long> projectSizes;
+    private Map<String, Long> projectSizes;
 
     private static final Logger LOG = LoggerFactory.getLogger(CacheModel.class);
 
@@ -84,10 +89,11 @@ public class CacheModel
     {
         cacheSizeGB = new SimpleDoubleProperty(-1); // -1 signifies uninitialized.
         cacheSizeCalcInProgress = new SimpleBooleanProperty(false);
+        cacheCleanupInProgress = new AtomicBoolean(false);
         pendingCacheSizeCallbacks = new ArrayList<>(1);
         cacheSizeCalcThreadLock = new Object();
         cacheSizeCalcThread = null;
-        projectSizes = new HashMap<>(getNumCachedProjects());
+        projectSizes = Map.of();
     }
 
     private static Map<File, Consumer<File[]>> getDeleteMethods()
@@ -125,18 +131,32 @@ public class CacheModel
         {
             if (response.equals(ButtonType.OK))
             {
-                try
+                new Thread(() ->
                 {
-                    for (var entry : deleteMethods.entrySet())
+                    try
                     {
-                        clearCache(entry.getKey(), entry.getValue());
+                        if (cacheCleanupInProgress.compareAndSet(false, true))
+                        {
+                            try
+                            {
+                                for (var entry : deleteMethods.entrySet())
+                                {
+                                    clearCache(entry.getKey(), entry.getValue());
+                                }
+                            }
+                            finally
+                            {
+                                cacheCleanupInProgress.set(false);
+                            }
+
+                            requestCacheSizeRefresh();
+                        }
                     }
-                    requestCacheSizeRefresh();
-                }
-                catch(IOException e)
-                {
-                    handleCacheCleanupError(e);
-                }
+                    catch (IOException e)
+                    {
+                        handleCacheCleanupError(e);
+                    }
+                }, "Clear Cache").start();
             }
         });
     }
@@ -375,7 +395,7 @@ public class CacheModel
                     {
                         handleCacheCleanupError(e);
                     }
-                }).start();
+                }, "Clean Up Cache").start();
             }
         });
     }
@@ -387,58 +407,77 @@ public class CacheModel
      */
     private void cleanCacheSubDirs(Map<File, Consumer<File[]>> deleteMethods) throws IOException
     {
-        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-
-        for (var deleteMethod : deleteMethods.entrySet())
+        if (cacheCleanupInProgress.compareAndSet(false, true))
         {
-            File directory = deleteMethod.getKey();
-
-            if (!directory.isDirectory())
+            try
             {
-                throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
-            }
-            // Select only cache directories that are not in the recently opened projects welcome dialogue.
-            Set<File> deletableProjects = new HashSet<>(0);
-            List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-            List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+                GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
 
-            if (settingsModel.getBoolean("recentPromptEnabled"))
+                for (var deleteMethod : deleteMethods.entrySet())
+                {
+                    File directory = deleteMethod.getKey();
+
+                    if (!directory.isDirectory())
+                    {
+                        throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+                    }
+                    // Select only cache directories that are not in the recently opened projects welcome dialogue.
+                    Collection<File> deletableProjects = new HashSet<>(0);
+                    List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+                    List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+
+                    if (settingsModel.getBoolean("recentPromptEnabled"))
+                    {
+                        filterByRecentProjectLimit(directory, nonRecentProjects);
+                        deletableProjects.addAll(nonRecentProjects);
+                    }
+
+                    if (settingsModel.getBoolean("fileAgePromptEnabled"))
+                    {
+                        filterByFileAgeLimit(oldProjects);
+                        deletableProjects.addAll(oldProjects);
+                    }
+
+                    // Perform cache deletion on directories still in oldProjects.
+                    File[] deletableProjectsArr = deletableProjects.toArray(File[]::new);
+
+                    deleteMethod.getValue().accept(deletableProjectsArr);
+                }
+
+                // Recalculate the size of the cache after cleaning up files by age or by presence in recent files list.
+                // Even if we still need to remove more projects due to cache size limit, it is necessary to first refresh
+                // the cache size because a user could, in theory, delete one of the more recent projects from their hard drive
+                // and then purge the recent files list manually.  The non-recent cache cleanup will then delete that project's
+                // cache, meaning that it may be possible to keep the cache for one or more older projects that have not been
+                // deleted while keeping within the cache size limit.
+                // On the other hand, if the cache size limit is not enabled, this will just be the final refresh.
+                requestCacheSizeRefresh(null, () ->
+                    // Callback will be on the JavaFX thread so we need to spawn a new thread
+                    new Thread(() ->
+                    {
+                        try
+                        {
+                            if (settingsModel.getBoolean("sizePromptEnabled") && (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit")))
+                            {
+                                // This method will keep deleting projects until we're within the cache size limit.
+                                cleanUpBySizeLimit();
+
+                                // Refresh the cache size again to display the final reduced size.
+                                requestCacheSizeRefresh();
+                            }
+                        }
+                        finally
+                        {
+                            cacheCleanupInProgress.set(false);
+                        }
+                    }, "Clean Up Cache By Size Limit").start());
+            }
+            catch (RuntimeException e)
             {
-                filterByRecentProjectLimit(directory, nonRecentProjects);
-                deletableProjects.addAll(nonRecentProjects);
+                cacheCleanupInProgress.set(false);
+                throw e;
             }
-
-            if (settingsModel.getBoolean("fileAgePromptEnabled"))
-            {
-                filterByFileAgeLimit(oldProjects);
-                deletableProjects.addAll(oldProjects);
-            }
-
-            // Perform cache deletion on directories still in oldProjects.
-            File[] deletableProjectsArr = new File[deletableProjects.size()];
-            deletableProjectsArr = deletableProjects.toArray(deletableProjectsArr);
-
-            deleteMethod.getValue().accept(deletableProjectsArr);
         }
-
-        // Recalculate the size of the cache after cleaning up files by age or by presence in recent files list.
-        // Even if we still need to remove more projects due to cache size limit, it is necessary to first refresh
-        // the cache size because a user could, in theory, delete one of the more recent projects from their hard drive
-        // and then purge the recent files list manually.  The non-recent cache cleanup will then delete that project's
-        // cache, meaning that it may be possible to keep the cache for one or more older projects that have not been
-        // deleted while keeping within the cache size limit.
-        // On the other hand, if the cache size limit is not enabled, this will just be the final refresh.
-        requestCacheSizeRefresh(cacheSize ->
-        {
-            if (settingsModel.getBoolean("sizePromptEnabled") && (cacheSize > settingsModel.getFloat("cacheSizeLimit")))
-            {
-                // This method will keep deleting projects until we're within the cache size limit.
-                cleanUpBySizeLimit();
-
-                // Refresh the cache size again to display the final reduced size.
-                requestCacheSizeRefresh();
-            }
-        });
     }
 
     private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
@@ -514,21 +553,41 @@ public class CacheModel
                 .map(Entry::getKey) // Keep just the key / project ID
                 .collect(Collectors.toCollection(ArrayList<String>::new)); // Explicit ArrayList constructor to ensure mutability
 
-        double prevCacheSize = getCacheSizeGB();
-        long freedSpace = 0;
-        do
+        double prevCacheSizeGB;
+        Map<String, Long> prevProjectSizes;
+
+        // Prevent race condition, as the project size map and the total cache size could be updated
+        // as a result of a concurrent cache size recalculation.
+        // We just get a snapshot here and work off that snapshot.
+        // It's possible that the contents on disk will no longer reflect this but our best bet is still to just
+        // optimize with the information that we had when the process started.
+        synchronized (cacheSizeCalcThreadLock)
         {
-            int oldestProjectIndex = retainedProjectIDs.size() - 1;
-            String oldestProjectID = retainedProjectIDs.get(oldestProjectIndex);
-            freedSpace += projectSizes.get(oldestProjectID);
-            retainedProjectIDs.remove(oldestProjectIndex);
-            // TODO if projectSizes doesn't contain the key, that indicates that somehow projectSizes got modified
-            // TODO (probably due to multithreading, and would indicate that it's a new project or that the table is being rebuilt)
-            // TODO right now a null pointer exception will be thrown; need to think more about how to handle this.
+            prevCacheSizeGB = getCacheSizeGB();
+            prevProjectSizes = projectSizes;
         }
-        while (!retainedProjectIDs.isEmpty() &&
-            (prevCacheSize - ((double) freedSpace * (1024 * 1024 * 1024)))
-                > Global.state().getSettingsModel().getDouble("cacheSizeLimit"));
+
+        long freedSpace = 0;
+        int oldestProjectIndex = retainedProjectIDs.size() - 1;
+
+        while (oldestProjectIndex >= 0 &&
+            prevCacheSizeGB - freedSpace * BYTES_TO_GB  > Global.state().getSettingsModel().getDouble("cacheSizeLimit"))
+        {
+            String oldestProjectID = retainedProjectIDs.get(oldestProjectIndex);
+            Long projectSize = prevProjectSizes.get(oldestProjectID);
+
+            if (projectSize != null)
+            {
+                freedSpace += projectSize;
+                retainedProjectIDs.remove(oldestProjectIndex);
+            }
+            // If projectSizes doesn't contain the key, that probably means that a new project cache was generated
+            // concurrently that isn't in the map that we had when the cache sizes were calculated.
+            // Just skip it for now as it has no impact on our current disk space calculation.
+
+            // Regardless of which case, we always want to move to the next index.
+            oldestProjectIndex--;
+        }
 
         // Convert to hash table for more efficient lookup.
         Collection<String> retainedProjectIDSet = new HashSet<>(retainedProjectIDs);
@@ -575,7 +634,14 @@ public class CacheModel
         return recentUUIDs;
     }
 
-    private long getDirectorySize(File directory, String projectID)
+    /**
+     *
+     * @param directory The current directory whose size is being evaluated.
+     * @param newProjectSizes Will be populated with updated individual project cache sizes.
+     * @param projectID The name of project whose cache size is being calculated.
+     * @return The total size of the cache over all projects.
+     */
+    private long getDirectorySize(File directory, Map<String, Long> newProjectSizes, String projectID)
     {
         if (!Objects.equals(Thread.currentThread(), cacheSizeCalcThread))
         {
@@ -591,17 +657,17 @@ public class CacheModel
                 if (file.isFile())
                 {
                     length += file.length();
-                    projectSizes.put(projectID, ((projectSizes.get(projectID) == null) ? 0 : projectSizes.get(projectID)) + file.length());
+                    newProjectSizes.put(projectID, ((newProjectSizes.get(projectID) == null) ? 0 : newProjectSizes.get(projectID)) + file.length());
                 }
                 else
                 {
                     if (projectID == null)
                     {
-                        length += getDirectorySize(file, file.getName());
+                        length += getDirectorySize(file, newProjectSizes, file.getName());
                     }
                     else
                     {
-                        length += getDirectorySize(file, projectID);
+                        length += getDirectorySize(file, newProjectSizes, projectID);
                     }
                 }
             }
@@ -631,7 +697,7 @@ public class CacheModel
      */
     public void requestCacheSizeRefresh()
     {
-        requestCacheSizeRefresh(value -> {});
+        requestCacheSizeRefresh(null, null);
     }
 
     /**
@@ -643,9 +709,10 @@ public class CacheModel
      * another request will not be started but the additional callback will instead be attached to the
      * already-running request and invoked if that request yields a different value than the current one.
      * If invoked, the callback will always be invoked from the JavaFX Application Thread.
-     * @param cacheSizeGBCallback
+     * @param cacheSizeGBCallback Runs only if the cache size changed.
+     * @param onCompleteCallback Always runs regardless of whether the cache size changed.  Also runs on the JavaFX thread.
      */
-    public void requestCacheSizeRefresh(DoubleConsumer cacheSizeGBCallback)
+    private void requestCacheSizeRefresh(DoubleConsumer cacheSizeGBCallback, Runnable onCompleteCallback)
     {
         synchronized (cacheSizeCalcThreadLock)
         {
@@ -662,13 +729,16 @@ public class CacheModel
                     cacheSizeGB.removeListener(this); // Remove first in case the callback throws an exception.
                     pendingCacheSizeCallbacks.remove(this);
 
-                    try
+                    if (cacheSizeGBCallback != null)
                     {
-                        cacheSizeGBCallback.accept(newValue.doubleValue());
-                    }
-                    catch (RuntimeException e)
-                    {
-                        LOG.error("Exception thrown by cache size callback", e);
+                        try
+                        {
+                            cacheSizeGBCallback.accept(newValue.doubleValue());
+                        }
+                        catch (RuntimeException e)
+                        {
+                            LOG.error("Exception thrown by cache size callback", e);
+                        }
                     }
                 }
             };
@@ -682,33 +752,49 @@ public class CacheModel
                 {
                     try
                     {
+                        Map<String, Long> newProjectSizes = new HashMap<>(getNumCachedProjects());
+
                         // Refresh the cache size.  This takes a while.
-                        double newCacheSizeGB = calcCacheSize();
+                        double newCacheSizeGB = calcCacheSize(newProjectSizes);
 
                         Platform.runLater(() ->
                         {
-                            // prevent race condition if another call to requestCacheSizeRefresh comes in
-                            // while updating and cleaning up listeners.
-                            synchronized (cacheSizeCalcThreadLock)
+                            try
                             {
-                                try
+                                // prevent race condition if another call to requestCacheSizeRefresh comes in
+                                // while updating and cleaning up listeners.
+                                synchronized (cacheSizeCalcThreadLock)
                                 {
-                                    // This will trigger the listener created above.
-                                    cacheSizeGB.set(newCacheSizeGB);
-                                }
-                                finally
-                                {
-                                    // Discard any listeners that didn't fire (i.e. if the value didn't change).
-                                    pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
-                                    pendingCacheSizeCallbacks.clear();
+                                    try
+                                    {
+                                        // Refresh the individual project cache size map
+                                        projectSizes = Collections.unmodifiableMap(newProjectSizes);
 
-                                    // This thread is now done.
-                                    // Set the thread reference to null to indicate that future refresh requests
-                                    // should actually start a new thread.
-                                    // We actually wait until after the JavaFX update via Platform.runLater
-                                    // so that another thread doesn't start before the update is fully processed.
-                                    cacheSizeCalcThread = null;
-                                    cacheSizeCalcInProgress.set(false);
+                                        // This will trigger the listener created above.
+                                        cacheSizeGB.set(newCacheSizeGB);
+                                    }
+                                    finally
+                                    {
+                                        // Discard any listeners that didn't fire (i.e. if the value didn't change).
+                                        pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
+                                        pendingCacheSizeCallbacks.clear();
+
+                                        // This thread is now done.
+                                        // Set the thread reference to null to indicate that future refresh requests
+                                        // should actually start a new thread.
+                                        // We actually wait until after the JavaFX update via Platform.runLater
+                                        // so that another thread doesn't start before the update is fully processed.
+                                        cacheSizeCalcThread = null;
+                                        cacheSizeCalcInProgress.set(false);
+                                    }
+                                }
+                            }
+                            finally // Another finally block that isn't synchronized to avoid blocking other threads.
+                            {
+                                // Callback that should always run regardless of whether the cache size changed or not.
+                                if (onCompleteCallback != null)
+                                {
+                                    onCompleteCallback.run();
                                 }
                             }
                         });
@@ -727,6 +813,12 @@ public class CacheModel
                             cacheSizeCalcThread = null;
                             cacheSizeCalcInProgress.set(false);
                         }
+
+                        // Callback that should always run regardless of whether the cache size changed or not.
+                        if (onCompleteCallback != null)
+                        {
+                            onCompleteCallback.run();
+                        }
                     }
                 }, "Cache Size Calculation");
 
@@ -737,16 +829,17 @@ public class CacheModel
         }
     }
 
-    private double calcCacheSize()
+    /**
+     *
+     * @param newProjectSizes Will be populated with updated individual project cache sizes.
+     * @return The total size of the cache over all projects.
+     */
+    private double calcCacheSize(Map<String, Long> newProjectSizes)
     {
-        // Clear projectSizes so that all are effectively reset to zero.
-        // TODO think about how this will interact with multithreading?
-        projectSizes.clear();
-
         // Calculates both the total cache size as well as individual project sizes.
-        return (double) getCleanableCacheDirectories().stream()
-            .mapToLong(dir -> getDirectorySize(dir, null))
-            .sum() / (1024 * 1024 * 1024); // Size in GB.
+        return getCleanableCacheDirectories().stream()
+            .mapToLong(dir -> getDirectorySize(dir, newProjectSizes, null))
+            .sum() * BYTES_TO_GB; // Size in GB.
     }
 
     /**
@@ -808,7 +901,8 @@ public class CacheModel
         {
             // Cache size needs to be calculated.
             requestCacheSizeRefresh(newCacheSize ->
-                checkforCleanupPrompts(newCacheSize, promptWithCacheSizeGB, noCleanupNeededWithCacheSizeGB));
+                checkforCleanupPrompts(newCacheSize, promptWithCacheSizeGB, noCleanupNeededWithCacheSizeGB),
+                null);
         }
         else
         {
