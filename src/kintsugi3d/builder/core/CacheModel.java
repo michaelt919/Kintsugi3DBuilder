@@ -167,6 +167,7 @@ public class CacheModel
         {
             throw new NotDirectoryException(String.format("Invalid directory: %s", directory.getAbsolutePath()));
         }
+
         File[] projects = directory.listFiles();
         if (projects == null)
         {
@@ -185,6 +186,7 @@ public class CacheModel
             {
                 throw new NotDirectoryException(String.format("Invalid directory: %s", project.getAbsolutePath()));
             }
+
             File[] resolutions = project.listFiles();
             if (resolutions == null)
             {
@@ -197,10 +199,10 @@ public class CacheModel
                 {
                     throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
                 }
+
                 File[] images = resolution.listFiles();
                 if (images == null)
                 {
-
                     throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
                 }
 
@@ -210,11 +212,12 @@ public class CacheModel
                     String imgName = image.toString();
                     if (!imgName.startsWith(directory.toString()))
                     {
-                        throw new IOException(String.format("Invalid image: %s", image.getAbsolutePath()));
+                        throw new IOException(String.format("Invalid image: %s.  Expected directory: %s",
+                            imgName, directory));
                     }
                     if (!imgName.toLowerCase(Locale.ROOT).endsWith(".png"))
                     {
-                        throw new IOException(String.format("Invalid image format: %s", image.getAbsolutePath()));
+                        throw new IOException(String.format("Invalid image format: %s", imgName));
                     }
                     if (!image.delete())
                     {
@@ -274,7 +277,8 @@ public class CacheModel
                 File debugImg = new File(resolution, "debug.png");
                 if (!debugImg.toString().startsWith(directory.toString()))
                 {
-                    throw new IOException(String.format("Invalid debug image: %s", debugImg.getAbsolutePath()));
+                    throw new IOException(String.format("Invalid debug image: %s.  Expected directory: %s.",
+                        debugImg, directory));
                 }
                 if (!debugImg.delete())
                 {
@@ -285,7 +289,8 @@ public class CacheModel
                 File sampleLocations = new File(resolution, "sampleLocations.txt");
                 if (!sampleLocations.toString().startsWith(directory.toString()))
                 {
-                    throw new IOException(String.format("Invalid sample locations: %s", sampleLocations.getAbsolutePath()));
+                    throw new IOException(String.format("Invalid sample locations: %s.  Expected directory: %s.",
+                        sampleLocations, directory));
                 }
                 if (!sampleLocations.delete())
                 {
@@ -294,7 +299,7 @@ public class CacheModel
 
                 // Everything left should be chunks folders (including the sampled folder)
                 File[] chunks = resolution.listFiles();
-                if  (chunks == null)
+                if (chunks == null)
                 {
                     throw new NotDirectoryException(String.format("Invalid directory: %s", resolution.getAbsolutePath()));
                 }
@@ -308,7 +313,7 @@ public class CacheModel
                     File[] images = chunk.listFiles();
                     if (images == null)
                     {
-                        throw new  NotDirectoryException(String.format("Invalid chunk: %s", chunk.getAbsolutePath()));
+                        throw new NotDirectoryException(String.format("Invalid chunk: %s", chunk.getAbsolutePath()));
                     }
 
                     for (File image : images)
@@ -317,11 +322,12 @@ public class CacheModel
                         String imgName = image.toString();
                         if (!imgName.startsWith(directory.toString()))
                         {
-                            throw new IOException(String.format("Invalid image: %s", image.getAbsolutePath()));
+                            throw new IOException(String.format("Invalid image: %s.  Expected directory: %s,",
+                                imgName, directory));
                         }
                         if (!imgName.toLowerCase(Locale.ROOT).endsWith(".png"))
                         {
-                            throw new IOException(String.format("Invalid image format: %s", image.getAbsolutePath()));
+                            throw new IOException(String.format("Invalid image format: %s", imgName));
                         }
                         if (!image.delete())
                         {
