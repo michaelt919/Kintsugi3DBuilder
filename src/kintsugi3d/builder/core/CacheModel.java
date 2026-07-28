@@ -103,7 +103,7 @@ public class CacheModel
 
         return Map.of(
             previewCacheDir, files -> tryDeletePreviewCacheFiles(previewCacheDir, files),
-            fitCacheDir, files -> tryDeleteFitCacheFiles(previewCacheDir, files));
+            fitCacheDir, files -> tryDeleteFitCacheFiles(fitCacheDir, files));
     }
 
     private static Collection<File> getCleanableCacheDirectories()
