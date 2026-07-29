@@ -110,7 +110,6 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             {
                                 // hard reset of cards list to re-number, etc.
                                 Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
-//                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
                             }
                         })))), !resources.getBasisResources().getBasis().getIsEnabled(cardIndex));
     }

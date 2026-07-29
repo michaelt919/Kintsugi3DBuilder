@@ -269,7 +269,7 @@ public class SpecularFitProcess
                     monitor.setStage(2, "Performing high-res fit...");
                 }
 
-                return optimizeFitWithCacheHelper(cache, monitor, sampledFit, sampledDecomposition.getMaterialBasis(), start);
+                return optimizeFitWithCacheHelper(cache, monitor, sampledFit, sampledDecomposition.getMaterialBasis().copy(), start);
             }
         }
     }
