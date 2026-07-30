@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// TODO see ModelExporter
 public class MaterialExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialExporter.class);
