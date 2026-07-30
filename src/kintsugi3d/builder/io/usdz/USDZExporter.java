@@ -137,7 +137,7 @@ public class USDZExporter extends MaterialExporter
             getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat())).getPath());
         if (useMetallic)
         {
-            command.add("--metallic");
+            command.add("--use-metallic");
             command.add("--albedo");
             command.add(new File(tempPath,
                 getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat())).getPath());
@@ -208,7 +208,7 @@ public class USDZExporter extends MaterialExporter
         }
     }
 
-    // Grab the output directory after the super call
+    // Grab the output directory and redirect the save to a temporary directory
     @Override
     public void saveTextures(File outputDirectory)
     {
