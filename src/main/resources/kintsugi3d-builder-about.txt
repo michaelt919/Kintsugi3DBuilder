@@ -29,7 +29,7 @@ Augusto Freitas (UW-Stout Polytechnic) - UX designer
 Chloe Ferguson  (UW-Stout Polytechnic) - UX designer
 Gary Meyer (University of Minnesota) - designer and advisor
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao 2026
+Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Seth Kendrick, Joe Luther, Jakob Schmucki, Nathan Sunday 2026
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 
