@@ -68,6 +68,12 @@ public class BlenderExporter extends MaterialExporter
     @Override
     protected void postExport()
     {
+        File model = new File(outputPath, getFilename());
+        File normal = new File(outputPath, getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat()));
+        File diffuse = new File(outputPath, getTextureFilename(StandardTexture.DIFFUSE_COLOR.details.name, getTextureFileFormat()));
+        File specular = new File(outputPath, getTextureFilename(StandardTexture.SPECULAR_COLOR.details.name, getTextureFileFormat()));
+        File roughness = new File(outputPath, getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat()));
+
         // Command list for the ProcessBuilder
         List<String> command = new ArrayList<>();
 
@@ -76,6 +82,13 @@ public class BlenderExporter extends MaterialExporter
         if (!blenderLocation.exists() || !blenderLocation.canExecute())
         {
             LOG.error("Can't find Blender, check Application Settings.");
+            // Delete "corrupt" files
+            // A little hacky, but MaterialExporter cannot affect ModelExporter in this method without a serious refactor
+            model.delete();
+            normal.delete();
+            diffuse.delete();
+            specular.delete();
+            roughness.delete();
             return;
         }
 
@@ -85,19 +98,15 @@ public class BlenderExporter extends MaterialExporter
         command.add(SCRIPT_LOCATION + "/open-blender.py");
         command.add("--");
         command.add("--model");
-        command.add(getFilename());
+        command.add(model.getPath());
         command.add("--normal");
-        command.add(new File(outputPath,
-            getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat())).getPath());
+        command.add(normal.getPath());
         command.add("--diffuse");
-        command.add(new File(outputPath,
-            getTextureFilename(StandardTexture.DIFFUSE_COLOR.details.name, getTextureFileFormat())).getPath());
+        command.add(diffuse.getPath());
         command.add("--specular");
-        command.add(new File(outputPath,
-            getTextureFilename(StandardTexture.SPECULAR_COLOR.details.name, getTextureFileFormat())).getPath());
+        command.add(specular.getPath());
         command.add("--roughness");
-        command.add(new File(outputPath,
-            getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat())).getPath());
+        command.add(roughness.getPath());
 
         if (cycles)
         {
