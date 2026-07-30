@@ -81,7 +81,6 @@ public class BlenderExporter extends MaterialExporter
         File blenderLocation = new File(Global.state().getSettingsModel().get("blenderLocation", String.class));
         if (!blenderLocation.exists() || !blenderLocation.canExecute())
         {
-            LOG.error("Can't find Blender, check Application Settings.");
             // Delete "corrupt" files
             // A little hacky, but MaterialExporter cannot affect ModelExporter in this method without a serious refactor
             model.delete();
@@ -89,7 +88,7 @@ public class BlenderExporter extends MaterialExporter
             diffuse.delete();
             specular.delete();
             roughness.delete();
-            return;
+            throw new RuntimeException("Can't find Blender, check Application Settings.");
         }
 
         command.add(blenderLocation.getPath());
