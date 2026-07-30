@@ -95,8 +95,9 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                 Map.of("Toggle Disabled", () ->
                         Rendering.runLater(() ->
                             {
-                                resources.getBasisResources().toggleBasisMaterial(cardIndex);
-                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
+                                resources.getBasisResources().toggleBasisMaterial(Integer.parseInt(resources.getBasisResources().getBasis().getDisplayName(cardIndex)));
+                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(resources.getBasisResources().getBasis().getDisplayName(cardIndex))));
+//                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
                             }),
                     "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",

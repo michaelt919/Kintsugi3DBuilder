@@ -179,6 +179,7 @@ public class SimpleMaterialBasis implements MaterialBasis
     public SimpleMaterialBasis(List<BasisData> basisList, List<BasisData> disabledBasisList)
     {
         this.materialCount = basisList.size();
+        this.disabledMaterialCount = disabledBasisList.size();
         this.specularResolution = basisList.get(0).getRedBasis().length - 1;
         this.basisList = basisList;
         this.disabledBasisList = disabledBasisList;
@@ -371,7 +372,8 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public MaterialBasis copy()
     {
-        return new SimpleMaterialBasis(List.copyOf(basisList), List.copyOf(disabledBasisList));
+//        return new SimpleMaterialBasis(List.copyOf(basisList), List.copyOf(disabledBasisList));
+        return new SimpleMaterialBasis(new ArrayList<>(basisList), new ArrayList<>(disabledBasisList));
 //        return new SimpleMaterialBasis(diffuseColors.toArray(DoubleVector3[]::new),
 //            List.copyOf(redBasis), List.copyOf(greenBasis), List.copyOf(blueBasis));
     }
