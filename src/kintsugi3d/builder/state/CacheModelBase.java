@@ -9,22 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.state;
 
-import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,32 +34,11 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
 
-public class CacheModel
+public abstract class CacheModelBase implements CacheModel
 {
-    public static final double BYTES_TO_GB = 1.0 / (1024.0 * 1024.0 * 1024.0);
-
-    /**
-     * This should ONLY be modified in one place, via the requestCacheSizeRefresh method.
-     * Otherwise, there would be bad race conditions.
-     */
-    private final DoubleProperty cacheSizeGB; // -1 signifies uninitialized.
-
-    /**
-     * This should ONLY be modified in one place, via the requestCacheSizeRefresh method.
-     * Otherwise, there would be bad race conditions.
-     * The intention is for this to just be used for UI display purposes, not internal thread synchronization logic.
-     */
-    private final BooleanProperty cacheSizeCalcInProgress;
+    private static final Logger LOG = LoggerFactory.getLogger(CacheModelBase.class);
 
     private final AtomicBoolean cacheCleanupInProgress;
-
-    /**
-     * Use a separate property for handling one-shot listeners
-     * that we can dispose to dump in case the listener doesn't need to fire.
-     * Important: should only be accessed in blocks synchronized on CACHE_SIZE_CALC_THREAD_LOCK
-     * to prevent concurrent modification issues.
-     */
-    private final List<ChangeListener<Number>> pendingCacheSizeCallbacks;
 
     /**
      * Lock for multithreaded cache size calculation.
@@ -81,22 +51,16 @@ public class CacheModel
      */
     private volatile Thread cacheSizeCalcThread;
 
-    private Map<String, Long> projectSizes;
+    public abstract Map<String, Long> getProjectSizes();
 
-    private static final Logger LOG = LoggerFactory.getLogger(CacheModel.class);
-
-    public CacheModel()
+    protected CacheModelBase()
     {
-        cacheSizeGB = new SimpleDoubleProperty(-1); // -1 signifies uninitialized.
-        cacheSizeCalcInProgress = new SimpleBooleanProperty(false);
         cacheCleanupInProgress = new AtomicBoolean(false);
-        pendingCacheSizeCallbacks = new ArrayList<>(1);
         cacheSizeCalcThreadLock = new Object();
         cacheSizeCalcThread = null;
-        projectSizes = Map.of();
     }
 
-    private static Map<File, Consumer<File[]>> getDeleteMethods()
+    protected Map<File, Consumer<File[]>> getDeleteMethods()
     {
         File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
         File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
@@ -106,59 +70,14 @@ public class CacheModel
             fitCacheDir, files -> tryDeleteFitCacheFiles(fitCacheDir, files));
     }
 
-    private static Collection<File> getCleanableCacheDirectories()
+    private Collection<File> getCleanableCacheDirectories()
     {
         return getDeleteMethods().keySet();
     }
 
-    private static void handleCacheCleanupError(IOException e)
+    protected void handleCacheCleanupError(Exception e)
     {
         LOG.error(e.toString());
-        ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
-    }
-
-    public void clearCache()
-    {
-        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
-
-        Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Clear Cache");
-        confirm.setHeaderText("Confirm cache clear?");
-        confirm.setContentText(String.format("This will permanently remove all files in %s, including the ones for your current project, and cannot be undone.  Are you sure?",
-            String.join(" and ", deleteMethods.keySet().stream().map(File::toString).toArray(String[]::new))));
-
-        confirm.showAndWait().ifPresent(response ->
-        {
-            if (response.equals(ButtonType.OK))
-            {
-                new Thread(() ->
-                {
-                    try
-                    {
-                        if (cacheCleanupInProgress.compareAndSet(false, true))
-                        {
-                            try
-                            {
-                                for (var entry : deleteMethods.entrySet())
-                                {
-                                    clearCache(entry.getKey(), entry.getValue());
-                                }
-                            }
-                            finally
-                            {
-                                cacheCleanupInProgress.set(false);
-                            }
-
-                            requestCacheSizeRefresh();
-                        }
-                    }
-                    catch (IOException e)
-                    {
-                        handleCacheCleanupError(e);
-                    }
-                }, "Clear Cache").start();
-            }
-        });
     }
 
     private static void clearCache(File directory, Consumer<File[]> deleteMethod) throws IOException
@@ -238,7 +157,7 @@ public class CacheModel
         }
     }
 
-    private static void tryDeletePreviewCacheFiles(File directory, File[] projects)
+    private void tryDeletePreviewCacheFiles(File directory, File[] projects)
     {
         try
         {
@@ -354,7 +273,7 @@ public class CacheModel
         }
     }
 
-    private static void tryDeleteFitCacheFiles(File directory, File[] projects)
+    private void tryDeleteFitCacheFiles(File directory, File[] projects)
     {
         try
         {
@@ -366,48 +285,166 @@ public class CacheModel
         }
     }
 
-    public void cleanUpCache()
+    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
     {
-        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-        if (settingsModel.getBoolean("recentPromptEnabled") || settingsModel.getBoolean("fileAgePromptEnabled")
-            || settingsModel.getBoolean("sizePromptEnabled"))
+        List<UUID> recentUUIDs = getRecentUUIDs(Global.state().getSettingsModel().getInt("recentProjectLimit"));
+        for (UUID recentUUID : recentUUIDs)
         {
-            cleanUpBothCaches();
+            String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
+            // Traverse backwards to not skip indices from removal
+            for (int i = oldProjects.size() - 1; i >= 0; i--)
+            {
+                if (oldProjects.get(i).toString().equals(cachePathFromUUID))
+                {
+                    oldProjects.remove(i);
+                }
+            }
         }
     }
 
-    private void cleanUpBothCaches()
+    private static void filterByFileAgeLimit(List<File> projects)
+    {
+        for (int i = projects.size() - 1; i >= 0; i--)
+        {
+            try
+            {
+                Instant lastModified = Files.getLastModifiedTime(projects.get(i).toPath()).toInstant();
+                Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
+                    .atZone(ZoneId.systemDefault()).toInstant();
+                if (lastModified.isAfter(limit))
+                {
+                    projects.remove(i);
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error while finding cache file for cleanup", e);
+            }
+        }
+    }
+
+    private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
+    {
+        List<String> recentProjects = RecentProjects.getRecentProjectFilenames().stream().limit(numProjectsToKeep).collect(Collectors.toList());
+        // Load view sets of recent projects to get their UUID.
+        List<UUID> recentUUIDs = new ArrayList<>(recentProjects.size());
+        for (String recentProject : recentProjects)
+        {
+            String projectName = recentProject.substring(recentProject.lastIndexOf(File.separator) + 1);
+            File vsetFile = new File(recentProject + ".files" + File.separator + projectName + ".vset");
+
+            if (vsetFile.exists()) // Might not exist anymore, in which case it's not considered recent.
+            {
+                try
+                {
+                    ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
+                    recentUUIDs.add(viewSet.getUUID());
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Failed to open project directory", e);
+                }
+            }
+
+        }
+        return recentUUIDs;
+    }
+
+    /**
+     * Gets the most cached projects in each cache (i.e. preview, fit).
+     * Typically, each cache will have the same projects (or one might have a subset of the other).
+     * Theoretically, it is possible that each cache has unique projects, in which case the total
+     * after combining would be greater than what this method returns.
+     * The intention is that this is to be used as an upper bound for the number of projects in an individual cache,
+     * and will typically be close to, if not equal to, the number of projects in all caches combined.
+     *
+     * @return
+     */
+    protected int getNumCachedProjects()
+    {
+        return getCleanableCacheDirectories().stream()
+            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
+            .max().orElse(0);
+    }
+
+    protected boolean checkOldFilesExist()
+    {
+        Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
+            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
+            .collect(Collectors.toList());
+
+        Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
+            .atZone(ZoneId.systemDefault()).toInstant();
+        for (File dir : cacheFiles)
+        {
+            try
+            {
+                Instant lastAccess = Files.getLastModifiedTime(dir.toPath()).toInstant();
+                if (lastAccess.isBefore(limit))
+                {
+                    return true;
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error while finding cache file for cleanup", e);
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void requestClearCache()
     {
         Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
 
-        Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Clear Old Cache Files");
-        confirm.setHeaderText("Confirm cache clean up?");
-
-        confirm.setContentText(String.format("This will permanently remove files in %s, and cannot be undone.  Are you sure?",
-            String.join(" and ", deleteMethods.keySet().stream().map(File::toString).toArray(String[]::new))));
-
-        confirm.showAndWait().ifPresent(response ->
+        new Thread(() ->
         {
-            if (response.equals(ButtonType.OK))
+            try
             {
-                new Thread(() ->
+                if (cacheCleanupInProgress.compareAndSet(false, true))
                 {
                     try
                     {
-                        cleanCacheSubDirs(deleteMethods);
+                        for (var entry : deleteMethods.entrySet())
+                        {
+                            clearCache(entry.getKey(), entry.getValue());
+                        }
                     }
-                    catch (IOException e)
+                    finally
                     {
-                        handleCacheCleanupError(e);
+                        cacheCleanupInProgress.set(false);
                     }
-                }, "Clean Up Cache").start();
+
+                    requestCacheSizeRefresh();
+                }
             }
-        });
+            catch (IOException e)
+            {
+                handleCacheCleanupError(e);
+            }
+        }, "Clear Cache").start();
+    }
+
+    @Override
+    public void requestCleanUpBothCaches(Map<File, Consumer<File[]>> deleteMethods)
+    {
+        new Thread(() ->
+        {
+            try
+            {
+                cleanCacheSubDirs(deleteMethods);
+            }
+            catch (IOException e)
+            {
+                handleCacheCleanupError(e);
+            }
+        }, "Clean Up Cache").start();
     }
 
     /**
      * Cleans up the cache based on user settings, and then refreshes the cache size.
+     *
      * @param deleteMethods
      * @throws IOException
      */
@@ -486,44 +523,6 @@ public class CacheModel
         }
     }
 
-    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
-    {
-        List<UUID> recentUUIDs = getRecentUUIDs(Global.state().getSettingsModel().getInt("recentProjectLimit"));
-        for (UUID recentUUID : recentUUIDs)
-        {
-            String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
-            // Traverse backwards to not skip indices from removal
-            for (int i = oldProjects.size() - 1; i >= 0; i--)
-            {
-                if (oldProjects.get(i).toString().equals(cachePathFromUUID))
-                {
-                    oldProjects.remove(i);
-                }
-            }
-        }
-    }
-
-    private static void filterByFileAgeLimit(List<File> projects)
-    {
-        for (int i = projects.size() - 1; i >= 0; i--)
-        {
-            try
-            {
-                Instant lastModified = Files.getLastModifiedTime(projects.get(i).toPath()).toInstant();
-                Instant limit =  LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
-                    .atZone(ZoneId.systemDefault()).toInstant();
-                if (lastModified.isAfter(limit))
-                {
-                    projects.remove(i);
-                }
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error while finding cache file for cleanup", e);
-            }
-        }
-    }
-
     private void cleanUpBySizeLimit()
     {
         Map<String, Collection<File>> cleanableCacheProjects = new HashMap<>(getNumCachedProjects());
@@ -551,15 +550,15 @@ public class CacheModel
         List<String> retainedProjectIDs =
             cleanableCacheProjects.entrySet().stream()
                 .sorted(Comparator.comparingLong(
-                    (Entry<String, Collection<File>> entry) -> // sort with least recently modified (i.e. "oldest") first
-                        entry.getValue().stream()
-                            .mapToLong(File::lastModified).max() // find most recent modification over various cache directories (i.e. preview, fit)
-                            .orElse(0L)) // shouldn't really ever need the default
+                        (Entry<String, Collection<File>> entry) -> // sort with least recently modified (i.e. "oldest") first
+                            entry.getValue().stream()
+                                .mapToLong(File::lastModified).max() // find most recent modification over various cache directories (i.e. preview, fit)
+                                .orElse(0L)) // shouldn't really ever need the default
                     .reversed()) // Reverse so that the oldest projects are now last.
                 .map(Entry::getKey) // Keep just the key / project ID
                 .collect(Collectors.toCollection(ArrayList<String>::new)); // Explicit ArrayList constructor to ensure mutability
 
-        double prevCacheSizeGB;
+        long prevCacheSize;
         Map<String, Long> prevProjectSizes;
 
         // Prevent race condition, as the project size map and the total cache size could be updated
@@ -569,15 +568,15 @@ public class CacheModel
         // optimize with the information that we had when the process started.
         synchronized (cacheSizeCalcThreadLock)
         {
-            prevCacheSizeGB = getCacheSizeGB();
-            prevProjectSizes = projectSizes;
+            prevCacheSize = getCacheSize();
+            prevProjectSizes = getProjectSizes();
         }
 
         long freedSpace = 0;
         int oldestProjectIndex = retainedProjectIDs.size() - 1;
 
         while (oldestProjectIndex >= 0 &&
-            prevCacheSizeGB - freedSpace * BYTES_TO_GB  > Global.state().getSettingsModel().getDouble("cacheSizeLimit"))
+            (prevCacheSize - freedSpace) * BYTES_TO_GB > Global.state().getSettingsModel().getDouble("cacheSizeLimit"))
         {
             String oldestProjectID = retainedProjectIDs.get(oldestProjectIndex);
             Long projectSize = prevProjectSizes.get(oldestProjectID);
@@ -614,37 +613,11 @@ public class CacheModel
         }
     }
 
-    private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
-    {
-        List<String> recentProjects = RecentProjects.getItemsFromRecentsFile().stream().limit(numProjectsToKeep).collect(Collectors.toList());
-        // Load view sets of recent projects to get their UUID.
-        List<UUID> recentUUIDs = new ArrayList<>(recentProjects.size());
-        for (String recentProject : recentProjects)
-        {
-            try
-            {
-                String projectName = recentProject.substring(recentProject.lastIndexOf(File.separator) + 1);
-                File vsetFile = new File(recentProject + ".files" + File.separator + projectName + ".vset");
-                if (vsetFile.exists()) // Might not exist anymore, in which case it's not considered recent.
-                {
-                    ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
-                    recentUUIDs.add(viewSet.getUUID());
-                }
-            }
-            catch (IOException e)
-            {
-                ExceptionHandling.error("Failed to open project directory", e);
-            }
-
-        }
-        return recentUUIDs;
-    }
-
     /**
      *
-     * @param directory The current directory whose size is being evaluated.
+     * @param directory       The current directory whose size is being evaluated.
      * @param newProjectSizes Will be populated with updated individual project cache sizes.
-     * @param projectID The name of project whose cache size is being calculated.
+     * @param projectID       The name of project whose cache size is being calculated.
      * @return The total size of the cache over all projects.
      */
     private long getDirectorySize(File directory, Map<String, Long> newProjectSizes, String projectID)
@@ -682,25 +655,19 @@ public class CacheModel
         return length;
     }
 
-    public DoubleProperty getCacheSizeGBProperty()
-    {
-        return cacheSizeGB;
-    }
+    protected abstract void updateCacheSize(long newCacheSize, Map<String, Long> newProjectSizes, Runnable onCompleteCallback);
 
-    public double getCacheSizeGB()
-    {
-        return cacheSizeGB.get();
-    }
+    protected abstract void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress);
 
-    public BooleanProperty getCacheSizeCalcInProgressProperty()
-    {
-        return cacheSizeCalcInProgress;
-    }
+    protected abstract void addCacheSizeChangeCallback(DoubleConsumer cacheSizeChangeCallback);
+
+    protected abstract void removeAllCacheSizeChangeCallbacks();
 
     /**
      * Requests that the cache size be recalculated without any callback.
      * If a request is already running when this method is invoked, another request will not be started.
      */
+    @Override
     public void requestCacheSizeRefresh()
     {
         requestCacheSizeRefresh(null, null);
@@ -710,50 +677,24 @@ public class CacheModel
      * Requests that the cache size be recalculated.
      * If (and only if) the cache size is updated to a different value
      * (from this invocation or a parallel running invocation of the same method),
-     * then the specified callback will be invoked once and only once with the updated value.
+     * then the specified cache size callback will be invoked once and only once with the updated value.
      * If a request is already running when this method is invoked,
      * another request will not be started but the additional callback will instead be attached to the
      * already-running request and invoked if that request yields a different value than the current one.
      * If invoked, the callback will always be invoked from the JavaFX Application Thread.
-     * @param cacheSizeGBCallback Runs only if the cache size changed.
-     * @param onCompleteCallback Always runs regardless of whether the cache size changed.  Also runs on the JavaFX thread.
+     *
+     * @param cacheSizeChangeCallback Runs only if the cache size changed.
+     * @param onCompleteCallback      Always runs regardless of whether the cache size changed.  Also runs on the JavaFX thread.
      */
-    private void requestCacheSizeRefresh(DoubleConsumer cacheSizeGBCallback, Runnable onCompleteCallback)
+    protected void requestCacheSizeRefresh(DoubleConsumer cacheSizeChangeCallback, Runnable onCompleteCallback)
     {
         synchronized (cacheSizeCalcThreadLock)
         {
-            // Add one-shot listener with the specified callback before checking whether calculation is in progress.
-            // Because cacheSizeGB should only be modified in one place (within a Platform.runLater fired by the worker thread),
-            // synchronization will ensure that any update will not be queued (and thus not fired)
-            // until after we exit this synchronized block.
-            // This works whether we need to start the thread or one is already running.
-            ChangeListener<Number> changeListener = new ChangeListener<>()
-            {
-                @Override
-                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
-                {
-                    cacheSizeGB.removeListener(this); // Remove first in case the callback throws an exception.
-                    pendingCacheSizeCallbacks.remove(this);
-
-                    if (cacheSizeGBCallback != null)
-                    {
-                        try
-                        {
-                            cacheSizeGBCallback.accept(newValue.doubleValue());
-                        }
-                        catch (RuntimeException e)
-                        {
-                            LOG.error("Exception thrown by cache size callback", e);
-                        }
-                    }
-                }
-            };
-            pendingCacheSizeCallbacks.add(changeListener); // add to our list first to avoid race conditions with JavaFX Application Thread
-            cacheSizeGB.addListener(changeListener);
+            addCacheSizeChangeCallback(cacheSizeChangeCallback);
 
             if (cacheSizeCalcThread == null) // only want one thread running at a time.
             {
-                cacheSizeCalcInProgress.set(true);
+                setCacheSizeCalcInProgress(true);
                 cacheSizeCalcThread = new Thread(() ->
                 {
                     try
@@ -761,49 +702,10 @@ public class CacheModel
                         Map<String, Long> newProjectSizes = new HashMap<>(getNumCachedProjects());
 
                         // Refresh the cache size.  This takes a while.
-                        double newCacheSizeGB = calcCacheSize(newProjectSizes);
+                        long newCacheSize = calcCacheSize(newProjectSizes);
 
-                        Platform.runLater(() ->
-                        {
-                            try
-                            {
-                                // prevent race condition if another call to requestCacheSizeRefresh comes in
-                                // while updating and cleaning up listeners.
-                                synchronized (cacheSizeCalcThreadLock)
-                                {
-                                    try
-                                    {
-                                        // Refresh the individual project cache size map
-                                        projectSizes = Collections.unmodifiableMap(newProjectSizes);
-
-                                        // This will trigger the listener created above.
-                                        cacheSizeGB.set(newCacheSizeGB);
-                                    }
-                                    finally
-                                    {
-                                        // Discard any listeners that didn't fire (i.e. if the value didn't change).
-                                        pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
-                                        pendingCacheSizeCallbacks.clear();
-
-                                        // This thread is now done.
-                                        // Set the thread reference to null to indicate that future refresh requests
-                                        // should actually start a new thread.
-                                        // We actually wait until after the JavaFX update via Platform.runLater
-                                        // so that another thread doesn't start before the update is fully processed.
-                                        cacheSizeCalcThread = null;
-                                        cacheSizeCalcInProgress.set(false);
-                                    }
-                                }
-                            }
-                            finally // Another finally block that isn't synchronized to avoid blocking other threads.
-                            {
-                                // Callback that should always run regardless of whether the cache size changed or not.
-                                if (onCompleteCallback != null)
-                                {
-                                    onCompleteCallback.run();
-                                }
-                            }
-                        });
+                        // This will trigger the listener created above.
+                        updateCacheSize(newCacheSize, newProjectSizes, onCompleteCallback);
                     }
                     catch (RuntimeException e)
                     {
@@ -812,12 +714,11 @@ public class CacheModel
                         synchronized (cacheSizeCalcThreadLock)
                         {
                             // Discard any listeners that didn't fire since an exception was thrown.
-                            pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
-                            pendingCacheSizeCallbacks.clear();
+                            removeAllCacheSizeChangeCallbacks();
 
                             // If an exception occurs, we want to still note that the thread is done.
                             cacheSizeCalcThread = null;
-                            cacheSizeCalcInProgress.set(false);
+                            setCacheSizeCalcInProgress(false);
                         }
 
                         // Callback that should always run regardless of whether the cache size changed or not.
@@ -837,113 +738,46 @@ public class CacheModel
 
     /**
      *
+     * @param postNewCacheSizes Handles actually posting the new cache size and individual project sizes,
+     *                          guaranteed to be invoked from a synchronized context.
+     */
+    protected void synchronizedCacheSizeCalcComplete(Runnable postNewCacheSizes)
+    {
+        // prevent race condition if another call to requestCacheSizeRefresh comes in
+        // while updating and cleaning up listeners.
+        synchronized (cacheSizeCalcThreadLock)
+        {
+            try
+            {
+                // This should trigger any listeners attached to the property.
+                postNewCacheSizes.run();
+            }
+            finally
+            {
+                // Discard any listeners that didn't fire (i.e. if the value didn't change).
+                removeAllCacheSizeChangeCallbacks();
+
+                // This thread is now done.
+                // Set the thread reference to null to indicate that future refresh requests
+                // should actually start a new thread.
+                // We actually wait until after the JavaFX update via Platform.runLater
+                // so that another thread doesn't start before the update is fully processed.
+                cacheSizeCalcThread = null;
+                setCacheSizeCalcInProgress(false);
+            }
+        }
+    }
+
+    /**
+     *
      * @param newProjectSizes Will be populated with updated individual project cache sizes.
      * @return The total size of the cache over all projects.
      */
-    private double calcCacheSize(Map<String, Long> newProjectSizes)
+    private long calcCacheSize(Map<String, Long> newProjectSizes)
     {
         // Calculates both the total cache size as well as individual project sizes.
         return getCleanableCacheDirectories().stream()
             .mapToLong(dir -> getDirectorySize(dir, newProjectSizes, null))
-            .sum() * BYTES_TO_GB; // Size in GB.
-    }
-
-    /**
-     * Gets the most cached projects in each cache (i.e. preview, fit).
-     * Typically, each cache will have the same projects (or one might have a subset of the other).
-     * Theoretically, it is possible that each cache has unique projects, in which case the total
-     * after combining would be greater than what this method returns.
-     * The intention is that this is to be used as an upper bound for the number of projects in an individual cache,
-     * and will typically be close to, if not equal to, the number of projects in all caches combined.
-     * @return
-     */
-    private static int getNumCachedProjects()
-    {
-        return getCleanableCacheDirectories().stream()
-            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
-            .max().orElse(0);
-    }
-
-    private static boolean checkOldFilesExist()
-    {
-        Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
-            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
-            .collect(Collectors.toList());
-
-        Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
-            .atZone(ZoneId.systemDefault()).toInstant();
-        for (File dir : cacheFiles)
-        {
-            try
-            {
-                Instant lastAccess = Files.getLastModifiedTime(dir.toPath()).toInstant();
-                if (lastAccess.isBefore(limit))
-                {
-                    return true;
-                }
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error while finding cache file for cleanup", e);
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if any cache cleanup conditions are enabled and triggered.
-     * If so, a callback will be fired with the current cache size in GB.
-     * If no enabled cache cleanup conditions are met, this method does nothing, although it may still trigger
-     * calculation of the cache size if said calculation has not yet been performed.
-     * If the cache size needs to be calculated, the cleanup conditions will be
-     * checked asynchronously in a worker thread that will also store the cache size.
-     * Otherwise, the conditions will be checked immediately.
-     * @param promptWithCacheSizeGB The callback, which takes as input the current cache size in GB.
-     */
-    public void requestPromptForCacheCleanup(
-        Consumer<Double> promptWithCacheSizeGB, Consumer<Double> noCleanupNeededWithCacheSizeGB)
-    {
-        if (cacheSizeGB.get() < 0.0)
-        {
-            // Cache size needs to be calculated.
-            requestCacheSizeRefresh(newCacheSize ->
-                checkforCleanupPrompts(newCacheSize, promptWithCacheSizeGB, noCleanupNeededWithCacheSizeGB),
-                null);
-        }
-        else
-        {
-            // Cache size is already calculated, just show the prompt.
-            checkforCleanupPrompts(cacheSizeGB.get(), promptWithCacheSizeGB, noCleanupNeededWithCacheSizeGB);
-        }
-    }
-
-    private void checkforCleanupPrompts(double newCacheSize, Consumer<Double> promptWithCacheSizeGB,
-                                               Consumer<Double> noCleanupNeededWithCacheSizeGB)
-    {
-        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-        if (settingsModel.getBoolean("sizePromptEnabled"))
-        {
-            if (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit"))
-            {
-                promptWithCacheSizeGB.accept(newCacheSize);
-            }
-        }
-        if (settingsModel.getBoolean("recentPromptEnabled"))
-        {
-            if (getNumCachedProjects() > settingsModel.getInt("recentProjectLimit"))
-            {
-                promptWithCacheSizeGB.accept(newCacheSize);
-            }
-        }
-        if (settingsModel.getBoolean("fileAgePromptEnabled"))
-        {
-            if (checkOldFilesExist())
-            {
-                promptWithCacheSizeGB.accept(newCacheSize);
-            }
-        }
-
-        // If the cache does not need to be cleaned up, then fire the "no cleanup needed" callback.
-        noCleanupNeededWithCacheSizeGB.accept(newCacheSize);
+            .sum();
     }
 }

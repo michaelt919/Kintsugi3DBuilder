@@ -24,8 +24,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.CacheModel;
-import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.javafx.internal.ObservableCacheModel;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 
 public class CacheSettingsController implements SystemSettingsControllerBase
 {
@@ -54,13 +52,15 @@ public class CacheSettingsController implements SystemSettingsControllerBase
 
     private static final Logger LOG = LoggerFactory.getLogger(CacheSettingsController.class);
 
+    private ObservableCacheModel cacheModel;
+
     @Override
     public void initializePage(Window parentWindow, JavaFXState state)
     {
         previewImageCacheLabel.setText(ApplicationFolders.getPreviewImagesRootDirectory().toString());
         specularFitCacheLabel.setText(ApplicationFolders.getFitCacheRootDirectory().toString());
 
-        CacheModel cacheModel = Global.state().getCacheModel();
+        cacheModel = state.getCacheModel();
         StringBinding cacheSizeTextBase = Bindings.createStringBinding(
             () -> String.format("Cache Size: %.2fGB", cacheModel.getCacheSizeGB()), cacheModel.getCacheSizeGBProperty());
 
@@ -94,14 +94,17 @@ public class CacheSettingsController implements SystemSettingsControllerBase
             new SafeNumberStringConverter(30));
     }
 
-    @FXML private void openDirectory(MouseEvent e){
-        if (!(e.getSource() instanceof Label)) {
+    @FXML private void openDirectory(MouseEvent e)
+    {
+        if (!(e.getSource() instanceof Label))
+        {
             return;
         }
 
         Label label = (Label) e.getSource();
         File file = new File(label.getText());
-        if (!file.exists()){
+        if (!file.exists())
+        {
             ButtonType ok = new ButtonType("OK", ButtonData.CANCEL_CLOSE);
 
             Alert alert = new Alert(AlertType.NONE, String.format("Cache path not found: %s", label.getText()), ok);
@@ -111,7 +114,8 @@ public class CacheSettingsController implements SystemSettingsControllerBase
             return;
         }
 
-        try{
+        try
+        {
             Desktop.getDesktop().open(file);
         }
         catch(IOException ioe){
@@ -121,7 +125,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
 
     @FXML private void clearCache()
     {
-        Global.state().getCacheModel().clearCache();
+        cacheModel.clearCachePrompt();
     }
 
     private static void handleCacheCleanupError(IOException e)
@@ -130,41 +134,8 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 
-
     @FXML private void cleanUpCacheButton()
     {
-        Global.state().getCacheModel().cleanUpCache();
+        cacheModel.checkForCleanUpCachePrompt();
     }
-
-
-//    // Not using this since it scares me.
-//    private void deleteRecursively(File file)
-//    {
-//        deleteRecursively(file, file);
-//    }
-//
-//    private void deleteRecursively(File original, File current)
-//    {
-//        if (current.isDirectory())
-//        {
-//            File[] contents = current.listFiles();
-//            if (contents != null)
-//            {
-//                for (File f : contents)
-//                {
-//                    deleteRecursively(original, f);
-//                }
-//            }
-//
-//            // Extra check due to danger of this operation
-//            assert current.toString().startsWith(original.toString());
-//            current.delete();
-//        }
-//        else
-//        {
-//            // Extra check due to danger of this operation
-//            assert current.toString().startsWith(original.toString());
-//            current.delete();
-//        }
-//    }
 }

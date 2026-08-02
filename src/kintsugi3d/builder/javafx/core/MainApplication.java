@@ -286,7 +286,7 @@ public class MainApplication extends Application
         mainWindowController.init(primaryStage, JavaFXState.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
-        welcomeWindowController.init(welcomeStage,
+        welcomeWindowController.init(welcomeStage, JavaFXState.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         initAccelerators(welcomeStage.getScene());

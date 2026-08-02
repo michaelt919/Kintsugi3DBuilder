@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.javafx.core;
 
-import kintsugi3d.builder.core.CacheModel;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadOptionsModel;
@@ -70,7 +69,9 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        cacheModel = new CacheModel();
+
+        // all methods are either read-only or inherently asynchronous, so no multithread wrapping needed
+        cacheModel = JavaFXState.getInstance().getCacheModel();
     }
 
     @Override
