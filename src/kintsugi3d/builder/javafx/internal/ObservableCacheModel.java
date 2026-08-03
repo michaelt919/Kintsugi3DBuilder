@@ -141,7 +141,7 @@ public class ObservableCacheModel extends CacheModelBase
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
             {
-                cacheSize.removeListener(this); // Remove first in case the callback throws an exception.
+                cacheSizeGB.removeListener(this); // Remove first in case the callback throws an exception.
                 pendingCacheSizeCallbacks.remove(this);
 
                 if (cacheSizeChangeCallback != null)
@@ -159,13 +159,13 @@ public class ObservableCacheModel extends CacheModelBase
         };
 
         pendingCacheSizeCallbacks.add(changeListener); // add to our list first to avoid race conditions with JavaFX Application Thread
-        cacheSize.addListener(changeListener);
+        cacheSizeGB.addListener(changeListener);
     }
 
     @Override
     public void removeAllCacheSizeChangeCallbacks()
     {
-        pendingCacheSizeCallbacks.forEach(cacheSize::removeListener);
+        pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
         pendingCacheSizeCallbacks.clear();
     }
 
