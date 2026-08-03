@@ -60,7 +60,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         for (int i = 0; i < basis.getMaterialCount(); i++)
         {
             drawable.program().setUniform("basisIndex", i);
-            drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
+//            drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
             drawable.draw(framebuffer);
             framebuffer.getTextureReaderForColorAttachment(0)
                 .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(i)));

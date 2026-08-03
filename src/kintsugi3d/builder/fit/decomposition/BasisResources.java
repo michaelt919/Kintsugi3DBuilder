@@ -107,10 +107,10 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
-            diffuseNativeBuffer.set(b, 0, this.basis.getDiffuseColor(b).x);
-            diffuseNativeBuffer.set(b, 1, this.basis.getDiffuseColor(b).y);
-            diffuseNativeBuffer.set(b, 2, this.basis.getDiffuseColor(b).z);
-            diffuseNativeBuffer.set(b, 3, 1.0f);
+//            diffuseNativeBuffer.set(b, 0, this.basis.getDiffuseColor(b).x);
+//            diffuseNativeBuffer.set(b, 1, this.basis.getDiffuseColor(b).y);
+//            diffuseNativeBuffer.set(b, 2, this.basis.getDiffuseColor(b).z);
+//            diffuseNativeBuffer.set(b, 3, 1.0f);
         }
 
         if (basisCount != basisMaps.getHeight()) // if the number of basis functions has changed, reallocate
@@ -157,16 +157,16 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
                 }
             }
 
-            // Diffuse albedos
-            NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, basis.getMaterialCount());
-            for (int b = 0; b < basis.getMaterialCount(); b++)
-            {
-                // Store each channel of the diffuse albedo in the local buffer.
-                diffuseNativeBuffer.set(b, 0, basis.getDiffuseColor(b).x);
-                diffuseNativeBuffer.set(b, 1, basis.getDiffuseColor(b).y);
-                diffuseNativeBuffer.set(b, 2, basis.getDiffuseColor(b).z);
-                diffuseNativeBuffer.set(b, 3, 1.0f);
-            }
+//            // Diffuse albedos
+//            NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, basis.getMaterialCount());
+//            for (int b = 0; b < basis.getMaterialCount(); b++)
+//            {
+//                // Store each channel of the diffuse albedo in the local buffer.
+//                diffuseNativeBuffer.set(b, 0, basis.getDiffuseColor(b).x);
+//                diffuseNativeBuffer.set(b, 1, basis.getDiffuseColor(b).y);
+//                diffuseNativeBuffer.set(b, 2, basis.getDiffuseColor(b).z);
+//                diffuseNativeBuffer.set(b, 3, 1.0f);
+//            }
 
             BasisResources<ContextType> resources = new BasisResources<>(context, basis.getMaterialCount(), basis.getSpecularResolution());
             resources.basis = basis;
@@ -175,7 +175,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             resources.basisMaps.load(basisMapBuffer);
 
             // Send the diffuse albedos to the GPU.
-            resources.diffuseUniformBuffer.setData(diffuseNativeBuffer);
+//            resources.diffuseUniformBuffer.setData(diffuseNativeBuffer);
 
             return resources;
         }
