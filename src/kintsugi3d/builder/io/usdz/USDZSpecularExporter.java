@@ -11,28 +11,31 @@
 
 package kintsugi3d.builder.io.usdz;
 
-import kintsugi3d.builder.io.gltf.MaterialExporter;
-import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import de.javagl.jgltf.impl.v2.TextureInfo;
+import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.io.gltf.StandardTextureExport;
 
-public class USDZSpecularExporterFactory implements MaterialExporterFactory
+import java.io.File;
+import java.util.List;
+
+public class USDZSpecularExporter extends USDZExporter
 {
-    private static final USDZSpecularExporterFactory INSTANCE = new USDZSpecularExporterFactory();
-
-    private USDZSpecularExporterFactory()
+    @StandardTextureExport(StandardTexture.DIFFUSE_COLOR)
+    public void diffuse(TextureInfo diffuse)
     {
     }
 
-    public static USDZSpecularExporterFactory getInstance()
+    @StandardTextureExport(StandardTexture.SPECULAR_COLOR)
+    public void specular(TextureInfo specular)
     {
-        return INSTANCE;
     }
 
     @Override
-    public MaterialExporter getExporter(TextureResources<?> resources)
+    protected void addCommands(List<String> commandList)
     {
-        USDZSpecularExporter exporter = new USDZSpecularExporter();
-        exporter.setTextureResources(resources);
-        return exporter;
+        commandList.add("--diffuse");
+        commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.DIFFUSE_COLOR.details.name, getTextureFileFormat())).getPath());
+        commandList.add("--specular");
+        commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.SPECULAR_COLOR.details.name, getTextureFileFormat())).getPath());
     }
 }
