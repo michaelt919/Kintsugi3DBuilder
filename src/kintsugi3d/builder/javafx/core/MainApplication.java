@@ -26,6 +26,7 @@ import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
@@ -288,6 +289,9 @@ public class MainApplication extends Application
 
         welcomeWindowController.init(welcomeStage, JavaFXState.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+
+        // Register JavaFX recent projects helper with the backend recent projects utility class.
+        RecentProjects.addRecentProjectsChangedListener(RecentProjectsHelper::updateAllControlStructures);
 
         initAccelerators(welcomeStage.getScene());
         initAccelerators(progressBarsStage.getScene());

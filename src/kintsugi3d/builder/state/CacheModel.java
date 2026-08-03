@@ -23,13 +23,19 @@ public interface CacheModel
      *
      * @return Cache size, in bytes, or -1 if uninitialized
      */
-    long getCacheSize();
+    long getCacheSizeBytes();
 
     /**
      *
      * @return Cache size, in gigabytes
      */
     double getCacheSizeGB();
+
+    /**
+     * Gets mapping from project IDs to their corresponding cache sizes, in bytes.
+     * @return
+     */
+    Map<String, Long> getProjectSizes();
 
     boolean isCacheSizeCalcInProgress();
 

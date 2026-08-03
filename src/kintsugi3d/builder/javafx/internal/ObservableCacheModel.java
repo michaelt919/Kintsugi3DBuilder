@@ -60,6 +60,115 @@ public class ObservableCacheModel extends CacheModelBase
 
     private Map<String, Long> projectSizes = Map.of();
 
+    @Override
+    public long getCacheSizeBytes()
+    {
+        return cacheSize.get();
+    }
+
+    @Override
+    public Map<String, Long> getProjectSizes()
+    {
+        // Should already be unmodifiable.
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
+        return projectSizes;
+    }
+
+    public DoubleBinding getCacheSizeGBProperty()
+    {
+        return cacheSizeGB;
+    }
+
+    @Override
+    public double getCacheSizeGB()
+    {
+        return cacheSizeGB.get();
+    }
+
+    public BooleanProperty getCacheSizeCalcInProgressProperty()
+    {
+        return cacheSizeCalcInProgress;
+    }
+
+    @Override
+    public boolean isCacheSizeCalcInProgress()
+    {
+        return cacheSizeCalcInProgress.get();
+    }
+
+    @Override
+    protected void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress)
+    {
+        this.cacheSizeCalcInProgress.set(cacheSizeCalcInProgress);
+    }
+
+    @Override
+    protected void updateCacheSize(long newCacheSize, Map<String, Long> newProjectSizes, Runnable onCompleteCallback)
+    {
+        Platform.runLater(() ->
+        {
+            try
+            {
+                synchronizedCacheSizeCalcComplete(() ->
+                {
+                    this.projectSizes = Collections.unmodifiableMap(newProjectSizes);
+
+                    // This will trigger any listeners attached to the property.
+                    this.cacheSize.set(newCacheSize);
+                });
+            }
+            finally // Another finally block that isn't synchronized to avoid blocking other threads.
+            {
+                // Callback that should always run regardless of whether the cache size changed or not.
+                if (onCompleteCallback != null)
+                {
+                    onCompleteCallback.run();
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void addCacheSizeChangeCallback(DoubleConsumer cacheSizeChangeCallback)
+    {
+        // Add one-shot listener with the specified callback before checking whether calculation is in progress.
+        // Because cacheSize should only be modified in one place (within a Platform.runLater fired by the worker thread),
+        // synchronization will ensure that any update will not be queued (and thus not fired)
+        // until after we exit this synchronized block.
+        // This works whether we need to start the thread or one is already running.
+        ChangeListener<Number> changeListener = new ChangeListener<>()
+        {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
+            {
+                cacheSize.removeListener(this); // Remove first in case the callback throws an exception.
+                pendingCacheSizeCallbacks.remove(this);
+
+                if (cacheSizeChangeCallback != null)
+                {
+                    try
+                    {
+                        cacheSizeChangeCallback.accept(newValue.doubleValue());
+                    }
+                    catch (RuntimeException e)
+                    {
+                        LOG.error("Exception thrown by cache size callback", e);
+                    }
+                }
+            }
+        };
+
+        pendingCacheSizeCallbacks.add(changeListener); // add to our list first to avoid race conditions with JavaFX Application Thread
+        cacheSize.addListener(changeListener);
+    }
+
+    @Override
+    public void removeAllCacheSizeChangeCallbacks()
+    {
+        pendingCacheSizeCallbacks.forEach(cacheSize::removeListener);
+        pendingCacheSizeCallbacks.clear();
+    }
+
     public void clearCachePrompt()
     {
         Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
@@ -109,107 +218,6 @@ public class ObservableCacheModel extends CacheModelBase
         });
     }
 
-    public DoubleBinding getCacheSizeGBProperty()
-    {
-        return cacheSizeGB;
-    }
-
-    @Override
-    public double getCacheSizeGB()
-    {
-        return cacheSizeGB.get();
-    }
-
-    @Override
-    public long getCacheSize()
-    {
-        return cacheSize.get();
-    }
-
-    @Override
-    protected void updateCacheSize(long newCacheSize, Map<String, Long> newProjectSizes, Runnable onCompleteCallback)
-    {
-        Platform.runLater(() ->
-        {
-            try
-            {
-                synchronizedCacheSizeCalcComplete(() ->
-                {
-                    this.projectSizes = Collections.unmodifiableMap(newProjectSizes);
-
-                    // This will trigger any listeners attached to the property.
-                    this.cacheSize.set(newCacheSize);
-                });
-            }
-            finally // Another finally block that isn't synchronized to avoid blocking other threads.
-            {
-                // Callback that should always run regardless of whether the cache size changed or not.
-                if (onCompleteCallback != null)
-                {
-                    onCompleteCallback.run();
-                }
-            }
-        });
-    }
-
-    public BooleanProperty getCacheSizeCalcInProgressProperty()
-    {
-        return cacheSizeCalcInProgress;
-    }
-
-    @Override
-    public boolean isCacheSizeCalcInProgress()
-    {
-        return cacheSizeCalcInProgress.get();
-    }
-
-    @Override
-    public void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress)
-    {
-        this.cacheSizeCalcInProgress.set(cacheSizeCalcInProgress);
-    }
-
-    @Override
-    protected void addCacheSizeChangeCallback(DoubleConsumer cacheSizeChangeCallback)
-    {
-        // Add one-shot listener with the specified callback before checking whether calculation is in progress.
-        // Because cacheSizeGB should only be modified in one place (within a Platform.runLater fired by the worker thread),
-        // synchronization will ensure that any update will not be queued (and thus not fired)
-        // until after we exit this synchronized block.
-        // This works whether we need to start the thread or one is already running.
-        ChangeListener<Number> changeListener = new ChangeListener<>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
-            {
-                cacheSizeGB.removeListener(this); // Remove first in case the callback throws an exception.
-                pendingCacheSizeCallbacks.remove(this);
-
-                if (cacheSizeChangeCallback != null)
-                {
-                    try
-                    {
-                        cacheSizeChangeCallback.accept(newValue.doubleValue());
-                    }
-                    catch (RuntimeException e)
-                    {
-                        LOG.error("Exception thrown by cache size callback", e);
-                    }
-                }
-            }
-        };
-
-        pendingCacheSizeCallbacks.add(changeListener); // add to our list first to avoid race conditions with JavaFX Application Thread
-        cacheSizeGB.addListener(changeListener);
-    }
-
-    @Override
-    public void removeAllCacheSizeChangeCallbacks()
-    {
-        pendingCacheSizeCallbacks.forEach(cacheSizeGB::removeListener);
-        pendingCacheSizeCallbacks.clear();
-    }
-
     /**
      * Check if any cache cleanup conditions are enabled and triggered.
      * If so, a callback will be fired with the current cache size in GB.
@@ -223,7 +231,7 @@ public class ObservableCacheModel extends CacheModelBase
     public void requestPromptForCacheCleanup(
         Consumer<Double> promptWithCacheSizeGB, Consumer<Double> noCleanupNeededWithCacheSizeGB)
     {
-        if (getCacheSize() < 0)
+        if (getCacheSizeBytes() < 0)
         {
             // Cache size needs to be calculated.
             requestCacheSizeRefresh(newCacheSize ->
@@ -243,7 +251,7 @@ public class ObservableCacheModel extends CacheModelBase
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
         if (settingsModel.getBoolean("sizePromptEnabled"))
         {
-            if (getCacheSizeGB() > settingsModel.getFloat("cacheSizeLimit"))
+            if (newCacheSizeGB > settingsModel.getFloat("cacheSizeLimit"))
             {
                 promptWithCacheSizeGB.accept(newCacheSizeGB);
             }
@@ -265,14 +273,6 @@ public class ObservableCacheModel extends CacheModelBase
 
         // If the cache does not need to be cleaned up, then fire the "no cleanup needed" callback.
         noCleanupNeededWithCacheSizeGB.accept(newCacheSizeGB);
-    }
-
-    @Override
-    public Map<String, Long> getProjectSizes()
-    {
-        // Should already be unmodifiable.
-        //noinspection AssignmentOrReturnOfFieldWithMutableType
-        return projectSizes;
     }
 
     @Override

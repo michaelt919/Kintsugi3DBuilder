@@ -51,14 +51,20 @@ public abstract class CacheModelBase implements CacheModel
      */
     private volatile Thread cacheSizeCalcThread;
 
-    public abstract Map<String, Long> getProjectSizes();
-
     protected CacheModelBase()
     {
         cacheCleanupInProgress = new AtomicBoolean(false);
         cacheSizeCalcThreadLock = new Object();
         cacheSizeCalcThread = null;
     }
+
+    protected abstract void updateCacheSize(long newCacheSize, Map<String, Long> newProjectSizes, Runnable onCompleteCallback);
+
+    protected abstract void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress);
+
+    protected abstract void addCacheSizeChangeCallback(DoubleConsumer cacheSizeChangeCallback);
+
+    protected abstract void removeAllCacheSizeChangeCallbacks();
 
     protected Map<File, Consumer<File[]>> getDeleteMethods()
     {
@@ -78,6 +84,39 @@ public abstract class CacheModelBase implements CacheModel
     protected void handleCacheCleanupError(Exception e)
     {
         LOG.error(e.toString());
+    }
+
+    @Override
+    public void requestClearCache()
+    {
+        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
+
+        new Thread(() ->
+        {
+            try
+            {
+                if (cacheCleanupInProgress.compareAndSet(false, true))
+                {
+                    try
+                    {
+                        for (var entry : deleteMethods.entrySet())
+                        {
+                            clearCache(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    finally
+                    {
+                        cacheCleanupInProgress.set(false);
+                    }
+
+                    requestCacheSizeRefresh();
+                }
+            }
+            catch (IOException e)
+            {
+                handleCacheCleanupError(e);
+            }
+        }, "Clear Cache").start();
     }
 
     private static void clearCache(File directory, Consumer<File[]> deleteMethod) throws IOException
@@ -285,147 +324,6 @@ public abstract class CacheModelBase implements CacheModel
         }
     }
 
-    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
-    {
-        List<UUID> recentUUIDs = getRecentUUIDs(Global.state().getSettingsModel().getInt("recentProjectLimit"));
-        for (UUID recentUUID : recentUUIDs)
-        {
-            String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
-            // Traverse backwards to not skip indices from removal
-            for (int i = oldProjects.size() - 1; i >= 0; i--)
-            {
-                if (oldProjects.get(i).toString().equals(cachePathFromUUID))
-                {
-                    oldProjects.remove(i);
-                }
-            }
-        }
-    }
-
-    private static void filterByFileAgeLimit(List<File> projects)
-    {
-        for (int i = projects.size() - 1; i >= 0; i--)
-        {
-            try
-            {
-                Instant lastModified = Files.getLastModifiedTime(projects.get(i).toPath()).toInstant();
-                Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
-                    .atZone(ZoneId.systemDefault()).toInstant();
-                if (lastModified.isAfter(limit))
-                {
-                    projects.remove(i);
-                }
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error while finding cache file for cleanup", e);
-            }
-        }
-    }
-
-    private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
-    {
-        List<String> recentProjects = RecentProjects.getRecentProjectFilenames().stream().limit(numProjectsToKeep).collect(Collectors.toList());
-        // Load view sets of recent projects to get their UUID.
-        List<UUID> recentUUIDs = new ArrayList<>(recentProjects.size());
-        for (String recentProject : recentProjects)
-        {
-            String projectName = recentProject.substring(recentProject.lastIndexOf(File.separator) + 1);
-            File vsetFile = new File(recentProject + ".files" + File.separator + projectName + ".vset");
-
-            if (vsetFile.exists()) // Might not exist anymore, in which case it's not considered recent.
-            {
-                try
-                {
-                    ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
-                    recentUUIDs.add(viewSet.getUUID());
-                }
-                catch (IOException e)
-                {
-                    LOG.error("Failed to open project directory", e);
-                }
-            }
-
-        }
-        return recentUUIDs;
-    }
-
-    /**
-     * Gets the most cached projects in each cache (i.e. preview, fit).
-     * Typically, each cache will have the same projects (or one might have a subset of the other).
-     * Theoretically, it is possible that each cache has unique projects, in which case the total
-     * after combining would be greater than what this method returns.
-     * The intention is that this is to be used as an upper bound for the number of projects in an individual cache,
-     * and will typically be close to, if not equal to, the number of projects in all caches combined.
-     *
-     * @return
-     */
-    protected int getNumCachedProjects()
-    {
-        return getCleanableCacheDirectories().stream()
-            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
-            .max().orElse(0);
-    }
-
-    protected boolean checkOldFilesExist()
-    {
-        Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
-            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
-            .collect(Collectors.toList());
-
-        Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
-            .atZone(ZoneId.systemDefault()).toInstant();
-        for (File dir : cacheFiles)
-        {
-            try
-            {
-                Instant lastAccess = Files.getLastModifiedTime(dir.toPath()).toInstant();
-                if (lastAccess.isBefore(limit))
-                {
-                    return true;
-                }
-            }
-            catch (IOException | RuntimeException e)
-            {
-                LOG.error("Error while finding cache file for cleanup", e);
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void requestClearCache()
-    {
-        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
-
-        new Thread(() ->
-        {
-            try
-            {
-                if (cacheCleanupInProgress.compareAndSet(false, true))
-                {
-                    try
-                    {
-                        for (var entry : deleteMethods.entrySet())
-                        {
-                            clearCache(entry.getKey(), entry.getValue());
-                        }
-                    }
-                    finally
-                    {
-                        cacheCleanupInProgress.set(false);
-                    }
-
-                    requestCacheSizeRefresh();
-                }
-            }
-            catch (IOException e)
-            {
-                handleCacheCleanupError(e);
-            }
-        }, "Clear Cache").start();
-    }
-
     @Override
     public void requestCleanUpBothCaches(Map<File, Consumer<File[]>> deleteMethods)
     {
@@ -523,6 +421,44 @@ public abstract class CacheModelBase implements CacheModel
         }
     }
 
+    private static void filterByRecentProjectLimit(File directory, List<File> oldProjects)
+    {
+        List<UUID> recentUUIDs = getRecentUUIDs(Global.state().getSettingsModel().getInt("recentProjectLimit"));
+        for (UUID recentUUID : recentUUIDs)
+        {
+            String cachePathFromUUID = String.format("%s%s%s", directory, File.separator, recentUUID.toString());
+            // Traverse backwards to not skip indices from removal
+            for (int i = oldProjects.size() - 1; i >= 0; i--)
+            {
+                if (oldProjects.get(i).toString().equals(cachePathFromUUID))
+                {
+                    oldProjects.remove(i);
+                }
+            }
+        }
+    }
+
+    private static void filterByFileAgeLimit(List<File> projects)
+    {
+        for (int i = projects.size() - 1; i >= 0; i--)
+        {
+            try
+            {
+                Instant lastModified = Files.getLastModifiedTime(projects.get(i).toPath()).toInstant();
+                Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
+                    .atZone(ZoneId.systemDefault()).toInstant();
+                if (lastModified.isAfter(limit))
+                {
+                    projects.remove(i);
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error while finding cache file for cleanup", e);
+            }
+        }
+    }
+
     private void cleanUpBySizeLimit()
     {
         Map<String, Collection<File>> cleanableCacheProjects = new HashMap<>(getNumCachedProjects());
@@ -568,7 +504,7 @@ public abstract class CacheModelBase implements CacheModel
         // optimize with the information that we had when the process started.
         synchronized (cacheSizeCalcThreadLock)
         {
-            prevCacheSize = getCacheSize();
+            prevCacheSize = getCacheSizeBytes();
             prevProjectSizes = getProjectSizes();
         }
 
@@ -613,6 +549,33 @@ public abstract class CacheModelBase implements CacheModel
         }
     }
 
+    private static List<UUID> getRecentUUIDs(int numProjectsToKeep)
+    {
+        List<String> recentProjects = RecentProjects.getRecentProjectFilenames().stream().limit(numProjectsToKeep).collect(Collectors.toList());
+        // Load view sets of recent projects to get their UUID.
+        List<UUID> recentUUIDs = new ArrayList<>(recentProjects.size());
+        for (String recentProject : recentProjects)
+        {
+            String projectName = recentProject.substring(recentProject.lastIndexOf(File.separator) + 1);
+            File vsetFile = new File(recentProject + ".files" + File.separator + projectName + ".vset");
+
+            if (vsetFile.exists()) // Might not exist anymore, in which case it's not considered recent.
+            {
+                try
+                {
+                    ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
+                    recentUUIDs.add(viewSet.getUUID());
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Failed to open project directory", e);
+                }
+            }
+
+        }
+        return recentUUIDs;
+    }
+
     /**
      *
      * @param directory       The current directory whose size is being evaluated.
@@ -654,14 +617,6 @@ public abstract class CacheModelBase implements CacheModel
         LOG.debug("Directory size for {}: {}", directory, length);
         return length;
     }
-
-    protected abstract void updateCacheSize(long newCacheSize, Map<String, Long> newProjectSizes, Runnable onCompleteCallback);
-
-    protected abstract void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress);
-
-    protected abstract void addCacheSizeChangeCallback(DoubleConsumer cacheSizeChangeCallback);
-
-    protected abstract void removeAllCacheSizeChangeCallbacks();
 
     /**
      * Requests that the cache size be recalculated without any callback.
@@ -779,5 +734,48 @@ public abstract class CacheModelBase implements CacheModel
         return getCleanableCacheDirectories().stream()
             .mapToLong(dir -> getDirectorySize(dir, newProjectSizes, null))
             .sum();
+    }
+
+    /**
+     * Gets the most cached projects in each cache (i.e. preview, fit).
+     * Typically, each cache will have the same projects (or one might have a subset of the other).
+     * Theoretically, it is possible that each cache has unique projects, in which case the total
+     * after combining would be greater than what this method returns.
+     * The intention is that this is to be used as an upper bound for the number of projects in an individual cache,
+     * and will typically be close to, if not equal to, the number of projects in all caches combined.
+     *
+     * @return
+     */
+    protected int getNumCachedProjects()
+    {
+        return getCleanableCacheDirectories().stream()
+            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
+            .max().orElse(0);
+    }
+
+    protected boolean checkOldFilesExist()
+    {
+        Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
+            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
+            .collect(Collectors.toList());
+
+        Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))
+            .atZone(ZoneId.systemDefault()).toInstant();
+        for (File dir : cacheFiles)
+        {
+            try
+            {
+                Instant lastAccess = Files.getLastModifiedTime(dir.toPath()).toInstant();
+                if (lastAccess.isBefore(limit))
+                {
+                    return true;
+                }
+            }
+            catch (IOException | RuntimeException e)
+            {
+                LOG.error("Error while finding cache file for cleanup", e);
+            }
+        }
+        return false;
     }
 }

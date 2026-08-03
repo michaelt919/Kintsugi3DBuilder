@@ -26,11 +26,6 @@ public final class RecentProjectsHelper
     {
     }
 
-    static
-    {
-        RecentProjects.addRecentProjectsChangedListener(RecentProjectsHelper::updateAllControlStructures);
-    }
-
     public static List<MenuItem> getMenuItems(Collection<String> items)
     {
         List<MenuItem> customMenuItems = new ArrayList<>(items.size());

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.javafx.core;
 
-import kintsugi3d.builder.javafx.internal.ObservableCacheModel;
 import kintsugi3d.builder.javafx.internal.*;
 
 public final class JavaFXState
