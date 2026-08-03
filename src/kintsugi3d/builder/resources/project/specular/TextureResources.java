@@ -362,7 +362,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     static String getBasisFunctionsFilename(String filenamePrefix)
     {
-        return String.format("%sbasisFunctions.csv", filenamePrefix);
+        return String.format("%sbasisFunctions.hdr", filenamePrefix);
     }
 
     /**
