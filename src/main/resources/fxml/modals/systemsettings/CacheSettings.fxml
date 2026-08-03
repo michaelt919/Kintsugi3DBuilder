@@ -25,7 +25,7 @@
     <VBox spacing="8" alignment="CENTER">
         <HBox spacing="8" alignment="CENTER_LEFT">
             <CheckBox styleClass="wireframeBody" fx:id="sizeCheck"/>
-            <Label styleClass="wireframeBody"  text="Prompt over cache size: "/>
+            <Label styleClass="wireframeBody"  text="Maximum cache size (GB): "/>
             <TextField styleClass="wireframeBody" fx:id="numGB"/>
         </HBox>
         <HBox spacing="8" alignment="CENTER_LEFT">
