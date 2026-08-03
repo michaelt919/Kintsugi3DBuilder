@@ -58,6 +58,12 @@ public abstract class CacheModelBase implements CacheModel
         cacheSizeCalcThread = null;
     }
 
+    /**
+     *
+     * @param newCacheSize
+     * @param newProjectSizes
+     * @param onCompleteCallback Called after the cache sizes have been fully posted.  May run on a separate thread (i.e. the JavaFX thread).
+     */
     protected abstract void updateCacheSize(long newCacheSize, Map<String, Long> newProjectSizes, Runnable onCompleteCallback);
 
     protected abstract void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress);
@@ -350,6 +356,12 @@ public abstract class CacheModelBase implements CacheModel
     {
         if (cacheCleanupInProgress.compareAndSet(false, true))
         {
+            // Flag just to check if we get to the end without an exception being thrown.
+            // If it doesn't get to the end, this thread must release the lock (cacheCleanupInProgress).
+            // Otherwise, it will be handled by an asynchronous thread.
+            // Assume unsuccessful until it reaches the end.
+            boolean responsibleForLockRelease = true;
+
             try
             {
                 GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
@@ -412,11 +424,17 @@ public abstract class CacheModelBase implements CacheModel
                             cacheCleanupInProgress.set(false);
                         }
                     }, "Clean Up Cache By Size Limit").start());
+
+                responsibleForLockRelease = false;
             }
-            catch (RuntimeException e)
+            finally
             {
-                cacheCleanupInProgress.set(false);
-                throw e;
+                if (responsibleForLockRelease)
+                {
+                    // If the flag was never set, then an exception was thrown,
+                    // and we should just indicate that cache cleanup is no longer "in progress."
+                    cacheCleanupInProgress.set(false);
+                }
             }
         }
     }
