@@ -26,7 +26,7 @@ public interface ReadonlyMaterialBasis
      */
     DoubleVector3 getDiffuseColor(int b);
 
-    int getName(int b);
+    DoubleVector3 getEnabledDiffuseColor(int b);
 
     String getDisplayName(int cardIndex);
 

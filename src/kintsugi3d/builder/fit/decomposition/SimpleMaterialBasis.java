@@ -21,111 +21,6 @@ import java.util.stream.IntStream;
 
 public class SimpleMaterialBasis implements MaterialBasis
 {
-    private class BasisData
-    {
-        private DoubleVector3 diffuseColor;
-        private double[] redBasis;
-        private double[] greenBasis;
-        private double[] blueBasis;
-        private int name;
-        private boolean enabled;
-
-        public BasisData()
-        {
-            this.diffuseColor = null;
-            this.redBasis = null;
-            this.greenBasis = null;
-            this.blueBasis = null;
-            this.name = -1;
-            this.enabled = true;
-        }
-
-        public BasisData(DoubleVector3 diffuseColor, double[] redBasis, double[] greenBasis, double[] blueBasis,
-                         int name, boolean enabled)
-        {
-            this.diffuseColor = diffuseColor;
-            this.redBasis = redBasis;
-            this.greenBasis = greenBasis;
-            this.blueBasis = blueBasis;
-            this.name = name;
-            this.enabled = enabled;
-        }
-
-        public DoubleVector3 getDiffuseColor()
-        {
-            return diffuseColor;
-        }
-
-        public void setDiffuseColor(DoubleVector3 diffuseColor)
-        {
-            this.diffuseColor = diffuseColor;
-        }
-
-        public double[] getRedBasis()
-        {
-            return this.redBasis;
-        }
-
-        public void setRedBasis(double[] redBasis)
-        {
-            this.redBasis = redBasis;
-        }
-
-        public double[] getGreenBasis()
-        {
-            return greenBasis;
-        }
-
-        public void setGreenBasis(double[] greenBasis)
-        {
-            this.greenBasis = greenBasis;
-        }
-
-        public double[] getBlueBasis()
-        {
-            return blueBasis;
-        }
-
-        public void setBlueBasis(double[] blueBasis)
-        {
-            this.blueBasis = blueBasis;
-        }
-
-        public int getName()
-        {
-            return this.name;
-        }
-
-        public void setName(int name)
-        {
-            this.name = name;
-        }
-
-        public boolean isEnabled()
-        {
-            return this.enabled;
-        }
-
-        public void setEnabled(boolean enabled)
-        {
-            this.enabled = enabled;
-        }
-    }
-//    private final List<DoubleVector3> diffuseColors;
-//
-//    private final List<double[]> redBasis;
-//    private final List<double[]> greenBasis;
-//    private final List<double[]> blueBasis;
-//
-//    private final List<String> names;
-//
-//    private final List<DoubleVector3> disabledDiffuseColors;
-//    private final List<double[]> disabledRedBasis;
-//    private final List<double[]> disabledGreenBasis;
-//    private final List<double[]> disabledBlueBasis;
-//
-//    private final List<String> disabledNames;
-
     private final List<BasisData> basisList;
     private final List<BasisData> disabledBasisList;
 
@@ -135,18 +30,6 @@ public class SimpleMaterialBasis implements MaterialBasis
 
     public SimpleMaterialBasis(int materialCount, int specularResolution)
     {
-//        diffuseColors = IntStream.range(0, materialCount).mapToObj(b -> DoubleVector3.ZERO).collect(Collectors.toList());
-//        redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
-//        greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
-//        blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
-//        names = IntStream.range(0, materialCount).mapToObj(String::valueOf).collect(Collectors.toList());
-//
-//        disabledDiffuseColors = new ArrayList<>(0);
-//        disabledRedBasis = new ArrayList<>(0);
-//        disabledGreenBasis = new ArrayList<>(0);
-//        disabledBlueBasis = new ArrayList<>(0);
-//        disabledNames = new ArrayList<>(0);
-//
         this.basisList=new ArrayList<>(materialCount);
         this.basisList.addAll(IntStream.range(0, materialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
 
@@ -205,18 +88,12 @@ public class SimpleMaterialBasis implements MaterialBasis
         this.disabledBasisList = new ArrayList<>(materialCount);
         this.disabledMaterialCount = disabledRedBasis.size();
         this.disabledBasisList.addAll(IntStream.range(0, disabledMaterialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setDiffuseColor(diffuseColors.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setRedBasis(redBasis.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setGreenBasis(greenBasis.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setBlueBasis(blueBasis.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setDiffuseColor(disabledDiffuseColors.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setRedBasis(disabledRedBasis.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setGreenBasis(disabledGreenBasis.get(i)));
+        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setBlueBasis(disabledBlueBasis.get(i)));
         IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setName(disabledNames.get(i)));
         this.disabledBasisList.forEach(b -> b.setEnabled(false));
-    }
-
-    @Override
-    public int getName(int b)
-    {
-        return basisList.get(b).getName();
     }
 
     @Override
@@ -229,27 +106,21 @@ public class SimpleMaterialBasis implements MaterialBasis
     {
         List<BasisData> combinedList = new ArrayList<>(basisList.size() + disabledBasisList.size());
         combinedList.addAll(basisList);
-        for (BasisData b : disabledBasisList)
-        {
-            combinedList.add(b.getName(), b);
-        }
+        combinedList.addAll(disabledBasisList);
+        combinedList.sort(Comparator.comparing(BasisData::getName));
         return combinedList;
     }
 
     @Override
     public DoubleVector3 getDiffuseColor(int b)
     {
-//        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
-//        if (inEnabledList.isPresent())
-//        {
-//            return basisList.get(basisList.indexOf(inEnabledList.get())).getDiffuseColor();
-//        }
-//        else
-//        {
-//            int index = disabledBasisList.indexOf(disabledBasisList.stream().filter(basisData -> basisData.getName() == b).findFirst().get());
-//            return disabledBasisList.get(index).getDiffuseColor();
-//        }
         return getAllBasisData().get(b).getDiffuseColor();
+    }
+
+    @Override
+    public DoubleVector3 getEnabledDiffuseColor(int b)
+    {
+        return basisList.get(b).getDiffuseColor();
     }
 
     @Override
@@ -261,16 +132,6 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public double evaluateSpecularRed(int b, int m)
     {
-//        int index = names.indexOf(Integer.toString(b));
-//        if (index != -1)
-//        {
-//            return redBasis.get(index)[m];
-//        }
-//        else
-//        {
-//            index = disabledNames.indexOf(Integer.toString(b));
-//            return disabledRedBasis.get(index)[m];
-//        }
         return getAllBasisData().get(b).getRedBasis()[m];
     }
 
@@ -283,16 +144,6 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public double evaluateSpecularGreen(int b, int m)
     {
-//        int index = names.indexOf(Integer.toString(b));
-//        if (index != -1)
-//        {
-//            return greenBasis.get(index)[m];
-//        }
-//        else
-//        {
-//            index = disabledNames.indexOf(Integer.toString(b));
-//            return disabledGreenBasis.get(index)[m];
-//        }
         return getAllBasisData().get(b).getGreenBasis()[m];
     }
 
@@ -305,16 +156,6 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public double evaluateSpecularBlue(int b, int m)
     {
-//        int index = names.indexOf(Integer.toString(b));
-//        if (index != -1)
-//        {
-//            return blueBasis.get(index)[m];
-//        }
-//        else
-//        {
-//            index = disabledNames.indexOf(Integer.toString(b));
-//            return disabledBlueBasis.get(index)[m];
-//        }
         return getAllBasisData().get(b).getBlueBasis()[m];
     }
 
@@ -345,22 +186,21 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public void deleteMaterial(int b)
     {
-//        redBasis.remove(b);
-//        greenBasis.remove(b);
-//        blueBasis.remove(b);
-//        diffuseColors.remove(b);
-//        names.remove(b);
-        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
-        if (inEnabledList.isPresent())
+        Optional<BasisData> inList = getAllBasisData().stream().filter(basisData -> basisData.getName() == b).findFirst();
+        if (inList.isPresent())
         {
-            basisList.remove(inEnabledList.get());
+            BasisData temp = inList.get();
+            if (basisList.contains(temp))
+            {
+                basisList.remove(temp);
+                materialCount--;
+            }
+            else
+            {
+                disabledBasisList.remove(temp);
+                disabledMaterialCount--;
+            }
         }
-        else
-        {
-            Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
-            inDisabledList.ifPresent(disabledBasisList::remove);
-        }
-        materialCount--;
     }
 
     @Override
@@ -372,10 +212,7 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public MaterialBasis copy()
     {
-//        return new SimpleMaterialBasis(List.copyOf(basisList), List.copyOf(disabledBasisList));
         return new SimpleMaterialBasis(new ArrayList<>(basisList), new ArrayList<>(disabledBasisList));
-//        return new SimpleMaterialBasis(diffuseColors.toArray(DoubleVector3[]::new),
-//            List.copyOf(redBasis), List.copyOf(greenBasis), List.copyOf(blueBasis));
     }
 
     @Override
@@ -384,7 +221,6 @@ public class SimpleMaterialBasis implements MaterialBasis
         Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
         if (inEnabledList.isPresent())
         {
-            int index = Math.min(b, disabledBasisList.size());
             // copy to disabled lists
             disabledBasisList.add(inEnabledList.get());
             disabledBasisList.get(disabledBasisList.size() - 1).setEnabled(false);
@@ -417,7 +253,8 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public boolean getIsEnabled(int b)
     {
-        return getAllBasisData().get(b).isEnabled();
+        Optional<BasisData> filteredList = getAllBasisData().stream().filter(basisData -> basisData.getName() == b).findFirst();
+        return filteredList.map(BasisData::isEnabled).orElseGet(() -> getAllBasisData().get(b).isEnabled());
     }
 
     /**

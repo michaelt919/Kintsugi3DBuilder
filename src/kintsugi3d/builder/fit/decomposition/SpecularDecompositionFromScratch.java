@@ -102,12 +102,6 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             private final int resolution = basisSettings.getBasisResolution();
 
             @Override
-            public int getName(int b)
-            {
-                return names.get(b);
-            }
-
-            @Override
             public String getDisplayName(int cardIndex)
             {
                 List<Integer> tempList = new ArrayList<>(names.size() + disabledNames.size());
@@ -115,40 +109,20 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                 tempList.addAll(disabledNames.values());
                 tempList.sort(Integer::compareTo);
                 return Integer.toString(tempList.get(cardIndex));
-//                int index = names.indexOf(cardIndex);
-//                if (index == -1)
-//                {
-//                    index = disabledNames.indexOf(cardIndex);
-//                    return Integer.toString(disabledNames.get(index));
-//                }
-//                else
-//                {
-//                    return Integer.toString(names.get(cardIndex));
-//                }
             }
 
             @Override
             public DoubleVector3 getDiffuseColor(int b)
             {
-//                int index = names.indexOf(Integer.toString(b));
-//                if (index != -1)
-//                {
-//                    return diffuseAlbedos.get(index);
-//                }
-//                else
-//                {
-//                    index = disabledNames.indexOf(Integer.toString(b));
-//                    return disabledDiffuseAlbedos.get(index);
-//                }
-//                return diffuseAlbedos.get(b);
-//                if (diffuseAlbedos.get(b) == null)
-//                {
-//                    return disabledDiffuseAlbedos.get(b);
-//                }
-//                return diffuseAlbedos.get(b);
                 // just get enabled ones
                 List<DoubleVector3> tempList = new ArrayList<>(diffuseAlbedos.values());
                 return tempList.get(b);
+            }
+
+            @Override
+            public DoubleVector3 getEnabledDiffuseColor(int b)
+            {
+                return getDiffuseColor(b);
             }
 
             @Override

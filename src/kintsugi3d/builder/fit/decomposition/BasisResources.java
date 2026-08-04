@@ -69,10 +69,6 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     @Override
     public int getBasisCount()
     {
-        if (basis != null)
-        {
-            return basis.getMaterialCount();
-        }
         return basisCount;
     }
 
@@ -96,8 +92,11 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
     public void deleteBasisMaterial(int materialIndex)
     {
+        if (basis.getIsEnabled(materialIndex))
+        {
+            basisCount--;
+        }
         basis.deleteMaterial(materialIndex);
-        basisCount--;
         refreshGraphicsResources();
     }
 
@@ -105,14 +104,12 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     {
         basis.disableMaterial(materialIndex);
         basisCount--;
-//        refreshGraphicsResources();
     }
 
     public void enableBasisMaterial(int materialIndex)
     {
         basis.enableMaterial(materialIndex);
         basisCount++;
-//        refreshGraphicsResources();
     }
 
     public void toggleBasisMaterial(int materialIndex)
@@ -147,9 +144,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
-            diffuseNativeBuffer.set(b, 0, this.basis.getDiffuseColor(b).x);
-            diffuseNativeBuffer.set(b, 1, this.basis.getDiffuseColor(b).y);
-            diffuseNativeBuffer.set(b, 2, this.basis.getDiffuseColor(b).z);
+            diffuseNativeBuffer.set(b, 0, this.basis.getEnabledDiffuseColor(b).x);
+            diffuseNativeBuffer.set(b, 1, this.basis.getEnabledDiffuseColor(b).y);
+            diffuseNativeBuffer.set(b, 2, this.basis.getEnabledDiffuseColor(b).z);
             diffuseNativeBuffer.set(b, 3, 1.0f);
         }
 
@@ -202,9 +199,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             for (int b = 0; b < basis.getMaterialCount(); b++)
             {
                 // Store each channel of the diffuse albedo in the local buffer.
-                diffuseNativeBuffer.set(b, 0, basis.getDiffuseColor(b).x);
-                diffuseNativeBuffer.set(b, 1, basis.getDiffuseColor(b).y);
-                diffuseNativeBuffer.set(b, 2, basis.getDiffuseColor(b).z);
+                diffuseNativeBuffer.set(b, 0, basis.getEnabledDiffuseColor(b).x);
+                diffuseNativeBuffer.set(b, 1, basis.getEnabledDiffuseColor(b).y);
+                diffuseNativeBuffer.set(b, 2, basis.getEnabledDiffuseColor(b).z);
                 diffuseNativeBuffer.set(b, 3, 1.0f);
             }
 

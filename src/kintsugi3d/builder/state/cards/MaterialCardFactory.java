@@ -95,22 +95,23 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                 Map.of("Toggle Disabled", () ->
                         Rendering.runLater(() ->
                             {
-                                resources.getBasisResources().toggleBasisMaterial(Integer.parseInt(resources.getBasisResources().getBasis().getDisplayName(cardIndex)));
-                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(resources.getBasisResources().getBasis().getDisplayName(cardIndex))));
+                                // Get name before we delete to avoid indexing issues.
+                                resources.getBasisResources().toggleBasisMaterial(cardIndex);
+                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
 //                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
                             }),
                     "Delete Material", () ->
                     cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
                         {
+                            // Get name before we delete to avoid indexing issues.
                             try
                             {
-                                resources.deleteBasisMaterial(Integer.parseInt(resources.getBasisResources().getBasis().getDisplayName(cardIndex)));
+                                resources.deleteBasisMaterial(cardIndex);
                             }
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
                             {
-                                // hard reset of cards list to re-number, etc.
-                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
+                                Platform.runLater(() -> cardsModel.deleteCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
                             }
                         })))), !resources.getBasisResources().getBasis().getIsEnabled(cardIndex));
     }
@@ -145,7 +146,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         {
             if (filter.test(card)) // Check whether the card is in the filter
             {
-                changes.put(card, createCard(cardsModel, instance.getResources().getTextureResources(), Integer.parseInt(card.getInternalName())));
+                changes.put(card, createCard(cardsModel, instance.getResources().getTextureResources(), cardsList.indexOf(card)));
             }
         }
 

@@ -101,11 +101,11 @@ public final class SpecularFitSerializer
                 boolean isEnabled = basis.getIsEnabled(b);
                 if (isEnabled)
                 {
-                    out.printf("Red#%d", b);
+                    out.printf("Red#%s", basis.getDisplayName(b));
                 }
                 else
                 {
-                    out.printf("RedDisabled#%d", b);
+                    out.printf("RedDisabled#%s", basis.getDisplayName(b));
                 }
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
@@ -116,11 +116,11 @@ public final class SpecularFitSerializer
 
                 if (isEnabled)
                 {
-                    out.printf("Green#%d", b);
+                    out.printf("Green#%s", basis.getDisplayName(b));
                 }
                 else
                 {
-                    out.printf("GreenDisabled#%d", b);
+                    out.printf("GreenDisabled#%s", basis.getDisplayName(b));
                 }
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
@@ -131,11 +131,11 @@ public final class SpecularFitSerializer
 
                 if (isEnabled)
                 {
-                    out.printf("Blue#%d", b);
+                    out.printf("Blue#%s", basis.getDisplayName(b));
                 }
                 else
                 {
-                    out.printf("BlueDisabled#%d", b);
+                    out.printf("BlueDisabled#%s", basis.getDisplayName(b));
                 }
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
@@ -151,11 +151,11 @@ public final class SpecularFitSerializer
                 DoubleVector3 diffuseColor = basis.getDiffuseColor(b);
                 if (basis.getIsEnabled(b))
                 {
-                    out.printf("Diffuse#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                    out.printf("Diffuse#%s, %f, %f, %f", basis.getDisplayName(b), diffuseColor.x, diffuseColor.y, diffuseColor.z);
                 }
                 else
                 {
-                    out.printf("DiffuseDisabled#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                    out.printf("DiffuseDisabled#%s, %f, %f, %f", basis.getDisplayName(b), diffuseColor.x, diffuseColor.y, diffuseColor.z);
                 }
                 out.println();
             }
@@ -220,19 +220,19 @@ public final class SpecularFitSerializer
                 while (!currentTag.startsWith("Diffuse") && in.hasNext()) // stop at end of file or if diffuse albedos found
                 {
                     // Beginning a new basis function for each RGB component.
-
-                    if (currentTag.equals(String.format("Red#%d", b)))
+                    int name = Character.getNumericValue(currentTag.charAt(currentTag.indexOf('#') + 1));
+                    if (currentTag.equals(String.format("Red#%d", name)))
                     {
-                        names.add(b);
+                        names.add(name);
                         specularRedBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {
                             specularRedBasis.get(specularRedBasis.size() - 1)[m] = in.nextDouble();
                         }
                     }
-                    else if (currentTag.equals(String.format("RedDisabled#%d", b)))
+                    else if (currentTag.equals(String.format("RedDisabled#%d", name)))
                     {
-                        disabledNames.add(b);
+                        disabledNames.add(name);
                         disabledSpecularRedBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
                         {
@@ -246,7 +246,7 @@ public final class SpecularFitSerializer
                     // newline
 
                     currentTag = in.next();
-                    if (currentTag.equals(String.format("Green#%d", b)))
+                    if (currentTag.equals(String.format("Green#%d", name)))
                     {
                         specularGreenBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
@@ -254,7 +254,7 @@ public final class SpecularFitSerializer
                             specularGreenBasis.get(specularGreenBasis.size() - 1)[m] = in.nextDouble();
                         }
                     }
-                    else if (currentTag.equals(String.format("GreenDisabled#%d", b)))
+                    else if (currentTag.equals(String.format("GreenDisabled#%d", name)))
                     {
                         disabledSpecularGreenBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
@@ -269,7 +269,7 @@ public final class SpecularFitSerializer
                     // newline
 
                     currentTag = in.next(); // "Blue#{b}"
-                    if (currentTag.equals(String.format("Blue#%d", b)))
+                    if (currentTag.equals(String.format("Blue#%d", name)))
                     {
                         specularBlueBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
@@ -277,7 +277,7 @@ public final class SpecularFitSerializer
                             specularBlueBasis.get(specularBlueBasis.size() - 1)[m] = in.nextDouble();
                         }
                     }
-                    else if (currentTag.equals(String.format("BlueDisabled#%d", b)))
+                    else if (currentTag.equals(String.format("BlueDisabled#%d", name)))
                     {
                         disabledSpecularBlueBasis.add(new double[numElements]);
                         for (int m = 0; m < numElements; m++)
@@ -306,6 +306,7 @@ public final class SpecularFitSerializer
 
                 while (in.hasNext()) // parse diffuse albedos if found
                 {
+                    diffuseCount = Character.getNumericValue(currentTag.charAt(currentTag.indexOf('#') + 1));
                     if (currentTag.equals(String.format("Diffuse#%d", diffuseCount)))
                     {
                         diffuseBasis.add(new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
