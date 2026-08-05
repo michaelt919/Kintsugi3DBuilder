@@ -98,7 +98,7 @@ public final class SpecularFitSerializer
         {
             for (int b = 0; b < basisCount; b++)
             {
-                boolean isEnabled = basis.getIsEnabled(b);
+                boolean isEnabled = basis.getIsEnabled(basis.getDisplayName(b));
                 if (isEnabled)
                 {
                     out.printf("Red#%s", basis.getDisplayName(b));
@@ -149,7 +149,7 @@ public final class SpecularFitSerializer
             {
 
                 DoubleVector3 diffuseColor = basis.getDiffuseColor(b);
-                if (basis.getIsEnabled(b))
+                if (basis.getIsEnabled(basis.getDisplayName(b)))
                 {
                     out.printf("Diffuse#%s, %f, %f, %f", basis.getDisplayName(b), diffuseColor.x, diffuseColor.y, diffuseColor.z);
                 }

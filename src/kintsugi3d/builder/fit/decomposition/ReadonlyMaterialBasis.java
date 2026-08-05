@@ -73,6 +73,8 @@ public interface ReadonlyMaterialBasis
 
     boolean getIsEnabled(int b);
 
+    boolean getIsEnabled(String name);
+
     void save(File outputDirectory, String filenameOverride);
 
     MaterialBasis copy();

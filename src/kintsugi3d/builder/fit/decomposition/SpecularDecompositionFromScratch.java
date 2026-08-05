@@ -329,6 +329,12 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                 return names.containsKey(tempNames.get(b));
             }
 
+            @Override
+            public boolean getIsEnabled(String name)
+            {
+                return names.containsValue(Integer.parseInt(name));
+            }
+
             private SimpleMatrix removeColumn(SimpleMatrix m, int b)
             {
                 SimpleMatrix result = new SimpleMatrix(m.numRows(), m.numCols() - 1, DMatrixRMaj.class);

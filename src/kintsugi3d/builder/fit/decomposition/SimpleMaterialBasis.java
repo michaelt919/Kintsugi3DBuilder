@@ -184,9 +184,9 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
-    public void deleteMaterial(int b)
+    public void deleteMaterial(int name)
     {
-        Optional<BasisData> inList = getAllBasisData().stream().filter(basisData -> basisData.getName() == b).findFirst();
+        Optional<BasisData> inList = getAllBasisData().stream().filter(basisData -> basisData.getName() == name).findFirst();
         if (inList.isPresent())
         {
             BasisData temp = inList.get();
@@ -216,9 +216,9 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
-    public void disableMaterial(int b)
+    public void disableMaterial(int name)
     {
-        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
+        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == name).findFirst();
         if (inEnabledList.isPresent())
         {
             // copy to disabled lists
@@ -233,10 +233,10 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
-    public void enableMaterial(int b)
+    public void enableMaterial(int name)
     {
         // get persistent name
-        Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == b).findFirst();
+        Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == name).findFirst();
         if (inDisabledList.isPresent())
         {
             // add to enabled lists
@@ -253,8 +253,14 @@ public class SimpleMaterialBasis implements MaterialBasis
     @Override
     public boolean getIsEnabled(int b)
     {
-        Optional<BasisData> filteredList = getAllBasisData().stream().filter(basisData -> basisData.getName() == b).findFirst();
-        return filteredList.map(BasisData::isEnabled).orElseGet(() -> getAllBasisData().get(b).isEnabled());
+        return getAllBasisData().get(b).isEnabled();
+    }
+
+    @Override
+    public boolean getIsEnabled(String name)
+    {
+        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == Integer.parseInt(name)).findFirst();
+        return inEnabledList.isPresent();
     }
 
     /**

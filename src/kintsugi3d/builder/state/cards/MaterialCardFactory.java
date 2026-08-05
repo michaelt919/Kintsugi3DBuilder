@@ -45,12 +45,13 @@ public class MaterialCardFactory implements ProjectDataCardFactory
 
     public ProjectDataCard createCard(CardsModel cardsModel, TextureResources<?> resources, int cardIndex)
     {
+        String name = resources.getBasisResources().getBasis().getDisplayName(cardIndex);
         String thumbnailPath;
         try
         {
             thumbnailPath = ImageFinder.getInstance().findImageFile(
                 new File(instance.getViewSet().getThumbnailImageDirectory(),
-                    BasisImageCreator.getBasisImageFilename(cardIndex))).toString();
+                    BasisImageCreator.getBasisImageFilename(Integer.parseInt(name)))).toString();
         }
         catch (FileNotFoundException e)
         {
@@ -61,8 +62,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
             cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
-        return new ShaderDataCard(resources.getBasisResources().getBasis().getDisplayName(cardIndex),
-            String.format("Material %s", resources.getBasisResources().getBasis().getDisplayName(cardIndex)), shader, thumbnailPath, Map.of(),
+
+        return new ShaderDataCard(name, String.format("Material %s", name), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
                     "Highlight Material", () ->
@@ -96,8 +97,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                         Rendering.runLater(() ->
                             {
                                 // Get name before we delete to avoid indexing issues.
-                                resources.getBasisResources().toggleBasisMaterial(cardIndex);
-                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(Integer.toString(cardIndex))));
+                                resources.getBasisResources().toggleBasisMaterial(Integer.parseInt(name));
+                                Platform.runLater(() -> cardsModel.refreshCards(card -> card.getInternalName().equals(name)));
 //                                Platform.runLater(() -> cardsModel.setCardList(createAllCards(cardsModel)));
                             }),
                     "Delete Material", () ->
@@ -107,7 +108,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                             // Get name before we delete to avoid indexing issues.
                             try
                             {
-                                resources.deleteBasisMaterial(cardIndex);
+                                resources.deleteBasisMaterial(Integer.parseInt(name));
                             }
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
                             {

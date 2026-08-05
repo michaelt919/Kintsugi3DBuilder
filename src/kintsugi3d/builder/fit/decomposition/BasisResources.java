@@ -90,37 +90,37 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         refreshGraphicsResources();
     }
 
-    public void deleteBasisMaterial(int materialIndex)
+    public void deleteBasisMaterial(int name)
     {
-        if (basis.getIsEnabled(materialIndex))
+        if (basis.getIsEnabled(Integer.toString(name)))
         {
             basisCount--;
         }
-        basis.deleteMaterial(materialIndex);
+        basis.deleteMaterial(name);
         refreshGraphicsResources();
     }
 
-    public void disableBasisMaterial(int materialIndex)
+    public void disableBasisMaterial(int name)
     {
-        basis.disableMaterial(materialIndex);
+        basis.disableMaterial(name);
         basisCount--;
     }
 
-    public void enableBasisMaterial(int materialIndex)
+    public void enableBasisMaterial(int name)
     {
-        basis.enableMaterial(materialIndex);
+        basis.enableMaterial(name);
         basisCount++;
     }
 
-    public void toggleBasisMaterial(int materialIndex)
+    public void toggleBasisMaterial(int name)
     {
-        if (basis.getIsEnabled(materialIndex))
+        if (basis.getIsEnabled(Integer.toString(name)))
         {
-            disableBasisMaterial(materialIndex);
+            disableBasisMaterial(name);
         }
         else
         {
-            enableBasisMaterial(materialIndex);
+            enableBasisMaterial(name);
         }
         refreshGraphicsResources();
     }
