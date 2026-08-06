@@ -441,7 +441,7 @@ public final class SpecularFitSerializer
         // bitwise operation is for "unsigning" bytes
         if ((rgbe[3] & 0xFF) > 0)
         { // If exponent is 0, pixel is pure black
-            // 2^(exponent - Radiance bias - 8) to get a range from "0 to 1"
+            // 2^(exponent - Radiance bias - 8) or 2^(exp - bias) / 256 to get a range from "0 to 1"
             double factor = Math.pow(2, (rgbe[3] & 0xFF) - 0x80 - 8);
             rgb[0] = (rgbe[0] & 0xFF) * factor;
             rgb[1] = (rgbe[1] & 0xFF) * factor;
