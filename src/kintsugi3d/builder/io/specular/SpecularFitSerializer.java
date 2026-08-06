@@ -25,9 +25,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,7 +87,202 @@ public final class SpecularFitSerializer
 
     public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
     {
-        // Calculate rgbe bytes
+        // Text file format
+        try (PrintStream out = new PrintStream(new File(outputDirectory, (filenameOverride != null) ? filenameOverride : TextureResources.getBasisFunctionsFilename()), StandardCharsets.UTF_8))
+        {
+            for (int b = 0; b < basisCount; b++)
+            {
+                out.printf("Red#%d", b);
+                for (int m = 0; m <= microfacetDistributionResolution; m++)
+                {
+                    out.print(", ");
+                    out.print(basis.evaluateSpecularRed(b, m));
+                }
+                out.println();
+
+                out.printf("Green#%d", b);
+                for (int m = 0; m <= microfacetDistributionResolution; m++)
+                {
+                    out.print(", ");
+                    out.print(basis.evaluateSpecularGreen(b, m));
+                }
+                out.println();
+
+                out.printf("Blue#%d", b);
+                for (int m = 0; m <= microfacetDistributionResolution; m++)
+                {
+                    out.print(", ");
+                    out.print(basis.evaluateSpecularBlue(b, m));
+                }
+                out.println();
+            }
+
+            for (int b = 0; b < basisCount; b++)
+            {
+                DoubleVector3 diffuseColor = basis.getDiffuseColor(b);
+                out.printf("Diffuse#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                out.println();
+            }
+        }
+        catch (IOException e)
+        {
+            LOG.error("An error occurred saving basis functions:", e);
+        }
+    }
+
+    /**
+     * Deserializes basis functions only.
+     * Does not deserialize weights (which can be loaded as images) or diffuse basis colors (which should be re-fit, or a diffuse texture can be used instead).
+     *
+     * @param priorSolutionDirectory
+     * @return An object containing the red, green, and blue basis functions.
+     */
+    public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory) throws IOException
+    {
+        File basisFile = new File(priorSolutionDirectory, TextureResources.getBasisFunctionsFilename());
+
+        if (basisFile.exists())
+        {
+            // Test to figure out the resolution
+            int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere
+            try (Scanner in = new Scanner(basisFile, StandardCharsets.UTF_8))
+            {
+                in.useLocale(Locale.ROOT);
+                String testLine = in.nextLine();
+                String[] elements = CSV_PATTERN.split(testLine);
+                if (elements[elements.length - 1].isBlank()) // detect trailing comma
+                {
+                    // Don't count the blank element after the trailing comma, or the leading identifier on each line.
+                    numElements = elements.length - 2;
+                }
+                else
+                {
+                    // Don't count the leading identifier on each line.
+                    numElements = elements.length - 1;
+                }
+            }
+
+            // Now actually parse the file
+            try (Scanner in = new Scanner(basisFile, StandardCharsets.UTF_8))
+            {
+                in.useLocale(Locale.ROOT);
+
+                List<double[]> specularRedBasis = new ArrayList<>(8);
+                List<double[]> specularGreenBasis = new ArrayList<>(8);
+                List<double[]> specularBlueBasis = new ArrayList<>(8);
+
+                in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
+
+                String currentTag = in.next();
+                int b = 0;
+                while (!currentTag.startsWith("Diffuse") && in.hasNext()) // stop at end of file or if diffuse albedos found
+                {
+                    // Beginning a new basis function for each RGB component.
+                    specularRedBasis.add(new double[numElements]);
+                    specularGreenBasis.add(new double[numElements]);
+                    specularBlueBasis.add(new double[numElements]);
+
+                    if (currentTag.equals(String.format("Red#%d", b)))
+                    {
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            specularRedBasis.get(b)[m] = in.nextDouble();
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
+                    }
+                    // newline
+
+                    currentTag = in.next();
+                    if (currentTag.equals(String.format("Green#%d", b)))
+                    {
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            specularGreenBasis.get(b)[m] = in.nextDouble();
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
+                    }
+                    // newline
+
+                    currentTag = in.next(); // "Blue#{b}"
+                    if (currentTag.equals(String.format("Blue#%d", b)))
+                    {
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            specularBlueBasis.get(b)[m] = in.nextDouble();
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
+                    }
+                    // newline
+
+                    if (in.hasNext())
+                    {
+                        // Get tag of next element for while loop check
+                        currentTag = in.next();
+                    }
+
+                    b++;
+                }
+
+                DoubleVector3[] diffuseBasis = new DoubleVector3[b]; // "b" is the number of specular basis functions from the earlier loop
+                int diffuseCount = 0;
+
+                while (in.hasNext()) // parse diffuse albedos if found
+                {
+                    if (currentTag.equals(String.format("Diffuse#%d", diffuseCount)))
+                    {
+                        diffuseBasis[diffuseCount] = new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble());
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
+                    }
+                    // newline
+
+                    if (in.hasNext())
+                    {
+                        // Get tag of next element
+                        currentTag = in.next();
+                    }
+
+                    diffuseCount++;
+                }
+
+                while (diffuseCount < diffuseBasis.length)
+                {
+                    // Default to black if not found
+                    diffuseBasis[diffuseCount] = DoubleVector3.ZERO;
+                    diffuseCount++;
+                }
+
+                return new SimpleMaterialBasis(diffuseBasis, specularRedBasis, specularGreenBasis, specularBlueBasis);
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /// Serializes basis functions into an HDR image.
+    /// DOES NOT SERIALIZE DIFFUSE COLORS!
+    ///
+    /// @param basisCount                       the number of basis functions
+    /// @param microfacetDistributionResolution the resolution of basis functions
+    /// @param basis                            the material basis in which to evaluate specular colors from
+    /// @param outputDirectory                  where to put the file
+    /// @param filenameOverride                 give the file a different name
+    public static void serializeHDRI(int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
+    {
+        // Calculate RGBE bytes
         byte[] rgbe = new byte[basisCount * microfacetDistributionResolution * 4];
         for (int b = 0; b < basisCount; ++b)
         {
@@ -98,7 +293,7 @@ public final class SpecularFitSerializer
         }
 
         // Write the bytes out to the HDRI
-        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outputDirectory, Objects.requireNonNullElseGet(filenameOverride, TextureResources::getBasisFunctionsFilename)))))
+        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outputDirectory, Objects.requireNonNullElse(filenameOverride, "basisFunctions.hdr")))))
         {
             // Write HDR header
             out.write("#?RADIANCE\n".getBytes(StandardCharsets.US_ASCII));
@@ -153,15 +348,15 @@ public final class SpecularFitSerializer
     }
 
     /**
-     * Deserializes basis functions only.
-     * Does not deserialize weights (which can be loaded as images) or diffuse basis colors (which should be re-fit, or a diffuse texture can be used instead).
+     * Deserializes basis functions packed into an HDRI
+     * Does not deserialize weights, diffuse basis colors, or albedo colors
      *
      * @param priorSolutionDirectory
      * @return An object containing the red, green, and blue basis functions.
      */
-    public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory) throws IOException
+    public static MaterialBasis deserializeHDRI(File priorSolutionDirectory) throws IOException
     {
-        File basisFile = new File(priorSolutionDirectory, TextureResources.getBasisFunctionsFilename());
+        File basisFile = new File(priorSolutionDirectory, "basisFunctions.hdr");
 
         if (!basisFile.exists())
         {
@@ -204,12 +399,7 @@ public final class SpecularFitSerializer
 
             // Parse RGBE byte data
             int index = 0;
-            rgbe = new byte[microfacetDistributionResolution * basisCount * 4];
-            while (((buf = in.read()) != -1) && (index < (microfacetDistributionResolution * basisCount * 4)))
-            {
-                rgbe[index] = (byte) buf;
-                index++;
-            }
+            rgbe = in.readAllBytes();
         }
 
         // For final product
@@ -238,7 +428,11 @@ public final class SpecularFitSerializer
             specularBlueBasis.add(blue);
         }
 
-        return new SimpleMaterialBasis(new DoubleVector3[0], specularRedBasis, specularGreenBasis, specularBlueBasis);
+        // Default all to black
+        DoubleVector3[] diffuse = new DoubleVector3[basisCount];
+        Arrays.fill(diffuse, DoubleVector3.ZERO);
+
+        return new SimpleMaterialBasis(diffuse, specularRedBasis, specularGreenBasis, specularBlueBasis);
     }
 
     private static double[] rgbeToDouble(byte[] rgbe)
@@ -247,7 +441,7 @@ public final class SpecularFitSerializer
         // bitwise operation is for "unsigning" bytes
         if ((rgbe[3] & 0xFF) > 0)
         { // If exponent is 0, pixel is pure black
-            // 2^(exponent - Radiance bias - 8) to get a range from 0 to 1
+            // 2^(exponent - Radiance bias - 8) to get a range from "0 to 1"
             double factor = Math.pow(2, (rgbe[3] & 0xFF) - 0x80 - 8);
             rgb[0] = (rgbe[0] & 0xFF) * factor;
             rgb[1] = (rgbe[1] & 0xFF) * factor;
