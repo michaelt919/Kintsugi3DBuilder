@@ -148,7 +148,6 @@
                             <outputDirectory>
                                 ${project.basedir}/bin
                             </outputDirectory>
-                            <outputFileName>usdz-exporter</outputFileName>
                         </configuration>
                     </execution>
                 </executions>
