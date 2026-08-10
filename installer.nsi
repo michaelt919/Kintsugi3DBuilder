@@ -60,7 +60,7 @@ Section "Kintsugi 3D Builder (required)" SectionApp
 
     ; Include JRE
     SetOutPath "$INSTDIR\jre"
-    File /r "jre\*"
+    File /r "target\jre\*"
 
     ; Include additional binaries
     SetOutPath "$INSTDIR\bin"
@@ -83,7 +83,7 @@ SectionEnd
 Section "Kintsugi 3D Viewer" SectionViewer
 
     SetOutPath $INSTDIR
-    File "viewer\Kintsugi3DViewer.exe"
+    File "target\viewer\Kintsugi3DViewer.exe"
 
 SectionEnd
 
