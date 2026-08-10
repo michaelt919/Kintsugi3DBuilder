@@ -86,8 +86,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory
                         else
                         {
                             defines.put("OVERLAY_MODE", Optional.of("OVERLAY_MODE_WEIGHTMAP"));
-                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(cardIndex));
-                            subName = String.format("Palette material %d", cardIndex);
+                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(Integer.parseInt(name)));
+                            subName = String.format("Palette material %d", Integer.parseInt(name));
                         }
 
                         Global.state().getUserShaderModel().setUserShader(

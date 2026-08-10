@@ -111,6 +111,11 @@ public class SimpleMaterialBasis implements MaterialBasis
         return combinedList;
     }
 
+    public void setDiffuseAlbedo(int basisIndex, DoubleVector3 diffuseAlbedo)
+    {
+        basisList.get(basisIndex).setDiffuseColor(diffuseAlbedo);
+    }
+
     @Override
     public DoubleVector3 getDiffuseColor(int b)
     {

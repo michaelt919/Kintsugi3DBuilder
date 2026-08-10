@@ -57,13 +57,13 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         ReadonlyMaterialBasis basis = specularFit.getBasisResources().getBasis();
 
         // Save basis functions in image format.
-        for (int i = 0; i < basis.getMaterialCount(); i++)
+        for (int i = 0; i < basis.getMaterialCount() + basis.getDisabledMaterialCount(); i++)
         {
             drawable.program().setUniform("basisIndex", i);
             drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
             drawable.draw(framebuffer);
             framebuffer.getTextureReaderForColorAttachment(0)
-                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(i)));
+                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(Integer.parseInt(basis.getDisplayName(i)))));
         }
     }
 

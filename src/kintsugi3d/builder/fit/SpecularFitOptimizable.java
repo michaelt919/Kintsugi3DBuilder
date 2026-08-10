@@ -190,7 +190,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, specularDecomposition.getMaterialBasis().getMaterialCount());
 
         // Run once just in case
-        getBasisResources().setBasis(specularDecomposition.getMaterialBasis());
+        getBasisResources().setBasis(specularDecomposition.getMaterialBasis().copy());
 
         optimize(
             () ->
@@ -331,7 +331,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         // Prepare for error calculation on the GPU.
         // Basis functions will have changed.
-        getBasisResources().setBasis(specularDecomposition.getMaterialBasis());
+        getBasisResources().setBasis(specularDecomposition.getMaterialBasis().copy());
 
         LOG.debug("Calculating error...");
         errorCalculator.update();
