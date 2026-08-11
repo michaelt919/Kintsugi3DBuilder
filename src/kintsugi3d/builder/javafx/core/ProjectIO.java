@@ -167,6 +167,7 @@ public final class ProjectIO
 
             viewSet.copyMasks();
             viewSet.copyModel();
+            viewSet.copyTextures();
         });
     }
 
