@@ -28,7 +28,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.javafx.controllers.modals.systemsettings.CacheSettingsController;
+import kintsugi3d.builder.core.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -77,7 +77,7 @@ public class WelcomeWindowController
 
     private BooleanExpression shouldBeHidden;
 
-    public void init(Stage injectedStage, Runnable injectedUserDocumentationHandler)
+    public void init(Stage injectedStage, JavaFXState state, Runnable injectedUserDocumentationHandler)
     {
         INSTANCE = this;
 
@@ -91,7 +91,7 @@ public class WelcomeWindowController
         recentButtons.add(recent4);
         recentButtons.add(recent5);
 
-        RecentProjects.updateAllControlStructures();
+        RecentProjectsHelper.updateAllControlStructures();
 
         shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
             .or(ProgressBarsController.getInstance().getProcessingProperty())
@@ -127,7 +127,7 @@ public class WelcomeWindowController
         LOG.info("Checking for cache cleanup...");
 
         // Prompt user to clear cache if conditions are met
-        CacheSettingsController.requestPromptForCacheCleanup(
+        state.getCacheModel().requestPromptForCacheCleanup(
             promptCacheSize ->
             {
                 LOG.info("Cache size: {}GB", promptCacheSize);
@@ -142,7 +142,7 @@ public class WelcomeWindowController
                 {
                     if (response.equals(ButtonType.OK))
                     {
-                        CacheSettingsController.cleanUpCache();
+                        state.getCacheModel().checkForCleanUpCachePrompt();
                     }
                 });
             },
@@ -238,7 +238,7 @@ public class WelcomeWindowController
 
     public void handleButtonSelection(Button item)
     {
-        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
+        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getRecentProjectFilenames();
         int i = 0;
         for (Button button : recentButtons)
         {
@@ -262,8 +262,8 @@ public class WelcomeWindowController
 
     public void updateRecentProjects()
     {
-        List<String> items = RecentProjects.getItemsFromRecentsFile();
-        List<MenuItem> recentItems = RecentProjects.getMenuItems(items);
+        List<String> items = RecentProjects.getRecentProjectFilenames();
+        List<MenuItem> recentItems = RecentProjectsHelper.getMenuItems(items);
 
         recentProjectsSplitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
@@ -356,7 +356,7 @@ public class WelcomeWindowController
 
     private static void removeReference(String fileName)
     {
-        List<String> newRecentItems = RecentProjects.getItemsFromRecentsFile().stream()
+        List<String> newRecentItems = RecentProjects.getRecentProjectFilenames().stream()
             .filter(item -> !item.equals(fileName))
             .collect(Collectors.toList());
 
@@ -373,7 +373,7 @@ public class WelcomeWindowController
             LOG.error("Failed to update recent files list while removing invalid reference.", ioe);
         }
 
-        RecentProjects.updateAllControlStructures();
+        RecentProjectsHelper.updateAllControlStructures();
     }
 
     private static void addItemToQuickAccess(String fileName, Button recentButton)

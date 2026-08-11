@@ -11,11 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.state.CarouselModel;
-import kintsugi3d.builder.state.CameraViewListModel;
-import kintsugi3d.builder.state.CanvasListModel;
-import kintsugi3d.builder.state.CanvasModel;
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
@@ -50,5 +46,5 @@ public interface Kintsugi3DBuilderState
     ProjectModel getProjectModel();
     CarouselModel getCarouselModel();
 
-    // add get cache model
+    CacheModel getCacheModel();
 }
