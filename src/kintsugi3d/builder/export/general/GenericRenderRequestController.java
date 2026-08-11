@@ -23,7 +23,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.io.File;

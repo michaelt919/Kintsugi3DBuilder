@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -9,11 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.core;
+package kintsugi3d.builder.core;
 
-import javafx.scene.control.*;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.OperatingSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +30,14 @@ public final class RecentProjects
     private static final Logger LOG = LoggerFactory.getLogger(RecentProjects.class);
     private static File recentDirectory = null;
 
+    private static final Collection<Runnable> RECENT_FILES_CHANGED_LISTENERS = new ArrayList<>(1);
+
     private RecentProjects()
     {
         throw new IllegalStateException("Utility class");
     }
 
-    public static List<String> getItemsFromRecentsFile()
+    public static List<String> getRecentProjectFilenames()
     {
         List<String> projectItems = List.of();
 
@@ -55,52 +55,6 @@ public final class RecentProjects
 
         //remove duplicates while maintaining the same order (regular HashSet does not maintain order)
         return new ArrayList<>(new LinkedHashSet<>(projectItems));
-    }
-
-    public static List<MenuItem> getMenuItems()
-    {
-        List<String> items = getItemsFromRecentsFile();
-        return getMenuItems(items);
-    }
-
-    public static List<MenuItem> getMenuItems(Collection<String> items)
-    {
-        List<MenuItem> customMenuItems = new ArrayList<>(items.size());
-        int i = 0;
-
-        //attach tooltips and event handlers
-        for (String item : items)
-        {
-            String fileName = getItemsFromRecentsFile().get(i);
-            String shortPath = shortenedPath(item);
-
-            if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
-            {
-                // MacOS doesn't support custom menu items
-                MenuItem menuItem = new MenuItem(shortPath);
-                menuItem.setOnAction(event -> onMenuItemAction(fileName));
-                customMenuItems.add(menuItem);
-            }
-            else
-            {
-                CustomMenuItem menuItem = new CustomMenuItem(new Label(shortPath));
-                menuItem.setOnAction(event -> onMenuItemAction(fileName));
-
-                Tooltip tooltip = new Tooltip(fileName);
-                Tooltip.install(menuItem.getContent(), tooltip);
-
-                customMenuItems.add(menuItem);
-            }
-
-            ++i;
-        }
-
-        return customMenuItems;
-    }
-
-    private static void onMenuItemAction(String fileName)
-    {
-        ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
     }
 
     public static String shortenedPath(String path)
@@ -123,7 +77,7 @@ public final class RecentProjects
 
     public static void addToRecentFiles(String fileName)
     {
-        List<String> existingFileNames = getItemsFromRecentsFile();
+        List<String> existingFileNames = getRecentProjectFilenames();
 
         // Check if the fileName is already present
         existingFileNames.remove(fileName); // Remove it from its current position
@@ -148,43 +102,12 @@ public final class RecentProjects
         }
 
         //update list of recent projects in program
-        updateAllControlStructures();
-    }
-
-    public static void updateAllControlStructures()
-    {
-        if (MainWindowController.getInstance() != null)
-        {
-            updateRecentProjectsInMenuBar();
-        }
-
-        if (WelcomeWindowController.getInstance() != null)
-        {
-            WelcomeWindowController.getInstance().updateRecentProjects();
-        }
-    }
-
-
-    private static void updateRecentProjectsInMenuBar()
-    {
-        Menu recentProjsList = MainWindowController.getInstance().getRecentProjectsMenu();
-        Menu cleanRecentProjectsMenu = MainWindowController.getInstance().getCleanRecentProjectsMenu();
-
-        recentProjsList.getItems().clear();
-
-        List<MenuItem> recentItems = getMenuItems();
-
-        recentProjsList.getItems().addAll(recentItems);
-
-        //disable menus if there are no recent projects, otherwise enable
-        boolean isListEmpty = recentProjsList.getItems().isEmpty();
-        recentProjsList.setDisable(isListEmpty);
-        cleanRecentProjectsMenu.setDisable(isListEmpty);
+        fireListeners();
     }
 
     public static void removeInvalidReferences()
     {
-        List<String> newRecentItems = getItemsFromRecentsFile().stream()
+        List<String> newRecentItems = getRecentProjectFilenames().stream()
             .map(File::new)
             .filter(File::exists)
             .map(File::getAbsolutePath)
@@ -203,7 +126,7 @@ public final class RecentProjects
             LOG.error("Failed to update recent files list while removing invalid references.", e);
         }
 
-        updateAllControlStructures();
+        fireListeners();
     }
 
     public static void removeAllReferences()
@@ -218,12 +141,12 @@ public final class RecentProjects
             LOG.error("Could not write to recent files list", e);
         }
 
-        updateAllControlStructures();
+        fireListeners();
     }
 
     public static String getMostRecentProjectPath()
     {
-        return getItemsFromRecentsFile().get(0);
+        return getRecentProjectFilenames().get(0);
     }
 
     //use these functions to make file selection more user-friendly across multiple File/Directory Choosers
@@ -240,7 +163,7 @@ public final class RecentProjects
         }
 
         //loop through recent files and assign/return the first existing one
-        for (String path : getItemsFromRecentsFile())
+        for (String path : getRecentProjectFilenames())
         {
             File file = new File(path);
             if (file.exists())
@@ -251,5 +174,18 @@ public final class RecentProjects
         }
 
         return new File(System.getProperty("user.home"));
+    }
+
+    public static void addRecentProjectsChangedListener(Runnable listener)
+    {
+        RECENT_FILES_CHANGED_LISTENERS.add(listener);
+    }
+
+    private static void fireListeners()
+    {
+        for (Runnable listener : RECENT_FILES_CHANGED_LISTENERS)
+        {
+            listener.run();
+        }
     }
 }

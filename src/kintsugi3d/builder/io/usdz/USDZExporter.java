@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class USDZExporter extends MaterialExporter
+public abstract class USDZExporter extends MaterialExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(USDZExporter.class);
     private static final Path BIN_LOCATION = ApplicationFolders.getAdditionalBinDirectory();
@@ -41,49 +41,30 @@ public class USDZExporter extends MaterialExporter
     private File outputPath;
     private File tempPath;
 
-    private boolean metallic;
-
-    public USDZExporter(boolean metallic)
+    protected final File getTempPath()
     {
-        this.metallic = metallic;
+        return tempPath;
     }
 
+    @SuppressWarnings("NoopMethodInAbstractClass")
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
     {
     }
 
-    @StandardTextureExport(StandardTexture.DIFFUSE_COLOR)
-    public void diffuse(TextureInfo diffuse)
-    {
-    }
-
-    @StandardTextureExport(StandardTexture.SPECULAR_COLOR)
-    public void specular(TextureInfo specular)
-    {
-    }
-
+    @SuppressWarnings("NoopMethodInAbstractClass")
     @StandardTextureExport(StandardTexture.ROUGHNESS)
     public void roughness(TextureInfo roughness)
     {
     }
 
-
-    @StandardTextureExport(StandardTexture.ALBEDO)
-    public void albedo(TextureInfo diffuse)
-    {
-    }
-
-    @StandardTextureExport(StandardTexture.ORM)
-    public void orm(TextureInfo specular)
-    {
-    }
+    protected abstract void addCommands(List<String> commandList);
 
     @Override
     protected void postExport()
     {
         // Command list for the ProcessBuilder
-        List<String> command = new ArrayList<>();
+        List<String> command = new ArrayList<>(8);
 
         // Get the wildcarded application name for the exporter
         String glob;
@@ -102,8 +83,7 @@ public class USDZExporter extends MaterialExporter
                 break;
 
             default:
-                LOG.error("OS environment not supported.");
-                return;
+                throw new RuntimeException("OS environment not supported.");
         }
 
         // Attempt to realize path for the exporter application
@@ -113,15 +93,14 @@ public class USDZExporter extends MaterialExporter
 
             if (!Files.exists(path))
             {
-                LOG.error("Could not find USDZ exporter binary.");
-                return;
+                throw new IOException("Could not find USDZ exporter binary.");
             }
 
             command.add(path.toString());
         }
-        catch (IOException | IllegalStateException e)
+        catch (IOException e)
         {
-            LOG.error(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
 
         command.add("--model");
@@ -129,29 +108,11 @@ public class USDZExporter extends MaterialExporter
         command.add("--format");
         command.add(getTextureFileFormat());
         command.add("--normal");
-        command.add(new File(tempPath,
-            getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat())).getPath());
-        if (metallic)
-        {
-            command.add("--metallic");
-            command.add("--albedo");
-            command.add(new File(tempPath,
-                getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat())).getPath());
-            command.add("--orm");
-            command.add(new File(tempPath,
-                getTextureFilename(StandardTexture.ORM.details.name, getTextureFileFormat())).getPath());
-        }
-        else {
-            command.add("--diffuse");
-            command.add(new File(tempPath,
-                getTextureFilename(StandardTexture.DIFFUSE_COLOR.details.name, getTextureFileFormat())).getPath());
-            command.add("--specular");
-            command.add(new File(tempPath,
-                getTextureFilename(StandardTexture.SPECULAR_COLOR.details.name, getTextureFileFormat())).getPath());
-            command.add("--roughness");
-            command.add(new File(tempPath,
-                getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat())).getPath());
-        }
+        command.add(new File(tempPath, getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat())).getPath());
+        command.add("--roughness");
+        command.add(new File(tempPath, getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat())).getPath());
+        // Add inheritance specified commands
+        addCommands(command);
 
         ProcessBuilder pb = new ProcessBuilder(command);
 
@@ -169,14 +130,12 @@ public class USDZExporter extends MaterialExporter
             // If the exporter didn't exit with a 0, an error occurred
             if (process.waitFor() != 0)
             {
-                LOG.error("Passed files don't match requirements.");
-                return;
+                throw new RuntimeException("Passed files don't match requirements.");
             }
         }
         catch (IOException e)
         {
-            LOG.error("Couldn't open the USDZ exporter.");
-            return;
+            throw new RuntimeException("Couldn't open the USDZ exporter.");
         }
         catch (InterruptedException e)
         {
@@ -187,10 +146,7 @@ public class USDZExporter extends MaterialExporter
         // Cleanup temp files
         try
         {
-            Files.walk(tempPath.toPath())
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+            Files.walk(tempPath.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         }
         catch (IOException e)
         {
@@ -198,7 +154,7 @@ public class USDZExporter extends MaterialExporter
         }
     }
 
-    // Grab the output directory after the super call
+    // Grab the output directory and redirect the save to a temporary directory
     @Override
     public void saveTextures(File outputDirectory)
     {

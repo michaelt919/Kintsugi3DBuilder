@@ -40,6 +40,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final CanvasModel mainCanvasModel;
     private final CanvasListModel canvasListModel;
     private final IOModel ioModel;
+    private final CacheModel cacheModel;
 
     private final TabsModel tabsModel;
 
@@ -68,7 +69,9 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-        // add cache model
+
+        // all methods are either read-only or inherently asynchronous, so no multithread wrapping needed
+        cacheModel = JavaFXState.getInstance().getCacheModel();
     }
 
     @Override
@@ -152,5 +155,11 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     public CarouselModel getCarouselModel()
     {
         return carouselModel;
+    }
+
+    @Override
+    public CacheModel getCacheModel()
+    {
+        return cacheModel;
     }
 }

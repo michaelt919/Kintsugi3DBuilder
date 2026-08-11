@@ -25,7 +25,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
-import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.javafx.internal.ObservableEnvironmentModel;
 import kintsugi3d.builder.javafx.util.ImageFactory;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
