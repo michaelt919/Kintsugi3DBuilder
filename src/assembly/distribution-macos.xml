@@ -23,36 +23,35 @@
             <fileMode>0755</fileMode>
         </file>
         <file>
-            <source>target/classes/kintsugi3d-builder-about.txt</source>
+            <source>${project.build.directory}/classes/kintsugi3d-builder-about.txt</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
         </file>
         <file>
-            <source>target/classes/export-classes.txt</source>
+            <source>${project.build.directory}/classes/export-classes.txt</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
         </file>
         <file>
-            <source>target/${project.artifactId}-${project.version}-shaded.jar</source>
+            <source>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
             <destName>Kintsugi3DBuilder-shaded.jar</destName>
             <fileMode>0755</fileMode>
         </file>
         <file>
-            <source>target/classes/Info.plist</source>
+            <source>${project.build.directory}/classes/Info.plist</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents</outputDirectory>
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
         </file>
         <file>
-            <source>target/classes/Info.plist</source>
+            <source>${project.build.directory}/classes/Info.plist</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents</outputDirectory>
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
         </file>
-
     </files>
     <fileSets>
         <fileSet>
@@ -68,7 +67,8 @@
             <lineEnding>unix</lineEnding>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/jre-macos-x64</directory>
+            <!-- Intentionally flatten the root "Contents" directory for the bundled JRE -->
+            <directory>${project.build.directory}/jre/Contents</directory>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/jre</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
