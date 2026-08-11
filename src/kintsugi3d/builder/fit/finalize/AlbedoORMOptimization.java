@@ -118,8 +118,13 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
                 {
                     framebuffer.getColorAttachmentTexture(2).blitScaled(metallicMap, true);
                 }
-                else {
+                else
+                {
                     extractMetallicFromOrm(context, ormMap);
+
+                    // Save to disk so that it's accessible for the details panel.
+                    framebuffer.getColorAttachmentTexture(2).getColorTextureReader().saveToFile(
+                        "PNG", TextureResources.getTextureFile(StandardTexture.METALLIC, priorSolutionDirectory));
                 }
             }
 
