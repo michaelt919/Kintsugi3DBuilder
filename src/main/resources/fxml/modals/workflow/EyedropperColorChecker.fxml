@@ -28,7 +28,11 @@
                 <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge" text="Choose Image...">
                 </Button>
             </StackPane>
-            <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge" text="Choose New Image..." visible="false"/>
+            <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" styleClass="wireframeBodyLarge" text="Choose New Image..." visible="false">
+                <VBox.margin>
+                    <Insets top="10.0" />
+                </VBox.margin>
+            </Button>
         </VBox>
         <VBox spacing="16.0" alignment="CENTER_LEFT" >
             <HBox.margin>

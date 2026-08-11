@@ -18,8 +18,6 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.geometry.Rectangle2D?>
 <VBox fx:id = "mainBox" styleClass="sidebar-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.RightBarController" onMouseMoved="#mouseMoved" onMouseDragged="#mouseDragged" onMouseReleased="#mouseReleased">
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox fx:id = "detailsBox" alignment="TOP_LEFT" prefHeight="23.0" maxHeight="23" prefWidth="462.0" style="-fx-background-color: #383838;">
@@ -40,18 +38,41 @@
         </StackPane>
     </HBox>
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-    <HBox fx:id = "textBox" prefHeight="31" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER" alignment="CENTER_LEFT">
-        <padding>
-            <Insets bottom="0.0" left="8.0" right="0.0" top="8.0" />
-        </padding>
-        <Label fx:id = "imageNameSpace" text = "Image Name: " style = "-fx-font-weight: bold;" visible="false"/>
-        <Label fx:id = "imageName" text = ""/>
-    </HBox>
-    <StackPane alignment="TOP_CENTER">
-        <padding>
-            <Insets top="10" right="10" bottom="10" left="10"/>
-        </padding>
+    <StackPane VBox.vgrow="ALWAYS">
+        <VBox.margin>
+            <Insets left="5.0" />
+        </VBox.margin>
+        <ScrollPane fx:id = "detailScrollPane" pickOnBounds="false" hbarPolicy="NEVER" vbarPolicy="NEVER" fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
 
-        <fx:include fx:id="imageDetails" source="ImageDetails.fxml"/>
+            <VBox fx:id = "panelBox" pickOnBounds="false">
+                <padding>
+                    <Insets right="8.0" />
+                </padding>
+                <HBox fx:id = "textBox" prefHeight="31" stylesheets="@../../kintsugiStyling.css" VBox.vgrow="NEVER" alignment="CENTER_LEFT">
+                    <padding>
+                        <Insets bottom="0.0" left="8.0" right="0.0" top="8.0" />
+                    </padding>
+                    <Label fx:id = "imageNameSpace" text = "Image Name: " style = "-fx-font-weight: bold;" visible="false"/>
+                    <Label fx:id = "imageName" text = ""/>
+                </HBox>
+                <StackPane alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
+                    <padding>
+                        <Insets top="10" right="10" left="10"/>
+                    </padding>
+                    <fx:include fx:id="imageDetails" source="ImageDetails.fxml"/>
+                </StackPane>
+                <StackPane>
+                    <padding>
+                        <Insets left="10" right="10" />
+                    </padding>
+                    <!--<fx:include fx:id="textureLayers" source="TextureLayers.fxml"/>-->
+                </StackPane>
+            </VBox>
+        </ScrollPane>
+        <ScrollBar fx:id="overlayScrollBar"
+                   orientation="VERTICAL"
+                   StackPane.alignment="TOP_RIGHT"
+                   styleClass="overlay-scrollbar">
+        </ScrollBar>
     </StackPane>
 </VBox>

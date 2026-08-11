@@ -16,23 +16,14 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.layout.*;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
 
 
-import java.io.File;
 import java.util.*;
-import java.util.Map.Entry;
 
 public class RightBarController
 {
@@ -44,21 +35,28 @@ public class RightBarController
     //Alternative LOWER_BOUND: 62
     private static final int LOWER_BOUND = 322;
 
-    @FXML private VBox mainBox;
     @FXML private Button minimizeButton;
-    @FXML private Label detailsLabel;
+
     @FXML private HBox detailsBox;
     @FXML private HBox textBox;
+
     @FXML private VBox imageDetails;
+    @FXML private VBox mainBox;
+    @FXML private VBox panelBox;
+
     @FXML private Label imageName;
     @FXML private Label imageNameSpace;
+    @FXML private Label detailsLabel;
+
+    //@FXML private AnchorPane textureLayers;
+
+    @FXML private ScrollPane detailScrollPane;
+
+    @FXML private ScrollBar overlayScrollBar;
 
     @FXML private ImageDetailsController imageDetailsController;
+    //@FXML private TextureLayersController textureLayersController;
 
-    // needed to remove tabs
-    private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
-
-    private String lastSelectedTabLabel = null;
     private boolean minimized = false;
     private boolean isLoaded = false;
 
@@ -78,29 +76,57 @@ public class RightBarController
                 {
                     //Calls setImage() with null (Will not display panel)
                     imageDetailsController.setImage(null);
+                    //textureLayersController.setShown(false);
 
                     //Image Name will not be displayed
                     imageName.setText("");
-                    textBox.setVisible(false);
-                    textBox.setManaged(false);
+                    setVisibilityState(textBox, false);
                     isLoaded = false;
-                }
-                else if (tabsModel.getAllCards().size() == 1)//If list size equals 1
-                {
-                    //Sends filePath to imageDetailsController setImage(String fileName)
-                    imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(0));
-                    textBox.setVisible(true);
-                    textBox.setManaged(true);
                 }
                 else
                 {
                     //Sends filePath to imageDetailsController setImage(String fileName)
                     imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(tabsModel.getAllCards().size()-1));
+                    //textureLayersController.setShown(true);
+                    setVisibilityState(textBox, true);
                 }
             }
         });
 
         resizeWidth(DEFAULT_WIDTH);
+
+        //Bind the value/scroll position for the overlay and actual scroll pane
+        overlayScrollBar.valueProperty().bindBidirectional(detailScrollPane.vvalueProperty());
+
+        // Set min and max bounds
+        overlayScrollBar.setMin(0.0);
+        overlayScrollBar.setMax(1.0);
+
+        // Compute the thumb size based on visible ratio
+        panelBox.heightProperty().addListener((obs, oldVal, newVal) -> updateScrollBarRange());
+        detailScrollPane.heightProperty().addListener((obs, oldVal, newVal) -> updateScrollBarRange());
+
+        // Show/hide when content overflows
+        overlayScrollBar.visibleProperty().bind(
+            panelBox.heightProperty().greaterThan(detailScrollPane.heightProperty())
+        );
+    }
+    private void updateScrollBarRange()
+    {
+        //Find the height of panel and of the scroll pane
+        double viewportHeight = detailScrollPane.getHeight();
+        double contentHeight = panelBox.getHeight();
+
+        //If content is greater than the available space
+        if ((contentHeight > 0) && (contentHeight > viewportHeight))
+        {
+            //Calculates visible amount
+            double visibleRatio = viewportHeight / contentHeight;
+            overlayScrollBar.setVisibleAmount(visibleRatio);
+        } else //Don't need scroll bar, 1.0 means that all of content is visible
+        {
+            overlayScrollBar.setVisibleAmount(1.0);
+        }
     }
 
     private void imageDetailFunctions(ObservableTabsModel tabsModel, String filePath)
@@ -212,6 +238,7 @@ public class RightBarController
             }
         }
         mainBox.requestLayout();
+        panelBox.requestLayout();
     }
 
     /**
@@ -235,25 +262,23 @@ public class RightBarController
      */
     private void minimize()
     {
-        imageDetails.setManaged(false);
-        imageDetails.setVisible(false);
+        setVisibilityState(imageDetails, false);
+        //setVisibilityState(textureLayers, false);
 
-        imageName.setManaged(false);
-        imageName.setVisible(false);
-        imageNameSpace.setManaged(false);
-        imageNameSpace.setVisible(false);
+        setVisibilityState(imageName, false);
+        setVisibilityState(imageNameSpace, false);
 
         resizeWidth(MINIMIZED_WIDTH);
 
-        detailsLabel.setVisible(false);
-        detailsLabel.setManaged(false);
+        setVisibilityState(detailsLabel, false);
+
+        setVisibilityState(detailScrollPane, false);
 
         for (Node child : detailsBox.getChildren())
         {
             if (!Objects.equals(child, minimizeButton))
             {
-                child.setVisible(false);
-                child.setManaged(false);
+                setVisibilityState(child, false);
             }
         }
         minimizeButton.setText("+");
@@ -269,27 +294,29 @@ public class RightBarController
     {
         if (isLoaded)
         {
-            imageDetails.setManaged(true);
-            imageDetails.setVisible(true);
+            setVisibilityState(imageDetails, true);
+            //setVisibilityState(textureLayers, true);
 
-            imageName.setManaged(true);
-            imageName.setVisible(true);
-            imageNameSpace.setManaged(true);
-            imageNameSpace.setVisible(true);
+            setVisibilityState(imageName, true);
+            setVisibilityState(imageNameSpace, true);
         }
+        setVisibilityState(detailScrollPane, true);
 
-        detailsLabel.setVisible(true);
-        detailsLabel.setManaged(true);
+        setVisibilityState(detailsLabel, true);
 
         for (Node child: detailsBox.getChildren())
         {
-            child.setVisible(true);
-            child.setManaged(true);
+            setVisibilityState(child, true);
         }
 
         minimizeButton.setText("-");
         minimized = false;
         Platform.runLater(()->detailsBox.requestLayout());
+    }
+    public void setVisibilityState(Node node, boolean active)
+    {
+        node.setVisible(active);
+        node.setManaged(active);
     }
 
     /**
