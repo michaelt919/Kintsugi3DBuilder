@@ -127,6 +127,11 @@ public class ApplicationFolders
         return getInstallationDirectory().resolve("bin");
     }
 
+    public static Path getAdditionalScriptsDirectory()
+    {
+        return getInstallationDirectory().resolve("scripts");
+    }
+
     public static Path getPreviewImagesRootDirectory()
     {
         Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getPreviewImagesDirectory();

@@ -14,7 +14,6 @@ package kintsugi3d.builder.core;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.EncodableColorImage;

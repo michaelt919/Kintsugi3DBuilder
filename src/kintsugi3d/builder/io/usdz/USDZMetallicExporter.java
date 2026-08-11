@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,145 +12,38 @@
 package kintsugi3d.builder.io.usdz;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.OperatingSystem;
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
+import java.util.List;
 
-public class USDZMetallicExporter extends MaterialExporter
+public class USDZMetallicExporter extends USDZExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(USDZMetallicExporter.class);
-    private static final Path SCRIPT_LOCATION = ApplicationFolders.getAdditionalBinDirectory();
-    private File outputPath;
-    private File tempPath;
-
-    @StandardTextureExport(StandardTexture.NORMAL_MAP)
-    public void normal(TextureInfo normal)
-    {
-    }
-
     @StandardTextureExport(StandardTexture.ALBEDO)
-    public void albedo(TextureInfo diffuse)
+    public void albedo(TextureInfo albedo)
     {
     }
 
-    @StandardTextureExport(StandardTexture.ORM)
-    public void orm(TextureInfo specular)
+    @StandardTextureExport(StandardTexture.OCCLUSION)
+    public void occlusion(TextureInfo occlusion)
+    {
+    }
+
+    @StandardTextureExport(StandardTexture.METALLIC)
+    public void metallic(TextureInfo metallic)
     {
     }
 
     @Override
-    protected void postExport()
+    protected void addCommands(List<String> commandList)
     {
-        // glb texture_extension normal diffuse specular roughness
-        try
-        {
-            String normal = getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat());
-            String albedo = getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat());
-            String orm = getTextureFilename(StandardTexture.ORM.details.name, getTextureFileFormat());
-
-            String executable = "";
-            String glob;
-
-            // Get the wildcarded application name for the exporter
-            switch (OperatingSystem.getCurrentOS())
-            {
-                case WINDOWS:
-                    glob = "usdz-exporter*windows.exe";
-                    break;
-
-                case MACOS:
-                    glob = "usdz-exporter*macos";
-                    break;
-
-                case UNIX:
-                    glob = "usdz-exporter*linux";
-                    break;
-
-                default:
-                    throw new IllegalStateException("OS environment not supported.");
-            }
-
-            // Attempt to realize path for the exporter application
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(SCRIPT_LOCATION, glob))
-            {
-                for (Path entry : stream)
-                {
-                    executable = entry.toAbsolutePath().toString();
-                    break;
-                }
-
-                if (executable.isEmpty())
-                {
-                    throw new IllegalStateException("Could not find USDZ exporter binary.");
-                }
-            }
-
-            // Define a new process to start the exporter
-            ProcessBuilder pb = new ProcessBuilder(
-                executable,
-                "--metallic",
-                "--model", getFilename(),
-                "--format", getTextureFileFormat(),
-                "--normal", new File(tempPath, normal).getPath(),
-                "--albedo", new File(tempPath, albedo).getPath(),
-                "--orm", new File(tempPath, orm).getPath()
-            );
-
-            // Change the working directory of the exporter to the output path
-            pb.directory(outputPath);
-            Process process = pb.start();
-
-            // Initialize a logger for the exporter log output
-            try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)))
-            {
-                reader.lines().forEachOrdered(LOG::info);
-            }
-
-            // If the exporter didn't exit with a 0, an error occurred
-            if (process.waitFor() != 0)
-            {
-                throw new IllegalArgumentException("Passed files don't match requirements.");
-            }
-
-            // Cleanup temp files
-            Files.walk(tempPath.toPath())
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
-            // Only if I can't get context ".usdz" working
-            // Files.deleteIfExists(new File(outputPath, getFilename()).toPath());
-        }
-        catch (IllegalArgumentException |
-               IllegalStateException |
-               IOException |
-               InterruptedException e)
-        {
-            LOG.error(e.getMessage());
-        }
-    }
-
-    // Grab the output directory after the super call
-    @Override
-    public void saveTextures(File outputDirectory)
-    {
-        outputPath = outputDirectory;
-        tempPath = new File(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory(), "temp");
-        super.saveTextures(tempPath);
+        commandList.add("--use-metallic");
+        commandList.add("--albedo");
+        commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat())).getPath());
+        commandList.add("--occlusion");
+        commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.OCCLUSION.details.name, getTextureFileFormat())).getPath());
+        commandList.add("--metallic");
+        commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.METALLIC.details.name, getTextureFileFormat())).getPath());
     }
 }

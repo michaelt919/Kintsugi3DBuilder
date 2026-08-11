@@ -9,31 +9,39 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.usdz;
+package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.io.gltf.MaterialExporter;
-import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import java.io.File;
+import java.util.Map;
+import java.util.function.Consumer;
 
-public final class USDZMetallicExporterFactory implements MaterialExporterFactory
+public interface CacheModel
 {
-    private static final USDZMetallicExporterFactory INSTANCE = new USDZMetallicExporterFactory();
+    double BYTES_TO_GB = 1.0 / (1024.0 * 1024.0 * 1024.0);
 
-    private USDZMetallicExporterFactory()
-    {
+    /**
+     *
+     * @return Cache size, in bytes, or -1 if uninitialized
+     */
+    long getCacheSizeBytes();
 
-    }
+    /**
+     *
+     * @return Cache size, in gigabytes
+     */
+    double getCacheSizeGB();
 
-    public static USDZMetallicExporterFactory getInstance()
-    {
-        return INSTANCE;
-    }
+    /**
+     * Gets mapping from project IDs to their corresponding cache sizes, in bytes.
+     * @return
+     */
+    Map<String, Long> getProjectSizes();
 
-    @Override
-    public MaterialExporter getExporter(TextureResources<?> resources)
-    {
-        USDZMetallicExporter exporter = new USDZMetallicExporter();
-        exporter.setTextureResources(resources);
-        return exporter;
-    }
+    boolean isCacheSizeCalcInProgress();
+
+    void requestCacheSizeRefresh();
+
+    void requestClearCache();
+
+    void requestCleanUpBothCaches(Map<File, Consumer<File[]>> deleteMethods);
 }

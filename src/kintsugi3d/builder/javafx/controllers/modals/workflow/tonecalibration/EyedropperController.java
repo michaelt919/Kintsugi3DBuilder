@@ -40,7 +40,7 @@ import kintsugi3d.builder.core.SampledLuminanceEncoding;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
-import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.SRGB;

@@ -37,6 +37,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+
+/* TODO possibly refactor ModelExporter and MaterialExporter into an abstract Exporter class using
+    composition, that way other file exportation types have full control over both the model and materials
+    i.e. the USDZ and Blender exporter solutions could benefit from this extensibility
+ */
 public class ModelExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(ModelExporter.class);
