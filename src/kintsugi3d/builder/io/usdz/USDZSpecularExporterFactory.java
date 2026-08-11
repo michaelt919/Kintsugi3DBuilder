@@ -15,7 +15,7 @@ import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public class USDZSpecularExporterFactory implements MaterialExporterFactory
+public final class USDZSpecularExporterFactory implements MaterialExporterFactory
 {
     private static final USDZSpecularExporterFactory INSTANCE = new USDZSpecularExporterFactory();
 

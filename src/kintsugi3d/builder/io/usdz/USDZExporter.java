@@ -46,11 +46,13 @@ public abstract class USDZExporter extends MaterialExporter
         return tempPath;
     }
 
+    @SuppressWarnings("NoopMethodInAbstractClass")
     @StandardTextureExport(StandardTexture.NORMAL_MAP)
     public void normal(TextureInfo normal)
     {
     }
 
+    @SuppressWarnings("NoopMethodInAbstractClass")
     @StandardTextureExport(StandardTexture.ROUGHNESS)
     public void roughness(TextureInfo roughness)
     {
@@ -62,7 +64,7 @@ public abstract class USDZExporter extends MaterialExporter
     protected void postExport()
     {
         // Command list for the ProcessBuilder
-        List<String> command = new ArrayList<>();
+        List<String> command = new ArrayList<>(8);
 
         // Get the wildcarded application name for the exporter
         String glob;
