@@ -9,6 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/jre-macos-x64" />
       <excludeFolder url="file://$MODULE_DIR$/test-output" />
       <excludeFolder url="file://$MODULE_DIR$/viewer" />
+      <excludeFolder url="file://$MODULE_DIR$/bin" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/copyright" />
     </content>
   </component>
