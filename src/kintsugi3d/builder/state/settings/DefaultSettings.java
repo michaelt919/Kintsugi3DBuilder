@@ -11,9 +11,15 @@
 
 package kintsugi3d.builder.state.settings;
 
+import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
+
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class DefaultSettings
 {
@@ -63,6 +69,36 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("recentProjectLimit", 20, true);
         settingsModel.createBooleanSetting("fileAgePromptEnabled", true, true);
         settingsModel.createNumericSetting("fileAgeLimit", 30, true);
+
+        // External application options
+        switch (OperatingSystem.getCurrentOS())
+        {
+            case WINDOWS:
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of("C:\\Program Files\\Blender Foundation\\"), "Blender*"))
+                {
+                    Path path = stream.iterator().next();
+
+                    if (!Files.exists(path))
+                    {
+                        throw new IOException("Could not find Blender.");
+                    }
+
+                    settingsModel.createObjectSetting("blenderLocation", path.resolve("blender.exe").toString());
+                }
+                catch (IOException e)
+                {
+                    settingsModel.createObjectSetting("blenderLocation", "");
+                }
+                break;
+
+            case MACOS:
+                settingsModel.createObjectSetting("blenderLocation", "/Applications/Blender.app/Contents/MacOS/Blender");
+                break;
+
+            default:
+                settingsModel.createObjectSetting("blenderLocation", "");
+                break;
+        }
     }
 
     public static void applyProjectDefaults(GeneralSettingsModel settingsModel)

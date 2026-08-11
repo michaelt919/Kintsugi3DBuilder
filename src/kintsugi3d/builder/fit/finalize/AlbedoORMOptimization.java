@@ -64,6 +64,8 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
                 .setLinearFilteringEnabled(true)) // total albedo
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
                 .setLinearFilteringEnabled(true)) // ORM
+            .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
+                .setLinearFilteringEnabled(true)) // metallic
             .createFramebufferObject();
 
         // Create basic rectangle vertex buffer
@@ -85,6 +87,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         // Load albedo and ORM maps
         Texture2D<ContextType> albedoMap = TextureResources.loadTexture(StandardTexture.ALBEDO, priorSolutionDirectory, context);
         Texture2D<ContextType> ormMap = TextureResources.loadTexture(StandardTexture.ORM, priorSolutionDirectory, context);
+        Texture2D<ContextType> metallicMap = TextureResources.loadTexture(StandardTexture.METALLIC, priorSolutionDirectory, context);
 
         if (TextureResources.getTextureFile(StandardTexture.OCCLUSION, priorSolutionDirectory).exists())
         {
@@ -103,12 +106,21 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
                     .addEmptyColorAttachment() // Will copy in albedo map after FBO is created
                     .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
                         .setLinearFilteringEnabled(true)) // Will blit in ORM map after FBO is created
+                    .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
+                        .setLinearFilteringEnabled(true)) // metallic
                     .createFramebufferObject();
             framebuffer.setColorAttachment(0, albedoMap);
 
             if (ormMap != null)
             {
                 framebuffer.getColorAttachmentTexture(1).blitScaled(ormMap, true);
+                if (metallicMap != null)
+                {
+                    framebuffer.getColorAttachmentTexture(2).blitScaled(metallicMap, true);
+                }
+                else {
+                    extractMetallicFromOrm(context, ormMap);
+                }
             }
 
             estimationProgram = createProgram(context, occlusionMap != null);
@@ -145,6 +157,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         // Estimate albedo and roughness; passthrough occlusion if it is present
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+        framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
         drawable.draw(framebuffer);
     }
 
@@ -199,7 +212,8 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         {
             textures.putAll(Map.of(
                 StandardTexture.ALBEDO, framebuffer.getColorAttachmentTexture(0),
-                StandardTexture.ORM, framebuffer.getColorAttachmentTexture(1)));
+                StandardTexture.ORM, framebuffer.getColorAttachmentTexture(1),
+                StandardTexture.METALLIC, framebuffer.getColorAttachmentTexture(2)));
         }
 
         if (occlusionMap != null)
@@ -213,6 +227,25 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     public Map<TextureDetails, Texture2D<ContextType>> getTextures()
     {
         return StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
+    }
+
+    private Texture2D<ContextType> extractMetallicFromOrm(ContextType context, Texture2D<ContextType> orm) throws IOException
+    {
+        ProgramObject<ContextType> program = context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/extractMetallic.frag"))
+            .createProgram();
+
+        program.setTexture("orm", orm);
+
+        VertexBuffer<ContextType> metallicRect = context.createRectangle();
+        Drawable<ContextType> metallicDrawable = context.createDrawable(program);
+        metallicDrawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
+        metallicDrawable.addVertexBuffer("position", metallicRect);
+        framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+        metallicDrawable.draw(framebuffer);
+
+        return framebuffer.getColorAttachmentTexture(2);
     }
 
     private static <ContextType extends Context<ContextType>>

@@ -13,7 +13,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>1.5.3</version>
+    <version>1.6.0</version>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src</sourceDirectory>
@@ -39,7 +39,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.15.0</version>
                 <configuration>
                     <source>11</source>
                     <target>11</target>
@@ -94,6 +94,128 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.13.0</version>
+                <executions>
+                    <!-- Download JRE -->
+                    <execution>
+                        <id>download-jre</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://api.adoptium.net/v3/binary/latest/${java.version}/ga/${jre.os}/${jre.arch}/jre/hotspot/normal/eclipse
+                            </url>
+                            <outputDirectory>
+                                ${project.build.directory}
+                            </outputDirectory>
+                            <outputFileName>jre.tar.gz</outputFileName>
+                        </configuration>
+                    </execution>
+                    <!-- Download latest published build of Kinsugi 3D Viewer -->
+                    <execution>
+                        <id>download-viewer</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://github.com/UWStout/Kintsugi3DViewer/releases/download/v${viewer.version}/Kintsugi3DViewer-${viewer.os}.zip
+                            </url>
+                            <outputDirectory>
+                                ${project.build.directory}
+                            </outputDirectory>
+                            <outputFileName>Kintsugi3DViewer.zip</outputFileName>
+                        </configuration>
+                    </execution>
+                    <!-- Download latest published build of USDZ exporter -->
+                    <!-- Put this one in bin rather than in target so that it's also accessible when running in IDE. -->
+                    <execution>
+                        <id>download-usdz-exporter</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://github.com/PoctorDepper/usdz-exporter/releases/download/v${usdz-exporter.version}/usdz-exporter-v${usdz-exporter.version}-${usdz-exporter.os}
+                            </url>
+                            <outputDirectory>
+                                ${project.basedir}/bin
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <!-- Change permissions for USDZ exporter.  Should be no-op on Windows -->
+                    <execution>
+                        <id>chmod-usdz-exporter</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <target>
+                                <chmod file="${project.basedir}/bin/usdz-exporter-v${usdz-exporter.version}-${usdz-exporter.os}"
+                                       perm="755"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <!-- Unzip JRE - explicitly invoking tar so that we can use strip-components  -->
+                    <execution>
+                        <id>unpack-jre</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <delete dir="${project.build.directory}/jre"/>
+                                <mkdir dir="${project.build.directory}/jre"/>
+                                <exec executable="tar" failonerror="true">
+                                    <arg value="-xzf"/>
+                                    <arg value="${project.build.directory}/jre.tar.gz"/>
+                                    <arg value="--strip-components=1"/>
+                                    <arg value="-C"/>
+                                    <arg value="${project.build.directory}/jre"/>
+                                </exec>
+                                <delete file="${project.build.directory}/jre.tar.gz"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!-- Unzip Kintsugi 3D Viewer -->
+                    <execution>
+                        <id>unpack-viewer</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <unzip
+                                        src="${project.build.directory}/Kintsugi3DViewer.zip"
+                                        dest="${project.build.directory}/viewer"
+                                />
+                                <chmod
+                                        file="${project.build.directory}/viewer/Kintsugi 3D Viewer.app/Contents/MacOS/Kintsugi 3D Viewer"
+                                        perm="755"
+                                />
+                                <delete file="${project.build.directory}/Kintsugi3DViewer.zip"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -115,7 +237,10 @@
         </resources>
     </build>
     <properties>
+        <java.version>11</java.version>
         <lwjgl.version>3.3.3</lwjgl.version>
+        <viewer.version>1.5.2</viewer.version>
+        <usdz-exporter.version>1.2.2</usdz-exporter.version>
     </properties>
     <profiles>
         <profile>
@@ -128,6 +253,10 @@
             </activation>
             <properties>
                 <lwjgl.natives>natives-macos</lwjgl.natives>
+                <jre.os>mac</jre.os>
+                <jre.arch>x64</jre.arch>
+                <viewer.os>macos</viewer.os>
+                <usdz-exporter.os>macos</usdz-exporter.os>
             </properties>
         </profile>
         <profile>
@@ -140,6 +269,10 @@
             </activation>
             <properties>
                 <lwjgl.natives>natives-macos-arm64</lwjgl.natives>
+                <jre.os>mac</jre.os>
+                <jre.arch>aarch64</jre.arch>
+                <viewer.os>macos</viewer.os>
+                <usdz-exporter.os>macos</usdz-exporter.os>
             </properties>
         </profile>
         <profile>
@@ -175,7 +308,7 @@
                         <!-- Disk image for MacOS -->
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.5.0</version>
                         <executions>
                             <execution>
                                 <id>create-dmg</id>
@@ -210,6 +343,10 @@
             </activation>
             <properties>
                 <lwjgl.natives>natives-windows</lwjgl.natives>
+                <jre.os>windows</jre.os>
+                <jre.arch>x64</jre.arch>
+                <viewer.os>windows</viewer.os>
+                <usdz-exporter.os>windows.exe</usdz-exporter.os>
             </properties>
             <build>
                 <!-- Windows: Needs Launch4J, a Maven assembly for Windows, and NSIS installer -->
@@ -225,8 +362,8 @@
                                 <goals><goal>launch4j</goal></goals>
                                 <configuration>
                                     <headerType>gui</headerType>
-                                    <outfile>target/Kintsugi3DBuilder.exe</outfile>
-                                    <jar>target/${project.artifactId}-${project.version}-shaded.jar</jar>
+                                    <outfile>${project.build.directory}/Kintsugi3DBuilder.exe</outfile>
+                                    <jar>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</jar>
                                     <icon>Kintsugi3D.ico</icon>
                                     <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
                                     <chdir>.</chdir>
@@ -293,6 +430,10 @@
             </activation>
             <properties>
                 <lwjgl.natives>natives-linux</lwjgl.natives>
+                <jre.os>linux</jre.os>
+                <jre.arch>x64</jre.arch>
+                <viewer.os>linux</viewer.os> <!-- Note: Probably won't exist unless we start posting Linux builds -->
+                <usdz-exporter.os>linux</usdz-exporter.os>
             </properties>
         </profile>
     </profiles>

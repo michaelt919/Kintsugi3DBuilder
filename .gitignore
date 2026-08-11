@@ -91,7 +91,9 @@ target/*
 
 # Project-specific
 *.log
-/jre*
 bin/
-/viewer
 /test-output/
+
+# Technically no longer needed but may be present on older dev environments
+/jre*
+/viewer

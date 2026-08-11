@@ -24,7 +24,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
-import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.core.RecentProjects;
 
 import java.io.File;
 import java.util.List;

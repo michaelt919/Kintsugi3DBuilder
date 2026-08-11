@@ -46,7 +46,8 @@ public class SystemSettingsController
                 Map.entry("Lighting Settings", "/fxml/modals/systemsettings/LightingSettings.fxml"),
                 Map.entry("Photo Projection Settings", "/fxml/modals/systemsettings/PhotoProjectionSettings.fxml"),
                 Map.entry("System Memory Settings", "/fxml/modals/systemsettings/SystemMemorySettings.fxml"),
-                Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml")
+                Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml"),
+                Map.entry("External Application Settings", "/fxml/modals/systemsettings/ExternalApplicationSettings.fxml")
             )
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, LinkedHashMap::new)));
 

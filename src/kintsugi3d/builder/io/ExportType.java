@@ -12,6 +12,8 @@
 package kintsugi3d.builder.io;
 
 import javafx.stage.FileChooser.ExtensionFilter;
+import kintsugi3d.builder.io.blender.CyclesExporterFactory;
+import kintsugi3d.builder.io.blender.EeveeExporterFactory;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
@@ -19,26 +21,37 @@ import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
 
 public enum ExportType
 {
-    GLTF(Kintsugi3DViewerExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb")),
-    USDZ_SPECULAR(USDZSpecularExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
-    USDZ_METALLIC(USDZMetallicExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz"));
+    GLTF("glTF", Kintsugi3DViewerExporterFactory.getInstance(), new ExtensionFilter("glTF file", "*.glb")),
+    USDZ_SPECULAR("USDZ (Specular)", USDZSpecularExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
+    USDZ_METALLIC("USDZ (Metallic)", USDZMetallicExporterFactory.getInstance(), new ExtensionFilter("USDZ file", "*.usdz")),
+    BLENDER_EEVEE("Blender (EEVEE)", EeveeExporterFactory.getInstance(), new ExtensionFilter("Blender project file", "*.blend")),
+    BLENDER_CYCLES("Blender (Cycles)", CyclesExporterFactory.getInstance(), new ExtensionFilter("Blender project file", "*.blend"));
 
+    private final String friendlyName;
     private final MaterialExporterFactory factory;
     private final ExtensionFilter filter;
 
-    ExportType(MaterialExporterFactory factory, ExtensionFilter filter)
+    ExportType(String friendlyName, MaterialExporterFactory factory, ExtensionFilter filter)
     {
+        this.friendlyName = friendlyName;
         this.factory = factory;
         this.filter = filter;
     }
 
     public MaterialExporterFactory getFactory()
     {
-        return factory;
+        return this.factory;
     }
+
 
     public ExtensionFilter getFilter()
     {
         return filter;
+    }
+
+    @Override
+    public String toString()
+    {
+        return this.friendlyName;
     }
 }

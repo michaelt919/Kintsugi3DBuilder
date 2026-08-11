@@ -214,6 +214,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 catch (Exception | AssertionError e)
                 {
                     LOG.error("Error occurred while executing request", e);
+                    progressMonitor.fail(e);
                 }
             });
         }
