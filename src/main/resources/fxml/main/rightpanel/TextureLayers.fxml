@@ -73,9 +73,9 @@
                 <Region HBox.hgrow="ALWAYS" />
             </HBox>
         </HBox>
-        <!--<HBox fx:id = "textureModificationBox">-->
-            <VBox fx:id = "sliderBox">
-                <HBox fx:id = "sizeRegion">
+        <HBox fx:id = "textureModificationBox" style="-fx-padding: 0;" alignment="CENTER_LEFT">
+            <VBox fx:id = "sliderBox" HBox.hgrow="ALWAYS">
+                <HBox fx:id = "sizeRegion" alignment="CENTER_LEFT">
                     <VBox spacing = "5">
                         <padding>
                             <Insets left="10.0" right="10.0"/>
@@ -84,13 +84,10 @@
                         <Slider fx:id = "sizeSlider" styleClass="dark-grey-slider" min = "10" max = "100" value="100" majorTickUnit="50" minorTickCount="10" showTickMarks="true"/>
                     </VBox>
                     <HBox fx:id = "sizeLabelRegion" style = "-fx-background-color: #202020;" minHeight="20" maxHeight="20" alignment="CENTER">
-                        <HBox.margin>
-                            <Insets top="10"/>
-                        </HBox.margin>
                         <Label fx:id = "sizeValue" text = "100%" style="-fx-font-size: 10px"/>
                     </HBox>
                 </HBox>
-                <HBox fx:id = "featherRegion">
+                <HBox fx:id = "featherRegion" alignment="CENTER_LEFT">
                     <VBox spacing = "5">
                         <padding>
                             <Insets left="10.0" right="10.0"/>
@@ -99,13 +96,10 @@
                         <Slider fx:id = "featherSlider" styleClass="dark-grey-slider" min = "10" max = "100" value="100" majorTickUnit="50" minorTickCount="10" showTickMarks="true"/>
                     </VBox>
                     <HBox fx:id = "featherLabelRegion" style = "-fx-background-color: #202020;" minHeight="20" maxHeight="20" alignment="CENTER">
-                        <HBox.margin>
-                            <Insets top="10"/>
-                        </HBox.margin>
                         <Label fx:id = "featherValue" text = "100%" style="-fx-font-size: 10px"/>
                     </HBox>
                 </HBox>
-                <HBox fx:id = "opacityRegion">
+                <HBox fx:id = "opacityRegion" alignment="CENTER_LEFT">
                     <VBox spacing = "5">
                         <padding>
                             <Insets left="10.0" right="10.0"/>
@@ -114,17 +108,41 @@
                         <Slider fx:id = "opacitySlider" styleClass="dark-grey-slider" min = "0" max = "100" value="100" majorTickUnit="50" minorTickCount="10" showTickMarks="true"/>
                     </VBox>
                     <HBox fx:id = "opacityLabelRegion" style = "-fx-background-color: #202020;" minHeight="20" maxHeight="20" alignment="CENTER">
-                        <HBox.margin>
-                            <Insets top="10"/>
-                        </HBox.margin>
                         <Label fx:id = "opacityValue" text = "100%" style="-fx-font-size: 10px"/>
                     </HBox>
                 </HBox>
             </VBox>
-            <!--
-            <StackPane>
+            <Region HBox.hgrow="ALWAYS"/>
+            <StackPane fx:id = "imageBox" minWidth="0" minHeight="0">
+                <StackPane.margin>
+                    <Insets bottom="4"/>
+                </StackPane.margin>
                 <ImageView fx:id = "imagePreview" preserveRatio="true"/>
-            </StackPane> -->
-        <!--</HBox>-->
+            </StackPane>
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <HBox minHeight="8" maxHeight="8"/>
+        <Region minHeight="1" maxHeight="1" style = "-fx-background-color: #202020;">
+            <VBox.margin>
+                <Insets left="8.0" right="8.0"/>
+            </VBox.margin>
+        </Region>
+        <HBox fx:id = "layerCards" alignment="CENTER_LEFT">
+            <Label text = "Layers" style = "-fx-font-weight: bold; -fx-font-size: 10px">
+                <HBox.margin>
+                    <Insets top = "6" left="8.0" bottom="8"/>
+                </HBox.margin>
+            </Label>
+        </HBox>
+        <ScrollPane fx:id="scrollpane" fitToWidth="true" hbarPolicy="NEVER" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS" minWidth="0.0">
+            <VBox fx:id = "cardContainer" spacing="5.0" style = "-fx-background-color: #202020;">
+                <VBox.margin>
+                    <Insets left="8.0" right="8.0" bottom="8.0"/>
+                </VBox.margin>
+            </VBox>
+            <VBox.margin>
+                <Insets bottom="8.0" left="8.0" right="8.0"/>
+            </VBox.margin>
+        </ScrollPane>
     </VBox>
 </AnchorPane>

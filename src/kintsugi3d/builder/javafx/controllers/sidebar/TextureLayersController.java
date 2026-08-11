@@ -18,10 +18,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 
 import java.io.File;
 
@@ -43,6 +40,7 @@ public class TextureLayersController
     @FXML private HBox featherLabelRegion;
     @FXML private HBox opacityRegion;
     @FXML private HBox opacityLabelRegion;
+    @FXML private HBox textureModificationBox;
 
     @FXML private VBox sliderBox;
 
@@ -62,6 +60,8 @@ public class TextureLayersController
 
     @FXML private ImageView imagePreview;
 
+    @FXML private StackPane imageBox;
+
     public void initialize()
     {
         widthBindHelper(containerHBox1, parentHBox,.25);
@@ -69,21 +69,22 @@ public class TextureLayersController
         widthBindHelper(containerHBox3, parentHBox,.41);
         widthBindHelper(layerBlendBox, containerHBox3,.8);
 
-        widthBindHelper(sizeSlider, sizeRegion, .45);
-        widthBindHelper(sizeLabelRegion, sizeRegion, .15);
-        widthBindHelper(featherSlider, featherRegion, .45);
-        widthBindHelper(featherLabelRegion, featherRegion, .15);
-        widthBindHelper(opacitySlider, opacityRegion, .45);
-        widthBindHelper(opacityLabelRegion, opacityRegion, .15);
+        widthBindHelper(sizeSlider, textureModificationBox, .45);
+        widthBindHelper(sizeLabelRegion, textureModificationBox, .15);
+        widthBindHelper(featherSlider, textureModificationBox, .45);
+        widthBindHelper(featherLabelRegion, textureModificationBox, .15);
+        widthBindHelper(opacitySlider, textureModificationBox, .45);
+        widthBindHelper(opacityLabelRegion, textureModificationBox, .15);
+        widthBindHelper(imageBox, textureModificationBox, .30);
 
         createSliderListener(sizeSlider, sizeValue);
         createSliderListener(featherSlider, featherValue);
         createSliderPercentListener(opacitySlider, opacityValue);
 
+        imagePreview.fitWidthProperty().bind(imageBox.widthProperty());
+        imagePreview.fitHeightProperty().bind(imageBox.heightProperty());
+
         Platform.runLater(()->{
-            double imageDimensions = sliderBox.getHeight();
-            imagePreview.setFitHeight(imageDimensions);
-            imagePreview.setFitWidth(imageDimensions);
             File file = new File("C:\\Users\\schmuckij3299\\OneDrive - University of Wisconsin-Stout\\Kintsugi3D_Model\\Statue.k3d.files\\File_Not_Found.png");
             Image image = new Image(file.toURI().toString());
             imagePreview.setImage(image);

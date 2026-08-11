@@ -48,14 +48,14 @@ public class RightBarController
     @FXML private Label imageNameSpace;
     @FXML private Label detailsLabel;
 
-    //@FXML private AnchorPane textureLayers;
+    @FXML private AnchorPane textureLayers;
 
     @FXML private ScrollPane detailScrollPane;
 
     @FXML private ScrollBar overlayScrollBar;
 
     @FXML private ImageDetailsController imageDetailsController;
-    //@FXML private TextureLayersController textureLayersController;
+    @FXML private TextureLayersController textureLayersController;
 
     private boolean minimized = false;
     private boolean isLoaded = false;
@@ -76,7 +76,7 @@ public class RightBarController
                 {
                     //Calls setImage() with null (Will not display panel)
                     imageDetailsController.setImage(null);
-                    //textureLayersController.setShown(false);
+                    textureLayersController.setShown(false);
 
                     //Image Name will not be displayed
                     imageName.setText("");
@@ -87,7 +87,7 @@ public class RightBarController
                 {
                     //Sends filePath to imageDetailsController setImage(String fileName)
                     imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(tabsModel.getAllCards().size()-1));
-                    //textureLayersController.setShown(true);
+                    textureLayersController.setShown(true);
                     setVisibilityState(textBox, true);
                 }
             }
@@ -262,7 +262,7 @@ public class RightBarController
     private void minimize()
     {
         setVisibilityState(imageDetails, false);
-        //setVisibilityState(textureLayers, false);
+        setVisibilityState(textureLayers, false);
 
         setVisibilityState(imageName, false);
         setVisibilityState(imageNameSpace, false);
@@ -294,7 +294,7 @@ public class RightBarController
         if (isLoaded)
         {
             setVisibilityState(imageDetails, true);
-            //setVisibilityState(textureLayers, true);
+            setVisibilityState(textureLayers, true);
 
             setVisibilityState(imageName, true);
             setVisibilityState(imageNameSpace, true);
