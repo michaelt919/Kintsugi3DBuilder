@@ -157,6 +157,20 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
+                    <!-- Change permissions for USDZ exporter.  Should be no-op on Windows -->
+                    <execution>
+                        <id>chmod-usdz-exporter</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <target>
+                                <chmod file="${project.basedir}/bin/usdz-exporter-v${usdz-exporter.version}-${usdz-exporter.os}"
+                                       perm="755"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
                     <!-- Unzip JRE - explicitly invoking tar so that we can use strip-components  -->
                     <execution>
                         <id>unpack-jre</id>
