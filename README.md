@@ -88,7 +88,7 @@ Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHO
 ## Build Requirements
 ### Package
 Kintsugi 3D Builder can be compiled using the maven build system with no external requirements.
-When packaging, an OpenJDK JRE will automatically be downloaded from Temurin, 
+When packaging, an OpenJDK JRE will automatically be downloaded from Adoptium, 
 along with the latest build of Kintsugi 3D Viewer and any other required binaries, 
 all of which will be bundled in the packaged build.
 

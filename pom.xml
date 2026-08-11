@@ -13,7 +13,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>1.5.3</version>
+    <version>1.6.0</version>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src</sourceDirectory>
@@ -97,7 +97,7 @@
             <plugin>
                 <groupId>com.googlecode.maven-download-plugin</groupId>
                 <artifactId>download-maven-plugin</artifactId>
-                <version>1.6.8</version>
+                <version>1.13.0</version>
                 <executions>
                     <!-- Download JRE -->
                     <execution>
@@ -225,7 +225,7 @@
     <properties>
         <java.version>11</java.version>
         <lwjgl.version>3.3.3</lwjgl.version>
-        <viewer.version>${project.version}</viewer.version>
+        <viewer.version>1.5.2</viewer.version>
         <usdz-exporter.version>1.2.2</usdz-exporter.version>
     </properties>
     <profiles>

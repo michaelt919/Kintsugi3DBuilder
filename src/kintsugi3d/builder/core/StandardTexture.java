@@ -32,7 +32,7 @@ public enum StandardTexture
     OCCLUSION(new TextureDetails("occlusion", "Occlusion map",
         "An imported occlusion map that represents how much ambient light can reach the surface based on neighboring geometry: cracks and crevices receive less ambient light than smooth surfaces.")),
     METALLIC(new TextureDetails("metallic", "Metallic map",
-        "A grayscale map that is useful in combination with an albedo map for PBR rendering pipelines that don't support separate diffuse and specular textures.  A metallicity of 0 (black) indicates that the albedo color is a diffuse color, while a metallicity of 1 (white) indicates that the albedo is a specular color, with intermediate values distributing the albedo proportionately between diffuse and specular.  In Kintsugi 3D, this is used exclusively by the “metallicity” material representation.")),
+        "A grayscale map that is useful in combination with an albedo map for PBR rendering pipelines that don't support separate diffuse and specular textures.  A metallicity of 0 (black) indicates that the albedo color is a diffuse color, while a metallicity of 1 (white) indicates that the albedo is a specular color, with intermediate values distributing the albedo proportionately between diffuse and specular.  In Kintsugi 3D, this is used exclusively by the \"metallicity\" material representation.")),
     ORM(new TextureDetails("orm", "ORM map",
         "A texture with occlusion, roughness, and metallicity packed into the red, green, and blue channels, respectively.  Occlusion, roughness, and metallicity are identical to the corresponding standalone textures.  ")),
     ERROR(new TextureDetails("error", "Error map",
