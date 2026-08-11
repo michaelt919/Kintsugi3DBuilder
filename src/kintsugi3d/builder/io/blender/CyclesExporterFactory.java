@@ -9,31 +9,31 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.usdz;
+package kintsugi3d.builder.io.blender;
 
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public final class USDZMetallicExporterFactory implements MaterialExporterFactory
+public final class CyclesExporterFactory implements MaterialExporterFactory
 {
-    private static final USDZMetallicExporterFactory INSTANCE = new USDZMetallicExporterFactory();
+    private static final CyclesExporterFactory INSTANCE = new CyclesExporterFactory();
 
-    private USDZMetallicExporterFactory()
-    {
-
-    }
-
-    public static USDZMetallicExporterFactory getInstance()
+    public static CyclesExporterFactory getInstance()
     {
         return INSTANCE;
+    }
+
+    private CyclesExporterFactory()
+    {
     }
 
     @Override
     public MaterialExporter getExporter(TextureResources<?> resources)
     {
-        USDZMetallicExporter exporter = new USDZMetallicExporter();
+        BlenderExporter exporter = new BlenderExporter(true);
         exporter.setTextureResources(resources);
         return exporter;
     }
 }
+

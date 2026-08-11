@@ -30,7 +30,7 @@ import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
-import kintsugi3d.builder.javafx.core.RecentProjects;
+import kintsugi3d.builder.core.RecentProjects;
 
 import java.io.File;
 import java.util.List;
