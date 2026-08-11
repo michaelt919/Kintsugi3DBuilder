@@ -26,23 +26,27 @@
       fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController"
       style = "-fx-background-color: #202020"
       minWidth="0.0"
+      VBox.vgrow="ALWAYS"
       maxHeight="-Infinity"
       alignment="TOP_CENTER">
     <padding>
         <Insets left="4" right="4" top="4" bottom="0"/>
     </padding>
     <StackPane fx:id="stackPane"
-               alignment="TOP_LEFT"
+               alignment="CENTER"
                pickOnBounds="false"
-               minHeight="0.0"
+               minHeight="250.0"
                onMousePressed="#startSelection"
                onMouseDragged="#dragSelection"
                onMouseReleased="#endSelection">
-
+        <VBox.margin>
+            <Insets left="4" right="4"/>
+        </VBox.margin>
         <ImageView fx:id="displayImage"
                    preserveRatio="true"
+                   smooth="true"
                    onScroll="#scrolling"
-                   StackPane.alignment="TOP_LEFT"/>
+                   StackPane.alignment="CENTER"/>
         <Rectangle fx:id="selectionBox"
                    fill="TRANSPARENT"
                    stroke="GOLD"

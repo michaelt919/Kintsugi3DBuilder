@@ -20,12 +20,12 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Screen;
 
 import java.io.File;
 
@@ -53,7 +53,7 @@ public class ImageDetailsController
     private double startViewportY;
 
     private static final double MAX_ZOOM_SIZE = 10.0;
-    private static final double MAX_IMAGE_SIZE = 372.0;
+    private static final double SCREEN_PIXELS = 100;
 
     /**
      * Called when controller is created.
@@ -75,15 +75,21 @@ public class ImageDetailsController
                 buttonRow.getSpacing()*buttonRow.getChildren().size()).divide(
                 buttonRow.getChildren().size()));
         }
-        //Image bound to detailBox width minus 8
+
+        // Bind width to detailBox width - 8px padding
         displayImage.fitWidthProperty().bind(detailBox.widthProperty().subtract(8.0));
+        //Height is bound to stack panes height
+        displayImage.fitHeightProperty().bind(stackPane.heightProperty());
 
-        Rectangle clip = new Rectangle(); // Clip rectangle
-
-        clip.widthProperty().bind(stackPane.widthProperty()); //Clip bounds are bound to stackPane
-        clip.heightProperty().bind(stackPane.heightProperty());
-
-        stackPane.setClip(clip); //Clip assigned to stackPane
+        //Listener detects whenever stack panes width changes
+        stackPane.widthProperty().addListener((obs, oldWidth, newWidth) ->
+        {
+            //If there is a image to display
+            if (currentImage != null && displayImage.getViewport() != null)
+            {
+               updateContainerAspect(); //Call function to update aspect ratio
+            }
+        });
     }
 
     /**
@@ -93,8 +99,9 @@ public class ImageDetailsController
      */
     public void setImage(String filePath)
     {
-        if (filePath != null)
+        if (filePath != null) //If there is a file path
         {
+            //Reveal the image details features
             detailBox.setVisible(true);
             buttonRow.setVisible(true);
             stackPane.setVisible(true);
@@ -106,9 +113,21 @@ public class ImageDetailsController
                 originalImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
                 currentImage = originalImage; //Current image gets set to the original image
                 displayImage.setImage(originalImage); //ImageView is set to originalImage
-                Platform.runLater(()->{
-                    reset();
-                    toggleGroup.selectToggle(null);
+
+                //Resets viewport
+                currentWidth = currentImage.getWidth();
+                currentHeight = currentImage.getHeight();
+                currentX = 0;
+                currentY = 0;
+
+                // Default viewport
+                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+
+                updateContainerAspect(); //Update aspect ratio
+
+                Platform.runLater(()->
+                {
+                    toggleGroup.selectToggle(null); //Removes any button that has been toggled
                 });
             }
             else
@@ -119,6 +138,7 @@ public class ImageDetailsController
         }
         else
         {
+            //Hide the image details features
             detailBox.setVisible(false);
             buttonRow.setVisible(false);
             stackPane.setVisible(false);
@@ -180,54 +200,119 @@ public class ImageDetailsController
     }
 
     /**
+     * This method will return the current aspect ratio that we have for display image
+     * @return
+     */
+    private double getActiveAspect()
+    {
+        if (displayImage.getViewport() != null) //If we have the image viewport
+        {
+            //Returns aspect ratio
+            return displayImage.getViewport().getWidth() / displayImage.getViewport().getHeight();
+        }
+        //If we have an image we return current image aspect ratio. If no image is loaded we return 1
+        return (currentImage != null) ? (currentImage.getWidth() / currentImage.getHeight()) : 1.0;
+    }
+
+    /**
+     * This method is called to update the aspect ratio of my container/stack pane
+     */
+
+    private void updateContainerAspect()
+    {
+        if (currentImage == null) return; //If we have no image, exit method
+
+        double activeAspect = getActiveAspect(); //Get current image aspect
+
+        //Find the max screen height by multiplying the screen height by .525 and subtracting 100 (SCREEN_PIXELS)
+        double maxScreenHeight = (Screen.getPrimary().getVisualBounds().getHeight() * (.525)) - SCREEN_PIXELS;
+
+        //Gets the minimum value between the original image height and max screen height.
+        double maxAllowedHeight = Math.min(originalImage.getHeight(), maxScreenHeight);
+
+        //Unbind the preferred height of stack pane
+        stackPane.prefHeightProperty().unbind();
+
+        //Set stackPane preferred height to the max allowed height
+        stackPane.setPrefHeight(maxAllowedHeight);
+    }
+
+    /**
      * Handles scrolling in the image for zoom scroll up to enlarge down to zoom out.
      * @param event
      */
     @FXML
     public void scrolling(ScrollEvent event)
     {
-        //Will stop function if there is no image or if canZoom is false
+        //Will exit this function if we have no image or if canZoom is false
         if ((currentImage == null) || !canZoom) return;
 
-        // If no viewport is set yet, initialize it to the full image size
-        if (displayImage.getViewport() == null)
-        {
-            currentWidth = currentImage.getWidth();
-            currentHeight = currentImage.getHeight();
-            currentX = 0;
-            currentY = 0;
-        }
+        //Gets base dimensions for the image and its aspect ratio
+        double imgOrigWidth = currentImage.getWidth();
+        double imgOrigHeight = currentImage.getHeight();
+        double imageAspect = imgOrigWidth / imgOrigHeight;
 
-        // If event is positive returns 1.1 (scrolls in), if its negative returns .9 (scrolls out)
+        //Gets the dimensions of stack pane and its aspect ratio
+        double paneWidth = stackPane.getWidth();
+        double paneHeight = stackPane.getHeight();
+        double paneAspect = paneWidth / paneHeight;
+
+        //Determine zoom direction
         double zoomFactor = (event.getDeltaY() > 0) ? 0.9 : 1.1;
 
-        // Calculate new dimensions
-        double newWidth = currentWidth * zoomFactor;
-        double newHeight = currentHeight * zoomFactor;
+        //Calculate possible width
+        double possibleWidth = currentWidth * zoomFactor;
 
-        // Prevent zooming out past the original image size boundary
-        if ((newWidth > currentImage.getWidth()) || (newHeight > currentImage.getHeight()))
+        //Prevent zooming out past original size
+        if (possibleWidth > imgOrigWidth)
         {
             resetViewport();
             event.consume();
             return;
         }
 
-        // Prevent zooming in too close ((Optional), less than Max Zoom Size pixels)
-        if ((newWidth < MAX_ZOOM_SIZE) || (newHeight <MAX_ZOOM_SIZE))
+        // Prevent zooming in closer than MAX_ZOOM_SIZE
+        if (possibleWidth < MAX_ZOOM_SIZE)
         {
             event.consume();
             return;
         }
 
-        // Adjust X and Y offsets so it zooms relative to the center of the viewport
-        currentX += (currentWidth - newWidth) / 2;
-        currentY += (currentHeight - newHeight) / 2;
+        //This fill threshold width determines how fast gray area disappears, .5 is what is set to
+        //currently if higher it will take less scrolling to eliminate the gray space
+        double fillThresholdWidth = imgOrigWidth * 0.5;
 
-        currentWidth = newWidth;
-        currentHeight = newHeight;
+        //Calculates the progress (0.0 = unzoomed, 1.0 = no gray space)
+        double fillProgress = (imgOrigWidth - possibleWidth) / (imgOrigWidth - fillThresholdWidth);
+        fillProgress = Math.max(0.0, Math.min(1.0, fillProgress));
 
-        //Apply the "crop" window to the ImageView
+        //Transition image aspect to stackPane aspect to assign to target Aspect
+        double targetAspect = imageAspect + (paneAspect - imageAspect) * fillProgress;
+
+        //Calculate possible height based on target aspect
+        double candidateHeight = possibleWidth / targetAspect;
+
+        //Ensure possible height doesn't exceed original image height
+        if (candidateHeight > imgOrigHeight)
+        {
+            candidateHeight = imgOrigHeight;
+            possibleWidth = candidateHeight * targetAspect;
+        }
+
+        //Adjust X and Y to stay centered on previous viewport center
+        double centerX = currentX + (currentWidth / 2.0);
+        double centerY = currentY + (currentHeight / 2.0);
+
+        double newX = centerX - (possibleWidth / 2.0);
+        double newY = centerY - (candidateHeight / 2.0);
+
+        //Clamp coordinates within image boundaries
+        currentX = Math.max(0, Math.min(newX, imgOrigWidth - possibleWidth));
+        currentY = Math.max(0, Math.min(newY, imgOrigHeight - candidateHeight));
+        currentWidth = possibleWidth;
+        currentHeight = candidateHeight;
+
+        //Apply updated viewport
         displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
 
         event.consume();
@@ -238,15 +323,18 @@ public class ImageDetailsController
      */
     private void resetViewport()
     {
-        if (currentImage != null)
+        if (currentImage != null)//If there is an image
         {
-            displayImage.setViewport(null); // Clears the zoom and pan
-
-            //sets dimensions back to basic numbers
+            //Reset viewport default coordinates
             currentWidth = currentImage.getWidth();
             currentHeight = currentImage.getHeight();
             currentX = 0;
             currentY = 0;
+
+            //Set default viewport
+            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+
+            updateContainerAspect(); //Update aspect ratio
         }
     }
 
@@ -366,123 +454,99 @@ public class ImageDetailsController
     @FXML
     private void endSelection(MouseEvent event)
     {
-        if (canCrop && selectionBox.isVisible() && (selectionBox.getWidth() > 5) && (selectionBox.getHeight() > 5.0))
+        try //Does this if it can, will always do finally statement
         {
-            // If the viewport exists we get those dimensions, otherwise we get dimensions of full image
-            double visibleWidth = (displayImage.getViewport() != null) ? displayImage.getViewport().getWidth() : currentImage.getWidth();
-            double visibleHeight = (displayImage.getViewport() != null) ? displayImage.getViewport().getHeight() : currentImage.getHeight();
-            double visibleX = (displayImage.getViewport() != null) ? displayImage.getViewport().getMinX() : 0;
-            double visibleY = (displayImage.getViewport() != null) ? displayImage.getViewport().getMinY() : 0;
-
-            // Finds the width of the displayed image
-            double renderedWidth = displayImage.getBoundsInParent().getWidth();
-            double renderedHeight = displayImage.getBoundsInParent().getHeight();
-
-            //If the width is equal to 0 or less it gets the width of stackPane
-            if (renderedWidth <= 0) renderedWidth = stackPane.getWidth();
-            if (renderedHeight <= 0) renderedHeight = stackPane.getHeight();
-
-            // Finds scale factor for what is CURRENTLY visible on screen
-            double scaleX = visibleWidth / renderedWidth;
-            double scaleY = visibleHeight / renderedHeight;
-
-            // Min x and y for the current image displayed
-            double imageMinX = displayImage.getBoundsInParent().getMinX();
-            double imageMinY = displayImage.getBoundsInParent().getMinY();
-
-            // Subtracts the max of 0 and min x/y (this accounts for any padding) from selectionBox
-            double trueX = selectionBox.getTranslateX() - Math.max(0, imageMinX);
-            double trueY = selectionBox.getTranslateY() - Math.max(0, imageMinY);
-
-            // Shifts other coordinates from the padding
-            double actualX = visibleX + (trueX * scaleX);
-            double actualY = visibleY + (trueY * scaleY);
-            double actualWidth = selectionBox.getWidth() * scaleX;
-            double actualHeight = selectionBox.getHeight() * scaleY;
-
-            //Adjusts selection to keep the same aspect ratio. Will always be same size
-            double centerX = actualX + actualWidth / 2.0;
-            double centerY = actualY + actualHeight / 2.0;
-            double viewAspect = stackPane.getWidth() / stackPane.getHeight();
-            double viewportWidth = actualWidth;
-            double viewportHeight = actualHeight;
-
-            if (viewportWidth / viewportHeight < viewAspect)
+            //Checks to see if cropping is enabled (marquee) and looks for if the selection
+            //box is wide and tall enough
+            if (canCrop && selectionBox.isVisible() && (selectionBox.getWidth() > 5.0) && (selectionBox.getHeight() > 5.0))
             {
-                viewportWidth = viewportHeight * viewAspect;
+                if (currentImage == null) return; //Exits method if there is no image
+
+                //Image bounds within stackPane (accounts for current gray space)
+                Bounds imgBounds = displayImage.getBoundsInParent();
+                double renderedWidth = imgBounds.getWidth();
+                double renderedHeight = imgBounds.getHeight();
+
+                // Current visible viewport dimensions
+                Rectangle2D currentVP = displayImage.getViewport();
+                double vpWidth = (currentVP != null) ? currentVP.getWidth() : currentImage.getWidth();
+                double vpHeight = (currentVP != null) ? currentVP.getHeight() : currentImage.getHeight();
+                double vpMinX = (currentVP != null) ? currentVP.getMinX() : 0;
+                double vpMinY = (currentVP != null) ? currentVP.getMinY() : 0;
+
+                //Translate selection box relative to actual image inside stackPane
+                double relX = selectionBox.getTranslateX() - imgBounds.getMinX();
+                double relY = selectionBox.getTranslateY() - imgBounds.getMinY();
+
+                //Scale screen selection pixels to image viewport coordinates
+                double scaleX = vpWidth / renderedWidth;
+                double scaleY = vpHeight / renderedHeight;
+
+                double selX = vpMinX + (relX * scaleX);
+                double selY = vpMinY + (relY * scaleY);
+                double selWidth = selectionBox.getWidth() * scaleX;
+                double selHeight = selectionBox.getHeight() * scaleY;
+
+                //Get stackPane's aspect ratio to eliminate gray space
+                double paneWidth = stackPane.getWidth();
+                double paneHeight = stackPane.getHeight();
+
+                if ((paneWidth > 0) && (paneHeight > 0)) //If stack pane isn't 0
+                {
+                    double paneAspect = paneWidth / paneHeight;
+                    double selCenterX = selX + (selWidth / 2.0);
+                    double selCenterY = selY + (selHeight / 2.0);
+
+                    //Expand marquee box to fit stackPane's aspect ratio
+                    if ((selWidth / selHeight) > paneAspect) // Selection is wider than pane
+                    {
+                        //Adjust height to match pane aspect
+                        selHeight = selWidth / paneAspect;
+                    }
+                    else //Selection is taller/narrower than pane
+                    {
+                        //Adjust width to match pane aspect
+                        selWidth = selHeight * paneAspect;
+                    }
+
+                    //Recenter crop box around original selection center
+                    selX = selCenterX - (selWidth / 2.0);
+                    selY = selCenterY - (selHeight / 2.0);
+                }
+
+                //Clamp coordinates so viewport stays within original image bounds
+                double imgOrigWidth = currentImage.getWidth();
+                double imgOrigHeight = currentImage.getHeight();
+
+                //Ensure width/height don't exceed image dimensions
+                if (selWidth > imgOrigWidth)
+                {
+                    selWidth = imgOrigWidth;
+                    selHeight = selWidth / (paneWidth / paneHeight);
+                }
+                if (selHeight > imgOrigHeight)
+                {
+                    selHeight = imgOrigHeight;
+                    selWidth = selHeight * (paneWidth / paneHeight);
+                }
+
+                //New view port dimensions
+                currentX = Math.max(0, Math.min(selX, imgOrigWidth - selWidth));
+                currentY = Math.max(0, Math.min(selY, imgOrigHeight - selHeight));
+                currentWidth = selWidth;
+                currentHeight = selHeight;
+
+                //Apply viewport
+                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
             }
-            else
-            {
-                viewportHeight = viewportWidth / viewAspect;
-            }
-
-            currentX = centerX - viewportWidth / 2.0;
-            currentY = centerY - viewportHeight / 2.0;
-            currentWidth = viewportWidth;
-            currentHeight = viewportHeight;
-
-            //Clamps selection box to prevent out of bounds.
-            currentX = Math.max(0, Math.min(currentX, currentImage.getWidth() - currentWidth));
-            currentY = Math.max(0, Math.min(currentY, currentImage.getHeight() - currentHeight));
-
-            // changes viewport to selection rectangle
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-            // Dynamic container shrinking logic
-            double imgW = currentImage.getWidth();
-            double imgH = currentImage.getHeight();
-            double currentPaneWidth = stackPane.getWidth();
-
-            // Safe fallback tracking if layout properties haven't fully drawn yet
-            if (currentPaneWidth <= 0)
-            {
-                currentPaneWidth = renderedWidth;
-            }
-
-            // Calculate how high the image should render
-            double aspect = currentHeight / currentWidth;
-            double targetRenderedHeight = currentPaneWidth * aspect;
-
-            // Caps the height for image using Max Image Size
-            double finalHeight = Math.min(MAX_IMAGE_SIZE, targetRenderedHeight);
-
-            // Update stackPane max height
-            stackPane.setPrefHeight(finalHeight);
-            stackPane.setMaxHeight(finalHeight);
         }
-        selectionBox.setVisible(false); // Remove selection box
-    }
-
-    /**
-     * !!!THIS METHOD IS ONLY USED WITH ACTUAL CROP NOT VIEWPORT CHANGE!!! (Currently actual crop code is commented out)
-     * Crops the image to the parameter cropRect which is a 2D rectangle.
-     * @param cropRect
-     * @return
-     */
-    private Image cropImage(Rectangle2D cropRect)
-    {
-        // Extract and round the coordinates
-        int x = (int) Math.round(cropRect.getMinX());
-        int y = (int) Math.round(cropRect.getMinY());
-        int width = (int) Math.round(cropRect.getWidth());
-        int height = (int) Math.round(cropRect.getHeight());
-
-        // Safeguard boundaries with max image size
-        x = Math.max(0, Math.min(x, (int) currentImage.getWidth() - 1));
-        y = Math.max(0, Math.min(y, (int) currentImage.getHeight() - 1));
-        width = Math.max(1, Math.min(width, (int) currentImage.getWidth() - x));
-        height = Math.max(1, Math.min(height, (int) currentImage.getHeight() - y));
-
-        var pixelReader = currentImage.getPixelReader(); // Get the PixelReader from image
-
-        if (pixelReader == null)
+        finally
         {
-            // Pixel reader exception statement
-            throw new IllegalStateException("Image pixel reader is not available. Ensure the image is fully loaded.");
+            //Hides selection box
+            selectionBox.setVisible(false);
+            selectionBox.setWidth(0);
+            selectionBox.setHeight(0);
         }
-
-        // Create a new image with the cropped dimensions and returns it
-        return new WritableImage(pixelReader, x, y, width, height);
     }
 
     /**
@@ -541,6 +605,7 @@ public class ImageDetailsController
         selectionBox.setVisible(false);
         displayImage.setImage(originalImage);
         currentImage = originalImage;
+
         stackPane.setPrefHeight(Region.USE_COMPUTED_SIZE);
         stackPane.setMaxHeight(Region.USE_COMPUTED_SIZE);
     }
@@ -562,86 +627,4 @@ public class ImageDetailsController
     {
         stackPane.setMouseTransparent(!enable);
     }
-
-    /* (This code is if you want to actually crop the image instead of changing the viewport)
-    @FXML
-    private void endSelection(MouseEvent event)
-    {
-        if (canCrop && selectionBox.isVisible() && (selectionBox.getWidth() > 5) && (selectionBox.getHeight() > 5.0))
-        {
-            // If the viewport exists we get those dimensions, otherwise we get dimensions of full image
-            double visibleWidth = (displayImage.getViewport() != null) ? displayImage.getViewport().getWidth() : currentImage.getWidth();
-            double visibleHeight = (displayImage.getViewport() != null) ? displayImage.getViewport().getHeight() : currentImage.getHeight();
-            double visibleX = (displayImage.getViewport() != null) ? displayImage.getViewport().getMinX() : 0;
-            double visibleY = (displayImage.getViewport() != null) ? displayImage.getViewport().getMinY() : 0;
-
-            // Finds the width of the displayed image
-            double renderedWidth = displayImage.getBoundsInParent().getWidth();
-            double renderedHeight = displayImage.getBoundsInParent().getHeight();
-
-            //If the width is equal to 0 or less it gets the width of stackPane
-            if (renderedWidth <= 0) renderedWidth = stackPane.getWidth();
-            if (renderedHeight <= 0) renderedHeight = stackPane.getHeight();
-
-            // Finds scale factor for what is CURRENTLY visible on screen
-            double scaleX = visibleWidth / renderedWidth;
-            double scaleY = visibleHeight / renderedHeight;
-
-            // Min x and y for the current image displayed
-            double imageMinX = displayImage.getBoundsInParent().getMinX();
-            double imageMinY = displayImage.getBoundsInParent().getMinY();
-
-            // Subtracts the max of 0 and min x/y (this accounts for any padding) from selectionBox
-            double trueX = selectionBox.getTranslateX() - Math.max(0, imageMinX);
-            double trueY = selectionBox.getTranslateY() - Math.max(0, imageMinY);
-
-            // Shifts other coordinates from the padding
-            double actualX = visibleX + (trueX * scaleX);
-            double actualY = visibleY + (trueY * scaleY);
-            double actualWidth = selectionBox.getWidth() * scaleX;
-            double actualHeight = selectionBox.getHeight() * scaleY;
-
-            // Prevents the position from ever being out of bounds (Should already be accounted for, but just in case)
-            currentX = Math.max(0, Math.min(actualX, currentImage.getWidth() - actualWidth));
-            currentY = Math.max(0, Math.min(actualY, currentImage.getHeight() - actualHeight));
-            currentWidth = actualWidth;
-            currentHeight = actualHeight;
-
-            // Crops current image and assigns to current image (original image is never changed)
-            currentImage = cropImage(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-            displayImage.setImage(currentImage);
-
-            // Dynamic container shrinking logic
-            double imgW = currentImage.getWidth();
-            double imgH = currentImage.getHeight();
-            double currentPaneWidth = stackPane.getWidth();
-
-            // Safe fallback tracking if layout properties haven't fully drawn yet
-            if (currentPaneWidth <= 0)
-            {
-                currentPaneWidth = renderedWidth;
-            }
-
-            // Calculate how high the image should render
-            double aspect = imgH / imgW;
-            double targetRenderedHeight = currentPaneWidth * aspect;
-
-            // Caps the height for image using Max Image Size
-            double finalHeight = Math.min(MAX_IMAGE_SIZE, targetRenderedHeight);
-
-            // Update stackPane max height
-            stackPane.setPrefHeight(finalHeight);
-            stackPane.setMaxHeight(finalHeight);
-
-            // Reset viewport with new cropped image
-            currentWidth = imgW;
-            currentHeight = imgW * (finalHeight / currentPaneWidth);
-            currentX = 0;
-            currentY = 0;
-
-            // Initialize the new viewport
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-        }
-        selectionBox.setVisible(false); // Remove selection box
-    }*/
 }

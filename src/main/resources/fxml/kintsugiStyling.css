@@ -748,6 +748,11 @@
 .corner {
     -fx-background-color: #202020;
 }
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0px;
+}
 .tree-view {
     -fx-background-color: #383838;
 }
