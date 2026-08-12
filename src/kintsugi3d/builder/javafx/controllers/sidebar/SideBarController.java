@@ -61,6 +61,7 @@ public class SideBarController
     private ObservableTabsModel tabModels;
     private String lastSelectedTabLabel;
     private boolean minimized = false;
+    private boolean resizingSidebar = false;
 
     public Node getRootNode()
     {
@@ -241,6 +242,21 @@ public class SideBarController
     }
 
     /**
+     * This method is for resizing the scroll bar and will trigger events to try to stop the
+     * scroll bar flicker
+     * @param event
+     */
+    @FXML
+    public void mousePressed(MouseEvent event)
+    {
+        if (mainBox.getCursor() == Cursor.E_RESIZE)
+        {
+            resizingSidebar = true;
+            tabControllers.forEach(CardTabController::onDragStarted);
+        }
+    }
+
+    /**
      * If the mouse is dragged it first gets the new mouse position, then it finds
      * the upper bound. Next it resizes the tab accordingly: If the box is minimized
      * it will snap back to minimized state if the drag is not far enough. Otherwise,
@@ -306,6 +322,10 @@ public class SideBarController
     @FXML
     public void mouseReleased(MouseEvent event)
     {
+        resizingSidebar = false;
+
+        tabControllers.forEach(CardTabController::onDragEnded); //Calls methods to stop scroll bar flicker
+
         if (minimized)
         {
             resizeWidth(MINIMIZED_WIDTH);
@@ -402,6 +422,12 @@ public class SideBarController
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
+
+        //Calls methods to stop scroll bar flicker
+        if (resizingSidebar)
+        {
+            tabControllers.forEach(controller -> controller.onSidebarWidthChanged(width));
+        }
     }
 
     public void refreshTabs()

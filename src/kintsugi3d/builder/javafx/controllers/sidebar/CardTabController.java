@@ -12,6 +12,8 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -67,6 +69,15 @@ public class CardTabController
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
 
     private ObservableCardsModel cardsModel;
+
+    private boolean isDragging = false;
+    private boolean scrollbarLockedDuringDrag = false;
+    private double scrollbarActivationWidth = -1;
+
+    private static final double SCROLLBAR_WIDTH = 15.0;
+    private static final double SCROLLBAR_RELEASE_MARGIN = 5.0;
+    private static final double WIDTH_TOLERANCE = 2.0;
+    private double lastSidebarWidth = -1;
 
     public void init(ObservableCardsModel cardsModel)
     {
@@ -124,8 +135,96 @@ public class CardTabController
     }
 
     public void initialize(){
-        scrollpane.heightProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
-        scrollpane.widthProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
+        //scrollpane.heightProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
+        //scrollpane.widthProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
+
+        //Listener to detect scroll bar
+        scrollpane.viewportBoundsProperty().addListener((obs, oldBounds, newBounds) ->
+            {
+                //Exits if we are not dragging or if scrollbar is locked
+                if (!isDragging || scrollbarLockedDuringDrag)
+                {
+                    return;
+                }
+
+                //Old and new widths
+                double oldWidth = oldBounds.getWidth();
+                double newWidth = newBounds.getWidth();
+
+                if (oldWidth <= 0 || newWidth <= 0) //If negative widths
+                {
+                    return;
+                }
+
+                double viewportShrink = oldWidth - newWidth; //amount changed
+
+
+                //If viewport lost about the amount of width of the scrollbar
+                if (viewportShrink >= (SCROLLBAR_WIDTH - WIDTH_TOLERANCE))
+                {
+                    scrollbarLockedDuringDrag = true; //Locks scrollbar
+
+                    //Gets the last sidebar width
+                    scrollbarActivationWidth = lastSidebarWidth;
+
+                    //Makes scroll bar always appear
+                    scrollpane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+                }
+            }
+        );
+    }
+
+    /**
+     * This method will assign last sidebar width with the new width and will also attempt to
+     * change the scroll bar back to as needed during drag
+     * @param width
+     */
+    public void onSidebarWidthChanged(double width)
+    {
+        lastSidebarWidth = width; //Assigns last width with param width
+
+        if (!isDragging || !scrollbarLockedDuringDrag) //If not locked or if not dragged, exit
+        {
+            return;
+        }
+
+        //release width is assigned with release margin scrollbar width and the activation width
+        double releaseWidth = scrollbarActivationWidth + SCROLLBAR_WIDTH + SCROLLBAR_RELEASE_MARGIN;
+
+        //TODO: I suspect this is where the problem is for the scroll bar not disappearing during
+        //TODO: drag, but I don't have enough time to work on it
+        if (width >= releaseWidth)
+        {
+            scrollbarLockedDuringDrag = false;
+            scrollbarActivationWidth = -1;
+
+            Platform.runLater(()->scrollpane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED));
+        }
+    }
+
+    /**
+     * Assigns is dragging to true
+     */
+    public void onDragStarted()
+    {
+        isDragging = true;
+    }
+
+    /**
+     * Assigns is dragging to false
+     * If scroll bar is locked it will unlock and make scroll bar as needed
+     */
+    public void onDragEnded()
+    {
+        isDragging = false;
+
+        if (scrollbarLockedDuringDrag)
+        {
+            scrollbarLockedDuringDrag = false;
+            scrollbarActivationWidth = -1;
+
+            scrollpane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        }
     }
 
     private void updateSummary()
