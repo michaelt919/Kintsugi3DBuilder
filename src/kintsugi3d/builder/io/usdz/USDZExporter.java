@@ -83,7 +83,7 @@ public abstract class USDZExporter extends MaterialExporter
                 break;
 
             default:
-                throw new RuntimeException("OS environment not supported.");
+                throw new RuntimeException(String.format("OS environment not supported: %s", OperatingSystem.getCurrentOS()));
         }
 
         // Attempt to realize path for the exporter application
@@ -93,14 +93,14 @@ public abstract class USDZExporter extends MaterialExporter
 
             if (!Files.exists(path))
             {
-                throw new IOException("Could not find USDZ exporter binary.");
+                throw new IOException(String.format("Could not find USDZ exporter binary: %s", path));
             }
 
             command.add(path.toString());
         }
         catch (IOException e)
         {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         }
 
         command.add("--model");
@@ -135,11 +135,11 @@ public abstract class USDZExporter extends MaterialExporter
         }
         catch (IOException e)
         {
-            throw new RuntimeException("Couldn't open the USDZ exporter.");
+            throw new RuntimeException("Couldn't open the USDZ exporter.", e);
         }
         catch (InterruptedException e)
         {
-            LOG.error("Process was interrupted.");
+            LOG.error("Process was interrupted.", e);
             return;
         }
 
@@ -150,7 +150,7 @@ public abstract class USDZExporter extends MaterialExporter
         }
         catch (IOException e)
         {
-            LOG.error("Couldn't cleanup temp files");
+            LOG.error("Couldn't cleanup temp files", e);
         }
     }
 

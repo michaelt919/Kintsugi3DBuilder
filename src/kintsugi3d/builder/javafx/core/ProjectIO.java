@@ -80,7 +80,7 @@ public final class ProjectIO
                 // TODO figure out a less hacky workaround.
                 WelcomeWindowController.getInstance().runOnceWhenShown(() ->
                 {
-                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
+                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled.");
                     alert.setTitle("Cancelled");
                     alert.setHeaderText("Cancelled");
                     alert.show();
@@ -99,14 +99,14 @@ public final class ProjectIO
                 }
                 else
                 {
-                    ExceptionHandling.error("An error occurred while loading project", e);
+                    ExceptionHandling.error("An error occurred", e);
                 }
             }
 
             @Override
             public void warn(Throwable e)
             {
-                ExceptionHandling.error("A potential problem occurred while loading project", e);
+                ExceptionHandling.error("A potential problem occurred", e);
             }
         });
     }
