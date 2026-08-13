@@ -1838,7 +1838,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public File getModelDirectory()
     {
-        return this.modelDirectory == null ? this.rootDirectory : this.modelDirectory;
+        return (this.modelDirectory == null) ? this.rootDirectory : this.modelDirectory;
     }
 
     public void setModelDirectory(File modelDirectory)
@@ -1878,7 +1878,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
         else
         {
-            copyFileSafe(getGeometryFile(), modelDestDir);
+            copyFileSafe(geometryFile, modelDestDir);
 
             for (var resource : resourceMap.entrySet())
             {
@@ -1889,7 +1889,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
 
             // Use the destination directory as the model directory to use from now on.
-            geometryFile = new File(modelDestDir, "model.zip");
+            geometryFile = new File(modelDestDir, geometryFile.getName());
         }
     }
 
