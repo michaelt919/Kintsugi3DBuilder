@@ -1804,22 +1804,17 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public String getGeometryFileName()
     {
-        File effectiveModelDirectory = this.getModelDirectory();
+        File effectiveGeometryDirectory = this.getGeometryFile();
 
-        if (this.geometryFile != null && effectiveModelDirectory != null && !effectiveModelDirectory.toString().endsWith(".zip"))
+        try
         {
-            try
-            {
-                return effectiveModelDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
-            }
-            catch (IllegalArgumentException | NullPointerException e)
-            {
-                LOG.warn("Exception relativizing {} within {}", this.geometryFile, effectiveModelDirectory);
-            }
+            return this.rootDirectory.toPath().relativize(effectiveGeometryDirectory.toPath()).toString();
         }
-
-        // If directories are located under different drive letters on windows, or geometry file is null, or model directory is a ZIP
-        return geometryFile == null ? null : geometryFile.toString();
+        catch (IllegalArgumentException |
+               NullPointerException e) // If the root and other directories are located under different drive letters on windows
+        {
+            return effectiveGeometryDirectory == null ? null : effectiveGeometryDirectory.toString();
+        }
     }
 
     @Override
@@ -1838,15 +1833,15 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         this.geometryFile = geometryFile;
     }
 
-    public File getModelDirectory()
-    {
-        return this.modelDirectory == null ? this.rootDirectory : this.modelDirectory;
-    }
+     public File getModelDirectory()
+     {
+         return this.modelDirectory == null ? this.rootDirectory : this.modelDirectory;
+     }
 
-    public void setModelDirectory(File modelDirectory)
-    {
-        this.modelDirectory = modelDirectory;
-    }
+     public void setModelDirectory(File modelDirectory)
+     {
+         this.modelDirectory = modelDirectory;
+     }
 
     /**
      * Copies model and textures to an appropriate supporting files directory and changes the model directory accordingly.
@@ -1854,30 +1849,24 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void copyModel()
     {
-        if (modelDirectory == null)
-        {
-            return;
-        }
-
-        File modelSrcDir = modelDirectory;
-
-        File modelDestDir = supportingFilesDirectory != null ?
+        File modelDestDir = (supportingFilesDirectory != null) ?
             new File(supportingFilesDirectory, "model") :
             new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.model").toFile(), uuid.toString());
 
         modelDestDir.mkdirs();
+        setModelDirectory(modelDestDir);
 
         // Unzip model and textures if needed
-        if (modelSrcDir.toString().endsWith(".zip"))
+        if (getGeometryFile().toString().endsWith(".zip"))
         {
             LOG.info("Unzipping model folder...");
             try
             {
                 // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
-                UnzipHelper.unzipToDirectory(modelSrcDir, modelDestDir, null);
+                UnzipHelper.unzipToDirectory(getGeometryFile(), modelDestDir, null);
 
                 // Use the destination directory as the model directory for validating (and thereafter)
-                setModelDirectory(modelDestDir);
+                setGeometryFile(new File(modelDestDir, "mesh.ply"));
             }
             catch (IOException e)
             {
@@ -1897,7 +1886,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
 
             // Use the destination directory as the model directory to use from now on.
-            setModelDirectory(modelDestDir);
+            setGeometryFile(new File(modelDestDir, getGeometryFile().getName()));
         }
     }
 
