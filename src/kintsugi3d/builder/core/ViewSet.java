@@ -11,6 +11,10 @@
 
 package kintsugi3d.builder.core;
 
+import de.javagl.obj.Mtl;
+import de.javagl.obj.MtlReader;
+import de.javagl.obj.Obj;
+import de.javagl.obj.ObjReader;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.ViewSetChange.Type;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
@@ -42,9 +46,8 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -59,137 +62,26 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
     private final Collection<Observer<ViewSetChange>> observers = new ArrayList<>(8);
-
-    /**
-     * A unique id given to each view set that can be used to prevent cache collisions on disk.
-     */
-    private UUID uuid = UUID.randomUUID();
-
     private final ViewSetDataCollection viewSetDataCollection;
     private final ViewSetDataCollection disabledViewSetDataCollection;
-
     /**
      * A list of projection transformations defining the intrinsic properties of each camera.
      * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
      */
     private final List<Projection> cameraProjectionList;
-
     /**
      * A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * Assumed by convention to be in camera space.
      * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
      */
     private final List<Vector3> lightPositionList;
-
     /**
      * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
      */
     private final List<Vector3> lightIntensityList;
-
-    /**
-     * The reference linear luminance values used for decoding pixel colors.
-     */
-    private double[] linearLuminanceValues;
-
-    /**
-     * The reference encoded luminance values used for decoding pixel colors.
-     */
-    private byte[] encodedLuminanceValues;
-
-    /**
-     * The absolute file path to be used for loading all resources.
-     */
-    private File rootDirectory;
-
-    /**
-     * The directory to be used for loading images. It is an absolute file path.
-     */
-    private File fullResImageDirectory;
-
-    /**
-     * The directory to be used for saving preview images.
-     */
-    private File previewImageDirectory;
-
-    /**
-     * The directory where the results of the texture / specular fitting are stored
-     */
-    private File supportingFilesDirectory;
-
-    /**
-     * The directory where thumbnail images are stored
-     */
-    private File thumbnailImageDirectory;
-
-    /**
-     * The directory where the masks are stored, if any are present (null if no masks)
-     */
-    private File masksDirectory;
-
-    /**
-     * The directory where the original model and imported textures (if any) are stored
-     */
-    private File modelDirectory;
-
-    /**
-     * The mesh file.
-     */
-    private File geometryFile;
-
-    /**
-     * If false, inverse-square light attenuation should be applied.
-     */
-    private boolean infiniteLightSources = false;
-
-    /**
-     * The recommended near plane to use when rendering this view set.
-     */
-    private float recommendedNearPlane = 0.01f;
-
-    /**
-     * The recommended far plane to use when rendering this view set.
-     */
-    private float recommendedFarPlane = 100.0f;
-
-    /**
-     * The index of the view used for color calibration
-     */
-    private int primaryViewIndex = 0;
-
-    /**
-     * The index of the view used to reorient the model
-     */
-    private int orientationViewIndex = 0;
-
-    /**
-     * Roll rotation of the orientation view, used to correct sideways or upside down images
-     */
-    private double orientationViewRotationDegrees = 0;
-
-    /**
-     * Orientation imported, to be applied to the model
-     */
-    private Matrix3 orientationMatrix;
-
-    /**
-     * Object translation imported, to be applied to the model
-     */
-    private Vector3 objectTranslation;
-
-    /**
-     * Object scale imported, to be applied to the model
-     */
-    private float objectScale = 1.0f;
-
-    private int previewWidth = 0;
-    private int previewHeight = 0;
-
     private final GeneralSettingsModel projectSettings = new SimpleGeneralSettingsModel();
     private final Map<String, File> resourceMap = new HashMap<>(32);
-
-    private boolean hasUnsupportedCorrections = false;
-
     /**
      * O(1) time complexity virtual list of enabled and disabled views combined.
      */
@@ -214,7 +106,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             return getEnabledCameraPoseCount() + getDisabledCameraPoseCount();
         }
     };
-
     /**
      * O(1) time complexity virtual list of enabled and disabled images combined.
      */
@@ -232,380 +123,89 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             return combinedViewSetData.size();
         }
     };
-
-    public static final class Builder
-    {
-        private final ViewSet result;
-
-        private boolean needsClipPlanes = true;
-        private Matrix4 cameraPose;
-        private int cameraProjectionIndex = 0;
-        private int lightIndex = 0;
-        private File imageFile;
-        private File maskFile;
-        private final Map<Integer, File> maskMap;
-        private boolean hasUnsupportedCorrections;
-
-        /**
-         * Uses root directory as supporting files directory by default
-         *
-         * @param rootDirectory
-         * @param initialCapacity
-         */
-        Builder(File rootDirectory, int initialCapacity)
-        {
-            this(rootDirectory, rootDirectory, initialCapacity);
-        }
-
-        Builder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
-        {
-            result = new ViewSet(initialCapacity);
-            result.setRootDirectory(rootDirectory);
-            result.setSupportingFilesDirectory(supportingFilesDirectory);
-
-            maskMap = new HashMap<>(initialCapacity);
-
-            // Initialize settings with defaults.
-            DefaultSettings.applyProjectDefaults(result.projectSettings);
-        }
-
-        public Builder setCurrentCameraPose(Matrix4 cameraPose)
-        {
-            this.cameraPose = cameraPose;
-            return this;
-        }
-
-        public Builder setCurrentCameraProjectionIndex(int cameraProjectionIndex)
-        {
-            this.cameraProjectionIndex = cameraProjectionIndex;
-            return this;
-        }
-
-        public Builder setCurrentLightIndex(int lightIndex)
-        {
-            this.lightIndex = lightIndex;
-            return this;
-        }
-
-        public Builder setCurrentImageFile(File imageFile)
-        {
-            this.imageFile = imageFile;
-            return this;
-        }
-
-        public Builder setCurrentMaskFile(File maskFile)
-        {
-            this.maskFile = maskFile;
-            return this;
-        }
-
-        public Builder commitCurrentCameraPose()
-        {
-            if (maskFile == null && !maskMap.isEmpty())
-            {
-                // We haven't committed this view yet, so size of the view set data will just be the current index.
-                maskFile = maskMap.get(result.viewSetDataCollection.getViewSetData().size());
-            }
-
-            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f),
-                cameraProjectionIndex, lightIndex, result.viewSetDataCollection.getViewSetData().size(), imageFile, maskFile, new ViewRMSE());
-            result.viewSetDataCollection.getViewSetData().add(currentCamera);
-
-            // Reset maskFile to null for the next camera pose.
-            maskFile = null;
-
-            return this;
-        }
-
-        public Builder commitCurrentCameraPoseAsDisabled()
-        {
-            if (maskFile == null)
-            {
-                maskFile = maskMap.get(result.viewSetDataCollection.getViewSetData().size());
-            }
-            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f), cameraProjectionIndex,
-                lightIndex, result.viewSetDataCollection.getViewSetData().size() + result.disabledViewSetDataCollection.getViewSetData().size(),
-                imageFile, maskFile, new ViewRMSE());
-            currentCamera.isDisabled = true;
-            result.disabledViewSetDataCollection.getViewSetData().add(currentCamera);
-            return this;
-        }
-
-        public Builder disableCamerasByImageFilename(Iterable<File> disabledImageFiles)
-        {
-            for (File f : disabledImageFiles)
-            {
-                int index = result.viewSetDataCollection.getImageFiles().indexOf(f);
-                if (index != -1)
-                {
-                    result.viewSetDataCollection.getViewSetData().remove(index);
-                }
-                int disabledIndex = result.disabledViewSetDataCollection.getImageFiles().indexOf(f);
-                if (disabledIndex != -1)
-                {
-                    result.disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
-                }
-            }
-            // Reassign view indices for smaller data set.
-            for (int i = 0; i < result.viewSetDataCollection.getViewSetData().size(); ++i)
-            {
-                result.viewSetDataCollection.getViewSetData().get(i).viewIndex = i;
-            }
-
-            return this;
-        }
-
-        public Builder addCameraProjection(Projection projection)
-        {
-            result.cameraProjectionList.add(projection);
-            return this;
-        }
-
-        public int getNextCameraProjectionIndex()
-        {
-            return result.cameraProjectionList.size();
-        }
-
-        public Builder addLight(Vector3 position, Vector3 intensity)
-        {
-            result.lightPositionList.add(position);
-            result.lightIntensityList.add(intensity);
-            return this;
-        }
-
-        public int getNextLightIndex()
-        {
-            return result.lightPositionList.size();
-        }
-
-        public Builder setUUID(UUID uuid)
-        {
-            result.uuid = uuid;
-            return this;
-        }
-
-        public Builder setRecommendedClipPlanes(float near, float far)
-        {
-            result.recommendedNearPlane = near;
-            result.recommendedFarPlane = far;
-            needsClipPlanes = false;
-            return this;
-        }
-
-        public Builder setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
-        {
-            result.setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
-            return this;
-        }
-
-        /**
-         * Sets the geometry file associated with this view set.
-         *
-         * @param geometryFile The geometry file.
-         */
-        public Builder setGeometryFile(File geometryFile)
-        {
-            result.geometryFile = geometryFile;
-            return this;
-        }
-
-        /**
-         * Sets the name of the geometry file associated with this view set relative to the root directory.
-         *
-         * @param geometryFileName The name of the geometry file.
-         */
-        public Builder setGeometryFileName(String geometryFileName)
-        {
-            result.geometryFile = geometryFileName == null ? null : result.rootDirectory
-                .toPath().resolve(geometryFileName).toFile();
-            return this;
-        }
-
-        /**
-         * Sets the full res image directory associated with this view set.
-         *
-         * @param fullResImageDirectory The full res image directory.
-         */
-        public Builder setFullResImageDirectory(File fullResImageDirectory)
-        {
-            result.setFullResImageDirectory(fullResImageDirectory);
-            return this;
-        }
-
-        /**
-         * Sets the name of the full res image directory associated with this view set relative to the root directory.
-         *
-         * @param relativePath The path to the full res images.
-         */
-        public Builder setRelativeFullResImagePathName(String relativePath)
-        {
-            result.setRelativeFullResImagePathName(relativePath);
-            return this;
-        }
-
-        /**
-         * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
-         *
-         * @param relativePath The file path of the supporting files directory.
-         */
-        public Builder setRelativeSupportingFilesPathName(String relativePath)
-        {
-            result.supportingFilesDirectory = result.rootDirectory.toPath().resolve(relativePath).toFile();
-            return this;
-        }
-
-        public Builder setRelativePreviewImagePathName(String relativePath)
-        {
-            result.setRelativePreviewImagePathName(relativePath);
-            return this;
-        }
-
-        public Builder setOrientationViewIndex(int viewIndex)
-        {
-            result.orientationViewIndex = viewIndex;
-            return this;
-        }
-
-        public Builder setOrientationViewName(String viewName)
-        {
-            result.setOrientationView(viewName);
-            return this;
-        }
-
-        public Builder setOrientationViewRotation(double rotation)
-        {
-            result.setOrientationViewRotationDegrees(rotation);
-            return this;
-        }
-
-        public Builder setOrientationMatrix(Matrix3 matrix)
-        {
-            result.setOrientationMatrix(matrix);
-            return this;
-        }
-
-        public Builder setObjectTranslation(Vector3 objectTranslation)
-        {
-            result.setObjectTranslation(objectTranslation);
-            return this;
-        }
-
-        public Builder setObjectScale(float objectScale)
-        {
-            result.setObjectScale(objectScale);
-            return this;
-        }
-
-        public Builder setMasksDirectory(File file)
-        {
-            result.setMasksDirectory(file);
-            return this;
-        }
-
-        public Builder addMask(int camId, String imgFilename)
-        {
-            maskMap.put(camId, new File(imgFilename));
-            return this;
-        }
-
-        public Builder applySettings(ReadonlyGeneralSettingsModel settings)
-        {
-            result.getProjectSettings().copyFrom(settings);
-            return this;
-        }
-
-        public Builder addResourceFiles(Map<String, File> resourceMap)
-        {
-            result.resourceMap.putAll(resourceMap);
-            return this;
-        }
-
-        public Builder setHasUnsupportedCorrections(boolean hasUnsupportedCorrections)
-        {
-            this.hasUnsupportedCorrections = hasUnsupportedCorrections;
-            return this;
-        }
-
-        public ViewSet finish()
-        {
-            if (needsClipPlanes)
-            {
-                result.recommendedFarPlane = findFarPlane(result.viewSetDataCollection.getViewSetData());
-                result.recommendedNearPlane = result.getRecommendedFarPlane() / 32.0f;
-                LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
-            }
-
-            // Fill with default lights if not specified
-            int maxLightIndex = result.viewSetDataCollection.getViewSetData().stream().mapToInt(data -> data.lightIndex).max().orElse(1);
-            for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
-            {
-                result.lightPositionList.add(Vector3.ZERO);
-                result.lightIntensityList.add(Vector3.ZERO);
-            }
-
-            if (result.geometryFile == null && result.rootDirectory != null)
-            {
-                setGeometryFileName("manifold.obj"); // Used by some really old datasets
-            }
-
-            if (result.getSupportingFilesDirectory() != null)
-            {
-                // Make sure the supporting files directory exists
-                result.getSupportingFilesDirectory().mkdirs();
-            }
-
-            result.hasUnsupportedCorrections = this.hasUnsupportedCorrections;
-
-            return result;
-        }
-
-        /**
-         * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
-         * Assumes that the object must lie between all of the cameras in the file.
-         *
-         * @param viewSetDataList The list of camera data.
-         * @return A far plane estimate.
-         */
-        private static float findFarPlane(Iterable<ViewSetData> viewSetDataList)
-        {
-            float minX = Float.POSITIVE_INFINITY;
-            float minY = Float.POSITIVE_INFINITY;
-            float minZ = Float.POSITIVE_INFINITY;
-            float maxX = Float.NEGATIVE_INFINITY;
-            float maxY = Float.NEGATIVE_INFINITY;
-            float maxZ = Float.NEGATIVE_INFINITY;
-
-            for (ViewSetData aviewSetData: viewSetDataList)
-            {
-                Vector4 position = aviewSetData.cameraPoseInv.getColumn(3);
-                minX = Math.min(minX, position.x);
-                minY = Math.min(minY, position.y);
-                minZ = Math.min(minZ, position.z);
-                maxX = Math.max(maxX, position.x);
-                maxY = Math.max(maxY, position.y);
-                maxZ = Math.max(maxZ, position.z);
-            }
-
-            // Corner-to-corner
-            float dX = maxX - minX;
-            float dY = maxY - minY;
-            float dZ = maxZ - minZ;
-            return (float) Math.sqrt(dX * dX + dY * dY + dZ * dZ);
-
-            // Longest Side approach
-//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
-        }
-    }
-
-    public static Builder getBuilder(File rootDirectory, int initialCapacity)
-    {
-        return new Builder(rootDirectory, initialCapacity);
-    }
-
-    public static Builder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
-    {
-        return new Builder(rootDirectory, supportingFilesDirectory, initialCapacity);
-    }
+    /**
+     * A unique id given to each view set that can be used to prevent cache collisions on disk.
+     */
+    private UUID uuid = UUID.randomUUID();
+    /**
+     * The reference linear luminance values used for decoding pixel colors.
+     */
+    private double[] linearLuminanceValues;
+    /**
+     * The reference encoded luminance values used for decoding pixel colors.
+     */
+    private byte[] encodedLuminanceValues;
+    /**
+     * The absolute file path to be used for loading all resources.
+     */
+    private File rootDirectory;
+    /**
+     * The directory to be used for loading images. It is an absolute file path.
+     */
+    private File fullResImageDirectory;
+    /**
+     * The directory to be used for saving preview images.
+     */
+    private File previewImageDirectory;
+    /**
+     * The directory where the results of the texture / specular fitting are stored
+     */
+    private File supportingFilesDirectory;
+    /**
+     * The directory where thumbnail images are stored
+     */
+    private File thumbnailImageDirectory;
+    /**
+     * The directory where the masks are stored, if any are present (null if no masks)
+     */
+    private File masksDirectory;
+    /**
+     * The directory where the original model and imported textures (if any) are stored
+     */
+    private File modelDirectory;
+    /**
+     * The mesh file.
+     */
+    private File geometryFile;
+    /**
+     * If false, inverse-square light attenuation should be applied.
+     */
+    private boolean infiniteLightSources = false;
+    /**
+     * The recommended near plane to use when rendering this view set.
+     */
+    private float recommendedNearPlane = 0.01f;
+    /**
+     * The recommended far plane to use when rendering this view set.
+     */
+    private float recommendedFarPlane = 100.0f;
+    /**
+     * The index of the view used for color calibration
+     */
+    private int primaryViewIndex = 0;
+    /**
+     * The index of the view used to reorient the model
+     */
+    private int orientationViewIndex = 0;
+    /**
+     * Roll rotation of the orientation view, used to correct sideways or upside down images
+     */
+    private double orientationViewRotationDegrees = 0;
+    /**
+     * Orientation imported, to be applied to the model
+     */
+    private Matrix3 orientationMatrix;
+    /**
+     * Object translation imported, to be applied to the model
+     */
+    private Vector3 objectTranslation;
+    /**
+     * Object scale imported, to be applied to the model
+     */
+    private float objectScale = 1.0f;
+    private int previewWidth = 0;
+    private int previewHeight = 0;
+    private boolean hasUnsupportedCorrections = false;
 
     /**
      * Creates a new view set object.
@@ -624,6 +224,71 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         this.cameraProjectionList = new ArrayList<>(1);
         this.lightIntensityList = new ArrayList<>(1);
         this.lightPositionList = new ArrayList<>(1);
+    }
+
+    public static Builder getBuilder(File rootDirectory, int initialCapacity)
+    {
+        return new Builder(rootDirectory, initialCapacity);
+    }
+
+    public static Builder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
+    {
+        return new Builder(rootDirectory, supportingFilesDirectory, initialCapacity);
+    }
+
+    public static ReadonlyViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
+                                                   float nearPlane, float aspect, float sensorWidth, float focalLength)
+    {
+        ViewSet result = new ViewSet(viewDir.size());
+
+        result.cameraProjectionList.add(new DistortionProjection(sensorWidth, sensorWidth / aspect, focalLength));
+
+        result.recommendedNearPlane = nearPlane;
+        result.recommendedFarPlane = (2 * distance) - nearPlane;
+
+        result.lightIntensityList.add(new Vector3(distance * distance));
+        result.lightPositionList.add(Vector3.ZERO);
+
+        for (int i = 0; i < viewDir.size(); i++)
+        {
+            File imageFile = new File(String.format("%04d.png", i + 1));
+            Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
+            Matrix4 cameraPoseInv = cameraPose.quickInverse(0.001f);
+
+            ViewSetData currentViewSetData = new ViewSetData(cameraPose, cameraPoseInv, 0, 0,
+                i, imageFile, null, new ViewRMSE());
+        }
+
+        return result;
+    }
+
+    public static String removeExt(String fileName)
+    {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
+    }
+
+    /**
+     * Checks for whether srcFile is null before copying into destDir.
+     *
+     * @param srcFile
+     * @param destDir
+     */
+    private static void copyFileSafe(File srcFile, File destDir)
+    {
+        if (srcFile != null)
+        {
+            File destFile = new File(destDir, srcFile.getName());
+
+            try
+            {
+                Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            catch (IOException e)
+            {
+                LOG.error("Failed to copy {} to {}", srcFile.getName(), destDir.getPath());
+            }
+        }
     }
 
     /**
@@ -853,7 +518,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         result.lightIntensityList.addAll(this.lightIntensityList);
         result.lightPositionList.addAll(this.lightPositionList);
 
-        if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
+        if ((this.linearLuminanceValues != null) && (this.encodedLuminanceValues != null))
         {
             result.setLuminanceEncoding(
                 Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
@@ -896,7 +561,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         result.lightPositionList.addAll(this.lightPositionList);
         result.lightIntensityList.addAll(this.lightIntensityList);
 
-        if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
+        if ((this.linearLuminanceValues != null) && (this.encodedLuminanceValues != null))
         {
             result.setLuminanceEncoding(
                 Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
@@ -926,32 +591,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         result.projectSettings.copyFrom(this.projectSettings);
         result.resourceMap.putAll(this.resourceMap);
-
-        return result;
-    }
-
-    public static ReadonlyViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
-                                                   float nearPlane, float aspect, float sensorWidth, float focalLength)
-    {
-        ViewSet result = new ViewSet(viewDir.size());
-
-        result.cameraProjectionList.add(new DistortionProjection(sensorWidth, sensorWidth / aspect, focalLength));
-
-        result.recommendedNearPlane = nearPlane;
-        result.recommendedFarPlane = 2 * distance - nearPlane;
-
-        result.lightIntensityList.add(new Vector3(distance * distance));
-        result.lightPositionList.add(Vector3.ZERO);
-
-        for (int i = 0; i < viewDir.size(); i++)
-        {
-            File imageFile = new File(String.format("%04d.png", i + 1));
-            Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
-            Matrix4 cameraPoseInv = cameraPose.quickInverse(0.001f);
-
-            ViewSetData currentViewSetData = new ViewSetData(cameraPose, cameraPoseInv, 0, 0,
-                i, imageFile, null, new ViewRMSE());
-        }
 
         return result;
     }
@@ -1067,7 +706,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public File getSupportingFilesDirectory()
     {
         // Fallback to root directory if no supporting files defined
-        return this.supportingFilesDirectory == null ? this.rootDirectory : this.supportingFilesDirectory;
+        return (this.supportingFilesDirectory == null) ? this.rootDirectory : this.supportingFilesDirectory;
     }
 
     /**
@@ -1092,7 +731,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         catch (IllegalArgumentException |
                NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return effectiveSupportingFilesDirectory == null ? null : effectiveSupportingFilesDirectory.toString();
+            return (effectiveSupportingFilesDirectory == null) ? null : effectiveSupportingFilesDirectory.toString();
         }
     }
 
@@ -1102,7 +741,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         if (this.fullResImageDirectory == null)
         {
             // If no full res images, just use preview images as full res, or root directory as last fallback
-            return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
+            return (this.previewImageDirectory == null) ? this.rootDirectory : this.previewImageDirectory;
         }
         else
         {
@@ -1132,7 +771,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         catch (IllegalArgumentException |
                NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return effectiveFullResImageDirectory == null ? null : effectiveFullResImageDirectory.toString();
+            return (effectiveFullResImageDirectory == null) ? null : effectiveFullResImageDirectory.toString();
         }
     }
 
@@ -1152,7 +791,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         if (this.previewImageDirectory == null)
         {
             // If no preview images, default to just using full res images, or root directory as last fallback
-            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+            return (this.fullResImageDirectory == null) ? this.rootDirectory : this.fullResImageDirectory;
         }
         else
         {
@@ -1166,7 +805,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         if (this.thumbnailImageDirectory == null)
         {
             // If no thumbnail images, default to just using full res images, or root directory as last fallback
-            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+            return (this.fullResImageDirectory == null) ? this.rootDirectory : this.fullResImageDirectory;
         }
         else
         {
@@ -1186,7 +825,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         catch (IllegalArgumentException |
                NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return effectivePreviewImageDirectory == null ? null : effectivePreviewImageDirectory.toString();
+            return (effectivePreviewImageDirectory == null) ? null : effectivePreviewImageDirectory.toString();
         }
     }
 
@@ -1390,12 +1029,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return -1;
     }
 
-    public static String removeExt(String fileName)
-    {
-        int dotIndex = fileName.lastIndexOf('.');
-        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
-    }
-
     public ViewSetDataCollection getViewSetData()
     {
         return viewSetDataCollection;
@@ -1539,8 +1172,8 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public boolean hasCustomLuminanceEncoding()
     {
-        return linearLuminanceValues != null && encodedLuminanceValues != null
-            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+        return (linearLuminanceValues != null) && (encodedLuminanceValues != null)
+            && (linearLuminanceValues.length > 0) && (encodedLuminanceValues.length > 0);
     }
 
     @Override
@@ -1643,14 +1276,14 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public File getMask(int poseIndex)
     {
         File maskFile = combinedViewSetData.get(poseIndex).maskFile;
-        if (maskFile == null || getMasksDirectory() == null)
+        if ((maskFile == null) || (masksDirectory == null))
         {
             // Not all images have masks, so this file may still not exist
             return null;
         }
         else
         {
-            return new File(getMasksDirectory(), maskFile.getName());
+            return new File(masksDirectory, maskFile.getName());
         }
     }
 
@@ -1714,35 +1347,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 // Search for the name of the photo in the masks directory
                 // Will check both with and without _mask suffix
                 maskFile = ImageFinder.getInstance().tryFindImageFile(
-                    new File(getMasksDirectory(), getFullResImageFile(i).getName()),
+                    new File(masksDirectory, getFullResImageFile(i).getName()),
                     "_mask");
             }
 
             // Overwrite based on the file that was found, or remove if no mask file was found
             combinedViewSetData.get(i).maskFile = maskFile;
-        }
-    }
-
-    /**
-     * Checks for whether srcFile is null before copying into destDir.
-     *
-     * @param srcFile
-     * @param destDir
-     */
-    private static void copyFileSafe(File srcFile, File destDir)
-    {
-        if (srcFile != null)
-        {
-            File destFile = new File(destDir, srcFile.getName());
-
-            try
-            {
-                Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-            catch (IOException e)
-            {
-                LOG.error("Failed to copy {} to {}", srcFile.getName(), destDir.getPath());
-            }
         }
     }
 
@@ -1761,7 +1371,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         File masksSrcDir = masksDirectory;
 
-        File masksDestinationDir = supportingFilesDirectory != null ?
+        File masksDestinationDir = (supportingFilesDirectory != null) ?
             new File(supportingFilesDirectory, "masks") :
             new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.masks").toFile(), uuid.toString());
 
@@ -1807,7 +1417,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public String getGeometryFileName()
     {
-        File effectiveGeometryDirectory = this.getGeometryFile();
+        File effectiveGeometryDirectory = this.geometryFile;
 
         try
         {
@@ -1816,7 +1426,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         catch (IllegalArgumentException |
                NullPointerException e) // If the root and other directories are located under different drive letters on windows
         {
-            return effectiveGeometryDirectory == null ? null : effectiveGeometryDirectory.toString();
+            return (effectiveGeometryDirectory == null) ? null : effectiveGeometryDirectory.toString();
         }
     }
 
@@ -1838,7 +1448,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public File getModelDirectory()
     {
-        return (this.modelDirectory == null) ? this.rootDirectory : this.modelDirectory;
+        return Objects.requireNonNullElse(this.modelDirectory, this.rootDirectory);
     }
 
     public void setModelDirectory(File modelDirectory)
@@ -1857,19 +1467,19 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.model").toFile(), uuid.toString());
 
         modelDestDir.mkdirs();
-        modelDirectory = modelDestDir;
 
         // Unzip model and textures if needed
-        if (getGeometryFile().toString().endsWith(".zip"))
+        if (geometryFile.toString().endsWith(".zip"))
         {
             LOG.info("Unzipping model folder...");
             try
             {
                 // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
-                UnzipHelper.unzipToDirectory(getGeometryFile(), modelDestDir, null);
+                UnzipHelper.unzipToDirectory(geometryFile, modelDestDir, null);
 
                 // Use the destination directory as the model directory for validating (and thereafter)
                 geometryFile = new File(modelDestDir, "mesh.ply");
+                modelDirectory = modelDestDir;
             }
             catch (IOException e)
             {
@@ -1888,6 +1498,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 }
             }
 
+            // By definition of the property, the "original" file directory
+            // Needed for copying textures
+            modelDirectory = geometryFile.getParentFile();
             // Use the destination directory as the model directory to use from now on.
             geometryFile = new File(modelDestDir, geometryFile.getName());
         }
@@ -1933,23 +1546,102 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 LOG.error("Could not copy textures from Agisoft project.");
             }
         }
+
+        else if (geometryFile.getName().endsWith(".obj"))
+        {
+            // Get our object file as an obj for parsing
+            Obj obj;
+            try (InputStream objStream = new FileInputStream(geometryFile))
+            {
+                obj = ObjReader.read(objStream);
+            }
+            catch (IOException e)
+            {
+                LOG.error("Could not read materials from {}", geometryFile);
+                return;
+            }
+
+            // Iterate through all mtl files
+            // Should only be one, but for completeness’s sake
+            for (String mtlFileName : obj.getMtlFileNames())
+            {
+                File mtlFile = new File(getModelDirectory(), mtlFileName);
+                if (!mtlFile.exists())
+                {
+                    LOG.error("Could not find material {}", mtlFile);
+                    continue;
+                }
+
+                // Get all the materials from the material file
+                List<Mtl> mtls;
+                try (InputStream mtlStream = new FileInputStream(mtlFile))
+                {
+                    mtls = MtlReader.read(mtlStream);
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Could not read material {}", mtlFile);
+                    continue;
+                }
+
+                // Map custom map_ao to material name (reading twice, yes)
+                Map<String, String> aoMaps = new HashMap<>();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mtlFile), StandardCharsets.UTF_8)))
+                {
+                    String line;
+                    String currentMaterial = null;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        line = line.trim();
+                        if (line.startsWith("newmtl "))
+                        {
+                            currentMaterial = line.substring(7).trim();
+                        }
+                        else if (line.startsWith("map_ao ") && (currentMaterial != null))
+                        {
+                            aoMaps.put(currentMaterial, line.substring(7).trim());
+                            currentMaterial = null;
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Could not read occlusion for material {}", mtlFile);
+                    // No need to continue here, as the rest of the code will function without ao
+                }
+
+
+                // Iterate through all the materials
+                // Should also only be one, but, ya know how it is
+                for (Mtl mtl : mtls)
+                {
+                    saveTexture(mtl.getMapKd(), "diffuse");
+                    saveTexture(mtl.getBump(), "normal");
+
+                    // Copy occlusion from obj using custom parser
+                    saveTexture(aoMaps.get(mtl.getName()), "occlusion");
+                }
+            }
+        }
     }
 
     private void saveTexture(String originalName, String saveName)
     {
+        // Mtl parsing compatibility
+        if (originalName == null) return;
+
         File inTex = new File(getModelDirectory(), originalName);
-        if (inTex.exists())
+        if (!inTex.exists()) return;
+
+        File outTex = new File(getSupportingFilesDirectory(), saveName + ".png");
+        try
         {
-            File outTex = new File(getSupportingFilesDirectory(), saveName + ".png");
-            try
-            {
-                // Force conversion to PNG.
-                ImageHelper.read(inTex).save("png", outTex);
-            }
-            catch (IOException e)
-            {
-                LOG.error("Could not copy {} texture.", saveName);
-            }
+            // Force conversion to PNG.
+            ImageHelper.read(inTex).save("png", outTex);
+        }
+        catch (IOException e)
+        {
+            LOG.error("Could not copy {} texture.", saveName);
         }
     }
 
@@ -2017,6 +1709,369 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         for (Observer<ViewSetChange> observer : observers)
         {
             observer.update(change);
+        }
+    }
+
+    public static final class Builder
+    {
+        private final ViewSet result;
+        private final Map<Integer, File> maskMap;
+        private boolean needsClipPlanes = true;
+        private Matrix4 cameraPose;
+        private int cameraProjectionIndex = 0;
+        private int lightIndex = 0;
+        private File imageFile;
+        private File maskFile;
+        private boolean hasUnsupportedCorrections;
+
+        /**
+         * Uses root directory as supporting files directory by default
+         *
+         * @param rootDirectory
+         * @param initialCapacity
+         */
+        Builder(File rootDirectory, int initialCapacity)
+        {
+            this(rootDirectory, rootDirectory, initialCapacity);
+        }
+
+        Builder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
+        {
+            result = new ViewSet(initialCapacity);
+            result.setRootDirectory(rootDirectory);
+            result.setSupportingFilesDirectory(supportingFilesDirectory);
+
+            maskMap = new HashMap<>(initialCapacity);
+
+            // Initialize settings with defaults.
+            DefaultSettings.applyProjectDefaults(result.projectSettings);
+        }
+
+        /**
+         * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
+         * Assumes that the object must lie between all of the cameras in the file.
+         *
+         * @param viewSetDataList The list of camera data.
+         * @return A far plane estimate.
+         */
+        private static float findFarPlane(Iterable<ViewSetData> viewSetDataList)
+        {
+            float minX = Float.POSITIVE_INFINITY;
+            float minY = Float.POSITIVE_INFINITY;
+            float minZ = Float.POSITIVE_INFINITY;
+            float maxX = Float.NEGATIVE_INFINITY;
+            float maxY = Float.NEGATIVE_INFINITY;
+            float maxZ = Float.NEGATIVE_INFINITY;
+
+            for (ViewSetData aviewSetData : viewSetDataList)
+            {
+                Vector4 position = aviewSetData.cameraPoseInv.getColumn(3);
+                minX = Math.min(minX, position.x);
+                minY = Math.min(minY, position.y);
+                minZ = Math.min(minZ, position.z);
+                maxX = Math.max(maxX, position.x);
+                maxY = Math.max(maxY, position.y);
+                maxZ = Math.max(maxZ, position.z);
+            }
+
+            // Corner-to-corner
+            float dX = maxX - minX;
+            float dY = maxY - minY;
+            float dZ = maxZ - minZ;
+            return (float) Math.sqrt((dX * dX) + (dY * dY) + (dZ * dZ));
+
+            // Longest Side approach
+//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+        }
+
+        public Builder setCurrentCameraPose(Matrix4 cameraPose)
+        {
+            this.cameraPose = cameraPose;
+            return this;
+        }
+
+        public Builder setCurrentCameraProjectionIndex(int cameraProjectionIndex)
+        {
+            this.cameraProjectionIndex = cameraProjectionIndex;
+            return this;
+        }
+
+        public Builder setCurrentLightIndex(int lightIndex)
+        {
+            this.lightIndex = lightIndex;
+            return this;
+        }
+
+        public Builder setCurrentImageFile(File imageFile)
+        {
+            this.imageFile = imageFile;
+            return this;
+        }
+
+        public Builder setCurrentMaskFile(File maskFile)
+        {
+            this.maskFile = maskFile;
+            return this;
+        }
+
+        public Builder commitCurrentCameraPose()
+        {
+            if ((maskFile == null) && !maskMap.isEmpty())
+            {
+                // We haven't committed this view yet, so size of the view set data will just be the current index.
+                maskFile = maskMap.get(result.viewSetDataCollection.getViewSetData().size());
+            }
+
+            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f),
+                cameraProjectionIndex, lightIndex, result.viewSetDataCollection.getViewSetData().size(), imageFile, maskFile, new ViewRMSE());
+            result.viewSetDataCollection.getViewSetData().add(currentCamera);
+
+            // Reset maskFile to null for the next camera pose.
+            maskFile = null;
+
+            return this;
+        }
+
+        public Builder commitCurrentCameraPoseAsDisabled()
+        {
+            if (maskFile == null)
+            {
+                maskFile = maskMap.get(result.viewSetDataCollection.getViewSetData().size());
+            }
+            ViewSetData currentCamera = new ViewSetData(cameraPose, cameraPose.quickInverse(0.002f), cameraProjectionIndex,
+                lightIndex, result.viewSetDataCollection.getViewSetData().size() + result.disabledViewSetDataCollection.getViewSetData().size(),
+                imageFile, maskFile, new ViewRMSE());
+            currentCamera.isDisabled = true;
+            result.disabledViewSetDataCollection.getViewSetData().add(currentCamera);
+            return this;
+        }
+
+        public Builder disableCamerasByImageFilename(Iterable<File> disabledImageFiles)
+        {
+            for (File f : disabledImageFiles)
+            {
+                int index = result.viewSetDataCollection.getImageFiles().indexOf(f);
+                if (index != -1)
+                {
+                    result.viewSetDataCollection.getViewSetData().remove(index);
+                }
+                int disabledIndex = result.disabledViewSetDataCollection.getImageFiles().indexOf(f);
+                if (disabledIndex != -1)
+                {
+                    result.disabledViewSetDataCollection.getViewSetData().remove(disabledIndex);
+                }
+            }
+            // Reassign view indices for smaller data set.
+            for (int i = 0; i < result.viewSetDataCollection.getViewSetData().size(); ++i)
+            {
+                result.viewSetDataCollection.getViewSetData().get(i).viewIndex = i;
+            }
+
+            return this;
+        }
+
+        public Builder addCameraProjection(Projection projection)
+        {
+            result.cameraProjectionList.add(projection);
+            return this;
+        }
+
+        public int getNextCameraProjectionIndex()
+        {
+            return result.cameraProjectionList.size();
+        }
+
+        public Builder addLight(Vector3 position, Vector3 intensity)
+        {
+            result.lightPositionList.add(position);
+            result.lightIntensityList.add(intensity);
+            return this;
+        }
+
+        public int getNextLightIndex()
+        {
+            return result.lightPositionList.size();
+        }
+
+        public Builder setUUID(UUID uuid)
+        {
+            result.uuid = uuid;
+            return this;
+        }
+
+        public Builder setRecommendedClipPlanes(float near, float far)
+        {
+            result.recommendedNearPlane = near;
+            result.recommendedFarPlane = far;
+            needsClipPlanes = false;
+            return this;
+        }
+
+        public Builder setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+        {
+            result.setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+            return this;
+        }
+
+        /**
+         * Sets the geometry file associated with this view set.
+         *
+         * @param geometryFile The geometry file.
+         */
+        public Builder setGeometryFile(File geometryFile)
+        {
+            result.geometryFile = geometryFile;
+            return this;
+        }
+
+        /**
+         * Sets the name of the geometry file associated with this view set relative to the root directory.
+         *
+         * @param geometryFileName The name of the geometry file.
+         */
+        public Builder setGeometryFileName(String geometryFileName)
+        {
+            result.geometryFile = (geometryFileName == null) ? null : result.rootDirectory
+                .toPath().resolve(geometryFileName).toFile();
+            return this;
+        }
+
+        /**
+         * Sets the full res image directory associated with this view set.
+         *
+         * @param fullResImageDirectory The full res image directory.
+         */
+        public Builder setFullResImageDirectory(File fullResImageDirectory)
+        {
+            result.setFullResImageDirectory(fullResImageDirectory);
+            return this;
+        }
+
+        /**
+         * Sets the name of the full res image directory associated with this view set relative to the root directory.
+         *
+         * @param relativePath The path to the full res images.
+         */
+        public Builder setRelativeFullResImagePathName(String relativePath)
+        {
+            result.setRelativeFullResImagePathName(relativePath);
+            return this;
+        }
+
+        /**
+         * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
+         *
+         * @param relativePath The file path of the supporting files directory.
+         */
+        public Builder setRelativeSupportingFilesPathName(String relativePath)
+        {
+            result.supportingFilesDirectory = result.rootDirectory.toPath().resolve(relativePath).toFile();
+            return this;
+        }
+
+        public Builder setRelativePreviewImagePathName(String relativePath)
+        {
+            result.setRelativePreviewImagePathName(relativePath);
+            return this;
+        }
+
+        public Builder setOrientationViewIndex(int viewIndex)
+        {
+            result.orientationViewIndex = viewIndex;
+            return this;
+        }
+
+        public Builder setOrientationViewName(String viewName)
+        {
+            result.setOrientationView(viewName);
+            return this;
+        }
+
+        public Builder setOrientationViewRotation(double rotation)
+        {
+            result.setOrientationViewRotationDegrees(rotation);
+            return this;
+        }
+
+        public Builder setOrientationMatrix(Matrix3 matrix)
+        {
+            result.setOrientationMatrix(matrix);
+            return this;
+        }
+
+        public Builder setObjectTranslation(Vector3 objectTranslation)
+        {
+            result.setObjectTranslation(objectTranslation);
+            return this;
+        }
+
+        public Builder setObjectScale(float objectScale)
+        {
+            result.setObjectScale(objectScale);
+            return this;
+        }
+
+        public Builder setMasksDirectory(File file)
+        {
+            result.setMasksDirectory(file);
+            return this;
+        }
+
+        public Builder addMask(int camId, String imgFilename)
+        {
+            maskMap.put(camId, new File(imgFilename));
+            return this;
+        }
+
+        public Builder applySettings(ReadonlyGeneralSettingsModel settings)
+        {
+            result.getProjectSettings().copyFrom(settings);
+            return this;
+        }
+
+        public Builder addResourceFiles(Map<String, File> resourceMap)
+        {
+            result.resourceMap.putAll(resourceMap);
+            return this;
+        }
+
+        public Builder setHasUnsupportedCorrections(boolean hasUnsupportedCorrections)
+        {
+            this.hasUnsupportedCorrections = hasUnsupportedCorrections;
+            return this;
+        }
+
+        public ViewSet finish()
+        {
+            if (needsClipPlanes)
+            {
+                result.recommendedFarPlane = findFarPlane(result.viewSetDataCollection.getViewSetData());
+                result.recommendedNearPlane = result.getRecommendedFarPlane() / 32.0f;
+                LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
+            }
+
+            // Fill with default lights if not specified
+            int maxLightIndex = result.viewSetDataCollection.getViewSetData().stream().mapToInt(data -> data.lightIndex).max().orElse(1);
+            for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
+            {
+                result.lightPositionList.add(Vector3.ZERO);
+                result.lightIntensityList.add(Vector3.ZERO);
+            }
+
+            if ((result.geometryFile == null) && (result.rootDirectory != null))
+            {
+                setGeometryFileName("manifold.obj"); // Used by some really old datasets
+            }
+
+            if (result.getSupportingFilesDirectory() != null)
+            {
+                // Make sure the supporting files directory exists
+                result.getSupportingFilesDirectory().mkdirs();
+            }
+
+            result.hasUnsupportedCorrections = this.hasUnsupportedCorrections;
+
+            return result;
         }
     }
 }
