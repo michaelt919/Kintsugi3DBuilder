@@ -23,21 +23,19 @@ import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class SpecularFitSerializer
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitSerializer.class);
     private static final Pattern CSV_PATTERN = Pattern.compile("\\s*,+\\s*");
+    private static final Pattern SIZE_PATTERN = Pattern.compile("-Y (\\d+) \\+X (\\d+)");
 
     private SpecularFitSerializer()
     {
@@ -50,12 +48,12 @@ public final class SpecularFitSerializer
             BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             int[] weightDataPacked = new int[width * height];
 
-            for (int p = 0; p < width * height; p++)
+            for (int p = 0; p < (width * height); p++)
             {
-                float weight = (float)basisWeights.getWeight(b, p);
+                float weight = (float) basisWeights.getWeight(b, p);
 
                 // Flip vertically
-                int dataBufferIndex = p % width + width * (height - p / width - 1);
+                int dataBufferIndex = (p % width) + (width * (height - (p / width) - 1));
                 weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
             }
 
@@ -63,23 +61,7 @@ public final class SpecularFitSerializer
 
             try
             {
-                ImageIO.write(weightImg, "PNG",
-                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
-            }
-            catch (IOException e)
-            {
-                LOG.error("An error occurred saving weight images:", e);
-            }
-        }
-    }
-    public static void saveWeightImages(Texture3D<?> basisWeights, File outputDirectory)
-    {
-        for (int b = 0; b < basisWeights.getDepth(); b++)
-        {
-            try
-            {
-                basisWeights.getColorTextureReader(b).saveToFile("PNG",
-                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
+                ImageIO.write(weightImg, "PNG", new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
             }
             catch (IOException e)
             {
@@ -88,12 +70,25 @@ public final class SpecularFitSerializer
         }
     }
 
-    public static void serializeBasisFunctions(
-        int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
+    public static void saveWeightImages(Texture3D<?> basisWeights, File outputDirectory)
+    {
+        for (int b = 0; b < basisWeights.getDepth(); b++)
+        {
+            try
+            {
+                basisWeights.getColorTextureReader(b).saveToFile("PNG", new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
+            }
+            catch (IOException e)
+            {
+                LOG.error("An error occurred saving weight images:", e);
+            }
+        }
+    }
+
+    public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
     {
         // Text file format
-        try (PrintStream out = new PrintStream(new File(outputDirectory,
-            filenameOverride != null ? filenameOverride : TextureResources.getBasisFunctionsFilename()), StandardCharsets.UTF_8))
+        try (PrintStream out = new PrintStream(new File(outputDirectory, (filenameOverride != null) ? filenameOverride : TextureResources.getBasisFunctionsFilename()), StandardCharsets.UTF_8))
         {
             for (int b = 0; b < basisCount; b++)
             {
@@ -138,11 +133,11 @@ public final class SpecularFitSerializer
     /**
      * Deserializes basis functions only.
      * Does not deserialize weights (which can be loaded as images) or diffuse basis colors (which should be re-fit, or a diffuse texture can be used instead).
+     *
      * @param priorSolutionDirectory
      * @return An object containing the red, green, and blue basis functions.
      */
-    public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory)
-        throws IOException
+    public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory) throws IOException
     {
         File basisFile = new File(priorSolutionDirectory, TextureResources.getBasisFunctionsFilename());
 
@@ -268,14 +263,208 @@ public final class SpecularFitSerializer
                     diffuseCount++;
                 }
 
-                return new SimpleMaterialBasis(
-                    diffuseBasis,
-                    specularRedBasis, specularGreenBasis, specularBlueBasis);
+                return new SimpleMaterialBasis(diffuseBasis, specularRedBasis, specularGreenBasis, specularBlueBasis);
             }
         }
         else
         {
             return null;
+        }
+    }
+
+    /// Serializes basis functions into an HDR image.
+    /// DOES NOT SERIALIZE DIFFUSE COLORS!
+    ///
+    /// @param basisCount                       the number of basis functions
+    /// @param microfacetDistributionResolution the resolution of basis functions
+    /// @param basis                            the material basis in which to evaluate specular colors from
+    /// @param outputDirectory                  where to put the file
+    /// @param filenameOverride                 give the file a different name
+    public static void serializeHDRI(int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
+    {
+        // Calculate RGBE bytes
+        byte[] rgbe = new byte[basisCount * microfacetDistributionResolution * 4];
+        for (int b = 0; b < basisCount; ++b)
+        {
+            for (int m = 0; m < microfacetDistributionResolution; ++m)
+            {
+                System.arraycopy(doubleToRgbe(basis.evaluateSpecularRed(b, m), basis.evaluateSpecularGreen(b, m), basis.evaluateSpecularBlue(b, m)), 0, rgbe, ((b * m) + m) * 4, 4);
+            }
+        }
+
+        // Write the bytes out to the HDRI
+        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outputDirectory, Objects.requireNonNullElse(filenameOverride, "basisFunctions.hdr")))))
+        {
+            // Write HDR header
+            out.write("#?RADIANCE\n".getBytes(StandardCharsets.US_ASCII));
+            out.write("FORMAT=32-bit_rle_rgbe\n\n".getBytes(StandardCharsets.US_ASCII));
+            out.write(String.format("-Y %d +X %d%n", basisCount, microfacetDistributionResolution).getBytes(StandardCharsets.US_ASCII));
+
+            // Write RGBE data
+            out.write(rgbe);
+        }
+        catch (IOException e)
+        {
+
+            LOG.error("An error occurred saving basis functions:", e);
+        }
+    }
+
+    private static byte[] doubleToRgbe(double r, double g, double b)
+    {
+        // Find the max color channel for compression
+        double maxVal = Math.max(r, Math.max(g, b));
+        if (maxVal < 1.0e-32)
+        {
+            return new byte[4];
+        }
+
+        byte[] rgbe = new byte[4];
+
+        // Find the scalar needed to compress values to 8-bit
+        FracExp fracExp = frexp(maxVal);
+        double scale = (fracExp.fraction * 0x100) / maxVal;
+
+        // Scale all values to RGB 8-bit color channels
+        rgbe[0] = (byte) (r * scale);
+        rgbe[1] = (byte) (g * scale);
+        rgbe[2] = (byte) (b * scale);
+        rgbe[3] = (byte) (fracExp.exponent + 0x80); // Standard Radiance dynamic bias offset
+
+        return rgbe;
+    }
+
+    // Fraction and exponent
+    private static FracExp frexp(double value)
+    {
+        if (value == 0)
+        {
+            return new FracExp();
+        }
+
+        // The base-2 exponent factor
+        int exp = (int) Math.floor(Math.log(value) / Math.log(2)) + 1;
+        return new FracExp(value / Math.pow(2, exp), exp);
+    }
+
+    /**
+     * Deserializes basis functions packed into an HDRI
+     * Does not deserialize weights, diffuse basis colors, or albedo colors
+     *
+     * @param priorSolutionDirectory
+     * @return An object containing the red, green, and blue basis functions.
+     */
+    public static MaterialBasis deserializeHDRI(File priorSolutionDirectory) throws IOException
+    {
+        File basisFile = new File(priorSolutionDirectory, "basisFunctions.hdr");
+
+        if (!basisFile.exists())
+        {
+            return null;
+        }
+
+        int microfacetDistributionResolution = 0;
+        int basisCount = 0;
+        byte[] rgbe;
+
+        // Load data file data into RAM first
+        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(basisFile)))
+        {
+            StringBuilder builder = new StringBuilder();
+            int buf;
+            boolean done = false;
+
+            // Parse header until size is found
+            while (!done && ((buf = in.read()) != -1))
+            {
+                // Reset string builder after each line
+                if (buf == '\n')
+                {
+                    String line = builder.toString().trim();
+                    builder.setLength(0);
+                    Matcher m = SIZE_PATTERN.matcher(line);
+                    if (m.matches())
+                    {
+                        microfacetDistributionResolution = Integer.parseInt(m.group(2));
+                        basisCount = Integer.parseInt(m.group(1));
+                        // Line after size should always be byte data
+                        done = true;
+                    }
+                }
+                else
+                {
+                    builder.append((char) buf);
+                }
+            }
+
+            // Parse RGBE byte data
+            int index = 0;
+            rgbe = in.readAllBytes();
+        }
+
+        // For final product
+        List<double[]> specularRedBasis = new ArrayList<>();
+        List<double[]> specularGreenBasis = new ArrayList<>();
+        List<double[]> specularBlueBasis = new ArrayList<>();
+
+        // For allocation
+        double[] red = new double[microfacetDistributionResolution];
+        double[] green = new double[microfacetDistributionResolution];
+        double[] blue = new double[microfacetDistributionResolution];
+        byte[] data = new byte[4];
+
+        for (int b = 0; b < basisCount; ++b)
+        {
+            for (int m = 0; m < microfacetDistributionResolution; ++m)
+            {
+                System.arraycopy(rgbe, ((b * m) + m) * 4, data, 0, 4);
+                double[] rgb = rgbeToDouble(data);
+                red[m] = rgb[0];
+                green[m] = rgb[1];
+                blue[m] = rgb[2];
+            }
+            specularRedBasis.add(red);
+            specularGreenBasis.add(green);
+            specularBlueBasis.add(blue);
+        }
+
+        // Default all to black
+        DoubleVector3[] diffuse = new DoubleVector3[basisCount];
+        Arrays.fill(diffuse, DoubleVector3.ZERO);
+
+        return new SimpleMaterialBasis(diffuse, specularRedBasis, specularGreenBasis, specularBlueBasis);
+    }
+
+    private static double[] rgbeToDouble(byte[] rgbe)
+    {
+        double[] rgb = new double[3];
+        // bitwise operation is for "unsigning" bytes
+        if ((rgbe[3] & 0xFF) > 0)
+        { // If exponent is 0, pixel is pure black
+            // 2^(exponent - Radiance bias - 8) or 2^(exp - bias) / 256 to get a range from "0 to 1"
+            double factor = Math.pow(2, (rgbe[3] & 0xFF) - 0x80 - 8);
+            rgb[0] = (rgbe[0] & 0xFF) * factor;
+            rgb[1] = (rgbe[1] & 0xFF) * factor;
+            rgb[2] = (rgbe[2] & 0xFF) * factor;
+        }
+        return rgb;
+    }
+
+    private static class FracExp
+    {
+        final double fraction;
+        final int exponent;
+
+        FracExp()
+        {
+            this.fraction = 0;
+            this.exponent = 0;
+        }
+
+        FracExp(double fraction, int exponent)
+        {
+            this.fraction = fraction;
+            this.exponent = exponent;
         }
     }
 }
