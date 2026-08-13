@@ -605,9 +605,6 @@ public class ImageDetailsController
         selectionBox.setVisible(false);
         displayImage.setImage(originalImage);
         currentImage = originalImage;
-
-        stackPane.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        stackPane.setMaxHeight(Region.USE_COMPUTED_SIZE);
     }
 
     /**
