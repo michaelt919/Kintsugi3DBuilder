@@ -85,9 +85,10 @@ public class ImageDetailsController
         stackPane.widthProperty().addListener((obs, oldWidth, newWidth) ->
         {
             //If there is a image to display
-            if (currentImage != null && displayImage.getViewport() != null)
+            if ((currentImage != null) && (displayImage.getViewport() != null))
             {
-               updateContainerAspect(); //Call function to update aspect ratio
+                updateContainerAspect(); //Call function to update aspect ratio
+                adjustViewport(); //Call function to update viewport
             }
         });
     }
@@ -235,6 +236,75 @@ public class ImageDetailsController
 
         //Set stackPane preferred height to the max allowed height
         stackPane.setPrefHeight(maxAllowedHeight);
+    }
+
+    /**
+     * This method is for adjusting the image when the panel is being resized
+     */
+    private void adjustViewport()
+    {
+        //If there is no image or the stackpane is negative width or height
+        if ((currentImage == null) || (stackPane.getWidth() <= 0) || (stackPane.getHeight() <= 0)) return;
+
+        //Get the image width and height
+        double imgOrigWidth = currentImage.getWidth();
+        double imgOrigHeight = currentImage.getHeight();
+
+        //Check if we are currently zoomed out to the full image.
+        //If so, handles standard letterboxing naturally.
+        boolean isFullyUnzoomed = (currentWidth >= (imgOrigWidth - 0.5)) && (currentHeight >= (imgOrigHeight - 0.5));
+        if (isFullyUnzoomed)
+        {
+            return;
+        }
+
+        //Otherwise, we are zoomed or cropped. Calculate the pane's new aspect ratio.
+        double paneWidth = stackPane.getWidth();
+        double paneHeight = stackPane.getHeight();
+        double paneAspect = paneWidth / paneHeight;
+
+        //Preserve the current center
+        double centerX = currentX + (currentWidth / 2.0);
+        double centerY = currentY + (currentHeight / 2.0);
+
+        //Calculate viewport dimensions to fill the new aspect ratio
+        double newWidth = currentWidth;
+        double newHeight = currentHeight;
+
+        //Pane is wider than current viewport
+        if ((currentWidth / currentHeight) < paneAspect)
+        {
+            //Expand width to fill horizontal space
+            newWidth = currentHeight * paneAspect;
+        }
+        else //Pane is taller than current viewport
+        {
+            //Expand height to fill vertical space
+            newHeight = currentWidth / paneAspect;
+        }
+
+        //Clamp dimensions so they do not exceed the actual image bounds
+        if (newWidth > imgOrigWidth)
+        {
+            newWidth = imgOrigWidth;
+            newHeight = newWidth / paneAspect;
+        }
+        if (newHeight > imgOrigHeight)
+        {
+            newHeight = imgOrigHeight;
+            newWidth = newHeight * paneAspect;
+        }
+
+        //Assign expanded dimensions
+        currentWidth = newWidth;
+        currentHeight = newHeight;
+
+        //Re-center and clamp coordinates
+        currentX = Math.max(0, Math.min(centerX - (currentWidth / 2.0), imgOrigWidth - currentWidth));
+        currentY = Math.max(0, Math.min(centerY - (currentHeight / 2.0), imgOrigHeight - currentHeight));
+
+        //Apply the viewport update
+        displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
     }
 
     /**
@@ -593,7 +663,7 @@ public class ImageDetailsController
      * Method to handle reset button.
      * Sets booleans for crop, pan, and zoom to false.
      * Resets viewport.
-     * Sets selectionBox to invisible, currentImage to originalImage, and stackPane height to computed size.
+     * Sets selectionBox to invisible and currentImage to originalImage.
      */
     @FXML
     public void reset()
