@@ -1886,7 +1886,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
 
             // Use the destination directory as the model directory to use from now on.
-            setGeometryFile(new File(modelDestDir, "model.zip"));
+            setGeometryFile(new File(modelDestDir, getGeometryFile().getName()));
         }
     }
 
