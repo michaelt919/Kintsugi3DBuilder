@@ -155,7 +155,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
 
                     int count = 0;
 
-                    for (int b = 0; b < this.getMaterialBasis().getMaterialCount(); b++)
+                    for (int b = 0; b < this.getMaterialBasis().getMaterialCount() + this.getMaterialBasis().getDisabledMaterialCount(); b++)
                     {
                         count = 0;
                         double sum = 0.0;

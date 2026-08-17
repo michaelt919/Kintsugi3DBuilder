@@ -26,14 +26,16 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     private Texture2D<ContextType> basisMaps;
     private final UniformBuffer<ContextType> diffuseUniformBuffer;
     private int basisCount;
+    private int disabledBasisCount;
     private final int basisResolution;
 
     private MaterialBasis basis;
 
-    public BasisResources(ContextType context, int basisCount, int basisResolution)
+    public BasisResources(ContextType context, int basisCount, int disabledBasisCount, int basisResolution)
     {
         this.context = context;
         this.basisCount = basisCount;
+        this.disabledBasisCount = disabledBasisCount;
         this.basisResolution = basisResolution;
 
         basisMaps = createBasisMaps(context, basisCount, basisResolution);
@@ -75,7 +77,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     @Override
     public int getDisabledBasisCount()
     {
-        return basis.getDisabledMaterialCount();
+        return disabledBasisCount;
     }
 
     @Override
@@ -96,6 +98,10 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         {
             basisCount--;
         }
+        else
+        {
+            disabledBasisCount--;
+        }
         basis.deleteMaterial(name);
         refreshGraphicsResources();
     }
@@ -104,12 +110,14 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     {
         basis.disableMaterial(name);
         basisCount--;
+        disabledBasisCount++;
     }
 
     public void enableBasisMaterial(int name)
     {
         basis.enableMaterial(name);
         basisCount++;
+        disabledBasisCount--;
     }
 
     public void toggleBasisMaterial(int name)
@@ -205,7 +213,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
                 diffuseNativeBuffer.set(b, 3, 1.0f);
             }
 
-            BasisResources<ContextType> resources = new BasisResources<>(context, basis.getMaterialCount(), basis.getSpecularResolution());
+            BasisResources<ContextType> resources = new BasisResources<>(context, basis.getMaterialCount(), basis.getDisabledMaterialCount(), basis.getSpecularResolution());
             resources.basis = basis;
 
             // Send the basis functions to the GPU.

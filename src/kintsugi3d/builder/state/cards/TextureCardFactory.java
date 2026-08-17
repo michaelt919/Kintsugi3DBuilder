@@ -189,7 +189,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
             if (basisResources != null)
             {
-                for (int i = 0; i < basisResources.getBasisCount(); i++)
+                for (int i = 0; i < basisResources.getBasisCount() + basisResources.getDisabledBasisCount(); i++)
                 {
                     textureCards.add(createWeightmapCard(resources, i));
                 }

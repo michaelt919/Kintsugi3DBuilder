@@ -16,11 +16,13 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class BasisWeightResources<ContextType extends Context<ContextType>>
     implements ManagedResource, ReadonlyBasisWeightResources<ContextType>
@@ -105,12 +107,23 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
         weightMask.load(weightMaskBuffer);
 
-        for (int b = 0; b < basisCount; b++)
+        int count = solution.getMaterialBasis().getMaterialCount() + solution.getMaterialBasis().getDisabledMaterialCount();
+        for (int b = 0; b < count; b++)
         {
-            // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
-            for (int p = 0; p < width * height; p++)
+            if (solution.getMaterialBasis().getIsEnabled(b))
             {
-                weightMaskBuffer.set(p, 0, solution.getWeights(p).get(b));
+                // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
+                for (int p = 0; p < width * height; p++)
+                {
+                    weightMaskBuffer.set(p, 0, solution.getWeights(p).get(b));
+                }
+            }
+            else
+            {
+                for (int p = 0; p < width * height; p++)
+                {
+                    weightMaskBuffer.set(p, 0, 0.0);
+                }
             }
 
             // Immediately load the weight map so that we can reuse the local memory buffer.

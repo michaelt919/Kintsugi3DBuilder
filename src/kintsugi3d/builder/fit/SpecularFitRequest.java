@@ -158,6 +158,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
                 BasisSettings basisSettings = settings.getSpecularBasisSettings();
                 ReadonlyBasisResources<ContextType> basisResources = resources.getTextureResources().getBasisResources();
                 basisSettings.setBasisCount(basisResources.getBasisCount());
+                basisSettings.setDisabledBasisCount(basisResources.getDisabledBasisCount());
                 basisSettings.setBasisResolution(basisResources.getBasisResolution());
 
                 // Runs the fit (long process) and then replaces the old material resources / textures

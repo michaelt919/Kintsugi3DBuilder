@@ -16,6 +16,7 @@ import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
 import kintsugi3d.builder.fit.settings.BasisSettings;
@@ -54,7 +55,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
         this.basisResources = basisResources;
         this.basisResourcesOwned = basisResourcesOwned;
         this.basisWeightResources = new BasisWeightResources<>(basisResources.getContext(),
-            textureResolution.width, textureResolution.height, basisResources.getBasisCount());
+            textureResolution.width, textureResolution.height, basisResources.getBasisCount() + basisResources.getDisabledBasisCount());
 
         // Specular roughness / reflectivity module that manages its own resources
         this.roughnessOptimization =
@@ -73,7 +74,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     protected SpecularFitBase(ContextType context, TextureResolution textureResolution,
         BasisSettings basisSettings) throws IOException
     {
-        this(new BasisResources<>(context, basisSettings.getBasisCount(), basisSettings.getBasisResolution()),
+        this(new BasisResources<>(context, basisSettings.getBasisCount(), basisSettings.getDisabledBasisCount(), basisSettings.getBasisResolution()),
             true, textureResolution);
     }
 
@@ -101,7 +102,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
             this.basisWeightResources = BasisWeightResources.loadFromPriorSolution(
                 context, priorSolutionDirectory,
                 roughnessOptimization.getRoughnessTexture().getWidth(), roughnessOptimization.getRoughnessTexture().getHeight(),
-                basisResources.getBasisCount());
+                basisResources.getBasisCount() + basisResources.getDisabledBasisCount());
 
             this.roughnessOptimization.setInputWeights(basisWeightResources);
         }

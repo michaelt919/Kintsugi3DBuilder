@@ -14,6 +14,7 @@ package kintsugi3d.builder.fit.settings;
 public class BasisSettings
 {
     private int basisCount = 8;
+    private int disabledBasisCount = 0;
     private int basisResolution = 90;
     private boolean smithMaskingShadowingEnabled = true;
 
@@ -37,6 +38,23 @@ public class BasisSettings
         else
         {
             this.basisCount = basisCount;
+        }
+    }
+
+    public int getDisabledBasisCount()
+    {
+        return disabledBasisCount;
+    }
+
+    public void setDisabledBasisCount(int disabledBasisCount)
+    {
+        if (basisCount < 0)
+        {
+            throw new IllegalArgumentException("Disabled basis count must not be negative.");
+        }
+        else
+        {
+            this.disabledBasisCount = disabledBasisCount;
         }
     }
 

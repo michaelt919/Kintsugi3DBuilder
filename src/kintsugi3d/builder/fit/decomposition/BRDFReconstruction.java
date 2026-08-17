@@ -51,8 +51,6 @@ public class BRDFReconstruction
 
         LOG.info("DONE!");
 
-        SimpleMaterialBasis newBasis = (SimpleMaterialBasis) solution.getMaterialBasis().copy();
-
         for (int b = 0; b < settings.getBasisCount(); b++)
         {
             int bCopy = b;
@@ -60,7 +58,7 @@ public class BRDFReconstruction
             // Only update if the BRDF has non-zero elements.
             if (brdfSolution.isInstanceNonZero(b))
             {
-                newBasis.setDiffuseAlbedo(b, new DoubleVector3(
+                solution.setDiffuseAlbedo(b, new DoubleVector3(
                         brdfSolution.getTrueConstantTerm(b, 0) * Math.PI,
                         brdfSolution.getTrueConstantTerm(b, 1) * Math.PI,
                         brdfSolution.getTrueConstantTerm(b, 2) * Math.PI));

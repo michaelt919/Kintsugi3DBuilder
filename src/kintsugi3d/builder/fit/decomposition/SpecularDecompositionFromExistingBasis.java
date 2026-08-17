@@ -24,7 +24,7 @@ public class SpecularDecompositionFromExistingBasis extends SpecularDecompositio
 
     public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
     {
-        super(textureResolution, materialBasis.getMaterialCount());
+        super(textureResolution, materialBasis.getMaterialCount() + materialBasis.getDisabledMaterialCount());
         this.diffuseAlbedos = materialBasis.getDiffuseColors();
         this.materialBasis = materialBasis;
     }

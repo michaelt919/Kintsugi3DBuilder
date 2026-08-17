@@ -136,7 +136,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         throws IOException
     {
         return new SpecularFitOptimizable<>(resources,
-            new BasisResources<>(resources.getContext(), basisSettings.getBasisCount(), basisSettings.getBasisResolution()),
+            new BasisResources<>(resources.getContext(), basisSettings.getBasisCount(), basisSettings.getDisabledBasisCount(), basisSettings.getBasisResolution()),
                 true, basisSettings, programFactory, textureResolution, normalOptimizationSettings, includeConstantTerm);
     }
 
@@ -322,6 +322,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         // Reconstruct the basis BRDFs.
         // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
         // Operate in parallel for optimal performance.
+        SimpleMaterialBasis newBasis = (SimpleMaterialBasis) specularDecomposition.getMaterialBasis().copy();
         brdfReconstruction.execute(
             reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
             specularDecomposition, monitor);

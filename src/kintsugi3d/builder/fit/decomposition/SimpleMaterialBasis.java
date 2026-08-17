@@ -96,10 +96,25 @@ public class SimpleMaterialBasis implements MaterialBasis
         this.disabledBasisList.forEach(b -> b.setEnabled(false));
     }
 
+    public int getName(int index)
+    {
+        return getAllBasisData().get(index).getName();
+    }
+
     @Override
     public String getDisplayName(int cardIndex)
     {
         return Integer.toString(getAllBasisData().get(cardIndex).getName());
+    }
+
+    public List<BasisData> getEnabledBasisList()
+    {
+        return List.copyOf(this.basisList);
+    }
+
+    public List<BasisData> getCombinedBasisList()
+    {
+        return List.copyOf(getAllBasisData());
     }
 
     private List<BasisData> getAllBasisData()
