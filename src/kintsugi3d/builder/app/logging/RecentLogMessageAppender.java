@@ -30,6 +30,7 @@ import org.slf4j.event.Level;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Plugin(
@@ -44,7 +45,7 @@ public class RecentLogMessageAppender extends AbstractAppender
     private static final int MESSAGE_TRUNC_SIZE = 10;
     private static RecentLogMessageAppender INSTANCE;
     private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
-    private final List<LogMessageListener> listeners = new ArrayList<>();
+    private final Collection<LogMessageListener> listeners = new ArrayList<>(0);
 
     protected RecentLogMessageAppender(String name, Filter filter, PatternLayout layout)
     {
@@ -88,13 +89,24 @@ public class RecentLogMessageAppender extends AbstractAppender
             if (messages.size() >= MAX_MESSAGES)
             {
                 // Removing from the ObservableList needs to happen on the JavaFX thread.
-                Platform.runLater(() ->
+                try
                 {
-                    synchronized (messages)
+                    Platform.runLater(() ->
+                    {
+                        synchronized (messages)
+                        {
+                            messages.remove(0, MESSAGE_TRUNC_SIZE);
+                        }
+                    });
+                }
+                // TODO: Duktape fix to get around hardcoded JavaFX
+                catch (IllegalStateException e)
+                {
+                    if (messages.size() >= MAX_MESSAGES)
                     {
                         messages.remove(0, MESSAGE_TRUNC_SIZE);
                     }
-                });
+                }
             }
         }
 

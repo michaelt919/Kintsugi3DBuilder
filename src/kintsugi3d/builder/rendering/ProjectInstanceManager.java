@@ -741,4 +741,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
         }
     }
+
+    /**
+     * Work around for use in testing only
+     */
+    public void setTestingViewSet(ViewSet viewSet)
+    {
+        this.loadedViewSet = viewSet;
+    }
 }

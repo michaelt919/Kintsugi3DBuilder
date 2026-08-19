@@ -30,8 +30,19 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class IOModel
+public final class IOModel
 {
+    private static final IOModel INSTANCE = new IOModel();
+
+    public static IOModel getInstance()
+    {
+        return INSTANCE;
+    }
+
+    private IOModel()
+    {
+    }
+
     private static class AggregateProgressMonitor implements ProgressMonitor
     {
         private final Collection<ProgressMonitor> subMonitors = new ArrayList<>(8);

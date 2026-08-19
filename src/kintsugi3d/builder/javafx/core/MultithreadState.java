@@ -67,7 +67,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         sceneViewportModel = new SceneViewportModelImpl();
         mainCanvasModel = new CanvasModelImpl();
         canvasListModel = new CanvasListModelImpl();
-        ioModel = new IOModel();
+        ioModel = IOModel.getInstance();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
 
         // all methods are either read-only or inherently asynchronous, so no multithread wrapping needed

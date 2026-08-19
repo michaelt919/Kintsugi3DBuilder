@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
@@ -139,7 +140,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             try (BasisImageCreator<ContextType> basisImageCreator =
                      new BasisImageCreator<>(getContext(), getBasisResources().getBasisResolution()))
             {
-                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                ViewSet viewSet = IOModel.getInstance().getLoadedViewSet();
                 basisImageCreator.createImages(this, viewSet.getThumbnailImageDirectory());
             }
             catch (IOException e)
