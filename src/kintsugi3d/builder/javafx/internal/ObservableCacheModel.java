@@ -13,7 +13,10 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Alert;
@@ -27,7 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 
@@ -99,7 +105,7 @@ public class ObservableCacheModel extends CacheModelBase
     @Override
     protected void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress)
     {
-        this.cacheSizeCalcInProgress.set(cacheSizeCalcInProgress);
+        Platform.runLater(() -> this.cacheSizeCalcInProgress.set(cacheSizeCalcInProgress));
     }
 
     @Override
