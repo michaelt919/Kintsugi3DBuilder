@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -24,13 +24,13 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
-import kintsugi3d.builder.core.RecentProjects;
 
 import java.io.File;
 import java.util.List;
@@ -133,12 +133,14 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     private static String getModelNameFromSelection(String selectionAsString)
     {
         //TODO: need to revisit this when formatting of model selection choice box changes
-        if (selectionAsString.endsWith(NO_MODEL_NAME_MSG))
+        if (selectionAsString == null || selectionAsString.endsWith(NO_MODEL_NAME_MSG))
         {
             return "";
         }
-
-        return selectionAsString.substring(selectionAsString.indexOf(' ') + SPACER.length());
+        else
+        {
+            return selectionAsString.substring(selectionAsString.indexOf(' ') + SPACER.length());
+        }
     }
 
     @FXML

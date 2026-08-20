@@ -57,13 +57,16 @@ public class ObservableCardsModel implements CardsModel
 
         cardsList.addListener((ListChangeListener<? super ProjectDataCard>) change ->
         {
-            // Clear selection / expansion for a card when it is removed.
-            if (change.wasRemoved())
+            while (change.next())
             {
-                for (var removedItem : change.getRemoved())
+                // Clear selection / expansion for a card when it is removed.
+                if (change.wasRemoved())
                 {
-                    selectedCardsModel.clearSelection(removedItem.getCardId());
-                    expandedCardsModel.clearSelection(removedItem.getCardId());
+                    for (var removedItem : change.getRemoved())
+                    {
+                        selectedCardsModel.clearSelection(removedItem.getCardId());
+                        expandedCardsModel.clearSelection(removedItem.getCardId());
+                    }
                 }
             }
         });
