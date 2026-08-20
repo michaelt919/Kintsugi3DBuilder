@@ -155,6 +155,9 @@ public class SmokeTest
     @BeforeEach
     void setup() throws IOException, URISyntaxException
     {
+        // Commented out code comes from other test class and could probably be used to do a from scratch test in
+        // addition to the current Metashape test.
+
         // Initialize testing objects
         progressMonitor = new ProgressMonitorImpl();
         observerFailure = new AtomicReference<>();
@@ -178,11 +181,11 @@ public class SmokeTest
         context.getState().enableDepthTest();
 
         // Create geometry
-        Potato potato = new Potato(50, 0.75f, 0.1f, 250000);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        potato.writeToStream(new PrintStream(out, false, StandardCharsets.UTF_8));
-        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        potatoGeometry = VertexGeometry.createFromOBJStream(in);
+//        Potato potato = new Potato(50, 0.75f, 0.1f, 250000);
+//        ByteArrayOutputStream out = new ByteArrayOutputStream();
+//        potato.writeToStream(new PrintStream(out, false, StandardCharsets.UTF_8));
+//        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+//        potatoGeometry = VertexGeometry.createFromOBJStream(in);
 
         // Create colors
         setupColor = program -> program.setUniform("diffuseColor", new Vector3(1.0f, 0.8f, 0.2f));
@@ -222,6 +225,12 @@ public class SmokeTest
                 System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
             },
             "Rodin_metashape");
+        int numLoadedCameras = viewSet.getCombinedCameraPoseCount();
+        assertEquals(397, numLoadedCameras);
+        int numEnabledCameras = viewSet.getEnabledCameraPoseCount();
+        assertEquals(397, numLoadedCameras);
+        int numDisabledCameras = viewSet.getDisabledCameraPoseCount();
+        assertEquals(0, numDisabledCameras);
     }
 
     private void testFitMetashape(String cameras, String geometry, String imageDirectory,
@@ -248,6 +257,7 @@ public class SmokeTest
             .create())
         {
             resources.calibrateLightIntensities();
+            viewSet = resources.getViewSet();
             testFit(resources, validation, testName);
         }
     }
