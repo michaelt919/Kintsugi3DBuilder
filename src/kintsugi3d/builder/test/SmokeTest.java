@@ -43,6 +43,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,11 +57,9 @@ public class SmokeTest
     private ViewSet tonemappedViewSet;
     private Context context;
     private VertexGeometry potatoGeometry;
-//    private BiConsumer<ColorAppearanceRMSE, Float> validationLinear;
-//    private BiConsumer<ColorAppearanceRMSE, Float> validationSRGB;
-//    private BiConsumer<ColorAppearanceRMSE, Float> validationEncoded;
     private Consumer<Program<OpenGLContext>> setupColor;
     private Consumer<Program<OpenGLContext>> setupMetallic;
+    private AtomicReference<Throwable> observerFailure;
 
     private static class ProgressMonitorImpl implements ProgressMonitor
     {
@@ -139,10 +138,26 @@ public class SmokeTest
         }
     }
 
+    private class TestLogListener extends LogMessageListener
+    {
+
+        @Override
+        public void newLogMessage(LogMessage logMessage)
+        {
+//            assertNotSame(Level.ERROR, logMessage.getLogLevel());
+            if (logMessage.getLogLevel() == Level.ERROR)
+            {
+                observerFailure.set(new AssertionError("Error found in log message!"));
+            }
+        }
+    }
+
     @BeforeEach
     void setup() throws IOException, URISyntaxException
     {
+        // Initialize testing objects
         progressMonitor = new ProgressMonitorImpl();
+        observerFailure = new AtomicReference<>();
 
         // Create directories
         ViewSetDirectories directories = new ViewSetDirectories();
@@ -169,11 +184,6 @@ public class SmokeTest
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         potatoGeometry = VertexGeometry.createFromOBJStream(in);
 
-        // Validations
-//        validationLinear = (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedLinear(), 0.001);
-//        validationSRGB = (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedSRGB(), 0.001);
-//        validationEncoded = (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getEncodedGroundTruth(), 0.005);
-
         // Create colors
         setupColor = program -> program.setUniform("diffuseColor", new Vector3(1.0f, 0.8f, 0.2f));
         setupMetallic = program ->
@@ -186,6 +196,12 @@ public class SmokeTest
     @AfterEach
     void tearDown()
     {
+        // Check whether the log contained any errors
+        Throwable failure = observerFailure.get();
+        if (failure != null)
+        {
+            fail(failure.getMessage());
+        }
         context.close();
     }
 
@@ -193,14 +209,7 @@ public class SmokeTest
     @DisplayName("Rodin fit, from Metashape export")
     void testFit_rodinMetashape() throws Exception
     {
-        LogMessageListener logListener = new LogMessageListener()
-        {
-            @Override
-            public void newLogMessage(LogMessage logMessage)
-            {
-                assertNotSame(Level.ERROR, logMessage.getLogLevel());
-            }
-        };
+        LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
         testFitMetashape(
             "Rodin/Mia_001239_Rodin_399cameras.xml",
@@ -211,9 +220,6 @@ public class SmokeTest
                 System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
                 System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
                 System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
-//                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
-//                assertTrue (rmse.getNormalizedSRGB() < 0.1);
-//                assertTrue (rmse.getNormalizedLinear() < 0.1);
             },
             "Rodin_metashape");
     }
@@ -227,7 +233,7 @@ public class SmokeTest
         // These are set since they otherwise are set in JavaFX related code
         IOModel.getInstance().setImageLoadOptionsModel(imageLoadOptions);
         ProjectInstanceManager mockIOHandler = new ProjectInstanceManager<>(context);
-        mockIOHandler.setTestingViewSet(viewSet);
+        mockIOHandler.setTestingViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
         IOModel.getInstance().setLoadingHandler(mockIOHandler);
 
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
