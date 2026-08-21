@@ -110,6 +110,7 @@ public class CardTabController
                 filePathHBox.setManaged(false);
             }
         });
+
         /*
         creates double that has the total pixel space between middle of the window and
         the end of the window that is NOT covered by the buttons. Using that information
@@ -123,7 +124,8 @@ public class CardTabController
         filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
     }
 
-    public void initialize(){
+    public void initialize()
+    {
         scrollpane.heightProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
         scrollpane.widthProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
     }

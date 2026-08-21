@@ -120,6 +120,7 @@ public class TextureCardFactory implements ProjectDataCardFactory
             // Default to icon if thumbnail isn't found
             thumbnailPath = MainApplication.ICON_PATH;
         }
+
         try
         {
             IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
@@ -133,13 +134,6 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 put("Purpose", purpose);
             }}
             , List.of(
-                // this was causing duplicated buttons
-//                Map.of(
-//                "View Texture", () -> Global.state().getUserShaderModel().setUserShader(shader),
-//                "Send to Carousel", () ->
-//                {
-//                    Global.state().getCarouselModel().addToCarousel(shader);
-//                }),
                 Map.of(
                     "Refresh Texture", () -> refreshTexture(key, weightmapIndex),
                     "Replace Texture...", () -> replaceTexture(key, weightmapIndex)
@@ -176,7 +170,11 @@ public class TextureCardFactory implements ProjectDataCardFactory
                 {
                     TextureDetails key = entry.getKey();
                     Texture2D<?> texture = entry.getValue();
-                    textureCards.add(createSimpleTextureCard(texture, key));
+                    ProjectDataCard card = createSimpleTextureCard(texture, key);
+                    if (card != null)
+                    {
+                        textureCards.add(card);
+                    }
                 }
             }
 
@@ -185,7 +183,11 @@ public class TextureCardFactory implements ProjectDataCardFactory
             {
                 for (int i = 0; i < basisResources.getBasisCount(); i++)
                 {
-                    textureCards.add(createWeightmapCard(resources, i));
+                    ProjectDataCard card = createWeightmapCard(resources, i);
+                    if (card != null)
+                    {
+                        textureCards.add(card);
+                    }
                 }
             }
         }

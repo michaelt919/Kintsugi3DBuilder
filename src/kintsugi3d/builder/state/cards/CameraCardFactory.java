@@ -94,10 +94,12 @@ public class CameraCardFactory implements ProjectDataCardFactory
         lastUsedCardsModel = cardsModel;
         List<ProjectDataCard> cardsList = IntStream.range(0, viewSet.getEnabledCameraPoseCount())
             .mapToObj(i -> createCard(cardsModel, i, viewSet.getViewSetData()))
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
         // Make sure to also display disabled cards
         List<ProjectDataCard> disabledCardsList = IntStream.range(0, viewSet.getDisabledCameraPoseCount())
             .mapToObj(i -> createCard(cardsModel, i, viewSet.getDisabledViewSetData()))
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
         cardsList.addAll(disabledCardsList);
         cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());

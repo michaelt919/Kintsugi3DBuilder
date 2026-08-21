@@ -26,10 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -120,6 +117,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
             {
                 return IntStream.range(0, basisResources.getBasisCount())
                     .mapToObj(i -> createCard(cardsModel, resources, i))
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toUnmodifiableList());
             }
         }
