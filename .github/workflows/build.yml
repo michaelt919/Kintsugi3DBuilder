@@ -54,7 +54,7 @@ jobs:
       - name: Install NSIS
         if: matrix.os == 'windows-latest'
         run: |
-          choco install nsis -y
+          winget install NSIS.NSIS
 
       - name: Maven install lifecycle
         run: mvn --batch-mode --update-snapshots install
