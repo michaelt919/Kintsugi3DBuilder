@@ -14,15 +14,16 @@ jobs:
   build:
     name: Build ${{ matrix.os }} distributions
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       matrix:
         include:
           - os: windows-latest
-            artifact: *setup.exe
+            artifact: '*setup.exe'
             
           - os: macos-latest
-            artifact: *macos.dmg
-        
+            artifact: '*macos.dmg'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
