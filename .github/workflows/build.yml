@@ -52,16 +52,23 @@ jobs:
           path: ${{ steps.build-dir.outputs.BUILD_DIR }}/*.zip
 
       - name: Install NSIS
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && github.ref_type == 'tag'
         run: |
           winget install NSIS.NSIS --silent --accept-source-agreements --accept-package-agreements
           echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
 
       - name: Maven install lifecycle
+        if: github.ref_type == 'tag'
         run: mvn --batch-mode --update-snapshots install
 
       - name: Upload release
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os }}
-          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/${{ matrix.artifact }}
+        shell: bash
+        if: github.ref_type == 'tag'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release upload ${{ github.ref_name }} ${{ steps.build-dir.outputs.BUILD_DIR }}/${{ matrix.artifact }} --clobber
+          else
+            gh release create ${{ github.ref_name }} ${{ steps.build-dir.outputs.BUILD_DIR }}/${{ matrix.artifact }} -t "${{ github.ref_name }}" -F RELEASE.md
+          fi
