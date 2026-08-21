@@ -55,6 +55,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           winget install NSIS.NSIS --silent --accept-source-agreements --accept-package-agreements
+          echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
 
       - name: Maven install lifecycle
         run: mvn --batch-mode --update-snapshots install
