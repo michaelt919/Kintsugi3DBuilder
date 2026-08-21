@@ -40,6 +40,7 @@ jobs:
 
       - name: Store build directory
         id: build-dir
+        shell: bash
         run: |
           BUILD_DIR=$(mvn help:evaluate -Dexpression=project.build.directory -q -DforceStdout)
           echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_OUTPUT
@@ -47,5 +48,14 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: ${{ matrix.os }}.zip
+          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/*.zip
+
+      - name: Maven install lifecycle
+        run: mvn --batch-mode --update-snapshots install
+
+      - name: Upload release
+        uses: actions/upload-artifact@v4
+        with:
           name: ${{ matrix.os }}
-          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/${{ matrix.artifact }}
+          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/{{ matrix.artifact }}
