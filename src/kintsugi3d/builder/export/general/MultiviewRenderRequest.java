@@ -11,10 +11,7 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
@@ -61,23 +58,24 @@ class MultiviewRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            for (int i = 0; i < resources.getViewSet().getCombinedCameraPoseCount(); i++)
+            int viewIndex = 0;
+            for (ViewData view : renderable.getViewSet().getViewSetData())
             {
                 if (monitor != null)
                 {
                     monitor.allowUserCancellation();
                 }
-                program.setUniform("viewIndex", i);
-                program.setUniform("model_view", renderable.getViewSet().getCameraPose(i));
+                program.setUniform("viewIndex", viewIndex);
+                program.setUniform("model_view", view.getCameraPose());
                 program.setUniform("projection",
-                    renderable.getViewSet().getCameraProjectionForViewIndex(i)
+                    view.getCameraProjection()
                         .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
                             renderable.getViewSet().getRecommendedFarPlane()));
 
                 render(drawable, framebuffer);
 
                 String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
-                    renderable.getViewSet().getImageFileName(i), "png");
+                    renderable.getViewSet().getImageFileName(viewIndex), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
@@ -85,9 +83,11 @@ class MultiviewRenderRequest extends RenderRequestBase
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) resources.getViewSet().getCombinedCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCombinedCameraPoseCount()));
+                    monitor.setProgress((double) viewIndex / (double) resources.getViewSet().getCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(viewIndex), viewIndex+1, resources.getViewSet().getCameraPoseCount()));
                 }
+
+                viewIndex++;
             }
         }
     }

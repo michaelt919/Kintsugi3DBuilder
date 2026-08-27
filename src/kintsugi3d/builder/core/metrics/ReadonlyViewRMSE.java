@@ -9,21 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.rendering;
+package kintsugi3d.builder.core.metrics;
 
-import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Drawable;
-import kintsugi3d.gl.core.ReadableFramebuffer;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-
-public interface ReconstructionView<ContextType extends Context<ContextType>>
+public interface ReadonlyViewRMSE
 {
-    int getIndex();
+    ReadonlyColorAppearanceRMSE usingBasisWeights();
 
-    DoubleVector3 getIncidentRadiance(int pixelIndex);
+    ReadonlyColorAppearanceRMSE usingReflectivity();
 
-    ReadableFramebuffer<ContextType> getReconstructionFramebuffer();
-
-    ReadonlyColorAppearanceRMSE reconstruct(Drawable<ContextType> drawable);
+    ReadonlyColorAppearanceRMSE usingMetallicity();
 }

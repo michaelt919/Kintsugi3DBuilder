@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,7 +30,7 @@ public class PowerViewWeightGenerator implements ViewWeightGenerator
     @Override
     public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.getViewSet().getCombinedCameraPoseCount()];
+        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
         float viewWeightSum = 0.0f;
 
         for (int viewIndex : activeViewIndexList)

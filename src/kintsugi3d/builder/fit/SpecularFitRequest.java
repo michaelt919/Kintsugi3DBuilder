@@ -13,7 +13,7 @@ package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
@@ -217,7 +217,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
                     new FinalReconstruction<>(resources, settings.getTextureResolution(), settings.getReconstructionSettings());
 
                 LOG.info("Reconstructing:");
-                List<Map<String, ColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
+                List<Map<String, ReadonlyColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
                         "basis", ReconstructionShaders.getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
                         "reflectivity", ReconstructionShaders.getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),
                     ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),

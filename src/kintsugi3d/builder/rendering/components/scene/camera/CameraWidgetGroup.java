@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -76,7 +76,7 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     {
         if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
         {
-            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCombinedCameraPoseCount(); cameraIndex++)
+            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCameraPoseCount(); cameraIndex++)
             {
                 cameraVisual.draw(framebuffer, cameraViewport);
                 cameraFrustum.draw(framebuffer, cameraViewport);

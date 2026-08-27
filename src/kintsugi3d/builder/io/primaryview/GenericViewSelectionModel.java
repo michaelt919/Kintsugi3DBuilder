@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -41,7 +41,7 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     @Override
     public List<View> getViews()
     {
-        return IntStream.range(0, viewSet.getCombinedCameraPoseCount())
+        return IntStream.range(0, viewSet.getCameraPoseCount())
             .mapToObj(i -> new View(viewSet.getImageFileName(i)))
             .collect(Collectors.toUnmodifiableList());
     }
@@ -56,7 +56,7 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     @Override
     public Optional<String> findFullResImagePath(String imageName)
     {
-        for (int i = 0; i < viewSet.getAllImageFiles().size(); ++i)
+        for (int i = 0; i < viewSet.getCameraPoseCount(); ++i)
         {
             String fileName = viewSet.getImageFileName(i);
             if (fileName.matches(".*" + imageName + ".*"))

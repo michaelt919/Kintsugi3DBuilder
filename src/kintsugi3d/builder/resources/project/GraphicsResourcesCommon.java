@@ -27,6 +27,7 @@ import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,7 +175,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
                 this.cameraWeightBuffer = context.createUniformBuffer()
                         .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                1, viewSet.getCombinedCameraPoseCount(), this.cameraWeights));
+                                1, viewSet.getCameraPoseCount(), this.cameraWeights));
 
                 ImportedMaterial material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
@@ -276,25 +277,25 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
     {
-        float[] cameraWeights = new float[viewSet.getCombinedCameraPoseCount()];
+        float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
 
-        Vector3[] viewDirections = IntStream.range(0, viewSet.getCombinedCameraPoseCount())
+        Vector3[] viewDirections = IntStream.range(0, viewSet.getCameraPoseCount())
                 .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
                         .minus(geometry.getCentroid()).normalized())
                 .toArray(Vector3[]::new);
 
-        int[] totals = new int[viewSet.getCombinedCameraPoseCount()];
-        int targetSampleCount = viewSet.getCombinedCameraPoseCount() * 256;
+        int[] totals = new int[viewSet.getCameraPoseCount()];
+        int targetSampleCount = viewSet.getCameraPoseCount() * 256;
         double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
         int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
 
         // Find the view with the greatest distance from any other view.
         // Directions that are further from any view than distance will be ignored in the view weight calculation.
         double maxMinDistance = 0.0;
-        for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
+        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
         {
             double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < viewSet.getCombinedCameraPoseCount(); j++)
+            for (int j = 0; j < viewSet.getCameraPoseCount(); j++)
             {
                 if (i != j)
                 {
@@ -320,7 +321,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
                 double minDistance = maxMinDistance;
                 int minIndex = -1;
-                for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
+                for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
                 {
                     double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
                     if (distance < minDistance)
@@ -341,7 +342,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         LOG.info("View weights:");
 
-        for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
+        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
             LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);
@@ -452,9 +453,10 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
      */
     public void updateViewIndicesData()
     {
-        if (viewIndexBuffer != null && viewSet.getEnabledCameraPoseCount() > 0)
+        ReadonlyNativeVectorBuffer viewIndexData = viewSet.getViewIndexData();
+        if (viewIndexBuffer != null && viewIndexData != null)
         {
-            viewIndexBuffer.setData(viewSet.getViewIndexData());
+            viewIndexBuffer.setData(viewIndexData);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -46,7 +46,7 @@ public class PreviewImageGenerator
         viewSet.getPreviewImageDirectory().mkdirs(); // Create preview directory
         new File(viewSet.getSupportingFilesDirectory(), "thumbnails").mkdirs(); // Create thumbnail directory
 
-        progressMonitor.setMaxProgress(viewSet.getCombinedCameraPoseCount());
+        progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
 
         return new PreviewImageGenerator(viewSet, progressMonitor);
     }
@@ -64,7 +64,7 @@ public class PreviewImageGenerator
 
     int getViewCount()
     {
-        return viewSet.getCombinedCameraPoseCount();
+        return viewSet.getCameraPoseCount();
     }
 
     void allowUserCancellation() throws UserCancellationException
@@ -83,7 +83,7 @@ public class PreviewImageGenerator
     void waitAndFinish() throws IOException, UserCancellationException
     {
         // Wait for all threads to finish
-        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getCombinedCameraPoseCount())
+        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getCameraPoseCount())
         {
             Thread.onSpinWait();
         }

@@ -13,6 +13,7 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -198,7 +199,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                  * @return x-component stores rmse, y-component stores pixel count after masking
                  */
                 @Override
-                public ColorAppearanceRMSE reconstruct(Drawable<ContextType> drawable)
+                public ReadonlyColorAppearanceRMSE reconstruct(Drawable<ContextType> drawable)
                 {
                     // Create new framebuffer if necessary.
                     if (reconstructionFramebuffer == null
@@ -280,7 +281,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         @Override
         public boolean hasNext()
         {
-            return viewIndex < viewSet.getCombinedCameraPoseCount();
+            return viewIndex < viewSet.getCameraPoseCount();
         }
 
         @Override
@@ -322,12 +323,12 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
         public boolean canJump(int index)
         {
-            return index >= 0 && index < viewSet.getCombinedCameraPoseCount();
+            return index >= 0 && index < viewSet.getCameraPoseCount();
         }
 
         public ReconstructionView<ContextType> jump(int index)
         {
-            if (index >= 0 && index < viewSet.getCombinedCameraPoseCount())
+            if (index >= 0 && index < viewSet.getCameraPoseCount())
             {
                 this.viewIndex = index;
                 refresh();

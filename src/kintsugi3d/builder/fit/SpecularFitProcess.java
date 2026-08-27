@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
@@ -99,7 +99,7 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
-        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ReadonlyColorAppearanceRMSE> reconstructionCallback)
         throws IOException
     {
         ViewSet viewSet = resources.getViewSet();
@@ -146,7 +146,7 @@ public class SpecularFitProcess
 
             for (ReconstructionView<ContextType> view : reconstruction)
             {
-                ColorAppearanceRMSE rmse = view.reconstruct(drawable);
+                ReadonlyColorAppearanceRMSE rmse = view.reconstruct(drawable);
                 reconstructionCallback.accept(view, rmse);
             }
         }

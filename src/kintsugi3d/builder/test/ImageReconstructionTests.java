@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -69,9 +69,9 @@ class ImageReconstructionTests
     private ViewSet potatoViewSetTonemapped;
     private OpenGLContext context;
     private VertexGeometry potatoGeometry;
-    private BiConsumer<ColorAppearanceRMSE, Float> validationLinear;
-    private BiConsumer<ColorAppearanceRMSE, Float> validationSRGB;
-    private BiConsumer<ColorAppearanceRMSE, Float> validationEncoded;
+    private BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationLinear;
+    private BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationSRGB;
+    private BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationEncoded;
     private Consumer<Program<OpenGLContext>> setupColor;
     private Consumer<Program<OpenGLContext>> setupMetallic;
 
@@ -237,7 +237,7 @@ class ImageReconstructionTests
                 File outputDirectory = new File(TEST_OUTPUT_DIR, groundTruthName);
                 outputDirectory.mkdirs();
 
-                for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
+                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                 {
                     renderGroundTruth(viewSet, i, groundTruthDrawable, groundTruthFBO);
                     groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG",
@@ -840,7 +840,7 @@ class ImageReconstructionTests
         ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
-        BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale,
+        BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationByNoiseScale,
         String testName)  throws IOException
     {
         float[] noiseScaleTests = { 0.0f, 0.1f, 0.25f, 0.5f, 1.0f };
@@ -865,7 +865,7 @@ class ImageReconstructionTests
         ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
-        Consumer<ColorAppearanceRMSE> validation,
+        Consumer<ReadonlyColorAppearanceRMSE> validation,
         String testName) throws IOException
     {
         SimpleGeneralSettingsModel globalSettings = new SimpleGeneralSettingsModel();
@@ -911,7 +911,7 @@ class ImageReconstructionTests
                     // Pass light intensity for noise generation methods that depend on it.
                     syntheticWithNoise.setUniform("reconstructionLightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(view.getIndex())));
 
-                    ColorAppearanceRMSE rmse = view.reconstruct(drawable);
+                    ReadonlyColorAppearanceRMSE rmse = view.reconstruct(drawable);
 
                     if (SAVE_TEST_IMAGES)
                     {
@@ -952,7 +952,7 @@ class ImageReconstructionTests
     }
 
     private void testFitSynthetic(ViewSet viewSet, Function<ProgramBuilder<OpenGLContext>, ProgramBuilder<OpenGLContext>> injectDefines,
-                                  Consumer<TextureResources<?>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
+                                  Consumer<TextureResources<?>> fitValidation, Consumer<ReadonlyColorAppearanceRMSE> rmseValidation, String testName)
     {
         try (GraphicsResources<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry)
         {
@@ -1010,7 +1010,7 @@ class ImageReconstructionTests
     }
 
     private void testFitMetashape(String cameras, String geometry, String imageDirectory,
-        Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
+                                  Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
@@ -1032,7 +1032,7 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFitVSET(File viewSetFile, Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
+    private void testFitVSET(File viewSetFile, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
         LoadOptionsModel loadOptions = new ObservableLoadOptionsModel();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
@@ -1051,7 +1051,7 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
+    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         // TODO not yet tested

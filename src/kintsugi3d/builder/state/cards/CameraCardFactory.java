@@ -13,9 +13,8 @@ package kintsugi3d.builder.state.cards;
 
 import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.ViewData;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.core.ViewSetData;
-import kintsugi3d.builder.core.ViewSetDataCollection;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -43,12 +42,12 @@ public class CameraCardFactory implements ProjectDataCardFactory
         this.viewSet = viewSet;
     }
 
-    private ProjectDataCard createCard(CardsModel cardsModel, int cardIndex, ViewSetDataCollection viewSetDataCollection)
+    private ProjectDataCard createCard(CardsModel cardsModel, ViewData viewData)
     {
         String thumbnailPath;
         try
         {
-            thumbnailPath = viewSetDataCollection.findThumbnailImageFile(cardIndex).toString();
+            thumbnailPath = viewData.findThumbnailImageFile().toString();
         }
         catch (FileNotFoundException e)
         {
@@ -58,15 +57,14 @@ public class CameraCardFactory implements ProjectDataCardFactory
 
         try
         {
-            File fullResFile = viewSetDataCollection.findFullResImageFile(cardIndex);
+            File fullResFile = viewData.findFullResImageFile();
             IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
             String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
-            ViewSetData view = viewSetDataCollection.getViewSetData().get(cardIndex);
-
             return new ProjectDataCard(
-                view.imageFile.getPath(), // path is used to uniquely identify views for synchronizing with backend
-                view.imageFile.getName(), thumbnailPath,
+                viewData.getImageFile().getPath(), // path is used to uniquely identify views for synchronizing with backend
+                viewData.getImageFile().getName(),
+                thumbnailPath,
                 new LinkedHashMap<>()
                 {{
                     put("Resolution", res);
@@ -75,10 +73,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 Map.of(
                     "Remove from Project", () ->
                         cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                            () -> Rendering.runLater(() -> viewSet.deleteCamera(view.imageFile))),
-                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(view.imageFile))
+                            () -> Rendering.runLater(() -> viewSet.deleteCamera(viewData.getImageFile()))),
+                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(viewData.getImageFile()))
                 ),
-                view.isDisabled
+                viewData.isDisabled()
             );
         }
         catch (RuntimeException|IOException e)
@@ -94,8 +92,8 @@ public class CameraCardFactory implements ProjectDataCardFactory
         return List.of(Map.of(
             "Disable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToDisable = IntStream.range(0, viewSet.getEnabledCameraPoseCount())
-                    .mapToObj(viewSet::getEnabledImageFile)
+                Iterable<File> photosToDisable = IntStream.range(0, viewSet.getCameraPoseCount())
+                    .mapToObj(viewSet::getImageFile)
                     .collect(Collectors.toList());
 
                 for (File photo : photosToDisable)
@@ -105,8 +103,8 @@ public class CameraCardFactory implements ProjectDataCardFactory
             }),
             "Enable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToEnable = IntStream.range(0, viewSet.getDisabledCameraPoseCount())
-                    .mapToObj(viewSet::getDisabledImageFile)
+                Iterable<File> photosToEnable = IntStream.range(0, viewSet.getCameraPoseCount())
+                    .mapToObj(viewSet::getImageFile)
                     .collect(Collectors.toList());
 
                 for (File photo : photosToEnable)
@@ -121,16 +119,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         lastUsedCardsModel = cardsModel;
-        List<ProjectDataCard> cardsList = IntStream.range(0, viewSet.getEnabledCameraPoseCount())
-            .mapToObj(i -> createCard(cardsModel, i, viewSet.getViewSetData()))
+        List<ProjectDataCard> cardsList = viewSet.getViewSetData().stream()
+            .map(viewData -> createCard(cardsModel, viewData))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-        // Make sure to also display disabled cards
-        List<ProjectDataCard> disabledCardsList = IntStream.range(0, viewSet.getDisabledCameraPoseCount())
-            .mapToObj(i -> createCard(cardsModel, i, viewSet.getDisabledViewSetData()))
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-        cardsList.addAll(disabledCardsList);
         cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());
         return cardsList;
     }
@@ -149,16 +141,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
 
                 if (viewIndex >= 0)
                 {
-                    if (viewSet.isViewDisabled(viewIndex))
-                    {
-                        changes.put(card, createCard(cardsModel,
-                            // Subtract # of enabled views to get index within just disabled view list.
-                            viewIndex - viewSet.getEnabledCameraPoseCount(), viewSet.getDisabledViewSetData()));
-                    }
-                    else
-                    {
-                        changes.put(card, createCard(cardsModel, viewIndex, viewSet.getViewSetData()));
-                    }
+                    changes.put(card, createCard(cardsModel, viewSet.getView(viewIndex)));
                 }
             }
         }

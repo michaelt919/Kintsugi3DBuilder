@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.core.metrics.ViewRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
@@ -56,20 +56,6 @@ public interface ReadonlyViewSet
      * @return The camera pose as a 4x4 affine transformation matrix.
      */
     Matrix4 getCameraPose(int poseIndex);
-
-    /**
-     * Gets the camera pose defining the transformation from object space to camera space for a particular disabled view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The camera pose as a 4x4 affine transformation matrix.
-     */
-    Matrix4 getDisabledCameraPose(int poseIndex);
-
-    /**
-     * Gets the camera pose defining the transformation from object space to camera space for a particular enabled view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The camera pose as a 4x4 affine transformation matrix.
-     */
-    Matrix4 getEnabledCameraPose(int poseIndex);
 
     /**
      * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
@@ -162,7 +148,7 @@ public interface ReadonlyViewSet
      * In contexts when the relative path is unwanted, use getImageFileName() instead.
      * @return The list of image files
      */
-    List<File> getAllImageFiles();
+    List<File> getImageFiles();
 
     /**
      * Gets the image file corresponding to a particular view, relative to the full res image directory.
@@ -172,20 +158,6 @@ public interface ReadonlyViewSet
      * @return The image file's relative name.
      */
     File getImageFile(int poseIndex);
-
-    /**
-     * Gets the image file corresponding to a particular enabled view, relative to the full res image directory.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The enabled image file's relative name.
-     */
-    File getEnabledImageFile(int poseIndex);
-
-    /**
-     * Gets the image file corresponding to a particular disabled view, relative to the full res image directory.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The disabled image file's relative name.
-     */
-    File getDisabledImageFile(int poseIndex);
 
     /**
      * Gets the name of the image file corresponding to a particular view.
@@ -250,6 +222,12 @@ public interface ReadonlyViewSet
     int getPrimaryViewIndex();
 
     /**
+     * Gets the view to be used for color calibration and tonemapping operations
+     * @return view
+     */
+    ViewData getPrimaryView();
+
+    /**
      * Gets the view index to use as a reference pose for reorienting the model
      * @return view index
      */
@@ -260,6 +238,10 @@ public interface ReadonlyViewSet
      * @return view index
      */
     double getOrientationViewRotationDegrees();
+
+    List<ViewData> getViewSetData();
+
+    ViewData getView(int poseIndex);
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.
@@ -284,22 +266,6 @@ public interface ReadonlyViewSet
      * @return The index of the projection transformation.
      */
     int getCameraProjectionIndex(int poseIndex);
-
-    /**
-     * Gets the index of the projection transformation to be used for a particular enabled view,
-     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
-     * @param poseIndex The index of the enabled view.
-     * @return The index of the projection transformation.
-     */
-    int getEnabledCameraProjectionIndex(int poseIndex);
-
-    /**
-     * Gets the index of the projection transformation to be used for a particular disabled view,
-     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
-     * @param poseIndex The index of the disabled view.
-     * @return The index of the projection transformation.
-     */
-    int getDisabledCameraProjectionIndex(int poseIndex);
 
     /**
      * Gets the position of a particular light source.
@@ -329,41 +295,13 @@ public interface ReadonlyViewSet
      */
     int getLightIndex(int poseIndex);
 
-    /**
-     * Gets the index of the light source to be used for a particular view,
-     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
-     * @param poseIndex The index of the view.
-     * @return The index of the light source.
-     */
-    int getEnabledLightIndex(int poseIndex);
-
-    /**
-     * Gets the index of the light source to be used for a particular disabled view,
-     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
-     * @param poseIndex The index of the disabled view.
-     * @return The index of the light source.
-     */
-    int getDisabledLightIndex(int poseIndex);
-
-    ViewRMSE getViewErrorMetrics(int poseIndex);
+    ReadonlyViewRMSE getViewErrorMetrics(int poseIndex);
 
     /**
      * Gets the number of camera poses defined in this view set.
      * @return The number of camera poses defined in this view set.
      */
-    int getCombinedCameraPoseCount();
-
-    /**
-     * Gets the number of camera poses defined in the enabled view set.
-     * @return The number of camera poses defined in the enabled view set.
-     */
-    int getEnabledCameraPoseCount();
-
-    /**
-     * Gets the number of camera poses defined in the disabled view set
-     * @return The number of camera Poses defined in the disabled view set
-     */
-    int getDisabledCameraPoseCount();
+    int getCameraPoseCount();
 
     /**
      * Gets the number of projection transformations defined in this view set.

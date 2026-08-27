@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -78,7 +78,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
             // View will be overridden for light calibration so that it snaps to specific views
             Matrix4 currentViewSnap = null;
 
-            for (int i = 0; i < this.viewSelection.getViewSet().getCombinedCameraPoseCount(); i++)
+            for (int i = 0; i < this.viewSelection.getViewSet().getCameraPoseCount(); i++)
             {
                 Matrix4 candidateView = this.viewSelection.getViewForIndex(i);
                 float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()

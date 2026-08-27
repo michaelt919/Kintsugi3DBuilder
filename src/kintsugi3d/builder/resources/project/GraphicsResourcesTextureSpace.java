@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -76,7 +76,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
         Date timestamp = new Date();
 
         ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> builder = getContext().getTextureFactory()
-                .build2DColorTextureArray(texWidth, texHeight, getViewSet().getCombinedCameraPoseCount())
+                .build2DColorTextureArray(texWidth, texHeight, getViewSet().getCameraPoseCount())
                 .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested());
 
@@ -95,18 +95,18 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
         if(progressMonitor != null)
         {
-            progressMonitor.setMaxProgress(getViewSet().getCombinedCameraPoseCount());
+            progressMonitor.setMaxProgress(getViewSet().getCameraPoseCount());
             progressMonitor.setStage(0, "Loading textures...");
         }
 
         try
         {
             // Iterate over the layers to load in the texture array
-            for (int k = 0; k < getViewSet().getCombinedCameraPoseCount(); k++)
+            for (int k = 0; k < getViewSet().getCameraPoseCount(); k++)
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCombinedCameraPoseCount()));
+                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
@@ -117,7 +117,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
             if (progressMonitor != null)
             {
-                progressMonitor.setProgress(getViewSet().getCombinedCameraPoseCount(), "All images loaded.");
+                progressMonitor.setProgress(getViewSet().getCameraPoseCount(), "All images loaded.");
             }
         }
         catch (IOException e)

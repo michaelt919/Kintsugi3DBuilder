@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,17 +11,18 @@
 
 package kintsugi3d.builder.core.metrics;
 
-public class ViewRMSE
+public class ViewRMSE implements ReadonlyViewRMSE
 {
-    private final ColorAppearanceRMSE basisWeights = new ColorAppearanceRMSE();
-    private final ColorAppearanceRMSE reflectivity = new ColorAppearanceRMSE();
-    private final ColorAppearanceRMSE metallicity = new ColorAppearanceRMSE();
+    private final ReadonlyColorAppearanceRMSE basisWeights = new ColorAppearanceRMSE();
+    private final ReadonlyColorAppearanceRMSE reflectivity = new ColorAppearanceRMSE();
+    private final ReadonlyColorAppearanceRMSE metallicity = new ColorAppearanceRMSE();
 
     /**
      * Gets RMSE metrics when using the basis weights
      * @return
      */
-    public ColorAppearanceRMSE usingBasisWeights()
+    @Override
+    public ReadonlyColorAppearanceRMSE usingBasisWeights()
     {
         return basisWeights;
     }
@@ -30,7 +31,8 @@ public class ViewRMSE
      * Gets RMSE metrics when using the reflectivity / RGB specular and roughness textures
      * @return
      */
-    public ColorAppearanceRMSE usingReflectivity()
+    @Override
+    public ReadonlyColorAppearanceRMSE usingReflectivity()
     {
         return reflectivity;
     }
@@ -39,7 +41,8 @@ public class ViewRMSE
      * Gets RMSE metrics when using the metallicity / ORM texture
      * @return
      */
-    public ColorAppearanceRMSE usingMetallicity()
+    @Override
+    public ReadonlyColorAppearanceRMSE usingMetallicity()
     {
         return metallicity;
     }

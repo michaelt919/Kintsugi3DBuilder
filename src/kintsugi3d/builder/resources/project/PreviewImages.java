@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -75,7 +75,7 @@ class PreviewImages
             markCreated();
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
                 MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
-                    finishedCount.get() + failedCount.get(), viewSet.getCombinedCameraPoseCount()));
+                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
 
             fullResImage = null; // skip for faster loading
         }
@@ -276,7 +276,7 @@ class PreviewImages
         {
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
                 MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
-                    finishedCount.get() + failedCount.get(), viewSet.getCombinedCameraPoseCount()));
+                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
 
             missingPreview = false;
             missingThumbnail = false;

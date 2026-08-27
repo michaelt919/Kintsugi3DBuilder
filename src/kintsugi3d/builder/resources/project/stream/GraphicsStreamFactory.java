@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -44,7 +44,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList[]> stream(
         Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        return new SequentialViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, attachmentCount);
+        return new SequentialViewRenderStream<>(this.resources.getViewSet().getCameraPoseCount(), drawable, framebuffer, attachmentCount);
     }
 
     /**
@@ -59,7 +59,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList> stream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer)
     {
-        return new SequentialViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, 1)
+        return new SequentialViewRenderStream<>(this.resources.getViewSet().getCameraPoseCount(), drawable, framebuffer, 1)
             .map(singletonList -> singletonList[0]);
     }
 
@@ -82,7 +82,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new SequentialViewRenderStream<>(
-                this.resources.getViewSet().getCombinedCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
+                this.resources.getViewSet().getCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
                 framebuffer.getColorAttachmentCount()));
     }
 
@@ -101,7 +101,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList[]> parallelStream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount, int maxRunningThreads)
     {
-        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer,
+        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCameraPoseCount(), drawable, framebuffer,
                 attachmentCount, maxRunningThreads);
     }
 
@@ -119,7 +119,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList[]> parallelStream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, attachmentCount);
+        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCameraPoseCount(), drawable, framebuffer, attachmentCount);
     }
 
     /**
@@ -134,7 +134,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList> parallelStream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer)
     {
-        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, 1)
+        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCameraPoseCount(), drawable, framebuffer, 1)
             .map(singletonList -> singletonList[0]);
     }
 
@@ -160,7 +160,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
-                this.resources.getViewSet().getCombinedCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
+                this.resources.getViewSet().getCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
                 framebuffer.getColorAttachmentCount(), maxRunningThreads));
     }
 
@@ -184,7 +184,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
-                this.resources.getViewSet().getCombinedCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
+                this.resources.getViewSet().getCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
                 framebuffer.getColorAttachmentCount()));
     }
 }

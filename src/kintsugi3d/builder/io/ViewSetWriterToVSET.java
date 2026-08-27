@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -33,17 +33,9 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         return INSTANCE;
     }
 
-    public void writeMatrixHelper(int index, ReadonlyViewSet viewSet, PrintStream out, boolean isEnabled)
+    public static void writePoseMatrix(int index, ReadonlyViewSet viewSet, PrintStream out)
     {
-        Matrix4 pose;
-        if (isEnabled)
-        {
-            pose = viewSet.getEnabledCameraPose(index);
-        }
-        else
-        {
-            pose = viewSet.getDisabledCameraPose(index);
-        }
+        Matrix4 pose = viewSet.getCameraPose(index);
 
         // TODO validate quaternion computation
 //            Matrix3 rot = new Matrix3(pose);
@@ -58,7 +50,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 //            else
         //{
         // Write a general 4x4 matrix
-        out.printf("P" + "\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+        out.printf("P\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
             pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
             pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
             pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
@@ -222,14 +214,12 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.printf("# %d%s%n", viewSet.getCombinedCameraPoseCount(), viewSet.getCombinedCameraPoseCount() == 1 ? " Camera" : " Cameras");
-        for (int i = 0; i < viewSet.getEnabledCameraPoseCount(); i++)
+        out.printf("# %d%s%n", viewSet.getCameraPoseCount(), viewSet.getCameraPoseCount() == 1 ? " Camera" : " Cameras");
+
+        // Enabled photos
+        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
         {
-            writeMatrixHelper(i, viewSet, out, true);
-        }
-        for (int i = 0; i < viewSet.getDisabledCameraPoseCount(); i++)
-        {
-            writeMatrixHelper(i, viewSet, out, false);
+            writePoseMatrix(i, viewSet, out);
         }
 
         if (viewSet.getLightCount() > 0)
@@ -246,7 +236,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.printf("# %d%s%n", viewSet.getEnabledCameraPoseCount(), viewSet.getEnabledCameraPoseCount() == 1 ? " View" : " Views");
+        out.printf("# %d%s%n", viewSet.getCameraPoseCount(), viewSet.getCameraPoseCount() == 1 ? " View" : " Views");
 
         // Primary view first (so that next time the view set is loaded it will be index 0)
         out.printf("v\t%d\t%d\t%d\t%s", viewSet.getPrimaryViewIndex(),
@@ -255,22 +245,14 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             viewSet.getImageFile(viewSet.getPrimaryViewIndex()));
         out.println();
 
-        for (int id = 0; id < viewSet.getEnabledCameraPoseCount(); id++)
+        for (int viewIndex = 0; viewIndex < viewSet.getCameraPoseCount(); viewIndex++)
         {
-            if (id != viewSet.getPrimaryViewIndex())
+            if (viewIndex != viewSet.getPrimaryViewIndex())
             {
-                out.printf("v\t%d\t%d\t%d\t%s", id, viewSet.getEnabledCameraProjectionIndex(id), viewSet.getEnabledLightIndex(id), viewSet.getEnabledImageFile(id));
+                String identifier = viewSet.getView(viewIndex).isDisabled() ? "vd" : "v";
+                out.printf("%s\t%d\t%d\t%d\t%s", identifier, viewIndex, viewSet.getCameraProjectionIndex(viewIndex), viewSet.getLightIndex(viewIndex), viewSet.getImageFile(viewIndex));
                 out.println();
             }
-        }
-
-        out.println();
-        out.printf("# %d%s%n", viewSet.getDisabledCameraPoseCount(), viewSet.getDisabledCameraPoseCount() == 1 ? " Disabled View" : " Disabled Views");
-
-        for (int id = 0; id < viewSet.getDisabledCameraPoseCount(); id++)
-        {
-            out.printf("vd\t%d\t%d\t%d\t%s", viewSet.getEnabledCameraPoseCount() + id, viewSet.getDisabledCameraProjectionIndex(id), viewSet.getDisabledLightIndex(id), viewSet.getDisabledImageFile(id));
-            out.println();
         }
 
         out.close();

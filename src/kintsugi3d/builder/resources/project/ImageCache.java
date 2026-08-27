@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -281,15 +281,15 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setMaxProgress(resources.getViewSet().getCombinedCameraPoseCount());
+                monitor.setMaxProgress(resources.getViewSet().getCameraPoseCount());
             }
 
             // Loop over the images, processing each one at a time
-            for (int k = 0; k < resources.getViewSet().getCombinedCameraPoseCount(); k++)
+            for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCombinedCameraPoseCount()));
+                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCameraPoseCount()));
                     monitor.allowUserCancellation();
                 }
 
@@ -389,7 +389,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setProgress(resources.getViewSet().getCombinedCameraPoseCount(), "All images completed.");
+                monitor.setProgress(resources.getViewSet().getCameraPoseCount(), "All images completed.");
             }
         }
     }
