@@ -624,7 +624,8 @@
             #CECECE;
 }
 
-.card-separator,.tab-separator .line {
+.card-separator .line,
+.tab-separator .line {
     -fx-pref-height: 1;
     -fx-border-color: null ;
 }
