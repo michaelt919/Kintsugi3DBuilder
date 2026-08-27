@@ -223,10 +223,10 @@ public class CardTabController
                             ProjectDataCard card = cardsModel.getCardList().get(i);
                             cardControllers.set(i, createDataCard(card));
 
-                            // Leave card open if enabled.
-                            if (!card.isDisabled())
+                            // Collapse card if disabled.
+                            if (card.isDisabled())
                             {
-                                cardsModel.expandCard(card.getCardId());
+                                cardsModel.collapseCard(card.getCardId());
                             }
                         }
                     }

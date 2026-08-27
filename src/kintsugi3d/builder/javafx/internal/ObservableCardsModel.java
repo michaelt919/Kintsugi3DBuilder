@@ -60,13 +60,39 @@ public class ObservableCardsModel implements CardsModel
         {
             while (change.next())
             {
-                // Clear selection / expansion for a card when it is removed.
+                // Clear selection / expansion for a card when it is removed (but not replaced).
                 if (change.wasRemoved())
                 {
-                    for (var removedItem : change.getRemoved())
+                    for (int i = 0; i < change.getRemovedSize(); i++)
                     {
-                        selectedCardsModel.clearSelection(removedItem.getCardId());
-                        expandedCardsModel.clearSelection(removedItem.getCardId());
+                        ProjectDataCard removedItem = change.getRemoved().get(i);
+
+                        if (change.wasAdded())
+                        {
+                            ProjectDataCard addedItem = change.getAddedSubList().get(i);
+
+                            if (!addedItem.getCardId().equals(removedItem.getCardId()))
+                            {
+                                // Pass on selected / expanded state to the new card if it was replaced.
+                                if (selectedCardsModel.isSelected(removedItem.getCardId()))
+                                {
+                                    selectedCardsModel.select(addedItem.getCardId());
+                                }
+
+                                if (expandedCardsModel.isSelected(removedItem.getCardId()))
+                                {
+                                    expandedCardsModel.select(addedItem.getCardId());
+                                }
+
+                                selectedCardsModel.clearSelection(removedItem.getCardId());
+                                expandedCardsModel.clearSelection(removedItem.getCardId());
+                            }
+                        }
+                        else
+                        {
+                            selectedCardsModel.clearSelection(removedItem.getCardId());
+                            expandedCardsModel.clearSelection(removedItem.getCardId());
+                        }
                     }
                 }
             }
@@ -84,7 +110,10 @@ public class ObservableCardsModel implements CardsModel
         return label;
     }
 
-    public String getPath() {return path; }
+    public String getPath()
+    {
+        return path;
+    }
 
     public boolean isSelected(UUID cardId)
     {
