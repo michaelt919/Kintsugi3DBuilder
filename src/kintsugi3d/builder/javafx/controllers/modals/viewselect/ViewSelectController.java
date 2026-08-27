@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -23,21 +23,30 @@ import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
-import kintsugi3d.builder.javafx.util.ImageThreadable;
 import kintsugi3d.builder.javafx.util.ScrollBarHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class ViewSelectController extends DataReceiverPageControllerBase<ViewSelectable> implements ImageThreadable
+public abstract class ViewSelectController extends DataReceiverPageControllerBase<ViewSelectable>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSelectController.class);
+
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
     private static final int THUMBNAIL_SIZE = 30;
     private static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
+
+    private final ImageSelectionCache cache = new ImageSelectionCache();
+
+    private ImageSelectionLoadManager loadManager;
 
     @FXML private TreeView<String> chunkTreeView;
     @FXML private ImageView primaryImgView;
@@ -50,8 +59,6 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
     private ViewSelectable newData;
     private ViewSelectable data;
-    private Map<String, Image> imageCache;
-    private ImageSelectionThread loadImgThread;
 
     protected abstract String getHintText();
 
@@ -73,7 +80,11 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public void initPage()
     {
-        this.imageCache = new HashMap<>(16);
+        loadManager = new ImageSelectionLoadManager(
+            imageName -> new ImageSelectionLoader(
+                imageName,
+                new ImageSelectionPreview(primaryImgView, imgViewText, cache),
+                getData().getViewSelectionModel()));
 
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
@@ -244,11 +255,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
         if (selectedItem.getValue() != null)
         {
-            //if loadImgThread is running, kill it and start a new one
-            if (loadImgThread != null && loadImgThread.isActive())
-            {
-                loadImgThread.stopThread();
-            }
+            loadManager.cancelLoad();
 
             if (selectedItem.equals(NONE_ITEM))
             {
@@ -265,7 +272,6 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
                 // Remove any image currently in the thumbnail viewer
                 primaryImgView.setImage(null);
-                return;
             }
             else
             {
@@ -274,28 +280,26 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
                 // Set confirm button text
                 setAdvanceLabelOverride(null);
+
+                String imageName = selectedItem.getValue();
+                imgViewText.setText(String.format("%s (preview)", imageName));
+
+                // Set thumbnail as main image, then update to full resolution later
+                // Don't set thumbnail if img is cached, otherwise would cause a flash
+                if (!cache.contains(imageName))
+                {
+                    setThumbnailAsFullImage(selectedItem);
+                }
+
+                // Try to load the full resolution image.
+                loadManager.loadImage(imageName);
             }
-
-            String imageName = selectedItem.getValue();
-            imgViewText.setText(String.format("%s (preview)", imageName));
-
-            //set thumbnail as main image, then update to full resolution later
-            //don't set thumbnail if img is cached, otherwise would cause a flash
-            if (!imageCache.containsKey(imageName))
-            {
-                setThumbnailAsFullImage(selectedItem);
-            }
-
-            loadImgThread = new ImageSelectionThread(imageName, this, getData().getViewSelectionModel());
-            Thread myThread = new Thread(loadImgThread);
-            myThread.start();
         }
     }
 
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem)
     {
-        //use thumbnail as main image
-        //used if image is not found, or if larger resolution image is being loaded
+        // Use thumbnail as main image if image is not found, or if larger resolution image is being loaded
         ImageView imageView = (ImageView) selectedItem.getGraphic();
         primaryImgView.setImage(imageView.getImage());
     }
@@ -319,35 +323,11 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         primaryImgView.setRotate(rotation % 360);
     }
 
-    @Override
-    public ImageView getImageView()
-    {
-        return primaryImgView;
-    }
-
-    @Override
-    public String getImageViewText()
-    {
-        return imgViewText.getText();
-    }
-
-    @Override
-    public void setImageViewText(String txt)
-    {
-        imgViewText.setText(txt);
-    }
-
-    @Override
-    public Map<String, Image> getImageCache()
-    {
-        return imageCache;
-    }
-
     protected String getSelectedViewName()
     {
         TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
 
-        if (!Objects.equals(selection, NONE_ITEM))
+        if (selection != null && !Objects.equals(selection, NONE_ITEM))
         {
             return selection.getValue();
         }
