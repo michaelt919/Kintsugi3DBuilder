@@ -23,6 +23,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
@@ -64,7 +65,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     {
         psxFileChooser = new FileChooser();
         psxFileChooser.setTitle("Choose .psx file");
-        psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
+        psxFileChooser.getExtensionFilters().add(new ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         setCanConfirm(true);
@@ -122,7 +123,7 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     private static String getModelIDFromSelection(String selectionAsString)
     {
         //TODO: need to revisit this when formatting of model selection choice box changes
-        if (selectionAsString.startsWith(NO_MODEL_ID_MSG))
+        if (selectionAsString == null || selectionAsString.startsWith(NO_MODEL_ID_MSG))
         {
             return null;
         }
