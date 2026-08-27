@@ -12,10 +12,13 @@
 package kintsugi3d.builder.state.cards;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public interface CardsModel
 {
+    List<? extends Map<String, Runnable>> getGlobalActions();
+
     List<ProjectDataCard> getCardList();
     void setCardList(List<ProjectDataCard> cards);
 

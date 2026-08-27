@@ -17,6 +17,11 @@ import java.util.function.Predicate;
 
 public interface ProjectDataCardFactory
 {
+    default List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return List.of();
+    }
+
     /**
      * Creates all cards from scratch.
      * @param cardsModel

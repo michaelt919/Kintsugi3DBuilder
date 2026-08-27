@@ -26,6 +26,7 @@ import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -123,6 +124,12 @@ public class ObservableCardsModel implements CardsModel
     public void deselectCard(UUID cardId)
     {
         Platform.runLater(()->selectedCardsModel.clearSelection(cardId));
+    }
+
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return cardFactory.getGlobalActions();
     }
 
     @Override

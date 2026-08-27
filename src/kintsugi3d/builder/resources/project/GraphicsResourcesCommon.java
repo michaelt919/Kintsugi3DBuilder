@@ -452,7 +452,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
      */
     public void updateViewIndicesData()
     {
-        if (viewIndexBuffer != null)
+        if (viewIndexBuffer != null && viewSet.getEnabledCameraPoseCount() > 0)
         {
             viewIndexBuffer.setData(viewSet.getViewIndexData());
         }

@@ -89,6 +89,35 @@ public class CameraCardFactory implements ProjectDataCardFactory
     }
 
     @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return List.of(Map.of(
+            "Disable All", () -> Rendering.runLater(() ->
+            {
+                Iterable<File> photosToDisable = IntStream.range(0, viewSet.getEnabledCameraPoseCount())
+                    .mapToObj(viewSet::getEnabledImageFile)
+                    .collect(Collectors.toList());
+
+                for (File photo : photosToDisable)
+                {
+                    viewSet.setCameraEnabled(photo, false);
+                }
+            }),
+            "Enable All", () -> Rendering.runLater(() ->
+            {
+                Iterable<File> photosToEnable = IntStream.range(0, viewSet.getDisabledCameraPoseCount())
+                    .mapToObj(viewSet::getDisabledImageFile)
+                    .collect(Collectors.toList());
+
+                for (File photo : photosToEnable)
+                {
+                    viewSet.setCameraEnabled(photo, true);
+                }
+            })
+        ));
+    }
+
+    @Override
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         lastUsedCardsModel = cardsModel;

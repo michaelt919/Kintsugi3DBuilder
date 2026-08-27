@@ -15,15 +15,11 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
@@ -32,7 +28,6 @@ import kintsugi3d.builder.state.cards.ProjectDataCard;
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 public class CardController
@@ -115,48 +110,8 @@ public class CardController
             VBox.setMargin(caption, new Insets(0, 0, 8, 4));
         });
 
-        buttonBox.getChildren().clear();
-        dataCard.getActions().forEach(group ->
-        {
-            Separator separator = new Separator();
-            separator.setPrefWidth(200.0);
-            separator.getStyleClass().add("card-separator");
-            separator.setPadding(new Insets(16.0, 8.0, 16, 8.0)); // Top, Right, Bottom, Left
-            buttonBox.getChildren().add(separator);
-            group.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry ->
-            {
-                HBox hBox = new HBox();
-                hBox.setAlignment(Pos.TOP_CENTER);
-
-//                // Button Icon
-//                ImageView imageView = new ImageView(MainApplication.getInstance().getIcon());
-//                imageView.setFitHeight(16.0);
-//                imageView.setFitWidth(16.0);
-//                imageView.setPickOnBounds(true);
-//                imageView.setPreserveRatio(true);
-
-                // Button
-                Button button = new Button(entry.getKey());
-                button.setGraphicTextGap(8.0);
-                button.setMnemonicParsing(false);
-                button.getStyleClass().add("card-button");
-                button.getStyleClass().add("wireframeBodyStrong");
-                button.getStylesheets().add("file:./kintsugiStyling.css");
-                button.setOnAction(event -> {
-
-                    /*If uncommented will make it so after a button is clicked
-                      boarder will remain to show it is selected*/
-                    //button.getStyleClass().add("activated");
-                    entry.getValue().run();
-                });
-
-                HBox.setMargin(button, new Insets(0, 0, 8, 0));
-                hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
-                hBox.getChildren().add(button);
-
-                buttonBox.getChildren().add(hBox);
-            });
-        });
+        ActionButtonFactory.createActionButtons(dataCard.getActions(), buttonBox,
+            "card-button", "card-separator");
 
         // Load the image for each card when it becomes visible.
         dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->

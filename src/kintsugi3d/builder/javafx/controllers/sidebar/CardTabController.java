@@ -59,6 +59,7 @@ public class CardTabController
     @FXML private Label filePathLabel;
     @FXML private Label locationLabel;
     @FXML private HBox filePathHBox;
+    @FXML private VBox buttonBox;
 
     private double scrollPosition = 0;
     private String path;
@@ -71,6 +72,10 @@ public class CardTabController
     public void init(ObservableCardsModel cardsModel)
     {
         this.cardsModel = cardsModel;
+
+        ActionButtonFactory.createActionButtons(cardsModel.getGlobalActions(), buttonBox,
+            "tab-button", "tab-separator");
+
         Collection<VBox> displayCards = new ArrayList<>(cardsModel.getCardList().size());
 
         try

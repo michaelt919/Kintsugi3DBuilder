@@ -16,6 +16,7 @@ import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class SynchronizedCardsModel implements CardsModel
@@ -25,6 +26,12 @@ public class SynchronizedCardsModel implements CardsModel
     public SynchronizedCardsModel(CardsModel base)
     {
         this.base = base;
+    }
+
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return base.getGlobalActions();
     }
 
     @Override
