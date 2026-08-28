@@ -11,8 +11,12 @@
 
 package kintsugi3d.builder.test;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -930,7 +934,7 @@ class ImageReconstructionTests
     }
 
     private static ColorArrayImage renderGroundTruth(ReadonlyViewSet viewSet, int viewIndex,
-        Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
+                                                     Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
     {
         groundTruthDrawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
         groundTruthDrawable.program().setUniform("projection",

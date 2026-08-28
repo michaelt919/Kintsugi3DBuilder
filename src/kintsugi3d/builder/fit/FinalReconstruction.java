@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;

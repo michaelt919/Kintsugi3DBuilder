@@ -13,7 +13,7 @@ package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.io.specular.WeightImageWriter;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;

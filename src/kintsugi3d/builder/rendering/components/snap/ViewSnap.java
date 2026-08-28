@@ -12,9 +12,9 @@
 package kintsugi3d.builder.rendering.components.snap;
 
 import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;

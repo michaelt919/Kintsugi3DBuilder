@@ -9,15 +9,14 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.viewset;
 
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.ViewSetChange.Type;
+import kintsugi3d.builder.core.Observer;
 import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
-import kintsugi3d.builder.state.settings.DefaultSettings;
+import kintsugi3d.builder.core.viewset.ViewSetChange.Type;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
-import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
@@ -30,7 +29,6 @@ import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
@@ -50,18 +48,19 @@ import java.util.stream.Collectors;
  *
  * @author Michael Tetzlaff
  */
-public final class ViewSet implements ReadonlyViewSet, Observable
+public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.Observable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
-    private final Collection<Observer<ViewSetChange>> observers = new ArrayList<>(8);
+    private final Collection<kintsugi3d.builder.core.Observer<ViewSetChange>> observers = new ArrayList<>(8);
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
      */
     private UUID uuid = UUID.randomUUID();
 
-    private final ArrayList<ViewData> viewSetData;
+    private final ArrayList<View> viewList;
+
     /**
      * A list of projection transformations defining the intrinsic properties of each camera.
      * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
@@ -235,377 +234,15 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         this.objectScale = objectScale;
     }
 
-    public static final class Builder
+    public static ViewSetBuilder getBuilder(File rootDirectory, int initialCapacity)
     {
-        private final ViewSet result;
-        private boolean needsClipPlanes = true;
-
-        private Matrix4 cameraPose;
-        private int cameraProjectionIndex = 0;
-        private int lightIndex = 0;
-        private File imageFile;
-        private File maskFile;
-        private final Map<Integer, File> maskMap;
-        private boolean hasUnsupportedCorrections;
-
-        /**
-         * Uses root directory as supporting files directory by default
-         *
-         * @param rootDirectory
-         * @param initialCapacity
-         */
-        Builder(File rootDirectory, int initialCapacity)
-        {
-            this(rootDirectory, rootDirectory, initialCapacity);
-        }
-
-        Builder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
-        {
-            result = new ViewSet(initialCapacity);
-            result.setRootDirectory(rootDirectory);
-            result.setSupportingFilesDirectory(supportingFilesDirectory);
-
-            maskMap = new HashMap<>(initialCapacity);
-
-            // Initialize settings with defaults.
-            DefaultSettings.applyProjectDefaults(result.projectSettings);
-        }
-
-        public Builder setCurrentCameraPose(Matrix4 cameraPose)
-        {
-            this.cameraPose = cameraPose;
-            return this;
-        }
-
-        public Builder setCurrentCameraProjectionIndex(int cameraProjectionIndex)
-        {
-            this.cameraProjectionIndex = cameraProjectionIndex;
-            return this;
-        }
-
-        public Builder setCurrentLightIndex(int lightIndex)
-        {
-            this.lightIndex = lightIndex;
-            return this;
-        }
-
-        public Builder setCurrentImageFile(File imageFile)
-        {
-            this.imageFile = imageFile;
-            return this;
-        }
-
-        public Builder setCurrentMaskFile(File maskFile)
-        {
-            this.maskFile = maskFile;
-            return this;
-        }
-
-        public Builder commitCurrentCameraPose()
-        {
-            if (maskFile == null && !maskMap.isEmpty())
-            {
-                // We haven't committed this view yet, so size of the view set data will just be the current index.
-                maskFile = maskMap.get(result.viewSetData.size());
-            }
-
-            ViewData currentCamera = new ViewData(cameraPose, cameraPose.quickInverse(0.002f),
-                cameraProjectionIndex, lightIndex, result.viewSetData.size(),
-                imageFile, maskFile, new ViewRMSE(), result);
-            result.viewSetData.add(currentCamera);
-
-            // Reset maskFile to null for the next camera pose.
-            maskFile = null;
-
-            return this;
-        }
-
-        public Builder commitCurrentCameraPoseAsDisabled()
-        {
-            if (maskFile == null)
-            {
-                maskFile = maskMap.get(result.viewSetData.size());
-            }
-            ViewData currentCamera = new ViewData(cameraPose, cameraPose.quickInverse(0.002f),
-                cameraProjectionIndex, lightIndex,
-                result.viewSetData.size(),
-                imageFile, maskFile, new ViewRMSE(), result);
-            currentCamera.isDisabled = true;
-            result.viewSetData.add(currentCamera);
-            return this;
-        }
-
-        public Builder disableCamerasByImageFilename(Iterable<File> disabledImageFiles)
-        {
-            for (File f : disabledImageFiles)
-            {
-                int index = result.getImageFiles().indexOf(f);
-                if (index != -1)
-                {
-                    result.viewSetData.remove(index);
-                }
-            }
-
-            // Reassign view indices for smaller data set.
-            for (int i = 0; i < result.viewSetData.size(); ++i)
-            {
-                result.viewSetData.get(i).gpuViewIndex = i;
-            }
-
-            return this;
-        }
-
-        public Builder addCameraProjection(Projection projection)
-        {
-            result.cameraProjectionList.add(projection);
-            return this;
-        }
-
-        public int getNextCameraProjectionIndex()
-        {
-            return result.cameraProjectionList.size();
-        }
-
-        public Builder addLight(Vector3 position, Vector3 intensity)
-        {
-            result.lightPositionList.add(position);
-            result.lightIntensityList.add(intensity);
-            return this;
-        }
-
-        public int getNextLightIndex()
-        {
-            return result.lightPositionList.size();
-        }
-
-        public Builder setUUID(UUID uuid)
-        {
-            result.uuid = uuid;
-            return this;
-        }
-
-        public Builder setRecommendedClipPlanes(float near, float far)
-        {
-            result.recommendedNearPlane = near;
-            result.recommendedFarPlane = far;
-            needsClipPlanes = false;
-            return this;
-        }
-
-        public Builder setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
-        {
-            result.setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
-            return this;
-        }
-
-        /**
-         * Sets the geometry file associated with this view set.
-         *
-         * @param geometryFile The geometry file.
-         */
-        public Builder setGeometryFile(File geometryFile)
-        {
-            result.geometryFile = geometryFile;
-            return this;
-        }
-
-        /**
-         * Sets the name of the geometry file associated with this view set relative to the root directory.
-         *
-         * @param geometryFileName The name of the geometry file.
-         */
-        public Builder setGeometryFileName(String geometryFileName)
-        {
-            result.geometryFile = geometryFileName == null ? null : result.rootDirectory
-                .toPath().resolve(geometryFileName).toFile();
-            return this;
-        }
-
-        /**
-         * Sets the full res image directory associated with this view set.
-         *
-         * @param fullResImageDirectory The full res image directory.
-         */
-        public Builder setFullResImageDirectory(File fullResImageDirectory)
-        {
-            result.setFullResImageDirectory(fullResImageDirectory);
-            return this;
-        }
-
-        /**
-         * Sets the name of the full res image directory associated with this view set relative to the root directory.
-         *
-         * @param relativePath The path to the full res images.
-         */
-        public Builder setRelativeFullResImagePathName(String relativePath)
-        {
-            result.setRelativeFullResImagePathName(relativePath);
-            return this;
-        }
-
-        /**
-         * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
-         *
-         * @param relativePath The file path of the supporting files directory.
-         */
-        public Builder setRelativeSupportingFilesPathName(String relativePath)
-        {
-            result.supportingFilesDirectory = result.rootDirectory.toPath().resolve(relativePath).toFile();
-            return this;
-        }
-
-        public Builder setRelativePreviewImagePathName(String relativePath)
-        {
-            result.setRelativePreviewImagePathName(relativePath);
-            return this;
-        }
-
-        public Builder setOrientationViewIndex(int viewIndex)
-        {
-            result.orientationViewIndex = viewIndex;
-            return this;
-        }
-
-        public Builder setOrientationViewName(String viewName)
-        {
-            result.setOrientationView(viewName);
-            return this;
-        }
-
-        public Builder setOrientationViewRotation(double rotation)
-        {
-            result.setOrientationViewRotationDegrees(rotation);
-            return this;
-        }
-
-        public Builder setOrientationMatrix(Matrix3 matrix)
-        {
-            result.setOrientationMatrix(matrix);
-            return this;
-        }
-
-        public Builder setObjectTranslation(Vector3 objectTranslation)
-        {
-            result.setObjectTranslation(objectTranslation);
-            return this;
-        }
-
-        public Builder setObjectScale(float objectScale)
-        {
-            result.setObjectScale(objectScale);
-            return this;
-        }
-
-        public Builder setMasksDirectory(File file)
-        {
-            result.setMasksDirectory(file);
-            return this;
-        }
-
-        public Builder addMask(int camId, String imgFilename)
-        {
-            maskMap.put(camId, new File(imgFilename));
-            return this;
-        }
-
-        public Builder applySettings(ReadonlyGeneralSettingsModel settings)
-        {
-            result.getProjectSettings().copyFrom(settings);
-            return this;
-        }
-
-        public Builder addResourceFiles(Map<String, File> resourceMap)
-        {
-            result.resourceMap.putAll(resourceMap);
-            return this;
-        }
-
-        public Builder setHasUnsupportedCorrections(boolean hasUnsupportedCorrections) {
-            this.hasUnsupportedCorrections = hasUnsupportedCorrections;
-            return this;
-        }
-
-        public ViewSet finish()
-        {
-            if (needsClipPlanes)
-            {
-                result.recommendedFarPlane = findFarPlane(result.viewSetData);
-                result.recommendedNearPlane = result.getRecommendedFarPlane() / 32.0f;
-                LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
-            }
-
-            // Fill with default lights if not specified
-            int maxLightIndex = result.viewSetData.stream().mapToInt(data->data.lightIndex).max().orElse(1);
-            for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
-            {
-                result.lightPositionList.add(Vector3.ZERO);
-                result.lightIntensityList.add(Vector3.ZERO);
-            }
-
-            if (result.geometryFile == null && result.rootDirectory != null)
-            {
-                setGeometryFileName("manifold.obj"); // Used by some really old datasets
-            }
-
-            if (result.getSupportingFilesDirectory() != null)
-            {
-                // Make sure the supporting files directory exists
-                result.getSupportingFilesDirectory().mkdirs();
-            }
-
-            result.hasUnsupportedCorrections = this.hasUnsupportedCorrections;
-
-            return result;
-        }
-
-        /**
-         * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
-         * Assumes that the object must lie between all of the cameras in the file.
-         *
-         * @param viewSetDataList The list of camera data.
-         * @return A far plane estimate.
-         */
-        private static float findFarPlane(Iterable<ViewData> viewSetDataList)
-        {
-            float minX = Float.POSITIVE_INFINITY;
-            float minY = Float.POSITIVE_INFINITY;
-            float minZ = Float.POSITIVE_INFINITY;
-            float maxX = Float.NEGATIVE_INFINITY;
-            float maxY = Float.NEGATIVE_INFINITY;
-            float maxZ = Float.NEGATIVE_INFINITY;
-
-            for (ViewData viewData : viewSetDataList)
-            {
-                Vector4 position = viewData.cameraPoseInv.getColumn(3);
-                minX = Math.min(minX, position.x);
-                minY = Math.min(minY, position.y);
-                minZ = Math.min(minZ, position.z);
-                maxX = Math.max(maxX, position.x);
-                maxY = Math.max(maxY, position.y);
-                maxZ = Math.max(maxZ, position.z);
-            }
-
-            // Corner-to-corner
-            float dX = maxX - minX;
-            float dY = maxY - minY;
-            float dZ = maxZ - minZ;
-            return (float) Math.sqrt(dX * dX + dY * dY + dZ * dZ);
-
-            // Longest Side approach
-//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
-        }
+        return new ViewSetBuilder(rootDirectory, initialCapacity);
     }
 
-    public static Builder getBuilder(File rootDirectory, int initialCapacity)
+    public static ViewSetBuilder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
     {
-        return new Builder(rootDirectory, initialCapacity);
+        return new ViewSetBuilder(rootDirectory, supportingFilesDirectory, initialCapacity);
     }
-
-    public static Builder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
-    {
-        return new Builder(rootDirectory, supportingFilesDirectory, initialCapacity);
-    }
-
 
     /**
      * Creates a new view set object.
@@ -614,7 +251,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public ViewSet(int initialCapacity)
     {
-        viewSetData = new ArrayList<>(initialCapacity);
+        viewList = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
         this.cameraProjectionList = new ArrayList<>(1);
@@ -625,14 +262,14 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public List<File> getImageFiles()
     {
-        return viewSetData.stream().map(ViewData::getImageFile).collect(Collectors.toList());
+        return viewList.stream().map(View::getImageFile).collect(Collectors.toList());
     }
 
     @Override
     public ReadonlyNativeVectorBuffer getCameraPoseData()
     {
         // Store the poses in a uniform buffer
-        if (viewSetData.isEmpty())
+        if (viewList.isEmpty())
         {
             return null;
         }
@@ -640,17 +277,17 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         {
             // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
             NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(
-                NativeDataType.FLOAT, 16, viewSetData.size());
+                NativeDataType.FLOAT, 16, viewList.size());
 
 
-            for (int k = 0; k < viewSetData.size(); k++)
+            for (int k = 0; k < viewList.size(); k++)
             {
                 int d = 0;
                 for (int col = 0; col < 4; col++) // column
                 {
                     for (int row = 0; row < 4; row++) // row
                     {
-                        cameraPoseData.set(k, d, viewSetData.get(k).cameraPose.get(row, col));
+                        cameraPoseData.set(k, d, viewList.get(k).cameraPose.get(row, col));
                         d++;
                     }
                 }
@@ -694,15 +331,15 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public ReadonlyNativeVectorBuffer getCameraProjectionIndexData()
     {
         // Store the camera projection indices in a uniform buffer
-        if (viewSetData.isEmpty())
+        if (viewList.isEmpty())
         {
             return null;
         }
         else
         {
-            int[] indexArray = new int[viewSetData.size()];
-            Arrays.setAll(indexArray, i-> viewSetData.get(i).cameraProjectionIndex);
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewSetData.size(), indexArray);
+            int[] indexArray = new int[viewList.size()];
+            Arrays.setAll(indexArray, i-> viewList.get(i).cameraProjectionIndex);
+            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
         }
     }
 
@@ -755,23 +392,23 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public ReadonlyNativeVectorBuffer getLightIndexData()
     {
         // Store the light indices in a uniform buffer
-        if (viewSetData.isEmpty())
+        if (viewList.isEmpty())
         {
             return null;
         }
         else
         {
-            int[] indexArray = new int[viewSetData.size()];
-            Arrays.setAll(indexArray, i-> viewSetData.get(i).lightIndex);
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewSetData.size(), indexArray);
+            int[] indexArray = new int[viewList.size()];
+            Arrays.setAll(indexArray, i-> viewList.get(i).lightIndex);
+            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
         }
     }
 
     public ReadonlyNativeVectorBuffer getViewIndexData()
     {
-        int[] indexArray = viewSetData.stream()
-            .filter(Predicate.not(ViewData::isDisabled))
-            .mapToInt(ViewData::getGPUViewIndex)
+        int[] indexArray = viewList.stream()
+            .filter(Predicate.not(View::isDisabled))
+            .mapToInt(View::getGPUViewIndex)
             .toArray();
 
         // Store the view indices in a uniform buffer
@@ -792,7 +429,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         for (int i : permutationIndices)
         {
-            result.viewSetData.add(this.viewSetData.get(i));
+            result.viewList.add(this.viewList.get(i));
         }
 
         result.cameraProjectionList.addAll(this.cameraProjectionList);
@@ -836,7 +473,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         ViewSet result = new ViewSet(this.getCameraPoseCount());
 
         result.uuid = this.uuid;
-        result.viewSetData.addAll(this.viewSetData);
+        result.viewList.addAll(this.viewList);
         result.cameraProjectionList.addAll(this.cameraProjectionList);
         result.lightPositionList.addAll(this.lightPositionList);
         result.lightIntensityList.addAll(this.lightIntensityList);
@@ -894,7 +531,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
             Matrix4 cameraPoseInv = cameraPose.quickInverse(0.001f);
 
-            ViewData currentViewData = new ViewData(cameraPose, cameraPoseInv, 0, 0,
+            View currentView = new View(cameraPose, cameraPoseInv, 0, 0,
                     i, imageFile, null, new ViewRMSE(), result);
         }
 
@@ -907,12 +544,21 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return uuid;
     }
 
+    /**
+     *
+     * @param uuid
+     */
+    void setUUID(UUID uuid)
+    {
+        this.uuid = uuid;
+    }
+
     public void deleteCamera(File image)
     {
         int index = findIndexOfView(image.getName());
         if (index >= 0)
         {
-            viewSetData.remove(index);
+            viewList.remove(index);
             notifyObservers(new ViewSetChange(Type.REMOVED, image));
         }
     }
@@ -922,7 +568,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         int index = findIndexOfView(image.getName());
         if (index >= 0)
         {
-            setCameraEnabled(image, viewSetData.get(index).isDisabled);
+            setCameraEnabled(image, viewList.get(index).isDisabled);
         }
     }
 
@@ -930,10 +576,10 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     {
         int index = findIndexOfView(image.getName());
 
-        if (viewSetData.get(index).isDisabled) // Currently disabled, so enable camera
+        if (viewList.get(index).isDisabled) // Currently disabled, so enable camera
         {
-            viewSetData.get(index).isDisabled = !isEnabled;
-            if (!viewSetData.get(index).isDisabled)
+            viewList.get(index).isDisabled = !isEnabled;
+            if (!viewList.get(index).isDisabled)
             {
                 notifyObservers(new ViewSetChange(Type.MODIFIED, image));
             }
@@ -941,8 +587,8 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
         else // Currently enabled, so disable
         {
-            viewSetData.get(index).isDisabled = !isEnabled;
-            if (viewSetData.get(index).isDisabled)
+            viewList.get(index).isDisabled = !isEnabled;
+            if (viewList.get(index).isDisabled)
             {
                 notifyObservers(new ViewSetChange(Type.MODIFIED, image));
             }
@@ -953,13 +599,13 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public Matrix4 getCameraPose(int poseIndex)
     {
-        return viewSetData.get(poseIndex).cameraPose;
+        return viewList.get(poseIndex).cameraPose;
     }
 
     @Override
     public Matrix4 getCameraPoseInverse(int poseIndex)
     {
-        return viewSetData.get(poseIndex).cameraPoseInv;
+        return viewList.get(poseIndex).cameraPoseInv;
     }
 
     @Override
@@ -1130,19 +776,19 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public File getImageFile(int poseIndex)
     {
-        return viewSetData.get(poseIndex).imageFile;
+        return viewList.get(poseIndex).imageFile;
     }
 
     @Override
     public String getImageFileName(int poseIndex)
     {
-        return viewSetData.get(poseIndex).imageFile.getName();
+        return viewList.get(poseIndex).imageFile.getName();
     }
 
     @Override
     public File getFullResImageFile(int poseIndex)
     {
-        return new File(getFullResImageDirectory(), viewSetData.get(poseIndex).imageFile.getPath());
+        return new File(getFullResImageDirectory(), viewList.get(poseIndex).imageFile.getPath());
 //        return viewSetDataCollection.getFullResImageFile(poseIndex);
     }
 
@@ -1169,13 +815,13 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public File getThumbnailImageFile(int poseIndex, String extension)
     {
-        return viewSetData.get(poseIndex).getThumbnailImageFile(extension);
+        return viewList.get(poseIndex).getThumbnailImageFile(extension);
     }
 
     @Override
     public File getThumbnailImageFile(int poseIndex)
     {
-        return viewSetData.get(poseIndex).getThumbnailImageFile();
+        return viewList.get(poseIndex).getThumbnailImageFile();
     }
 
     public int getPreviewWidth()
@@ -1201,9 +847,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     }
 
     @Override
-    public ViewData getPrimaryView()
+    public View getPrimaryView()
     {
-        return viewSetData.get(this.primaryViewIndex);
+        return viewList.get(this.primaryViewIndex);
     }
 
     public void setPrimaryViewIndex(int poseIndex)
@@ -1262,11 +908,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         // Try simple file comparison with full paths
         File key = new File(viewName);
-        for (int i = 0; i < viewSetData.size(); ++i)
+        for (int i = 0; i < viewList.size(); ++i)
         {
             if (getImageFile(i).equals(key))
             {
-                LOG.debug("Matched {} for {}", viewSetData.get(i).imageFile.getPath(), viewName);
+                LOG.debug("Matched {} for {}", viewList.get(i).imageFile.getPath(), viewName);
                 return i;
             }
         }
@@ -1278,7 +924,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         // i.e. the camera label is photo314.jpg, other times just photo314
 
         //This is all necessary due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-        for (int i = 0; i < viewSetData.size(); ++i)
+        for (int i = 0; i < viewList.size(); ++i)
         {
             String imgName = getImageFileName(i);
             String shortenedImgName = removeExt(imgName);
@@ -1286,7 +932,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
             if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
             {
-                LOG.debug("Matched {} for {}", viewSetData.get(i).imageFile.getPath(), viewName);
+                LOG.debug("Matched {} for {}", viewList.get(i).imageFile.getPath(), viewName);
                 return i;
             }
         }
@@ -1300,22 +946,16 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
-    /**
-     * Returns a virtual view of all the view set data, combining the enabled and disabled lists
-     * with disabled views listed after all enabled views.
-     * This view requires no copying (i.e. O(1) performance), is read-only, and will always be in sync with the source lists.
-     * @return
-     */
     @Override
-    public List<ViewData> getViewSetData()
+    public List<View> getViewList()
     {
-        return viewSetData;
+        return viewList;
     }
 
     @Override
-    public ViewData getView(int poseIndex)
+    public View getView(int poseIndex)
     {
-        return viewSetData.get(poseIndex);
+        return viewList.get(poseIndex);
     }
 
     @Override
@@ -1330,10 +970,15 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return getCameraProjection(getCameraProjectionIndex(viewIndex));
     }
 
+    void addCameraProjection(Projection projection)
+    {
+        this.cameraProjectionList.add(projection);
+    }
+
     @Override
     public int getCameraProjectionIndex(int poseIndex)
     {
-        return viewSetData.get(poseIndex).cameraProjectionIndex;
+        return viewList.get(poseIndex).cameraProjectionIndex;
     }
 
     @Override
@@ -1358,22 +1003,28 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         this.lightIntensityList.set(lightIndex, lightIntensity);
     }
 
+    void addLight(Vector3 position, Vector3 intensity)
+    {
+        this.lightPositionList.add(position);
+        this.lightIntensityList.add(intensity);
+    }
+
     @Override
     public int getLightIndex(int poseIndex)
     {
-        return viewSetData.get(poseIndex).lightIndex;
+        return viewList.get(poseIndex).lightIndex;
     }
 
     @Override
     public ReadonlyViewRMSE getViewErrorMetrics(int poseIndex)
     {
-        return viewSetData.get(poseIndex).viewErrorMetric;
+        return viewList.get(poseIndex).viewErrorMetric;
     }
 
     @Override
     public int getCameraPoseCount()
     {
-        return viewSetData.size();
+        return viewList.size();
     }
 
     @Override
@@ -1398,6 +1049,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public float getRecommendedFarPlane()
     {
         return this.recommendedFarPlane;
+    }
+
+    void setRecommmendedClipPlanes(float near, float far)
+    {
+        this.recommendedNearPlane = near;
+        this.recommendedFarPlane = far;
     }
 
     @Override
@@ -1488,7 +1145,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public File findThumbnailImageFile(int index) throws FileNotFoundException
     {
-        return viewSetData.get(index).findThumbnailImageFile();
+        return viewList.get(index).findThumbnailImageFile();
     }
 
     @Override
@@ -1506,7 +1163,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public File getMask(int poseIndex)
     {
-        File maskFile = viewSetData.get(poseIndex).maskFile;
+        File maskFile = viewList.get(poseIndex).maskFile;
         if (maskFile == null || getMasksDirectory() == null)
         {
             // Not all images have masks, so this file may still not exist
@@ -1527,12 +1184,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public Map<Integer, File> getMasksMap()
     {
-        Map<Integer, File> maskFiles = new HashMap<>(viewSetData.size());
-        for (int i = 0; i < viewSetData.size(); ++i)
+        Map<Integer, File> maskFiles = new HashMap<>(viewList.size());
+        for (int i = 0; i < viewList.size(); ++i)
         {
-            if (viewSetData.get(i).maskFile != null)
+            if (viewList.get(i).maskFile != null)
             {
-                maskFiles.put(i, viewSetData.get(i).maskFile);
+                maskFiles.put(i, viewList.get(i).maskFile);
             }
         }
         return Collections.unmodifiableMap(maskFiles);
@@ -1585,12 +1242,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             if (maskFile == null)
             {
                 // Remove if no mask file was found
-                viewSetData.get(i).maskFile = null;
+                viewList.get(i).maskFile = null;
             }
             else
             {
                 // Overwrite based on the file that was found
-                viewSetData.get(i).maskFile = maskFile;
+                viewList.get(i).maskFile = maskFile;
             }
         }
     }
@@ -1791,7 +1448,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public boolean isViewDisabled(int poseIndex)
     {
-        return viewSetData.get(poseIndex).isDisabled;
+        return viewList.get(poseIndex).isDisabled;
     }
 
     @Override
@@ -1823,13 +1480,13 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     }
 
     @Override
-    public void registerObserver(Observer<ViewSetChange> observer)
+    public void registerObserver(kintsugi3d.builder.core.Observer<ViewSetChange> observer)
     {
         observers.add(observer);
     }
 
     @Override
-    public void removeObserver(Observer<ViewSetChange> observer)
+    public void removeObserver(kintsugi3d.builder.core.Observer<ViewSetChange> observer)
     {
         observers.remove(observer);
     }

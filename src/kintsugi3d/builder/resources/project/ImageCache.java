@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.SimpleLoadOptionsModel;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
 import kintsugi3d.gl.geometry.GeometryTextures;

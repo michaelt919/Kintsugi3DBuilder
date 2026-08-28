@@ -12,7 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.primaryview.GenericViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 

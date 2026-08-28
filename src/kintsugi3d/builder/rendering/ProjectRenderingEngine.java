@@ -12,6 +12,8 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.gltf.ModelExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 
 import java.util.HashMap;
 import java.util.List;

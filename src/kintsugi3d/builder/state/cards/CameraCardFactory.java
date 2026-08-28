@@ -13,8 +13,8 @@ package kintsugi3d.builder.state.cards;
 
 import javafx.application.Platform;
 import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.ViewData;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -42,12 +42,12 @@ public class CameraCardFactory implements ProjectDataCardFactory
         this.viewSet = viewSet;
     }
 
-    private ProjectDataCard createCard(CardsModel cardsModel, ViewData viewData)
+    private ProjectDataCard createCard(CardsModel cardsModel, View view)
     {
         String thumbnailPath;
         try
         {
-            thumbnailPath = viewData.findThumbnailImageFile().toString();
+            thumbnailPath = view.findThumbnailImageFile().toString();
         }
         catch (FileNotFoundException e)
         {
@@ -57,13 +57,13 @@ public class CameraCardFactory implements ProjectDataCardFactory
 
         try
         {
-            File fullResFile = viewData.findFullResImageFile();
+            File fullResFile = view.findFullResImageFile();
             IntVector2 dimensions = ImageHelper.dimensionsOf(fullResFile);
             String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
             return new ProjectDataCard(
-                viewData.getImageFile().getPath(), // path is used to uniquely identify views for synchronizing with backend
-                viewData.getImageFile().getName(),
+                view.getImageFile().getPath(), // path is used to uniquely identify views for synchronizing with backend
+                view.getImageFile().getName(),
                 thumbnailPath,
                 new LinkedHashMap<>()
                 {{
@@ -73,10 +73,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 Map.of(
                     "Remove from Project", () ->
                         cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                            () -> Rendering.runLater(() -> viewSet.deleteCamera(viewData.getImageFile()))),
-                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(viewData.getImageFile()))
+                            () -> Rendering.runLater(() -> viewSet.deleteCamera(view.getImageFile()))),
+                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(view.getImageFile()))
                 ),
-                viewData.isDisabled()
+                view.isDisabled()
             );
         }
         catch (RuntimeException|IOException e)
@@ -119,7 +119,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         lastUsedCardsModel = cardsModel;
-        List<ProjectDataCard> cardsList = viewSet.getViewSetData().stream()
+        List<ProjectDataCard> cardsList = viewSet.getViewList().stream()
             .map(viewData -> createCard(cardsModel, viewData))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());

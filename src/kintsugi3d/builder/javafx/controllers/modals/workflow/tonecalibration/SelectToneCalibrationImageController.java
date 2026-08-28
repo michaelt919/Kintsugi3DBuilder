@@ -21,7 +21,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;

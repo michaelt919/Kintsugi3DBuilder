@@ -11,8 +11,14 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.viewset.DistortionProjection;
+import kintsugi3d.builder.core.viewset.Projection;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;

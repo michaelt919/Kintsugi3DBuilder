@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;

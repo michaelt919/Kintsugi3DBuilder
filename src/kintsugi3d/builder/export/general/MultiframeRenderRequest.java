@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 
@@ -72,7 +76,7 @@ class MultiframeRenderRequest extends RenderRequestBase
                     monitor.allowUserCancellation();
                 }
 
-                ViewData primaryView = renderable.getViewSet().getPrimaryView();
+                View primaryView = renderable.getViewSet().getPrimaryView();
 
                 program.setUniform("frame", i);
                 program.setUniform("frameCount", frameCount);

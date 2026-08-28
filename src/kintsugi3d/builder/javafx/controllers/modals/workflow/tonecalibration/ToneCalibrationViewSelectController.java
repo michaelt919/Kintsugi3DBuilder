@@ -15,7 +15,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectController;
 
 import java.util.Optional;

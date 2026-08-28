@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.viewset;
 
 import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
@@ -225,7 +225,7 @@ public interface ReadonlyViewSet
      * Gets the view to be used for color calibration and tonemapping operations
      * @return view
      */
-    ViewData getPrimaryView();
+    View getPrimaryView();
 
     /**
      * Gets the view index to use as a reference pose for reorienting the model
@@ -239,9 +239,9 @@ public interface ReadonlyViewSet
      */
     double getOrientationViewRotationDegrees();
 
-    List<ViewData> getViewSetData();
+    List<View> getViewList();
 
-    ViewData getView(int poseIndex);
+    View getView(int poseIndex);
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.

@@ -11,8 +11,8 @@
 
 package kintsugi3d.util;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.gl.vecmath.Vector3;
 

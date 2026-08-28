@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,7 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.Projection;
-import kintsugi3d.builder.core.SimpleProjection;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.core.ViewSet.Builder;
+import kintsugi3d.builder.core.viewset.*;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.gl.vecmath.Matrix3;
@@ -145,10 +141,10 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      *
      * @param stream The Agisoft camera XML stream to parse.
      * @param directories Project directory used when constructing the builder.
-     * @return The populated {@link Builder}.
+     * @return The populated {@link ViewSetBuilder}.
      */
     @Override
-    public Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
+    public ViewSetBuilder readFromStream(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
     {
         if (directories.supportingFilesDirectory == null)
         {
@@ -165,7 +161,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param stream stream The Agisoft camera XML stream to parse.
      * @param directories the project directory used when constructing {@code Builder}
      */
-    private static Builder readFromLooseFiles(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
+    private static ViewSetBuilder readFromLooseFiles(InputStream stream, ViewSetDirectories directories) throws XMLStreamException
     {
         return readFromStream(stream, directories, null, null, null, false);
     }
@@ -174,15 +170,15 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * Loads a view set from a Metashape psx chunk's extracted XML.
      * Image and mask filenames come from a pre-built path map; disabled images already be filtered out of imagePathMap.
      */
-    private static Builder readFromMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
-        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap) throws XMLStreamException
+    private static ViewSetBuilder readFromMetashapeChunk(InputStream stream, ViewSetDirectories directories, String modelID,
+                                                         Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap) throws XMLStreamException
     {
         return readFromStream(stream, directories, modelID, imagePathMap, maskPathMap, true);
     }
 
     /**
      * Core XML stream parser shared by the loose-file and Metashape-chunk paths.
-     * transforms, and produces a populated view set {@link Builder}.
+     * transforms, and produces a populated view set {@link ViewSetBuilder}.
      *
      * @param stream The XML stream (a chunk's {@code doc.xml} or a standalone exported camera file).
      * @param directories Project directory layout used when constructing the builder and resolving image paths.
@@ -194,8 +190,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      *                               transform drives projective texture mapping. When false (XML import),
      *                               the inverted global transform is used instead.
      */
-    private static Builder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
-        Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms)
+    private static ViewSetBuilder readFromStream(InputStream stream, ViewSetDirectories directories, String modelID,
+                                                 Map<Integer, String> imagePathMap, Map<Integer, String> maskPathMap, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new HashMap<>(16);
@@ -679,7 +675,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
         }
 
-        Builder builder = ViewSet.getBuilder(directories.projectRoot, directories.supportingFilesDirectory, cameraSet.size());
+        ViewSetBuilder builder = ViewSet.getBuilder(directories.projectRoot, directories.supportingFilesDirectory, cameraSet.size());
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 
@@ -913,7 +909,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param disabledImageFiles Image labels to exclude from the camera path map; may be null or empty.
      * @return A builder populated with the chunk's cameras, masks, geometry, and full-res image directory.
      */
-    public static Builder loadViewsetFromChunk(MetashapeChunk metashapeChunk, Collection<File> disabledImageFiles)
+    public static ViewSetBuilder loadViewsetFromChunk(MetashapeChunk metashapeChunk, Collection<File> disabledImageFiles)
         throws IOException, XMLStreamException, MissingImagesException
     {
         // Get reference to the chunk directory
@@ -973,7 +969,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // cameraPathsMap was already built with disabledImageFiles excluded
                     // (see metashapeChunk.buildCameraPathsMap above), so cameras whose images
                     // are disabled simply won't be in the map and will be skipped downstream.
-                    Builder viewSetBuilder = readFromMetashapeChunk(fileStream, directories,
+                    ViewSetBuilder viewSetBuilder = readFromMetashapeChunk(fileStream, directories,
                             String.valueOf(metashapeChunk.getCurrModelID()),
                             cameraPathsMap, maskPathsMap);
 

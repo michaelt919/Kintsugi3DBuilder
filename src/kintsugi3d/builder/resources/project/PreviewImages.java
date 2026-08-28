@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.DistortionProjection;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;

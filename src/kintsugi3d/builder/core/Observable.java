@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.core.viewset.ViewSetChange;
+
 public interface Observable
 {
     void registerObserver(Observer<ViewSetChange> observer);

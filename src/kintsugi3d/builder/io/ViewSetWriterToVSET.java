@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;

@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.viewset;
 
 import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -22,7 +22,7 @@ import java.io.FileNotFoundException;
  * Container for different data used by ViewSet. Contains cameraPose, cameraPoseInv, cameraProjectionIndex
  * lightIndex, imageFile, maskFile, and viewErrorMetrics.
  */
-public class ViewData
+public class View
 {
     /**
      * A camera pose defining the transformation from object space to camera space for each view.
@@ -65,8 +65,8 @@ public class ViewData
     /**
      * Creates a new view set data object with parameters for each member.
      */
-    ViewData(Matrix4 cameraPose, Matrix4 cameraPoseInv, int cameraProjectionIndex, int lightIndex,
-             int gpuViewIndex, File imageFile, File maskFile, ReadonlyViewRMSE viewErrorMetric, ReadonlyViewSet containingViewSet)
+    View(Matrix4 cameraPose, Matrix4 cameraPoseInv, int cameraProjectionIndex, int lightIndex,
+         int gpuViewIndex, File imageFile, File maskFile, ReadonlyViewRMSE viewErrorMetric, ReadonlyViewSet containingViewSet)
     {
         this.cameraPose = cameraPose;
         this.cameraPoseInv = cameraPoseInv;

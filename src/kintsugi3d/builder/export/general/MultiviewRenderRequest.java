@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ImageFinder;
@@ -59,7 +63,7 @@ class MultiviewRenderRequest extends RenderRequestBase
         )
         {
             int viewIndex = 0;
-            for (ViewData view : renderable.getViewSet().getViewSetData())
+            for (View view : renderable.getViewSet().getViewList())
             {
                 if (monitor != null)
                 {

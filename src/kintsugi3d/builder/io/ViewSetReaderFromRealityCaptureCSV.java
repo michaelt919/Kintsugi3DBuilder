@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,11 +13,7 @@ package kintsugi3d.builder.io;
 
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvToBeanBuilder;
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.Projection;
-import kintsugi3d.builder.core.SimpleProjection;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.core.ViewSet.Builder;
+import kintsugi3d.builder.core.viewset.*;
 import kintsugi3d.gl.vecmath.DoubleMatrix4;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -107,13 +103,13 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
     }
 
     @Override
-    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws IOException
+    public ViewSetBuilder readFromStream(InputStream stream, ViewSetDirectories directories) throws IOException
     {
         List<Camera> cameras = new CsvToBeanBuilder<Camera>(new InputStreamReader(stream, StandardCharsets.UTF_8))
             .withType(Camera.class).build().parse();
 
         // Start building the view set
-        Builder builder = ViewSet.getBuilder(directories.projectRoot, cameras.size());
+        ViewSetBuilder builder = ViewSet.getBuilder(directories.projectRoot, cameras.size());
 
         // Try to figure out what the camera groups were
         Map<Projection, List<String>> cameraMap = new HashMap<>(1);

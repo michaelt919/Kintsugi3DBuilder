@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSetBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,7 @@ public interface ViewSetReader
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws Exception;
+    ViewSetBuilder readFromStream(InputStream stream, ViewSetDirectories directories) throws Exception;
 
     /**
      * Loads a view set from an input file.
@@ -36,7 +36,7 @@ public interface ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    default ViewSet.Builder readFromFile(File cameraFile, ViewSetDirectories directories) throws Exception
+    default ViewSetBuilder readFromFile(File cameraFile, ViewSetDirectories directories) throws Exception
     {
         try (InputStream stream = new FileInputStream(cameraFile))
         {
@@ -53,9 +53,9 @@ public interface ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    default ViewSet.Builder readFromFile(File cameraFile, ViewSetLoadOptions loadOptions) throws Exception
+    default ViewSetBuilder readFromFile(File cameraFile, ViewSetLoadOptions loadOptions) throws Exception
     {
-        ViewSet.Builder builder = this.readFromFile(cameraFile, loadOptions.mainDirectories);
+        ViewSetBuilder builder = this.readFromFile(cameraFile, loadOptions.mainDirectories);
 
         if (loadOptions.disabledImages != null)
         {

@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.export.resample;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;

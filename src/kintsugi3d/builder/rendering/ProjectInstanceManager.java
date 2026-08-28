@@ -13,6 +13,8 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
@@ -197,7 +199,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<String> imgFileNames = loadedViewSet.getViewSetData().stream()
+        List<String> imgFileNames = loadedViewSet.getViewList().stream()
             .map(view -> view.getImageFile().getName())
             .collect(Collectors.toList());
 

@@ -13,7 +13,11 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ColorAppearanceMode;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
