@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.primaryview.GenericViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
@@ -33,9 +34,10 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
         ViewSet currentViewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
         setViewSelectionModel(new GenericViewSelectionModel("Current Project", currentViewSet));
 
-        if (currentViewSet.getOrientationViewIndex() >= 0)
+        View orientationView = currentViewSet.getOrientationView();
+        if (orientationView != null)
         {
-            String viewName = currentViewSet.getImageFileName(currentViewSet.getOrientationViewIndex());
+            String viewName = orientationView.getImageFile().getPath();
             selectView(viewName, currentViewSet.getOrientationViewRotationDegrees());
         }
 

@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
-import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
@@ -241,11 +241,11 @@ class ImageReconstructionTests
                 File outputDirectory = new File(TEST_OUTPUT_DIR, groundTruthName);
                 outputDirectory.mkdirs();
 
-                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                for (View view : viewSet.getViews())
                 {
-                    renderGroundTruth(viewSet, i, groundTruthDrawable, groundTruthFBO);
+                    renderGroundTruth(view, groundTruthDrawable, groundTruthFBO);
                     groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                        new File(outputDirectory, MessageFormat.format("{0,number,0000}.png", i)));
+                        new File(outputDirectory, MessageFormat.format("{0,number,0000}.png", view.getGPUViewIndex())));
                 }
             }
         }
@@ -901,7 +901,7 @@ class ImageReconstructionTests
                         .addDepthAttachment(),
                     ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
                     resources,
-                    viewIndex -> renderGroundTruth(viewSet, viewIndex, groundTruthDrawable, groundTruthFBO));
+                    view -> renderGroundTruth(view, groundTruthDrawable, groundTruthFBO));
                 ProgramObject<OpenGLContext> syntheticWithNoise = testProgramCreator.apply(programFactory, resources);
                 Drawable<OpenGLContext> drawable = resources.createDrawable(syntheticWithNoise))
             {
@@ -913,7 +913,7 @@ class ImageReconstructionTests
                 for (ReconstructionView<OpenGLContext> view : reconstruction)
                 {
                     // Pass light intensity for noise generation methods that depend on it.
-                    syntheticWithNoise.setUniform("reconstructionLightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(view.getIndex())));
+                    syntheticWithNoise.setUniform("reconstructionLightIntensity", view.getView().getLightIntensity());
 
                     ReadonlyColorAppearanceRMSE rmse = view.reconstruct(drawable);
 
@@ -921,7 +921,7 @@ class ImageReconstructionTests
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0)
                             .saveToFile("PNG", new File(outputDirectory,
-                                    MessageFormat.format("{0,number,0000}.png", view.getIndex())),
+                                    MessageFormat.format("{0,number,0000}.png", view.getView().getGPUViewIndex())),
                                 // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                 // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                                 (color, index) -> viewSet.getLuminanceEncoding().encode(
@@ -933,19 +933,16 @@ class ImageReconstructionTests
         }
     }
 
-    private static ColorArrayImage renderGroundTruth(ReadonlyViewSet viewSet, int viewIndex,
-                                                     Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
+    private static ColorArrayImage renderGroundTruth(
+        View view, Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
     {
-        groundTruthDrawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
-        groundTruthDrawable.program().setUniform("projection",
-            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
-                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+        groundTruthDrawable.program().setUniform("model_view", view.getCameraPose());
+        groundTruthDrawable.program().setUniform("projection", view.getProjectionMatrix());
         groundTruthDrawable.program().setUniform("reconstructionCameraPos",
-            viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
+            view.getCameraPoseInverse().getColumn(3).getXYZ());
         groundTruthDrawable.program().setUniform("reconstructionLightPos",
-            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
-        groundTruthDrawable.program().setUniform("reconstructionLightIntensity",
-            viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+            view.getCameraPoseInverse().times(view.getLightPosition().asPosition()).getXYZ());
+        groundTruthDrawable.program().setUniform("reconstructionLightIntensity", view.getLightIntensity());
 
         groundTruthFBO.clearColorBuffer(0, 0, 0, 0, 0);
         groundTruthFBO.clearDepthBuffer();
@@ -991,7 +988,7 @@ class ImageReconstructionTests
                             {
                                 view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
                                     new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
-                                        resources.getViewSet().getImageFileName(view.getIndex()), "png")),
+                                        view.getView().getImageFile().getName(), "png")),
                                     // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                     // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                                     (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(
@@ -1081,7 +1078,7 @@ class ImageReconstructionTests
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
                             new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
-                                resources.getViewSet().getImageFileName(view.getIndex()), "png")),
+                                view.getView().getImageFile().getName(), "png")),
                             // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                             // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                             (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(

@@ -19,7 +19,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.io.primaryview.View;
+import kintsugi3d.builder.io.primaryview.PrimaryViewCandidate;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
@@ -163,21 +163,21 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         TreeItem<String> rootItem = new TreeItem<>(viewSelectionModel.getName());
         searchableTreeView.getTreeView().setRoot(rootItem);
 
-        List<View> views = viewSelectionModel.getViews();
+        List<PrimaryViewCandidate> primaryViewCandidates = viewSelectionModel.getViews();
 
         if (canSelectNullView())
         {
             rootItem.getChildren().add(NONE_ITEM);
         }
 
-        for (View view : views)
+        for (PrimaryViewCandidate primaryViewCandidate : primaryViewCandidates)
         {
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
             //unless that group already exists, then add the camera to the already created group
 
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-            if (view.group != null)
+            if (primaryViewCandidate.group != null)
             {
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
@@ -185,7 +185,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
                 rootChildren.forEach(item ->
                 {
-                    if (item.getValue().equals(view.group))
+                    if (item.getValue().equals(primaryViewCandidate.group))
                     {
                         groupAlreadyCreated.set(true);
                         matchingItem.set(item);
@@ -199,7 +199,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 }
                 else
                 {//group has not been created yet
-                    TreeItem<String> newGroup = new TreeItem<>(view.group);
+                    TreeItem<String> newGroup = new TreeItem<>(primaryViewCandidate.group);
                     rootItem.getChildren().add(newGroup);
                     destinationItem = newGroup;
                 }
@@ -212,7 +212,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnailMap(), view);
+            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnailMap(), primaryViewCandidate);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -220,16 +220,16 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, View view)
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, PrimaryViewCandidate primaryViewCandidate)
     {
         ImageView thumbnailImgView;
-        Image img = thumbnailImgMap.get(view.id);
+        Image img = thumbnailImgMap.get(primaryViewCandidate.id);
         thumbnailImgView = new ImageView(Objects.requireNonNullElseGet(img, // null if thumbnail not found in thumbnailImgMap
             () -> new Image(new File("question-mark.png").toURI().toString())));
         thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
-        return new TreeItem<>(view.name, thumbnailImgView);
+        return new TreeItem<>(primaryViewCandidate.name, thumbnailImgView);
     }
 
     @FXML

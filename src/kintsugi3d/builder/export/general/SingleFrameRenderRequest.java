@@ -14,11 +14,14 @@ package kintsugi3d.builder.export.general;
 import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Consumer;
 
 class SingleFrameRenderRequest extends RenderRequestBase
@@ -62,15 +65,38 @@ class SingleFrameRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            if(monitor != null){
+            if(monitor != null)
+            {
                 monitor.setProcessName("Generic Export");
             }
 
-            program.setUniform("model_view", renderable.getViewSet().getCameraPose(0));
-            program.setUniform("projection",
-                renderable.getViewSet().getCameraProjectionForViewIndex(0)
-                    .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
-                        renderable.getViewSet().getRecommendedFarPlane()));
+            ViewSet viewSet = renderable.getViewSet();
+
+            View orientationView = viewSet.getOrientationView();
+
+            if (orientationView == null)
+            {
+                // First fallback if no orientation view has been set: primary view for tone calibration
+                orientationView = viewSet.getPrimaryView();
+            }
+
+            if (orientationView == null)
+            {
+                // Second fallback if primary view is not set: grab the first view in the list, if it exists.
+                List<View> views = viewSet.getViews();
+
+                if (!views.isEmpty())
+                {
+                    orientationView = views.get(0);
+                }
+            }
+
+            if (orientationView != null)
+            {
+                program.setUniform("model_view", orientationView.getCameraPose());
+                program.setUniform("projection", orientationView.getProjectionMatrix());
+            }
+
 
             render(drawable, framebuffer);
 

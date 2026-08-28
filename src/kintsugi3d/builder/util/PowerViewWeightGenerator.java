@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.util;
 
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -28,29 +29,30 @@ public class PowerViewWeightGenerator implements ViewWeightGenerator
     }
 
     @Override
-    public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
+    public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
+        float[] viewWeights = new float[resources.getViewSet().getGPUBufferSize()];
         float viewWeightSum = 0.0f;
 
-        for (int viewIndex : activeViewIndexList)
+        for (View view : activeViewList)
         {
-            Vector3 viewDir = resources.getViewSet().getCameraPose(viewIndex).times(
+            Vector3 viewDir = view.getCameraPose().times(
                     Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                 .getXYZ().negated().normalized();
 
-            Vector3 targetDir = resources.getViewSet().getCameraPose(viewIndex).times(
+            Vector3 targetDir = view.getCameraPose().times(
                     targetView.quickInverse(0.01f).getColumn(3)
                         .minus(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition()))
                 .getXYZ().normalized();
 
+            int viewIndex = view.getGPUViewIndex();
             viewWeights[viewIndex] = 1.0f / (float) Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), power)) - 1.0f;
             viewWeightSum += viewWeights[viewIndex];
         }
 
         for (int i = 0; i < viewWeights.length; i++)
         {
-            viewWeights[i] /= Math.max(0.01, viewWeightSum);
+            viewWeights[i] /= Math.max(0.01f, viewWeightSum);
         }
 
         return viewWeights;

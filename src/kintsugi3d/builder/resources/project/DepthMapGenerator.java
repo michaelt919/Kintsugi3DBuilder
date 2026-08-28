@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
@@ -59,43 +59,36 @@ public final class DepthMapGenerator<ContextType extends Context<ContextType>> i
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"));
     }
 
-    public void generateDepthMap(ReadonlyViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)
+    public void generateDepthMap(View view, Framebuffer<ContextType> framebuffer)
     {
         framebuffer.clearDepthBuffer();
 
-        depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewIndex));
-        depthRenderingProgram.setUniform("projection",
-            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
-                .getProjectionMatrix(
-                    viewSet.getRecommendedNearPlane(),
-                    viewSet.getRecommendedFarPlane()
-                )
-        );
+        depthRenderingProgram.setUniform("model_view", view.getCameraPose());
+        depthRenderingProgram.setUniform("projection", view.getProjectionMatrix());
 
         depthDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     }
 
     /**
      *
-     * @param viewSet
-     * @param viewIndex
+     * @param view
      * @param framebuffer
      * @return The shadow matrix
      */
-    public Matrix4 generateShadowMap(ReadonlyViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)
+    public Matrix4 generateShadowMap(View view, Framebuffer<ContextType> framebuffer)
     {
         framebuffer.clearDepthBuffer();
 
         Matrix4 modelView = Matrix4.lookAt(
-            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(0).asPosition()).getXYZ(),
+            view.getCameraPoseInverse().times(view.getLightPosition().asPosition()).getXYZ(),
             geometryResources.geometry.getCentroid(),
             new Vector3(0, 1, 0));
         depthRenderingProgram.setUniform("model_view", modelView);
 
-        Matrix4 projection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
+        Matrix4 projection = view.getCameraProjection()
             .getProjectionMatrix(
-                viewSet.getRecommendedNearPlane(),
-                viewSet.getRecommendedFarPlane() * 2 // double it for good measure
+                view.getContainingViewSet().getRecommendedNearPlane(),
+                view.getContainingViewSet().getRecommendedFarPlane() * 2 // double it for good measure
             );
         depthRenderingProgram.setUniform("projection", projection);
 

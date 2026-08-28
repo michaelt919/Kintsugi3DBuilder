@@ -11,21 +11,15 @@
 
 package kintsugi3d.builder.core.viewset;
 
-import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
-import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,25 +38,9 @@ public interface ReadonlyViewSet
 
     ReadonlyNativeVectorBuffer getLightIndexData();
 
-    ReadonlyViewSet createPermutation(Collection<Integer> permutationIndices);
-
     ViewSet copy();
 
     UUID getUUID();
-
-    /**
-     * Gets the camera pose defining the transformation from object space to camera space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The camera pose as a 4x4 affine transformation matrix.
-     */
-    Matrix4 getCameraPose(int poseIndex);
-
-    /**
-     * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The inverse camera pose as a 4x4 affine transformation matrix.
-     */
-    Matrix4 getCameraPoseInverse(int poseIndex);
 
     /**
      * Gets the root directory for this view set.
@@ -142,84 +120,9 @@ public interface ReadonlyViewSet
      */
     float getObjectScale();
 
-    /**
-     * Gets a list of all image files.
-     * This method should be used to retrieve a filename representing the actual location of the full-res image file.
-     * In contexts when the relative path is unwanted, use getImageFileName() instead.
-     * @return The list of image files
-     */
-    List<File> getImageFiles();
+    int getPreviewWidth();
 
-    /**
-     * Gets the image file corresponding to a particular view, relative to the full res image directory.
-     * This method should be used to retrieve a filename representing the actual location of the full-res image file.
-     * In contexts when the relative path is unwanted, use getImageFileName() instead.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name.
-     */
-    File getImageFile(int poseIndex);
-
-    /**
-     * Gets the name of the image file corresponding to a particular view.
-     * This method should be used to retrieve the filename in contexts when the relative path is unwanted.
-     * (i.e. for creating or finding images with the same name as the full-res image file, but which are in a different directory).
-     * To retrieve a filename representing the actual location of the full-res image file, use getImageFile() instead.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name.
-     */
-    String getImageFileName(int poseIndex);
-
-    /**
-     * Gets the full resolution image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
-    File getFullResImageFile(int poseIndex);
-
-    File getFullResImageFile(String viewName);
-
-    /**
-     * Gets the downscaled "preview" image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @param extension The file extension without the dot (i.e. "png", "jpeg", "tiff") to use for the file.
-     * @return The image file.
-     */
-    File getPreviewImageFile(int poseIndex, String extension);
-
-    /**
-     * Gets the downscaled "preview" image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
-    File getPreviewImageFile(int poseIndex);
-
-    /**
-     * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @param extension The file extension without the dot (i.e. "png", "jpeg", "tiff") to use for the file.
-     * @return The image file.
-     */
-    File getThumbnailImageFile(int poseIndex, String extension);
-
-    /**
-     * Gets the downscaled "thumbnail" image file corresponding to a partiulr view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
-    File getThumbnailImageFile(int poseIndex);
-
-    /**
-     * Gets the mask of a particular view, if it exists
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
-    File getMask(int poseIndex);
-
-    /**
-     * Gets the view index to be used for color calibration and tonemapping operations
-     * @return view index
-     */
-    int getPrimaryViewIndex();
+    int getPreviewHeight();
 
     /**
      * Gets the view to be used for color calibration and tonemapping operations
@@ -231,7 +134,7 @@ public interface ReadonlyViewSet
      * Gets the view index to use as a reference pose for reorienting the model
      * @return view index
      */
-    int getOrientationViewIndex();
+    View getOrientationView();
 
     /**
      * Roll rotation of the reference view pose to correct upside down and sideways images
@@ -239,9 +142,21 @@ public interface ReadonlyViewSet
      */
     double getOrientationViewRotationDegrees();
 
-    List<View> getViewList();
+    List<View> getViews();
 
-    View getView(int poseIndex);
+    /**
+     * Gets the number of views defined in this view set.
+     * @return The number of views defined in this view set.
+     */
+    int getViewCount();
+
+    /**
+     * Gets the size for any array on the GPU that is indexed by view.
+     * This may be greater than the "view count" if views were deleted after the project was loaded.
+     * @return
+     */
+    int getGPUBufferSize();
+
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.
@@ -250,22 +165,11 @@ public interface ReadonlyViewSet
      * @return The projection transformation.
      */
     Projection getCameraProjection(int projectionIndex);
-
     /**
-     * Gets the projection transformation defining the intrinsic properties for a specific view.
-     * @param viewIndex The index of the view whose projection transformation should be retrieved.
-     * This works by first finding the camera projection index for the view and then looking up the projection itself by that index.
-     * @return The projection transformation.
+     * Gets the number of projection transformations defined in this view set.
+     * @return The number of projection transformations defined in this view set.
      */
-    Projection getCameraProjectionForViewIndex(int viewIndex);
-
-    /**
-     * Gets the index of the projection transformation to be used for a particular view,
-     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
-     * @param poseIndex The index of the view.
-     * @return The index of the projection transformation.
-     */
-    int getCameraProjectionIndex(int poseIndex);
+    int getCameraProjectionCount();
 
     /**
      * Gets the position of a particular light source.
@@ -286,28 +190,6 @@ public interface ReadonlyViewSet
      * @return The position of the light source.
      */
     Vector3 getLightIntensity(int lightIndex);
-
-    /**
-     * Gets the index of the light source to be used for a particular view,
-     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
-     * @param poseIndex The index of the view.
-     * @return The index of the light source.
-     */
-    int getLightIndex(int poseIndex);
-
-    ReadonlyViewRMSE getViewErrorMetrics(int poseIndex);
-
-    /**
-     * Gets the number of camera poses defined in this view set.
-     * @return The number of camera poses defined in this view set.
-     */
-    int getCameraPoseCount();
-
-    /**
-     * Gets the number of projection transformations defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
-    int getCameraProjectionCount();
 
     /**
      * Gets the number of lights defined in this view set.
@@ -334,47 +216,11 @@ public interface ReadonlyViewSet
     double[] getLinearLuminanceValues();
     byte[] getEncodedLuminanceValues();
 
-    /**
-     * Finds the image file for a particular view index.
-     * @param index The index of the view to find.
-     * @return The image file at the specified view index.
-     * @throws FileNotFoundException if the image file cannot be found.
-     */
-    File findFullResImageFile(int index) throws FileNotFoundException;
-
-    /**
-     * Finds the image file for the primary view index.
-     * @return The image file at the primary view index.
-     * @throws FileNotFoundException if the image file cannot be found.
-     */
-    File findFullResPrimaryImageFile() throws FileNotFoundException;
-
-    File findPreviewImageFile(int index) throws FileNotFoundException;
-
-    File findThumbnailImageFile(int index) throws FileNotFoundException;
-
-    File tryFindFullResImageFile(int index);
-
-    File tryFindPreviewImageFile(int index);
-
-    File tryFindThumbnailImageFile(int index);
-
-    File findPreviewPrimaryImageFile() throws FileNotFoundException;
-
     boolean hasMasks();
 
     File getMasksDirectory();
 
     Map<Integer, File> getMasksMap();
-
-    ImageHelper loadFullResMaskedImage(int index) throws IOException;
-
-    /**
-     * Gets whether a camera pose in the combined views is disabled at a given index.
-     * @param poseIndex The index of the view to check.
-     * @return Whether this view is disabled.
-     */
-    boolean isViewDisabled(int poseIndex);
 
     /**
      * Gets additional settings associated with this view set

@@ -62,24 +62,22 @@ class MultiviewRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            int viewIndex = 0;
-            for (View view : renderable.getViewSet().getViewList())
+            int progressCount = 0;
+            for (View view : renderable.getViewSet().getViews())
             {
                 if (monitor != null)
                 {
                     monitor.allowUserCancellation();
                 }
-                program.setUniform("viewIndex", viewIndex);
+
+                program.setUniform("viewIndex", view.getGPUViewIndex());
                 program.setUniform("model_view", view.getCameraPose());
-                program.setUniform("projection",
-                    view.getCameraProjection()
-                        .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
-                            renderable.getViewSet().getRecommendedFarPlane()));
+                program.setUniform("projection", view.getProjectionMatrix());
 
                 render(drawable, framebuffer);
 
                 String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
-                    renderable.getViewSet().getImageFileName(viewIndex), "png");
+                    view.getImageFile().getName(), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
@@ -87,11 +85,12 @@ class MultiviewRenderRequest extends RenderRequestBase
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) viewIndex / (double) resources.getViewSet().getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(viewIndex), viewIndex+1, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress((double) progressCount / (double) resources.getViewSet().getViewCount(),
+                        MessageFormat.format("{0} ({1}/{2})", view,
+                            progressCount + 1, resources.getViewSet().getViewCount()));
                 }
 
-                viewIndex++;
+                progressCount++;
             }
         }
     }

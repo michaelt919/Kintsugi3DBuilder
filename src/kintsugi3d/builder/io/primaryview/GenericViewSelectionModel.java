@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 
 import java.util.HashMap;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public final class GenericViewSelectionModel implements ViewSelectionModel
 {
@@ -39,10 +39,10 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     }
 
     @Override
-    public List<View> getViews()
+    public List<PrimaryViewCandidate> getViews()
     {
-        return IntStream.range(0, viewSet.getCameraPoseCount())
-            .mapToObj(i -> new View(viewSet.getImageFileName(i)))
+        return viewSet.getViews().stream()
+            .map(view -> new PrimaryViewCandidate(view.toString()))
             .collect(Collectors.toUnmodifiableList());
     }
 
@@ -56,12 +56,12 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     @Override
     public Optional<String> findFullResImagePath(String imageName)
     {
-        for (int i = 0; i < viewSet.getCameraPoseCount(); ++i)
+        for (View view : viewSet.getViews())
         {
-            String fileName = viewSet.getImageFileName(i);
+            String fileName = view.getImageFile().getName();
             if (fileName.matches(".*" + imageName + ".*"))
             {
-                return Optional.of(viewSet.getFullResImageFile(i).getPath());
+                return Optional.of(view.getFullResImageFile().getPath());
             }
         }
         return Optional.empty();

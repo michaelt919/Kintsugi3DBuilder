@@ -59,7 +59,7 @@ public interface ViewSetReader
 
         if (loadOptions.disabledImages != null)
         {
-            builder.disableCamerasByImageFilename(loadOptions.disabledImages);
+            builder.removeViewsByImageFilename(loadOptions.disabledImages);
         }
 
         if (loadOptions.geometryFile != null)
@@ -73,7 +73,7 @@ public interface ViewSetReader
         }
 
         // Set even if orientationViewName is null (to use default orientation in that case).
-        builder.setOrientationViewName(loadOptions.orientationViewName)
+        builder.setOrientationViewByName(loadOptions.orientationViewName)
             .setOrientationViewRotation(loadOptions.orientationViewRotation);
 
         if (loadOptions.uuid != null)

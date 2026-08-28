@@ -15,10 +15,14 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.viewset.Projection;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector4;
+
+import java.util.Objects;
 
 /**
  * Snaps to viewpoints from the view set
@@ -32,7 +36,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     private ViewSnapContent<ContextType> contentRoot;
 
     private Matrix4 viewSnap = Matrix4.IDENTITY;
-    private int lastSnapViewIndex = -1;
+    private View lastSnapView = null;
 
     public ViewSnap(SceneModel sceneModel, ViewSelection viewSelection)
     {
@@ -69,18 +73,20 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
 
     private Matrix4 snapToView(Matrix4 targetView)
     {
-        if (sceneModel.getCameraViewListModel().isCameraViewSnapEnabled())
+        CameraViewListModel cameraViewListModel = sceneModel.getCameraViewListModel();
+
+        if (cameraViewListModel.isCameraViewSnapEnabled())
         {
             Matrix4 viewInverse = targetView.quickInverse(0.01f);
             float maxSimilarity = Float.NEGATIVE_INFINITY;
-            int snapViewIndex = -1;
+            View snapView = null;
 
             // View will be overridden for light calibration so that it snaps to specific views
             Matrix4 currentViewSnap = null;
 
-            for (int i = 0; i < this.viewSelection.getViewSet().getCameraPoseCount(); i++)
+            for (View view : viewSelection.getViewSet().getViews())
             {
-                Matrix4 candidateView = this.viewSelection.getViewForIndex(i);
+                Matrix4 candidateView = this.viewSelection.getMatrixFromView(view);
                 float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
                     .dot(candidateView.quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
 
@@ -88,35 +94,35 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
                 {
                     maxSimilarity = similarity;
                     currentViewSnap = candidateView;
-                    snapViewIndex = i;
+                    snapView = view;
                 }
             }
 
             assert currentViewSnap != null; // Should be non-null if there are any camera poses since initially maxSimilarity is -infinity
 
-            if (lastSnapViewIndex == snapViewIndex)
+            if (Objects.equals(lastSnapView, snapView))
             {
                 // Snapped view has not changed; refer to the global selection model in case the user changed the selected camera on the list view.
-                return viewSelection.getSelectedView();
+                return viewSelection.getSelectedMatrix();
             }
             else
             {
                 // Snapped view has changed; set it on the global selection model and use it.
-                lastSnapViewIndex = snapViewIndex;
-                sceneModel.getCameraViewListModel().setSelectedCameraViewIndex(snapViewIndex);
+                lastSnapView = snapView;
+                cameraViewListModel.setSelectedCameraView(snapView);
                 return currentViewSnap;
             }
         }
         else
         {
-            if (sceneModel.getCameraViewListModel().getSelectedCameraViewIndex() < 0)
+            if (cameraViewListModel.getSelectedCameraView() == null && !cameraViewListModel.getCameraViewList().isEmpty())
             {
                 // Select a view if none is selected.
-                sceneModel.getCameraViewListModel().setSelectedCameraViewIndex(0);
+                cameraViewListModel.setSelectedCameraView(cameraViewListModel.getCameraViewList().get(0));
             }
 
             // View snap is disabled; do not change the current view.
-            return viewSelection.getSelectedView();
+            return viewSelection.getSelectedMatrix();
         }
     }
 
@@ -130,7 +136,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        Projection projection = viewSelection.getSelectedCameraProjection();
+        Projection projection = viewSelection.getSelectedView().getCameraProjection();
         Matrix4 projectionMatrix = projection.getProjectionMatrix(
             viewSelection.getViewSet().getRecommendedNearPlane(), viewSelection.getViewSet().getRecommendedFarPlane());
 

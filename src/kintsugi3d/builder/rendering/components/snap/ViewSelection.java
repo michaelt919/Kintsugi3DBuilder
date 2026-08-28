@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
-import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -20,36 +20,20 @@ public interface ViewSelection
 {
     ReadonlyViewSet getViewSet();
 
-    int getSelectedViewIndex();
+    View getSelectedView();
 
     /**
      * Gets the view matrix for a particular view index, relative to the world space used by rendered components.
      * This is not generally the same as the camera pose matrix in the view set as it is in reference to a
      * recentered, reoriented, and rescaled model.
-     * @param index
+     * @param view
      * @return
      */
-    Matrix4 getViewForIndex(int index);
+    Matrix4 getMatrixFromView(View view);
 
-    default Matrix4 getSelectedView()
+    default Matrix4 getSelectedMatrix()
     {
-        return getViewForIndex(getSelectedViewIndex());
-    }
-
-    default Matrix4 getSelectedCameraPose()
-    {
-        return getViewSet().getCameraPose(getSelectedViewIndex());
-    }
-
-    default Matrix4 getSelectedCameraPoseInverse()
-    {
-        return getViewSet().getCameraPoseInverse(getSelectedViewIndex());
-    }
-
-    default Projection getSelectedCameraProjection()
-    {
-        ReadonlyViewSet viewSet = getViewSet();
-        return viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(getSelectedViewIndex()));
+        return getMatrixFromView(getSelectedView());
     }
 
     Vector3 getFrustumDimensions();

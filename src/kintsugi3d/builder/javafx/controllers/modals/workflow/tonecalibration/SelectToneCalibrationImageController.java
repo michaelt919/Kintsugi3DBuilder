@@ -21,6 +21,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
@@ -126,14 +127,14 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         File imageFile = null;
         if (Objects.equals(buttonGroup.getSelectedToggle(), primaryViewImageButton))
         {
-            int primaryViewIndex = viewSet.getPrimaryViewIndex();
+            View primaryView = viewSet.getPrimaryView();
             try
             {
-                imageFile = viewSet.findFullResImageFile(primaryViewIndex);
+                imageFile = primaryView.findFullResImageFile();
             }
             catch (FileNotFoundException e)
             {
-                error("File not found", String.format("Could not find file: %s", viewSet.getFullResImageFile(primaryViewIndex)));
+                error("File not found", String.format("Could not find file: %s", primaryView.getFullResImageFile()));
                 return false;
             }
         }

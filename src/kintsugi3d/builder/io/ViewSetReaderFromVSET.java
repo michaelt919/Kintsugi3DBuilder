@@ -97,7 +97,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     }
                     case "O":
                     {
-                        builder.setOrientationViewIndex(scanner.nextInt());
+                        builder.setOrientationViewByIndex(scanner.nextInt());
                         scanner.nextLine();
                         break;
                     }
@@ -311,14 +311,14 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                                 .setCurrentCameraProjectionIndex(projectionId)
                                 .setCurrentLightIndex(lightId)
                                 .setCurrentImageFile(new File(imgFilename))
-                                .commitCurrentCameraPoseAsDisabled();
+                                .commitCurrentViewAsDisabled();
                             break;
                         }
                         builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)
                             .setCurrentImageFile(new File(imgFilename))
-                            .commitCurrentCameraPose();
+                            .commitCurrentView();
                         break;
                     }
                     case "k":

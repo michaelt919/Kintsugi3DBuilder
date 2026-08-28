@@ -15,9 +15,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectController;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class ToneCalibrationViewSelectController extends ViewSelectController
@@ -33,8 +35,8 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
     {
         ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
 
-        int viewIndex = viewSet.findIndexOfView(getSelectedViewName());
-        if (viewIndex == viewSet.getPrimaryViewIndex())
+        View view = viewSet.findViewByName(getSelectedViewName());
+        if (Objects.equals(view, viewSet.getPrimaryView()))
         {
             // No change was made, continue to next page
             return true;
@@ -53,7 +55,7 @@ public class ToneCalibrationViewSelectController extends ViewSelectController
         }
 
         viewSet.clearLuminanceEncoding();
-        viewSet.setPrimaryViewIndex(viewIndex);
+        viewSet.setPrimaryView(view);
         return true;
     }
 

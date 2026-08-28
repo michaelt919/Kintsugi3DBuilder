@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering.components.scene.camera;
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraFrustum;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
@@ -25,29 +26,26 @@ import kintsugi3d.gl.core.FramebufferObject;
 
 public class CameraWidgetGroup<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private int cameraIndex;
+    private View currentView;
 
-    private ViewSelection selection;
+    private final GraphicsResourcesImageSpace<ContextType> resources;
+    private final SceneModel sceneModel;
 
-    private GraphicsResourcesImageSpace<ContextType> resources;
-    private SceneModel sceneModel;
-    private SceneViewportModel sceneViewportModel;
-
-    private CameraVisual<ContextType> cameraVisual;
-    private CameraFrustum<ContextType> cameraFrustum;
+    private final CameraVisual<ContextType> cameraVisual;
+    private final CameraFrustum<ContextType> cameraFrustum;
 
     public CameraWidgetGroup(GraphicsResourcesImageSpace<ContextType> resources,
                              SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;
         this.sceneModel = sceneModel;
-        this.sceneViewportModel = sceneViewportModel;
 
-        selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel){
+        ViewSelection selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel)
+        {
             @Override
-            public int getSelectedViewIndex()
+            public View getSelectedView()
             {
-                return cameraIndex;
+                return currentView;
             }
         };
 
@@ -76,7 +74,7 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     {
         if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
         {
-            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCameraPoseCount(); cameraIndex++)
+            for (View view : resources.getViewSet().getViews())
             {
                 cameraVisual.draw(framebuffer, cameraViewport);
                 cameraFrustum.draw(framebuffer, cameraViewport);

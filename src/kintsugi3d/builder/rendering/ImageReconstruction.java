@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -31,13 +32,13 @@ import java.nio.FloatBuffer;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {
     private final ReadonlyViewSet viewSet;
-    private final IntFunction<ColorImage> groundTruthLoader;
+    private final Function<View, ColorImage> groundTruthLoader;
     private final ProgramObject<ContextType> incidentRadianceProgram;
     private final Drawable<ContextType> incidentRadianceDrawable;
 
@@ -59,12 +60,12 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         throws IOException
     {
         this(viewSet, buildFramebufferAttachments, buildIncidentRadianceFramebufferAttachments, incidentRadianceProgramBuilder, resources,
-            viewIndex ->
+            view ->
             {
                 // load new ground truth
                 try
                 {
-                    BufferedImage groundTruthImage = ImageHelper.read(viewSet.findFullResImageFile(viewIndex)).getBufferedImage();
+                    BufferedImage groundTruthImage = ImageHelper.read(view.findFullResImageFile()).getBufferedImage();
                     return new BufferedImageColorList(groundTruthImage);
                 }
                 catch (IOException e)
@@ -82,7 +83,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
             ReadonlyGraphicsResources<ContextType> resources,
-            IntFunction<ColorImage> groundTruthLoader)
+            Function<View, ColorImage> groundTruthLoader)
         throws IOException
     {
         this.viewSet = viewSet;
@@ -101,19 +102,15 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     }
 
     private static <ContextType extends Context<ContextType>> void render(
-        ReadonlyViewSet viewSet, int viewIndex, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+        View view, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         // Reconstruct the view
-        drawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
-        drawable.program().setUniform("projection",
-            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
-                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-        drawable.program().setUniform("reconstructionCameraPos",
-            viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
+        drawable.program().setUniform("model_view", view.getCameraPose());
+        drawable.program().setUniform("projection", view.getProjectionMatrix());
+        drawable.program().setUniform("reconstructionCameraPos", view.getCameraPoseInverse().getColumn(3).getXYZ());
         drawable.program().setUniform("reconstructionLightPos",
-            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
-        drawable.program().setUniform("reconstructionLightIntensity",
-            viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+            view.getCameraPoseInverse().times(view.getLightPosition().asPosition()).getXYZ());
+        drawable.program().setUniform("reconstructionLightIntensity", view.getLightIntensity());
 
         for (int i = 0; i < framebuffer.getColorAttachmentCount(); i++)
         {
@@ -130,13 +127,19 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
     public final class ReconstructionIterator implements ListIterator<ReconstructionView<ContextType>>
     {
-        private int viewIndex = 0;
+        private final ListIterator<View> base;
+        private View currentView;
         private ColorImage currentGroundTruth;
+
+        ReconstructionIterator(ListIterator<View> base)
+        {
+            this.base = base;
+        }
 
         private void refresh()
         {
             // load new ground truth
-            currentGroundTruth = groundTruthLoader.apply(viewIndex);
+            currentGroundTruth = groundTruthLoader.apply(currentView);
 
             // Create new framebuffer if necessary.
             if (incidentRadianceFramebuffer == null
@@ -155,7 +158,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             }
 
             // render incident radiance for this view
-            render(viewSet, viewIndex, incidentRadianceDrawable, incidentRadianceFramebuffer);
+            render(currentView, incidentRadianceDrawable, incidentRadianceFramebuffer);
 
             // create new native buffer if necessary
             FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSizeForRead(); // should be the same as reconstruction size
@@ -171,12 +174,12 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         {
             return new ReconstructionView<>()
             {
-                private final int index = ReconstructionIterator.this.viewIndex;
+                private final View view = ReconstructionIterator.this.currentView;
 
                 @Override
-                public int getIndex()
+                public View getView()
                 {
-                    return index;
+                    return view;
                 }
 
                 @Override
@@ -218,7 +221,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                     }
 
                     // render view
-                    render(viewSet, index, drawable, reconstructionFramebuffer);
+                    render(view, drawable, reconstructionFramebuffer);
 
                     // create new native buffer if necessary
                     FramebufferSize framebufferSize = reconstructionFramebuffer.getSizeForRead(); // should be the same as reconstruction size
@@ -281,7 +284,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         @Override
         public boolean hasNext()
         {
-            return viewIndex < viewSet.getCameraPoseCount();
+            return base.hasNext();
         }
 
         @Override
@@ -289,10 +292,9 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         {
             if (hasNext())
             {
+                currentView = base.next();
                 refresh();
-                ReconstructionView<ContextType> view = makeReconstructionView();
-                viewIndex++;
-                return view;
+                return makeReconstructionView();
             }
             else
             {
@@ -303,7 +305,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         @Override
         public boolean hasPrevious()
         {
-            return viewIndex > 0;
+            return base.hasPrevious();
         }
 
         @Override
@@ -311,7 +313,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         {
             if (hasPrevious())
             {
-                viewIndex--;
+                currentView = base.previous();
                 refresh();
                 return makeReconstructionView();
             }
@@ -321,35 +323,16 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             }
         }
 
-        public boolean canJump(int index)
-        {
-            return index >= 0 && index < viewSet.getCameraPoseCount();
-        }
-
-        public ReconstructionView<ContextType> jump(int index)
-        {
-            if (index >= 0 && index < viewSet.getCameraPoseCount())
-            {
-                this.viewIndex = index;
-                refresh();
-                return makeReconstructionView();
-            }
-            else
-            {
-                throw new NoSuchElementException("Illegal index for view set: " + index);
-            }
-        }
-
         @Override
         public int nextIndex()
         {
-            return viewIndex + 1;
+            return base.nextIndex();
         }
 
         @Override
         public int previousIndex()
         {
-            return viewIndex - 1;
+            return base.previousIndex();
         }
 
         @Override
@@ -375,7 +358,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public ReconstructionIterator iterator()
     {
         //noinspection ReturnOfInnerClass
-        return new ReconstructionIterator();
+        return new ReconstructionIterator(viewSet.getViews().listIterator());
     }
 
     @Override

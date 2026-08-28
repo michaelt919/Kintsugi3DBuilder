@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-import java.util.stream.Collectors;
 
 public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements IOHandler
@@ -186,10 +185,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-        int cameraCount = loadedViewSet.getCameraPoseCount();
-        if (cameraCount > 1024 && progressMonitor != null)
+        int gpuBufferSize = loadedViewSet.getGPUBufferSize();
+        if (gpuBufferSize > 1024 && progressMonitor != null)
         {
-            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
+            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", gpuBufferSize));
             progressMonitor.warn(e);
         }
         boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
@@ -199,11 +198,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<String> imgFileNames = loadedViewSet.getViewList().stream()
-            .map(view -> view.getImageFile().getName())
-            .collect(Collectors.toList());
-
-        Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
+        Global.state().getCameraViewListModel().setCameraViewList(new ArrayList<>(loadedViewSet.getViews()));
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);

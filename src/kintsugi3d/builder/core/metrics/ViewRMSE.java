@@ -13,16 +13,16 @@ package kintsugi3d.builder.core.metrics;
 
 public class ViewRMSE implements ReadonlyViewRMSE
 {
-    private final ReadonlyColorAppearanceRMSE basisWeights = new ColorAppearanceRMSE();
-    private final ReadonlyColorAppearanceRMSE reflectivity = new ColorAppearanceRMSE();
-    private final ReadonlyColorAppearanceRMSE metallicity = new ColorAppearanceRMSE();
+    private final ColorAppearanceRMSE basisWeights = new ColorAppearanceRMSE();
+    private final ColorAppearanceRMSE reflectivity = new ColorAppearanceRMSE();
+    private final ColorAppearanceRMSE metallicity = new ColorAppearanceRMSE();
 
     /**
      * Gets RMSE metrics when using the basis weights
      * @return
      */
     @Override
-    public ReadonlyColorAppearanceRMSE usingBasisWeights()
+    public ColorAppearanceRMSE usingBasisWeights()
     {
         return basisWeights;
     }
@@ -32,7 +32,7 @@ public class ViewRMSE implements ReadonlyViewRMSE
      * @return
      */
     @Override
-    public ReadonlyColorAppearanceRMSE usingReflectivity()
+    public ColorAppearanceRMSE usingReflectivity()
     {
         return reflectivity;
     }
@@ -42,7 +42,7 @@ public class ViewRMSE implements ReadonlyViewRMSE
      * @return
      */
     @Override
-    public ReadonlyColorAppearanceRMSE usingMetallicity()
+    public ColorAppearanceRMSE usingMetallicity()
     {
         return metallicity;
     }

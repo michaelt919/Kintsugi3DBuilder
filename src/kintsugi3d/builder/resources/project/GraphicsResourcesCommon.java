@@ -13,6 +13,7 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.TextureDetails;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
@@ -38,7 +39,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
-import java.util.stream.IntStream;
 
 final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
@@ -174,8 +174,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                 this.cameraWeights = computeCameraWeights(viewSet, geometry);
 
                 this.cameraWeightBuffer = context.createUniformBuffer()
-                        .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                1, viewSet.getCameraPoseCount(), this.cameraWeights));
+                    .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
+                        1, viewSet.getGPUBufferSize(), this.cameraWeights));
 
                 ImportedMaterial material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
@@ -277,25 +277,26 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
     {
-        float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
+        Vector3[] viewDirections = new Vector3[viewSet.getGPUBufferSize()];
 
-        Vector3[] viewDirections = IntStream.range(0, viewSet.getCameraPoseCount())
-                .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
-                        .minus(geometry.getCentroid()).normalized())
-                .toArray(Vector3[]::new);
+        for (View view : viewSet.getViews())
+        {
+            viewDirections[view.getGPUViewIndex()] =
+                view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometry.getCentroid()).normalized();
+        }
 
-        int[] totals = new int[viewSet.getCameraPoseCount()];
-        int targetSampleCount = viewSet.getCameraPoseCount() * 256;
+        int[] totals = new int[viewDirections.length];
+        int targetSampleCount = viewDirections.length * 256;
         double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
         int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
 
         // Find the view with the greatest distance from any other view.
         // Directions that are further from any view than distance will be ignored in the view weight calculation.
         double maxMinDistance = 0.0;
-        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+        for (int i = 0; i < viewDirections.length; i++)
         {
             double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < viewSet.getCameraPoseCount(); j++)
+            for (int j = 0; j < viewDirections.length; j++)
             {
                 if (i != j)
                 {
@@ -320,20 +321,20 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                         (float)(r * Math.sin(2 * Math.PI * (double)j / (double)sampleColumns)));
 
                 double minDistance = maxMinDistance;
-                int minIndex = -1;
-                for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+                int minDirectionIndex = -1;
+                for (int k = 0; k < viewDirections.length; k++)
                 {
                     double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
                     if (distance < minDistance)
                     {
                         minDistance = distance;
-                        minIndex = k;
+                        minDirectionIndex = k;
                     }
                 }
 
-                if (minIndex >= 0)
+                if (minDirectionIndex >= 0)
                 {
-                    totals[minIndex]++;
+                    totals[minDirectionIndex]++;
                 }
 
                 actualSampleCount++;
@@ -342,10 +343,12 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         LOG.info("View weights:");
 
-        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+        float[] cameraWeights = new float[viewSet.getGPUBufferSize()];
+        for (View view : viewSet.getViews())
         {
-            cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);
+            int index = view.getGPUViewIndex();
+            cameraWeights[index] = (float)totals[index] / (float)actualSampleCount;
+            LOG.info("{}\t{}", view, cameraWeights[index]);
         }
 
         return cameraWeights;

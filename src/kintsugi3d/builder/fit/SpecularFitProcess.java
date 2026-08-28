@@ -120,12 +120,12 @@ public class SpecularFitProcess
                 .addDepthAttachment(),
             ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
             resources,
-            viewIndex ->
+            view ->
             {
                 try
                 {
-                    Projection projection = resources.getViewSet().getCameraProjectionForViewIndex(viewIndex);
-                    ImageHelper image = viewSet.loadFullResMaskedImage(viewIndex);
+                    Projection projection = view.getCameraProjection();
+                    ImageHelper image = view.loadFullResMaskedImage();
 
                     if (projection instanceof DistortionProjection)
                     {

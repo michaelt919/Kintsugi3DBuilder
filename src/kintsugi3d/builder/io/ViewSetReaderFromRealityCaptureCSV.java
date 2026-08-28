@@ -153,7 +153,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
                 .setCurrentCameraProjectionIndex(cameraMapInverted.get(cam.name))
                 .setCurrentLightIndex(0)
                 .setCurrentImageFile(new File(cam.name))
-                .commitCurrentCameraPose();
+                .commitCurrentView();
         }
 
         // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)

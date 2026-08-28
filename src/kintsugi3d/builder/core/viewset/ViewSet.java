@@ -12,8 +12,8 @@
 package kintsugi3d.builder.core.viewset;
 
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.Observable;
 import kintsugi3d.builder.core.Observer;
-import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
 import kintsugi3d.builder.core.viewset.ViewSetChange.Type;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
@@ -25,7 +25,6 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -35,35 +34,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * A class representing a collection of photographs, or views.
  *
  * @author Michael Tetzlaff
  */
-public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.Observable
+public final class ViewSet implements ReadonlyViewSet, Observable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
-    private final Collection<kintsugi3d.builder.core.Observer<ViewSetChange>> observers = new ArrayList<>(8);
+    private final Collection<Observer<ViewSetChange>> observers = Collections.synchronizedList(new ArrayList<>(8));
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
      */
     private UUID uuid = UUID.randomUUID();
 
-    private final ArrayList<View> viewList;
+    private final List<View> viewList;
 
     /**
      * A list of projection transformations defining the intrinsic properties of each camera.
      * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
+     * This array may be added to but should never be removed from as indices are expected to be persistent.
      */
     private final List<Projection> cameraProjectionList;
 
@@ -71,12 +68,14 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
      * A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * Assumed by convention to be in camera space.
      * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+     * This array may be added to but should never be removed from as indices are expected to be persistent.
      */
     private final List<Vector3> lightPositionList;
 
     /**
      * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+     * This array may be added to but should never be removed from as indices are expected to be persistent.
      */
     private final List<Vector3> lightIntensityList;
 
@@ -145,14 +144,16 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     private float recommendedFarPlane = 100.0f;
 
     /**
-     * The index of the view used for color calibration
+     * The view used for color calibration
      */
-    private int primaryViewIndex = 0;
+    private View primaryView;
 
     /**
-     * The index of the view used to reorient the model
+     * The view used to reorient the model
      */
-    private int orientationViewIndex = 0;
+    private View orientationView;
+
+    private int gpuBufferSize = 0;
 
     /**
      * Roll rotation of the orientation view, used to correct sideways or upside down images
@@ -181,6 +182,31 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     private final Map<String, File> resourceMap = new HashMap<>(32);
 
     private boolean hasUnsupportedCorrections = false;
+
+    public static ViewSetBuilder getBuilder(File rootDirectory, int initialCapacity)
+    {
+        return new ViewSetBuilder(rootDirectory, initialCapacity);
+    }
+
+    public static ViewSetBuilder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
+    {
+        return new ViewSetBuilder(rootDirectory, supportingFilesDirectory, initialCapacity);
+    }
+
+    /**
+     * Creates a new view set object.
+     *
+     * @param initialCapacity The capacity to use for initializing array-based lists that scale with the number of views
+     */
+    public ViewSet(int initialCapacity)
+    {
+        viewList = Collections.synchronizedList(new ArrayList<>(initialCapacity));
+
+        // Often these lists will have just one element
+        this.cameraProjectionList = Collections.synchronizedList(new ArrayList<>(1));
+        this.lightIntensityList = Collections.synchronizedList(new ArrayList<>(1));
+        this.lightPositionList = Collections.synchronizedList(new ArrayList<>(1));
+    }
 
     /**
      *
@@ -234,249 +260,226 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
         this.objectScale = objectScale;
     }
 
-    public static ViewSetBuilder getBuilder(File rootDirectory, int initialCapacity)
-    {
-        return new ViewSetBuilder(rootDirectory, initialCapacity);
-    }
-
-    public static ViewSetBuilder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
-    {
-        return new ViewSetBuilder(rootDirectory, supportingFilesDirectory, initialCapacity);
-    }
-
-    /**
-     * Creates a new view set object.
-     *
-     * @param initialCapacity The capacity to use for initializing array-based lists that scale with the number of views
-     */
-    public ViewSet(int initialCapacity)
-    {
-        viewList = new ArrayList<>(initialCapacity);
-
-        // Often these lists will have just one element
-        this.cameraProjectionList = new ArrayList<>(1);
-        this.lightIntensityList = new ArrayList<>(1);
-        this.lightPositionList = new ArrayList<>(1);
-    }
-
-    @Override
-    public List<File> getImageFiles()
-    {
-        return viewList.stream().map(View::getImageFile).collect(Collectors.toList());
-    }
-
     @Override
     public ReadonlyNativeVectorBuffer getCameraPoseData()
     {
-        // Store the poses in a uniform buffer
-        if (viewList.isEmpty())
+        synchronized (viewList)
         {
-            return null;
-        }
-        else
-        {
-            // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-            NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(
-                NativeDataType.FLOAT, 16, viewList.size());
-
-
-            for (int k = 0; k < viewList.size(); k++)
+            // Store the poses in a uniform buffer
+            if (viewList.isEmpty())
             {
-                int d = 0;
-                for (int col = 0; col < 4; col++) // column
+                return null;
+            }
+            else
+            {
+                // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+                NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(
+                    NativeDataType.FLOAT, 16, viewList.size());
+
+                for (int k = 0; k < viewList.size(); k++)
                 {
-                    for (int row = 0; row < 4; row++) // row
+                    int d = 0;
+                    for (int col = 0; col < 4; col++) // column
                     {
-                        cameraPoseData.set(k, d, viewList.get(k).cameraPose.get(row, col));
-                        d++;
+                        for (int row = 0; row < 4; row++) // row
+                        {
+                            cameraPoseData.set(k, d, viewList.get(k).cameraPose.get(row, col));
+                            d++;
+                        }
                     }
                 }
-            }
 
-            return cameraPoseData;
+                return cameraPoseData;
+            }
         }
     }
 
     @Override
     public ReadonlyNativeVectorBuffer getCameraProjectionData()
     {
-        // Store the camera projections in a uniform buffer
-        if (cameraProjectionList.isEmpty())
+        synchronized (cameraProjectionList)
         {
-            return null;
-        }
-        else
-        {
-            // Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-            NativeVectorBuffer cameraProjectionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraProjectionList.size());
-
-            for (int k = 0; k < cameraProjectionList.size(); k++)
+            // Store the camera projections in a uniform buffer
+            if (cameraProjectionList.isEmpty())
             {
-                int d = 0;
-                for (int col = 0; col < 4; col++) // column
+                return null;
+            }
+            else
+            {
+                // Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
+                NativeVectorBuffer cameraProjectionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraProjectionList.size());
+
+                for (int k = 0; k < cameraProjectionList.size(); k++)
                 {
-                    for (int row = 0; row < 4; row++) // row
+                    int d = 0;
+                    for (int col = 0; col < 4; col++) // column
                     {
-                        Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
-                        cameraProjectionData.set(k, d, projection.get(row, col));
-                        d++;
+                        for (int row = 0; row < 4; row++) // row
+                        {
+                            Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
+                            cameraProjectionData.set(k, d, projection.get(row, col));
+                            d++;
+                        }
                     }
                 }
+                return cameraProjectionData;
             }
-            return cameraProjectionData;
         }
     }
 
     @Override
     public ReadonlyNativeVectorBuffer getCameraProjectionIndexData()
     {
-        // Store the camera projection indices in a uniform buffer
-        if (viewList.isEmpty())
+        synchronized (viewList)
         {
-            return null;
-        }
-        else
-        {
-            int[] indexArray = new int[viewList.size()];
-            Arrays.setAll(indexArray, i-> viewList.get(i).cameraProjectionIndex);
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
+            // Store the camera projection indices in a uniform buffer
+            if (viewList.isEmpty())
+            {
+                return null;
+            }
+            else
+            {
+                int[] indexArray = new int[viewList.size()];
+                Arrays.setAll(indexArray, i -> viewList.get(i).cameraProjectionIndex);
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
+            }
         }
     }
 
     @Override
     public ReadonlyNativeVectorBuffer getLightPositionData()
     {
-        // Store the light positions in a uniform buffer
-        if (lightPositionList.isEmpty())
+        synchronized (lightPositionList)
         {
-            return null;
-        }
-        else
-        {
-            NativeVectorBuffer lightPositionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightPositionList.size());
-            for (int k = 0; k < lightPositionList.size(); k++)
+            // Store the light positions in a uniform buffer
+            if (lightPositionList.isEmpty())
             {
-                lightPositionData.set(k, 0, lightPositionList.get(k).x);
-                lightPositionData.set(k, 1, lightPositionList.get(k).y);
-                lightPositionData.set(k, 2, lightPositionList.get(k).z);
-                lightPositionData.set(k, 3, 1.0f);
+                return null;
             }
+            else
+            {
+                NativeVectorBuffer lightPositionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightPositionList.size());
+                for (int k = 0; k < lightPositionList.size(); k++)
+                {
+                    lightPositionData.set(k, 0, lightPositionList.get(k).x);
+                    lightPositionData.set(k, 1, lightPositionList.get(k).y);
+                    lightPositionData.set(k, 2, lightPositionList.get(k).z);
+                    lightPositionData.set(k, 3, 1.0f);
+                }
 
-            return lightPositionData;
+                return lightPositionData;
+            }
         }
     }
 
     @Override
     public ReadonlyNativeVectorBuffer getLightIntensityData()
     {
-        // Store the light positions in a uniform buffer
-        if (lightIntensityList.isEmpty())
+        synchronized (lightIntensityList)
         {
-            return null;
-        }
-        else
-        {
-            NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
-            for (int k = 0; k < lightIntensityList.size(); k++)
+            // Store the light positions in a uniform buffer
+            if (lightIntensityList.isEmpty())
             {
-                lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
-                lightIntensityData.set(k, 1, lightIntensityList.get(k).y);
-                lightIntensityData.set(k, 2, lightIntensityList.get(k).z);
-                lightIntensityData.set(k, 3, 1.0f);
+                return null;
             }
-            return lightIntensityData;
+            else
+            {
+                NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
+                for (int k = 0; k < lightIntensityList.size(); k++)
+                {
+                    lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
+                    lightIntensityData.set(k, 1, lightIntensityList.get(k).y);
+                    lightIntensityData.set(k, 2, lightIntensityList.get(k).z);
+                    lightIntensityData.set(k, 3, 1.0f);
+                }
+                return lightIntensityData;
+            }
         }
     }
 
     @Override
     public ReadonlyNativeVectorBuffer getLightIndexData()
     {
-        // Store the light indices in a uniform buffer
-        if (viewList.isEmpty())
+        synchronized (viewList)
         {
-            return null;
-        }
-        else
-        {
-            int[] indexArray = new int[viewList.size()];
-            Arrays.setAll(indexArray, i-> viewList.get(i).lightIndex);
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
+            // Store the light indices in a uniform buffer
+            if (viewList.isEmpty())
+            {
+                return null;
+            }
+            else
+            {
+                int[] indexArray = new int[viewList.size()];
+                Arrays.setAll(indexArray, i -> viewList.get(i).lightIndex);
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
+            }
         }
     }
 
     public ReadonlyNativeVectorBuffer getViewIndexData()
     {
-        int[] indexArray = viewList.stream()
-            .filter(Predicate.not(View::isDisabled))
-            .mapToInt(View::getGPUViewIndex)
-            .toArray();
-
-        // Store the view indices in a uniform buffer
-        if (indexArray.length == 0)
+        synchronized (viewList)
         {
-            return null;
+            int[] indexArray = viewList.stream()
+                .filter(View::isEnabled)
+                .mapToInt(View::getGPUViewIndex)
+                .toArray();
+
+            // Store the view indices in a uniform buffer
+            if (indexArray.length == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, indexArray.length, indexArray);
+            }
         }
-        else
-        {
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, indexArray.length, indexArray);
-        }
-    }
-
-    @Override
-    public ReadonlyViewSet createPermutation(Collection<Integer> permutationIndices)
-    {
-        ViewSet result = new ViewSet(permutationIndices.size());
-
-        for (int i : permutationIndices)
-        {
-            result.viewList.add(this.viewList.get(i));
-        }
-
-        result.cameraProjectionList.addAll(this.cameraProjectionList);
-        result.lightIntensityList.addAll(this.lightIntensityList);
-        result.lightPositionList.addAll(this.lightPositionList);
-
-        if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
-        {
-            result.setLuminanceEncoding(
-                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
-        }
-
-        result.rootDirectory = this.rootDirectory;
-        result.fullResImageDirectory = this.fullResImageDirectory;
-        result.previewImageDirectory = this.previewImageDirectory;
-        result.supportingFilesDirectory = this.supportingFilesDirectory;
-        result.thumbnailImageDirectory = this.thumbnailImageDirectory;
-        result.masksDirectory = this.masksDirectory;
-        result.modelDirectory = this.modelDirectory;
-        result.geometryFile = this.geometryFile;
-        result.infiniteLightSources = this.infiniteLightSources;
-        result.recommendedNearPlane = this.recommendedNearPlane;
-        result.recommendedFarPlane = this.recommendedFarPlane;
-        result.primaryViewIndex = this.primaryViewIndex;
-        result.orientationViewIndex = this.orientationViewIndex;
-        result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
-        result.orientationMatrix = this.orientationMatrix;
-        result.objectTranslation = this.objectTranslation;
-        result.objectScale = this.objectScale;
-
-        result.projectSettings.copyFrom(this.projectSettings);
-        result.resourceMap.putAll(this.resourceMap);
-
-        return result;
     }
 
     @Override
     public ViewSet copy()
     {
-        ViewSet result = new ViewSet(this.getCameraPoseCount());
+        ViewSet result = new ViewSet(this.getViewCount());
 
         result.uuid = this.uuid;
-        result.viewList.addAll(this.viewList);
-        result.cameraProjectionList.addAll(this.cameraProjectionList);
-        result.lightPositionList.addAll(this.lightPositionList);
-        result.lightIntensityList.addAll(this.lightIntensityList);
+
+        synchronized (viewList)
+        {
+            this.viewList.stream() // Deep copy for view list
+                .map(view -> view.copy(result))
+                .forEach(result.viewList::add);
+            result.gpuBufferSize = this.gpuBufferSize;
+
+            if (this.primaryView != null)
+            {
+                result.primaryView = result.viewList.stream()
+                    .filter(this.primaryView::equals)
+                    .findFirst().orElse(null);
+            }
+
+            if (this.orientationView != null)
+            {
+                result.orientationView = result.viewList.stream()
+                    .filter(this.orientationView::equals)
+                    .findFirst().orElse(null);
+            }
+        }
+
+        synchronized (cameraProjectionList)
+        {
+            result.cameraProjectionList.addAll(this.cameraProjectionList);
+        }
+
+        synchronized (lightPositionList)
+        {
+            result.lightPositionList.addAll(this.lightPositionList);
+        }
+
+        synchronized (lightIntensityList)
+        {
+            result.lightIntensityList.addAll(this.lightIntensityList);
+        }
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
@@ -496,8 +499,7 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
-        result.primaryViewIndex = this.primaryViewIndex;
-        result.orientationViewIndex = this.orientationViewIndex;
+
         result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
         result.orientationMatrix = this.orientationMatrix;
         result.objectTranslation = this.objectTranslation;
@@ -553,59 +555,37 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
         this.uuid = uuid;
     }
 
-    public void deleteCamera(File image)
-    {
-        int index = findIndexOfView(image.getName());
-        if (index >= 0)
-        {
-            viewList.remove(index);
-            notifyObservers(new ViewSetChange(Type.REMOVED, image));
-        }
-    }
-
     public void toggleCamera(File image)
     {
-        int index = findIndexOfView(image.getName());
-        if (index >= 0)
+        View view = findViewByName(image.getName());
+        if (view != null)
         {
-            setCameraEnabled(image, viewList.get(index).isDisabled);
+            setCameraEnabled(image, !view.isEnabled);
         }
     }
 
     public void setCameraEnabled(File image, boolean isEnabled)
     {
-        int index = findIndexOfView(image.getName());
+        View view = findViewByName(image.getName());
 
-        if (viewList.get(index).isDisabled) // Currently disabled, so enable camera
+        if (view.isEnabled) // Currently enabled, so disable camera
         {
-            viewList.get(index).isDisabled = !isEnabled;
-            if (!viewList.get(index).isDisabled)
-            {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, image));
-            }
-            // Else still disabled so nothing needs to change
-        }
-        else // Currently enabled, so disable
-        {
-            viewList.get(index).isDisabled = !isEnabled;
-            if (viewList.get(index).isDisabled)
+            view.isEnabled = isEnabled;
+            if (!isEnabled)
             {
                 notifyObservers(new ViewSetChange(Type.MODIFIED, image));
             }
             // Else still enabled so nothing needs to change
         }
-    }
-
-    @Override
-    public Matrix4 getCameraPose(int poseIndex)
-    {
-        return viewList.get(poseIndex).cameraPose;
-    }
-
-    @Override
-    public Matrix4 getCameraPoseInverse(int poseIndex)
-    {
-        return viewList.get(poseIndex).cameraPoseInv;
+        else // Currently disabled, so enable camera
+        {
+            view.isEnabled = isEnabled;
+            if (isEnabled)
+            {
+                notifyObservers(new ViewSetChange(Type.MODIFIED, image));
+            }
+            // Else still disabled so nothing needs to change
+        }
     }
 
     @Override
@@ -774,61 +754,12 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     }
 
     @Override
-    public File getImageFile(int poseIndex)
-    {
-        return viewList.get(poseIndex).imageFile;
-    }
-
-    @Override
-    public String getImageFileName(int poseIndex)
-    {
-        return viewList.get(poseIndex).imageFile.getName();
-    }
-
-    @Override
-    public File getFullResImageFile(int poseIndex)
-    {
-        return new File(getFullResImageDirectory(), viewList.get(poseIndex).imageFile.getPath());
-//        return viewSetDataCollection.getFullResImageFile(poseIndex);
-    }
-
-    @Override
-    public File getFullResImageFile(String viewName)
-    {
-        return getFullResImageFile(findIndexOfView(viewName));
-    }
-
-    @Override
-    public File getPreviewImageFile(int poseIndex, String extension)
-    {
-        return new File(this.getPreviewImageDirectory(),
-            ImageFinder.getInstance().getImageFileNameWithExtension(this.getImageFileName(poseIndex), extension));
-    }
-
-    @Override
-    public File getPreviewImageFile(int poseIndex)
-    {
-        // Use PNG for preview images (TODO: make this a configurable setting?)
-        return getPreviewImageFile(poseIndex, "png");
-    }
-
-    @Override
-    public File getThumbnailImageFile(int poseIndex, String extension)
-    {
-        return viewList.get(poseIndex).getThumbnailImageFile(extension);
-    }
-
-    @Override
-    public File getThumbnailImageFile(int poseIndex)
-    {
-        return viewList.get(poseIndex).getThumbnailImageFile();
-    }
-
     public int getPreviewWidth()
     {
         return previewWidth;
     }
 
+    @Override
     public int getPreviewHeight()
     {
         return previewHeight;
@@ -840,50 +771,37 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
         this.previewHeight = height;
     }
 
-    @Override
-    public int getPrimaryViewIndex()
-    {
-        return this.primaryViewIndex;
-    }
 
     @Override
     public View getPrimaryView()
     {
-        return viewList.get(this.primaryViewIndex);
+        return primaryView;
     }
 
-    public void setPrimaryViewIndex(int poseIndex)
+    public void setPrimaryView(View primaryView)
     {
-        this.primaryViewIndex = poseIndex;
+        this.primaryView = primaryView;
     }
 
     @Override
-    public int getOrientationViewIndex()
+    public View getOrientationView()
     {
-        return this.orientationViewIndex;
+        return this.orientationView;
     }
 
     /**
-     * Set the index of the view to use as a reference pose to reorient the model
+     * Set the view to use as a reference pose to reorient the model
      *
-     * @param newOrientationViewIndex view index
+     * @param orientationView view
      */
-    public void setOrientationViewIndex(int newOrientationViewIndex)
+    public void setOrientationView(View orientationView)
     {
-        this.orientationViewIndex = newOrientationViewIndex;
+        this.orientationView = orientationView;
     }
 
-    public void setOrientationView(String viewName)
+    public void setOrientationViewByName(String viewName)
     {
-        int viewIndex = findIndexOfView(viewName);
-        if (viewIndex >= 0)
-        {
-            this.orientationViewIndex = viewIndex;
-        }
-        else
-        {
-            this.orientationViewIndex = -1;
-        }
+        this.orientationView = findViewByName(viewName);
     }
 
     @Override
@@ -897,47 +815,51 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
         orientationViewRotationDegrees = rotation;
     }
 
-    public int findIndexOfView(String viewName)
+    public View findViewByName(String viewName)
     {
         // Treat null as "not found" or "not present"
         // Important for allowing for orientation pose to remain unset.
         if (viewName == null)
         {
-            return -1;
+            return null;
         }
 
-        // Try simple file comparison with full paths
-        File key = new File(viewName);
-        for (int i = 0; i < viewList.size(); ++i)
+        synchronized (viewList)
         {
-            if (getImageFile(i).equals(key))
+            // Try simple file comparison with full paths
+            File key = new File(viewName);
+
+            for (View view : viewList)
             {
-                LOG.debug("Matched {} for {}", viewList.get(i).imageFile.getPath(), viewName);
-                return i;
+                if (view.getImageFile().equals(key))
+                {
+                    LOG.debug("Matched {} for {}", view.getImageFile().getPath(), viewName);
+                    return view;
+                }
             }
-        }
 
-        // Try just checking file name in case there were parent files
-        // i.e. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
+            // Try just checking file name in case there were parent files
+            // i.e. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
 
-        // Also check for extension mismatch
-        // i.e. the camera label is photo314.jpg, other times just photo314
+            // Also check for extension mismatch
+            // i.e. the camera label is photo314.jpg, other times just photo314
 
-        //This is all necessary due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-        for (int i = 0; i < viewList.size(); ++i)
-        {
-            String imgName = getImageFileName(i);
-            String shortenedImgName = removeExt(imgName);
-            String shortenedViewName = removeExt(viewName);
-
-            if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
+            //This is all necessary due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
+            for (View view : viewList)
             {
-                LOG.debug("Matched {} for {}", viewList.get(i).imageFile.getPath(), viewName);
-                return i;
-            }
-        }
+                String imgName = view.getImageFile().getName();
+                String shortenedImgName = removeExt(imgName);
+                String shortenedViewName = removeExt(viewName);
 
-        return -1;
+                if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
+                {
+                    LOG.debug("Matched {} for {}", view.getImageFile(), viewName);
+                    return view;
+                }
+            }
+
+            return null;
+        }
     }
 
     public static String removeExt(String fileName)
@@ -947,96 +869,174 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     }
 
     @Override
-    public List<View> getViewList()
+    public List<View> getViews()
     {
-        return viewList;
+        return Collections.unmodifiableList(viewList);
     }
 
-    @Override
-    public View getView(int poseIndex)
+    void addView(View view)
     {
-        return viewList.get(poseIndex);
+        synchronized (viewList)
+        {
+            viewList.add(view);
+            gpuBufferSize = Math.max(gpuBufferSize, view.getGPUViewIndex() + 1);
+
+            if (primaryView == null)
+            {
+                // Set default primary view if none has been specified.
+                primaryView = view;
+            }
+        }
+
+        notifyObservers(new ViewSetChange(Type.ADDED, view.imageFile));
+    }
+
+    void removeView(View view)
+    {
+        boolean removed;
+
+        synchronized (viewList)
+        {
+            removed = viewList.remove(view);
+        }
+
+        if (removed)
+        {
+            notifyObservers(new ViewSetChange(Type.REMOVED, view.imageFile));
+        }
+    }
+
+    public void removeViewByImageFilename(File image)
+    {
+        boolean removed;
+
+        synchronized (viewList)
+        {
+            removed = viewList.removeIf(view -> Objects.equals(view.imageFile.getName(), image.getName()));
+        }
+
+        if (removed)
+        {
+            notifyObservers(new ViewSetChange(Type.REMOVED, image));
+        }
     }
 
     @Override
     public Projection getCameraProjection(int projectionIndex)
     {
-        return this.cameraProjectionList.get(projectionIndex);
-    }
-
-    @Override
-    public Projection getCameraProjectionForViewIndex(int viewIndex)
-    {
-        return getCameraProjection(getCameraProjectionIndex(viewIndex));
+        synchronized (cameraProjectionList)
+        {
+            return this.cameraProjectionList.get(projectionIndex);
+        }
     }
 
     void addCameraProjection(Projection projection)
     {
-        this.cameraProjectionList.add(projection);
-    }
-
-    @Override
-    public int getCameraProjectionIndex(int poseIndex)
-    {
-        return viewList.get(poseIndex).cameraProjectionIndex;
+        synchronized (cameraProjectionList)
+        {
+            this.cameraProjectionList.add(projection);
+        }
     }
 
     @Override
     public Vector3 getLightPosition(int lightIndex)
     {
-        return this.lightPositionList.get(lightIndex);
+        synchronized (lightPositionList)
+        {
+            return this.lightPositionList.get(lightIndex);
+        }
     }
 
     @Override
     public Vector3 getLightIntensity(int lightIndex)
     {
-        return this.lightIntensityList.get(lightIndex);
+        synchronized (lightIntensityList)
+        {
+            return this.lightIntensityList.get(lightIndex);
+        }
     }
 
     public void setLightPosition(int lightIndex, Vector3 lightPosition)
     {
-        this.lightPositionList.set(lightIndex, lightPosition);
+        synchronized (lightPositionList)
+        {
+            this.lightPositionList.set(lightIndex, lightPosition);
+        }
     }
 
     public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
     {
-        this.lightIntensityList.set(lightIndex, lightIntensity);
+        synchronized (lightIntensityList)
+        {
+            this.lightIntensityList.set(lightIndex, lightIntensity);
+        }
     }
 
     void addLight(Vector3 position, Vector3 intensity)
     {
-        this.lightPositionList.add(position);
-        this.lightIntensityList.add(intensity);
+        synchronized (lightIntensityList)
+        {
+            this.lightIntensityList.add(intensity);
+        }
+
+        // Do lightPositionList last since that is what getLightCount is based on.
+        // That way it should be less likely that we get an index out of bounds due to concurrency issues.
+        synchronized (lightPositionList)
+        {
+            this.lightPositionList.add(position);
+        }
     }
 
     @Override
-    public int getLightIndex(int poseIndex)
+    public int getViewCount()
     {
-        return viewList.get(poseIndex).lightIndex;
+        synchronized (viewList)
+        {
+            return viewList.size();
+        }
     }
 
     @Override
-    public ReadonlyViewRMSE getViewErrorMetrics(int poseIndex)
+    public int getGPUBufferSize()
     {
-        return viewList.get(poseIndex).viewErrorMetric;
+        synchronized (viewList)
+        {
+            return this.gpuBufferSize;
+        }
     }
 
-    @Override
-    public int getCameraPoseCount()
+    /**
+     * Only intended to be used by ViewSetBuilder during initialization.
+     */
+    void optimizeGPUIndexing()
     {
-        return viewList.size();
+        synchronized (viewList)
+        {
+            // Reassign view indices for smaller data set.
+            for (int i = 0; i < viewList.size(); ++i)
+            {
+                viewList.get(i).gpuViewIndex = i;
+            }
+            gpuBufferSize = viewList.size();
+        }
     }
 
     @Override
     public int getCameraProjectionCount()
     {
-        return this.cameraProjectionList.size();
+        synchronized (cameraProjectionList)
+        {
+            return this.cameraProjectionList.size();
+        }
     }
 
     @Override
     public int getLightCount()
     {
-        return this.lightPositionList.size();
+        synchronized (lightPositionList)
+        {
+            return this.lightPositionList.size();
+        }
     }
 
     @Override
@@ -1107,72 +1107,9 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     }
 
     @Override
-    public File findFullResImageFile(int index) throws FileNotFoundException
-    {
-        return ImageFinder.getInstance().findImageFile(getFullResImageFile(index));
-    }
-
-    @Override
-    public File tryFindFullResImageFile(int index)
-    {
-        return ImageFinder.getInstance().tryFindImageFile(getFullResImageFile(index));
-    }
-
-    @Override
-    public File findFullResPrimaryImageFile() throws FileNotFoundException
-    {
-        return findFullResImageFile(primaryViewIndex);
-    }
-
-    @Override
-    public File tryFindPreviewImageFile(int index)
-    {
-        return ImageFinder.getInstance().tryFindImageFile(getPreviewImageFile(index));
-    }
-
-    @Override
-    public File tryFindThumbnailImageFile(int index)
-    {
-        return ImageFinder.getInstance().tryFindImageFile(getThumbnailImageFile(index));
-    }
-
-    @Override
-    public File findPreviewImageFile(int index) throws FileNotFoundException
-    {
-        return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-    }
-
-    @Override
-    public File findThumbnailImageFile(int index) throws FileNotFoundException
-    {
-        return viewList.get(index).findThumbnailImageFile();
-    }
-
-    @Override
-    public File findPreviewPrimaryImageFile() throws FileNotFoundException
-    {
-        return findPreviewImageFile(primaryViewIndex);
-    }
-
-    @Override
     public boolean hasMasks()
     {
         return masksDirectory != null;
-    }
-
-    @Override
-    public File getMask(int poseIndex)
-    {
-        File maskFile = viewList.get(poseIndex).maskFile;
-        if (maskFile == null || getMasksDirectory() == null)
-        {
-            // Not all images have masks, so this file may still not exist
-            return null;
-        }
-        else
-        {
-            return new File(getMasksDirectory(), maskFile.getName());
-        }
     }
 
     @Override
@@ -1184,26 +1121,23 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     @Override
     public Map<Integer, File> getMasksMap()
     {
-        Map<Integer, File> maskFiles = new HashMap<>(viewList.size());
-        for (int i = 0; i < viewList.size(); ++i)
+        synchronized (viewList)
         {
-            if (viewList.get(i).maskFile != null)
+            Map<Integer, File> maskFiles = new HashMap<>(viewList.size());
+            for (int i = 0; i < viewList.size(); ++i)
             {
-                maskFiles.put(i, viewList.get(i).maskFile);
+                if (viewList.get(i).importedMaskFile != null)
+                {
+                    maskFiles.put(i, viewList.get(i).importedMaskFile);
+                }
             }
+            return Collections.unmodifiableMap(maskFiles);
         }
-        return Collections.unmodifiableMap(maskFiles);
     }
 
     public void setMasksDirectory(File dir)
     {
         masksDirectory = dir;
-    }
-
-    @Override
-    public ImageHelper loadFullResMaskedImage(int index) throws IOException
-    {
-        return ImageHelper.read(findFullResImageFile(index)).withAlphaMask(getMask(index));
     }
 
     /**
@@ -1213,41 +1147,36 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
      */
     public void validateMasks()
     {
-        for (int i = 0; i < getCameraPoseCount(); i++)
+        synchronized (viewList)
         {
-            File maskFile = getMask(i);
-            if (maskFile != null)
+            for (View view : viewList)
             {
-                File originalMaskFile = maskFile; // remember the original filename for logging
+                File maskFile = view.getMaskFile();
+                if (maskFile != null)
+                {
+                    File originalMaskFile = maskFile; // remember the original filename for logging
 
-                // Could set maskFile to null if it doesn't actually exist,
-                // or change the file extension if it exists with a different file extension.
-                maskFile = ImageFinder.getInstance().tryFindImageFile(maskFile);
+                    // Could set maskFile to null if it doesn't actually exist,
+                    // or change the file extension if it exists with a different file extension.
+                    maskFile = ImageFinder.getInstance().tryFindImageFile(maskFile);
+
+                    if (maskFile == null)
+                    {
+                        LOG.warn("Specified mask file not found: {}", originalMaskFile.getPath());
+                    }
+                }
 
                 if (maskFile == null)
                 {
-                    LOG.warn("Specified mask file not found: {}", originalMaskFile.getPath());
+                    // Search for the name of the photo in the masks directory
+                    // Will check both with and without _mask suffix
+                    maskFile = ImageFinder.getInstance().tryFindImageFile(
+                        new File(getMasksDirectory(), view.getFullResImageFile().getName()),
+                        "_mask");
                 }
-            }
 
-            if (maskFile == null)
-            {
-                // Search for the name of the photo in the masks directory
-                // Will check both with and without _mask suffix
-                maskFile = ImageFinder.getInstance().tryFindImageFile(
-                    new File(getMasksDirectory(), getFullResImageFile(i).getName()),
-                    "_mask");
-            }
-
-            if (maskFile == null)
-            {
-                // Remove if no mask file was found
-                viewList.get(i).maskFile = null;
-            }
-            else
-            {
-                // Overwrite based on the file that was found
-                viewList.get(i).maskFile = maskFile;
+                // Remove if no mask file was found, otherwise overwrite based on the file that was found
+                view.importedMaskFile = maskFile;
             }
         }
     }
@@ -1321,10 +1250,19 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
             // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
             validateMasks();
 
-            // Copy the files that were actually found
-            for (int i = 0; i < getCameraPoseCount(); i++)
+
+            // Copy the list for thread safety without blocking while it copies all the files.
+            Iterable<View> viewsCopy;
+
+            synchronized (viewList)
             {
-                File maskSrcFile = getMask(i);
+                viewsCopy = new ArrayList<>(viewList);
+            }
+
+            // Copy the files that were actually found
+            for (View view : viewsCopy)
+            {
+                File maskSrcFile = view.getMaskFile();
                 copyFileSafe(maskSrcFile, masksDestinationDir);
             }
 
@@ -1446,18 +1384,13 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     }
 
     @Override
-    public boolean isViewDisabled(int poseIndex)
-    {
-        return viewList.get(poseIndex).isDisabled;
-    }
-
-    @Override
     public <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getShaderProgramBuilder(ContextType context)
     {
         // Determine shader defines here that should apply globally as defaults without require specific resources other than view set data.
         // The defines can be overridden by the actual shader.
         return context.getShaderProgramBuilder()
-            .define("CAMERA_POSE_COUNT", getCameraPoseCount())
+            .define("VIEW_COUNT", getViewCount())
+            .define("CAMERA_POSE_COUNT", getGPUBufferSize())
             .define("CAMERA_PROJECTION_COUNT", getCameraProjectionCount())
             .define("LIGHT_COUNT", getLightCount())
             .define("INFINITE_LIGHT_SOURCES", projectSettings.getBoolean("infiniteLightSources"))
@@ -1480,13 +1413,13 @@ public final class ViewSet implements ReadonlyViewSet, kintsugi3d.builder.core.O
     }
 
     @Override
-    public void registerObserver(kintsugi3d.builder.core.Observer<ViewSetChange> observer)
+    public void registerObserver(Observer<ViewSetChange> observer)
     {
         observers.add(observer);
     }
 
     @Override
-    public void removeObserver(kintsugi3d.builder.core.Observer<ViewSetChange> observer)
+    public void removeObserver(Observer<ViewSetChange> observer)
     {
         observers.remove(observer);
     }

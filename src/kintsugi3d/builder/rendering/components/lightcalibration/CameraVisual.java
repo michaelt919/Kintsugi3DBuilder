@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -66,11 +66,11 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
             this.getContext().getState().disableDepthWrite();
             this.getContext().getState().enableDepthTest();
 
-            Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
+            Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
             Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
             this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
-            this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
+            this.getProgram().setUniform("viewIndex", viewSelection.getSelectedView().getGPUViewIndex());
             this.getProgram().setUniform("model_view",
                 cameraViewport.getView().times(snapViewInverse)
                     .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));

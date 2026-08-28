@@ -43,11 +43,11 @@ public class OrientationViewSelectController extends ViewSelectController
         {
             if (getData().getViewSelection() == null)
             {
-                currentViewSet.setOrientationViewIndex(-1);
+                currentViewSet.setOrientationView(null);
             }
             else
             {
-                currentViewSet.setOrientationView(getData().getViewSelection());
+                currentViewSet.setOrientationViewByName(getData().getViewSelection());
             }
 
             currentViewSet.setOrientationViewRotationDegrees(getData().getViewRotation());

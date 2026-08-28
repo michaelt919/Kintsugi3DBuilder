@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,6 +16,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.state.CameraViewListModel;
 
 import java.util.Collections;
@@ -23,33 +24,27 @@ import java.util.List;
 
 public class ObservableCameraViewListModel implements CameraViewListModel
 {
-    private MultipleSelectionModel<String> selectedCameraViewModel;
-    private Property<ObservableList<String>> cameraViewListProperty;
+    private MultipleSelectionModel<View> selectedCameraViewModel;
+    private Property<ObservableList<View>> cameraViewListProperty;
     private BooleanProperty cameraViewSnapEnabledProperty;
 
     @Override
-    public String getSelectedCameraView() { return selectedCameraViewModel.getSelectedItem();}
+    public View getSelectedCameraView() { return selectedCameraViewModel.getSelectedItem();}
 
     @Override
-    public int getSelectedCameraViewIndex()
+    public void setSelectedCameraView(View cameraView)
     {
-        return selectedCameraViewModel.getSelectedIndex();
+        selectedCameraViewModel.select(cameraView);
     }
 
     @Override
-    public void setSelectedCameraViewIndex(int cameraViewIndex)
-    {
-        selectedCameraViewModel.select(cameraViewIndex);
-    }
-
-    @Override
-    public List<String> getCameraViewList()
+    public List<View> getCameraViewList()
     {
         return Collections.unmodifiableList(cameraViewListProperty.getValue());
     }
 
     @Override
-    public void setCameraViewList(List<String> cameraViewList)
+    public void setCameraViewList(List<View> cameraViewList)
     {
         cameraViewListProperty.setValue(new ObservableListWrapper<>(cameraViewList));
     }
@@ -71,22 +66,22 @@ public class ObservableCameraViewListModel implements CameraViewListModel
         return cameraViewSnapEnabledProperty;
     }
 
-    public MultipleSelectionModel<String> getSelectedCameraViewModel()
+    public MultipleSelectionModel<View> getSelectedCameraViewModel()
     {
         return selectedCameraViewModel;
     }
 
-    public Property<ObservableList<String>> getCameraViewListProperty()
+    public Property<ObservableList<View>> getCameraViewListProperty()
     {
         return cameraViewListProperty;
     }
 
-    public void setSelectedCameraViewModel(MultipleSelectionModel<String> selectedCameraViewModel)
+    public void setSelectedCameraViewModel(MultipleSelectionModel<View> selectedCameraViewModel)
     {
         this.selectedCameraViewModel = selectedCameraViewModel;
     }
 
-    public void setCameraViewListProperty(Property<ObservableList<String>> cameraViewListProperty)
+    public void setCameraViewListProperty(Property<ObservableList<View>> cameraViewListProperty)
     {
         this.cameraViewListProperty = cameraViewListProperty;
     }

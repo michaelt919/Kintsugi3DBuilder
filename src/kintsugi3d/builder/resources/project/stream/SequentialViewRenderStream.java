@@ -11,26 +11,28 @@
 
 package kintsugi3d.builder.resources.project.stream;
 
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.ReadableFramebuffer;
 import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 public class SequentialViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {
-    private final int viewCount;
+    private final Collection<View> views;
     private final Drawable<ContextType> drawable;
     private final ReadableFramebuffer<ContextType> framebuffer;
     private final int attachmentCount;
     private final ColorNativeBufferList[] framebufferData;
 
-    SequentialViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
+    SequentialViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        this.viewCount = viewCount;
+        this.views = views;
         this.drawable = drawable;
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;
@@ -48,25 +50,25 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
     @Override
     public GraphicsStream<ColorList[]> parallel()
     {
-        return new ParallelViewRenderStream<>(viewCount, drawable, framebuffer, attachmentCount);
+        return new ParallelViewRenderStream<>(views, drawable, framebuffer, attachmentCount);
     }
 
     @Override
     public GraphicsStream<ColorList[]> parallel(int maxRunningThreads)
     {
-        return new ParallelViewRenderStream<>(viewCount, drawable, framebuffer, attachmentCount, maxRunningThreads);
+        return new ParallelViewRenderStream<>(views, drawable, framebuffer, attachmentCount, maxRunningThreads);
     }
 
     @Override
     public int getCount()
     {
-        return viewCount;
+        return views.size();
     }
 
     @Override
     public void forEach(Consumer<? super ColorList[]> action)
     {
-        for (int k = 0; k < viewCount; k++)
+        for (View view : views)
         {
             for (int i = 0; i < attachmentCount; i++)
             {
@@ -75,7 +77,7 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
             }
 
             // Run shader program to fill framebuffer with per-pixel information.
-            drawable.program().setUniform("viewIndex", k);
+            drawable.program().setUniform("viewIndex", view.getGPUViewIndex());
             drawable.draw(framebuffer);
 
             // Copy framebuffer from GPU to main memory.

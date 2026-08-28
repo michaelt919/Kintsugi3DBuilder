@@ -13,7 +13,9 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.viewset.DistortionProjection;
+import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
@@ -29,8 +31,7 @@ import java.io.IOException;
  */
 public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements Resource
 {
-    private final ReadonlyViewSet viewSet;
-    private final int viewIndex;
+    private final View view;
     private GeometryResources<ContextType> geometryResources;
     private final boolean geometryResourcesOwned;
     private Texture2D<ContextType> colorTexture;
@@ -41,41 +42,40 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
     /**
      * Creates a calibrated image resource, loading the geometry onto the GPU as a new resource owned by this resource (if and only if geometry is not null).
      * @param context
-     * @param viewSet
-     * @param viewIndex
-     * @param imageFile
+     * @param view
      * @param geometry
      * @param loadOptions
      * @throws IOException
      */
-    SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile, ReadonlyVertexGeometry geometry,
-        ReadonlyLoadOptionsModel loadOptions) throws IOException
+    SingleCalibratedImageResource(ContextType context, View view, ReadonlyVertexGeometry geometry,
+                                  ReadonlyLoadOptionsModel loadOptions) throws IOException
     {
-        this(context, viewSet, viewIndex, imageFile,
-            geometry == null ? GeometryResources.createNullResources() : geometry.createGraphicsResources(context), true,
-            loadOptions);
+        this(context, view,
+            geometry == null ? GeometryResources.createNullResources() : geometry.createGraphicsResources(context),
+            true, loadOptions);
     }
 
-    private SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile,
+    private SingleCalibratedImageResource(ContextType context, View view,
         GeometryResources<ContextType> geometryResources, boolean geometryResourcesOwned, ReadonlyLoadOptionsModel loadOptions) throws IOException
     {
-        this.viewSet = viewSet;
-        this.viewIndex = viewIndex;
+        this.view = view;
         this.geometryResources = geometryResources;
         this.geometryResourcesOwned = geometryResourcesOwned;
 
+        File imageFile = view.findFullResImageFile();
+
         // Read the images from a file
-        if (loadOptions.areColorImagesRequested() && imageFile != null && viewIndex < viewSet.getCameraPoseCount())
+        if (loadOptions.areColorImagesRequested() && imageFile != null)
         {
-            File mask = viewSet.getMask(viewIndex);
+            File mask = view.getMaskFile();
             var colorTextureBuilder = mask == null ?
                 context.getTextureFactory().build2DColorTextureFromFile(imageFile, true) :
                 context.getTextureFactory().build2DColorTextureFromFileWithMask(imageFile, mask, true);
 
-            int projectionIndex = viewSet.getCameraProjectionIndex(viewIndex);
-            if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+            Projection projection = view.getCameraProjection();
+            if (projection instanceof DistortionProjection)
             {
-                DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
+                DistortionProjection distortion = (DistortionProjection) projection;
 
                 try (ImageUndistorter<ContextType> undistorter = new ImageUndistorter<>(context);
                      Texture2D<ContextType> distortedTexture = colorTextureBuilder.createTexture())
@@ -117,7 +117,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
                     .createTexture();
 
                 depthRenderingFBO.setDepthAttachment(depthTexture);
-                depthMapGenerator.generateDepthMap(viewSet, viewIndex, depthRenderingFBO);
+                depthMapGenerator.generateDepthMap(view, depthRenderingFBO);
 
                 // Build shadow texture
                 this.shadowTexture = context.getTextureFactory()
@@ -125,7 +125,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
                     .createTexture();
 
                 depthRenderingFBO.setDepthAttachment(shadowTexture);
-                this.shadowMatrix = depthMapGenerator.generateShadowMap(viewSet, viewIndex, depthRenderingFBO);
+                this.shadowMatrix = depthMapGenerator.generateShadowMap(view, depthRenderingFBO);
             }
         }
     }
@@ -146,7 +146,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
 
     public void setupShaderProgram(Program<ContextType> program)
     {
-        viewSet.setupShaderProgram(program);
+        view.getContainingViewSet().setupShaderProgram(program);
 
         if (this.colorTexture != null)
         {
@@ -164,11 +164,10 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
             }
         }
 
-        program.setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
-        program.setUniform("cameraProjection", viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
-            .getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-        program.setUniform("lightPosition", viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)));
-        program.setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+        program.setUniform("cameraPose", view.getCameraPose());
+        program.setUniform("cameraProjection", view.getProjectionMatrix());
+        program.setUniform("lightPosition", view.getLightPosition());
+        program.setUniform("lightIntensity", view.getLightIntensity());
     }
 
     /**

@@ -13,6 +13,7 @@ package kintsugi3d.builder.rendering.components.snap;
 
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -37,21 +38,21 @@ public class ViewSelectionImpl implements ViewSelection
     }
 
     @Override
-    public int getSelectedViewIndex()
+    public View getSelectedView()
     {
-        return sceneModel.getCameraViewListModel().getSelectedCameraViewIndex();
+        return sceneModel.getCameraViewListModel().getSelectedCameraView();
     }
 
     @Override
-    public Matrix4 getViewForIndex(int index)
+    public Matrix4 getMatrixFromView(View view)
     {
-        Matrix4 pose = this.viewSet.getCameraPose(index);
+        Matrix4 pose = view.getCameraPose();
         return pose.times(sceneModel.getFullModelMatrix().quickInverse(0.01f));
     }
 
     @Override
     public Vector3 getFrustumDimensions()
     {
-        return getSelectedCameraProjection().getNormalizedFrustumDimensions().times(FRUSTUM_VISUALIZATION_SCALE);
+        return getSelectedView().getCameraProjection().getNormalizedFrustumDimensions().times(FRUSTUM_VISUALIZATION_SCALE);
     }
 }

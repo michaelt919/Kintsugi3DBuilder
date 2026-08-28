@@ -47,12 +47,12 @@ public final class ViewSetBuilder
      * @param rootDirectory
      * @param initialCapacity
      */
-    public ViewSetBuilder(@SuppressWarnings("ParameterNameDiffersFromOverriddenParameter") File rootDirectory, int initialCapacity)
+    ViewSetBuilder(@SuppressWarnings("ParameterNameDiffersFromOverriddenParameter") File rootDirectory, int initialCapacity)
     {
         this(rootDirectory, rootDirectory, initialCapacity);
     }
 
-    public ViewSetBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
+    ViewSetBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
     {
         result = new ViewSet(initialCapacity);
         result.setRootDirectory(rootDirectory);
@@ -94,56 +94,45 @@ public final class ViewSetBuilder
         return this;
     }
 
-    public ViewSetBuilder commitCurrentCameraPose()
+    public ViewSetBuilder commitCurrentView()
     {
-        if (maskFile == null && !maskMap.isEmpty())
-        {
-            // We haven't committed this view yet, so size of the view set data will just be the current index.
-            maskFile = maskMap.get(result.getCameraPoseCount());
-        }
-
-        View currentCamera = new View(cameraPose, cameraPose.quickInverse(0.002f),
-            cameraProjectionIndex, lightIndex, result.getCameraPoseCount(),
-            imageFile, maskFile, new ViewRMSE(), result);
-        result.getViewList().add(currentCamera);
-
-        // Reset maskFile to null for the next camera pose.
-        maskFile = null;
-
+        commitCurrentView(true);
         return this;
     }
 
-    public ViewSetBuilder commitCurrentCameraPoseAsDisabled()
+    public ViewSetBuilder commitCurrentViewAsDisabled()
+    {
+        commitCurrentView(false);
+        return this;
+    }
+
+    private void commitCurrentView(boolean enabled)
     {
         if (maskFile == null)
         {
-            maskFile = maskMap.get(result.getCameraPoseCount());
+            // We haven't committed this view yet, so size of the view set data will just be the current index.
+            maskFile = maskMap.get(result.getGPUBufferSize());
         }
+
         View currentCamera = new View(cameraPose, cameraPose.quickInverse(0.002f),
-            cameraProjectionIndex, lightIndex,
-            result.getCameraPoseCount(),
+            cameraProjectionIndex, lightIndex, result.getGPUBufferSize(),
             imageFile, maskFile, new ViewRMSE(), result);
-        currentCamera.isDisabled = true;
-        result.getViewList().add(currentCamera);
-        return this;
+        currentCamera.isEnabled = enabled;
+        result.addView(currentCamera);
+
+        // Reset maskFile to null for the next camera pose.
+        maskFile = null;
     }
 
-    public ViewSetBuilder disableCamerasByImageFilename(Iterable<File> disabledImageFiles)
+    public ViewSetBuilder removeViewsByImageFilename(Iterable<File> disabledImageFiles)
     {
         for (File f : disabledImageFiles)
         {
-            int index = result.getImageFiles().indexOf(f);
-            if (index != -1)
-            {
-                result.getViewList().remove(index);
-            }
+            result.removeViewByImageFilename(f);
         }
 
         // Reassign view indices for smaller data set.
-        for (int i = 0; i < result.getCameraPoseCount(); ++i)
-        {
-            result.getView(i).gpuViewIndex = i;
-        }
+        result.optimizeGPUIndexing();
 
         return this;
     }
@@ -251,15 +240,15 @@ public final class ViewSetBuilder
         return this;
     }
 
-    public ViewSetBuilder setOrientationViewIndex(int viewIndex)
+    public ViewSetBuilder setOrientationViewByIndex(int viewIndex)
     {
-        result.setOrientationViewIndex(viewIndex);
+        result.setOrientationView(result.getViews().get(viewIndex));
         return this;
     }
 
-    public ViewSetBuilder setOrientationViewName(String viewName)
+    public ViewSetBuilder setOrientationViewByName(String viewName)
     {
-        result.setOrientationView(viewName);
+        result.setOrientationViewByName(viewName);
         return this;
     }
 
@@ -321,13 +310,13 @@ public final class ViewSetBuilder
     {
         if (needsClipPlanes)
         {
-            float farPlane = findFarPlane(result.getViewList());
+            float farPlane = findFarPlane(result.getViews());
             result.setRecommmendedClipPlanes(farPlane / 32.0f, farPlane);
             LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
         }
 
         // Fill with default lights if not specified
-        int maxLightIndex = result.getViewList().stream().mapToInt(data -> data.lightIndex).max().orElse(1);
+        int maxLightIndex = result.getViews().stream().mapToInt(data -> data.lightIndex).max().orElse(1);
         for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
         {
             result.addLight(Vector3.ZERO, Vector3.ZERO);
@@ -367,7 +356,7 @@ public final class ViewSetBuilder
 
         for (View view : viewSetDataList)
         {
-            Vector4 position = view.cameraPoseInv.getColumn(3);
+            Vector4 position = view.cameraPoseInverse.getColumn(3);
             minX = Math.min(minX, position.x);
             minY = Math.min(minY, position.y);
             minZ = Math.min(minZ, position.z);

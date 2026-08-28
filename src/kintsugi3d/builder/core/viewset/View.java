@@ -12,11 +12,15 @@
 package kintsugi3d.builder.core.viewset;
 
 import kintsugi3d.builder.core.metrics.ReadonlyViewRMSE;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Container for different data used by ViewSet. Contains cameraPose, cameraPoseInv, cameraProjectionIndex
@@ -34,7 +38,7 @@ public class View
      * An inverted camera pose defining the transformation from camera space to object space for each view.
      * (Useful for visualizing the cameras on screen).
      */
-    final Matrix4 cameraPoseInv;
+    final Matrix4 cameraPoseInverse;
 
     /**
      * An entry which designates the index of the projection transformation that should be used for each view.
@@ -52,32 +56,36 @@ public class View
      */
     final File imageFile;
 
+    /**
+     * Only intended to be modified by ViewSet.optimizeGPUIndexing, during initialization by ViewSetBuilder.
+     */
     int gpuViewIndex;
 
     final ReadonlyViewRMSE viewErrorMetric;
 
     final ReadonlyViewSet containingViewSet;
 
-    File maskFile;
+    File importedMaskFile;
 
-    boolean isDisabled;
+    boolean isEnabled;
 
     /**
      * Creates a new view set data object with parameters for each member.
      */
-    View(Matrix4 cameraPose, Matrix4 cameraPoseInv, int cameraProjectionIndex, int lightIndex,
-         int gpuViewIndex, File imageFile, File maskFile, ReadonlyViewRMSE viewErrorMetric, ReadonlyViewSet containingViewSet)
+    View(Matrix4 cameraPose, Matrix4 cameraPoseInverse, int cameraProjectionIndex, int lightIndex,
+         int gpuViewIndex, File imageFile, File importedMaskFile, ReadonlyViewRMSE viewErrorMetric,
+         ReadonlyViewSet containingViewSet)
     {
         this.cameraPose = cameraPose;
-        this.cameraPoseInv = cameraPoseInv;
+        this.cameraPoseInverse = cameraPoseInverse;
         this.cameraProjectionIndex = cameraProjectionIndex;
         this.lightIndex = lightIndex;
         this.gpuViewIndex = gpuViewIndex;
         this.imageFile = imageFile;
-        this.maskFile = maskFile;
+        this.importedMaskFile = importedMaskFile;
         this.viewErrorMetric = viewErrorMetric;
         this.containingViewSet = containingViewSet;
-        this.isDisabled = false;
+        this.isEnabled = true;
     }
 
     public Matrix4 getCameraPose()
@@ -85,9 +93,9 @@ public class View
         return cameraPose;
     }
 
-    public Matrix4 getCameraPoseInv()
+    public Matrix4 getCameraPoseInverse()
     {
-        return cameraPoseInv;
+        return cameraPoseInverse;
     }
 
     public int getCameraProjectionIndex()
@@ -100,9 +108,25 @@ public class View
         return containingViewSet.getCameraProjection(cameraProjectionIndex);
     }
 
+    public Matrix4 getProjectionMatrix()
+    {
+        return getCameraProjection().getProjectionMatrix(
+            containingViewSet.getRecommendedNearPlane(), containingViewSet.getRecommendedFarPlane());
+    }
+
     public int getLightIndex()
     {
         return lightIndex;
+    }
+
+    public Vector3 getLightPosition()
+    {
+        return containingViewSet.getLightPosition(lightIndex);
+    }
+
+    public Vector3 getLightIntensity()
+    {
+        return containingViewSet.getLightIntensity(lightIndex);
     }
 
     public File getImageFile()
@@ -115,19 +139,14 @@ public class View
         return gpuViewIndex;
     }
 
-    public File getMaskFile()
-    {
-        return maskFile;
-    }
-
     public ReadonlyViewRMSE getViewErrorMetric()
     {
         return viewErrorMetric;
     }
 
-    public boolean isDisabled()
+    public boolean isEnabled()
     {
-        return isDisabled;
+        return isEnabled;
     }
 
     public ReadonlyViewSet getContainingViewSet()
@@ -138,12 +157,16 @@ public class View
     public File getFullResImageFile()
     {
         return new File(containingViewSet.getFullResImageDirectory(), imageFile.getPath());
-//        return viewSetDataCollection.getFullResImageFile(poseIndex);
     }
 
     public File findFullResImageFile() throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getFullResImageFile());
+    }
+
+    public File tryFindFullResImageFile()
+    {
+        return ImageFinder.getInstance().tryFindImageFile(getFullResImageFile());
     }
 
     public File getPreviewImageFile(String extension)
@@ -152,10 +175,31 @@ public class View
             ImageFinder.getInstance().getImageFileNameWithExtension(imageFile.getName(), extension));
     }
 
+    public File getPreviewImageFile()
+    {
+        // Use PNG for preview images by default (TODO: make this a configurable setting?)
+        return getPreviewImageFile("png");
+    }
+
+    public File findPreviewImageFile() throws FileNotFoundException
+    {
+        return ImageFinder.getInstance().findImageFile(getPreviewImageFile());
+    }
+
+    public File tryFindPreviewImageFile()
+    {
+        return ImageFinder.getInstance().tryFindImageFile(getPreviewImageFile());
+    }
+
     public File getThumbnailImageFile(String extension)
     {
         return new File(containingViewSet.getThumbnailImageDirectory(),
             ImageFinder.getInstance().getImageFileNameWithExtension(imageFile.getName(), extension));
+    }
+
+    public File getThumbnailImageFile()
+    {
+        return getThumbnailImageFile("png");
     }
 
     public File findThumbnailImageFile() throws FileNotFoundException
@@ -163,8 +207,67 @@ public class View
         return ImageFinder.getInstance().findImageFile(getThumbnailImageFile());
     }
 
-    public File getThumbnailImageFile()
+    public File tryFindThumbnailImageFile()
     {
-        return getThumbnailImageFile("png");
+        return ImageFinder.getInstance().tryFindImageFile(getThumbnailImageFile());
+    }
+
+    public File getMaskFile()
+    {
+        if (importedMaskFile == null || containingViewSet.getMasksDirectory() == null)
+        {
+            // Not all images have masks, so this file may still not exist
+            return null;
+        }
+        else
+        {
+            return new File(containingViewSet.getMasksDirectory(), importedMaskFile.getName());
+        }
+    }
+
+    public ImageHelper loadFullResMaskedImage() throws IOException
+    {
+        return ImageHelper.read(findFullResImageFile()).withAlphaMask(getMaskFile());
+    }
+
+    @Override
+    public String toString()
+    {
+        if (imageFile != null)
+        {
+            return imageFile.getName();
+        }
+        else
+        {
+            return super.toString();
+        }
+    }
+
+    public View copy(ViewSet newContainingViewSet)
+    {
+        // TODO do we need to also do a deep copy of viewErroMetric?
+        return new View(this.cameraPose, this.cameraPoseInverse, this.cameraProjectionIndex, this.lightIndex,
+            this.gpuViewIndex, this.imageFile, this.importedMaskFile, this.viewErrorMetric, newContainingViewSet);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        // Two views are equal either if they have the same memory address / identity OR
+        // if they are distinct objects with the same, non-null image file path.
+        return obj == this ||
+            (obj instanceof View && this.imageFile != null && Objects.equals(this.imageFile, ((View)obj).imageFile));
+    }
+
+    @Override
+    public int hashCode()
+    {
+        // If imageFile is not null, use it as a hash code.
+        // This ensures that two objects that are equals() will have the same hashCode()
+        // either when they are the same object (with a non-null image file path)
+        // or if they are different objects with the same, non-null image file path.
+        // Otherwise, use the default Object hashCode which covers the case when this object has a null imageFile
+        // (and thus is only equal to another reference to itself).
+        return imageFile != null ? Objects.hashCode(imageFile) : super.hashCode();
     }
 }

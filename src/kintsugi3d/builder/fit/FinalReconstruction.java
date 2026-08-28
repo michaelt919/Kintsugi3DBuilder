@@ -92,12 +92,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
             }
 
-            List<Map<String, ReadonlyColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getCameraPoseCount());
+            List<Map<String, ReadonlyColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getViewCount());
 
             // Run the reconstruction and save the results to file
             for (ReconstructionView<ContextType> view : reconstruction)
             {
-                LOG.info("View {}:", view.getIndex());
+                LOG.info("View {}:", view.getView());
                 // Allocate hash map for the current view
                 rmseOut.add(new HashMap<>(drawableMap.size()));
 
@@ -107,11 +107,11 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
 
                     if (debugDirectory != null)
                     {
-                        saveImageToFile(new File(debugDirectory, entry.getKey()), view.getIndex(), view.getReconstructionFramebuffer());
+                        saveImageToFile(new File(debugDirectory, entry.getKey()), view.getView().getGPUViewIndex(), view.getReconstructionFramebuffer());
                     }
 
                     // Record RMSE
-                    rmseOut.get(view.getIndex()).put(entry.getKey(), rmse);
+                    rmseOut.get(view.getView().getGPUViewIndex()).put(entry.getKey(), rmse);
 
                     LOG.info("{}: \nencoded ground truth = {}\nnormalized sRGB = {}\nnormalized linear = {}",
                         entry.getKey(), rmse.getEncodedGroundTruth(), rmse.getNormalizedSRGB(), rmse.getNormalizedLinear());

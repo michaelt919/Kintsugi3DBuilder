@@ -864,7 +864,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
                 }
 
-                builder.commitCurrentCameraPose();
+                builder.commitCurrentView();
             }
         }
 

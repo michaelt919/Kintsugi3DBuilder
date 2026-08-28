@@ -13,6 +13,7 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.gltf.ModelExporter;
@@ -283,9 +284,9 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             if (viewSet != null)
             {
-                int referencePoseIndex = viewSet.getOrientationViewIndex();
+                View orientationView = viewSet.getOrientationView();
 
-                if (referencePoseIndex < 0) // check for override
+                if (orientationView == null) // check for override
                 {
                     // Imported orientation and object center if no override
                     // For now, this is all that we're importing from Metashape;
@@ -311,7 +312,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 {
                     // reference image based override, replaces any imported reference frame
                     // use centroid and scale based on geometry assuming the imported scale and center is invalid
-                    Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
+                    Matrix3 referenceCameraPose = orientationView.getCameraPose().getUpperLeft3x3();
                     sceneModel.setOrientation(Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
                         .times(referenceCameraPose));
                     sceneModel.setCentroid(resources.getGeometry().getCentroid());

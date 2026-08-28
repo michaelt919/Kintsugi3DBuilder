@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,24 +11,24 @@
 
 package kintsugi3d.builder.io.primaryview;
 
-public class View
+public class PrimaryViewCandidate
 {
     public final String name;
     public final String group;
     public final int id;
 
-    public View(String name, int id, String group) {
+    public PrimaryViewCandidate(String name, int id, String group) {
         this.name = name;
         this.group = group;
         this.id = id;
     }
 
-    public View(String name, String group)
+    public PrimaryViewCandidate(String name, String group)
     {
         this(name, -1, group);
     }
 
-    public View(String name)
+    public PrimaryViewCandidate(String name)
     {
         this(name, null);
     }

@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class CameraCardFactory implements ProjectDataCardFactory
 {
@@ -73,10 +72,10 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 Map.of(
                     "Remove from Project", () ->
                         cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                            () -> Rendering.runLater(() -> viewSet.deleteCamera(view.getImageFile()))),
+                            () -> Rendering.runLater(() -> viewSet.removeViewByImageFilename(view.getImageFile()))),
                     "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(view.getImageFile()))
                 ),
-                view.isDisabled()
+                !view.isEnabled()
             );
         }
         catch (RuntimeException|IOException e)
@@ -92,8 +91,8 @@ public class CameraCardFactory implements ProjectDataCardFactory
         return List.of(Map.of(
             "Disable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToDisable = IntStream.range(0, viewSet.getCameraPoseCount())
-                    .mapToObj(viewSet::getImageFile)
+                Iterable<File> photosToDisable = viewSet.getViews().stream()
+                    .map(View::getImageFile)
                     .collect(Collectors.toList());
 
                 for (File photo : photosToDisable)
@@ -103,8 +102,8 @@ public class CameraCardFactory implements ProjectDataCardFactory
             }),
             "Enable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToEnable = IntStream.range(0, viewSet.getCameraPoseCount())
-                    .mapToObj(viewSet::getImageFile)
+                Iterable<File> photosToEnable = viewSet.getViews().stream()
+                    .map(View::getImageFile)
                     .collect(Collectors.toList());
 
                 for (File photo : photosToEnable)
@@ -119,7 +118,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
     public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
     {
         lastUsedCardsModel = cardsModel;
-        List<ProjectDataCard> cardsList = viewSet.getViewList().stream()
+        List<ProjectDataCard> cardsList = viewSet.getViews().stream()
             .map(viewData -> createCard(cardsModel, viewData))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
@@ -137,11 +136,11 @@ public class CameraCardFactory implements ProjectDataCardFactory
         {
             if (filter.test(card)) // Check whether the card is in the filter
             {
-                int viewIndex = viewSet.findIndexOfView(card.getInternalName()); // find the view index with this view name.
+                View view = viewSet.findViewByName(card.getInternalName()); // find the view index with this view name.
 
-                if (viewIndex >= 0)
+                if (view != null)
                 {
-                    changes.put(card, createCard(cardsModel, viewSet.getView(viewIndex)));
+                    changes.put(card, createCard(cardsModel, view));
                 }
             }
         }

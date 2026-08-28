@@ -14,10 +14,12 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,7 +48,7 @@ public class PreviewImageGenerator
         viewSet.getPreviewImageDirectory().mkdirs(); // Create preview directory
         new File(viewSet.getSupportingFilesDirectory(), "thumbnails").mkdirs(); // Create thumbnail directory
 
-        progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
+        progressMonitor.setMaxProgress(viewSet.getViewCount());
 
         return new PreviewImageGenerator(viewSet, progressMonitor);
     }
@@ -57,14 +59,14 @@ public class PreviewImageGenerator
         this.progressMonitor = progressMonitor;
     }
 
-    PreviewImages forView(int viewIndex)
+    PreviewImages forView(View view)
     {
-        return new PreviewImages(viewIndex, viewSet, progressMonitor, finishedCount, failedCount);
+        return new PreviewImages(view, progressMonitor, finishedCount, failedCount);
     }
 
-    int getViewCount()
+    Collection<View> getViews()
     {
-        return viewSet.getCameraPoseCount();
+        return viewSet.getViews();
     }
 
     void allowUserCancellation() throws UserCancellationException
@@ -83,7 +85,7 @@ public class PreviewImageGenerator
     void waitAndFinish() throws IOException, UserCancellationException
     {
         // Wait for all threads to finish
-        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getCameraPoseCount())
+        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getViewCount())
         {
             Thread.onSpinWait();
         }

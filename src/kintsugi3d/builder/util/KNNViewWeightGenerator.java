@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.util;
 
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -63,48 +64,54 @@ public class KNNViewWeightGenerator implements ViewWeightGenerator
     }
 
     @Override
-    public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
+    public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
-        float viewWeightSum = 0.0f;
+        float[] viewWeights = new float[resources.getViewSet().getGPUBufferSize()];
 
-        Queue<WeightedView> viewPriority = new PriorityQueue<>(resources.getViewSet().getCameraPoseCount(), Comparator.reverseOrder());
+        Queue<WeightedView> viewPriority = new PriorityQueue<>(resources.getViewSet().getGPUBufferSize(), Comparator.reverseOrder());
 
-        for (int i : activeViewIndexList)
+        for (View view : activeViewList)
         {
-            Vector3 viewDir = resources.getViewSet().getCameraPose(i).times(
+            Vector3 viewDir = view.getCameraPose().times(
                     Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                 .getXYZ().negated().normalized();
 
-            Vector3 targetDir = resources.getViewSet().getCameraPose(i).times(
+            Vector3 targetDir = view.getCameraPose().times(
                 targetView.quickInverse(0.01f).getColumn(3).minus(
                     Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition()))
                 .getXYZ().normalized();
 
-            viewPriority.add(new WeightedView(i, targetDir.dot(viewDir)));
+            viewPriority.add(new WeightedView(view.getGPUViewIndex(), targetDir.dot(viewDir)));
         }
 
-        for (int i = 0; i < k; i++)
+        if (!viewPriority.isEmpty())
         {
-            WeightedView next = viewPriority.poll();
-            viewWeights[next.viewIndex] = 1.0f / (float)Math.max(0.000001, 1.0 - next.weight);
-        }
-
-        WeightedView thresholdView = viewPriority.poll();
-        float threshold = 1.0f / (float)Math.max(0.000001, 1.0 - thresholdView.weight);
-
-        for (int i = 0; i < viewWeights.length; i++)
-        {
-            if (viewWeights[i] > 0)
+            for (int i = 0; i < k && viewPriority.size() > 1; i++) // Always save one to be the threshold.
             {
-                viewWeights[i] -= threshold;
-                viewWeightSum += viewWeights[i];
+                WeightedView next = viewPriority.poll();
+                viewWeights[next.viewIndex] = 1.0f / (float) Math.max(0.000001, 1.0 - next.weight);
             }
-        }
 
-        for (int i = 0; i < viewWeights.length; i++)
-        {
-            viewWeights[i] /= Math.max(0.01, viewWeightSum);
+            // viewPriority should still not be empty since we only poll if the size was greater than 1.
+            assert !viewPriority.isEmpty();
+
+            WeightedView thresholdView = viewPriority.poll();
+            float threshold = 1.0f / (float) Math.max(0.000001, 1.0 - thresholdView.weight);
+
+            float viewWeightSum = 0.0f;
+            for (int i = 0; i < viewWeights.length; i++)
+            {
+                if (viewWeights[i] > 0)
+                {
+                    viewWeights[i] -= threshold;
+                    viewWeightSum += viewWeights[i];
+                }
+            }
+
+            for (int i = 0; i < viewWeights.length; i++)
+            {
+                viewWeights[i] /= Math.max(0.01f, viewWeightSum);
+            }
         }
 
         return viewWeights;

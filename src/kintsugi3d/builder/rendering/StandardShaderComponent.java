@@ -158,7 +158,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED", Optional.empty());
         defineMap.put("USE_VIEW_INDICES", Optional.empty());
 
-        defineMap.put("VIEW_COUNT", Optional.empty());
         defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.empty());
         defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.empty());
 
@@ -241,7 +240,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             float lightDistance = sceneModel.getLightModelViewMatrix(lightIndex).times(sceneModel.getCentroid().asPosition()).getXYZ().length();
 
             float lightScale = resources.getViewSet().getProjectSettings().getBoolean("infiniteLightSources") ? 1.0f :
-                resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
+                resources.getViewSet().getPrimaryView().getCameraPose()
                     .times(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                     .getXYZ().length();
             getDrawable().program().setUniform(String.format("lightIntensityVirtual[%d]", lightIndex),
@@ -311,7 +310,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
                     this.sceneModel.getLightingModel().getEnvironmentMapFilteringBias()
                         + (float)(0.5 *
                         Math.log(6 * (double)lightingResources.getEnvironmentMap().getFaceSize() * (double)lightingResources.getEnvironmentMap().getFaceSize()
-                            / (double) resources.getViewSet().getCameraPoseCount() )
+                            / (double) resources.getViewSet().getViewCount() )
                         / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", lightingResources.getEnvironmentMap().getMipmapLevelCount() - 1);
 

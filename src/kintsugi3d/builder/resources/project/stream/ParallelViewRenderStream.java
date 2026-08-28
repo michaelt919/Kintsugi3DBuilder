@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.project.stream;
 
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.ReadableFramebuffer;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -28,7 +30,7 @@ import java.util.stream.IntStream;
 public class ParallelViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ParallelViewRenderStream.class);
-    private final int viewCount;
+    private final Collection<View> views;
     private final Drawable<ContextType> drawable;
     private final ReadableFramebuffer<ContextType> framebuffer;
     private final int attachmentCount;
@@ -41,11 +43,10 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
 
     private final Deque<ColorNativeBufferList[]> unusedColorBuffers;
 
-
-    ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount,
+    ParallelViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount,
         int maxRunningThreads)
     {
-        this.viewCount = viewCount;
+        this.views = views;
         this.drawable = drawable;
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;
@@ -57,15 +58,15 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
             .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
-    ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
+    ParallelViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        this(viewCount, drawable, framebuffer, attachmentCount, DEFAULT_MAX_RUNNING_THREADS);
+        this(views, drawable, framebuffer, attachmentCount, DEFAULT_MAX_RUNNING_THREADS);
     }
 
     @Override
     public GraphicsStream<ColorList[]> sequential()
     {
-        return new SequentialViewRenderStream<>(viewCount, drawable, framebuffer, attachmentCount);
+        return new SequentialViewRenderStream<>(views, drawable, framebuffer, attachmentCount);
     }
 
     @Override
@@ -83,20 +84,20 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
         }
         else
         {
-            return new ParallelViewRenderStream<>(viewCount, drawable, framebuffer, attachmentCount, maxRunningThreads);
+            return new ParallelViewRenderStream<>(views, drawable, framebuffer, attachmentCount, maxRunningThreads);
         }
     }
 
     @Override
     public int getCount()
     {
-        return viewCount;
+        return views.size();
     }
 
     @Override
     public void forEach(Consumer<? super ColorList[]> action)
     {
-        for (int k = 0; k < viewCount; k++)
+        for (View view : views)
         {
             ColorNativeBufferList[] colorBuffers;
 
@@ -127,7 +128,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
             }
 
             // Run shader program to fill framebuffer with per-pixel information.
-            drawable.program().setUniform("viewIndex", k);
+            drawable.program().setUniform("viewIndex", view.getGPUViewIndex());
             drawable.draw(framebuffer);
 
 

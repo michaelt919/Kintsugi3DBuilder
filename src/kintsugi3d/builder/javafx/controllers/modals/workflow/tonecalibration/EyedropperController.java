@@ -33,11 +33,13 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
@@ -784,12 +786,16 @@ public class EyedropperController extends NonDataPageControllerBase
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", VALID_EXTENSIONS));
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", VALID_EXTENSIONS));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         try
         {
-            fileChooser.setInitialDirectory(Global.state().getIOModel().getLoadedViewSet().getFullResImageFile(0).getParentFile());
+            List<View> views = Global.state().getIOModel().getLoadedViewSet().getViews();
+            if (!views.isEmpty())
+            {
+                fileChooser.setInitialDirectory(views.get(0).getFullResImageFile().getParentFile());
+            }
         }
         catch (NullPointerException e)
         {

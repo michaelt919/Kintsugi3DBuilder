@@ -25,9 +25,9 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ShadingParameterMode;
 
-import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Map;
+
 public class RenderingSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
     private UniformBuffer<ContextType> viewIndexBufferOverride;
@@ -57,22 +57,7 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
-                .generateWeights(resources,
-                    new AbstractList<Integer>()
-                    {
-                        @Override
-                        public Integer get(int index)
-                        {
-                            return index;
-                        }
-
-                        @Override
-                        public int size()
-                        {
-                            return resources.getViewSet().getCameraPoseCount();
-                        }
-                    },
-                    targetView);
+                .generateWeights(resources, resources.getViewSet().getViews(), targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
