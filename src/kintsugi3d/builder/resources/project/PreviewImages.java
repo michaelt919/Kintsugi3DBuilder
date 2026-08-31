@@ -13,7 +13,6 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.viewset.DistortionProjection;
-import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.util.ImageHelper;
@@ -39,8 +38,6 @@ class PreviewImages
     private final AtomicInteger finishedCount;
     private final AtomicInteger failedCount;
 
-    private final Projection projection;
-
     private boolean missingPreview;
     private boolean missingThumbnail;
 
@@ -54,8 +51,6 @@ class PreviewImages
         this.progressMonitor = progressMonitor;
         this.finishedCount = finishedCount;
         this.failedCount = failedCount;
-
-        projection = view.getCameraProjection();
 
         File previewImageFile = view.tryFindPreviewImageFile();
         File thumbnailImageFile = view.tryFindThumbnailImageFile();
@@ -198,12 +193,12 @@ class PreviewImages
         }
     }
 
-    private static class Resolution
+    private static final class Resolution
     {
         public final int width;
         public final int height;
 
-        public Resolution(int width, int height)
+        private Resolution(int width, int height)
         {
             this.width = width;
             this.height = height;

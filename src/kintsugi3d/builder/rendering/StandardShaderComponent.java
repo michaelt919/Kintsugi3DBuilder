@@ -34,11 +34,10 @@ import java.util.Map.Entry;
 public abstract class StandardShaderComponent<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(StandardShaderComponent.class);
+
     private final LightingResources<ContextType> lightingResources;
 
-
     protected final GraphicsResourcesImageSpace<ContextType> resources;
-
     protected final SceneModel sceneModel;
 
     private boolean lightCalibrationMode = false;
@@ -46,7 +45,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     // Set default shader to be the untextured IBR shader
     private File fragmentShaderFile;
     private Map<String, Optional<Object>> fragmentShaderDefines;
-
 
     protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)

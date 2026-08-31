@@ -21,130 +21,159 @@ import javafx.scene.control.TreeView;
 
 import java.util.Iterator;
 
-public final class SearchableTreeView extends SearchableView {
-    TreeView<String> treeView;
-    TreeItem<String> backupRoot;
+public final class SearchableTreeView extends SearchableView
+{
+    private final TreeView<String> treeView;
+    private TreeItem<String> backupRoot;
 
-    private SearchableTreeView(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode){
+    private SearchableTreeView(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode)
+    {
         this.treeView = tree;
         this.textInput = textInput;
         this.regexMode = regexMode;
     }
 
     @Override
-    public SearchableTreeView bind() {
+    public SearchableTreeView bind()
+    {
         backupRoot = deepCopy(treeView.getRoot());
 
-        textInput.textProperty().addListener((obs, oldText, newText)-> updateView());
+        textInput.textProperty().addListener((obs, oldText, newText) -> updateView());
 
-        if(regexMode != null){
-            regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateView());
+        if (regexMode != null)
+        {
+            regexMode.selectedProperty().addListener((obs, oldVal, newVal) -> updateView());
         }
         return this;
     }
 
-    public static SearchableTreeView createUnboundInstance(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode){
+    public static SearchableTreeView createUnboundInstance(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode)
+    {
         return new SearchableTreeView(tree, textInput, regexMode);
     }
 
-    public static SearchableTreeView createUnboundInstance(TreeView<String> tree, TextInputControl textInput){
+    public static SearchableTreeView createUnboundInstance(TreeView<String> tree, TextInputControl textInput)
+    {
         return new SearchableTreeView(tree, textInput, null);
     }
 
     @Override
-    protected void updateView() {
+    protected void updateView()
+    {
         treeView.setRoot(deepCopy(backupRoot));
 
         String searchTxt = textInput.getText().trim();
-        if (searchTxt.isBlank()){
+        if (searchTxt.isBlank())
+        {
             treeView.getRoot().setExpanded(true);
             return;
         }
 
         ObservableList<TreeItem<String>> leaves = getTreeViewLeaves(backupRoot);
-        FilteredList<TreeItem<String>> filteredLeaves = new FilteredList<>(leaves, visibility->true);
+        FilteredList<TreeItem<String>> filteredLeaves = new FilteredList<>(leaves, visibility -> true);
 
-        filteredLeaves.setPredicate(regexMode != null && regexMode.isSelected() ? leaf->leaf.getValue().matches(".*" + searchTxt + ".*") :
-                leaf->leaf.getValue().contains(searchTxt));
+        filteredLeaves.setPredicate(regexMode != null && regexMode.isSelected() ?
+            leaf -> leaf.getValue().matches(".*" + searchTxt + ".*") :
+            leaf -> leaf.getValue().contains(searchTxt));
 
 
-        for (TreeItem<String> leaf : leaves){
-            if(!filteredLeaves.contains(leaf)){
+        for (TreeItem<String> leaf : leaves)
+        {
+            if (!filteredLeaves.contains(leaf))
+            {
                 removeLeaf(treeView, leaf);
             }
         }
 
-        for (TreeItem<String> group : getTreeViewGroups(treeView.getRoot())){
+        for (TreeItem<String> group : getTreeViewGroups(treeView.getRoot()))
+        {
             group.setExpanded(true);
         }
     }
 
-    private static void removeLeaf(TreeView<String> treeView, TreeItem<String> toRemove) {
+    private static void removeLeaf(TreeView<String> treeView, TreeItem<String> toRemove)
+    {
         removeLeafRec(treeView.getRoot().getChildren().iterator(), toRemove);
     }
 
-    private static void removeLeafRec(Iterator<TreeItem<String>> curr, TreeItem<String> toRemove) {
+    private static void removeLeafRec(Iterator<TreeItem<String>> curr, TreeItem<String> toRemove)
+    {
         TreeItem<String> currItem = curr.next();
 
-        if(currItem.getValue().equals(toRemove.getValue())){
+        if (currItem.getValue().equals(toRemove.getValue()))
+        {
             curr.remove();
             return;
         }
 
         //search child nodes if needed
-        if(!currItem.getChildren().isEmpty()){
+        if (!currItem.getChildren().isEmpty())
+        {
             Iterator<TreeItem<String>> childrenIter = currItem.getChildren().iterator();
             removeLeafRec(childrenIter, toRemove);
         }
 
         //search sibling nodes if needed
-        if(curr.hasNext()){
+        if (curr.hasNext())
+        {
             removeLeafRec(curr, toRemove);
         }
     }
 
-    private static TreeItem<String> deepCopy(TreeItem<String> item) {
+    private static TreeItem<String> deepCopy(TreeItem<String> item)
+    {
         TreeItem<String> copy = new TreeItem<>(item.getValue(), item.getGraphic());
-        for (TreeItem<String> child : item.getChildren()) {
+        for (TreeItem<String> child : item.getChildren())
+        {
             copy.getChildren().add(deepCopy(child));
         }
         return copy;
     }
 
-    private static ObservableList<TreeItem<String>> getTreeViewGroups(TreeItem<String> backupRoot){
+    private static ObservableList<TreeItem<String>> getTreeViewGroups(TreeItem<String> backupRoot)
+    {
         ObservableList<TreeItem<String>> list = FXCollections.observableArrayList();
         getTreeViewGroupsRec(backupRoot, list);
         return list;
     }
 
-    private static void getTreeViewGroupsRec(TreeItem<String> item, ObservableList<TreeItem<String>> list) {
-        if (!item.getChildren().isEmpty()){
+    private static void getTreeViewGroupsRec(TreeItem<String> item, ObservableList<TreeItem<String>> list)
+    {
+        if (!item.getChildren().isEmpty())
+        {
             list.add(item);
 
-            for(TreeItem<String> child : item.getChildren()){
+            for (TreeItem<String> child : item.getChildren())
+            {
                 getTreeViewGroupsRec(child, list);
             }
         }
     }
 
-    private static ObservableList<TreeItem<String>> getTreeViewLeaves(TreeItem<String> backupRoot) {
+    private static ObservableList<TreeItem<String>> getTreeViewLeaves(TreeItem<String> backupRoot)
+    {
         ObservableList<TreeItem<String>> list = FXCollections.observableArrayList();
         getTreeViewLeavesRec(backupRoot, list);
         return list;
     }
 
-    private static void getTreeViewLeavesRec(TreeItem<String> item, ObservableList<TreeItem<String>> list) {
-        if(item.isLeaf()){
+    private static void getTreeViewLeavesRec(TreeItem<String> item, ObservableList<TreeItem<String>> list)
+    {
+        if (item.isLeaf())
+        {
             list.add(item);
         }
-        else{
-            for (TreeItem<String> child : item.getChildren()){
+        else
+        {
+            for (TreeItem<String> child : item.getChildren())
+            {
                 getTreeViewLeavesRec(child, list);
             }
         }
     }
 
-    public TreeView<String> getTreeView() {
+    public TreeView<String> getTreeView()
+    {
         return this.treeView;
     }
 }

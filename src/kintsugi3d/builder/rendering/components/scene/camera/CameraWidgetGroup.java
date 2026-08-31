@@ -76,6 +76,11 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
         {
             for (View view : resources.getViewSet().getViews())
             {
+                // Current view is captured by cameraVisual and cameraFrustum so that they know where we are in the loop.
+                // A bit of a hack to get a design that was built for a single frustum to work for rendering multiple.
+                // TODO maybe rework with a dedicated visual and frustum child for each camera?
+                currentView = view;
+
                 cameraVisual.draw(framebuffer, cameraViewport);
                 cameraFrustum.draw(framebuffer, cameraViewport);
             }

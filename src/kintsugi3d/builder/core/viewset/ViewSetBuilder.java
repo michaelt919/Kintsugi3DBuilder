@@ -41,6 +41,9 @@ public final class ViewSetBuilder
     private final Map<Integer, File> maskMap;
     private boolean hasUnsupportedCorrections;
 
+    private int orientationViewIndex = -1;
+    private String orientationViewName;
+
     /**
      * Uses root directory as supporting files directory by default
      *
@@ -242,13 +245,17 @@ public final class ViewSetBuilder
 
     public ViewSetBuilder setOrientationViewByIndex(int viewIndex)
     {
-        result.setOrientationView(result.getViews().get(viewIndex));
+        // Defer application until all views have been loaded.
+        this.orientationViewIndex = viewIndex;
+        this.orientationViewName = null;
         return this;
     }
 
     public ViewSetBuilder setOrientationViewByName(String viewName)
     {
-        result.setOrientationViewByName(viewName);
+        // Defer application until all views have been loaded.
+        this.orientationViewName = viewName;
+        this.orientationViewIndex = -1;
         return this;
     }
 
@@ -308,6 +315,19 @@ public final class ViewSetBuilder
 
     public ViewSet finish()
     {
+        if (orientationViewName != null)
+        {
+            result.setOrientationViewByName(orientationViewName);
+        }
+        else if (orientationViewIndex >= 0)
+        {
+            result.setOrientationView(result.getViews().get(orientationViewIndex));
+        }
+        else
+        {
+            result.setOrientationView(null);
+        }
+
         if (needsClipPlanes)
         {
             float farPlane = findFarPlane(result.getViews());

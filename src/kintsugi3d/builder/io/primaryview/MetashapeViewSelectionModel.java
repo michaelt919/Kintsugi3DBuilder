@@ -80,7 +80,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
         thumbnailMap = new HashMap<>(16);
 
         cameraIdToFullRes = new HashMap<>(primaryViewCandidates.size());
-        List<File> missingImgs = new ArrayList<>();
+        List<File> missingImgs = new ArrayList<>(16);
         for (PrimaryViewCandidate primaryViewCandidate : primaryViewCandidates)
         {
             if (!disabledImageFiles.contains(new File(primaryViewCandidate.name)))
@@ -96,7 +96,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
         }
         if (!missingImgs.isEmpty()) {
             throw new MissingImagesException(
-                    String.format("{} image(s) missing in {}", missingImgs.size(), fullResSearchDir),
+                    String.format("%d image(s) missing in %s", missingImgs.size(), fullResSearchDir),
                     missingImgs, fullResSearchDir
             );
         }

@@ -47,6 +47,7 @@ import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.function.BiConsumer;
 
 /**
@@ -305,7 +306,7 @@ public class SpecularFitProcess
 
     private <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> optimizeFitWithCacheHelper(
         ImageCache<ContextType> cache, ProgressMonitor monitor, TextureResources<ContextType> reference,
-        MaterialBasis basis, Instant start) throws IOException, UserCancellationException
+        MaterialBasis basis, Temporal start) throws IOException, UserCancellationException
     {
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.

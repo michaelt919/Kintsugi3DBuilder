@@ -86,8 +86,6 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
         selectImageFileLabel.visibleProperty().bind(selectImageFileButton.selectedProperty()
             .or(previousImageButton.selectedProperty().and(selectedImageFile.isNotNull())));
-        buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
-            selectImageFileLabel.setVisible(selectImageFileButton.isSelected()));
 
         this.getCanAdvanceObservable().bind(buttonGroup.selectedToggleProperty().isNotNull());
     }

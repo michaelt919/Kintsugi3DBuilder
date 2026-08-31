@@ -24,14 +24,14 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class PreviewImageGenerator
+public final class PreviewImageGenerator
 {
     private final ViewSet viewSet;
     private final ProgressMonitor progressMonitor;
 
     private final AtomicInteger finishedCount = new AtomicInteger(0);
     private final AtomicInteger failedCount = new AtomicInteger(0);
-    AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
+    private final AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
 
     static PreviewImageGenerator start(ViewSet viewSet)
     {

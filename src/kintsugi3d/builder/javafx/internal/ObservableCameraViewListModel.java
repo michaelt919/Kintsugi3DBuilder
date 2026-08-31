@@ -29,7 +29,10 @@ public class ObservableCameraViewListModel implements CameraViewListModel
     private BooleanProperty cameraViewSnapEnabledProperty;
 
     @Override
-    public View getSelectedCameraView() { return selectedCameraViewModel.getSelectedItem();}
+    public View getSelectedCameraView()
+    {
+        return selectedCameraViewModel.getSelectedItem();
+    }
 
     @Override
     public void setSelectedCameraView(View cameraView)

@@ -46,13 +46,29 @@ public class ViewSelectionImpl implements ViewSelection
     @Override
     public Matrix4 getMatrixFromView(View view)
     {
-        Matrix4 pose = view.getCameraPose();
-        return pose.times(sceneModel.getFullModelMatrix().quickInverse(0.01f));
+        if (view == null)
+        {
+            return Matrix4.IDENTITY;
+        }
+        else
+        {
+            Matrix4 pose = view.getCameraPose();
+            return pose.times(sceneModel.getFullModelMatrix().quickInverse(0.01f));
+        }
     }
 
     @Override
     public Vector3 getFrustumDimensions()
     {
-        return getSelectedView().getCameraProjection().getNormalizedFrustumDimensions().times(FRUSTUM_VISUALIZATION_SCALE);
+        View selectedView = getSelectedView();
+
+        if (selectedView != null)
+        {
+            return selectedView.getCameraProjection().getNormalizedFrustumDimensions().times(FRUSTUM_VISUALIZATION_SCALE);
+        }
+        else
+        {
+            return new Vector3(1.0f);
+        }
     }
 }

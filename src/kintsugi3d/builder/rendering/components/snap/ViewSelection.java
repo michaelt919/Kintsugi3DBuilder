@@ -33,7 +33,16 @@ public interface ViewSelection
 
     default Matrix4 getSelectedMatrix()
     {
-        return getMatrixFromView(getSelectedView());
+        View selectedView = getSelectedView();
+
+        if (selectedView != null)
+        {
+            return getMatrixFromView(selectedView);
+        }
+        else
+        {
+            return Matrix4.IDENTITY;
+        }
     }
 
     Vector3 getFrustumDimensions();

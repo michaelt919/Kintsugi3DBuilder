@@ -15,12 +15,8 @@ import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 
 public class ReconstructionSettings
 {
-    ReadonlyViewSet reconstructionViewSet = null;
-    boolean reconstructAll = false;
-
-    public ReconstructionSettings()
-    {
-    }
+    private ReadonlyViewSet reconstructionViewSet;
+    private boolean reconstructAll = false;
 
     /**
      * Should every image in the view set be reconstructed for validation, or just one key view?

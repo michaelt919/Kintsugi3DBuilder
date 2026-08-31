@@ -304,7 +304,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
                         String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
 
-                        if (id.equals("vd"))
+                        if ("vd".equals(id))
                         {
                             // commit as disabled
                             builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
