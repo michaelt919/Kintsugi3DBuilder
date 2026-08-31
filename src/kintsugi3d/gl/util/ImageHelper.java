@@ -286,6 +286,12 @@ public class ImageHelper
         }
     }
 
+    public ImageHelper save(String format, File file) throws IOException
+    {
+        ImageIO.write(this.image, format, file);
+        return this;
+    }
+
     public ImageHelper saveAtResolution(String format, File scaledFile, int width, int height) throws IOException
     {
         BufferedImage scaled = scaledToResolution(width, height).image;
