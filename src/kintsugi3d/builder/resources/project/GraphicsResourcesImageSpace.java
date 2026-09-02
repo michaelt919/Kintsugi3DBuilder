@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -320,8 +321,12 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 (loadOptions != null) ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
             true);
 
+        // getViews makes a copy; save it here since we'll need it a couple times.
+        List<View> views = viewSet != null ? viewSet.getViews() : List.of();
+
         // Read the images from a file
-        if ((loadOptions != null) && loadOptions.areColorImagesRequested() && (viewSet.getFullResImageDirectory() != null) && (viewSet.getGPUBufferSize() > 0))
+        if (loadOptions != null && loadOptions.areColorImagesRequested() &&
+            viewSet != null && viewSet.getFullResImageDirectory() != null && viewSet.getGPUBufferSize() > 0)
         {
             Date timestamp = new Date();
 
@@ -357,7 +362,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
             int progressCount = 0;
 
-            for (View view : viewSet.getViews())
+            for (View view : views)
             {
                 if (progressMonitor != null)
                 {
@@ -443,7 +448,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                     )
                     {
                         // Render each depth texture
-                        for (View view : viewSet.getViews())
+                        for (View view : views)
                         {
                             depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(view.getGPUViewIndex()));
                             depthMapGenerator.generateDepthMap(view, depthRenderingFBO);
@@ -472,7 +477,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 .createTexture();
             shadowMatrixBuffer = context.createUniformBuffer();
 
-            updateShadowTextures();
+            updateShadowTextures(views);
         }
         else
         {
@@ -528,6 +533,11 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
     private void updateShadowTextures() throws IOException
     {
+        updateShadowTextures(this.getViewSet().getViews());
+    }
+
+    private void updateShadowTextures(Iterable<View> views) throws IOException
+    {
         if (this.shadowTextures != null)
         {
             try
@@ -546,7 +556,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                     NativeDataType.FLOAT, 16, this.getViewSet().getGPUBufferSize());
 
                 // Render each depth texture
-                for (View view : this.getViewSet().getViews())
+                for (View view : views)
                 {
                     depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(view.getGPUViewIndex()));
                     Matrix4 shadowMatrix = depthMapGenerator.generateShadowMap(view, depthRenderingFBO);

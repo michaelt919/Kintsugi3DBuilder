@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.FloatBuffer;
+import java.util.List;
 import java.util.stream.IntStream;
 
 /**
@@ -134,12 +135,15 @@ public final class FinalErrorCalculaton
             // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
             ReadableFramebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
 
+            // getViews makes a copy, so save it for efficiency.
+            List<View> views = resources.getViewSet().getViews();
+
             rmseOut.printf("Final RMSE with final diffuse estimate (linear): %s%n",
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getViews()));
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, views));
 
             finalErrorCalcProgram.setUniform("sRGB", true);
             rmseOut.printf("Final RMSE with final diffuse estimate (sRGB): %s%n",
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getViews()));
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, views));
 
             // Calculate error using the GGX fit rather than the basis functions.
             calculateGGXRMSE(resources, programFactory, specularFit, scratchFramebuffer, rmseOut);
@@ -171,12 +175,15 @@ public final class FinalErrorCalculaton
             specularFit.setupShaderProgram(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setUniform("sRGB", false);
 
+            // getViews makes a copy, so save it for efficiency.
+            List<View> views = resources.getViewSet().getViews();
+
             rmseOut.printf("RMSE for GGX fit (linear): %s%n",
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getViews()));
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, views));
 
             ggxErrorCalcProgram.setUniform("sRGB", true);
             rmseOut.printf("RMSE for GGX fit (sRGB): %s%n",
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getViews()));
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, views));
         }
     }
 

@@ -198,7 +198,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        Global.state().getCameraViewListModel().setCameraViewList(new ArrayList<>(loadedViewSet.getViews()));
+        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViews()); // getViews returns a copy
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);

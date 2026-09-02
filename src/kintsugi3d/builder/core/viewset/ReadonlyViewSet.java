@@ -154,6 +154,10 @@ public interface ReadonlyViewSet
      */
     View getRepresentativeView();
 
+    /**
+     * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
+     * @return
+     */
     List<View> getViews();
 
     /**

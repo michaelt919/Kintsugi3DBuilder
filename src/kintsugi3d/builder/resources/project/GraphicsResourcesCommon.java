@@ -277,9 +277,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
     {
-        Vector3[] viewDirections = new Vector3[viewSet.getGPUBufferSize()];
+        // getViews makes a copy; save it here since we'll need it a couple times.
+        List<View> views = viewSet.getViews();
 
-        for (View view : viewSet.getViews())
+        Vector3[] viewDirections = new Vector3[viewSet.getGPUBufferSize()];
+        for (View view : views)
         {
             viewDirections[view.getGPUViewIndex()] =
                 view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometry.getCentroid()).normalized();
@@ -344,7 +346,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         LOG.info("View weights:");
 
         float[] cameraWeights = new float[viewSet.getGPUBufferSize()];
-        for (View view : viewSet.getViews())
+        for (View view : views)
         {
             int index = view.getGPUViewIndex();
             cameraWeights[index] = (float)totals[index] / (float)actualSampleCount;

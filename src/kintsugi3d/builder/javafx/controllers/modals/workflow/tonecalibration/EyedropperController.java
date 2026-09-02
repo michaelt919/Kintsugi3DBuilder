@@ -61,7 +61,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
-    private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
+    private static final double[] LINEAR_LUMINANCE_VALUES = { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
     @FXML private VBox eydropperImageRoot;
     @FXML private GridPane curveValuesRoot;
@@ -804,34 +804,34 @@ public class EyedropperController extends NonDataPageControllerBase
         fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", VALID_EXTENSIONS));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        try
+        ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+        if (viewSet == null)
         {
-            List<View> views = Global.state().getIOModel().getLoadedViewSet().getViews();
-            if (!views.isEmpty())
-            {
-                fileChooser.setInitialDirectory(views.get(0).getFullResImageFile().getParentFile());
-            }
-        }
-        catch (NullPointerException e)
-        {
-            Alert alert = new Alert(AlertType.ERROR, "Please load a model before using the color checker.");
+            Alert alert = new Alert(AlertType.ERROR, "Please load a model before performing tone calibration.");
             alert.setGraphic(null);
             alert.show();
-            return;
         }
-
-        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-        File file = fileChooser.showOpenDialog(stage);
-        setImage(file);
-
-        // This saves the file to the location path listed
-        try
+        else
         {
-            getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
-        }
-        catch (RuntimeException e)
-        {
-            LOG.error("Could not save file");
+            View view = viewSet.getRepresentativeView();
+            if (view != null)
+            {
+                fileChooser.setInitialDirectory(view.getFullResImageFile().getParentFile());
+            }
+
+            Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            File file = fileChooser.showOpenDialog(stage);
+            setImage(file);
+
+            // This saves the file to the location path listed
+            try
+            {
+                getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
+            }
+            catch (RuntimeException e)
+            {
+                LOG.error("Could not save file");
+            }
         }
     }
 

@@ -940,7 +940,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public List<View> getViews()
     {
-        return Collections.unmodifiableList(viewList);
+        // Make a copy to ensure that the list is not changed while another object is using it.
+        synchronized (viewList)
+        {
+            return List.copyOf(viewList);
+        }
     }
 
     void addView(View view)

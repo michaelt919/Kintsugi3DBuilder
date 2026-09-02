@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -110,7 +109,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         View primaryView = viewSet.getPrimaryView();
         View orientationView = viewSet.getOrientationView();
-        List<View> viewsCopy = new ArrayList<>(viewSet.getViews());
+        List<View> viewsCopy = viewSet.getViews(); // getViews already returns a copy.
         int primaryViewIndex = viewsCopy.indexOf(primaryView);
         int orientationViewIndex = viewsCopy.indexOf(orientationView);
 
