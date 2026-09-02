@@ -64,7 +64,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
-    private ViewSet loadedViewSet;
+    private volatile ViewSet loadedViewSet;
     private RenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 

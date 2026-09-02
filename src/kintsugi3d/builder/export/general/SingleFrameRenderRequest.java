@@ -15,13 +15,11 @@ import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Consumer;
 
 class SingleFrameRenderRequest extends RenderRequestBase
@@ -70,33 +68,12 @@ class SingleFrameRenderRequest extends RenderRequestBase
                 monitor.setProcessName("Generic Export");
             }
 
-            ViewSet viewSet = renderable.getViewSet();
-
-            View orientationView = viewSet.getOrientationView();
-
-            if (orientationView == null)
+            View repView = renderable.getViewSet().getRepresentativeView();
+            if (repView != null)
             {
-                // First fallback if no orientation view has been set: primary view for tone calibration
-                orientationView = viewSet.getPrimaryView();
+                program.setUniform("model_view", repView.getCameraPose());
+                program.setUniform("projection", repView.getProjectionMatrix());
             }
-
-            if (orientationView == null)
-            {
-                // Second fallback if primary view is not set: grab the first view in the list, if it exists.
-                List<View> views = viewSet.getViews();
-
-                if (!views.isEmpty())
-                {
-                    orientationView = views.get(0);
-                }
-            }
-
-            if (orientationView != null)
-            {
-                program.setUniform("model_view", orientationView.getCameraPose());
-                program.setUniform("projection", orientationView.getProjectionMatrix());
-            }
-
 
             render(drawable, framebuffer);
 

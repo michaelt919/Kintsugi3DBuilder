@@ -247,9 +247,24 @@ public class EyedropperController extends NonDataPageControllerBase
         }
 
         // Set color checker image
-        setImage(getState().getProjectModel().getColorCheckerFile());
+        setImage(getColorCheckerFile());
 
         autoApply();
+    }
+
+    private File getColorCheckerFile()
+    {
+        File colorCheckerFile = getState().getProjectModel().getColorCheckerFile();
+
+        if (colorCheckerFile != null)
+        {
+            return colorCheckerFile;
+        }
+        else
+        {
+            ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
+            return viewSet.getPrimaryView().tryFindFullResImageFile();
+        }
     }
 
     @Override
@@ -808,6 +823,16 @@ public class EyedropperController extends NonDataPageControllerBase
         Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
         setImage(file);
+
+        // This saves the file to the location path listed
+        try
+        {
+            getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
+        }
+        catch (RuntimeException e)
+        {
+            LOG.error("Could not save file");
+        }
     }
 
     private void setImage(File file)
@@ -839,22 +864,6 @@ public class EyedropperController extends NonDataPageControllerBase
             chooseImageButton.setVisible(false);
             chooseNewImageButton.setVisible(true);
             cropButton.setVisible(true);
-
-            //testing the code for saving the file
-            //Note: Code bellow saves the file however it's not audiomatic. The user has to select where to save it and name the file as well.
-            //Stage secondStage = new Stage();
-            //File savefile = fileChooser.showSaveDialog(secondStage);
-            //fileChooser.setInitialFileName("colorPickerImage");
-
-            //This saves the file to the location path listed
-            try
-            {
-                getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
-            }
-            catch (RuntimeException e)
-            {
-                LOG.error("Could not save file");
-            }
 
             //reset viewport and crop button text
             resetCrop();

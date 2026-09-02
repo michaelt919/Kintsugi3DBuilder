@@ -76,15 +76,15 @@ class MultiframeRenderRequest extends RenderRequestBase
                     monitor.allowUserCancellation();
                 }
 
-                View primaryView = renderable.getViewSet().getPrimaryView();
-
                 program.setUniform("frame", i);
                 program.setUniform("frameCount", frameCount);
-                program.setUniform("model_view", primaryView.getCameraPose());
-                program.setUniform("projection",
-                    primaryView.getCameraProjection()
-                        .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
-                            renderable.getViewSet().getRecommendedFarPlane()));
+
+                View repView = renderable.getViewSet().getRepresentativeView();
+                if (repView != null)
+                {
+                    program.setUniform("model_view", repView.getCameraPose());
+                    program.setUniform("projection", repView.getProjectionMatrix());
+                }
 
                 render(drawable, framebuffer);
 

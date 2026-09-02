@@ -90,97 +90,105 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     private byte[] encodedLuminanceValues;
 
     /**
+     * Synchronizes access to linear and encoded luminance values
+     * (i.e. ensures that if they are changed mid-operation we don't have a situation
+     * where old linear values are used with new encoded values or vice-versa).
+     */
+    private final Object luminanceEncodingLock = new Object();
+
+    /**
      * The absolute file path to be used for loading all resources.
      */
-    private File rootDirectory;
+    private volatile File rootDirectory;
 
     /**
      * The directory to be used for loading images. It is an absolute file path.
      */
-    private File fullResImageDirectory;
+    private volatile File fullResImageDirectory;
 
     /**
      * The directory to be used for saving preview images.
      */
-    private File previewImageDirectory;
+    private volatile File previewImageDirectory;
 
     /**
      * The directory where the results of the texture / specular fitting are stored
      */
-    private File supportingFilesDirectory;
+    private volatile File supportingFilesDirectory;
 
     /**
      * The directory where thumbnail images are stored
      */
-    private File thumbnailImageDirectory;
+    private volatile File thumbnailImageDirectory;
 
     /**
      * The directory where the masks are stored, if any are present (null if no masks)
      */
-    private File masksDirectory;
+    private volatile File masksDirectory;
     /**
      * The directory where the original model and imported textures (if any) are stored
      */
-    private File modelDirectory;
+    private volatile File modelDirectory;
 
     /**
      * The mesh file.
      */
-    private File geometryFile;
-
-    /**
-     * If false, inverse-square light attenuation should be applied.
-     */
-    private boolean infiniteLightSources = false;
+    private volatile File geometryFile;
 
     /**
      * The recommended near plane to use when rendering this view set.
      */
-    private float recommendedNearPlane = 0.01f;
+    private volatile float recommendedNearPlane = 0.01f;
 
     /**
      * The recommended far plane to use when rendering this view set.
      */
-    private float recommendedFarPlane = 100.0f;
+    private volatile float recommendedFarPlane = 100.0f;
 
     /**
      * The view used for color calibration
      */
-    private View primaryView;
+    private volatile View primaryView;
 
     /**
      * The view used to reorient the model
      */
-    private View orientationView;
+    private volatile View orientationView;
 
     private int gpuBufferSize = 0;
 
     /**
      * Roll rotation of the orientation view, used to correct sideways or upside down images
      */
-    private double orientationViewRotationDegrees = 0;
+    private volatile double orientationViewRotationDegrees = 0;
 
     /**
-     * Orientation imported, to be applied to the model
+     * Orientation imported, to be applied to the model.
+     * Should not be changed once object has been created.
      */
     private Matrix3 orientationMatrix;
 
     /**
-     * Object translation imported, to be applied to the model
+     * Object translation imported, to be applied to the model.
+     * Should not be changed once object has been created.
      */
     private Vector3 objectTranslation;
 
     /**
-     * Object scale imported, to be applied to the model
+     * Object scale imported, to be applied to the model.
+     * Should not be changed once object has been created.
      */
     private float objectScale = 1.0f;
 
-    private int previewWidth = 0;
-    private int previewHeight = 0;
+    private volatile int previewWidth = 0;
+    private volatile int previewHeight = 0;
 
     private final GeneralSettingsModel projectSettings = new SimpleGeneralSettingsModel();
     private final Map<String, File> resourceMap = new HashMap<>(32);
 
+    /**
+     * Should not be changed once object has been created.
+     */
     private boolean hasUnsupportedCorrections = false;
 
     public static ViewSetBuilder getBuilder(File rootDirectory, int initialCapacity)
@@ -222,7 +230,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      * @param hasUnsupportedCorrections true if the camera file contains correction flag, false otherwise
      * @return ViewSet.Builder instance
      */
-    public void setHasUnsupportedCorrections(boolean hasUnsupportedCorrections)
+    void setHasUnsupportedCorrections(boolean hasUnsupportedCorrections)
     {
         this.hasUnsupportedCorrections = hasUnsupportedCorrections;
     }
@@ -233,7 +241,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return orientationMatrix;
     }
 
-    public void setOrientationMatrix(Matrix3 orientationMatrix)
+    void setOrientationMatrix(Matrix3 orientationMatrix)
     {
         this.orientationMatrix = orientationMatrix;
     }
@@ -244,7 +252,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return objectTranslation;
     }
 
-    public void setObjectTranslation(Vector3 objectTranslation)
+    void setObjectTranslation(Vector3 objectTranslation)
     {
         this.objectTranslation = objectTranslation;
     }
@@ -255,7 +263,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return objectScale;
     }
 
-    public void setObjectScale(float objectScale)
+    void setObjectScale(float objectScale)
     {
         this.objectScale = objectScale;
     }
@@ -481,11 +489,14 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             result.lightIntensityList.addAll(this.lightIntensityList);
         }
 
-        if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
+        synchronized (luminanceEncodingLock)
         {
-            result.setLuminanceEncoding(
-                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+            if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
+            {
+                result.setLuminanceEncoding(
+                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+            }
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -496,7 +507,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         result.masksDirectory = this.masksDirectory;
         result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
-        result.infiniteLightSources = this.infiniteLightSources;
+
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
 
@@ -608,7 +619,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public File getSupportingFilesDirectory()
     {
         // Fallback to root directory if no supporting files defined
-        return this.supportingFilesDirectory == null ? this.rootDirectory : this.supportingFilesDirectory;
+        return Optional.ofNullable(this.supportingFilesDirectory).orElse(this.rootDirectory);
     }
 
     @Override
@@ -619,9 +630,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         {
             return this.rootDirectory.toPath().relativize(effectiveSupportingFilesDirectory.toPath()).toString();
         }
-        catch (IllegalArgumentException |
-            NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) // If the root and other directories are located under different drive letters on windows
         {
+            LOG.warn("Could not relativize supporting files directory", e);
             return effectiveSupportingFilesDirectory == null ? null : effectiveSupportingFilesDirectory.toString();
         }
     }
@@ -640,17 +651,10 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public File getFullResImageDirectory()
     {
-        if (this.fullResImageDirectory == null)
-        {
-            // If no full res images, just use preview images as full res, or root directory as last fallback
-            return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
-        }
-        else
-        {
-            return this.fullResImageDirectory;
-        }
+        return Optional.ofNullable(this.fullResImageDirectory)
+            .orElse(Optional.ofNullable(this.previewImageDirectory)
+                .orElse(this.rootDirectory));
     }
-
 
     /**
      * Sets the absolute image file directory associated with this view set.
@@ -671,9 +675,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         {
             return this.rootDirectory.toPath().relativize(effectiveFullResImageDirectory.toPath()).toString();
         }
-        catch (IllegalArgumentException |
-            NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
         {
+            LOG.warn("Could not relativize full resolution image directory", e);
             return effectiveFullResImageDirectory == null ? null : effectiveFullResImageDirectory.toString();
         }
     }
@@ -691,29 +695,17 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public File getPreviewImageDirectory()
     {
-        if (this.previewImageDirectory == null)
-        {
-            // If no preview images, default to just using full res images, or root directory as last fallback
-            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
-        }
-        else
-        {
-            return this.previewImageDirectory;
-        }
+        // If no preview images, default to just using full res images, or root directory as last fallback
+        return Optional.ofNullable(this.previewImageDirectory)
+            .orElse(Optional.ofNullable(this.fullResImageDirectory)
+                .orElse(this.rootDirectory));
     }
 
     @Override
     public File getThumbnailImageDirectory()
     {
-        if (this.thumbnailImageDirectory == null)
-        {
-            // If no thumbnail images, default to just using full res images, or root directory as last fallback
-            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
-        }
-        else
-        {
-            return this.thumbnailImageDirectory;
-        }
+        // If no thumbnail images, default to just using full res images, or preview images, or root directory as last fallback
+        return Optional.ofNullable(this.thumbnailImageDirectory).orElse(getFullResImageDirectory());
     }
 
     @Override
@@ -725,9 +717,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         {
             return this.rootDirectory.toPath().relativize(effectivePreviewImageDirectory.toPath()).toString();
         }
-        catch (IllegalArgumentException |
-            NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
         {
+            LOG.warn("Could not relativize preview image directory", e);
             return effectivePreviewImageDirectory == null ? null : effectivePreviewImageDirectory.toString();
         }
     }
@@ -739,12 +731,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
-        if (this.fullResImageDirectory == null)
-        {
-            // If we didn't have a full res directory, use the old preview directory as our full res directory
-            this.fullResImageDirectory = previewImageDirectory;
-        }
-
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
@@ -780,7 +766,17 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public void setPrimaryView(View primaryView)
     {
-        this.primaryView = primaryView;
+        synchronized (viewList)
+        {
+            if (viewList.contains(primaryView))
+            {
+                this.primaryView = primaryView;
+            }
+            else
+            {
+                viewNotFoundException(primaryView);
+            }
+        }
     }
 
     @Override
@@ -792,16 +788,66 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     /**
      * Set the view to use as a reference pose to reorient the model
      *
-     * @param orientationView view
+     * @param orientationView Can be null to use default orientation.
      */
     public void setOrientationView(View orientationView)
     {
-        this.orientationView = orientationView;
+        synchronized (viewList)
+        {
+            if (orientationView != null)
+            {
+                if (viewList.contains(orientationView))
+                {
+                    this.orientationView = orientationView;
+                }
+                else
+                {
+                    viewNotFoundException(orientationView);
+                }
+            }
+            else
+            {
+                this.orientationView = null;
+            }
+        }
     }
 
+    /**
+     * Set the view to use as a reference pose to reorient the model
+     *
+     * @param viewName Can be null to use default orientation.
+     */
     public void setOrientationViewByName(String viewName)
     {
-        this.orientationView = findViewByName(viewName);
+        synchronized (viewList)
+        {
+            if (viewName != null)
+            {
+                View newView = findViewByName(viewName);
+
+                if (newView != null)
+                {
+                    this.orientationView = newView;
+                }
+                else
+                {
+                    viewNotFoundException(viewName);
+                }
+            }
+            else
+            {
+                this.orientationView = null;
+            }
+        }
+    }
+
+    /**
+     *
+     * @param viewRef can be a string containing the name or the view itself.
+     */
+    private static void viewNotFoundException(Object viewRef)
+    {
+        throw new IllegalArgumentException(String.format("View %s is not in the view set", viewRef));
     }
 
     @Override
@@ -813,6 +859,29 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public void setOrientationViewRotationDegrees(double rotation)
     {
         orientationViewRotationDegrees = rotation;
+    }
+
+    @Override
+    public View getRepresentativeView()
+    {
+        synchronized (viewList)
+        {
+            View representativeView = orientationView;
+
+            if (representativeView == null)
+            {
+                // First fallback if no orientation view has been set: primary view for tone calibration
+                representativeView = primaryView;
+
+                if (representativeView == null && !viewList.isEmpty())
+                {
+                    // Second fallback if primary view is not set: grab the first view in the list, if it exists.
+                    representativeView = viewList.get(0);
+                }
+            }
+
+            return representativeView;
+        }
     }
 
     public View findViewByName(String viewName)
@@ -898,6 +967,20 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         synchronized (viewList)
         {
             removed = viewList.remove(view);
+
+            // Check to see if we just removed the tone calibration primary or orientation views.
+            if (Objects.equals(view, primaryView))
+            {
+                // Primary view should always be non-null, if possible.
+                primaryView = viewList.isEmpty() ? null : viewList.get(0);
+            }
+
+            if (Objects.equals(view, orientationView))
+            {
+                // Orientation view can be null.
+                // TODO notify renderer that the orientation has changed.
+                orientationView = null;
+            }
         }
 
         if (removed)
@@ -913,6 +996,25 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         synchronized (viewList)
         {
             removed = viewList.removeIf(view -> Objects.equals(view.imageFile.getName(), image.getName()));
+
+            // Check to see if we just removed the tone calibration primary or orientation views.
+            if (primaryView != null && Objects.equals(image.getName(), primaryView.imageFile.getName()))
+            {
+                // Primary view should always be non-null, if possible.
+                // NOTE: This will not automatically re-calculate light intensity;
+                // to do that, the user will have to go through tone calibration again.
+                // This is intentional in case of a workflow where the user performs tone calibration on a photo
+                // then deletes it entirely if it is not needed for texture processing -- we want the tone calibration
+                // to still be in terms of the light intensity derived from that deleted view!
+                primaryView = viewList.isEmpty() ? null : viewList.get(0);
+            }
+
+            if (orientationView != null && Objects.equals(image.getName(), orientationView.imageFile.getName()))
+            {
+                // Orientation view can be null.
+                // TODO notify renderer that the orientation has changed.
+                orientationView = null;
+            }
         }
 
         if (removed)
@@ -1060,33 +1162,45 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public boolean hasCustomLuminanceEncoding()
     {
-        return linearLuminanceValues != null && encodedLuminanceValues != null
-            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+        synchronized (luminanceEncodingLock)
+        {
+            return linearLuminanceValues != null && encodedLuminanceValues != null
+                && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+        }
     }
 
     @Override
     public SampledLuminanceEncoding getLuminanceEncoding()
     {
-        if (hasCustomLuminanceEncoding())
+        synchronized (luminanceEncodingLock)
         {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
-        }
-        else
-        {
-            return new SampledLuminanceEncoding();
+            if (hasCustomLuminanceEncoding())
+            {
+                return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+            }
+            else
+            {
+                return new SampledLuminanceEncoding();
+            }
         }
     }
 
     @Override
     public double[] getLinearLuminanceValues()
     {
-        return Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
+        synchronized (luminanceEncodingLock)
+        {
+            return Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
+        }
     }
 
     @Override
     public byte[] getEncodedLuminanceValues()
     {
-        return Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
+        synchronized (luminanceEncodingLock)
+        {
+            return Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
+        }
     }
 
     public void setLuminanceEncoding(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
@@ -1096,14 +1210,20 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             throw new IllegalArgumentException("Arrays must be of equal length.");
         }
 
-        this.linearLuminanceValues = linearLuminanceValues.clone();
-        this.encodedLuminanceValues = encodedLuminanceValues.clone();
+        synchronized (luminanceEncodingLock)
+        {
+            this.linearLuminanceValues = linearLuminanceValues.clone();
+            this.encodedLuminanceValues = encodedLuminanceValues.clone();
+        }
     }
 
     public void clearLuminanceEncoding()
     {
-        this.linearLuminanceValues = null;
-        this.encodedLuminanceValues = null;
+        synchronized (luminanceEncodingLock)
+        {
+            this.linearLuminanceValues = null;
+            this.encodedLuminanceValues = null;
+        }
     }
 
     @Override
@@ -1191,10 +1311,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     {
         if (srcFile != null)
         {
-            File destFile = new File(destDir, srcFile.getName());
-
             try
             {
+                File destFile = new File(destDir, srcFile.getName());
                 Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
             catch (IOException e)
@@ -1212,16 +1331,24 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void copyMasks()
     {
-        if (masksDirectory == null)
+        File masksSrcDir = masksDirectory;
+        if (masksSrcDir == null)
         {
             return;
         }
 
-        File masksSrcDir = masksDirectory;
+        // Grab reference first just in case for thread synchronization.
+        File masksDestParentDir = supportingFilesDirectory;
 
-        File masksDestinationDir = supportingFilesDirectory != null ?
-            new File(supportingFilesDirectory, "masks") :
-            new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.masks").toFile(), uuid.toString());
+        File masksDestinationDir;
+        if (masksDestParentDir != null)
+        {
+            masksDestinationDir = new File(masksDestParentDir, "masks");
+        }
+        else
+        {
+            masksDestinationDir = new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.masks").toFile(), uuid.toString());
+        }
 
         masksDestinationDir.mkdirs();
 
@@ -1235,7 +1362,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, null);
 
                 // Use the destination directory as the masks directory for validating (and thereafter)
-                setMasksDirectory(masksDestinationDir);
+                masksDirectory = masksDestinationDir;
 
                 // Make sure the masks are there after unzipping (might change the mask filenames stored)
                 validateMasks();
@@ -1249,7 +1376,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         {
             // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
             validateMasks();
-
 
             // Copy the list for thread safety without blocking while it copies all the files.
             Iterable<View> viewsCopy;
@@ -1267,7 +1393,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
 
             // Use the destination directory as the masks directory to use from now on.
-            setMasksDirectory(masksDestinationDir);
+            masksDirectory = masksDestinationDir;
         }
     }
 
@@ -1276,20 +1402,22 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     {
         File effectiveModelDirectory = this.getModelDirectory();
 
-        if (this.geometryFile != null && effectiveModelDirectory != null && !effectiveModelDirectory.toString().endsWith(".zip"))
+        // Grab reference for thread synchronization, just in case.
+        File geometryFileRef = this.geometryFile;
+        if (geometryFileRef != null && effectiveModelDirectory != null && !effectiveModelDirectory.toString().endsWith(".zip"))
         {
             try
             {
-                return effectiveModelDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
+                return effectiveModelDirectory.toPath().relativize(geometryFileRef.toPath()).toString();
             }
-            catch (IllegalArgumentException | NullPointerException e)
+            catch (RuntimeException e)
             {
-                LOG.warn("Exception relativizing {} within {}", this.geometryFile, effectiveModelDirectory);
+                LOG.warn("Could not relativize geometry file {} within model directory {}", geometryFileRef, effectiveModelDirectory, e);
             }
         }
 
         // If directories are located under different drive letters on windows, or geometry file is null, or model directory is a ZIP
-        return geometryFile == null ? null : geometryFile.toString();
+        return geometryFileRef == null ? null : geometryFileRef.toString();
     }
 
     @Override
@@ -1310,12 +1438,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public File getModelDirectory()
     {
-        return this.modelDirectory == null ? this.rootDirectory : this.modelDirectory;
-    }
-
-    public void setModelDirectory(File modelDirectory)
-    {
-        this.modelDirectory = modelDirectory;
+        return Optional.ofNullable(this.modelDirectory).orElse(this.rootDirectory);
     }
 
     /**
@@ -1324,16 +1447,24 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void copyModel()
     {
-        if (modelDirectory == null)
+        File modelSrcDir = modelDirectory;
+        if (modelSrcDir == null)
         {
             return;
         }
 
-        File modelSrcDir = modelDirectory;
+        // Grab reference first just in case for thread synchronization.
+        File modelDestParentDir = supportingFilesDirectory;
 
-        File modelDestDir = supportingFilesDirectory != null ?
-            new File(supportingFilesDirectory, "model") :
-            new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.model").toFile(), uuid.toString());
+        File modelDestDir;
+        if (modelDestParentDir != null)
+        {
+            modelDestDir = new File(modelDestParentDir, "model");
+        }
+        else
+        {
+            modelDestDir = new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.model").toFile(), uuid.toString());
+        }
 
         modelDestDir.mkdirs();
 
@@ -1347,7 +1478,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 UnzipHelper.unzipToDirectory(modelSrcDir, modelDestDir, null);
 
                 // Use the destination directory as the model directory for validating (and thereafter)
-                setModelDirectory(modelDestDir);
+                modelDirectory = modelDestDir;
             }
             catch (IOException e)
             {
@@ -1367,7 +1498,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
 
             // Use the destination directory as the model directory to use from now on.
-            setModelDirectory(modelDestDir);
+            modelDirectory = modelDestDir;
         }
     }
 
@@ -1380,7 +1511,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public Map<String, File> getResourceMap()
     {
-        return resourceMap;
+        return Collections.unmodifiableMap(resourceMap);
+    }
+
+    void putResources(Map<String, File> newResourceMap)
+    {
+        this.resourceMap.putAll(newResourceMap);
     }
 
     @Override

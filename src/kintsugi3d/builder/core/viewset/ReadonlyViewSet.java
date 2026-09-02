@@ -38,6 +38,10 @@ public interface ReadonlyViewSet
 
     ReadonlyNativeVectorBuffer getLightIndexData();
 
+    /**
+     * Note: not currently guaranteed to be thead-safe
+     * @return
+     */
     ViewSet copy();
 
     UUID getUUID();
@@ -141,6 +145,14 @@ public interface ReadonlyViewSet
      * @return view index
      */
     double getOrientationViewRotationDegrees();
+
+    /**
+     * Gets a representative view for purposes where an arbitrary view is needed.
+     * This will return the orientation view if it exists, otherwise, the primary view for tonemapping,
+     * otherwise, the first view in the list.
+     * @return
+     */
+    View getRepresentativeView();
 
     List<View> getViews();
 

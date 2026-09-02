@@ -303,7 +303,7 @@ public final class ViewSetBuilder
 
     public ViewSetBuilder addResourceFiles(Map<String, File> resourceMap)
     {
-        result.getResourceMap().putAll(resourceMap);
+        result.putResources(resourceMap);
         return this;
     }
 

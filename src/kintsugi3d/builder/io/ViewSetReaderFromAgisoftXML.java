@@ -870,8 +870,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
         for (int i = 0; i < nextLightIndex; i++)
         {
-            // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
-            builder.addLight(Vector3.ZERO, new Vector3(1.0f));
+            // Setup default light calibration.
+            // Set light intensity to zero to signal that it needs to be calibrated.
+            builder.addLight(Vector3.ZERO, Vector3.ZERO);
         }
 
         if (disabledCameraCount > 0)

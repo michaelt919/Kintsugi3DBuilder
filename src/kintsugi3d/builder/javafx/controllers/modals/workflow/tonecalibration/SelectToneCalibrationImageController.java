@@ -104,9 +104,9 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
             previousImageButton.setText("Skip (no tone curve)");
         }
 
-        if (hasPreviousColorCheckerImage() || Global.state().getIOModel().getLoadedViewSet().hasCustomLuminanceEncoding())
+        if (hasPreviousColorCheckerImage())
         {
-            // Default unless the user has never selected a calibration image nor saved a luminance encoding.
+            // Default unless the user has never selected a calibration image.
             buttonGroup.selectToggle(previousImageButton);
         }
     }
@@ -156,8 +156,18 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
             viewSet.clearLuminanceEncoding();
 
-            LOG.debug("Setting new color calibration image: {}", imageFile);
-            getState().getProjectModel().setColorCheckerFile(imageFile);
+            // Don't remember the image if it was just the calibrated primary view.
+            // (We don't want users to be given the default option to use the old view for the eyedropper step
+            // if they switch to a new calibrated view.)
+            if (Objects.equals(buttonGroup.getSelectedToggle(), primaryViewImageButton))
+            {
+                getState().getProjectModel().setColorCheckerFile(null);
+            }
+            else
+            {
+                LOG.debug("Setting new color calibration image: {}", imageFile);
+                getState().getProjectModel().setColorCheckerFile(imageFile);
+            }
         }
 
         // Skip is selected if and only if there is no previous image (i.e. button is actually labelled "Skip")

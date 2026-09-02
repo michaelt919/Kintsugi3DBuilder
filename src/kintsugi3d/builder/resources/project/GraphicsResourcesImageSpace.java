@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -61,6 +60,10 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesImageSpace.class);
+
+    // Used for evaluating distance from primary view when depth textures are not present.
+    private static final int DEPTH_SAMPLE_SIZE = 512;
+
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
@@ -91,8 +94,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
      */
     public final UniformBuffer<ContextType> shadowMatrixBuffer;
 
-    private final double primaryViewDistance;
-
     public static final class Builder<ContextType extends Context<ContextType>>
     {
         private final ContextType context;
@@ -112,7 +113,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
         private void updateViewSetFromImageLoadOptions()
         {
-            if (this.imageLoadOptions != null)
+            if (this.viewSet != null && this.imageLoadOptions != null)
             {
                 this.viewSet.setPreviewImageResolution(imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
                 String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), imageLoadOptions.getPreviewImageWidth(), imageLoadOptions.getPreviewImageHeight());
@@ -132,10 +133,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         {
             this.imageLoadOptions = imageLoadOptions;
 
-            if (this.viewSet != null)
-            {
-                updateViewSetFromImageLoadOptions();
-            }
+            updateViewSetFromImageLoadOptions();
 
             return this;
         }
@@ -425,7 +423,14 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         {
             if ((viewSet != null) && (loadOptions != null) && (loadOptions.getDepthImageWidth() != 0) && (loadOptions.getDepthImageHeight() != 0))
             {
-                try
+                if (loadOptions.areDepthImagesRequested())
+                {
+                    // Build depth textures for each view
+                    this.depthTextures = context.getTextureFactory().build2DDepthTextureArray(
+                            loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getGPUBufferSize())
+                        .createTexture();
+                    
+                    try
                     (
                         // Don't automatically generate any texture attachments for this framebuffer object
                         FramebufferObject<ContextType> depthRenderingFBO =
@@ -436,55 +441,28 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                         DepthMapGenerator<ContextType> depthMapGenerator =
                             DepthMapGenerator.createFromGeometryResources(getGeometryResources())
                     )
-                {
-                    double minDepth = viewSet.getRecommendedFarPlane();
-
-                    if (loadOptions.areDepthImagesRequested())
                     {
-                        // Build depth textures for each view
-                        this.depthTextures = context.getTextureFactory().build2DDepthTextureArray(
-                                loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getGPUBufferSize())
-                            .createTexture();
-
                         // Render each depth texture
                         for (View view : viewSet.getViews())
                         {
                             depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(view.getGPUViewIndex()));
                             depthMapGenerator.generateDepthMap(view, depthRenderingFBO);
-
-                            if (Objects.equals(view, viewSet.getPrimaryView()))
-                            {
-                                minDepth = getMinDepthFromFBO(depthRenderingFBO, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
-                            }
                         }
                     }
-                    else
-                    {
-                        this.depthTextures = null;
-
-                        try (Texture2D<ContextType> depthAttachment = context.getTextureFactory()
-                            .build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
-                            .createTexture())
-                        {
-                            depthRenderingFBO.setDepthAttachment(depthAttachment);
-                            depthMapGenerator.generateDepthMap(viewSet.getPrimaryView(), depthRenderingFBO);
-                            minDepth = getMinDepthFromFBO(depthRenderingFBO, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
-                        }
-                    }
-
-                    primaryViewDistance = minDepth;
+                }
+                else
+                {
+                    this.depthTextures = null;
                 }
             }
             else
             {
                 this.depthTextures = null;
-                primaryViewDistance = 0.0;
             }
         }
         else
         {
             this.depthTextures = null;
-            primaryViewDistance = 0.0;
         }
 
         if (this.depthTextures != null)
@@ -503,11 +481,43 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
     }
 
-    private static <ContextType extends Context<ContextType>> double getMinDepthFromFBO(ReadableFramebuffer<ContextType> depthFramebuffer, double nearPlane, double farPlane)
+    private double getMinDepthForView(View view) throws IOException
+    {
+        if (depthTextures == null)
+        {
+            try
+            (
+                FramebufferObject<ContextType> depthRenderingFBO =
+                    getContext().buildFramebufferObject(DEPTH_SAMPLE_SIZE, DEPTH_SAMPLE_SIZE)
+                        .addDepthAttachment()
+                        .createFramebufferObject();
+
+                // Create a depth map generator -- includes the depth map program and drawable
+                DepthMapGenerator<ContextType> depthMapGenerator =
+                    DepthMapGenerator.createFromGeometryResources(getGeometryResources())
+            )
+            {
+                depthMapGenerator.generateDepthMap(view, depthRenderingFBO);
+                return getMinDepthFromTextureReader(depthRenderingFBO.getTextureReaderForDepthAttachment(),
+                    view.getContainingViewSet().getRecommendedNearPlane(),
+                    view.getContainingViewSet().getRecommendedFarPlane());
+            }
+        }
+        else
+        {
+            return getMinDepthFromTextureReader(
+                depthTextures.getDepthTextureReader(view.getGPUViewIndex()),
+                view.getContainingViewSet().getRecommendedNearPlane(),
+                view.getContainingViewSet().getRecommendedFarPlane());
+        }
+    }
+
+    private static <ContextType extends Context<ContextType>> double getMinDepthFromTextureReader(
+        DepthTextureReader textureReader, double nearPlane, double farPlane)
     {
         double minDepth = farPlane;
 
-        short[] depthBufferData = depthFramebuffer.getTextureReaderForDepthAttachment().read();
+        short[] depthBufferData = textureReader.read();
         for (short encodedDepth : depthBufferData)
         {
             int nonlinearDepth = 0xFFFF & (int) encodedDepth;
@@ -672,17 +682,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         return getGeometryResources().createDrawable(program);
     }
 
-    /**
-     * Gets the distance from the camera to the centroid in the primary view.
-     * This is frequently used to calibrate scale in Kintsugi 3D Builder.
-     *
-     * @return The camera distance in the primary view.
-     */
-    public double getPrimaryViewDistance()
-    {
-        return primaryViewDistance;
-    }
-
     public void calibrateLightIntensities()
     {
         if (getViewSet().getProjectSettings().getBoolean("infiniteLightSources"))
@@ -690,15 +689,18 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             // Use unit light intensity if light sources don't have inverse-square falloff.
             initializeLightIntensities(new Vector3(1.0f));
         }
-        else if (primaryViewDistance > 0)
-        {
-            Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
-            initializeLightIntensities(lightIntensity);
-        }
         else
         {
-            initializeLightIntensities(new Vector3(1.0f));
-            LOG.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?).");
+            try
+            {
+                double primaryViewDistance = getMinDepthForView(getViewSet().getPrimaryView());
+                Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
+                initializeLightIntensities(lightIntensity);
+            }
+            catch (IOException e)
+            {
+                LOG.error("Error loading shader to calculate primary view distance", e);
+            }
         }
     }
 
