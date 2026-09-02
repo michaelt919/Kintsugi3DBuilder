@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -315,13 +316,15 @@ public final class ViewSetBuilder
 
     public ViewSet finish()
     {
+        List<View> viewList = result.getViewListUnsynchronized();
+
         if (orientationViewName != null)
         {
             result.setOrientationViewByName(orientationViewName);
         }
         else if (orientationViewIndex >= 0)
         {
-            result.setOrientationView(result.getViews().get(orientationViewIndex));
+            result.setOrientationView(viewList.get(orientationViewIndex));
         }
         else
         {
@@ -330,13 +333,13 @@ public final class ViewSetBuilder
 
         if (needsClipPlanes)
         {
-            float farPlane = findFarPlane(result.getViews());
+            float farPlane = findFarPlane(viewList);
             result.setRecommmendedClipPlanes(farPlane / 32.0f, farPlane);
             LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
         }
 
         // Fill with default lights if not specified
-        int maxLightIndex = result.getViews().stream().mapToInt(data -> data.lightIndex).max().orElse(1);
+        int maxLightIndex = viewList.stream().mapToInt(data -> data.lightIndex).max().orElse(1);
         for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
         {
             result.addLight(Vector3.ZERO, Vector3.ZERO);

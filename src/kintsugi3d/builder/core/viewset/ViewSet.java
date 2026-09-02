@@ -947,6 +947,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
     }
 
+    List<View> getViewListUnsynchronized()
+    {
+        return Collections.unmodifiableList(viewList);
+    }
+
     void addView(View view)
     {
         synchronized (viewList)
