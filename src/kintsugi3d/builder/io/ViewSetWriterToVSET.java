@@ -113,8 +113,25 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         // Want views sorted by original GPU index to preserve the original order when the view set was loaded.
         List<View> viewsCopy = viewSet.getViewsSorted();
 
-        int primaryViewIndex = viewsCopy.indexOf(primaryView);
-        int orientationViewIndex = viewsCopy.indexOf(orientationView);
+        int primaryViewIndex, orientationViewIndex;
+
+        if (primaryView != null)
+        {
+            primaryViewIndex = viewsCopy.indexOf(primaryView);
+        }
+        else
+        {
+            primaryViewIndex = -1;
+        }
+
+        if (orientationView != null)
+        {
+            orientationViewIndex = viewsCopy.indexOf(orientationView);
+        }
+        else
+        {
+            orientationViewIndex = -1;
+        }
 
         // Correct for the primary view selection index being moved to 0 when written to the vset file
         int correctedOrientationViewIndex = orientationViewIndex;
