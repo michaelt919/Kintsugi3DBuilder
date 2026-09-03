@@ -156,6 +156,7 @@ public interface ReadonlyViewSet
     View getRepresentativeView();
 
     /**
+     * Gets all views in an arbitrary order.
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
@@ -169,26 +170,28 @@ public interface ReadonlyViewSet
     List<View> getViewsSorted();
 
     /**
-     * Gets only enabled views sorted by GPU index.
+     * Gets only enabled views in an arbitrary order.
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
     Set<View> getEnabledViews();
 
     /**
-     * Gets only disabled views sorted by GPU index.
+     * Gets only disabled views in an arbitrary order.
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
     Set<View> getDisabledViews();
 
     /**
+     * Gets only enabled views sorted by GPU index.
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
     List<View> getEnabledViewsSorted();
 
     /**
+     * Gets only disabled views sorted by GPU index.
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
