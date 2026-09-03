@@ -92,7 +92,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
             }
 
-            List<Map<String, ReadonlyColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getViewCount());
+            List<Map<String, ReadonlyColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getEnabledViewCount());
 
             // Run the reconstruction and save the results to file
             for (ReconstructionView<ContextType> view : reconstruction)

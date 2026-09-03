@@ -88,6 +88,10 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      */
     void initializeLightIntensities(Vector3 lightIntensity);
 
+    /**
+     * Stream over enabled views only -- disabled views are not included.
+     * @return
+     */
     @Override
     default GraphicsStreamFactory<ContextType> streamFactory()
     {

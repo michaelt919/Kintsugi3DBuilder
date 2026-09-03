@@ -161,10 +161,34 @@ public interface ReadonlyViewSet
     List<View> getViews();
 
     /**
+     * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
+     * @return
+     */
+    List<View> getEnabledViews();
+
+    /**
+     * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
+     * @return
+     */
+    List<View> getDisabledViews();
+
+    /**
      * Gets the number of views defined in this view set.
      * @return The number of views defined in this view set.
      */
     int getViewCount();
+
+    /**
+     * Gets the number of enabled views in this view set.
+     * @return The number of enabled views in this view set.
+     */
+    int getEnabledViewCount();
+
+    /**
+     * Gets the number of disabled views in this view set.
+     * @return The number of disabled views in this view set.
+     */
+    int getDisabledViewCount();
 
     /**
      * Gets the size for any array on the GPU that is indexed by view.
@@ -172,7 +196,6 @@ public interface ReadonlyViewSet
      * @return
      */
     int getGPUBufferSize();
-
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.

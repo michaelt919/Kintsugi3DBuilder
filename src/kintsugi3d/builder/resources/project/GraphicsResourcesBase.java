@@ -54,13 +54,13 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     @Override
     public float getCameraWeight(int index)
     {
-        return sharedResources.getCameraWeight(index);
+        return sharedResources.getViewWeight(index);
     }
 
     @Override
     public List<Float> getCameraWeights()
     {
-        return sharedResources.getCameraWeights();
+        return sharedResources.getViewWeights();
     }
 
     @Override

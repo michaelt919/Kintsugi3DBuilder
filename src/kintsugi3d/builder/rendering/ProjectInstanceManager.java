@@ -198,7 +198,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViews()); // getViews returns a copy
+        // getViews returns a copy
+        // Grab all views (not just enabled) for light calibration
+        // TODO this is for the light calibration sidebar and should probably be migrated to a newer system
+        // TODO   for managing the list of photos (like the photos tab)
+        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViews());
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);

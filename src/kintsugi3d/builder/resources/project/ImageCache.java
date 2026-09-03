@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -170,7 +171,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 .flipVertical()
                 .create();
 
-            Random random = new Random();
+            Random random = new SecureRandom();
 
             // Somewhat arbitrary heuristic
             int maxAttempts = 3 + settings.getTextureWidth() * settings.getTextureHeight() / (settings.getSampledSize() * settings.getSampledSize());
@@ -290,6 +291,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             }
 
             // Loop over the images, processing each one at a time
+            // Includes both enabled and disabled views which will all be included in the cache.
             int progressCount = 0;
             for (View view : resources.getViewSet().getViews())
             {

@@ -62,7 +62,7 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
             }
 
             int progressCount = 0;
-            for (View view : targetViewSet.getViews())
+            for (View view : targetViewSet.getEnabledViews())
             {
                 if (monitor != null)
                 {
@@ -82,9 +82,9 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) progressCount / (double) targetViewSet.getViewCount(),
+                    monitor.setProgress((double) progressCount / (double) targetViewSet.getEnabledViewCount(),
                         MessageFormat.format("{0} ({1}/{2})", view,
-                            progressCount + 1, targetViewSet.getViewCount()));
+                            progressCount + 1, targetViewSet.getEnabledViewCount()));
                 }
 
                 progressCount++;

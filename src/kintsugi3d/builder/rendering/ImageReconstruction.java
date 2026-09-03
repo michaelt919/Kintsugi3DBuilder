@@ -358,7 +358,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public ReconstructionIterator iterator()
     {
         //noinspection ReturnOfInnerClass
-        return new ReconstructionIterator(viewSet.getViews().listIterator());
+        return new ReconstructionIterator(viewSet.getEnabledViews().listIterator());
     }
 
     @Override

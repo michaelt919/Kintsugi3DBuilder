@@ -74,7 +74,8 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     {
         if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
         {
-            for (View view : resources.getViewSet().getViews())
+            // Don't render disabled views so that this can be used to visualize what's enabled
+            for (View view : resources.getViewSet().getEnabledViews())
             {
                 // Current view is captured by cameraVisual and cameraFrustum so that they know where we are in the loop.
                 // A bit of a hack to get a design that was built for a single frustum to work for rendering multiple.

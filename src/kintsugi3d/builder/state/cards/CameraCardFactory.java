@@ -91,7 +91,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
         return List.of(Map.of(
             "Disable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToDisable = viewSet.getViews().stream()
+                Iterable<File> photosToDisable = viewSet.getEnabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
@@ -102,7 +102,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
             }),
             "Enable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToEnable = viewSet.getViews().stream()
+                Iterable<File> photosToEnable = viewSet.getDisabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 

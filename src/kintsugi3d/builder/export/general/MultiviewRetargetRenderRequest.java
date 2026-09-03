@@ -73,7 +73,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         )
         {
             int progressCount = 0;
-            for (View view : targetViewSet.getViews())
+            for (View view : targetViewSet.getEnabledViews())
             {
                 if (monitor != null)
                 {
@@ -95,9 +95,9 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) progressCount / (double) resources.getViewSet().getViewCount(),
+                    monitor.setProgress((double) progressCount / (double) resources.getViewSet().getEnabledViewCount(),
                         MessageFormat.format("{0} ({1}/{2})", view,
-                            progressCount + 1, resources.getViewSet().getViewCount()));
+                            progressCount + 1, resources.getViewSet().getEnabledViewCount()));
                 }
 
                 progressCount++;

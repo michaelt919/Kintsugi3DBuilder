@@ -102,7 +102,8 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
         try
         {
-            // Iterate over the layers to load in the texture array
+            // Iterate over the layers to load in the texture array.
+            // Includes both enabled and disabled views which will all be allocated on the GPU.
             int progressCount = 0;
             for (View view : this.getViewSet().getViews())
             {

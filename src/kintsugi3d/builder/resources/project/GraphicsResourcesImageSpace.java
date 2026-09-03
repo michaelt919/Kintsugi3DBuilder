@@ -322,6 +322,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             true);
 
         // getViews makes a copy; save it here since we'll need it a couple times.
+        // Includes both enabled and disabled views which will all be allocated on the GPU.
         List<View> views = viewSet != null ? viewSet.getViews() : List.of();
 
         // Read the images from a file

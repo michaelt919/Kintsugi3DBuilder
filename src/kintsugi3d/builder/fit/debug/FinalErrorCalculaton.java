@@ -136,7 +136,7 @@ public final class FinalErrorCalculaton
             ReadableFramebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
 
             // getViews makes a copy, so save it for efficiency.
-            List<View> views = resources.getViewSet().getViews();
+            List<View> views = resources.getViewSet().getEnabledViews();
 
             rmseOut.printf("Final RMSE with final diffuse estimate (linear): %s%n",
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, views));
@@ -176,7 +176,7 @@ public final class FinalErrorCalculaton
             ggxErrorCalcProgram.setUniform("sRGB", false);
 
             // getViews makes a copy, so save it for efficiency.
-            List<View> views = resources.getViewSet().getViews();
+            List<View> views = resources.getViewSet().getEnabledViews();
 
             rmseOut.printf("RMSE for GGX fit (linear): %s%n",
                 runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, views));

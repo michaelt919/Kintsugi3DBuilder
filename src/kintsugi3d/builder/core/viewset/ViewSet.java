@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -947,6 +949,24 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
     }
 
+    @Override
+    public List<View> getEnabledViews()
+    {
+        synchronized (viewList)
+        {
+            return viewList.stream().filter(View::isEnabled).collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public List<View> getDisabledViews()
+    {
+        synchronized (viewList)
+        {
+            return viewList.stream().filter(Predicate.not(View::isEnabled)).collect(Collectors.toList());
+        }
+    }
+
     List<View> getViewListUnsynchronized()
     {
         return Collections.unmodifiableList(viewList);
@@ -1104,6 +1124,24 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         synchronized (viewList)
         {
             return viewList.size();
+        }
+    }
+
+    @Override
+    public int getEnabledViewCount()
+    {
+        synchronized (viewList)
+        {
+            return (int)viewList.stream().filter(View::isEnabled).count();
+        }
+    }
+
+    @Override
+    public int getDisabledViewCount()
+    {
+        synchronized (viewList)
+        {
+            return (int)viewList.stream().filter(Predicate.not(View::isEnabled)).count();
         }
     }
 
@@ -1534,7 +1572,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         // Determine shader defines here that should apply globally as defaults without require specific resources other than view set data.
         // The defines can be overridden by the actual shader.
         return context.getShaderProgramBuilder()
-            .define("VIEW_COUNT", getViewCount())
+            .define("VIEW_COUNT", getEnabledViewCount())
             .define("CAMERA_POSE_COUNT", getGPUBufferSize())
             .define("CAMERA_PROJECTION_COUNT", getCameraProjectionCount())
             .define("LIGHT_COUNT", getLightCount())

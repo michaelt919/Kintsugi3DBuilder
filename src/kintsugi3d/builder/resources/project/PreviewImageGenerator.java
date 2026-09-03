@@ -66,6 +66,7 @@ public final class PreviewImageGenerator
 
     Collection<View> getViews()
     {
+        // Includes both enabled and disabled views, all of which will have preview images generated.
         return viewSet.getViews();
     }
 

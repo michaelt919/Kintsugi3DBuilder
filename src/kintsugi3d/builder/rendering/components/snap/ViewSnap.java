@@ -84,6 +84,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
             // View will be overridden for light calibration so that it snaps to specific views
             Matrix4 currentViewSnap = null;
 
+            // Include disabled views since snapping to a disabled view (i.e. for light calibration) is valid.
             for (View view : viewSelection.getViewSet().getViews())
             {
                 Matrix4 candidateView = this.viewSelection.getMatrixFromView(view);

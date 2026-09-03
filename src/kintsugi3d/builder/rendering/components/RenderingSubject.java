@@ -57,7 +57,7 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
-                .generateWeights(resources, resources.getViewSet().getViews(), targetView);
+                .generateWeights(resources, resources.getViewSet().getEnabledViews(), targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
