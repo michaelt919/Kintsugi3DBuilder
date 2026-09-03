@@ -29,7 +29,7 @@ import org.lwjgl.BufferUtils;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.util.ListIterator;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -125,13 +125,13 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         drawable.draw(framebuffer);
     }
 
-    public final class ReconstructionIterator implements ListIterator<ReconstructionView<ContextType>>
+    public final class ReconstructionIterator implements Iterator<ReconstructionView<ContextType>>
     {
-        private final ListIterator<View> base;
+        private final Iterator<View> base;
         private View currentView;
         private ColorImage currentGroundTruth;
 
-        ReconstructionIterator(ListIterator<View> base)
+        ReconstructionIterator(Iterator<View> base)
         {
             this.base = base;
         }
@@ -301,64 +301,13 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 throw new NoSuchElementException("Reached the end of the view set");
             }
         }
-
-        @Override
-        public boolean hasPrevious()
-        {
-            return base.hasPrevious();
-        }
-
-        @Override
-        public ReconstructionView<ContextType> previous()
-        {
-            if (hasPrevious())
-            {
-                currentView = base.previous();
-                refresh();
-                return makeReconstructionView();
-            }
-            else
-            {
-                throw new NoSuchElementException("Reached the beginning of the view set");
-            }
-        }
-
-        @Override
-        public int nextIndex()
-        {
-            return base.nextIndex();
-        }
-
-        @Override
-        public int previousIndex()
-        {
-            return base.previousIndex();
-        }
-
-        @Override
-        public void remove()
-        {
-            throw new UnsupportedOperationException("remove");
-        }
-
-        @Override
-        public void set(ReconstructionView<ContextType> contextTypeReconstructionView)
-        {
-            throw new UnsupportedOperationException("set");
-        }
-
-        @Override
-        public void add(ReconstructionView<ContextType> contextTypeReconstructionView)
-        {
-            throw new UnsupportedOperationException("add");
-        }
     }
 
     @Override
     public ReconstructionIterator iterator()
     {
         //noinspection ReturnOfInnerClass
-        return new ReconstructionIterator(viewSet.getEnabledViews().listIterator());
+        return new ReconstructionIterator(viewSet.getEnabledViews().iterator());
     }
 
     @Override

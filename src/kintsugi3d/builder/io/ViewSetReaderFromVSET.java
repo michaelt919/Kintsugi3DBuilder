@@ -310,15 +310,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                                 .setCurrentCameraProjectionIndex(projectionId)
                                 .setCurrentLightIndex(lightId)
-                                .setCurrentImageFile(new File(imgFilename))
-                                .commitCurrentViewAsDisabled();
+                                .commitCurrentViewAsDisabled(new File(imgFilename));
                             break;
                         }
                         builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)
-                            .setCurrentImageFile(new File(imgFilename))
-                            .commitCurrentView();
+                            .commitCurrentView(new File(imgFilename));
                         break;
                     }
                     case "k":

@@ -32,10 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.AbstractList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.Map.Entry;
 
 final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
@@ -273,7 +270,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     private float[] computeViewWeights()
     {
         // getViews makes a copy; save it here since we'll need it a couple times.
-        List<View> views = viewSet.getEnabledViews();
+        Collection<View> views = viewSet.getEnabledViews();
 
         Vector3[] viewDirections = new Vector3[viewSet.getGPUBufferSize()];
         for (View view : views)

@@ -45,6 +45,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
@@ -323,7 +324,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
 
         // getViews makes a copy; save it here since we'll need it a couple times.
         // Includes both enabled and disabled views which will all be allocated on the GPU.
-        List<View> views = viewSet != null ? viewSet.getViews() : List.of();
+        Collection<View> views = viewSet != null ? viewSet.getViews() : List.of();
 
         // Read the images from a file
         if (loadOptions != null && loadOptions.areColorImagesRequested() &&

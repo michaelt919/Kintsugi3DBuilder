@@ -12,6 +12,8 @@
 package kintsugi3d.builder.core.viewset;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Set;
 
 public class ViewSetChange
 {
@@ -21,11 +23,11 @@ public class ViewSetChange
     }
 
     public final Type type;
-    public final File image;
+    public final Set<File> imageFiles;
 
-    public ViewSetChange(Type type, File image)
+    ViewSetChange(Type type, Set<File> imageFiles)
     {
         this.type = type;
-        this.image = image;
+        this.imageFiles = Collections.unmodifiableSet(imageFiles);
     }
 }

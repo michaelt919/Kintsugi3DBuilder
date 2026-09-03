@@ -857,14 +857,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                 builder.setCurrentCameraProjectionIndex(cam.sensor.index);
                 builder.setCurrentLightIndex(cam.lightIndex);
-                builder.setCurrentImageFile(imgFile);
 
                 if (maskPathMap != null && maskPathMap.containsKey(camID))
                 {
                     builder.setCurrentMaskFile(new File(maskPathMap.get(camID)));
                 }
 
-                builder.commitCurrentView();
+                builder.commitCurrentView(imgFile);
             }
         }
 

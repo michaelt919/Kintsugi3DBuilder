@@ -37,7 +37,6 @@ public final class ViewSetBuilder
     private Matrix4 cameraPose;
     private int cameraProjectionIndex = 0;
     private int lightIndex = 0;
-    private File imageFile;
     private File maskFile;
     private final Map<Integer, File> maskMap;
     private boolean hasUnsupportedCorrections;
@@ -86,31 +85,33 @@ public final class ViewSetBuilder
         return this;
     }
 
-    public ViewSetBuilder setCurrentImageFile(File imageFile)
-    {
-        this.imageFile = imageFile;
-        return this;
-    }
-
     public ViewSetBuilder setCurrentMaskFile(File maskFile)
     {
         this.maskFile = maskFile;
         return this;
     }
 
-    public ViewSetBuilder commitCurrentView()
+    /**
+     * Image file is required to commit to ensure that no view has a null image file.
+     * @param imageFile
+     */
+    public ViewSetBuilder commitCurrentView(File imageFile)
     {
-        commitCurrentView(true);
+        commitCurrentView(imageFile, true);
         return this;
     }
 
-    public ViewSetBuilder commitCurrentViewAsDisabled()
+    /**
+     * Image file is required to commit to ensure that no view has a null image file.
+     * @param imageFile
+     */
+    public ViewSetBuilder commitCurrentViewAsDisabled(File imageFile)
     {
-        commitCurrentView(false);
+        commitCurrentView(imageFile, false);
         return this;
     }
 
-    private void commitCurrentView(boolean enabled)
+    private void commitCurrentView(File imageFile, boolean enabled)
     {
         if (maskFile == null)
         {
@@ -118,11 +119,11 @@ public final class ViewSetBuilder
             maskFile = maskMap.get(result.getGPUBufferSize());
         }
 
-        View currentCamera = new View(cameraPose, cameraPose.quickInverse(0.002f),
+        View currentView = new View(cameraPose, cameraPose.quickInverse(0.002f),
             cameraProjectionIndex, lightIndex, result.getGPUBufferSize(),
             imageFile, maskFile, new ViewRMSE(), result);
-        currentCamera.isEnabled = enabled;
-        result.addView(currentCamera);
+        currentView.isEnabled = enabled;
+        result.addView(currentView);
 
         // Reset maskFile to null for the next camera pose.
         maskFile = null;
@@ -316,7 +317,8 @@ public final class ViewSetBuilder
 
     public ViewSet finish()
     {
-        List<View> viewList = result.getViewListUnsynchronized();
+        // Sorted by GPU index, which should be the order the views were added.
+        List<View> views = result.getViewsSorted();
 
         if (orientationViewName != null)
         {
@@ -324,7 +326,7 @@ public final class ViewSetBuilder
         }
         else if (orientationViewIndex >= 0)
         {
-            result.setOrientationView(viewList.get(orientationViewIndex));
+            result.setOrientationView(views.get(orientationViewIndex));
         }
         else
         {
@@ -333,13 +335,13 @@ public final class ViewSetBuilder
 
         if (needsClipPlanes)
         {
-            float farPlane = findFarPlane(viewList);
+            float farPlane = findFarPlane(views);
             result.setRecommmendedClipPlanes(farPlane / 32.0f, farPlane);
             LOG.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
         }
 
         // Fill with default lights if not specified
-        int maxLightIndex = viewList.stream().mapToInt(data -> data.lightIndex).max().orElse(1);
+        int maxLightIndex = views.stream().mapToInt(data -> data.lightIndex).max().orElse(1);
         for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
         {
             result.addLight(Vector3.ZERO, Vector3.ZERO);

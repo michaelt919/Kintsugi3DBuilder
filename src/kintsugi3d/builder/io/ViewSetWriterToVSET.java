@@ -24,7 +24,6 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -33,6 +32,10 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
     public static ViewSetWriter getInstance()
     {
         return INSTANCE;
+    }
+
+    private ViewSetWriterToVSET()
+    {
     }
 
     public static void writePoseMatrix(View view, PrintStream out)
@@ -67,10 +70,6 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("%s\t%d\t%d\t%d\t%s", identifier, viewIndex,
             view.getCameraProjectionIndex(), view.getLightIndex(), view.getImageFile());
         out.println();
-    }
-
-    private ViewSetWriterToVSET()
-    {
     }
 
     @Override
@@ -109,7 +108,11 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         View primaryView = viewSet.getPrimaryView();
         View orientationView = viewSet.getOrientationView();
-        List<View> viewsCopy = viewSet.getViews(); // getViews already returns a copy.
+
+        // getViewsSorted returns a copy.
+        // Want views sorted by original GPU index to preserve the original order when the view set was loaded.
+        List<View> viewsCopy = viewSet.getViewsSorted();
+
         int primaryViewIndex = viewsCopy.indexOf(primaryView);
         int orientationViewIndex = viewsCopy.indexOf(orientationView);
 
@@ -195,13 +198,13 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.printf("M %s%n", viewSet.getMasksDirectory().getAbsolutePath());
 
             out.println();
-            Map<Integer, File> masksMap = viewSet.getMasksMap();
-            out.printf("# %d masks%n", masksMap.size());
-            for (var entry : masksMap.entrySet())
+            out.printf("# %d masks%n", viewsCopy.stream().filter(view -> view.getMaskFile() != null).count());
+            for (int i = 0; i < viewsCopy.size(); i++)
             {
-                if (entry.getValue() != null)
+                File maskFile = viewsCopy.get(i).getMaskFile();
+                if (maskFile != null)
                 {
-                    out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
+                    out.println(MessageFormat.format("k\t{0}\t{1}", i, maskFile.getName()));
                 }
             }
         }

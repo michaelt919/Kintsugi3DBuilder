@@ -57,7 +57,10 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     private UUID uuid = UUID.randomUUID();
 
-    private final List<View> viewList;
+    /**
+     * Views indexed by nominal file path.
+     */
+    private final Map<File, View> views;
 
     /**
      * A list of projection transformations defining the intrinsic properties of each camera.
@@ -210,7 +213,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public ViewSet(int initialCapacity)
     {
-        viewList = Collections.synchronizedList(new ArrayList<>(initialCapacity));
+        views = Collections.synchronizedMap(new HashMap<>(initialCapacity));
 
         // Often these lists will have just one element
         this.cameraProjectionList = Collections.synchronizedList(new ArrayList<>(1));
@@ -273,10 +276,10 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public ReadonlyNativeVectorBuffer getCameraPoseData()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             // Store the poses in a uniform buffer
-            if (viewList.isEmpty())
+            if (views.isEmpty())
             {
                 return null;
             }
@@ -284,16 +287,16 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             {
                 // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
                 NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(
-                    NativeDataType.FLOAT, 16, viewList.size());
+                    NativeDataType.FLOAT, 16, gpuBufferSize);
 
-                for (int k = 0; k < viewList.size(); k++)
+                for (View view : views.values())
                 {
                     int d = 0;
                     for (int col = 0; col < 4; col++) // column
                     {
                         for (int row = 0; row < 4; row++) // row
                         {
-                            cameraPoseData.set(k, d, viewList.get(k).cameraPose.get(row, col));
+                            cameraPoseData.set(view.getGPUViewIndex(), d, view.cameraPose.get(row, col));
                             d++;
                         }
                     }
@@ -340,18 +343,21 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public ReadonlyNativeVectorBuffer getCameraProjectionIndexData()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             // Store the camera projection indices in a uniform buffer
-            if (viewList.isEmpty())
+            if (views.isEmpty())
             {
                 return null;
             }
             else
             {
-                int[] indexArray = new int[viewList.size()];
-                Arrays.setAll(indexArray, i -> viewList.get(i).cameraProjectionIndex);
-                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
+                int[] indexArray = new int[views.size()];
+                for (View view : views.values())
+                {
+                    indexArray[view.gpuViewIndex] = view.cameraProjectionIndex;
+                }
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, views.size(), indexArray);
             }
         }
     }
@@ -410,29 +416,33 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public ReadonlyNativeVectorBuffer getLightIndexData()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             // Store the light indices in a uniform buffer
-            if (viewList.isEmpty())
+            if (views.isEmpty())
             {
                 return null;
             }
             else
             {
-                int[] indexArray = new int[viewList.size()];
-                Arrays.setAll(indexArray, i -> viewList.get(i).lightIndex);
-                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, viewList.size(), indexArray);
+                int[] indexArray = new int[views.size()];
+                for (View view : views.values())
+                {
+                    indexArray[view.gpuViewIndex] = view.lightIndex;
+                }
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, views.size(), indexArray);
             }
         }
     }
 
     public ReadonlyNativeVectorBuffer getViewIndexData()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            int[] indexArray = viewList.stream()
+            int[] indexArray = views.values().stream()
                 .filter(View::isEnabled)
                 .mapToInt(View::getGPUViewIndex)
+                .sorted() // Ensure minimal changes to the GPU data -- i.e. if index 0 or ordering in general has particular significance to some shader.
                 .toArray();
 
             // Store the view indices in a uniform buffer
@@ -454,25 +464,23 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         result.uuid = this.uuid;
 
-        synchronized (viewList)
+        synchronized (views)
         {
-            this.viewList.stream() // Deep copy for view list
-                .map(view -> view.copy(result))
-                .forEach(result.viewList::add);
+            for (var entry : this.views.entrySet())
+            {
+                result.views.put(entry.getKey(), entry.getValue().copy(result));
+            }
+
             result.gpuBufferSize = this.gpuBufferSize;
 
             if (this.primaryView != null)
             {
-                result.primaryView = result.viewList.stream()
-                    .filter(this.primaryView::equals)
-                    .findFirst().orElse(null);
+                result.primaryView = result.views.get(this.primaryView.getImageFile());
             }
 
             if (this.orientationView != null)
             {
-                result.orientationView = result.viewList.stream()
-                    .filter(this.orientationView::equals)
-                    .findFirst().orElse(null);
+                result.orientationView = result.views.get(this.orientationView.getImageFile());
             }
         }
 
@@ -568,16 +576,16 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         this.uuid = uuid;
     }
 
-    public void toggleCamera(File image)
+    public void toggleViewEnabled(File image)
     {
         View view = findViewByName(image.getName());
         if (view != null)
         {
-            setCameraEnabled(image, !view.isEnabled);
+            setViewEnabled(image, !view.isEnabled);
         }
     }
 
-    public void setCameraEnabled(File image, boolean isEnabled)
+    public void setViewEnabled(File image, boolean isEnabled)
     {
         View view = findViewByName(image.getName());
 
@@ -586,7 +594,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             view.isEnabled = isEnabled;
             if (!isEnabled)
             {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, image));
+                notifyObservers(new ViewSetChange(Type.MODIFIED, Set.of(view.getImageFile())));
             }
             // Else still enabled so nothing needs to change
         }
@@ -595,9 +603,28 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             view.isEnabled = isEnabled;
             if (isEnabled)
             {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, image));
+                notifyObservers(new ViewSetChange(Type.MODIFIED, Set.of(view.getImageFile())));
             }
             // Else still disabled so nothing needs to change
+        }
+    }
+
+    public void setViewsEnabled(Collection<File> images, boolean isEnabled)
+    {
+        Set<File> imageFilesModified = new HashSet<>(images.size());
+        synchronized (views)
+        {
+            for (File image : images)
+            {
+                View view = findViewByName(image.getName());
+                view.isEnabled = isEnabled;
+                imageFilesModified.add(view.getImageFile());
+            }
+        }
+
+        if (!imageFilesModified.isEmpty())
+        {
+            notifyObservers(new ViewSetChange(Type.MODIFIED, imageFilesModified));
         }
     }
 
@@ -768,9 +795,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public void setPrimaryView(View primaryView)
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            if (viewList.contains(primaryView))
+            if (Objects.equals(views.get(primaryView.getImageFile()), primaryView))
             {
                 this.primaryView = primaryView;
             }
@@ -794,11 +821,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void setOrientationView(View orientationView)
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             if (orientationView != null)
             {
-                if (viewList.contains(orientationView))
+                if (Objects.equals(views.get(orientationView.getImageFile()), orientationView))
                 {
                     this.orientationView = orientationView;
                 }
@@ -821,7 +848,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void setOrientationViewByName(String viewName)
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             if (viewName != null)
             {
@@ -866,7 +893,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public View getRepresentativeView()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             View representativeView = orientationView;
 
@@ -875,10 +902,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 // First fallback if no orientation view has been set: primary view for tone calibration
                 representativeView = primaryView;
 
-                if (representativeView == null && !viewList.isEmpty())
+                if (representativeView == null && !views.isEmpty())
                 {
-                    // Second fallback if primary view is not set: grab the first view in the list, if it exists.
-                    representativeView = viewList.get(0);
+                    // Second fallback if primary view is not set:
+                    // grab the view with the lowest GPU index (typically the first loaded), if it exists.
+                    representativeView = views.values().stream().min(Comparator.comparing(View::getGPUViewIndex)).orElse(null);
                 }
             }
 
@@ -895,18 +923,16 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             return null;
         }
 
-        synchronized (viewList)
+        synchronized (views)
         {
             // Try simple file comparison with full paths
             File key = new File(viewName);
+            View mappedView = views.get(key);
 
-            for (View view : viewList)
+            if (mappedView != null)
             {
-                if (view.getImageFile().equals(key))
-                {
-                    LOG.debug("Matched {} for {}", view.getImageFile().getPath(), viewName);
-                    return view;
-                }
+                LOG.debug("Matched {} for {}", mappedView.getImageFile().getPath(), viewName);
+                return mappedView;
             }
 
             // Try just checking file name in case there were parent files
@@ -915,8 +941,8 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             // Also check for extension mismatch
             // i.e. the camera label is photo314.jpg, other times just photo314
 
-            //This is all necessary due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
-            for (View view : viewList)
+            // This is all necessary due to inconsistencies with camera labels in frame.zip and chunk.zip XMLs
+            for (View view : views.values())
             {
                 String imgName = view.getImageFile().getName();
                 String shortenedImgName = removeExt(imgName);
@@ -940,43 +966,72 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     }
 
     @Override
-    public List<View> getViews()
+    public Set<View> getViews()
     {
         // Make a copy to ensure that the list is not changed while another object is using it.
-        synchronized (viewList)
+        synchronized (views)
         {
-            return List.copyOf(viewList);
+            return Set.copyOf(views.values());
         }
     }
 
     @Override
-    public List<View> getEnabledViews()
+    public List<View> getViewsSorted()
     {
-        synchronized (viewList)
+        // Make a copy to ensure that the list is not changed while another object is using it.
+        synchronized (views)
         {
-            return viewList.stream().filter(View::isEnabled).collect(Collectors.toList());
+            return views.values().stream().sorted(Comparator.comparing(View::getGPUViewIndex)).collect(Collectors.toList());
         }
     }
 
     @Override
-    public List<View> getDisabledViews()
+    public Set<View> getEnabledViews()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            return viewList.stream().filter(Predicate.not(View::isEnabled)).collect(Collectors.toList());
+            return views.values().stream().filter(View::isEnabled).collect(Collectors.toSet());
         }
     }
 
-    List<View> getViewListUnsynchronized()
+    @Override
+    public Set<View> getDisabledViews()
     {
-        return Collections.unmodifiableList(viewList);
+        synchronized (views)
+        {
+            return views.values().stream().filter(Predicate.not(View::isEnabled)).collect(Collectors.toSet());
+        }
+    }
+
+    @Override
+    public List<View> getEnabledViewsSorted()
+    {
+        synchronized (views)
+        {
+            return views.values().stream()
+                .filter(View::isEnabled)
+                .sorted(Comparator.comparing(View::getGPUViewIndex))
+                .collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public List<View> getDisabledViewsSorted()
+    {
+        synchronized (views)
+        {
+            return views.values().stream()
+                .filter(Predicate.not(View::isEnabled))
+                .sorted(Comparator.comparing(View::getGPUViewIndex))
+                .collect(Collectors.toList());
+        }
     }
 
     void addView(View view)
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            viewList.add(view);
+            views.put(view.getImageFile(), view);
             gpuBufferSize = Math.max(gpuBufferSize, view.getGPUViewIndex() + 1);
 
             if (primaryView == null)
@@ -986,22 +1041,22 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
         }
 
-        notifyObservers(new ViewSetChange(Type.ADDED, view.imageFile));
+        notifyObservers(new ViewSetChange(Type.ADDED, Set.of(view.getImageFile())));
     }
 
     void removeView(View view)
     {
-        boolean removed;
+        View removed;
 
-        synchronized (viewList)
+        synchronized (views)
         {
-            removed = viewList.remove(view);
+            removed = views.remove(view.getImageFile());
 
             // Check to see if we just removed the tone calibration primary or orientation views.
             if (Objects.equals(view, primaryView))
             {
                 // Primary view should always be non-null, if possible.
-                primaryView = viewList.isEmpty() ? null : viewList.get(0);
+                primaryView = views.isEmpty() ? null : getRepresentativeView();
             }
 
             if (Objects.equals(view, orientationView))
@@ -1012,19 +1067,19 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
         }
 
-        if (removed)
+        if (removed != null)
         {
-            notifyObservers(new ViewSetChange(Type.REMOVED, view.imageFile));
+            notifyObservers(new ViewSetChange(Type.REMOVED, Set.of(removed.getImageFile())));
         }
     }
 
     public void removeViewByImageFilename(File image)
     {
-        boolean removed;
+        View removed = null;
 
-        synchronized (viewList)
+        synchronized (views)
         {
-            removed = viewList.removeIf(view -> Objects.equals(view.imageFile.getName(), image.getName()));
+            removed = views.remove(image);
 
             // Check to see if we just removed the tone calibration primary or orientation views.
             if (primaryView != null && Objects.equals(image.getName(), primaryView.imageFile.getName()))
@@ -1035,7 +1090,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 // This is intentional in case of a workflow where the user performs tone calibration on a photo
                 // then deletes it entirely if it is not needed for texture processing -- we want the tone calibration
                 // to still be in terms of the light intensity derived from that deleted view!
-                primaryView = viewList.isEmpty() ? null : viewList.get(0);
+                primaryView = views.isEmpty() ? null : getRepresentativeView();
             }
 
             if (orientationView != null && Objects.equals(image.getName(), orientationView.imageFile.getName()))
@@ -1046,9 +1101,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
         }
 
-        if (removed)
+        if (removed != null)
         {
-            notifyObservers(new ViewSetChange(Type.REMOVED, image));
+            notifyObservers(new ViewSetChange(Type.REMOVED, Set.of(removed.getImageFile())));
         }
     }
 
@@ -1121,34 +1176,34 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public int getViewCount()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            return viewList.size();
+            return views.size();
         }
     }
 
     @Override
     public int getEnabledViewCount()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            return (int)viewList.stream().filter(View::isEnabled).count();
+            return (int) views.values().stream().filter(View::isEnabled).count();
         }
     }
 
     @Override
     public int getDisabledViewCount()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            return (int)viewList.stream().filter(Predicate.not(View::isEnabled)).count();
+            return (int) views.values().stream().filter(Predicate.not(View::isEnabled)).count();
         }
     }
 
     @Override
     public int getGPUBufferSize()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
             return this.gpuBufferSize;
         }
@@ -1159,14 +1214,17 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     void optimizeGPUIndexing()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
+            // Keep views ordered by original GPU index as much as possible.
+            List<View> sortedViews = getViewsSorted();
+
             // Reassign view indices for smaller data set.
-            for (int i = 0; i < viewList.size(); ++i)
+            for (int i = 0; i < sortedViews.size(); ++i)
             {
-                viewList.get(i).gpuViewIndex = i;
+                sortedViews.get(i).gpuViewIndex = i;
             }
-            gpuBufferSize = viewList.size();
+            gpuBufferSize = views.size();
         }
     }
 
@@ -1285,23 +1343,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         return masksDirectory;
     }
 
-    @Override
-    public Map<Integer, File> getMasksMap()
-    {
-        synchronized (viewList)
-        {
-            Map<Integer, File> maskFiles = new HashMap<>(viewList.size());
-            for (int i = 0; i < viewList.size(); ++i)
-            {
-                if (viewList.get(i).importedMaskFile != null)
-                {
-                    maskFiles.put(i, viewList.get(i).importedMaskFile);
-                }
-            }
-            return Collections.unmodifiableMap(maskFiles);
-        }
-    }
-
     public void setMasksDirectory(File dir)
     {
         masksDirectory = dir;
@@ -1314,9 +1355,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void validateMasks()
     {
-        synchronized (viewList)
+        synchronized (views)
         {
-            for (View view : viewList)
+            for (View view : views.values())
             {
                 File maskFile = view.getMaskFile();
                 if (maskFile != null)
@@ -1343,7 +1384,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 }
 
                 // Remove if no mask file was found, otherwise overwrite based on the file that was found
-                view.importedMaskFile = maskFile;
+                view.maskFile = maskFile;
             }
         }
     }
@@ -1427,9 +1468,9 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             // Copy the list for thread safety without blocking while it copies all the files.
             Iterable<View> viewsCopy;
 
-            synchronized (viewList)
+            synchronized (views)
             {
-                viewsCopy = new ArrayList<>(viewList);
+                viewsCopy = new ArrayList<>(views.values());
             }
 
             // Copy the files that were actually found

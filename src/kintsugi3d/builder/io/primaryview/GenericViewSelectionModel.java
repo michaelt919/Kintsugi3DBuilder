@@ -31,7 +31,7 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
         this.name = name;
 
         // Makes a snapshot copy; grab all views (not just those disabled) since selecting a disabled view is valid.
-        this.views = viewSet.getViews();
+        this.views = viewSet.getViewsSorted();
     }
 
     @Override

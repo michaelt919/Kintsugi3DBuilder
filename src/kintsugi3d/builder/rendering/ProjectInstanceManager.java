@@ -202,7 +202,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Grab all views (not just enabled) for light calibration
         // TODO this is for the light calibration sidebar and should probably be migrated to a newer system
         // TODO   for managing the list of photos (like the photos tab)
-        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViews());
+        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViewsSorted());
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -254,10 +254,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                             tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
                             break;
                         case REMOVED:
-                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            photosTab.deleteCards(card -> change.imageFiles.contains(new File(card.getInternalName())));
                             break;
                         case MODIFIED:
-                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            photosTab.refreshCards(card -> change.imageFiles.contains(new File(card.getInternalName())));
                             break;
                     }
                 });

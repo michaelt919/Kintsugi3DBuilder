@@ -73,7 +73,7 @@ public class CameraCardFactory implements ProjectDataCardFactory
                     "Remove from Project", () ->
                         cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
                             () -> Rendering.runLater(() -> viewSet.removeViewByImageFilename(view.getImageFile()))),
-                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleCamera(view.getImageFile()))
+                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleViewEnabled(view.getImageFile()))
                 ),
                 !view.isEnabled()
             );
@@ -91,25 +91,19 @@ public class CameraCardFactory implements ProjectDataCardFactory
         return List.of(Map.of(
             "Disable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToDisable = viewSet.getEnabledViews().stream()
+                Collection<File> photosToDisable = viewSet.getEnabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
-                for (File photo : photosToDisable)
-                {
-                    viewSet.setCameraEnabled(photo, false);
-                }
+                viewSet.setViewsEnabled(photosToDisable, false);
             }),
             "Enable All", () -> Rendering.runLater(() ->
             {
-                Iterable<File> photosToEnable = viewSet.getDisabledViews().stream()
+                Collection<File> photosToEnable = viewSet.getDisabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
-                for (File photo : photosToEnable)
-                {
-                    viewSet.setCameraEnabled(photo, true);
-                }
+                viewSet.setViewsEnabled(photosToEnable, true);
             })
         ));
     }

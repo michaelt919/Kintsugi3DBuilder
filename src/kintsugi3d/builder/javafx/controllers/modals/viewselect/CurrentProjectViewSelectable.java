@@ -18,9 +18,44 @@ import kintsugi3d.builder.io.primaryview.GenericViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 public class CurrentProjectViewSelectable extends ViewSelectableBase
 {
+    private final View initialView;
+    private final double initialViewRotationDegrees;
+
+    public CurrentProjectViewSelectable(Function<ViewSet, View> getInitialSelection, ToDoubleFunction<ViewSet> getInitialRotationDegrees)
+    {
+        ViewSet currentViewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
+        this.initialView = getInitialSelection.apply(currentViewSet);
+
+        if (getInitialRotationDegrees != null)
+        {
+            this.initialViewRotationDegrees = getInitialRotationDegrees.applyAsDouble(currentViewSet);
+        }
+        else
+        {
+            this.initialViewRotationDegrees = 0.0;
+        }
+    }
+
+    public CurrentProjectViewSelectable(Function<ViewSet, View> getInitialSelection)
+    {
+        this(getInitialSelection, null);
+    }
+
+    public View getInitialView()
+    {
+        return initialView;
+    }
+
+    public double getInitialViewRotationDegrees()
+    {
+        return initialViewRotationDegrees;
+    }
+
     @Override
     public String getAdvanceLabelOverride()
     {
@@ -34,11 +69,10 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
         ViewSet currentViewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
         setViewSelectionModel(new GenericViewSelectionModel("Current Project", currentViewSet));
 
-        View orientationView = currentViewSet.getOrientationView();
-        if (orientationView != null)
+        if (initialView != null)
         {
-            String viewName = orientationView.getImageFile().getPath();
-            selectView(viewName, currentViewSet.getOrientationViewRotationDegrees());
+            String viewName = initialView.getImageFile().getPath();
+            selectView(viewName, initialViewRotationDegrees);
         }
 
         onLoadComplete.accept(getViewSelectionModel());

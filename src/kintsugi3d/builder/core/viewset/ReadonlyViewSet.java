@@ -22,6 +22,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ReadonlyViewSet
@@ -158,19 +159,40 @@ public interface ReadonlyViewSet
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
-    List<View> getViews();
+    Set<View> getViews();
+
+    /**
+     * Gets the views sorted by GPU index.
+     * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
+     * @return
+     */
+    List<View> getViewsSorted();
+
+    /**
+     * Gets only enabled views sorted by GPU index.
+     * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
+     * @return
+     */
+    Set<View> getEnabledViews();
+
+    /**
+     * Gets only disabled views sorted by GPU index.
+     * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
+     * @return
+     */
+    Set<View> getDisabledViews();
 
     /**
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
-    List<View> getEnabledViews();
+    List<View> getEnabledViewsSorted();
 
     /**
      * Returns a snapshot copy to ensure that the list isn't modified by another thread while the calling object is using it.
      * @return
      */
-    List<View> getDisabledViews();
+    List<View> getDisabledViewsSorted();
 
     /**
      * Gets the number of views defined in this view set.
@@ -258,8 +280,6 @@ public interface ReadonlyViewSet
     boolean hasMasks();
 
     File getMasksDirectory();
-
-    Map<Integer, File> getMasksMap();
 
     /**
      * Gets additional settings associated with this view set

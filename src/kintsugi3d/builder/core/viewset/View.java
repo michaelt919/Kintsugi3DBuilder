@@ -65,24 +65,38 @@ public class View
 
     final ReadonlyViewSet containingViewSet;
 
-    File importedMaskFile;
+    File maskFile;
 
     boolean isEnabled;
 
     /**
      * Creates a new view set data object with parameters for each member.
+     * @param cameraPose
+     * @param cameraPoseInverse
+     * @param cameraProjectionIndex
+     * @param lightIndex
+     * @param gpuViewIndex
+     * @param imageFile Cannot be null.
+     * @param maskFile
+     * @param viewErrorMetric
+     * @param containingViewSet
      */
     View(Matrix4 cameraPose, Matrix4 cameraPoseInverse, int cameraProjectionIndex, int lightIndex,
-         int gpuViewIndex, File imageFile, File importedMaskFile, ReadonlyViewRMSE viewErrorMetric,
+         int gpuViewIndex, File imageFile, File maskFile, ReadonlyViewRMSE viewErrorMetric,
          ReadonlyViewSet containingViewSet)
     {
+        if (imageFile == null)
+        {
+            throw new IllegalArgumentException("Image file cannot be null.");
+        }
+
         this.cameraPose = cameraPose;
         this.cameraPoseInverse = cameraPoseInverse;
         this.cameraProjectionIndex = cameraProjectionIndex;
         this.lightIndex = lightIndex;
         this.gpuViewIndex = gpuViewIndex;
         this.imageFile = imageFile;
-        this.importedMaskFile = importedMaskFile;
+        this.maskFile = maskFile;
         this.viewErrorMetric = viewErrorMetric;
         this.containingViewSet = containingViewSet;
         this.isEnabled = true;
@@ -214,14 +228,14 @@ public class View
 
     public File getMaskFile()
     {
-        if (importedMaskFile == null || containingViewSet.getMasksDirectory() == null)
+        if (maskFile == null || containingViewSet.getMasksDirectory() == null)
         {
             // Not all images have masks, so this file may still not exist
             return null;
         }
         else
         {
-            return new File(containingViewSet.getMasksDirectory(), importedMaskFile.getName());
+            return new File(containingViewSet.getMasksDirectory(), maskFile.getName());
         }
     }
 
@@ -233,21 +247,14 @@ public class View
     @Override
     public String toString()
     {
-        if (imageFile != null)
-        {
-            return imageFile.getName();
-        }
-        else
-        {
-            return super.toString();
-        }
+        return imageFile.getName();
     }
 
     public View copy(ViewSet newContainingViewSet)
     {
-        // TODO do we need to also do a deep copy of viewErroMetric?
+        // TODO do we need to also do a deep copy of viewErrorMetric?
         return new View(this.cameraPose, this.cameraPoseInverse, this.cameraProjectionIndex, this.lightIndex,
-            this.gpuViewIndex, this.imageFile, this.importedMaskFile, this.viewErrorMetric, newContainingViewSet);
+            this.gpuViewIndex, this.imageFile, this.maskFile, this.viewErrorMetric, newContainingViewSet);
     }
 
     @Override
@@ -255,8 +262,7 @@ public class View
     {
         // Two views are equal either if they have the same memory address / identity OR
         // if they are distinct objects with the same, non-null image file path.
-        return obj == this ||
-            (obj instanceof View && this.imageFile != null && Objects.equals(this.imageFile, ((View)obj).imageFile));
+        return obj == this || ((obj instanceof View) && this.imageFile.equals(((View) obj).imageFile));
     }
 
     @Override
@@ -268,6 +274,6 @@ public class View
         // or if they are different objects with the same, non-null image file path.
         // Otherwise, use the default Object hashCode which covers the case when this object has a null imageFile
         // (and thus is only equal to another reference to itself).
-        return imageFile != null ? Objects.hashCode(imageFile) : super.hashCode();
+        return Objects.hashCode(imageFile);
     }
 }
