@@ -100,7 +100,7 @@ void main()
     float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
     float dampingFactor = texture(dampingTex, fTexCoord)[0];
 
-    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
+    for (int k = 0; k < VIEW_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
         LightInfo lightInfo = getLightInfo(k);

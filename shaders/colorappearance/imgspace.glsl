@@ -22,6 +22,12 @@
 #define CAMERA_PROJECTION_COUNT 1024
 #endif
 
+// Protect against zero-length arrays
+#if CAMERA_PROJECTION_COUNT < 1
+#undef CAMERA_PROJECTION_COUNT
+#define CAMERA_PROJECTION_COUNT 1
+#endif
+
 #ifndef VISIBILITY_TEST_ENABLED
 #define VISIBILITY_TEST_ENABLED 0
 #endif

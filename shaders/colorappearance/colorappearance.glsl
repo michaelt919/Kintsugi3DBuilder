@@ -33,11 +33,37 @@
 #define LIGHT_COUNT 1024
 #endif
 
+// Protect against zero-length arrays
+#if LIGHT_COUNT < 1
+#undef LIGHT_COUNT
+#define LIGHT_COUNT 1
+#endif
+
+// View count is allowed to be zero since it should never be the size of an array.
+// (the only arrays sized based on view count are viewIndices and viewWeights,
+// both of which pack indices into ivec4 / vec4 and thus use VIEW_COUNT_DIV_4)
 #ifndef VIEW_COUNT
 #define VIEW_COUNT CAMERA_POSE_COUNT
 #endif
 
 #define VIEW_COUNT_DIV_4 ((VIEW_COUNT + 3) / 4)
+
+// Protect against zero-length arrays
+// Intentionally placed after defining VIEW_COUNT so that VIEW_COUNT can still be zero.
+#if CAMERA_POSE_COUNT < 1
+#undef CAMERA_POSE_COUNT
+#define CAMERA_POSE_COUNT 1
+#endif
+
+#if CAMERA_POSE_COUNT_DIV_4 < 1
+#undef CAMERA_POSE_COUNT_DIV_4
+#define CAMERA_POSE_COUNT_DIV_4 1
+#endif
+
+#if VIEW_COUNT_DIV_4 < 1
+#undef VIEW_COUNT_DIV_4
+#define VIEW_COUNT_DIV_4 1
+#endif
 
 #ifndef USE_VIEW_INDICES
 #define USE_VIEW_INDICES 0
