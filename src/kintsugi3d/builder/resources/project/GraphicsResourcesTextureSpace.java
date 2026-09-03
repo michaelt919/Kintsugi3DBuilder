@@ -114,7 +114,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
                     progressMonitor.allowUserCancellation();
                 }
 
-                textureArray.loadLayer(progressCount,
+                textureArray.loadLayer(view.getGPUViewIndex(),
                     ImageFinder.getInstance().findImageFile(new File(textureDirectory, view.getImageFile().getName())),
                     true);
 
