@@ -18,7 +18,7 @@
 uniform int viewIndex;
 
 #define MODEL_VIEW (cameraPoses[viewIndex])
-#define PROJECTION (cameraProjections[getCameraProjectionIndex(viewIndex)])
+#define PROJECTION (cameraProjections[getCameraProjectionIndexByPhysicalIndex(viewIndex)])
 
 in vec3 position;
 in vec2 texCoord;

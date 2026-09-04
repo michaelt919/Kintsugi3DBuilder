@@ -69,16 +69,19 @@ layout(std140) uniform ShadowMatrices
 };
 #endif
 
-int getCameraProjectionIndex(int virtualIndex)
+int getCameraProjectionIndexByPhysicalIndex(int viewIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
     return extractComponentByIndex(cameraProjectionIndices[viewIndex/4], viewIndex%4);
 }
 
-vec4 getColor(int virtualIndex)
+int getCameraProjectionIndex(int virtualIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(virtualIndex)] * cameraPoses[viewIndex] * vec4(fPosition, 1.0);
+    return getCameraProjectionIndexByPhysicalIndex(getViewIndex(virtualIndex));
+}
+
+vec4 getColorByPhysicalIndex(int viewIndex)
+{
+    vec4 projTexCoord = cameraProjections[getCameraProjectionIndexByPhysicalIndex(viewIndex)] * cameraPoses[viewIndex] * vec4(fPosition, 1.0);
     projTexCoord /= projTexCoord.w;
     projTexCoord = (projTexCoord + vec4(1)) / 2;
 

@@ -129,29 +129,50 @@ mat4 getCameraPose(int virtualIndex)
     return cameraPoses[getViewIndex(virtualIndex)];
 }
 
+int getLightIndexByPhysicalIndex(int viewIndex)
+{
+    return extractComponentByIndex(lightIndices[viewIndex/4], viewIndex%4);
+}
+
 int getLightIndex(int virtualIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    return extractComponentByIndex(lightIndices[viewIndex/4], viewIndex%4);
+    return getLightIndexByPhysicalIndex(getViewIndex(virtualIndex));
+}
+
+float getCameraWeightByPhysicalIndex(int viewIndex)
+{
+    return extractComponentByIndex(cameraWeights[viewIndex/4], viewIndex%4);
 }
 
 float getCameraWeight(int virtualIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    return extractComponentByIndex(cameraWeights[viewIndex/4], viewIndex%4);
+    return getCameraWeightByPhysicalIndex(getViewIndex(virtualIndex));
+}
+
+vec3 getViewVectorByPhysicalIndex(int viewIndex, vec3 position)
+{
+    return transpose(mat3(cameraPoses[viewIndex])) * -cameraPoses[viewIndex][3].xyz - position;
 }
 
 vec3 getViewVector(int virtualIndex, vec3 position)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    return transpose(mat3(cameraPoses[viewIndex])) * -cameraPoses[viewIndex][3].xyz - position;
+    return getViewVectorByPhysicalIndex(getViewIndex(virtualIndex), position);
+}
+
+vec3 getLightVectorByPhysicalIndex(int viewIndex, vec3 position)
+{
+    return transpose(mat3(cameraPoses[viewIndex])) *
+        (lightPositions[getLightIndexByPhysicalIndex(viewIndex)].xyz - cameraPoses[viewIndex][3].xyz) - position;
 }
 
 vec3 getLightVector(int virtualIndex, vec3 position)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    return transpose(mat3(cameraPoses[viewIndex])) *
-        (lightPositions[getLightIndex(virtualIndex)].xyz - cameraPoses[viewIndex][3].xyz) - position;
+    return getLightVectorByPhysicalIndex(getViewIndex(virtualIndex), position);
+}
+
+vec3 getViewVectorByPhysicalIndex(int viewIndex)
+{
+    return getViewVectorByPhysicalIndex(viewIndex, getPosition());
 }
 
 vec3 getViewVector(int virtualIndex)
@@ -159,23 +180,33 @@ vec3 getViewVector(int virtualIndex)
     return getViewVector(virtualIndex, getPosition());
 }
 
+vec3 getLightVectorByPhysicalIndex(int viewIndex)
+{
+    return getLightVectorByPhysicalIndex(viewIndex, getPosition());
+}
+
 vec3 getLightVector(int virtualIndex)
 {
     return getLightVector(virtualIndex, getPosition());
 }
 
-vec3 getLightIntensity(int virtualIndex)
+vec3 getLightIntensityByPhysicalIndex(int viewIndex)
 {
-    return lightIntensities[getLightIndex(virtualIndex)].rgb;
+    return lightIntensities[getLightIndexByPhysicalIndex(viewIndex)].rgb;
 }
 
-LightInfo getLightInfo(int virtualIndex)
+vec3 getLightIntensity(int virtualIndex)
+{
+    return getLightIntensityByPhysicalIndex(getViewIndex(virtualIndex));
+}
+
+LightInfo getLightInfoByPhysicalIndex(int viewIndex)
 {
     LightInfo result;
 
 #if FLATFIELD_CORRECTED && !INFINITE_LIGHT_SOURCES
     // Just use normalize() since we won't actually be needing a true lightDistSquared.
-    result.normalizedDirection = normalize(getLightVector(virtualIndex));
+    result.normalizedDirection = normalize(getLightVectorByPhysicalIndex(viewIndex));
 
     // Tone calibration assumes the tone patches are square with the camera, essentially on camera axis,
     // at the same distance as the closest point on the object.
@@ -201,15 +232,15 @@ LightInfo getLightInfo(int virtualIndex)
     // With those approximations, incident radiance is just light_power / surface_camera_axis_dist^2
 
     // Transform to camera space and just grab the z-axis.
-    float cameraAxisDist = (cameraPoses[getViewIndex(virtualIndex)] * vec4(getPosition(), 1.0)).z;
+    float cameraAxisDist = (cameraPoses[viewIndex] * vec4(getPosition(), 1.0)).z;
     float lightDistSquared = dot(cameraAxisDist, cameraAxisDist);
 #else
-    vec3 unnormalizedDirection = getLightVector(virtualIndex);
+    vec3 unnormalizedDirection = getLightVectorByPhysicalIndex(viewIndex);
     float lightDistSquared = dot(unnormalizedDirection, unnormalizedDirection);
     result.normalizedDirection = unnormalizedDirection * inversesqrt(lightDistSquared);
 #endif
 
-    result.attenuatedIntensity = getLightIntensity(virtualIndex);
+    result.attenuatedIntensity = getLightIntensityByPhysicalIndex(viewIndex);
 #if !INFINITE_LIGHT_SOURCES
     result.attenuatedIntensity /= lightDistSquared;
 #endif
@@ -217,11 +248,26 @@ LightInfo getLightInfo(int virtualIndex)
     return result;
 }
 
-vec4 getColor(int virtualIndex); // Defined by imgspace.glsl or texspace_crop.glsl
+LightInfo getLightInfo(int virtualIndex)
+{
+    return getLightInfoByPhysicalIndex(getViewIndex(virtualIndex));
+}
+
+vec4 getColorByPhysicalIndex(int viewIndex); // Defined by imgspace.glsl or texspace_crop.glsl, etc.
+
+vec4 getColor(int virtualIndex)
+{
+    return getColorByPhysicalIndex(getViewIndex(virtualIndex));
+}
+
+vec4 getLinearColorByPhysicalIndex(int viewIndex)
+{
+    return linearizeColor(getColorByPhysicalIndex(viewIndex));
+}
 
 vec4 getLinearColor(int virtualIndex)
 {
-    return linearizeColor(getColor(virtualIndex));
+    return getLinearColorByPhysicalIndex(getViewIndex(virtualIndex));
 }
 
 #endif // COLOR_APPEARANCE_GLSL
