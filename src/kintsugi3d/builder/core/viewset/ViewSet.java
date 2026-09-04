@@ -352,12 +352,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
             else
             {
-                int[] indexArray = new int[views.size()];
+                int[] indexArray = new int[gpuBufferSize];
                 for (View view : views.values())
                 {
                     indexArray[view.gpuViewIndex] = view.cameraProjectionIndex;
                 }
-                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, views.size(), indexArray);
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, gpuBufferSize, indexArray);
             }
         }
     }
@@ -425,12 +425,12 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
             else
             {
-                int[] indexArray = new int[views.size()];
+                int[] indexArray = new int[gpuBufferSize];
                 for (View view : views.values())
                 {
                     indexArray[view.gpuViewIndex] = view.lightIndex;
                 }
-                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, views.size(), indexArray);
+                return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, gpuBufferSize, indexArray);
             }
         }
     }

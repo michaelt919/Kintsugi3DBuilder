@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     ParallelViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount,
         int maxRunningThreads)
     {
-        this.views = views;
+        this.views = Collections.unmodifiableCollection(views);
         this.drawable = drawable;
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;

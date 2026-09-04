@@ -19,6 +19,7 @@ import kintsugi3d.util.ColorList;
 import kintsugi3d.util.ColorNativeBufferList;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
@@ -32,7 +33,7 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
 
     SequentialViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        this.views = views;
+        this.views = Collections.unmodifiableCollection(views);
         this.drawable = drawable;
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;
