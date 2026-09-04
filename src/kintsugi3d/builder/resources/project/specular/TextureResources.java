@@ -11,8 +11,9 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.texture.NamedTextureInfo;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
@@ -32,7 +33,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
-    Map<TextureDetails, Texture2D<ContextType>> getTextures();
+    Map<TextureInfo, Texture2D<ContextType>> getTextures();
 
     /**
      * Returns a map containing only the standard textures
@@ -45,10 +46,10 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     default Texture2D<ContextType> getTexture(String texName)
     {
-        return getTextures().get(new TextureDetails(texName));
+        return getTextures().get(new NamedTextureInfo(texName));
     }
 
-    default Texture2D<ContextType> getTexture(TextureDetails tex)
+    default Texture2D<ContextType> getTexture(TextureInfo tex)
     {
         return getTextures().get(tex);
     }
@@ -161,7 +162,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+            public Map<TextureInfo, Texture2D<ContextType>> getTextures()
             {
                 return Map.of();
             }
@@ -319,9 +320,19 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return getTextureFilename(texName, format, "");
     }
 
+    static String getTextureFilename(String texName)
+    {
+        return getTextureFilename(texName, "PNG");
+    }
+
     static String getTextureFilename(String texName, String format, String filenamePrefix)
     {
         return String.format("%s%s.%s", filenamePrefix, texName, format.toLowerCase(Locale.ROOT));
+    }
+
+    static String getPackedWeightMapFilename(int index, String format, String filenamePrefix)
+    {
+        return getTextureFilename(getPackedWeightMapName(index), format, filenamePrefix);
     }
 
     static String getPackedWeightMapFilename(int index, String format)
@@ -329,9 +340,9 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return getPackedWeightMapFilename(index, format, "");
     }
 
-    static String getPackedWeightMapFilename(int index, String format, String filenamePrefix)
+    static String getPackedWeightMapFilename(int index)
     {
-        return getTextureFilename(getPackedWeightMapName(index), format, filenamePrefix);
+        return getPackedWeightMapFilename(index, "PNG");
     }
 
     static String getPackedWeightMapName(int index)
@@ -340,14 +351,19 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return String.format("weights%02d%02d", scaledWeightMapIndex, scaledWeightMapIndex + (WEIGHTS_PER_PACKED_CHANNEL - 1));
     }
 
+    static String getUnpackedWeightMapFilename(int index, String format, String filenamePrefix)
+    {
+        return getTextureFilename(getUnpackedWeightMapName(index), format, filenamePrefix);
+    }
+
     static String getUnpackedWeightMapFilename(int index, String format)
     {
         return getUnpackedWeightMapFilename(index, format, "");
     }
 
-    static String getUnpackedWeightMapFilename(int index, String format, String filenamePrefix)
+    static String getUnpackedWeightMapFilename(int index)
     {
-        return getTextureFilename(getUnpackedWeightMapName(index), format, filenamePrefix);
+        return getUnpackedWeightMapFilename(index, "PNG");
     }
 
     static String getUnpackedWeightMapName(int index)
@@ -426,7 +442,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     static File getTextureFile(String texName, File directory)
     {
-        return new File(directory, getTextureFilename(texName, "PNG"));
+        return new File(directory, getTextureFilename(texName));
     }
 
     static <ContextType extends Context<ContextType>>
@@ -478,7 +494,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param parentDirectory
      * @throws IOException
      */
-    default void replaceTextureWithDefaultFile(TextureDetails key, File parentDirectory) throws IOException
+    default void replaceTextureWithDefaultFile(TextureInfo key, File parentDirectory) throws IOException
     {
         getTextures().get(key).load(new File(parentDirectory, key.name + ".png"), true);
     }
@@ -489,7 +505,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
      * @param newTextureFile
      * @throws IOException
      */
-    default void replaceTextureWithSpecificFile(TextureDetails key, File newTextureFile) throws IOException
+    default void replaceTextureWithSpecificFile(TextureInfo key, File newTextureFile) throws IOException
     {
         getTextures().get(key).load(newTextureFile, true);
     }

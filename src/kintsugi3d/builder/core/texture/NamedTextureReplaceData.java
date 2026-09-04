@@ -9,8 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.texture;
 
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
@@ -19,32 +20,30 @@ import java.util.Objects;
 
 public class NamedTextureReplaceData extends ImageReplaceData
 {
-    private TextureDetails key;
+    private final TextureInfo texture;
+
+    public NamedTextureReplaceData(TextureResources<?> resources, TextureInfo texture, File currentImage)
+    {
+        super(resources);
+        this.texture = texture;
+        setCurrentImage(currentImage);
+    }
+
+    public TextureInfo getTexture()
+    {
+        return texture;
+    }
 
     @Override
     public void replace() throws IOException
     {
-        getResources().replaceTextureWithSpecificFile(key, getNewImage());
+        getResources().replaceTextureWithSpecificFile(texture, getNewImage());
     }
 
     @Override
-    public void refreshCards()
+    public void refreshCard()
     {
-        Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-            Objects.equals(card.getTitle(), key.friendlyName));
+        Global.state().getTabModels().getTab("Textures", TextureInfo.class)
+            .refreshCard(card -> Objects.equals(card.getInternalName(), texture.name), texture);
     }
-
-    public NamedTextureReplaceData(TextureResources resources, TextureDetails key, File currentImage)
-    {
-        super(resources);
-        this.key = key;
-        setCurrentImage(currentImage);
-    }
-
-    public TextureDetails getKey()
-    {
-        return key;
-    }
-
-
 }

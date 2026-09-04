@@ -11,7 +11,8 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
@@ -94,7 +95,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         if (viewSet != null)
         {
-            viewSet.registerObserver(change -> updateViewIndicesData());
+            viewSet.registerObserver(change -> Rendering.runLater(this::updateViewIndicesData));
         }
 
         // Store the poses in a uniform buffer
@@ -511,7 +512,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         // The defines can be overridden by the actual shader.
         ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context);
 
-        for (Entry<TextureDetails, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
+        for (Entry<TextureInfo, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
         {
             builder.define(
                 String.format("TEXTURE_%s", entry.getKey().name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "_")),

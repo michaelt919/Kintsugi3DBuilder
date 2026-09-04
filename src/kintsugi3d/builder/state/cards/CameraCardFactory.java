@@ -12,7 +12,6 @@
 package kintsugi3d.builder.state.cards;
 
 import javafx.application.Platform;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
@@ -25,23 +24,29 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class CameraCardFactory implements ProjectDataCardFactory
+public class CameraCardFactory implements ProjectDataCardFactory<View>
 {
     private static final Logger LOG = LoggerFactory.getLogger(CameraCardFactory.class);
 
     private final ViewSet viewSet;
 
-    private CardsModel lastUsedCardsModel;
+    private CardsModel<View> lastUsedCardsModel;
 
     public CameraCardFactory(ViewSet viewSet)
     {
         this.viewSet = viewSet;
     }
 
-    private ProjectDataCard createCard(CardsModel cardsModel, View view)
+    @Override
+    public Class<View> getDataClass()
+    {
+        return View.class;
+    }
+
+    private ProjectDataCard createCard(CardsModel<View> cardsModel, View view)
     {
         String thumbnailPath;
         try
@@ -72,8 +77,8 @@ public class CameraCardFactory implements ProjectDataCardFactory
                 Map.of(
                     "Remove from Project", () ->
                         cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                            () -> Rendering.runLater(() -> viewSet.removeViewByImageFilename(view.getImageFile()))),
-                    "Toggle Disabled", () -> Rendering.runLater(() -> viewSet.toggleViewEnabled(view.getImageFile()))
+                            () -> viewSet.removeViewByImageFilename(view.getImageFile())),
+                    "Toggle Disabled", () -> viewSet.toggleViewEnabled(view.getImageFile())
                 ),
                 !view.isEnabled()
             );
@@ -89,27 +94,27 @@ public class CameraCardFactory implements ProjectDataCardFactory
     public List<? extends Map<String, Runnable>> getGlobalActions()
     {
         return List.of(Map.of(
-            "Disable All", () -> Rendering.runLater(() ->
+            "Disable All", () ->
             {
                 Collection<File> photosToDisable = viewSet.getEnabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
                 viewSet.setViewsEnabled(photosToDisable, false);
-            }),
-            "Enable All", () -> Rendering.runLater(() ->
+            },
+            "Enable All", () ->
             {
                 Collection<File> photosToEnable = viewSet.getDisabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
                 viewSet.setViewsEnabled(photosToEnable, true);
-            })
+            }
         ));
     }
 
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
+    public List<ProjectDataCard> createAllCards(CardsModel<View> cardsModel)
     {
         lastUsedCardsModel = cardsModel;
         List<ProjectDataCard> cardsList = viewSet.getViews().stream()
@@ -121,23 +126,23 @@ public class CameraCardFactory implements ProjectDataCardFactory
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<View> cardsModel, Function<ProjectDataCard, View> refreshedData)
     {
+        LOG.debug("Started refreshing cards");
+
         Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
 
         List<ProjectDataCard> cardsList = cardsModel.getCardList();
         for (ProjectDataCard card : cardsList)
         {
-            if (filter.test(card)) // Check whether the card is in the filter
+            View view = refreshedData.apply(card);
+            if (view != null) // Check whether the card is in the filter
             {
-                View view = viewSet.findViewByName(card.getInternalName()); // find the view index with this view name.
-
-                if (view != null)
-                {
-                    changes.put(card, createCard(cardsModel, view));
-                }
+                changes.put(card, createCard(cardsModel, view));
             }
         }
+
+        LOG.debug("Finished refreshing cards");
 
         return changes;
     }

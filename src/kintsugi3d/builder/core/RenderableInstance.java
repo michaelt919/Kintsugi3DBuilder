@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.core.texture.ImageReplaceData;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;

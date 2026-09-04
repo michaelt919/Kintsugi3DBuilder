@@ -13,8 +13,7 @@ package kintsugi3d.builder.io.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -375,20 +374,20 @@ public class MaterialExporter
 
             extras.setBaseRes(baseRes);
 
-            String filename = baseUri;
+            String strippedFilename = baseUri;
             String extension = "";
-            int i = filename.lastIndexOf('.'); //Strip file extension
+            int i = strippedFilename.lastIndexOf('.'); //Strip file extension
             if (i > 0)
             {
-                extension = filename.substring(i);
-                filename = filename.substring(0, i);
+                extension = strippedFilename.substring(i);
+                strippedFilename = strippedFilename.substring(0, i);
             }
 
             // size = 2048, 1024, 512... minRes
             for (int size = baseRes / 2; size >= minRes; size /= 2)
             {
                 Image image = new Image();
-                image.setUri(String.format("%s-%d%s", filename, size, extension));
+                image.setUri(String.format("%s-%d%s", strippedFilename, size, extension));
                 gltf.addImages(image);
                 int imageIndex = gltf.getImages().size() - 1;
                 extras.setLodImageIndex(size, imageIndex);

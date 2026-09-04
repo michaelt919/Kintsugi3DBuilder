@@ -13,27 +13,33 @@ package kintsugi3d.builder.state.cards;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
-public interface ProjectDataCardFactory
+/**
+ *
+ * @param <T> The backend type that the associated data cards represent.
+ */
+public interface ProjectDataCardFactory<T>
 {
     default List<? extends Map<String, Runnable>> getGlobalActions()
     {
         return List.of();
     }
 
+    Class<T> getDataClass();
+
     /**
      * Creates all cards from scratch.
      * @param cardsModel
      * @return
      */
-    List<ProjectDataCard> createAllCards(CardsModel cardsModel);
+    List<ProjectDataCard> createAllCards(CardsModel<T> cardsModel);
 
     /**
      * Returns a map from the original card to its replacement after refresh.
      * @param cardsModel
-     * @param filter
+     * @param refreshedData
      * @return
      */
-    Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter);
+    Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<T> cardsModel, Function<ProjectDataCard, T> refreshedData);
 }

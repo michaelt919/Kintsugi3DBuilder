@@ -13,16 +13,23 @@ package kintsugi3d.builder.state.cards;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface CardsModel
+public interface CardsModel<T>
 {
     List<? extends Map<String, Runnable>> getGlobalActions();
 
     List<ProjectDataCard> getCardList();
     void setCardList(List<ProjectDataCard> cards);
 
-    void refreshCards(Predicate<ProjectDataCard> filter);
+    void refreshCards(Function<ProjectDataCard, T> refreshedData);
+
+    default void refreshCard(Predicate<ProjectDataCard> cardEquals, T refreshedData)
+    {
+        refreshCards(card -> cardEquals.test(card) ? refreshedData : null);
+    }
+
     void deleteCards(Predicate<ProjectDataCard> filter);
 
     void confirm(String title, String header, String message, Runnable onConfirm);

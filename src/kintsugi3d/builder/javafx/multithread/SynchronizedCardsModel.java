@@ -17,13 +17,14 @@ import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class SynchronizedCardsModel implements CardsModel
+public class SynchronizedCardsModel<T> implements CardsModel<T>
 {
-    private final CardsModel base;
+    private final CardsModel<T> base;
 
-    public SynchronizedCardsModel(CardsModel base)
+    public SynchronizedCardsModel(CardsModel<T> base)
     {
         this.base = base;
     }
@@ -47,7 +48,7 @@ public class SynchronizedCardsModel implements CardsModel
     }
 
     @Override
-    public void refreshCards(Predicate<ProjectDataCard> filter)
+    public void refreshCards(Function<ProjectDataCard, T> filter)
     {
         Platform.runLater(() -> base.refreshCards(filter));
     }

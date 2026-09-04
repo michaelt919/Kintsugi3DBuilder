@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.debug;
 
-import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.GraphicsResources;

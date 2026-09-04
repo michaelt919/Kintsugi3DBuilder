@@ -12,6 +12,7 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.texture.ImageReplaceData;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;

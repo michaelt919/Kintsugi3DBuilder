@@ -594,7 +594,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             view.isEnabled = isEnabled;
             if (!isEnabled)
             {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, Set.of(view.getImageFile())));
+                notifyObservers(new ViewSetChange(Type.MODIFIED, view));
             }
             // Else still enabled so nothing needs to change
         }
@@ -603,7 +603,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             view.isEnabled = isEnabled;
             if (isEnabled)
             {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, Set.of(view.getImageFile())));
+                notifyObservers(new ViewSetChange(Type.MODIFIED, view));
             }
             // Else still disabled so nothing needs to change
         }
@@ -611,21 +611,27 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public void setViewsEnabled(Collection<File> images, boolean isEnabled)
     {
-        Set<File> imageFilesModified = new HashSet<>(images.size());
+        LOG.info("setViewsEnabled called");
+
+        Map<File, View> imageFilesModified = new HashMap<>(images.size());
         synchronized (views)
         {
             for (File image : images)
             {
                 View view = findViewByName(image.getName());
                 view.isEnabled = isEnabled;
-                imageFilesModified.add(view.getImageFile());
+                imageFilesModified.put(view.getImageFile(), view);
             }
         }
+
+        LOG.info("Finished modifying views");
 
         if (!imageFilesModified.isEmpty())
         {
             notifyObservers(new ViewSetChange(Type.MODIFIED, imageFilesModified));
         }
+
+        LOG.info("Finished notifying observers");
     }
 
     @Override
@@ -931,7 +937,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
             if (mappedView != null)
             {
-                LOG.debug("Matched {} for {}", mappedView.getImageFile().getPath(), viewName);
                 return mappedView;
             }
 
@@ -950,7 +955,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
                 if (shortenedImgName.equals(shortenedViewName) || shortenedImgName.equals(viewName) || imgName.equals(shortenedViewName))
                 {
-                    LOG.debug("Matched {} for {}", view.getImageFile(), viewName);
                     return view;
                 }
             }
@@ -1041,7 +1045,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
         }
 
-        notifyObservers(new ViewSetChange(Type.ADDED, Set.of(view.getImageFile())));
+        notifyObservers(new ViewSetChange(Type.ADDED, view));
     }
 
     void removeView(View view)
@@ -1069,7 +1073,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         if (removed != null)
         {
-            notifyObservers(new ViewSetChange(Type.REMOVED, Set.of(removed.getImageFile())));
+            notifyObservers(new ViewSetChange(Type.REMOVED, removed));
         }
     }
 
@@ -1103,7 +1107,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         if (removed != null)
         {
-            notifyObservers(new ViewSetChange(Type.REMOVED, Set.of(removed.getImageFile())));
+            notifyObservers(new ViewSetChange(Type.REMOVED, removed));
         }
     }
 

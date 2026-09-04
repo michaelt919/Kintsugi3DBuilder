@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
@@ -246,7 +247,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 // Register observer for changes to the Photos tab
                 loadedViewSet.registerObserver(change ->
                 {
-                    CardsModel photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS);
+                    CardsModel<View> photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS, View.class);
 
                     switch (change.type)
                     {
@@ -254,10 +255,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                             tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
                             break;
                         case REMOVED:
-                            photosTab.deleteCards(card -> change.imageFiles.contains(new File(card.getInternalName())));
+                            photosTab.deleteCards(card -> change.viewMap.get(new File(card.getInternalName())) != null);
                             break;
                         case MODIFIED:
-                            photosTab.refreshCards(card -> change.imageFiles.contains(new File(card.getInternalName())));
+                            photosTab.refreshCards(card -> change.viewMap.get(new File(card.getInternalName())));
                             break;
                     }
                 });

@@ -20,12 +20,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ImageReplaceData;
+import kintsugi3d.builder.core.texture.ImageReplaceData;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
 
 public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplaceData>
 {
@@ -59,7 +58,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
         newFileButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("dark-button"), true);
 
         replacementFileChooser.setTitle("Replace with...");
-        replacementFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture image", "*.png"));
+        replacementFileChooser.getExtensionFilters().add(new ExtensionFilter("Texture image", "*.png"));
         setCurrentDirectoryFile(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory());
 
         setCanConfirm(true);
@@ -86,7 +85,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
                 Files.copy(data.getNewImage().toPath(), data.getCurrentImage().toPath(), StandardCopyOption.REPLACE_EXISTING);
 
                 // Finally, attempt to refresh the card (including thumbnail from the version saved to disk).
-                data.refreshCards();
+                data.refreshCard();
             }
             catch (IOException | RuntimeException e)
             {

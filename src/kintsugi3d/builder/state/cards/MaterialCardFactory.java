@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class MaterialCardFactory implements ProjectDataCardFactory
+public class MaterialCardFactory implements ProjectDataCardFactory<String> // TODO need object-oriented representation of single basis material
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
@@ -42,7 +42,13 @@ public class MaterialCardFactory implements ProjectDataCardFactory
         this.instance = instance;
     }
 
-    public ProjectDataCard createCard(CardsModel cardsModel, TextureResources<?> resources, int cardIndex)
+    @Override
+    public Class<String> getDataClass()
+    {
+        return String.class;
+    }
+
+    public ProjectDataCard createCard(CardsModel<String> cardsModel, TextureResources<?> resources, int cardIndex)
     {
         String thumbnailPath;
         try
@@ -107,7 +113,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
     }
 
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
+    public List<ProjectDataCard> createAllCards(CardsModel<String> cardsModel)
     {
         if (instance.getResources() != null)
         {
@@ -127,7 +133,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<String> cardsModel, Function<ProjectDataCard, String> filter)
     {
         LOG.warn("refreshCards not implemented for textures.");
         return Map.of();

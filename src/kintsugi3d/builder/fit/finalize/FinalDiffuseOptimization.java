@@ -11,9 +11,10 @@
 
 package kintsugi3d.builder.fit.finalize;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.NamedTextureInfo;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
@@ -32,8 +33,8 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
 
-    public static final TextureDetails CONSTANT_TRANSLUCENCY_MAP =
-        new TextureDetails("constant", "Constant translucency map",
+    public static final TextureInfo CONSTANT_TRANSLUCENCY_MAP =
+        new NamedTextureInfo("constant", "Constant translucency map",
             "An experimental texture for translucency fitting.");
 
     // Graphics context
@@ -146,7 +147,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(0);
     }
 
-    public Map<TextureDetails, Texture2D<ContextType>> getNonStandardTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getNonStandardTextures()
     {
         return includeConstant ? Map.of(CONSTANT_TRANSLUCENCY_MAP, framebuffer.getColorAttachmentTexture(1)) : Map.of();
     }

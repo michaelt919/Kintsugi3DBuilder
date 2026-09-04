@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,7 +29,7 @@ public class SynchronizedTabsModel implements TabsModel
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
+    public <T> void addTab(String tabName, ProjectDataCardFactory<T> cardFactory, String path)
     {
         Platform.runLater(() -> base.addTab(tabName, cardFactory, path));
     }
@@ -41,19 +41,25 @@ public class SynchronizedTabsModel implements TabsModel
     }
 
     @Override
-    public CardsModel getTab(String label)
+    public CardsModel<?> getTab(String label)
     {
-        return new SynchronizedCardsModel(base.getTab(label));
+        return new SynchronizedCardsModel<>(base.getTab(label));
     }
 
     @Override
-    public Map<String, CardsModel> getTabsMap()
+    public <T> CardsModel<T> getTab(String label, Class<T> dataClass)
     {
-        Map<String, CardsModel> wrapped = new LinkedHashMap<>();
+        return new SynchronizedCardsModel<>(base.getTab(label, dataClass));
+    }
+
+    @Override
+    public Map<String, CardsModel<?>> getTabsMap()
+    {
+        Map<String, CardsModel<?>> wrapped = new LinkedHashMap<>(4);
 
         for (var entry : base.getTabsMap().entrySet())
         {
-            wrapped.put(entry.getKey(), new SynchronizedCardsModel(entry.getValue()));
+            wrapped.put(entry.getKey(), new SynchronizedCardsModel<>(entry.getValue()));
         }
 
         return wrapped;

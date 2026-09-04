@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.normal.NormalOptimization;
@@ -430,13 +434,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     @Override
-    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
         // Convert to enum-based keys to string-based keys
-        Map<TextureDetails, Texture2D<ContextType>> standardTextures = StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
+        Map<TextureInfo, Texture2D<ContextType>> standardTextures = StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
 
         // make the previous result mutable and add non-standard textures
-        Map<TextureDetails, Texture2D<ContextType>> textures = new HashMap<>(standardTextures);
+        Map<TextureInfo, Texture2D<ContextType>> textures = new HashMap<>(standardTextures);
         textures.putAll(diffuseOptimization.getNonStandardTextures());
         return Collections.unmodifiableMap(textures);
     }

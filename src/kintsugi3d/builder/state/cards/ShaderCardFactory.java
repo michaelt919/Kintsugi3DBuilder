@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
 /**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
@@ -29,7 +29,7 @@ the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
 shaders will be available for the user to use.
  */
-public class ShaderCardFactory implements ProjectDataCardFactory
+public class ShaderCardFactory implements ProjectDataCardFactory<UserShader>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
 
@@ -43,6 +43,12 @@ public class ShaderCardFactory implements ProjectDataCardFactory
     public ShaderCardFactory(RenderableInstance<?> instance)
     {
         this.instance = instance;
+    }
+
+    @Override
+    public Class<UserShader> getDataClass()
+    {
+        return UserShader.class;
     }
 
     /**
@@ -68,7 +74,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
      @return
      */
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
+    public List<ProjectDataCard> createAllCards(CardsModel<UserShader> cardsModel)
     {
         // shaderDataCards is an arraylist that will hold all shaders user can use
         List<ProjectDataCard> shaderDataCards = new ArrayList<>(9);
@@ -96,7 +102,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
+    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<UserShader> cardsModel, Function<ProjectDataCard, UserShader> filter)
     {
         LOG.warn("refreshCards not implemented for textures.");
         return Map.of();

@@ -45,10 +45,10 @@ public class CardController
     @FXML private VBox buttonBox;
 
     private UUID cardId;
-    private ObservableCardsModel cardsModel;
+    private ObservableCardsModel<?> cardsModel;
     private Image preview;
 
-    public void init(ObservableCardsModel cardsModel, ProjectDataCard dataCard)
+    public void init(ObservableCardsModel<?> cardsModel, ProjectDataCard dataCard)
     {
         this.cardsModel = cardsModel;
         this.cardId = dataCard.getCardId();

@@ -24,12 +24,15 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class RightBarController
 {
@@ -58,7 +61,7 @@ public class RightBarController
 
 
     private ObservableTabsModel tabModels;
-    private String lastSelectedTabLabel = null;
+    private String lastSelectedTabLabel;
     private boolean minimized = false;
 
     public Node getRootNode()
@@ -72,7 +75,7 @@ public class RightBarController
 
         tabModels.getAllTabs().forEach(this::addTab);
 
-        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel>) change ->
+        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel<?>>) change ->
         {
             if (change.wasAdded())
             {
@@ -130,7 +133,7 @@ public class RightBarController
         }
     }
 
-    private void addTab(ObservableCardsModel model)
+    private void addTab(ObservableCardsModel<?> model)
     {
         RadioButton newButton = createButton(model.getModelLabel());
         VBox newTab = createTab(model);
@@ -160,20 +163,20 @@ public class RightBarController
         button.setSelected(false);
         button.setStyle("-fx-alignment: center;");
         button.getStyleClass().add("stripped-radio-button");
-        button.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        button.setTextAlignment(TextAlignment.CENTER);
 
         // Add to ToggleGroup
         button.setToggleGroup(tabToggleGroup);
 
         // Allow the button to grow horizontally in an HBox
-        HBox.setHgrow(button, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(button, Priority.ALWAYS);
 
         buttons.add(button);
 
         return button;
     }
 
-    private VBox createTab(ObservableCardsModel model)
+    private VBox createTab(ObservableCardsModel<?> model)
     {
         VBox newTab = null;
         FXMLLoader loader = new FXMLLoader();
@@ -320,7 +323,7 @@ public class RightBarController
     {
         if (lastSelectedTabLabel == null)
         {
-            for (Map.Entry<String, RadioButton> entry : buttonMap.entrySet())
+            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
             {
                 RadioButton button = entry.getValue();
 

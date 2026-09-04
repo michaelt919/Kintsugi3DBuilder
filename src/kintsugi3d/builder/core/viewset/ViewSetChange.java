@@ -13,7 +13,7 @@ package kintsugi3d.builder.core.viewset;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
 
 public class ViewSetChange
 {
@@ -23,11 +23,17 @@ public class ViewSetChange
     }
 
     public final Type type;
-    public final Set<File> imageFiles;
+    public final Map<File, View> viewMap;
 
-    ViewSetChange(Type type, Set<File> imageFiles)
+    ViewSetChange(Type type, Map<File, View> viewMap)
     {
         this.type = type;
-        this.imageFiles = Collections.unmodifiableSet(imageFiles);
+        this.viewMap = Collections.unmodifiableMap(viewMap);
+    }
+
+    ViewSetChange(Type type, View view)
+    {
+        this.type = type;
+        this.viewMap = Map.of(view.imageFile, view);
     }
 }

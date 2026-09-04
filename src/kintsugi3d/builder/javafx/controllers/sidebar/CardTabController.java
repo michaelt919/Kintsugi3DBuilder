@@ -67,9 +67,9 @@ public class CardTabController
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
 
-    private ObservableCardsModel cardsModel;
+    private ObservableCardsModel<?> cardsModel;
 
-    public void init(ObservableCardsModel cardsModel)
+    public void init(ObservableCardsModel<?> cardsModel)
     {
         this.cardsModel = cardsModel;
 

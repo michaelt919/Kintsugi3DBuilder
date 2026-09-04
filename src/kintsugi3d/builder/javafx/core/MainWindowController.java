@@ -300,17 +300,17 @@ public class MainWindowController
 
         // Update flyout menus if the available materials change (i.e. delete).
         javaFXState.getTabModels().getObservableTabsMap().addListener(
-            (MapChangeListener<? super String, ? super ObservableCardsModel>) change ->
+            (MapChangeListener<? super String, ? super ObservableCardsModel<?>>) change ->
             {
                 if (change.wasAdded() && TabsManager.MATERIALS.equals(change.getKey()))
                 {
-                    ObservableCardsModel materialCardsModel = change.getValueAdded();
+                    ObservableCardsModel<?> materialCardsModel = change.getValueAdded();
                     materialCardsModel.getCardList().addListener((InvalidationListener)
                         obs -> updateMaterialShaderList(materialCardsModel.getCardList()));
                 }
                 else if (change.wasAdded() && TabsManager.TEXTURES.equals(change.getKey()))
                 {
-                    ObservableCardsModel textureCardsModel = change.getValueAdded();
+                    ObservableCardsModel<?> textureCardsModel = change.getValueAdded();
                     textureCardsModel.getCardList().addListener((InvalidationListener)
                         obs -> updateTextureList(textureCardsModel.getCardList()));
                 }

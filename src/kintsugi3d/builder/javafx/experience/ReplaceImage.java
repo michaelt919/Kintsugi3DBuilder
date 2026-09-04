@@ -14,7 +14,7 @@ package kintsugi3d.builder.javafx.experience;
 import javafx.application.Platform;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.ImageReplaceData;
+import kintsugi3d.builder.core.texture.ImageReplaceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

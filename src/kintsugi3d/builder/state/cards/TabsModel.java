@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,8 +15,17 @@ import java.util.Map;
 
 public interface TabsModel
 {
-    void addTab(String tabName, ProjectDataCardFactory cardFactory, String path);
+    /**
+     *
+     * @param tabName
+     * @param cardFactory
+     * @param path
+     * @param <T> The backend type that the associated data cards represent.
+     */
+    <T> void addTab(String tabName, ProjectDataCardFactory<T> cardFactory, String path);
+
     void clearTabs();
-    CardsModel getTab(String label);
-    Map<String, ? extends CardsModel> getTabsMap();
+    CardsModel<?> getTab(String label);
+    <T> CardsModel<T> getTab(String label, Class<T> dataClass);
+    Map<String, ? extends CardsModel<?>> getTabsMap();
 }

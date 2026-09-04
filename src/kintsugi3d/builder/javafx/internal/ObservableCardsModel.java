@@ -28,9 +28,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class ObservableCardsModel implements CardsModel
+/**
+ *
+ * @param <T> The backend type that the associated data cards represent.
+ */
+public class ObservableCardsModel<T> implements CardsModel<T>
 {
     private final String label;
     private final String path;
@@ -40,10 +45,10 @@ public class ObservableCardsModel implements CardsModel
     private final ObservableList<ProjectDataCard> cardsList;
     private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
 
-    private final ProjectDataCardFactory cardFactory;
+    private final ProjectDataCardFactory<T> cardFactory;
     private final ObservableCarouselModel carouselModel;
 
-    public ObservableCardsModel(String label, String path, ProjectDataCardFactory cardFactory,
+    public ObservableCardsModel(String label, String path, ProjectDataCardFactory<T> cardFactory,
                                 ObservableCarouselModel carouselModel)
     {
         this.label = label;
@@ -103,6 +108,11 @@ public class ObservableCardsModel implements CardsModel
     {
         List<ProjectDataCard> dataCards = cardFactory.createAllCards(this);
         this.setCardList(dataCards);
+    }
+
+    public Class<T> getDataClass()
+    {
+        return cardFactory.getDataClass();
     }
 
     public String getModelLabel()
@@ -203,10 +213,10 @@ public class ObservableCardsModel implements CardsModel
     }
 
     @Override
-    public void refreshCards(Predicate<ProjectDataCard> filter)
+    public void refreshCards(Function<ProjectDataCard, T> refreshedData)
     {
         // Get a mapping from stale cards needing refresh and their updated version.
-        var replacements = cardFactory.createRefreshedCards(this, filter);
+        var replacements = cardFactory.createRefreshedCards(this, refreshedData);
 
         // Loop over cards to check if refresh is needed.
         for (int i = 0; i < cardsList.size(); i++)
