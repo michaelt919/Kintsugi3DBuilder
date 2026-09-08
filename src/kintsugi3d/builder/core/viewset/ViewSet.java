@@ -611,8 +611,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
     public void setViewsEnabled(Collection<File> images, boolean isEnabled)
     {
-        LOG.info("setViewsEnabled called");
-
         Map<File, View> imageFilesModified = new HashMap<>(images.size());
         synchronized (views)
         {
@@ -624,14 +622,10 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
         }
 
-        LOG.info("Finished modifying views");
-
         if (!imageFilesModified.isEmpty())
         {
             notifyObservers(new ViewSetChange(Type.MODIFIED, imageFilesModified));
         }
-
-        LOG.info("Finished notifying observers");
     }
 
     @Override

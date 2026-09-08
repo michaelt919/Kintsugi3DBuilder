@@ -16,9 +16,6 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
@@ -110,7 +107,6 @@ public class ObservableCardsModel<T> implements CardsModel<T>
 
     public void initialize()
     {
-        cardFactory.setConfirmHandler(ObservableCardsModel::confirm);
         List<ProjectDataCard> dataCards = cardFactory.createAllCards();
         this.setCardList(dataCards);
     }
@@ -227,20 +223,6 @@ public class ObservableCardsModel<T> implements CardsModel<T>
     public void deleteCards(Predicate<ProjectDataCard> filter )
     {
         cardsList.removeIf(filter);
-    }
-
-    private static void confirm(String title, String header, String message, Runnable onConfirm)
-    {
-        // Temp solution -- will eventually create a custom modal.
-        Alert alert = new Alert(AlertType.CONFIRMATION, message);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        var result = alert.showAndWait();
-
-        if (result.isPresent() && result.get().equals(ButtonType.OK))
-        {
-            onConfirm.run();
-        }
     }
 
     public CarouselModel getCarousel()

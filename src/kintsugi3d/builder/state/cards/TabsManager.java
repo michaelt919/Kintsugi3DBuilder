@@ -32,7 +32,7 @@ public class TabsManager
 
     public TabsManager(RenderableInstance<?> instance)
     {
-        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance), null));
+        factories.add(new TabInfo(PHOTOS, new PhotoCardFactory(instance), null));
         factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),
             Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
         factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance),

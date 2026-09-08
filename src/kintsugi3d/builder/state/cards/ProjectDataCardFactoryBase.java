@@ -14,6 +14,13 @@ package kintsugi3d.builder.state.cards;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.ViewSet;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 public abstract class ProjectDataCardFactoryBase<T> implements ProjectDataCardFactory<T>
 {
     private final RenderableInstance<?> instance;
@@ -24,18 +31,6 @@ public abstract class ProjectDataCardFactoryBase<T> implements ProjectDataCardFa
         this.instance = instance;
     }
 
-    @Override
-    public ConfirmHandler getConfirmHandler()
-    {
-        return confirmHandler;
-    }
-
-    @Override
-    public void setConfirmHandler(ConfirmHandler confirmHandler)
-    {
-        this.confirmHandler = confirmHandler;
-    }
-
     protected RenderableInstance<?> getInstance()
     {
         return instance;
@@ -44,5 +39,22 @@ public abstract class ProjectDataCardFactoryBase<T> implements ProjectDataCardFa
     protected ViewSet getViewSet()
     {
         return instance.getViewSet();
+    }
+
+    @Override
+    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, T> refreshedData)
+    {
+        // Generate cards in parallel for efficiency
+        List<Entry<Integer, ProjectDataCard>> entryList = IntStream.range(0, mutableCardList.size())
+            .parallel()
+            .mapToObj(index -> new SimpleEntry<>(index, refreshedData.apply(mutableCardList.get(index))))
+            .filter(entry -> entry.getValue() != null)
+            .map(entry -> new SimpleEntry<>(entry.getKey(), createCard(entry.getValue())))
+            .collect(Collectors.toList());
+
+        for (var entry : entryList)
+        {
+            mutableCardList.set(entry.getKey(), entry.getValue());
+        }
     }
 }

@@ -28,8 +28,11 @@ public interface ProjectDataCardFactory<T>
 
     Class<T> getDataClass();
 
-    ConfirmHandler getConfirmHandler();
-    void setConfirmHandler(ConfirmHandler confirmHandler);
+    /**
+     * Creates a single card.
+     * @return
+     */
+    ProjectDataCard createCard(T data);
 
     /**
      * Creates all cards from scratch.

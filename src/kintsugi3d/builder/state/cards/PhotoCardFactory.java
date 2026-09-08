@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state.cards;
 
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.javafx.core.MainApplication;
@@ -22,18 +23,14 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
-import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-public class CameraCardFactory extends ProjectDataCardFactoryBase<View>
+public class PhotoCardFactory extends ProjectDataCardFactoryBase<View>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(CameraCardFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PhotoCardFactory.class);
 
-    public CameraCardFactory(RenderableInstance<?> instance)
+    public PhotoCardFactory(RenderableInstance<?> instance)
     {
         super(instance);
     }
@@ -44,7 +41,8 @@ public class CameraCardFactory extends ProjectDataCardFactoryBase<View>
         return View.class;
     }
 
-    private ProjectDataCard createCard(View view)
+    @Override
+    public ProjectDataCard createCard(View view)
     {
         String thumbnailPath;
         try
@@ -74,7 +72,7 @@ public class CameraCardFactory extends ProjectDataCardFactoryBase<View>
                 }},
                 Map.of(
                     "Remove from Project", () ->
-                        getConfirmHandler().confirm("Remove Image", "Remove Image?",
+                        Global.state().getProjectModel().confirm("Remove Image", "Remove Image?",
                             "This will remove the image from the project.",
                             () -> getViewSet().removeViewByImageFilename(view.getImageFile())),
                     "Toggle Disabled", () -> getViewSet().toggleViewEnabled(view.getImageFile())
@@ -121,28 +119,5 @@ public class CameraCardFactory extends ProjectDataCardFactoryBase<View>
             .collect(Collectors.toList());
         cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());
         return cardsList;
-    }
-
-    @Override
-    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, View> refreshedData)
-    {
-        LOG.debug("Started creating refreshed cards");
-
-        // Generate cards in parallel for efficiency
-        List<Entry<Integer, ProjectDataCard>> entryList = IntStream.range(0, mutableCardList.size())
-            .parallel()
-            .mapToObj(index -> new SimpleEntry<>(index, refreshedData.apply(mutableCardList.get(index))))
-            .filter(entry -> entry.getValue() != null)
-            .map(entry -> new SimpleEntry<>(entry.getKey(), createCard(entry.getValue())))
-            .collect(Collectors.toList());
-
-        LOG.debug("Finished creating refreshed cards");
-
-        for (var entry : entryList)
-        {
-            mutableCardList.set(entry.getKey(), entry.getValue());
-        }
-
-        LOG.debug("Finished updating card list");
     }
 }

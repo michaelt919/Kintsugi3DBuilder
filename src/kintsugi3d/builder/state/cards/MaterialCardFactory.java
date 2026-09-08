@@ -18,7 +18,6 @@ import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.javafx.core.MainApplication;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.ImageFinder;
@@ -28,11 +27,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class MaterialCardFactory extends ProjectDataCardFactoryBase<String> // TODO need object-oriented representation of single basis material
+public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // TODO need object-oriented representation of single basis material
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
@@ -42,12 +40,13 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<String> // T
     }
 
     @Override
-    public Class<String> getDataClass()
+    public Class<Integer> getDataClass()
     {
-        return String.class;
+        return Integer.class;
     }
 
-    public ProjectDataCard createCard(TextureResources<?> resources, int cardIndex)
+    @Override
+    public ProjectDataCard createCard(Integer cardIndex)
     {
         String thumbnailPath;
         try
@@ -96,11 +95,13 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<String> // T
                             new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
                 Map.of("Delete Material", () ->
-                    getConfirmHandler().confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
+                    Global.state().getProjectModel().confirm("Delete Material", "Delete Material?",
+                        "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
                         {
                             try
                             {
+                                TextureResources<?> resources = getInstance().getResources().getTextureResources();
                                 resources.deleteBasisMaterial(cardIndex);
                             }
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
@@ -114,27 +115,18 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<String> // T
     @Override
     public List<ProjectDataCard> createAllCards()
     {
-        GraphicsResourcesImageSpace<?> resources = getInstance().getResources();
-        if (resources != null)
+        BasisResources<?> basisResources = getInstance().getResources().getTextureResources().getBasisResources();
+        if (basisResources != null)
         {
-            TextureResources<?> texResources = resources.getTextureResources();
-            BasisResources<?> basisResources = texResources.getBasisResources();
-            if (basisResources != null)
-            {
-                return IntStream.range(0, basisResources.getBasisCount())
-                    .mapToObj(i -> createCard(texResources, i))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toUnmodifiableList());
-            }
+            return IntStream.range(0, basisResources.getBasisCount())
+                .mapToObj(this::createCard)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList());
         }
-
-        // If not yet initialized, return empty list.
-        return List.of();
-    }
-
-    @Override
-    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, String> filter)
-    {
-        LOG.warn("refreshCards not implemented for textures.");
+        else
+        {
+            // If not yet initialized, return empty list.
+            return List.of();
+        }
     }
 }

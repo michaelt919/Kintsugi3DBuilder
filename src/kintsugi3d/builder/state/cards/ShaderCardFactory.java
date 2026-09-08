@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 /**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
@@ -50,19 +49,29 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
 
     /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
-    the title of the shader and the file name. Returns ProjectDataCard of the shader
-    (single card).
+    the title of the shader and the file name.
      @param title
      @param fileName
-     @return
+     @return ProjectDataCard of the shader (single card).
     */
-    public static ProjectDataCard createCard(String title, String fileName)
+    public ProjectDataCard createCard(String title, String fileName)
     {
-        //Creates shader with given title and filename
+        // Creates shader with given title and filename
         UserShader shader = new UserShader(title, fileName);
-
-        return new ShaderDataCard(fileName, shader, MainApplication.ICON_PATH);
+        return createCard(shader);
     }
+
+    /**
+     *
+     * @param shader
+     * @return ProjectDataCard of the shader (single card).
+     */
+    @Override
+    public ProjectDataCard createCard(UserShader shader)
+    {
+        return new ShaderDataCard(shader.getFilename(), shader, MainApplication.ICON_PATH);
+    }
+
     /**
     createAllCards will call createCard for all the shaders and will
     return them in a list. This method will also detect if the model
@@ -95,11 +104,5 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
             shaderDataCards.add(createCard("Weight maps (combined)", "rendermodes/weightmaps/weightmapCombination.frag"));
         }
         return shaderDataCards;
-    }
-
-    @Override
-    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, UserShader> filter)
-    {
-        LOG.warn("refreshCards not implemented for textures.");
     }
 }

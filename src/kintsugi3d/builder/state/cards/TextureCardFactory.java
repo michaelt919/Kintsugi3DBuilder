@@ -33,7 +33,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
@@ -64,7 +63,8 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
      * @param texture
      * @return projectDataCard
      */
-    private ProjectDataCard createCard(TextureInfo texture)
+    @Override
+    public ProjectDataCard createCard(TextureInfo texture)
     {
         // Base Location where the .pngs and thumbnails folder are.
         File baseDirectory = getViewSet().getSupportingFilesDirectory();
@@ -167,21 +167,9 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
                 }
             }
         }
+
         // If not yet initialized, return empty list.
         return textureCards;
-    }
-
-    @Override
-    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, TextureInfo> refreshedData)
-    {
-        for (int i = 0; i < mutableCardList.size(); i++)
-        {
-            TextureInfo newInfo = refreshedData.apply(mutableCardList.get(i));
-            if (newInfo != null) // Check whether the card is in the filter
-            {
-                mutableCardList.set(i, createCard(newInfo));
-            }
-        }
     }
 
     private void refreshTexture(TextureInfo texture)
