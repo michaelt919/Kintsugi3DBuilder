@@ -128,7 +128,7 @@ public class CameraCardFactory implements ProjectDataCardFactory<View>
     @Override
     public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<View> cardsModel, Function<ProjectDataCard, View> refreshedData)
     {
-        LOG.debug("Started refreshing cards");
+        LOG.debug("Started creating refreshed cards");
 
         Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
 
@@ -142,7 +142,7 @@ public class CameraCardFactory implements ProjectDataCardFactory<View>
             }
         }
 
-        LOG.debug("Finished refreshing cards");
+        LOG.debug("Finished creating refreshed cards");
 
         return changes;
     }
