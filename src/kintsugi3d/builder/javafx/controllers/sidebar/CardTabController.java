@@ -187,7 +187,7 @@ public class CardTabController
     /**
      * Does not recreate the listener!!!
      */
-    public void refreshCardList()
+    public void reloadCardList()
     {
         try
         {
@@ -221,7 +221,7 @@ public class CardTabController
                         for (int i = change.getFrom(); i < change.getTo(); i++)
                         {
                             ProjectDataCard card = cardsModel.getCardList().get(i);
-                            cardControllers.set(i, createDataCard(card));
+                            cardControllers.get(i).refresh(card);
 
                             // Collapse card if disabled.
                             if (card.isDisabled())
@@ -256,7 +256,7 @@ public class CardTabController
                 {
                     // Shouldn't really every happen if things are working properly, but as a fallback, try to refresh the whole list.
                     // (This will probably also fail if anything is failing, and will effectively empty the list which is better than inconsistent state.)
-                    refreshCardList();
+                    reloadCardList();
                 }
             }
             catch (IOException e)
@@ -264,7 +264,7 @@ public class CardTabController
                 cardLoadError(e);
 
                 // Again, this is a last-ditch effort to fix things but will probably just clear out the list.
-                refreshCardList();
+                reloadCardList();
             }
 
             updateSummary();

@@ -11,9 +11,8 @@
 
 package kintsugi3d.builder.state.cards;
 
-import javafx.application.Platform;
+import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -23,21 +22,20 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class CameraCardFactory implements ProjectDataCardFactory<View>
+public class CameraCardFactory extends ProjectDataCardFactoryBase<View>
 {
     private static final Logger LOG = LoggerFactory.getLogger(CameraCardFactory.class);
 
-    private final ViewSet viewSet;
-
-    private CardsModel<View> lastUsedCardsModel;
-
-    public CameraCardFactory(ViewSet viewSet)
+    public CameraCardFactory(RenderableInstance<?> instance)
     {
-        this.viewSet = viewSet;
+        super(instance);
     }
 
     @Override
@@ -46,7 +44,7 @@ public class CameraCardFactory implements ProjectDataCardFactory<View>
         return View.class;
     }
 
-    private ProjectDataCard createCard(CardsModel<View> cardsModel, View view)
+    private ProjectDataCard createCard(View view)
     {
         String thumbnailPath;
         try
@@ -76,9 +74,10 @@ public class CameraCardFactory implements ProjectDataCardFactory<View>
                 }},
                 Map.of(
                     "Remove from Project", () ->
-                        cardsModel.confirm("Remove Image", "Remove Image?", "This will remove the image from the project.",
-                            () -> viewSet.removeViewByImageFilename(view.getImageFile())),
-                    "Toggle Disabled", () -> viewSet.toggleViewEnabled(view.getImageFile())
+                        getConfirmHandler().confirm("Remove Image", "Remove Image?",
+                            "This will remove the image from the project.",
+                            () -> getViewSet().removeViewByImageFilename(view.getImageFile())),
+                    "Toggle Disabled", () -> getViewSet().toggleViewEnabled(view.getImageFile())
                 ),
                 !view.isEnabled()
             );
@@ -96,29 +95,28 @@ public class CameraCardFactory implements ProjectDataCardFactory<View>
         return List.of(Map.of(
             "Disable All", () ->
             {
-                Collection<File> photosToDisable = viewSet.getEnabledViews().stream()
+                Collection<File> photosToDisable = getViewSet().getEnabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
-                viewSet.setViewsEnabled(photosToDisable, false);
+                getViewSet().setViewsEnabled(photosToDisable, false);
             },
             "Enable All", () ->
             {
-                Collection<File> photosToEnable = viewSet.getDisabledViews().stream()
+                Collection<File> photosToEnable = getViewSet().getDisabledViews().stream()
                     .map(View::getImageFile)
                     .collect(Collectors.toList());
 
-                viewSet.setViewsEnabled(photosToEnable, true);
+                getViewSet().setViewsEnabled(photosToEnable, true);
             }
         ));
     }
 
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel<View> cardsModel)
+    public List<ProjectDataCard> createAllCards()
     {
-        lastUsedCardsModel = cardsModel;
-        List<ProjectDataCard> cardsList = viewSet.getViews().stream()
-            .map(viewData -> createCard(cardsModel, viewData))
+        List<ProjectDataCard> cardsList = getViewSet().getViews().stream()
+            .map(this::createCard)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
         cardsList = cardsList.stream().sorted(Comparator.comparing(ProjectDataCard::getTitle)).collect(Collectors.toUnmodifiableList());
@@ -126,29 +124,25 @@ public class CameraCardFactory implements ProjectDataCardFactory<View>
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<View> cardsModel, Function<ProjectDataCard, View> refreshedData)
+    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, View> refreshedData)
     {
         LOG.debug("Started creating refreshed cards");
 
-        Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
-
-        List<ProjectDataCard> cardsList = cardsModel.getCardList();
-        for (ProjectDataCard card : cardsList)
-        {
-            View view = refreshedData.apply(card);
-            if (view != null) // Check whether the card is in the filter
-            {
-                changes.put(card, createCard(cardsModel, view));
-            }
-        }
+        // Generate cards in parallel for efficiency
+        List<Entry<Integer, ProjectDataCard>> entryList = IntStream.range(0, mutableCardList.size())
+            .parallel()
+            .mapToObj(index -> new SimpleEntry<>(index, refreshedData.apply(mutableCardList.get(index))))
+            .filter(entry -> entry.getValue() != null)
+            .map(entry -> new SimpleEntry<>(entry.getKey(), createCard(entry.getValue())))
+            .collect(Collectors.toList());
 
         LOG.debug("Finished creating refreshed cards");
 
-        return changes;
-    }
+        for (var entry : entryList)
+        {
+            mutableCardList.set(entry.getKey(), entry.getValue());
+        }
 
-    private void updateCards()
-    {
-        Platform.runLater(() -> lastUsedCardsModel.setCardList(createAllCards(lastUsedCardsModel)));
+        LOG.debug("Finished updating card list");
     }
 }

@@ -18,6 +18,7 @@ import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.util.ImageFinder;
@@ -31,15 +32,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class MaterialCardFactory implements ProjectDataCardFactory<String> // TODO need object-oriented representation of single basis material
+public class MaterialCardFactory extends ProjectDataCardFactoryBase<String> // TODO need object-oriented representation of single basis material
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
-    private final RenderableInstance<?> instance;
-
     public MaterialCardFactory(RenderableInstance<?> instance)
     {
-        this.instance = instance;
+        super(instance);
     }
 
     @Override
@@ -48,13 +47,13 @@ public class MaterialCardFactory implements ProjectDataCardFactory<String> // TO
         return String.class;
     }
 
-    public ProjectDataCard createCard(CardsModel<String> cardsModel, TextureResources<?> resources, int cardIndex)
+    public ProjectDataCard createCard(TextureResources<?> resources, int cardIndex)
     {
         String thumbnailPath;
         try
         {
             thumbnailPath = ImageFinder.getInstance().findImageFile(
-                new File(instance.getViewSet().getThumbnailImageDirectory(),
+                new File(getViewSet().getThumbnailImageDirectory(),
                     BasisImageCreator.getBasisImageFilename(cardIndex))).toString();
         }
         catch (FileNotFoundException e)
@@ -97,7 +96,7 @@ public class MaterialCardFactory implements ProjectDataCardFactory<String> // TO
                             new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
                 Map.of("Delete Material", () ->
-                    cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
+                    getConfirmHandler().confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
                         () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
                         {
                             try
@@ -107,22 +106,23 @@ public class MaterialCardFactory implements ProjectDataCardFactory<String> // TO
                             finally // even if an exception is thrown, want to make sure we're in sync with the current state.
                             {
                                 // hard reset of cards list to re-number, etc.
-                                cardsModel.setCardList(createAllCards(cardsModel));
+                                Global.state().getTabModels().getTab(TabsManager.MATERIALS).setCardList(createAllCards());
                             }
                         })))));
     }
 
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel<String> cardsModel)
+    public List<ProjectDataCard> createAllCards()
     {
-        if (instance.getResources() != null)
+        GraphicsResourcesImageSpace<?> resources = getInstance().getResources();
+        if (resources != null)
         {
-            TextureResources<?> resources = instance.getResources().getTextureResources();
-            BasisResources<?> basisResources = resources.getBasisResources();
+            TextureResources<?> texResources = resources.getTextureResources();
+            BasisResources<?> basisResources = texResources.getBasisResources();
             if (basisResources != null)
             {
                 return IntStream.range(0, basisResources.getBasisCount())
-                    .mapToObj(i -> createCard(cardsModel, resources, i))
+                    .mapToObj(i -> createCard(texResources, i))
                     .filter(Objects::nonNull)
                     .collect(Collectors.toUnmodifiableList());
             }
@@ -133,9 +133,8 @@ public class MaterialCardFactory implements ProjectDataCardFactory<String> // TO
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<String> cardsModel, Function<ProjectDataCard, String> filter)
+    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, String> filter)
     {
         LOG.warn("refreshCards not implemented for textures.");
-        return Map.of();
     }
 }

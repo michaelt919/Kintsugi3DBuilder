@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -29,11 +28,9 @@ the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
 shaders will be available for the user to use.
  */
-public class ShaderCardFactory implements ProjectDataCardFactory<UserShader>
+public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
-
-    private final RenderableInstance<?> instance;
 
     /**
      * ShaderCardFactory is the constructor for this class takes a RenderableInstance and
@@ -42,7 +39,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory<UserShader>
      */
     public ShaderCardFactory(RenderableInstance<?> instance)
     {
-        this.instance = instance;
+        super(instance);
     }
 
     @Override
@@ -70,11 +67,10 @@ public class ShaderCardFactory implements ProjectDataCardFactory<UserShader>
     createAllCards will call createCard for all the shaders and will
     return them in a list. This method will also detect if the model
     is processed and if so will limit the shaders shown to the user.
-     @param cardsModel
      @return
      */
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel<UserShader> cardsModel)
+    public List<ProjectDataCard> createAllCards()
     {
         // shaderDataCards is an arraylist that will hold all shaders user can use
         List<ProjectDataCard> shaderDataCards = new ArrayList<>(9);
@@ -102,9 +98,8 @@ public class ShaderCardFactory implements ProjectDataCardFactory<UserShader>
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<UserShader> cardsModel, Function<ProjectDataCard, UserShader> filter)
+    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, UserShader> filter)
     {
         LOG.warn("refreshCards not implemented for textures.");
-        return Map.of();
     }
 }

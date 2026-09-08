@@ -32,7 +32,7 @@ public class TabsManager
 
     public TabsManager(RenderableInstance<?> instance)
     {
-        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance.getViewSet()), null));
+        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance), null));
         factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),
             Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
         factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance),
@@ -59,8 +59,8 @@ public class TabsManager
         {
             try
             {
-                CardsModel cardsModel = tab.getValue();
-                cardsModel.setCardList(factories.get(index).getFactory().createAllCards(cardsModel));
+                CardsModel<?> cardsModel = tab.getValue();
+                cardsModel.setCardList(factories.get(index).getFactory().createAllCards());
             }
             catch (RuntimeException e)
             {
@@ -74,12 +74,12 @@ public class TabsManager
     {
         TabsModel tabsModel = Global.state().getTabModels();
 
-        CardsModel cardsModel = tabsModel.getTab(tabName);
+        CardsModel<?> cardsModel = tabsModel.getTab(tabName);
         for (var fac : factories)
         {
             if (fac.getLabel().equals(tabName))
             {
-                cardsModel.setCardList(fac.getFactory().createAllCards(cardsModel));
+                cardsModel.setCardList(fac.getFactory().createAllCards());
             }
         }
     }

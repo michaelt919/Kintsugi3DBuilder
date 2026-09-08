@@ -11,37 +11,38 @@
 
 package kintsugi3d.builder.state.cards;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.viewset.ViewSet;
 
-/**
- *
- * @param <T> The backend type that the associated data cards represent.
- */
-public interface ProjectDataCardFactory<T>
+public abstract class ProjectDataCardFactoryBase<T> implements ProjectDataCardFactory<T>
 {
-    default List<? extends Map<String, Runnable>> getGlobalActions()
+    private final RenderableInstance<?> instance;
+    private ConfirmHandler confirmHandler;
+
+    protected ProjectDataCardFactoryBase(RenderableInstance<?> instance)
     {
-        return List.of();
+        this.instance = instance;
     }
 
-    Class<T> getDataClass();
+    @Override
+    public ConfirmHandler getConfirmHandler()
+    {
+        return confirmHandler;
+    }
 
-    ConfirmHandler getConfirmHandler();
-    void setConfirmHandler(ConfirmHandler confirmHandler);
+    @Override
+    public void setConfirmHandler(ConfirmHandler confirmHandler)
+    {
+        this.confirmHandler = confirmHandler;
+    }
 
-    /**
-     * Creates all cards from scratch.
-     * @return
-     */
-    List<ProjectDataCard> createAllCards();
+    protected RenderableInstance<?> getInstance()
+    {
+        return instance;
+    }
 
-    /**
-     * Refreshes cards and overwrites any cards which changed in the card list.
-     * @param mutableCardList Must be modifiable on the thread from which this method is called.
-     * @param refreshedData
-     * @return
-     */
-    void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, T> refreshedData);
+    protected ViewSet getViewSet()
+    {
+        return instance.getViewSet();
+    }
 }

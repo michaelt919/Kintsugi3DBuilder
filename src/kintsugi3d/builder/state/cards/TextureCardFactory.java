@@ -20,6 +20,7 @@ import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -35,11 +36,9 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
+public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureCardFactory.class);
-
-    private final RenderableInstance<?> instance;
 
     private File textureImage;
     /**
@@ -49,7 +48,7 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
      */
     public TextureCardFactory(RenderableInstance<?> instance)
     {
-        this.instance = instance;
+        super(instance);
     }
 
     @Override
@@ -68,7 +67,7 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
     private ProjectDataCard createCard(TextureInfo texture)
     {
         // Base Location where the .pngs and thumbnails folder are.
-        File baseDirectory = instance.getViewSet().getSupportingFilesDirectory();
+        File baseDirectory = getViewSet().getSupportingFilesDirectory();
 
         // thumbnails folder
         File thumbnailDestination = new File(baseDirectory, "thumbnails");
@@ -131,18 +130,18 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
      * createAllCards will call createCard for all the textures and will
      * return them in a list. If the model is not processed there will be
      * no textures at all shown to the user.
-     * @param cardsModel
      * @return
      */
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel<TextureInfo> cardsModel)
+    public List<ProjectDataCard> createAllCards()
     {
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
-        if (instance.getResources() != null)
+        GraphicsResources<?> resources = getInstance().getResources();
+        if (resources != null)
         {
-            TextureResources<?> resources = instance.getResources().getTextureResources();
+            TextureResources<?> texResources = resources.getTextureResources();
 
-            var textures = resources.getTextures();
+            var textures = texResources.getTextures();
             if (textures != null)
             {
                 for (var entry : textures.entrySet().stream().sorted(Comparator.comparing(Entry::getKey)).collect(Collectors.toList()))
@@ -155,7 +154,7 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
                 }
             }
 
-            BasisResources<?> basisResources = resources.getBasisResources();
+            BasisResources<?> basisResources = texResources.getBasisResources();
             if (basisResources != null)
             {
                 for (int i = 0; i < basisResources.getBasisCount(); i++)
@@ -173,23 +172,16 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
     }
 
     @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel<TextureInfo> cardsModel, Function<ProjectDataCard, TextureInfo> refreshedData)
+    public void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, TextureInfo> refreshedData)
     {
-        Map<ProjectDataCard, ProjectDataCard> changes = new HashMap<>(1);
-
-        List<ProjectDataCard> cardsList = cardsModel.getCardList();
-        Iterable<TextureInfo> details = new ArrayList<>(instance.getResources().getTextureResources().getTextures().keySet());
-
-        for (ProjectDataCard card : cardsList)
+        for (int i = 0; i < mutableCardList.size(); i++)
         {
-            TextureInfo key = refreshedData.apply(card);
-            if (key != null) // Check whether the card is in the filter
+            TextureInfo newInfo = refreshedData.apply(mutableCardList.get(i));
+            if (newInfo != null) // Check whether the card is in the filter
             {
-                changes.put(card, createCard(key));
+                mutableCardList.set(i, createCard(newInfo));
             }
         }
-
-        return changes;
     }
 
     private void refreshTexture(TextureInfo texture)
@@ -197,6 +189,7 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
         // Texture replacement must happen on graphics thread.
         Rendering.runLater(() ->
         {
+            RenderableInstance<?> instance = getInstance();
             TextureResources<?> resources = instance.getResources().getTextureResources();
 
             try
@@ -217,7 +210,7 @@ public class TextureCardFactory implements ProjectDataCardFactory<TextureInfo>
     private void replaceTexture(TextureInfo texture)
     {
         Platform.runLater(() ->
-            Global.state().getIOModel().getMainRenderable().invokeUserImageReplacement(texture.getReplaceData(instance)));
+            Global.state().getIOModel().getMainRenderable().invokeUserImageReplacement(texture.getReplaceData(getInstance())));
     }
 
 }

@@ -415,7 +415,7 @@ public class RightBarController
     }
     public void refreshTabs()
     {
-        tabControllers.forEach(CardTabController::refreshCardList);
+        tabControllers.forEach(CardTabController::reloadCardList);
     }
     public double getTabWidth(){ return mainBox.getWidth(); }
 }

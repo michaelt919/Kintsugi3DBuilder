@@ -58,10 +58,4 @@ public class SynchronizedCardsModel<T> implements CardsModel<T>
     {
         Platform.runLater(() -> base.deleteCards(filter));
     }
-
-    @Override
-    public void confirm(String title, String header, String message, Runnable onConfirm)
-    {
-        Platform.runLater(() -> base.confirm(title, header, message, onConfirm));
-    }
 }
