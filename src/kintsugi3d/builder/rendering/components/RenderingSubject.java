@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -25,9 +25,9 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ShadingParameterMode;
 
-import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Map;
+
 public class RenderingSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
     private UniformBuffer<ContextType> viewIndexBufferOverride;
@@ -57,22 +57,7 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
-                .generateWeights(resources,
-                    new AbstractList<Integer>()
-                    {
-                        @Override
-                        public Integer get(int index)
-                        {
-                            return index;
-                        }
-
-                        @Override
-                        public int size()
-                        {
-                            return resources.getViewSet().getCombinedCameraPoseCount();
-                        }
-                    },
-                    targetView);
+                .generateWeights(resources, resources.getViewSet().getEnabledViews(), targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }

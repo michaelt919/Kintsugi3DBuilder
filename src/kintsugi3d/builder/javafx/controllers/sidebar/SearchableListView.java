@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -19,31 +19,37 @@ import javafx.scene.control.TextField;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchableListView extends SearchableView {
-    ListView<String> listView;
-    List<String> backup;
-    public SearchableListView(ListView<String> viewList, TextField searchTxtField, CheckBox regexMode) {
+public class SearchableListView<T> extends SearchableView
+{
+    private final ListView<T> listView;
+    private List<T> backup;
+
+    public SearchableListView(ListView<T> viewList, TextField searchTxtField, CheckBox regexMode)
+    {
         this.listView = viewList;
         this.textInput = searchTxtField;
         this.regexMode = regexMode;
     }
 
-    public static SearchableListView createUnboundInstance(ListView<String> viewList, TextField searchTxtField) {
-        return new SearchableListView(viewList, searchTxtField, null);
+    public static <T> SearchableListView<T> createUnboundInstance(ListView<T> viewList, TextField searchTxtField)
+    {
+        return new SearchableListView<>(viewList, searchTxtField, null);
     }
 
-    private static SearchableListView createUnboundInstance(ListView<String> viewList, TextField searchTxtField, CheckBox regexMode) {
-        return new SearchableListView(viewList, searchTxtField, regexMode);
+    private static <T> SearchableListView<T> createUnboundInstance(ListView<T> viewList, TextField searchTxtField, CheckBox regexMode)
+    {
+        return new SearchableListView<>(viewList, searchTxtField, regexMode);
     }
 
     @Override
-    public SearchableView bind() {
-        backup = new ArrayList<>();
-        backup.addAll(listView.getItems());
+    public SearchableView bind()
+    {
+        backup = new ArrayList<>(listView.getItems());
 
         textInput.textProperty().addListener((obs, oldText, newText)-> updateView());
 
-        if(regexMode != null){
+        if(regexMode != null)
+        {
             regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateView());
         }
         return this;
@@ -51,23 +57,37 @@ public class SearchableListView extends SearchableView {
 
     @Override
     protected void updateView() {
+
         listView.getItems().clear();
         listView.getItems().addAll(backup);
 
         String searchTxt = textInput.getText().trim();
-        if (searchTxt.isBlank()){
+        if (searchTxt.isBlank())
+        {
             return;
         }
 
-        FilteredList<String> filteredItems = new FilteredList<>(listView.getItems(), visibility->true);
+        FilteredList<T> filteredItems = new FilteredList<>(listView.getItems(), visibility->true);
 
-        filteredItems.setPredicate(regexMode != null && regexMode.isSelected() ?
-                item->item.matches(".*" + searchTxt + ".*") :
-                item->item.contains(searchTxt));
+        filteredItems.setPredicate(item ->
+        {
+            String itemName = item.toString();
+
+            if (regexMode != null && regexMode.isSelected())
+            {
+                return itemName.matches(String.format(".*%s.*", searchTxt));
+            }
+            else
+            {
+                return itemName.contains(searchTxt);
+            }
+        });
 
 
-        for (String item : backup) {
-            if (!filteredItems.contains(item)) {
+        for (T item : backup)
+        {
+            if (!filteredItems.contains(item))
+            {
                 listView.getItems().remove(item);
             }
         }

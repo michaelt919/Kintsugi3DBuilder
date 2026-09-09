@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,15 +11,16 @@
 
 package kintsugi3d.builder.state;
 
+import kintsugi3d.builder.core.viewset.View;
+
 import java.util.List;
 
 public interface CameraViewListModel
 {
-    String getSelectedCameraView();
-    int getSelectedCameraViewIndex();
-    void setSelectedCameraViewIndex(int cameraViewIndex);
-    List<String> getCameraViewList();
-    void setCameraViewList(List<String> cameraViewList);
+    View getSelectedCameraView();
+    void setSelectedCameraView(View cameraView);
+    List<View> getCameraViewList();
+    void setCameraViewList(List<View> cameraViewList);
     boolean isCameraViewSnapEnabled();
     void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled);
 }

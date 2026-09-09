@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.Context;
@@ -64,7 +64,7 @@ public final class ImportedMaterialResourcesWrapper<ContextType extends Context<
     }
 
     @Override
-    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
         return StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
     }

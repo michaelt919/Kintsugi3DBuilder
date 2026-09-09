@@ -14,10 +14,10 @@ package kintsugi3d.builder.state.cards;
 public class TabInfo
 {
     private final String label;
-    private final ProjectDataCardFactory factory;
+    private final ProjectDataCardFactory<?> factory;
     private final String path;
 
-    public TabInfo(String label, ProjectDataCardFactory factory, String path)
+    public TabInfo(String label, ProjectDataCardFactory<?> factory, String path)
     {
         this.label = label;
         this.factory = factory;
@@ -29,7 +29,7 @@ public class TabInfo
         return label;
     }
 
-    public ProjectDataCardFactory getFactory()
+    public ProjectDataCardFactory<?> getFactory()
     {
         return factory;
     }

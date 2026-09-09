@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,9 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel.Setting;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -22,7 +23,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.Map;
+import java.util.List;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -33,17 +34,13 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         return INSTANCE;
     }
 
-    public void writeMatrixHelper(int index, ReadonlyViewSet viewSet, PrintStream out, boolean isEnabled)
+    private ViewSetWriterToVSET()
     {
-        Matrix4 pose;
-        if (isEnabled)
-        {
-            pose = viewSet.getEnabledCameraPose(index);
-        }
-        else
-        {
-            pose = viewSet.getDisabledCameraPose(index);
-        }
+    }
+
+    public static void writePoseMatrix(View view, PrintStream out)
+    {
+        Matrix4 pose = view.getCameraPose();
 
         // TODO validate quaternion computation
 //            Matrix3 rot = new Matrix3(pose);
@@ -58,7 +55,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 //            else
         //{
         // Write a general 4x4 matrix
-        out.printf("P" + "\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+        out.printf("P\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
             pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
             pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
             pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
@@ -67,8 +64,12 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println();
     }
 
-    private ViewSetWriterToVSET()
+    private static void writeView(View view, int viewIndex, PrintStream out)
     {
+        String identifier = view.isEnabled() ? "v" : "vd";
+        out.printf("%s\t%d\t%d\t%d\t%s", identifier, viewIndex,
+            view.getCameraProjectionIndex(), view.getLightIndex(), view.getImageFile());
+        out.println();
     }
 
     @Override
@@ -105,15 +106,42 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("c\t%.8f\t%.8f", viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
         out.println();
 
-        // Correct for the primary view selection index being moved to 0 when written to the vset file
-        int correctedOrientationViewIndex = viewSet.getOrientationViewIndex();
-        if (viewSet.getOrientationViewIndex() >= 0)
+        View primaryView = viewSet.getPrimaryView();
+        View orientationView = viewSet.getOrientationView();
+
+        // getViewsSorted returns a copy.
+        // Want views sorted by original GPU index to preserve the original order when the view set was loaded.
+        List<View> viewsCopy = viewSet.getViewsSorted();
+
+        int primaryViewIndex, orientationViewIndex;
+
+        if (primaryView != null)
         {
-            if (viewSet.getPrimaryViewIndex() == correctedOrientationViewIndex)
+            primaryViewIndex = viewsCopy.indexOf(primaryView);
+        }
+        else
+        {
+            primaryViewIndex = -1;
+        }
+
+        if (orientationView != null)
+        {
+            orientationViewIndex = viewsCopy.indexOf(orientationView);
+        }
+        else
+        {
+            orientationViewIndex = -1;
+        }
+
+        // Correct for the primary view selection index being moved to 0 when written to the vset file
+        int correctedOrientationViewIndex = orientationViewIndex;
+        if (orientationViewIndex >= 0)
+        {
+            if (primaryViewIndex == correctedOrientationViewIndex)
             {
                 correctedOrientationViewIndex = 0;
             }
-            else if (viewSet.getPrimaryViewIndex() > correctedOrientationViewIndex)
+            else if (primaryViewIndex > correctedOrientationViewIndex)
             {
                 correctedOrientationViewIndex += 1;
             }
@@ -151,7 +179,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("os\t%.8f", viewSet.getObjectScale());
 
         boolean firstSetting = true;
-        for (ReadonlyGeneralSettingsModel.Setting setting : viewSet.getProjectSettings())
+        for (Setting setting : viewSet.getProjectSettings())
         {
             if (firstSetting) // print only for the first setting; do not print at all if no settings
             {
@@ -187,13 +215,13 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.printf("M %s%n", viewSet.getMasksDirectory().getAbsolutePath());
 
             out.println();
-            Map<Integer, File> masksMap = viewSet.getMasksMap();
-            out.printf("# %d masks%n", masksMap.size());
-            for (var entry : masksMap.entrySet())
+            out.printf("# %d masks%n", viewsCopy.stream().filter(view -> view.getMaskFile() != null).count());
+            for (int i = 0; i < viewsCopy.size(); i++)
             {
-                if (entry.getValue() != null)
+                File maskFile = viewsCopy.get(i).getMaskFile();
+                if (maskFile != null)
                 {
-                    out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
+                    out.println(MessageFormat.format("k\t{0}\t{1}", i, maskFile.getName()));
                 }
             }
         }
@@ -222,14 +250,12 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.printf("# %d%s%n", viewSet.getCombinedCameraPoseCount(), viewSet.getCombinedCameraPoseCount() == 1 ? " Camera" : " Cameras");
-        for (int i = 0; i < viewSet.getEnabledCameraPoseCount(); i++)
+        out.printf("# %d%s%n", viewsCopy.size(), viewsCopy.size() == 1 ? " Camera" : " Cameras");
+
+        // Enabled photos
+        for (View view : viewsCopy)
         {
-            writeMatrixHelper(i, viewSet, out, true);
-        }
-        for (int i = 0; i < viewSet.getDisabledCameraPoseCount(); i++)
-        {
-            writeMatrixHelper(i, viewSet, out, false);
+            writePoseMatrix(view, out);
         }
 
         if (viewSet.getLightCount() > 0)
@@ -246,31 +272,20 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.printf("# %d%s%n", viewSet.getEnabledCameraPoseCount(), viewSet.getEnabledCameraPoseCount() == 1 ? " View" : " Views");
+        out.printf("# %d%s%n", viewsCopy.size(), viewsCopy.size() == 1 ? " View" : " Views");
 
-        // Primary view first (so that next time the view set is loaded it will be index 0)
-        out.printf("v\t%d\t%d\t%d\t%s", viewSet.getPrimaryViewIndex(),
-            viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()),
-            viewSet.getLightIndex(viewSet.getPrimaryViewIndex()),
-            viewSet.getImageFile(viewSet.getPrimaryViewIndex()));
-        out.println();
-
-        for (int id = 0; id < viewSet.getEnabledCameraPoseCount(); id++)
+        if (primaryViewIndex >= 0)
         {
-            if (id != viewSet.getPrimaryViewIndex())
-            {
-                out.printf("v\t%d\t%d\t%d\t%s", id, viewSet.getEnabledCameraProjectionIndex(id), viewSet.getEnabledLightIndex(id), viewSet.getEnabledImageFile(id));
-                out.println();
-            }
+            // Primary view first (so that next time the view set is loaded it will be index 0)
+            writeView(primaryView, primaryViewIndex, out);
         }
 
-        out.println();
-        out.printf("# %d%s%n", viewSet.getDisabledCameraPoseCount(), viewSet.getDisabledCameraPoseCount() == 1 ? " Disabled View" : " Disabled Views");
-
-        for (int id = 0; id < viewSet.getDisabledCameraPoseCount(); id++)
+        for (int i = 0; i < viewsCopy.size(); i++)
         {
-            out.printf("vd\t%d\t%d\t%d\t%s", viewSet.getEnabledCameraPoseCount() + id, viewSet.getDisabledCameraProjectionIndex(id), viewSet.getDisabledLightIndex(id), viewSet.getDisabledImageFile(id));
-            out.println();
+            if (i != primaryViewIndex)
+            {
+                writeView(viewsCopy.get(i), i, out);
+            }
         }
 
         out.close();

@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.settings.BasisSettings;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 public final class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
-    private final Map<TextureDetails, Texture2D<ContextType>> managedTextures;
+    private final Map<TextureInfo, Texture2D<ContextType>> managedTextures;
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
@@ -140,21 +140,21 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         }
     }
 
-    private void addTexture(TextureDetails textureDetails, File priorSolutionDirectory) throws IOException
+    private void addTexture(TextureInfo textureInfo, File priorSolutionDirectory) throws IOException
     {
         // Load texture file
-        Texture2D<ContextType> texture = loadTexture(textureDetails.name, priorSolutionDirectory);
+        Texture2D<ContextType> texture = loadTexture(textureInfo.name, priorSolutionDirectory);
 
         if (texture != null)
         {
-            managedTextures.put(textureDetails, texture);
+            managedTextures.put(textureInfo, texture);
         }
     }
 
     @Override
-    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
-        Map<TextureDetails, Texture2D<ContextType>> mergedMaps =
+        Map<TextureInfo, Texture2D<ContextType>> mergedMaps =
             new HashMap<>(getSpecularTextureCount() + managedTextures.size() + albedoORMOptimization.getTextureCount());
         mergedMaps.putAll(getSpecularTextures());
         mergedMaps.putAll(managedTextures);

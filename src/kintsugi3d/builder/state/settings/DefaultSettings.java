@@ -63,7 +63,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
 
         // Cache cleaning options
-        settingsModel.createBooleanSetting("sizePromptEnabled", false, true);
+        settingsModel.createBooleanSetting("sizePromptEnabled", true, true);
         settingsModel.createNumericSetting("cacheSizeLimit", 32.0f, true);
         settingsModel.createBooleanSetting("recentPromptEnabled", true, true);
         settingsModel.createNumericSetting("recentProjectLimit", 20, true);

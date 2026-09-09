@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -92,7 +92,13 @@ public class RecentLogMessageAppender extends AbstractAppender
                 {
                     synchronized (messages)
                     {
-                        messages.remove(0, MESSAGE_TRUNC_SIZE);
+                        // Make sure there is still something to remove.
+                        // (If multiple messages came in between JavaFX frames they may have all triggered this
+                        // but there might not be that many messages to remove.)
+                        if (messages.size() >= MAX_MESSAGES)
+                        {
+                            messages.remove(0, MESSAGE_TRUNC_SIZE);
+                        }
                     }
                 });
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,17 +21,21 @@ public interface LoadOptionsModel extends ReadonlyLoadOptionsModel
     void setColorImagesRequested(boolean colorImagesRequested);
     void setMipmapsRequested(boolean mipmapsRequested);
     void setCompressionRequested(boolean compressionRequested);
+    void setAlphaRequested(boolean alphaRequested);
     void setMaxLoadingThreads(int maxLoadingThreads);
     void setDepthImagesRequested(boolean depthImagesRequested);
     void setDepthImageWidth(int depthImageWidth);
     void setDepthImageHeight(int depthImageHeight);
     void setPreviewImageHeight(int previewImageHeight);
     void setPreviewImageWidth(int previewImageWidth);
+
     default void copyFrom(ReadonlyLoadOptionsModel otherModel)
     {
         setColorImagesRequested(otherModel.areColorImagesRequested());
         setMipmapsRequested(otherModel.areMipmapsRequested());
         setCompressionRequested(otherModel.isCompressionRequested());
+        setAlphaRequested(otherModel.isAlphaRequested());
+        setMaxLoadingThreads(otherModel.getMaxLoadingThreads());
         setDepthImagesRequested(otherModel.areDepthImagesRequested());
         setDepthImageWidth(otherModel.getDepthImageWidth());
         setDepthImageHeight(otherModel.getDepthImageHeight());

@@ -60,18 +60,22 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         cameraViewListModel = new SynchronizedCameraViewListModel(JavaFXState.getInstance().getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(JavaFXState.getInstance().getProjectModel());
         settingsModel = new SynchronizedGeneralSettingsModel(JavaFXState.getInstance().getSettingsModel());
-        loadOptionsModel = JavaFXState.getInstance().getLoadOptionsModel();
+        loadOptionsModel = new SynchronizedLoadOptionsModel(JavaFXState.getInstance().getLoadOptionsModel());
         tabsModel = new SynchronizedTabsModel(JavaFXState.getInstance().getTabModels());
         carouselModel = new SynchronizedCarouselModel(JavaFXState.getInstance().getCarouselModel());
+
+        // All methods are either read-only or inherently asynchronous, so no multithread wrapping needed.
+        // (This might not be 100% true with Java's memory model but it wouldn't be improved with the
+        // "SynchronizedValue" framework which only ensures that writes happen on the JavaFX thread.
+        // If more than that is needed, than we probably need to rework the synchronization for all models.
+        // In practice, this hasn't proven to be necessary.)
+        cacheModel = JavaFXState.getInstance().getCacheModel();
 
         sceneViewportModel = new SceneViewportModelImpl();
         mainCanvasModel = new CanvasModelImpl();
         canvasListModel = new CanvasListModelImpl();
         ioModel = new IOModel();
         ioModel.setImageLoadOptionsModel(loadOptionsModel);
-
-        // all methods are either read-only or inherently asynchronous, so no multithread wrapping needed
-        cacheModel = JavaFXState.getInstance().getCacheModel();
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,29 +22,42 @@ import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public interface Kintsugi3DBuilderState
 {
+    // Models related to presentation within Kintsugi 3D Builder
     ReadonlyViewpointModel getCameraModel();
     ReadonlyLightingEnvironmentModel getLightingModel();
     ReadonlyObjectPoseModel getObjectModel();
     UserShaderModel getUserShaderModel();
 
+    // Mainly for light calibration?
     CameraViewListModel getCameraViewListModel();
+
+    // Cards and tabs
     TabsModel getTabModels();
 
+    // Global settings
     /**
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
      * @return
      */
     GeneralSettingsModel getSettingsModel();
 
+    // Settings that must be applied prior to load
+    LoadOptionsModel getLoadOptionsModel();
+
+    // Project cache info and access
+    CacheModel getCacheModel();
+
+    // Main view and carousel
     CanvasModel getMainCanvasModel();
     CanvasListModel getCanvasListModel();
-
-    SceneViewportModel getSceneViewportModel();
-    LoadOptionsModel getLoadOptionsModel();
-    IOModel getIOModel();
-
-    ProjectModel getProjectModel();
     CarouselModel getCarouselModel();
 
-    CacheModel getCacheModel();
+    // Global access to 3D view
+    SceneViewportModel getSceneViewportModel();
+
+    // Load / save / export of project elements -- not intended for frontend display
+    IOModel getIOModel();
+
+    // Global project state and other miscellaneous properties that are available for frontend display.
+    ProjectModel getProjectModel();
 }

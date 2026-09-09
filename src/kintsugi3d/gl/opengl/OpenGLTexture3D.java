@@ -11,8 +11,6 @@
 
 package kintsugi3d.gl.opengl;
 
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.base.ColorTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthStencilTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthTextureBuilderBase;

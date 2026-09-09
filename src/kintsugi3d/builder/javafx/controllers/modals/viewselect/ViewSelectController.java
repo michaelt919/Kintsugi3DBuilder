@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -19,25 +19,34 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.io.primaryview.View;
+import kintsugi3d.builder.io.primaryview.PrimaryViewCandidate;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
-import kintsugi3d.builder.javafx.util.ImageThreadable;
 import kintsugi3d.builder.javafx.util.ScrollBarHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class ViewSelectController extends DataReceiverPageControllerBase<ViewSelectable> implements ImageThreadable
+public abstract class ViewSelectController extends DataReceiverPageControllerBase<ViewSelectable>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ViewSelectController.class);
+
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
     private static final int THUMBNAIL_SIZE = 30;
     private static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
+
+    private final ImageSelectionCache cache = new ImageSelectionCache();
+
+    private ImageSelectionLoadManager loadManager;
 
     @FXML private TreeView<String> chunkTreeView;
     @FXML private ImageView primaryImgView;
@@ -50,8 +59,6 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
     private ViewSelectable newData;
     private ViewSelectable data;
-    private Map<String, Image> imageCache;
-    private ImageSelectionThread loadImgThread;
 
     protected abstract String getHintText();
 
@@ -73,7 +80,11 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public void initPage()
     {
-        this.imageCache = new HashMap<>(16);
+        loadManager = new ImageSelectionLoadManager(
+            imageName -> new ImageSelectionLoader(
+                imageName,
+                new ImageSelectionPreview(primaryImgView, imgViewText, cache),
+                getData().getViewSelectionModel()));
 
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
@@ -152,21 +163,21 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         TreeItem<String> rootItem = new TreeItem<>(viewSelectionModel.getName());
         searchableTreeView.getTreeView().setRoot(rootItem);
 
-        List<View> views = viewSelectionModel.getViews();
+        List<PrimaryViewCandidate> primaryViewCandidates = viewSelectionModel.getViews();
 
         if (canSelectNullView())
         {
             rootItem.getChildren().add(NONE_ITEM);
         }
 
-        for (View view : views)
+        for (PrimaryViewCandidate primaryViewCandidate : primaryViewCandidates)
         {
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
             //unless that group already exists, then add the camera to the already created group
 
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-            if (view.group != null)
+            if (primaryViewCandidate.group != null)
             {
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
@@ -174,7 +185,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
                 rootChildren.forEach(item ->
                 {
-                    if (item.getValue().equals(view.group))
+                    if (item.getValue().equals(primaryViewCandidate.group))
                     {
                         groupAlreadyCreated.set(true);
                         matchingItem.set(item);
@@ -188,7 +199,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
                 }
                 else
                 {//group has not been created yet
-                    TreeItem<String> newGroup = new TreeItem<>(view.group);
+                    TreeItem<String> newGroup = new TreeItem<>(primaryViewCandidate.group);
                     rootItem.getChildren().add(newGroup);
                     destinationItem = newGroup;
                 }
@@ -201,7 +212,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnailMap(), view);
+            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnailMap(), primaryViewCandidate);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -209,16 +220,16 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, View view)
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, PrimaryViewCandidate primaryViewCandidate)
     {
         ImageView thumbnailImgView;
-        Image img = thumbnailImgMap.get(view.id);
+        Image img = thumbnailImgMap.get(primaryViewCandidate.id);
         thumbnailImgView = new ImageView(Objects.requireNonNullElseGet(img, // null if thumbnail not found in thumbnailImgMap
             () -> new Image(new File("question-mark.png").toURI().toString())));
         thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
-        return new TreeItem<>(view.name, thumbnailImgView);
+        return new TreeItem<>(primaryViewCandidate.name, thumbnailImgView);
     }
 
     @FXML
@@ -244,11 +255,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
         if (selectedItem.getValue() != null)
         {
-            //if loadImgThread is running, kill it and start a new one
-            if (loadImgThread != null && loadImgThread.isActive())
-            {
-                loadImgThread.stopThread();
-            }
+            loadManager.cancelLoad();
 
             if (selectedItem.equals(NONE_ITEM))
             {
@@ -265,7 +272,6 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
                 // Remove any image currently in the thumbnail viewer
                 primaryImgView.setImage(null);
-                return;
             }
             else
             {
@@ -274,28 +280,26 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
 
                 // Set confirm button text
                 setAdvanceLabelOverride(null);
+
+                String imageName = selectedItem.getValue();
+                imgViewText.setText(String.format("%s (preview)", imageName));
+
+                // Set thumbnail as main image, then update to full resolution later
+                // Don't set thumbnail if img is cached, otherwise would cause a flash
+                if (!cache.contains(imageName))
+                {
+                    setThumbnailAsFullImage(selectedItem);
+                }
+
+                // Try to load the full resolution image.
+                loadManager.loadImage(imageName);
             }
-
-            String imageName = selectedItem.getValue();
-            imgViewText.setText(String.format("%s (preview)", imageName));
-
-            //set thumbnail as main image, then update to full resolution later
-            //don't set thumbnail if img is cached, otherwise would cause a flash
-            if (!imageCache.containsKey(imageName))
-            {
-                setThumbnailAsFullImage(selectedItem);
-            }
-
-            loadImgThread = new ImageSelectionThread(imageName, this, getData().getViewSelectionModel());
-            Thread myThread = new Thread(loadImgThread);
-            myThread.start();
         }
     }
 
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem)
     {
-        //use thumbnail as main image
-        //used if image is not found, or if larger resolution image is being loaded
+        // Use thumbnail as main image if image is not found, or if larger resolution image is being loaded
         ImageView imageView = (ImageView) selectedItem.getGraphic();
         primaryImgView.setImage(imageView.getImage());
     }
@@ -319,35 +323,11 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         primaryImgView.setRotate(rotation % 360);
     }
 
-    @Override
-    public ImageView getImageView()
-    {
-        return primaryImgView;
-    }
-
-    @Override
-    public String getImageViewText()
-    {
-        return imgViewText.getText();
-    }
-
-    @Override
-    public void setImageViewText(String txt)
-    {
-        imgViewText.setText(txt);
-    }
-
-    @Override
-    public Map<String, Image> getImageCache()
-    {
-        return imageCache;
-    }
-
     protected String getSelectedViewName()
     {
         TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
 
-        if (!Objects.equals(selection, NONE_ITEM))
+        if (selection != null && !Objects.equals(selection, NONE_ITEM))
         {
             return selection.getValue();
         }

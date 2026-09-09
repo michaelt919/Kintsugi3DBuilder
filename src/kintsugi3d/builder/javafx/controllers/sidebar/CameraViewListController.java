@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,15 +15,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.javafx.internal.ObservableCameraViewListModel;
 
 public class CameraViewListController
 {
     @FXML private TextField searchTxtField;
-    @FXML private ListView<String> cameraViewList;
+    @FXML private ListView<View> cameraViewList;
     @FXML private CheckBox snapToView;
 
-    private SearchableListView searchableListView;
+    private SearchableListView<View> searchableListView;
 
     public void init(ObservableCameraViewListModel cameraViewListModel)
     {

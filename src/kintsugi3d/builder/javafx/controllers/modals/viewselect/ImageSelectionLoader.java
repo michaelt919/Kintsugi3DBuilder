@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,7 +16,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
-import kintsugi3d.builder.javafx.util.ImageThreadable;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
@@ -26,21 +25,20 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Map;
 
-class ImageSelectionThread implements Runnable
+class ImageSelectionLoader implements Runnable
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ImageSelectionThread.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageSelectionLoader.class);
     private final String imageName;
     private final ViewSelectionModel model;
-    private final ImageThreadable imageThreadable;
+    private final ImageSelectionPreview preview;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
-    ImageSelectionThread(String imageName, ImageThreadable imgThreadable, ViewSelectionModel model)
+    ImageSelectionLoader(String imageName, ImageSelectionPreview preview, ViewSelectionModel model)
     {
         this.imageName = imageName;
-        this.imageThreadable = imgThreadable;
+        this.preview = preview;
         this.model = model;
     }
 
@@ -48,7 +46,19 @@ class ImageSelectionThread implements Runnable
     public void run()
     {
         isRunning = true;
-        loadFullResImg(imageName);
+        if (!stopRequested)
+        {
+            try
+            {
+                loadFullResImg();
+            }
+            catch (FileNotFoundException|RuntimeException e)
+            {
+                preview.setImageViewText(
+                    String.format("%s (full res image not found)", preview.getImageViewText()));
+                return;
+            }
+        }
         isRunning = false;
     }
 
@@ -62,33 +72,16 @@ class ImageSelectionThread implements Runnable
         stopRequested = true;
     }
 
-    private void loadFullResImg(String imageName)
+    private void loadFullResImg() throws FileNotFoundException
     {
-        ImageView imgView = imageThreadable.getImageView();
-        Map<String, Image> imgCache = imageThreadable.getImageCache();
-
-        Image image = null; //use cached img if possible
-        if (imgCache.containsKey(imageName))
-        {
-            image = imgCache.get(imageName);
-        }
-        else
+        ImageView imgView = preview.getImageView();
+        Image image = preview.retrieveFromCache(imageName); //use cached img if possible
+        if (image == null)
         {
             try
             {
                 String path = model.findFullResImagePath(imageName).orElse("");
-
-                File imgFile;
-                try
-                {
-                    imgFile = ImageFinder.getInstance().findImageFile(new File(path));
-                }
-                catch (FileNotFoundException ignored)
-                {
-                    imageThreadable.setImageViewText(imageThreadable.getImageViewText() +
-                        " (full res image not found)");
-                    return;
-                }
+                File imgFile = ImageFinder.getInstance().findImageFile(new File(path));
 
                 if (stopRequested)
                 {
@@ -105,27 +98,16 @@ class ImageSelectionThread implements Runnable
 
                 image = SwingFXUtils.toFXImage(bufferedImage, null);
 
-                if (stopRequested)
-                {
-                    return;
-                }
-
-                imgCache.put(imageName, image);
-            }
-            catch (IllegalArgumentException e)
-            {
-                // could not find image
-                imageThreadable.setImageViewText(
-                    imageThreadable.getImageViewText() + " (full res image not found)");
-                LOG.warn("Could not find full res image", e);
+                // Even if stop requested, at this point we should still put the image in the cache as it might be needed later.
+                preview.addToCache(imageName, image);
             }
             catch (IOException e)
             {
                 LOG.warn("Failed to read image", e);
             }
-            catch (Exception e)
+            catch (RuntimeException e)
             {
-                LOG.warn("Image selection thread failed to find " + imageName, e);
+                LOG.warn("Image selection thread failed to find {}", imageName, e);
             }
         }
 
@@ -134,8 +116,14 @@ class ImageSelectionThread implements Runnable
         {
             Platform.runLater(() ->
             {
-                imgView.setImage(finalImage);
-                imageThreadable.setImageViewText(imageName);
+                // Need to check for stopRequested one more time.
+                // Since this runs on the JavaFX thread, we shouldn't have race conditions with another image load starting
+                // (since that also runs on the JavaFX thread initially).
+                if (!stopRequested)
+                {
+                    imgView.setImage(finalImage);
+                    preview.setImageViewText(imageName);
+                }
             });
         }
     }
