@@ -11,8 +11,9 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.texture.NamedTextureInfo;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.Context;
@@ -25,7 +26,7 @@ import java.util.Map;
 public class SimpleTextureResources<ContextType extends Context<ContextType>>
     extends TextureResourcesBase<ContextType>
 {
-    private final Map<TextureDetails, Texture2D<ContextType>> textures = new HashMap<>(StandardTexture.values().length);
+    private final Map<TextureInfo, Texture2D<ContextType>> textures = new HashMap<>(StandardTexture.values().length);
     private BasisResources<ContextType> basisResources;
     private BasisWeightResources<ContextType> basisWeightResources;
 
@@ -60,19 +61,19 @@ public class SimpleTextureResources<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
         return Collections.unmodifiableMap(textures);
     }
 
     public void setTexture(String texName, Texture2D<ContextType> texture)
     {
-        textures.put(new TextureDetails(texName), texture);
+        textures.put(new NamedTextureInfo(texName), texture);
     }
 
-    public void setTexture(TextureDetails textureDetails, Texture2D<ContextType> texture)
+    public void setTexture(TextureInfo textureInfo, Texture2D<ContextType> texture)
     {
-        textures.put(textureDetails, texture);
+        textures.put(textureInfo, texture);
     }
 
     public void setTexture(StandardTexture standardTex, Texture2D<ContextType> texture)

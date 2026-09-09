@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
@@ -32,7 +32,7 @@ import kintsugi3d.builder.state.cards.ProjectDataCard;
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.UUID;
 
 public class CardController
@@ -50,19 +50,55 @@ public class CardController
     @FXML private VBox buttonBox;
 
     private UUID cardId;
-    private ObservableCardsModel cardsModel;
-    private Image preview;
+    private ObservableCardsModel<?> cardsModel;
 
-    public void init(ObservableCardsModel cardsModel, ProjectDataCard dataCard)
+    private final ObjectProperty<Image> previewImage = new SimpleObjectProperty<>(MainApplication.getIcon());
+    private File currentPreviewImageFile;
+    private File loadedPreviewImageFile;
+
+    public void init(ObservableCardsModel<?> cardsModel, ProjectDataCard dataCard)
     {
         this.cardsModel = cardsModel;
-        this.cardId = dataCard.getCardId();
         this.setCardVisibility(false);
+
+        cardIcon.imageProperty().bind(previewImage);
+        mainImage.imageProperty().bind(previewImage);
+        mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
+
+        // Load the image for each card when it becomes visible.
+        dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->
+        {
+            if (newVal)
+            {
+                loadPreviewImage();
+            }
+        });
+
+        refresh(dataCard);
+    }
+
+    private void loadPreviewImage()
+    {
+        if (currentPreviewImageFile.exists() && !Objects.equals(loadedPreviewImageFile, currentPreviewImageFile))
+        {
+            previewImage.set(new Image(currentPreviewImageFile.toURI().toString()));
+            loadedPreviewImageFile = currentPreviewImageFile;
+        }
+    }
+
+    public void refresh(ProjectDataCard dataCard)
+    {
+        this.cardId = dataCard.getCardId();
 
         if (dataCard.isDisabled())
         {
             dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
             cardTitle.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
+        }
+        else
+        {
+            dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), false);
+            cardTitle.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), false);
         }
 
         cardTitle.setText(dataCard.getTitle());
@@ -79,19 +115,14 @@ public class CardController
 
         cardBody.visibleProperty().bind(expanded);
         cardBody.managedProperty().bind(expanded);
-        selected.addListener((observable, oldValue, newValue) ->
-        {
-            if (newValue)
-            {
-                borderBox.setStyle("-fx-border-color: black; -fx-border-width: 2px;");
-                dataCardPane.setStyle("-fx-padding: 2px;");
-            }
-            else
-            {
-                borderBox.setStyle("");
-                dataCardPane.setStyle("-fx-padding: 4px");
-            }
-        });
+
+        // Style when selected
+        borderBox.styleProperty().bind(Bindings.when(selected)
+            .then("-fx-border-color: black; -fx-border-width: 2px;")
+            .otherwise(""));
+        dataCardPane.styleProperty().bind(Bindings.when(selected)
+            .then("-fx-padding: 2px;")
+            .otherwise("-fx-padding: 4px"));
 
         textContent.getChildren().clear();
         dataCard.getTextContent().forEach((key, value) ->
@@ -115,74 +146,20 @@ public class CardController
             VBox.setMargin(caption, new Insets(0, 0, 8, 4));
         });
 
-        buttonBox.getChildren().clear();
-        dataCard.getActions().forEach(group ->
+        ActionButtonFactory.createActionButtons(dataCard.getActions(), buttonBox,
+            "card-button", "card-separator");
+
+        currentPreviewImageFile = new File(dataCard.getImagePath());
+
+        // Invalidate any previously loaded image file in case the refresh was requested to display a file modification on disk.
+        loadedPreviewImageFile = null;
+
+        // If the card was already visible, load its preview image right away; otherwise wait for lazy loading.
+        if (dataCardPane.isVisible())
         {
-            Separator separator = new Separator();
-            separator.setPrefWidth(200.0);
-            separator.getStyleClass().add("card-separator");
-            separator.setPadding(new Insets(16.0, 8.0, 16, 8.0)); // Top, Right, Bottom, Left
-            buttonBox.getChildren().add(separator);
-            group.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry ->
-            {
-                HBox hBox = new HBox();
-                hBox.setAlignment(Pos.TOP_CENTER);
-
-//                // Button Icon
-//                ImageView imageView = new ImageView(MainApplication.getInstance().getIcon());
-//                imageView.setFitHeight(16.0);
-//                imageView.setFitWidth(16.0);
-//                imageView.setPickOnBounds(true);
-//                imageView.setPreserveRatio(true);
-
-                // Button
-                Button button = new Button(entry.getKey());
-                button.setGraphicTextGap(8.0);
-                button.setMnemonicParsing(false);
-                button.getStyleClass().add("card-button");
-                button.getStyleClass().add("wireframeBodyStrong");
-                button.getStylesheets().add("file:./kintsugiStyling.css");
-                button.setOnAction(event -> {
-
-                    /*If uncommented will make it so after a button is clicked
-                      boarder will remain to show it is selected*/
-                    //button.getStyleClass().add("activated");
-                    entry.getValue().run();
-                });
-
-                HBox.setMargin(button, new Insets(0, 0, 8, 0));
-                hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
-                hBox.getChildren().add(button);
-
-                buttonBox.getChildren().add(hBox);
-            });
-        });
-
-        // Load the image for each card when it becomes visible.
-        dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->
-        {
-            File imageFile = new File(dataCard.getImagePath());
-            if (preview == null)
-            {
-                if (newVal && imageFile.exists())
-                {
-                    preview = new Image(imageFile.toURI().toString());
-                    cardIcon.setImage(preview);
-                    mainImage.setImage(preview);
-                }
-                else
-                {
-                    cardIcon.setImage(MainApplication.getIcon());
-                    mainImage.setImage(MainApplication.getIcon());
-                }
-            }
-            else
-            {
-                cardIcon.setImage(preview);
-                mainImage.setImage(preview);
-            }
-        });
-        mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
+            // Defer loading the new image until next tick so that it doesn't slow down a bulk refresh (like enable/disable all)
+            Platform.runLater(this::loadPreviewImage);
+        }
     }
 
     public void setCardVisibility(boolean visibility)

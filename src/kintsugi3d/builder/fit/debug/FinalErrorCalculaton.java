@@ -11,7 +11,8 @@
 
 package kintsugi3d.builder.fit.debug;
 
-import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
@@ -29,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.FloatBuffer;
+import java.util.Collection;
 import java.util.stream.IntStream;
 
 /**
@@ -100,7 +102,7 @@ public final class FinalErrorCalculaton
                 LOG.info("Normal map ground truth RMSE: {}", rmse);
 
                 // Print out RMSE for normal map ground truth
-                rmseOut.println("Normal map ground truth RMSE: " + rmse);
+                rmseOut.printf("Normal map ground truth RMSE: %s%n", rmse);
             }
             catch (IOException e)
             {
@@ -119,12 +121,12 @@ public final class FinalErrorCalculaton
         {
             // Calculate linear RMSE using basis diffuse
             basisErrorCalculator.update();
-            rmseOut.println("RMSE using basis diffuse (linear): " + basisErrorCalculator.getReport().getError());
+            rmseOut.printf("RMSE using basis diffuse (linear): %s%n", basisErrorCalculator.getReport().getError());
 
             // Calculate sRGB RMSE using basis diffuse
             basisErrorCalculator.getProgram().setUniform("sRGB", true);
             basisErrorCalculator.update();
-            rmseOut.println("RMSE using basis diffuse (sRGB): " + basisErrorCalculator.getReport().getError());
+            rmseOut.printf("RMSE using basis diffuse (sRGB): %s%n", basisErrorCalculator.getReport().getError());
 
             // Setup drawable that uses the final diffuse texture (not limited to basis colors)
             specularFit.setupShaderProgram(finalErrorCalcProgram);
@@ -133,12 +135,15 @@ public final class FinalErrorCalculaton
             // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
             ReadableFramebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
 
-            rmseOut.println("Final RMSE with final diffuse estimate (linear): " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
+            // getViews makes a copy, so save it for efficiency.
+            Collection<View> views = resources.getViewSet().getEnabledViews();
+
+            rmseOut.printf("Final RMSE with final diffuse estimate (linear): %s%n",
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, views));
 
             finalErrorCalcProgram.setUniform("sRGB", true);
-            rmseOut.println("Final RMSE with final diffuse estimate (sRGB): " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
+            rmseOut.printf("Final RMSE with final diffuse estimate (sRGB): %s%n",
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, views));
 
             // Calculate error using the GGX fit rather than the basis functions.
             calculateGGXRMSE(resources, programFactory, specularFit, scratchFramebuffer, rmseOut);
@@ -170,12 +175,15 @@ public final class FinalErrorCalculaton
             specularFit.setupShaderProgram(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setUniform("sRGB", false);
 
-            rmseOut.println("RMSE for GGX fit (linear): " +
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
+            // getViews makes a copy, so save it for efficiency.
+            Collection<View> views = resources.getViewSet().getEnabledViews();
+
+            rmseOut.printf("RMSE for GGX fit (linear): %s%n",
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, views));
 
             ggxErrorCalcProgram.setUniform("sRGB", true);
-            rmseOut.println("RMSE for GGX fit (sRGB): " +
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCombinedCameraPoseCount()));
+            rmseOut.printf("RMSE for GGX fit (sRGB): %s%n",
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, views));
         }
     }
 
@@ -192,16 +200,16 @@ public final class FinalErrorCalculaton
     }
 
     private static <ContextType extends Context<ContextType>>
-    double runFinalErrorCalculation(Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int viewCount)
+    double runFinalErrorCalculation(Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, Iterable<View> views)
     {
         WeightedError errorTotal = new WeightedError(0, 0);
 
         FramebufferSize size = framebuffer.getSizeForRead();
         FloatBuffer pixelErrors = BufferUtils.createFloatBuffer(size.width * size.height * 4);
 
-        for (int k = 0; k < viewCount; k++)
+        for (View view : views)
         {
-            drawable.program().setUniform("viewIndex", k);
+            drawable.program().setUniform("viewIndex", view.getGPUViewIndex());
 
             // Clear framebuffer
             framebuffer.clearDepthBuffer();

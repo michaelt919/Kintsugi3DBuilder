@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -9,16 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.util;
+package kintsugi3d.builder.core.metrics;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+public interface ReadonlyViewRMSE
+{
+    ReadonlyColorAppearanceRMSE usingBasisWeights();
 
-import java.util.Map;
+    ReadonlyColorAppearanceRMSE usingReflectivity();
 
-public interface ImageThreadable {
-    ImageView getImageView();
-    String getImageViewText();
-    void setImageViewText(String txt);
-    Map<String, Image> getImageCache();
+    ReadonlyColorAppearanceRMSE usingMetallicity();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class ImageHelper
+public final class ImageHelper
 {
     public static final String ERROR_UNSUPPORTED_IMAGE_FORMAT = "Error: Unsupported image format.";
 
@@ -49,7 +49,7 @@ public class ImageHelper
         InputStream input = new FileInputStream(file);
         try (ImageInputStream iis = ImageIO.createImageInputStream(input))
         {
-            final Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
             if (readers.hasNext())
             {
                 ImageReader reader = readers.next();
@@ -233,6 +233,7 @@ public class ImageHelper
                 null));
     }
 
+    @SuppressWarnings("UseOfSunClasses")
     private ImageHelper convertedICCToSRGB()
     {
         if (image == null || !(image.getColorModel().getColorSpace() instanceof ICC_ColorSpace))
@@ -242,7 +243,6 @@ public class ImageHelper
         else
         {
             // Copied from ICC_ColorSpace::toRGB
-            ColorTransform[] transformList = new ColorTransform[2];
             ICC_ColorSpace srgbCS = (ICC_ColorSpace) ColorSpace.getInstance(ColorSpace.CS_sRGB);
             PCMM mdl = CMSManager.getModule();
             ICC_ColorSpace colorSpace = (ICC_ColorSpace) image.getColorModel().getColorSpace();
@@ -255,6 +255,7 @@ public class ImageHelper
             }
             else
             {
+                ColorTransform[] transformList = new ColorTransform[2];
                 transformList[0] = mdl.createTransform(
                     colorSpace.getProfile(), ColorTransform.Any, ColorTransform.In);
                 transformList[1] = mdl.createTransform(

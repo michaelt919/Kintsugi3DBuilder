@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -19,7 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
-public class GlobalUserPreferencesManager
+public final class GlobalUserPreferencesManager
 {
     private static final GlobalUserPreferencesManager INSTANCE = new GlobalUserPreferencesManager();
     private final UserPreferencesSerializer serializer = new JacksonUserPreferencesSerializer();
@@ -37,7 +37,9 @@ public class GlobalUserPreferencesManager
     public UserPreferencesModel getPreferences()
     {
         if (!modelLoaded)
+        {
             rollback();
+        }
 
         return preferencesModel;
     }

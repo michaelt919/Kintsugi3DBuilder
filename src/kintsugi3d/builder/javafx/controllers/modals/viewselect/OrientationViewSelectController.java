@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 
 /**
@@ -43,11 +43,11 @@ public class OrientationViewSelectController extends ViewSelectController
         {
             if (getData().getViewSelection() == null)
             {
-                currentViewSet.setOrientationViewIndex(-1);
+                currentViewSet.setOrientationView(null);
             }
             else
             {
-                currentViewSet.setOrientationView(getData().getViewSelection());
+                currentViewSet.setOrientationViewByName(getData().getViewSelection());
             }
 
             currentViewSet.setOrientationViewRotationDegrees(getData().getViewRotation());

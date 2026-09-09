@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,12 @@
 
 package kintsugi3d.builder.test;
 
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -69,9 +73,9 @@ class ImageReconstructionTests
     private ViewSet potatoViewSetTonemapped;
     private OpenGLContext context;
     private VertexGeometry potatoGeometry;
-    private BiConsumer<ColorAppearanceRMSE, Float> validationLinear;
-    private BiConsumer<ColorAppearanceRMSE, Float> validationSRGB;
-    private BiConsumer<ColorAppearanceRMSE, Float> validationEncoded;
+    private BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationLinear;
+    private BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationSRGB;
+    private BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationEncoded;
     private Consumer<Program<OpenGLContext>> setupColor;
     private Consumer<Program<OpenGLContext>> setupMetallic;
 
@@ -237,11 +241,11 @@ class ImageReconstructionTests
                 File outputDirectory = new File(TEST_OUTPUT_DIR, groundTruthName);
                 outputDirectory.mkdirs();
 
-                for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
+                for (View view : viewSet.getViews())
                 {
-                    renderGroundTruth(viewSet, i, groundTruthDrawable, groundTruthFBO);
+                    renderGroundTruth(view, groundTruthDrawable, groundTruthFBO);
                     groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                        new File(outputDirectory, MessageFormat.format("{0,number,0000}.png", i)));
+                        new File(outputDirectory, MessageFormat.format("{0,number,0000}.png", view.getGPUViewIndex())));
                 }
             }
         }
@@ -840,7 +844,7 @@ class ImageReconstructionTests
         ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
-        BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale,
+        BiConsumer<ReadonlyColorAppearanceRMSE, Float> validationByNoiseScale,
         String testName)  throws IOException
     {
         float[] noiseScaleTests = { 0.0f, 0.1f, 0.25f, 0.5f, 1.0f };
@@ -865,7 +869,7 @@ class ImageReconstructionTests
         ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, GraphicsResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
-        Consumer<ColorAppearanceRMSE> validation,
+        Consumer<ReadonlyColorAppearanceRMSE> validation,
         String testName) throws IOException
     {
         SimpleGeneralSettingsModel globalSettings = new SimpleGeneralSettingsModel();
@@ -897,7 +901,7 @@ class ImageReconstructionTests
                         .addDepthAttachment(),
                     ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
                     resources,
-                    viewIndex -> renderGroundTruth(viewSet, viewIndex, groundTruthDrawable, groundTruthFBO));
+                    view -> renderGroundTruth(view, groundTruthDrawable, groundTruthFBO));
                 ProgramObject<OpenGLContext> syntheticWithNoise = testProgramCreator.apply(programFactory, resources);
                 Drawable<OpenGLContext> drawable = resources.createDrawable(syntheticWithNoise))
             {
@@ -909,15 +913,15 @@ class ImageReconstructionTests
                 for (ReconstructionView<OpenGLContext> view : reconstruction)
                 {
                     // Pass light intensity for noise generation methods that depend on it.
-                    syntheticWithNoise.setUniform("reconstructionLightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(view.getIndex())));
+                    syntheticWithNoise.setUniform("reconstructionLightIntensity", view.getView().getLightIntensity());
 
-                    ColorAppearanceRMSE rmse = view.reconstruct(drawable);
+                    ReadonlyColorAppearanceRMSE rmse = view.reconstruct(drawable);
 
                     if (SAVE_TEST_IMAGES)
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0)
                             .saveToFile("PNG", new File(outputDirectory,
-                                    MessageFormat.format("{0,number,0000}.png", view.getIndex())),
+                                    MessageFormat.format("{0,number,0000}.png", view.getView().getGPUViewIndex())),
                                 // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                 // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                                 (color, index) -> viewSet.getLuminanceEncoding().encode(
@@ -929,19 +933,16 @@ class ImageReconstructionTests
         }
     }
 
-    private static ColorArrayImage renderGroundTruth(ReadonlyViewSet viewSet, int viewIndex,
-        Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
+    private static ColorArrayImage renderGroundTruth(
+        View view, Drawable<OpenGLContext> groundTruthDrawable, ReadableFramebuffer<OpenGLContext> groundTruthFBO)
     {
-        groundTruthDrawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
-        groundTruthDrawable.program().setUniform("projection",
-            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
-                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+        groundTruthDrawable.program().setUniform("model_view", view.getCameraPose());
+        groundTruthDrawable.program().setUniform("projection", view.getProjectionMatrix());
         groundTruthDrawable.program().setUniform("reconstructionCameraPos",
-            viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
+            view.getCameraPoseInverse().getColumn(3).getXYZ());
         groundTruthDrawable.program().setUniform("reconstructionLightPos",
-            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
-        groundTruthDrawable.program().setUniform("reconstructionLightIntensity",
-            viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+            view.getCameraPoseInverse().times(view.getLightPosition().asPosition()).getXYZ());
+        groundTruthDrawable.program().setUniform("reconstructionLightIntensity", view.getLightIntensity());
 
         groundTruthFBO.clearColorBuffer(0, 0, 0, 0, 0);
         groundTruthFBO.clearDepthBuffer();
@@ -952,7 +953,7 @@ class ImageReconstructionTests
     }
 
     private void testFitSynthetic(ViewSet viewSet, Function<ProgramBuilder<OpenGLContext>, ProgramBuilder<OpenGLContext>> injectDefines,
-                                  Consumer<TextureResources<?>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
+                                  Consumer<TextureResources<?>> fitValidation, Consumer<ReadonlyColorAppearanceRMSE> rmseValidation, String testName)
     {
         try (GraphicsResources<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry)
         {
@@ -987,7 +988,7 @@ class ImageReconstructionTests
                             {
                                 view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
                                     new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
-                                        resources.getViewSet().getImageFileName(view.getIndex()), "png")),
+                                        view.getView().getImageFile().getName(), "png")),
                                     // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                     // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                                     (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(
@@ -1010,7 +1011,7 @@ class ImageReconstructionTests
     }
 
     private void testFitMetashape(String cameras, String geometry, String imageDirectory,
-        Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
+                                  Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
@@ -1032,7 +1033,7 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFitVSET(File viewSetFile, Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
+    private void testFitVSET(File viewSetFile, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
         LoadOptionsModel loadOptions = new ObservableLoadOptionsModel();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
@@ -1051,7 +1052,7 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
+    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         // TODO not yet tested
@@ -1077,7 +1078,7 @@ class ImageReconstructionTests
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
                             new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithExtension(
-                                resources.getViewSet().getImageFileName(view.getIndex()), "png")),
+                                view.getView().getImageFile().getName(), "png")),
                             // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                             // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                             (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,7 +28,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 {
     private final ContextType context;
 
-    Logger LOG = LoggerFactory.getLogger(TextureResources.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasisWeightResources.class);
 
     public Texture3D<ContextType> weightMaps;
     public final Texture2D<ContextType> weightMask;
@@ -133,7 +133,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         {
             // Load weight maps
             resources.weightMaps.loadLayer(b,
-                new File(priorSolutionDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")),
+                new File(priorSolutionDirectory, TextureResources.getUnpackedWeightMapFilename(b)),
                 true);
         }
 
@@ -176,7 +176,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     public void replaceWeightMapWithDefaultFile(int weightmapIndex, File parentDirectory) throws IOException
     {
         replaceWeightMapWithSpecificFile(weightmapIndex,
-            new File(parentDirectory, TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+            new File(parentDirectory, TextureResources.getUnpackedWeightMapFilename(weightmapIndex)));
     }
 
     /**

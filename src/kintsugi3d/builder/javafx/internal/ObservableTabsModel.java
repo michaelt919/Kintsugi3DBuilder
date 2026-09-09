@@ -16,28 +16,25 @@ import javafx.collections.ObservableMap;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ObservableTabsModel implements TabsModel
 {
-    private final ObservableMap<String, ObservableCardsModel> tabs;
+    private final ObservableMap<String, ObservableCardsModel<?>> tabs;
     private final ObservableCarouselModel carouselModel;
 
     public ObservableTabsModel(ObservableCarouselModel carouselModel)
     {
         this.carouselModel = carouselModel;
 
-        Map<String, ObservableCardsModel> cardsModels = new LinkedHashMap<>(4);
+        Map<String, ObservableCardsModel<?>> cardsModels = new LinkedHashMap<>(4);
         this.tabs = FXCollections.observableMap(cardsModels);
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
+    public <T> void addTab(String tabName, ProjectDataCardFactory<T> cardFactory, String path)
     {
-        ObservableCardsModel newTab = new ObservableCardsModel(tabName, path, cardFactory, carouselModel);
+        ObservableCardsModel<?> newTab = new ObservableCardsModel<>(tabName, path, cardFactory, carouselModel);
         newTab.initialize();
         tabs.put(tabName, newTab);
     }
@@ -52,23 +49,39 @@ public class ObservableTabsModel implements TabsModel
     }
 
     @Override
-    public ObservableCardsModel getTab(String label)
+    public ObservableCardsModel<?> getTab(String label)
     {
         return tabs.get(label);
     }
 
     @Override
-    public Map<String, ObservableCardsModel> getTabsMap()
+    public <T> ObservableCardsModel<T> getTab(String label, Class<T> dataClass)
+    {
+        ObservableCardsModel<?> observableCardsModel = tabs.get(label);
+
+        if (Objects.equals(observableCardsModel.getDataClass(), dataClass))
+        {
+            //noinspection unchecked
+            return (ObservableCardsModel<T>) observableCardsModel;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public Map<String, ObservableCardsModel<?>> getTabsMap()
     {
         return Collections.unmodifiableMap(tabs);
     }
 
-    public Collection<ObservableCardsModel> getAllTabs()
+    public Collection<ObservableCardsModel<?>> getAllTabs()
     {
         return Collections.unmodifiableCollection(tabs.values());
     }
 
-    public ObservableMap<String, ObservableCardsModel> getObservableTabsMap()
+    public ObservableMap<String, ObservableCardsModel<?>> getObservableTabsMap()
     {
         return tabs;
     }
