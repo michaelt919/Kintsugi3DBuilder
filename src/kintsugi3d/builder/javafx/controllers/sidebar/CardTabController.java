@@ -59,6 +59,7 @@ public class CardTabController
     @FXML private Label filePathLabel;
     @FXML private Label locationLabel;
     @FXML private HBox filePathHBox;
+    @FXML private VBox buttonBox;
 
     private double scrollPosition = 0;
     private String path;
@@ -66,11 +67,15 @@ public class CardTabController
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
 
-    private ObservableCardsModel cardsModel;
+    private ObservableCardsModel<?> cardsModel;
 
-    public void init(ObservableCardsModel cardsModel)
+    public void init(ObservableCardsModel<?> cardsModel)
     {
         this.cardsModel = cardsModel;
+
+        ActionButtonFactory.createActionButtons(cardsModel.getGlobalActions(), buttonBox,
+            "tab-button", "tab-separator");
+
         Collection<VBox> displayCards = new ArrayList<>(cardsModel.getCardList().size());
 
         try
@@ -110,6 +115,7 @@ public class CardTabController
                 filePathHBox.setManaged(false);
             }
         });
+
         /*
         creates double that has the total pixel space between middle of the window and
         the end of the window that is NOT covered by the buttons. Using that information
@@ -123,7 +129,8 @@ public class CardTabController
         filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
     }
 
-    public void initialize(){
+    public void initialize()
+    {
         scrollpane.heightProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
         scrollpane.widthProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
     }
@@ -180,7 +187,7 @@ public class CardTabController
     /**
      * Does not recreate the listener!!!
      */
-    public void refreshCardList()
+    public void reloadCardList()
     {
         try
         {
@@ -214,12 +221,12 @@ public class CardTabController
                         for (int i = change.getFrom(); i < change.getTo(); i++)
                         {
                             ProjectDataCard card = cardsModel.getCardList().get(i);
-                            cardControllers.set(i, createDataCard(card));
+                            cardControllers.get(i).refresh(card);
 
-                            // Leave card open if enabled.
-                            if (!card.isDisabled())
+                            // Collapse card if disabled.
+                            if (card.isDisabled())
                             {
-                                cardsModel.expandCard(card.getCardId());
+                                cardsModel.collapseCard(card.getCardId());
                             }
                         }
                     }
@@ -249,7 +256,7 @@ public class CardTabController
                 {
                     // Shouldn't really every happen if things are working properly, but as a fallback, try to refresh the whole list.
                     // (This will probably also fail if anything is failing, and will effectively empty the list which is better than inconsistent state.)
-                    refreshCardList();
+                    reloadCardList();
                 }
             }
             catch (IOException e)
@@ -257,7 +264,7 @@ public class CardTabController
                 cardLoadError(e);
 
                 // Again, this is a last-ditch effort to fix things but will probably just clear out the list.
-                refreshCardList();
+                reloadCardList();
             }
 
             updateSummary();

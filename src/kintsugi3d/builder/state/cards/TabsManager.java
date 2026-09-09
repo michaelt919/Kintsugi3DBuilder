@@ -13,12 +13,16 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.RenderableInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TabsManager
 {
+    private static final Logger LOG = LoggerFactory.getLogger(TabsManager.class);
+
     public static final String PHOTOS = "Photos";
     public static final String TEXTURES = "Textures";
     public static final String MATERIALS = "Materials";
@@ -28,7 +32,7 @@ public class TabsManager
 
     public TabsManager(RenderableInstance<?> instance)
     {
-        factories.add(new TabInfo(PHOTOS, new CameraCardFactory(instance.getViewSet()), null));
+        factories.add(new TabInfo(PHOTOS, new PhotoCardFactory(instance), null));
         factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),
             Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory().getPath()));
         factories.add(new TabInfo(MATERIALS, new MaterialCardFactory(instance),
@@ -53,8 +57,15 @@ public class TabsManager
         int index = 0;
         for (var tab : tabsModel.getTabsMap().entrySet())
         {
-            CardsModel cardsModel = tab.getValue();
-            cardsModel.setCardList(factories.get(index).getFactory().createAllCards(cardsModel));
+            try
+            {
+                CardsModel<?> cardsModel = tab.getValue();
+                cardsModel.setCardList(factories.get(index).getFactory().createAllCards());
+            }
+            catch (RuntimeException e)
+            {
+                LOG.error("Error initializing tab: {}", tab.getKey(), e);
+            }
             index += 1;
         }
     }
@@ -63,12 +74,12 @@ public class TabsManager
     {
         TabsModel tabsModel = Global.state().getTabModels();
 
-        CardsModel cardsModel = tabsModel.getTab(tabName);
+        CardsModel<?> cardsModel = tabsModel.getTab(tabName);
         for (var fac : factories)
         {
             if (fac.getLabel().equals(tabName))
             {
-                cardsModel.setCardList(fac.getFactory().createAllCards(cardsModel));
+                cardsModel.setCardList(fac.getFactory().createAllCards());
             }
         }
     }

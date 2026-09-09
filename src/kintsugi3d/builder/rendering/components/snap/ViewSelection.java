@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
-import kintsugi3d.builder.core.Projection;
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -20,36 +20,29 @@ public interface ViewSelection
 {
     ReadonlyViewSet getViewSet();
 
-    int getSelectedViewIndex();
+    View getSelectedView();
 
     /**
      * Gets the view matrix for a particular view index, relative to the world space used by rendered components.
      * This is not generally the same as the camera pose matrix in the view set as it is in reference to a
      * recentered, reoriented, and rescaled model.
-     * @param index
+     * @param view
      * @return
      */
-    Matrix4 getViewForIndex(int index);
+    Matrix4 getMatrixFromView(View view);
 
-    default Matrix4 getSelectedView()
+    default Matrix4 getSelectedMatrix()
     {
-        return getViewForIndex(getSelectedViewIndex());
-    }
+        View selectedView = getSelectedView();
 
-    default Matrix4 getSelectedCameraPose()
-    {
-        return getViewSet().getCameraPose(getSelectedViewIndex());
-    }
-
-    default Matrix4 getSelectedCameraPoseInverse()
-    {
-        return getViewSet().getCameraPoseInverse(getSelectedViewIndex());
-    }
-
-    default Projection getSelectedCameraProjection()
-    {
-        ReadonlyViewSet viewSet = getViewSet();
-        return viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(getSelectedViewIndex()));
+        if (selectedView != null)
+        {
+            return getMatrixFromView(selectedView);
+        }
+        else
+        {
+            return Matrix4.IDENTITY;
+        }
     }
 
     Vector3 getFrustumDimensions();

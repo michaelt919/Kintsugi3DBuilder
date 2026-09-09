@@ -73,7 +73,7 @@ public class SideBarController
 
         tabModels.getAllTabs().forEach(this::addTab);
 
-        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel>) change ->
+        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel<?>>) change ->
         {
             if (change.wasAdded())
             {
@@ -129,7 +129,7 @@ public class SideBarController
         }
     }
 
-    private void addTab(ObservableCardsModel model)
+    private void addTab(ObservableCardsModel<?> model)
     {
         RadioButton newButton = createButton(model.getModelLabel());
         VBox newTab = createTab(model);
@@ -173,7 +173,7 @@ public class SideBarController
         return button;
     }
 
-    private VBox createTab(ObservableCardsModel model)
+    private VBox createTab(ObservableCardsModel<?> model)
     {
         VBox newTab = null;
         FXMLLoader loader = new FXMLLoader();
@@ -406,7 +406,7 @@ public class SideBarController
 
     public void refreshTabs()
     {
-        tabControllers.forEach(CardTabController::refreshCardList);
+        tabControllers.forEach(CardTabController::reloadCardList);
     }
     public double getTabWidth() {return mainBox.getWidth();}
 }

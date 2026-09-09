@@ -18,7 +18,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
@@ -65,8 +65,7 @@ public class LightCalibrationController extends NonDataPageControllerBase
         // Set the "currentLightCalibration" to the existing calibration values in the view set.
         ViewSet loadedViewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
 
-        settingsModel.set("currentLightCalibration",
-            loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
+        settingsModel.set("currentLightCalibration", loadedViewSet.getPrimaryView().getLightPosition().getXY());
 
         // Enables light calibration mode when the window is opened.
         settingsModel.set("lightCalibrationMode", true);

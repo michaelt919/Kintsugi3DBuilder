@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -64,6 +64,12 @@ public class SimpleLoadOptionsModel implements LoadOptionsModel
     public void setCompressionRequested(boolean compressionRequested)
     {
         this.compressionRequested = compressionRequested;
+    }
+
+    @Override
+    public void setAlphaRequested(boolean alphaRequested)
+    {
+        this.alphaRequested = alphaRequested;
     }
 
     @Override

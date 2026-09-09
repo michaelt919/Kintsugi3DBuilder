@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,22 +14,24 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class PreviewImageGenerator
+public final class PreviewImageGenerator
 {
     private final ViewSet viewSet;
     private final ProgressMonitor progressMonitor;
 
     private final AtomicInteger finishedCount = new AtomicInteger(0);
     private final AtomicInteger failedCount = new AtomicInteger(0);
-    AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
+    private final AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
 
     static PreviewImageGenerator start(ViewSet viewSet)
     {
@@ -46,7 +48,7 @@ public class PreviewImageGenerator
         viewSet.getPreviewImageDirectory().mkdirs(); // Create preview directory
         new File(viewSet.getSupportingFilesDirectory(), "thumbnails").mkdirs(); // Create thumbnail directory
 
-        progressMonitor.setMaxProgress(viewSet.getCombinedCameraPoseCount());
+        progressMonitor.setMaxProgress(viewSet.getViewCount());
 
         return new PreviewImageGenerator(viewSet, progressMonitor);
     }
@@ -57,14 +59,15 @@ public class PreviewImageGenerator
         this.progressMonitor = progressMonitor;
     }
 
-    PreviewImages forView(int viewIndex)
+    PreviewImages forView(View view)
     {
-        return new PreviewImages(viewIndex, viewSet, progressMonitor, finishedCount, failedCount);
+        return new PreviewImages(view, progressMonitor, finishedCount, failedCount);
     }
 
-    int getViewCount()
+    Collection<View> getViews()
     {
-        return viewSet.getCombinedCameraPoseCount();
+        // Includes both enabled and disabled views, all of which will have preview images generated.
+        return viewSet.getViews();
     }
 
     void allowUserCancellation() throws UserCancellationException
@@ -83,7 +86,7 @@ public class PreviewImageGenerator
     void waitAndFinish() throws IOException, UserCancellationException
     {
         // Wait for all threads to finish
-        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getCombinedCameraPoseCount())
+        while (cancelled.get() == null && finishedCount.get() + failedCount.get() < viewSet.getViewCount())
         {
             Thread.onSpinWait();
         }

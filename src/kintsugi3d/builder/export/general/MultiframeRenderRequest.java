@@ -15,6 +15,7 @@ import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 
@@ -77,11 +78,13 @@ class MultiframeRenderRequest extends RenderRequestBase
 
                 program.setUniform("frame", i);
                 program.setUniform("frameCount", frameCount);
-                program.setUniform("model_view", renderable.getViewSet().getCameraPose(0));
-                program.setUniform("projection",
-                    renderable.getViewSet().getCameraProjectionForViewIndex(0)
-                        .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
-                            renderable.getViewSet().getRecommendedFarPlane()));
+
+                View repView = renderable.getViewSet().getRepresentativeView();
+                if (repView != null)
+                {
+                    program.setUniform("model_view", repView.getCameraPose());
+                    program.setUniform("projection", repView.getProjectionMatrix());
+                }
 
                 render(drawable, framebuffer);
 

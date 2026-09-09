@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,14 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.core.viewset.DistortionProjection;
+import kintsugi3d.builder.core.viewset.Projection;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
@@ -41,6 +47,7 @@ import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.function.BiConsumer;
 
 /**
@@ -99,7 +106,7 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
-        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ReadonlyColorAppearanceRMSE> reconstructionCallback)
         throws IOException
     {
         ViewSet viewSet = resources.getViewSet();
@@ -114,12 +121,12 @@ public class SpecularFitProcess
                 .addDepthAttachment(),
             ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
             resources,
-            viewIndex ->
+            view ->
             {
                 try
                 {
-                    Projection projection = resources.getViewSet().getCameraProjectionForViewIndex(viewIndex);
-                    ImageHelper image = viewSet.loadFullResMaskedImage(viewIndex);
+                    Projection projection = view.getCameraProjection();
+                    ImageHelper image = view.loadFullResMaskedImage();
 
                     if (projection instanceof DistortionProjection)
                     {
@@ -146,7 +153,7 @@ public class SpecularFitProcess
 
             for (ReconstructionView<ContextType> view : reconstruction)
             {
-                ColorAppearanceRMSE rmse = view.reconstruct(drawable);
+                ReadonlyColorAppearanceRMSE rmse = view.reconstruct(drawable);
                 reconstructionCallback.accept(view, rmse);
             }
         }
@@ -299,7 +306,7 @@ public class SpecularFitProcess
 
     private <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> optimizeFitWithCacheHelper(
         ImageCache<ContextType> cache, ProgressMonitor monitor, TextureResources<ContextType> reference,
-        MaterialBasis basis, Instant start) throws IOException, UserCancellationException
+        MaterialBasis basis, Temporal start) throws IOException, UserCancellationException
     {
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.

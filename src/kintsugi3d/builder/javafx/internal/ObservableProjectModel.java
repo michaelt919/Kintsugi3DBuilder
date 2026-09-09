@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -18,6 +18,9 @@ import javafx.beans.binding.StringExpression;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSettings;
 import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSettings;
@@ -237,6 +240,21 @@ public class ObservableProjectModel extends ProjectModelBase<
     public void setModelSize(Vector3 modelSize)
     {
         this.modelSize.set(modelSize);
+    }
+
+    @Override
+    public void confirm(String title, String header, String message, Runnable onConfirm)
+    {
+        // Temp solution -- will eventually create a custom modal.
+        Alert alert = new Alert(AlertType.CONFIRMATION, message);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        var result = alert.showAndWait();
+
+        if (result.isPresent() && result.get().equals(ButtonType.OK))
+        {
+            onConfirm.run();
+        }
     }
 
     public ObjectProperty<Vector3> getModelSizeProperty()

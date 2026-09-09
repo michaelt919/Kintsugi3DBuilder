@@ -11,7 +11,12 @@
 
 package kintsugi3d.builder.export.resample;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
@@ -51,10 +56,13 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
                 .createFramebufferObject()
         )
         {
-            if(monitor != null){
+            if(monitor != null)
+            {
                 monitor.setProcessName("Resample");
             }
-            for (int i = 0; i < targetViewSet.getCombinedCameraPoseCount(); i++)
+
+            int progressCount = 0;
+            for (View view : targetViewSet.getEnabledViews())
             {
                 if (monitor != null)
                 {
@@ -64,21 +72,22 @@ public class ResampleRequest implements ObservableProjectGraphicsRequest
                 framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
                 framebuffer.clearDepthBuffer();
 
-                renderable.draw(framebuffer, targetViewSet.getCameraPose(i),
-                    targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
-                        .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+                renderable.draw(framebuffer, view.getCameraPose(), view.getProjectionMatrix());
 
                 File exportFile = new File(resampleExportPath,
-                    ImageFinder.getInstance().getImageFileNameWithExtension(targetViewSet.getImageFileName(i), "png"));
+                    ImageFinder.getInstance().getImageFileNameWithExtension(view.getImageFile().getName(), "png"));
 
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) targetViewSet.getCombinedCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i+1, targetViewSet.getCombinedCameraPoseCount()));
+                    monitor.setProgress((double) progressCount / (double) targetViewSet.getEnabledViewCount(),
+                        MessageFormat.format("{0} ({1}/{2})", view,
+                            progressCount + 1, targetViewSet.getEnabledViewCount()));
                 }
+
+                progressCount++;
             }
 
             Files.copy(resampleVSETFile.toPath(),

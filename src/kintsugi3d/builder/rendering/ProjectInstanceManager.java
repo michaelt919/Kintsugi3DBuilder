@@ -13,6 +13,9 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
@@ -62,7 +65,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
-    private ViewSet loadedViewSet;
+    private volatile ViewSet loadedViewSet;
     private RenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
@@ -183,10 +186,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-        int cameraCount = loadedViewSet.getCombinedCameraPoseCount();
-        if (cameraCount > 1024 && progressMonitor != null)
+        int gpuBufferSize = loadedViewSet.getGPUBufferSize();
+        if (gpuBufferSize > 1024 && progressMonitor != null)
         {
-            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
+            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", gpuBufferSize));
             progressMonitor.warn(e);
         }
         boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
@@ -196,12 +199,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = loadedViewSet.getAllImageFiles();
-        List<String> imgFileNames = new ArrayList<>(imgFiles.size());
-
-        imgFiles.forEach(file -> imgFileNames.add(file.getName()));
-
-        Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
+        // getViews returns a copy
+        // Grab all views (not just enabled) for light calibration
+        // TODO this is for the light calibration sidebar and should probably be migrated to a newer system
+        // TODO   for managing the list of photos (like the photos tab)
+        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViewsSorted());
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -245,7 +247,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 // Register observer for changes to the Photos tab
                 loadedViewSet.registerObserver(change ->
                 {
-                    CardsModel photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS);
+                    CardsModel<View> photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS, View.class);
 
                     switch (change.type)
                     {
@@ -253,10 +255,10 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                             tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
                             break;
                         case REMOVED:
-                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            photosTab.deleteCards(card -> change.viewMap.get(new File(card.getInternalName())) != null);
                             break;
                         case MODIFIED:
-                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            photosTab.refreshCards(card -> change.viewMap.get(new File(card.getInternalName())));
                             break;
                     }
                 });
