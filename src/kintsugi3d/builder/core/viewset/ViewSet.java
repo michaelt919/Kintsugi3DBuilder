@@ -1486,24 +1486,17 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     @Override
     public String getGeometryFileName()
     {
-        File effectiveModelDirectory = this.getModelDirectory();
-
         // Grab reference for thread synchronization, just in case.
         File geometryFileRef = this.geometryFile;
-        if (geometryFileRef != null && effectiveModelDirectory != null && !effectiveModelDirectory.toString().endsWith(".zip"))
-        {
-            try
-            {
-                return effectiveModelDirectory.toPath().relativize(geometryFileRef.toPath()).toString();
-            }
-            catch (RuntimeException e)
-            {
-                LOG.warn("Could not relativize geometry file {} within model directory {}", geometryFileRef, effectiveModelDirectory, e);
-            }
-        }
 
-        // If directories are located under different drive letters on windows, or geometry file is null, or model directory is a ZIP
-        return geometryFileRef == null ? null : geometryFileRef.toString();
+        try
+        {
+            return this.rootDirectory.toPath().relativize(geometryFileRef.toPath()).toString();
+        }
+        catch (RuntimeException e) // If the root and other directories are located under different drive letters on windows
+        {
+            return geometryFileRef == null ? null : geometryFileRef.toString();
+        }
     }
 
     @Override
@@ -1533,12 +1526,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
      */
     public void copyModel()
     {
-        File modelSrcDir = modelDirectory;
-        if (modelSrcDir == null)
-        {
-            return;
-        }
-
         // Grab reference first just in case for thread synchronization.
         File modelDestParentDir = supportingFilesDirectory;
 
@@ -1553,18 +1540,23 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
 
         modelDestDir.mkdirs();
+        modelDirectory = modelDestDir;
+
+        // Grab reference for thread synchronization, just in case.
+        File geometryFileRef = this.geometryFile;
 
         // Unzip model and textures if needed
-        if (modelSrcDir.toString().endsWith(".zip"))
+        if (geometryFileRef.toString().endsWith(".zip"))
         {
+            // Assuming a Metashape-zipped PLY model called "mesh.ply".
             LOG.info("Unzipping model folder...");
             try
             {
                 // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
-                UnzipHelper.unzipToDirectory(modelSrcDir, modelDestDir, null);
+                UnzipHelper.unzipToDirectory(geometryFileRef, modelDestDir, null);
 
                 // Use the destination directory as the model directory for validating (and thereafter)
-                modelDirectory = modelDestDir;
+                this.geometryFile = new File(modelDestDir, "mesh.ply");
             }
             catch (IOException e)
             {
@@ -1584,7 +1576,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
 
             // Use the destination directory as the model directory to use from now on.
-            modelDirectory = modelDestDir;
+            this.geometryFile = new File(modelDestDir, geometryFileRef.getName());
         }
     }
 
