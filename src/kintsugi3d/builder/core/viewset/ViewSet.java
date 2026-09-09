@@ -11,6 +11,10 @@
 
 package kintsugi3d.builder.core.viewset;
 
+import de.javagl.obj.Mtl;
+import de.javagl.obj.MtlReader;
+import de.javagl.obj.Obj;
+import de.javagl.obj.ObjReader;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Observable;
 import kintsugi3d.builder.core.Observer;
@@ -25,6 +29,7 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -32,9 +37,16 @@ import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -554,8 +566,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
             Matrix4 cameraPoseInv = cameraPose.quickInverse(0.001f);
 
-            View currentView = new View(cameraPose, cameraPoseInv, 0, 0,
-                    i, imageFile, null, new ViewRMSE(), result);
+            result.addView(new View(cameraPose, cameraPoseInv, 0, 0, i, imageFile, null, new ViewRMSE(), result));
         }
 
         return result;
@@ -1042,35 +1053,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         notifyObservers(new ViewSetChange(Type.ADDED, view));
     }
 
-    void removeView(View view)
-    {
-        View removed;
-
-        synchronized (views)
-        {
-            removed = views.remove(view.getImageFile());
-
-            // Check to see if we just removed the tone calibration primary or orientation views.
-            if (Objects.equals(view, primaryView))
-            {
-                // Primary view should always be non-null, if possible.
-                primaryView = views.isEmpty() ? null : getRepresentativeView();
-            }
-
-            if (Objects.equals(view, orientationView))
-            {
-                // Orientation view can be null.
-                // TODO notify renderer that the orientation has changed.
-                orientationView = null;
-            }
-        }
-
-        if (removed != null)
-        {
-            notifyObservers(new ViewSetChange(Type.REMOVED, removed));
-        }
-    }
-
     public void removeViewByImageFilename(File image)
     {
         View removed = null;
@@ -1540,7 +1522,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
 
         modelDestDir.mkdirs();
-        modelDirectory = modelDestDir;
 
         // Grab reference for thread synchronization, just in case.
         File geometryFileRef = this.geometryFile;
@@ -1557,6 +1538,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
                 // Use the destination directory as the model directory for validating (and thereafter)
                 this.geometryFile = new File(modelDestDir, "mesh.ply");
+                modelDirectory = modelDestDir;
             }
             catch (IOException e)
             {
@@ -1565,7 +1547,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
         else
         {
-            copyFileSafe(getGeometryFile(), modelDestDir);
+            copyFileSafe(geometryFileRef, modelDestDir);
 
             for (var resource : resourceMap.entrySet())
             {
@@ -1575,8 +1557,151 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 }
             }
 
+            // By definition of the property, the "original" file directory
+            // Needed for copying textures
+            modelDirectory = geometryFileRef.getParentFile();
+
             // Use the destination directory as the model directory to use from now on.
             this.geometryFile = new File(modelDestDir, geometryFileRef.getName());
+        }
+    }
+
+    public void copyTextures()
+    {
+        File xmlFile = new File(getModelDirectory(), "doc.xml");
+
+        if (xmlFile.exists())
+        {
+            try
+            {
+                // Initialize document builder
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+
+                // Create a new document from the doc.xml
+                Document document = builder.parse(xmlFile);
+                document.getDocumentElement().normalize();
+
+                // Get all the textures
+                NodeList textures = document.getElementsByTagName("texture");
+
+                for (int i = 0; i < textures.getLength(); ++i)
+                {
+                    Element e = (Element) textures.item(i);
+
+                    // Get some needed metadata
+                    String texType = e.getAttribute("type");
+                    String texName = ((Element) e.getElementsByTagName("page").item(0)).getAttribute("path");
+
+                    if ("normals".equals(texType))
+                    {
+                        texType = "normal";
+                    }
+
+                    saveTexture(texName, texType);
+                }
+            }
+            catch (ParserConfigurationException | IOException | SAXException e)
+            {
+                LOG.error("Could not copy textures from Agisoft project.");
+            }
+        }
+        else if (geometryFile.getName().endsWith(".obj"))
+        {
+            // Get our object file as an obj for parsing
+            Obj obj;
+            try (InputStream objStream = new FileInputStream(geometryFile))
+            {
+                obj = ObjReader.read(objStream);
+            }
+            catch (IOException e)
+            {
+                LOG.error("Could not read materials from {}", geometryFile);
+                return;
+            }
+
+            // Iterate through all mtl files
+            // Should only be one, but for completeness’s sake
+            for (String mtlFileName : obj.getMtlFileNames())
+            {
+                File mtlFile = new File(getModelDirectory(), mtlFileName);
+                if (mtlFile.exists())
+                {
+                    // Get all the materials from the material file
+                    try (InputStream mtlStream = new FileInputStream(mtlFile))
+                    {
+                        List<Mtl> mtls = MtlReader.read(mtlStream);
+
+                        // Map custom map_ao to material name (reading twice, yes)
+                        Map<String, String> aoMaps = new HashMap<>(1);
+                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mtlFile), StandardCharsets.UTF_8)))
+                        {
+                            String line;
+                            String currentMaterial = null;
+                            while ((line = reader.readLine()) != null)
+                            {
+                                line = line.trim();
+                                if (line.startsWith("newmtl "))
+                                {
+                                    currentMaterial = line.substring(7).trim();
+                                }
+                                else if (line.startsWith("map_ao ") && (currentMaterial != null))
+                                {
+                                    aoMaps.put(currentMaterial, line.substring(7).trim());
+                                    currentMaterial = null;
+                                }
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            LOG.error("Could not read occlusion for material {}", mtlFile);
+                            // No need to continue here, as the rest of the code will function without ao
+                        }
+
+
+                        // Iterate through all the materials
+                        // Should also only be one, but, ya know how it is
+                        for (Mtl mtl : mtls)
+                        {
+                            saveTexture(mtl.getMapKd(), "diffuse");
+                            saveTexture(mtl.getBump(), "normal");
+
+                            // Copy occlusion from obj using custom parser
+                            saveTexture(aoMaps.get(mtl.getName()), "occlusion");
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        LOG.error("Could not read material {}", mtlFile);
+                    }
+                }
+                else
+                {
+                    LOG.error("Could not find material {}", mtlFile);
+                }
+            }
+        }
+    }
+
+    private void saveTexture(String originalName, String saveName)
+    {
+        // Mtl parsing compatibility
+        if (originalName != null)
+        {
+            File inTex = new File(getModelDirectory(), originalName);
+            if (inTex.exists())
+            {
+                File outTex = new File(getSupportingFilesDirectory(), saveName + ".png");
+                try
+                {
+                    // Force conversion to PNG.
+                    ImageHelper.read(inTex).save("png", outTex);
+                }
+                catch (IOException e)
+                {
+                    LOG.error("Could not copy {} texture.", saveName);
+                }
+            }
         }
     }
 
