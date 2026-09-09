@@ -9,23 +9,15 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.metrics;
 
-import java.io.File;
-
-public class ViewSetChange
+public interface ReadonlyColorAppearanceRMSE
 {
-    public enum Type
-    {
-        ADDED, REMOVED, MODIFIED
-    }
+    double getNormalizedLinear();
 
-    public final Type type;
-    public final File image;
+    double getNormalizedSRGB();
 
-    public ViewSetChange(Type type, File image)
-    {
-        this.type = type;
-        this.image = image;
-    }
+    double getEncodedGroundTruth();
+
+    long getSampleCount();
 }

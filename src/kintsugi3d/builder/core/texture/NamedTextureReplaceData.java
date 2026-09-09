@@ -9,41 +9,41 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.texture;
 
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.gl.core.Texture;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class WeightmapReplaceData extends ImageReplaceData
+public class NamedTextureReplaceData extends ImageReplaceData
 {
-    private int weightmapIndex;
+    private final TextureInfo texture;
+
+    public NamedTextureReplaceData(TextureResources<?> resources, TextureInfo texture, File currentImage)
+    {
+        super(resources);
+        this.texture = texture;
+        setCurrentImage(currentImage);
+    }
+
+    public TextureInfo getTexture()
+    {
+        return texture;
+    }
 
     @Override
     public void replace() throws IOException
     {
-        getResources().getBasisWeightResources().replaceWeightMapWithSpecificFile(weightmapIndex, getNewImage());
+        getResources().replaceTextureWithSpecificFile(texture, getNewImage());
     }
 
     @Override
-    public void refreshCards()
+    public void refreshCard()
     {
-        Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-            Objects.equals(card.getInternalName(), TextureResources.getUnpackedWeightMapFilename(getWeightmapIndex(), "PNG")));
-    }
-
-    public WeightmapReplaceData(TextureResources resources, int weightmapIndex, File currentImage)
-    {
-        super(resources);
-        this.weightmapIndex = weightmapIndex;
-        setCurrentImage(currentImage);
-    }
-
-    public int getWeightmapIndex()
-    {
-        return weightmapIndex;
+        Global.state().getTabModels().getTab("Textures", TextureInfo.class)
+            .refreshCard(card -> Objects.equals(card.getInternalName(), texture.name), texture);
     }
 }

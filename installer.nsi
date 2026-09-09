@@ -65,21 +65,27 @@ Section "Kintsugi 3D Builder (required)" SectionApp
     File "target\classes\kintsugi3d-builder-about.txt"
     File "target\classes\export-classes.txt"
 
-    ; Include shaders
+    ; Include shaders (keep old shaders in case of user-authored shaders in this directory)
     SetOutPath "$INSTDIR\shaders"
     File /r "shaders\*"
+
+    ; Include scripts (keep old scripts in case of user-authored scripts in this directory)
+    SetOutPath "$INSTDIR\scripts"
+    File /r "scripts\*"
+
+    ; Remove any pre-existing JRE (i.e. old versions)
+    RMDir /r "$INSTDIR\jre"
 
     ; Include JRE
     SetOutPath "$INSTDIR\jre"
     File /r "target\jre\*"
 
+    ; Remove any pre-existing binary files (i.e. old versions)
+    RMDir /r "$INSTDIR\bin"
+
     ; Include additional binaries
     SetOutPath "$INSTDIR\bin"
     File /r "bin\*"
-
-    ; Include scripts
-    SetOutPath "$INSTDIR\scripts"
-    File /r "scripts\*"
 
     ; Write install directory registry key
     WriteRegStr HKLM "SOFTWARE\Kintsugi3DBuilder" "Install_Dir" "$INSTDIR"

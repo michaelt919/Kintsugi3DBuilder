@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -46,6 +46,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -53,11 +54,11 @@ public class WelcomeWindowController
 {
     private static final Logger LOG = LoggerFactory.getLogger(WelcomeWindowController.class);
 
-    private static WelcomeWindowController INSTANCE;
+    private static WelcomeWindowController instance;
 
     static WelcomeWindowController getInstance()
     {
-        return INSTANCE;
+        return instance;
     }
 
     @FXML private Button recent1;
@@ -79,7 +80,7 @@ public class WelcomeWindowController
 
     public void init(Stage injectedStage, JavaFXState state, Runnable injectedUserDocumentationHandler)
     {
-        INSTANCE = this;
+        instance = this;
 
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
@@ -242,7 +243,7 @@ public class WelcomeWindowController
         int i = 0;
         for (Button button : recentButtons)
         {
-            if (button == item)
+            if (Objects.equals(button, item))
             {
                 ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
             }
@@ -250,11 +251,13 @@ public class WelcomeWindowController
         }
     }
 
+    @FXML
     public void openSystemSettingsModal()
     {
         ExperienceManager.getInstance().getExperience("SystemSettings").tryOpen();
     }
 
+    @FXML
     public void openAboutModal()
     {
         ExperienceManager.getInstance().getExperience("About").tryOpen();
@@ -450,42 +453,49 @@ public class WelcomeWindowController
 
     private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException
     {
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse(file);
-
-        //get view set path
-        Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
-        Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-        String viewSetPath = new File(file.getParent(), viewSetDomElement.getAttribute("src")).getPath();
-
-        //open images in view set path
-        File viewSetFile = new File(viewSetPath);
-
-        try (Scanner sc = new Scanner(viewSetFile, StandardCharsets.UTF_8))
+        if (file.exists())
         {
-            while (sc.hasNextLine())
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(file);
+
+            //get view set path
+            Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
+            Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
+            String viewSetPath = new File(file.getParent(), viewSetDomElement.getAttribute("src")).getPath();
+
+            //open images in view set path
+            File viewSetFile = new File(viewSetPath);
+
+            try (Scanner sc = new Scanner(viewSetFile, StandardCharsets.UTF_8))
             {
-                String read = sc.nextLine();
-
-                //if (read.equals("# Full resolution image file path")){
-                //if (read.equals("# Preview resolution image file path")) {
-                if (read.equals(target))
+                while (sc.hasNextLine())
                 {
-                    String imgsPath = sc.nextLine();
-                    //remove the first two chars of the path because it starts with "i "
-                    imgsPath = imgsPath.substring(2);
+                    String read = sc.nextLine();
 
-                    //remove references to parent directories
-                    String parentPrefix = "..\\";
-                    String parentPrefixUnix = "../";
-                    while (imgsPath.startsWith(parentPrefix) || imgsPath.startsWith(parentPrefixUnix))
+                    //if (read.equals("# Full resolution image file path")){
+                    //if (read.equals("# Preview resolution image file path")) {
+                    if (read.equals(target))
                     {
-                        imgsPath = imgsPath.substring(parentPrefix.length());
-                    }
-                    return imgsPath;
-                }
-            }
+                        String imgsPath = sc.nextLine();
+                        //remove the first two chars of the path because it starts with "i "
+                        imgsPath = imgsPath.substring(2);
 
+                        //remove references to parent directories
+                        String parentPrefix = "..\\";
+                        String parentPrefixUnix = "../";
+                        while (imgsPath.startsWith(parentPrefix) || imgsPath.startsWith(parentPrefixUnix))
+                        {
+                            imgsPath = imgsPath.substring(parentPrefix.length());
+                        }
+                        return imgsPath;
+                    }
+                }
+
+                return null;
+            }
+        }
+        else
+        {
             return null;
         }
     }

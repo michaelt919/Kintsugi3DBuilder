@@ -29,6 +29,7 @@ import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.window.CanvasSize;
+import kintsugi3d.gl.window.FramebufferCanvas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,12 @@ public class ObservableCarouselModel implements CarouselModel
 
     private void refreshMainViewSafeRegion()
     {
-        refreshMainViewSafeRegion(Global.state().getMainCanvasModel().getCanvas().getSizeForDisplay());
+        FramebufferCanvas<?> canvas = Global.state().getMainCanvasModel().getCanvas();
+
+        if (canvas != null)
+        {
+            refreshMainViewSafeRegion(canvas.getSizeForDisplay());
+        }
     }
 
     private void refreshMainViewSafeRegion(CanvasSize mainViewSize)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -79,7 +79,7 @@ public class CameraFrustum<ContextType extends Context<ContextType>> extends Sha
             FramebufferSize size = framebuffer.getSize();
 
             // Scale to match actual camera frustum.
-            Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
+            Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
             Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
             this.getDrawable().program().setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));

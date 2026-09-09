@@ -12,8 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -27,6 +25,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -61,6 +60,7 @@ public class CardTabController
     @FXML private Label filePathLabel;
     @FXML private Label locationLabel;
     @FXML private HBox filePathHBox;
+    @FXML private VBox buttonBox;
 
     private double scrollPosition = 0;
     private String path;
@@ -68,7 +68,7 @@ public class CardTabController
     private final ObservableList<CardController> cardControllers = FXCollections.observableArrayList();
     private final FilteredList<CardController> searchList = new FilteredList<>(cardControllers);
 
-    private ObservableCardsModel cardsModel;
+    private ObservableCardsModel<?> cardsModel;
 
     private boolean isDragging = false;
     private boolean scrollbarLockedDuringDrag = false;
@@ -79,9 +79,13 @@ public class CardTabController
     private static final double WIDTH_TOLERANCE = 2.0;
     private double lastSidebarWidth = -1;
 
-    public void init(ObservableCardsModel cardsModel)
+    public void init(ObservableCardsModel<?> cardsModel)
     {
         this.cardsModel = cardsModel;
+
+        ActionButtonFactory.createActionButtons(cardsModel.getGlobalActions(), buttonBox,
+            "tab-button", "tab-separator");
+
         Collection<VBox> displayCards = new ArrayList<>(cardsModel.getCardList().size());
 
         try
@@ -121,6 +125,7 @@ public class CardTabController
                 filePathHBox.setManaged(false);
             }
         });
+
         /*
         creates double that has the total pixel space between middle of the window and
         the end of the window that is NOT covered by the buttons. Using that information
@@ -134,44 +139,41 @@ public class CardTabController
         filePathLabel.maxWidthProperty().bind(tab.widthProperty().multiply(0.50).subtract(locationLabel.widthProperty()).subtract(25));
     }
 
-    public void initialize(){
-        //scrollpane.heightProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
-        //scrollpane.widthProperty().addListener((observable, oldValue, newValue) -> vbox.requestLayout());
-
+    public void initialize()
+    {
         //Listener to detect scroll bar
         scrollpane.viewportBoundsProperty().addListener((obs, oldBounds, newBounds) ->
+        {
+            //Exits if we are not dragging or if scrollbar is locked
+            if (!isDragging || scrollbarLockedDuringDrag)
             {
-                //Exits if we are not dragging or if scrollbar is locked
-                if (!isDragging || scrollbarLockedDuringDrag)
-                {
-                    return;
-                }
-
-                //Old and new widths
-                double oldWidth = oldBounds.getWidth();
-                double newWidth = newBounds.getWidth();
-
-                if (oldWidth <= 0 || newWidth <= 0) //If negative widths
-                {
-                    return;
-                }
-
-                double viewportShrink = oldWidth - newWidth; //amount changed
-
-
-                //If viewport lost about the amount of width of the scrollbar
-                if (viewportShrink >= (SCROLLBAR_WIDTH - WIDTH_TOLERANCE))
-                {
-                    scrollbarLockedDuringDrag = true; //Locks scrollbar
-
-                    //Gets the last sidebar width
-                    scrollbarActivationWidth = lastSidebarWidth;
-
-                    //Makes scroll bar always appear
-                    scrollpane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
-                }
+                return;
             }
-        );
+
+            //Old and new widths
+            double oldWidth = oldBounds.getWidth();
+            double newWidth = newBounds.getWidth();
+
+            if (oldWidth <= 0 || newWidth <= 0) //If negative widths
+            {
+                return;
+            }
+
+            double viewportShrink = oldWidth - newWidth; //amount changed
+
+
+            //If viewport lost about the amount of width of the scrollbar
+            if (viewportShrink >= (SCROLLBAR_WIDTH - WIDTH_TOLERANCE))
+            {
+                scrollbarLockedDuringDrag = true; //Locks scrollbar
+
+                //Gets the last sidebar width
+                scrollbarActivationWidth = lastSidebarWidth;
+
+                //Makes scroll bar always appear
+                scrollpane.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+            }
+        });
     }
 
     /**
@@ -223,7 +225,7 @@ public class CardTabController
             scrollbarLockedDuringDrag = false;
             scrollbarActivationWidth = -1;
 
-            scrollpane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            scrollpane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
         }
     }
 
@@ -279,7 +281,7 @@ public class CardTabController
     /**
      * Does not recreate the listener!!!
      */
-    public void refreshCardList()
+    public void reloadCardList()
     {
         try
         {
@@ -313,12 +315,12 @@ public class CardTabController
                         for (int i = change.getFrom(); i < change.getTo(); i++)
                         {
                             ProjectDataCard card = cardsModel.getCardList().get(i);
-                            cardControllers.set(i, createDataCard(card));
+                            cardControllers.get(i).refresh(card);
 
-                            // Leave card open if enabled.
-                            if (!card.isDisabled())
+                            // Collapse card if disabled.
+                            if (card.isDisabled())
                             {
-                                cardsModel.expandCard(card.getCardId());
+                                cardsModel.collapseCard(card.getCardId());
                             }
                         }
                     }
@@ -348,7 +350,7 @@ public class CardTabController
                 {
                     // Shouldn't really every happen if things are working properly, but as a fallback, try to refresh the whole list.
                     // (This will probably also fail if anything is failing, and will effectively empty the list which is better than inconsistent state.)
-                    refreshCardList();
+                    reloadCardList();
                 }
             }
             catch (IOException e)
@@ -356,7 +358,7 @@ public class CardTabController
                 cardLoadError(e);
 
                 // Again, this is a last-ditch effort to fix things but will probably just clear out the list.
-                refreshCardList();
+                reloadCardList();
             }
 
             updateSummary();
