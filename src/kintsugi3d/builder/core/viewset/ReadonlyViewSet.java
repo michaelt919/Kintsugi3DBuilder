@@ -284,6 +284,8 @@ public interface ReadonlyViewSet
 
     File getMasksDirectory();
 
+    String getRelativeMaskPathName();
+
     /**
      * Gets additional settings associated with this view set
      * @return A model containing the settings for this view set.

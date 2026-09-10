@@ -23,7 +23,9 @@ import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.color.ICC_ColorSpace;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -82,7 +84,7 @@ public final class ImageHelper
         return ICC_TRANSFORM_ENABLED ? raw.convertedICCToSRGB() : raw.forcedSRGB();
     }
 
-    public static ImageHelper of(BufferedImage image)
+    public static ImageHelper wrap(BufferedImage image)
     {
         ImageHelper raw = new ImageHelper(image);
         Objects.requireNonNull(image);
@@ -143,7 +145,7 @@ public final class ImageHelper
     {
         if (mask != null)
         {
-            return withAlphaMask(ImageHelper.of(mask)
+            return withAlphaMask(wrap(mask)
                 .scaledToResolution(image.getWidth(), image.getHeight())); // scale if necessary (skipped if same resolution)
         }
         else
@@ -156,7 +158,7 @@ public final class ImageHelper
     {
         if (maskStream != null)
         {
-            return withAlphaMask(ImageHelper.read(maskStream))
+            return withAlphaMask(read(maskStream))
                 .scaledToResolution(image.getWidth(), image.getHeight()); // scale if necessary (skipped if same resolution)
         }
         else
@@ -169,7 +171,7 @@ public final class ImageHelper
     {
         if (maskFile != null && maskFile.exists())
         {
-            return withAlphaMask(ImageHelper.read(maskFile))
+            return withAlphaMask(read(maskFile))
                 .scaledToResolution(image.getWidth(), image.getHeight()); // scale if necessary (skipped if same resolution
         }
         else
@@ -203,12 +205,16 @@ public final class ImageHelper
         }
         else
         {
+            // Allocate a new buffered image of the specified size but with the same attributes as the original.
+            ColorModel colorModel = image.getColorModel();
+            WritableRaster writableRaster = colorModel.createCompatibleWritableRaster(width, height);
+            BufferedImage resized = new BufferedImage(colorModel, writableRaster, colorModel.isAlphaPremultiplied(), null);
+
             // Just use java.awt graphics for simple scaling
-            // drawImage is more lightweight and possibly higher quality than AffineTransform.
-            // TODO This doesn't seem to work when rescaling TIFFs previously saved from Kintsugi.
-            BufferedImage resized = new BufferedImage(width, height, image.getType());
-            Graphics resizedGraphics = resized.createGraphics();
-            resizedGraphics.drawImage(image.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null);
+            // drawImage is more lightweight than AffineTransform.
+            Graphics2D resizedGraphics = resized.createGraphics();
+            resizedGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            resizedGraphics.drawImage(image, 0, 0, width, height, null);
             resizedGraphics.dispose();
             return new ImageHelper(resized);
         }
@@ -217,20 +223,30 @@ public final class ImageHelper
     private ImageHelper forcedSRGB()
     {
         // TODO is there a cleaner way to ignore input color space?  Maybe work with the Raster object directly?
-        return new ImageHelper(
-            image == null || !(image.getColorModel() instanceof ComponentColorModel) || image.getColorModel().getNumComponents() < 3
-                // skip forced color space if not ComponentColorModel or if the number of components is < 3 (i.e. grayscale)
-                ? image
-                : new BufferedImage(
-                new ComponentColorModel(
-                    ColorSpace.getInstance(ColorSpace.CS_sRGB),
-                    image.getColorModel().hasAlpha(),
-                    image.isAlphaPremultiplied(),
-                    image.getTransparency(),
-                    image.getColorModel().getTransferType()),
-                image.getRaster(),
-                image.isAlphaPremultiplied(),
-                null));
+        if (image != null && image.getColorModel() instanceof ComponentColorModel)
+        {
+            ColorSpace oldColorSpace = image.getColorModel().getColorSpace();
+            if (oldColorSpace.getType() == ColorSpace.TYPE_RGB && !oldColorSpace.isCS_sRGB()
+                && !Objects.equals(ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB), oldColorSpace))
+            {
+                return new ImageHelper(new BufferedImage(
+                    new ComponentColorModel(
+                        ColorSpace.getInstance(ColorSpace.CS_sRGB),
+                        image.getColorModel().hasAlpha(),
+                        image.isAlphaPremultiplied(),
+                        image.getTransparency(),
+                        image.getColorModel().getTransferType()),
+                    image.getRaster(), image.isAlphaPremultiplied(), null));
+            }
+            else
+            {
+                return this;
+            }
+        }
+        else
+        {
+            return this;
+        }
     }
 
     @SuppressWarnings("UseOfSunClasses")

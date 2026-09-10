@@ -20,6 +20,8 @@ import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
  */
 public final class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(SpecularFitFinal.class);
+
     private final Map<TextureInfo, Texture2D<ContextType>> managedTextures;
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
@@ -94,39 +98,13 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         try
         {
             albedoORMOptimizationTemp = AlbedoORMOptimization.loadFromPriorSolution(context, priorSolutionDirectory);
-
-            if (albedoORMOptimizationTemp.getAlbedoMap() == null)
-            {
-                // Load failed
-                albedoORMOptimizationTemp.close();
-
-                AlbedoORMOptimization<ContextType> fallback = albedoDiffuseFallback();
-                albedoORMOptimizationTemp = fallback != null ? fallback : albedoORMOptimizationTemp;
-            }
         }
         catch (IOException e)
         {
-            AlbedoORMOptimization<ContextType> fallback = albedoDiffuseFallback();
-            albedoORMOptimizationTemp = fallback != null ? fallback : albedoORMOptimizationTemp;
+            LOG.error("Error loading albedo / ORM maps", e);
         }
 
         albedoORMOptimization = albedoORMOptimizationTemp;
-    }
-
-    private AlbedoORMOptimization<ContextType> albedoDiffuseFallback() throws IOException
-    {
-        // Load failed; try to initialize based on diffuse map resolution
-        if (managedTextures.containsKey(StandardTexture.DIFFUSE_COLOR.details))
-        {
-            Texture2D<ContextType> diffuseMap = managedTextures.get(StandardTexture.DIFFUSE_COLOR.details);
-            if (diffuseMap != null)
-            {
-                return AlbedoORMOptimization.createWithoutOcclusion(getContext(),
-                    new TextureResolution(diffuseMap.getWidth(), diffuseMap.getHeight()));
-            }
-        }
-
-        return null;
     }
 
     private void addStandardTexture(StandardTexture standardTex, File priorSolutionDirectory) throws IOException

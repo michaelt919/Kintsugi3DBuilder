@@ -95,7 +95,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.println("# Preview resolution image file path");
-        out.printf("i %s%n", viewSet.getRelativePreviewImagePathName());
+        out.printf("i %s%n", viewSet.getPreviewImageDirectory().getAbsolutePath());
 
         out.println();
         out.println("# Supporting files (texture fit results) file path");
@@ -212,7 +212,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         {
             out.println();
             out.println("# Masks directory");
-            out.printf("M %s%n", viewSet.getMasksDirectory().getAbsolutePath());
+            out.printf("M %s%n", viewSet.getRelativeMaskPathName());
 
             out.println();
             out.printf("# %d masks%n", viewsCopy.stream().filter(view -> view.getMaskFile() != null).count());

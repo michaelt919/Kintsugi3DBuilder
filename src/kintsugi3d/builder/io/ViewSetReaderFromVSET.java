@@ -134,31 +134,43 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     case "m":
                     {
                         String original = scanner.nextLine().trim();
-                        builder.setGeometryFileName(makePortableRelativeFilePath(original));
+                        builder.setGeometryFileName(makePortableFilePath(original));
                             // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "M":
                     {
-                        builder.setMasksDirectory(new File(makePortableRelativeFilePath(scanner.nextLine().trim())));
+                        builder.setRelativeMasksPathName(makePortableFilePath(scanner.nextLine().trim()));
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "I":
                     {
-                        builder.setRelativeFullResImagePathName(makePortableRelativeFilePath(scanner.nextLine().trim()));
+                        builder.setRelativeFullResImagePathName(makePortableFilePath(scanner.nextLine().trim()));
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "i":
                     {
-                        builder.setRelativePreviewImagePathName(makePortableRelativeFilePath(scanner.nextLine().trim()));
+                        File absoluteFile = new File(makePortableFilePath(scanner.nextLine().trim()));
+
+                        if (absoluteFile.exists())
+                        {
+                            // Intentionally use absolute path since preview images are probably stored in cache
+                            // rather than being contained within this project.
+                            builder.setPreviewImageDirectory(new File(makePortableFilePath(scanner.nextLine().trim())));
+                        }
+                        else // Fallback for older projects that store relative paths
+                        {
+                            builder.setRelativePreviewImagePathName(makePortableFilePath(scanner.nextLine().trim()));
+                        }
+
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "t":
                     {
-                        builder.setRelativeSupportingFilesPathName(makePortableRelativeFilePath(scanner.nextLine().trim()));
+                        builder.setRelativeSupportingFilesPathName(makePortableFilePath(scanner.nextLine().trim()));
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
@@ -302,7 +314,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         int projectionId = scanner.nextInt();
                         int lightId = scanner.nextInt();
 
-                        String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
+                        String imgFilename = makePortableFilePath(scanner.nextLine().trim());
 
                         if ("vd".equals(id))
                         {
@@ -323,7 +335,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     {
                         int cameraId = scanner.nextInt();
 
-                        String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
+                        String imgFilename = makePortableFilePath(scanner.nextLine().trim());
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
 
                         builder.addMask(cameraId, imgFilename);
@@ -381,7 +393,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         break;
                     case "zr":
                         // resource file
-                        resourceMap.put(scanner.next(), new File(makePortableRelativeFilePath(scanner.nextLine().trim())));
+                        resourceMap.put(scanner.next(), new File(makePortableFilePath(scanner.nextLine().trim())));
                         break;
                     default:
                         // Skip unrecognized line
@@ -410,7 +422,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         return builder;
     }
 
-    private static String makePortableRelativeFilePath(String original)
+    private static String makePortableFilePath(String original)
     {
         return original
             .replace('/', File.separatorChar).replace('\\', File.separatorChar);

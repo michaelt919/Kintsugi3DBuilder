@@ -39,7 +39,6 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureCardFactory.class);
 
-    private File textureImage;
     /**
      * TextureCardFactory is the constructor for this class takes a RenderableInstance and
      * assigns it to private variable in class
@@ -70,58 +69,60 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
         File baseDirectory = getViewSet().getSupportingFilesDirectory();
 
         // thumbnails folder
-        File thumbnailDestination = new File(baseDirectory, "thumbnails");
 
         String fileName = TextureResources.getTextureFilename(texture.name);
 
         // Where and how to save the new .pngs
-        File newTextureImage = new File(thumbnailDestination, fileName);
         try
         {
             // .png File
-            textureImage = new File(baseDirectory, fileName);
+            File textureImage = new File(baseDirectory, fileName);
 
-            // TODO convert weightmap to grayscale
-            ImageHelper.read(textureImage).saveAtResolution("PNG", newTextureImage,256,256);
+            if (textureImage.exists())
+            {
+                // Save thumbnail
+                // TODO convert weightmap to grayscale
+                File thumbnailDestination = new File(baseDirectory, "thumbnails");
+                File newTextureImage = new File(thumbnailDestination, fileName);
+                ImageHelper.read(textureImage).saveAtResolution("PNG", newTextureImage, 256, 256);
+
+                String thumbnailPath;
+
+                try
+                {
+                    thumbnailPath = ImageFinder.getInstance().findImageFile(newTextureImage).toString();
+                }
+                catch (FileNotFoundException e)
+                {
+                    // Default to icon if thumbnail isn't found
+                    thumbnailPath = MainApplication.ICON_PATH;
+                }
+
+                IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
+                String res = String.format("%dx%d", dimensions.x, dimensions.y);
+
+                return new ShaderDataCard(texture.name, texture.getVisualizationShader(), thumbnailPath,
+                    new LinkedHashMap<>()
+                    {{
+                        put("File Name", textureImage.getName());
+                        put("Resolution", res);
+                        put("Size", (int) (((double) textureImage.length() / (1024.0 * 1024.0)) * 1000.0) + " KB");
+                        put("Purpose", texture.purpose);
+                    }},
+                    List.of(Map.of(
+                        "Refresh Texture", () -> refreshTexture(texture),
+                        "Replace Texture...", () -> replaceTexture(texture)
+                    )));
+            }
+            else
+            {
+                LOG.info("Texture not found: {}", texture);
+                return null;
+            }
         }
         catch (IOException|RuntimeException e)
         {
             LOG.error("Error loading texture card: {}", texture.friendlyName, e);
-        }
-
-        String thumbnailPath;
-
-        try
-        {
-            thumbnailPath = ImageFinder.getInstance().findImageFile(newTextureImage).toString();
-        }
-        catch (FileNotFoundException e)
-        {
-            // Default to icon if thumbnail isn't found
-            thumbnailPath = MainApplication.ICON_PATH;
-        }
-
-        try
-        {
-            IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
-            String res = String.format("%dx%d", dimensions.x, dimensions.y);
-
-            return new ShaderDataCard(texture.name, texture.getVisualizationShader(), thumbnailPath, new LinkedHashMap<>()
-            {{
-                put("File Name", textureImage.getName());
-                put("Resolution", res);
-                put("Size", (int) (((double) textureImage.length() / (1024.0 * 1024.0))*1000.0) + " KB");
-                put("Purpose", texture.purpose);
-            }}
-            , List.of(
-                Map.of(
-                    "Refresh Texture", () -> refreshTexture(texture),
-                    "Replace Texture...", () -> replaceTexture(texture)
-                )));
-        }
-        catch (IOException|RuntimeException e)
-        {
-            LOG.error("Error creating card: {}", texture.friendlyName, e);
             return null;
         }
     }
@@ -177,12 +178,9 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
         // Texture replacement must happen on graphics thread.
         Rendering.runLater(() ->
         {
-            RenderableInstance<?> instance = getInstance();
-            TextureResources<?> resources = instance.getResources().getTextureResources();
-
             try
             {
-                texture.refresh(instance);
+                texture.refresh(getInstance());
 
                 // TODO switch to observable pattern for textures?
                 Global.state().getTabModels().getTab("Textures", TextureInfo.class)

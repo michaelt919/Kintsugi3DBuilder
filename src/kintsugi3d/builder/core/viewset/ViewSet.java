@@ -741,6 +741,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
                 .orElse(this.rootDirectory));
     }
 
+    public void setPreviewImageDirectory(File previewImageDirectory)
+    {
+        this.previewImageDirectory = previewImageDirectory;
+    }
+
     @Override
     public File getThumbnailImageDirectory()
     {
@@ -777,6 +782,11 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public void setRelativeThumbnailImagePathName(String relativeImagePath)
     {
         this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+    }
+
+    public void setRelativeMasksPathName(String relativeMasksPath)
+    {
+        this.masksDirectory = this.rootDirectory.toPath().resolve(relativeMasksPath).toFile();
     }
 
     @Override
@@ -1326,6 +1336,22 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     public void setMasksDirectory(File dir)
     {
         masksDirectory = dir;
+    }
+
+    @Override
+    public String getRelativeMaskPathName()
+    {
+        File masksDirectoryRef = masksDirectory;
+
+        try
+        {
+            return this.rootDirectory.toPath().relativize(masksDirectoryRef.toPath()).toString();
+        }
+        catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
+        {
+            LOG.warn("Could not relativize full resolution image directory", e);
+            return masksDirectoryRef == null ? null : masksDirectoryRef.toString();
+        }
     }
 
     /**

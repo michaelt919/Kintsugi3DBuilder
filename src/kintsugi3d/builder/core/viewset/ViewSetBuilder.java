@@ -245,6 +245,34 @@ public final class ViewSetBuilder
         return this;
     }
 
+    /**
+     * Sets the name of the masks directory associated with this view set relative to the root directory.
+     *
+     * @param relativePath The path to the mask images.
+     */
+    public ViewSetBuilder setRelativeMasksPathName(String relativePath)
+    {
+        result.setRelativeMasksPathName(relativePath);
+
+        if (!result.getMasksDirectory().exists())
+        {
+            // Fallback for older projects where masks were stored as absolute path.
+            File pathAsAbsoluteFile = new File(relativePath);
+            if (pathAsAbsoluteFile.exists())
+            {
+                result.setMasksDirectory(pathAsAbsoluteFile);
+            }
+        }
+
+        return this;
+    }
+
+    public ViewSetBuilder setPreviewImageDirectory(File directory)
+    {
+        result.setPreviewImageDirectory(directory);
+        return this;
+    }
+
     public ViewSetBuilder setOrientationViewByIndex(int viewIndex)
     {
         // Defer application until all views have been loaded.
