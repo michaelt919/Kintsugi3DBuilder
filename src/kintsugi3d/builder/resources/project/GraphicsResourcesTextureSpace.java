@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,8 +13,9 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.ColorAppearanceMode;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -76,7 +77,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
         Date timestamp = new Date();
 
         ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> builder = getContext().getTextureFactory()
-                .build2DColorTextureArray(texWidth, texHeight, getViewSet().getCombinedCameraPoseCount())
+                .build2DColorTextureArray(texWidth, texHeight, getViewSet().getGPUBufferSize())
                 .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested());
 
@@ -95,29 +96,34 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
         if(progressMonitor != null)
         {
-            progressMonitor.setMaxProgress(getViewSet().getCombinedCameraPoseCount());
+            progressMonitor.setMaxProgress(getViewSet().getViewCount());
             progressMonitor.setStage(0, "Loading textures...");
         }
 
         try
         {
-            // Iterate over the layers to load in the texture array
-            for (int k = 0; k < getViewSet().getCombinedCameraPoseCount(); k++)
+            // Iterate over the layers to load in the texture array.
+            // Includes both enabled and disabled views which will all be allocated on the GPU.
+            int progressCount = 0;
+            for (View view : this.getViewSet().getViews())
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCombinedCameraPoseCount()));
+                    progressMonitor.setProgress(progressCount, MessageFormat.format("{0} ({1}/{2})",
+                        view, progressCount + 1, getViewSet().getViewCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
-                textureArray.loadLayer(k,
-                    ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
+                textureArray.loadLayer(view.getGPUViewIndex(),
+                    ImageFinder.getInstance().findImageFile(new File(textureDirectory, view.getImageFile().getName())),
                     true);
+
+                progressCount++;
             }
 
             if (progressMonitor != null)
             {
-                progressMonitor.setProgress(getViewSet().getCombinedCameraPoseCount(), "All images loaded.");
+                progressMonitor.setProgress(getViewSet().getViewCount(), "All images loaded.");
             }
         }
         catch (IOException e)
@@ -128,7 +134,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
             throw e;
         }
 
-        LOG.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        LOG.info("View Set textures loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
 
         if (progressMonitor != null)
         {

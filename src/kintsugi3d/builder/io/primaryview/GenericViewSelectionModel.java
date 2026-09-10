@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,24 +12,26 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public final class GenericViewSelectionModel implements ViewSelectionModel
 {
     private final String name;
-    private final ViewSet viewSet;
+    private final List<View> views;
 
-    public GenericViewSelectionModel(String name, ViewSet viewSet)
+    public GenericViewSelectionModel(String name, ReadonlyViewSet viewSet)
     {
         this.name = name;
-        this.viewSet = viewSet;
+
+        // Makes a snapshot copy; grab all views (not just those disabled) since selecting a disabled view is valid.
+        this.views = viewSet.getViewsSorted();
     }
 
     @Override
@@ -39,10 +41,10 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     }
 
     @Override
-    public List<View> getViews()
+    public List<PrimaryViewCandidate> getViews()
     {
-        return IntStream.range(0, viewSet.getCombinedCameraPoseCount())
-            .mapToObj(i -> new View(viewSet.getImageFileName(i)))
+        return views.stream()
+            .map(view -> new PrimaryViewCandidate(view.toString()))
             .collect(Collectors.toUnmodifiableList());
     }
 
@@ -56,12 +58,12 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     @Override
     public Optional<String> findFullResImagePath(String imageName)
     {
-        for (int i = 0; i < viewSet.getAllImageFiles().size(); ++i)
+        for (View view : views)
         {
-            String fileName = viewSet.getImageFileName(i);
+            String fileName = view.getImageFile().getName();
             if (fileName.matches(".*" + imageName + ".*"))
             {
-                return Optional.of(viewSet.getFullResImageFile(i).getPath());
+                return Optional.of(view.getFullResImageFile().getPath());
             }
         }
         return Optional.empty();

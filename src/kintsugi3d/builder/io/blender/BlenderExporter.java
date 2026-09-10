@@ -14,7 +14,7 @@ package kintsugi3d.builder.io.blender;
 import de.javagl.jgltf.impl.v2.TextureInfo;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.StandardTexture;
+import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
 import org.slf4j.Logger;
@@ -75,7 +75,7 @@ public class BlenderExporter extends MaterialExporter
         File roughness = new File(outputPath, getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat()));
 
         // Command list for the ProcessBuilder
-        List<String> command = new ArrayList<>();
+        List<String> command = new ArrayList<>(8);
 
         // Get blender from settings
         File blenderLocation = new File(Global.state().getSettingsModel().get("blenderLocation", String.class));
@@ -88,7 +88,8 @@ public class BlenderExporter extends MaterialExporter
             diffuse.delete();
             specular.delete();
             roughness.delete();
-            throw new RuntimeException("Can't find Blender, check Application Settings.");
+            throw new RuntimeException(
+                String.format("Can't find Blender, check Application Settings.  Expected location: %s", blenderLocation));
         }
 
         command.add(blenderLocation.getPath());
@@ -128,19 +129,16 @@ public class BlenderExporter extends MaterialExporter
             // If the exporter didn't exit with a 0, an error occurred
             if (process.waitFor() != 0)
             {
-                LOG.error("Passed files don't match requirements.");
-                return;
+                throw new RuntimeException("Passed files don't match requirements.");
             }
         }
         catch (IOException e)
         {
-            LOG.error("Couldn't open Blender.");
-            return;
+            throw new RuntimeException("Couldn't open Blender.", e);
         }
         catch (InterruptedException e)
         {
-            LOG.error("Process was interrupted.");
-            return;
+            LOG.error("Process was interrupted.", e);
         }
     }
 

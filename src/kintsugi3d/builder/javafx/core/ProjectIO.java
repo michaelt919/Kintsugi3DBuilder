@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,6 +21,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.experience.CreateProject;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import org.slf4j.Logger;
@@ -80,7 +81,7 @@ public final class ProjectIO
                 // TODO figure out a less hacky workaround.
                 WelcomeWindowController.getInstance().runOnceWhenShown(() ->
                 {
-                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
+                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled.");
                     alert.setTitle("Cancelled");
                     alert.setHeaderText("Cancelled");
                     alert.show();
@@ -99,14 +100,14 @@ public final class ProjectIO
                 }
                 else
                 {
-                    ExceptionHandling.error("An error occurred while loading project", e);
+                    ExceptionHandling.error("An error occurred", e);
                 }
             }
 
             @Override
             public void warn(Throwable e)
             {
-                ExceptionHandling.error("A potential problem occurred while loading project", e);
+                ExceptionHandling.error("A potential problem occurred", e);
             }
         });
     }
@@ -166,6 +167,8 @@ public final class ProjectIO
             }
 
             viewSet.copyMasks();
+            viewSet.copyModel();
+            viewSet.copyTextures();
         });
     }
 

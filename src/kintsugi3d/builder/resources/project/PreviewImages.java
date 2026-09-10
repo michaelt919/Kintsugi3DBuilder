@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.DistortionProjection;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
@@ -33,13 +33,10 @@ class PreviewImages
 
     private static final int MAX_THUMBNAIL_SIZE = 450;
 
-    private final ViewSet viewSet;
-    private final int viewIndex;
+    private final View view;
     private final ProgressMonitor progressMonitor;
     private final AtomicInteger finishedCount;
     private final AtomicInteger failedCount;
-
-    private final int projectionIndex;
 
     private boolean missingPreview;
     private boolean missingThumbnail;
@@ -47,24 +44,22 @@ class PreviewImages
     private ImageHelper fullResImage;
     private BufferedImage undistortedPreviewImage;
 
-    PreviewImages(int viewIndex, ViewSet viewSet, ProgressMonitor progressMonitor,
-        AtomicInteger finishedCount, AtomicInteger failedCount)
+    PreviewImages(View view, ProgressMonitor progressMonitor,
+                  AtomicInteger finishedCount, AtomicInteger failedCount)
     {
-        this.viewSet = viewSet;
-        this.viewIndex = viewIndex;
+        this.view = view;
         this.progressMonitor = progressMonitor;
         this.finishedCount = finishedCount;
         this.failedCount = failedCount;
 
-        projectionIndex = viewSet.getCameraProjectionIndex(viewIndex);
-
-        File previewImageFile = viewSet.tryFindPreviewImageFile(viewIndex);
-        File thumbnailImageFile = viewSet.tryFindThumbnailImageFile(viewIndex);
+        File previewImageFile = view.tryFindPreviewImageFile();
+        File thumbnailImageFile = view.tryFindThumbnailImageFile();
 
         // If the preview image doesn't exist but the preview width / height are zero (i.e. scaling off)
         // and undistortion isn't necessary, we don't need it.
         missingPreview = (previewImageFile == null || !previewImageFile.exists())
-            && ((viewSet.getPreviewWidth() > 0 && viewSet.getPreviewHeight() > 0) || needsUndistortion());
+            && ((view.getContainingViewSet().getPreviewWidth() > 0 && view.getContainingViewSet().getPreviewHeight() > 0)
+                || needsUndistortion());
         missingThumbnail = thumbnailImageFile == null || !thumbnailImageFile.exists();
 
         // If neither are missing, mark finished
@@ -74,8 +69,8 @@ class PreviewImages
             logExists(thumbnailImageFile);
             markCreated();
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
-                MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
-                    finishedCount.get() + failedCount.get(), viewSet.getCombinedCameraPoseCount()));
+                MessageFormat.format("Completed: {0} ({1}/{2})", view,
+                    finishedCount.get() + failedCount.get(), view.getContainingViewSet().getViewCount()));
 
             fullResImage = null; // skip for faster loading
         }
@@ -83,7 +78,7 @@ class PreviewImages
         {
             try
             {
-                fullResImage = viewSet.loadFullResMaskedImage(viewIndex);
+                fullResImage = view.loadFullResMaskedImage();
             }
             catch (RuntimeException | IOException ex)
             {
@@ -105,20 +100,23 @@ class PreviewImages
 
     boolean needsUndistortion()
     {
-        return viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection;
+        return view.getCameraProjection() instanceof DistortionProjection;
     }
 
     <ContextType extends Context<ContextType>> void tryGenerateUndistortedPreviewImage(ContextType context)
     {
         try
         {
-            LOG.info("Undistorting preview image {}", viewIndex);
+            LOG.info("Undistorting preview image {}", view);
 
-            DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
+            DistortionProjection distortion = (DistortionProjection) view.getCameraProjection();
 
-            if (viewSet.getPreviewWidth() > 0 && viewSet.getPreviewHeight() > 0)
+            int previewWidth = view.getContainingViewSet().getPreviewWidth();
+            int previewHeight = view.getContainingViewSet().getPreviewHeight();
+
+            if (previewWidth > 0 && previewHeight > 0)
             {
-                distortion = distortion.scaledTo(viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
+                distortion = distortion.scaledTo(previewWidth, previewHeight);
             }
             // If no preview width / height is specified, just use whatever was originally in the distortion model
 
@@ -166,8 +164,8 @@ class PreviewImages
                 {
                     if (missingPreview)
                     {
-                        ImageIO.write(undistortedPreviewImage, "PNG", viewSet.getPreviewImageFile(viewIndex));
-                        logFinished(viewSet.getPreviewImageFile(viewIndex));
+                        ImageIO.write(undistortedPreviewImage, "PNG", view.getPreviewImageFile());
+                        logFinished(view.getPreviewImageFile());
                     }
 
                     if (missingThumbnail)
@@ -175,9 +173,9 @@ class PreviewImages
                         Resolution thumbnailResolution = getThumbnailResolution();
 
                         // Thumbnail doesn't need undistortion.
-                        fullResImage.saveAtResolution("PNG", viewSet.getThumbnailImageFile(viewIndex),
+                        fullResImage.saveAtResolution("PNG", view.getThumbnailImageFile(),
                             thumbnailResolution.width, thumbnailResolution.height);
-                        logFinished(viewSet.getThumbnailImageFile(viewIndex));
+                        logFinished(view.getThumbnailImageFile());
                     }
 
                     markCreated();
@@ -195,12 +193,12 @@ class PreviewImages
         }
     }
 
-    private static class Resolution
+    private static final class Resolution
     {
         public final int width;
         public final int height;
 
-        public Resolution(int width, int height)
+        private Resolution(int width, int height)
         {
             this.width = width;
             this.height = height;
@@ -236,17 +234,17 @@ class PreviewImages
             // Use PNG to ensure losslessness
             if (missingPreview)
             {
-                fullResImage.saveAtResolution("PNG", viewSet.getPreviewImageFile(viewIndex, "png"),
-                    viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
-                logFinished(viewSet.getPreviewImageFile(viewIndex));
+                fullResImage.saveAtResolution("PNG", view.getPreviewImageFile("png"),
+                    view.getContainingViewSet().getPreviewWidth(), view.getContainingViewSet().getPreviewHeight());
+                logFinished(view.getPreviewImageFile());
             }
 
             if (missingThumbnail)
             {
                 Resolution thumbnailResolution = getThumbnailResolution();
-                fullResImage.saveAtResolution("PNG", viewSet.getThumbnailImageFile(viewIndex, "png"),
+                fullResImage.saveAtResolution("PNG", view.getThumbnailImageFile("png"),
                     thumbnailResolution.width, thumbnailResolution.height);
-                logFinished(viewSet.getThumbnailImageFile(viewIndex));
+                logFinished(view.getThumbnailImageFile());
             }
 
             markCreated();
@@ -275,8 +273,8 @@ class PreviewImages
         if (hasMissingFiles())
         {
             progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
-                MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(viewIndex),
-                    finishedCount.get() + failedCount.get(), viewSet.getCombinedCameraPoseCount()));
+                MessageFormat.format("Completed: {0} ({1}/{2})", view,
+                    finishedCount.get() + failedCount.get(), view.getContainingViewSet().getViewCount()));
 
             missingPreview = false;
             missingThumbnail = false;

@@ -17,6 +17,7 @@ import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.state.cards.TabsManager;
+import kintsugi3d.gl.vecmath.Vector3;
 
 class BackendProgressMonitor implements ProgressMonitor
 {
@@ -118,7 +119,13 @@ class BackendProgressMonitor implements ProgressMonitor
     @Override
     public void complete()
     {
-        instance.getResources().calibrateLightIntensities();
+        // Zero vector signals that the light requires calibration.
+        // TODO support multiple light sources.
+        if (Vector3.ZERO.equals(instance.getViewSet().getLightIntensity(0)))
+        {
+            instance.getResources().calibrateLightIntensities();
+        }
+
         instance.reloadShaders();
 
         Global.state().getProjectModel().setProjectLoaded(true);

@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
@@ -22,14 +22,14 @@ public abstract class ImageReplaceData
     private File currentImage;
     private File newImage;
 
-    public ImageReplaceData()
+    protected ImageReplaceData()
     {
         this.resources = null;
         this.currentImage = null;
         this.newImage = null;
     }
 
-    public ImageReplaceData(TextureResources resources)
+    protected ImageReplaceData(TextureResources<?> resources)
     {
         this.resources = resources;
         this.currentImage = null;
@@ -38,7 +38,7 @@ public abstract class ImageReplaceData
 
     public abstract void replace() throws IOException;
 
-    public abstract void refreshCards();
+    public abstract void refreshCard();
 
     public final TextureResources<?> getResources()
     {
@@ -53,6 +53,11 @@ public abstract class ImageReplaceData
     final void setCurrentImage(File currentTexture)
     {
         this.currentImage = currentTexture;
+
+        if (this.newImage == null)
+        {
+            this.newImage = currentTexture;
+        }
     }
 
     public final File getNewImage()

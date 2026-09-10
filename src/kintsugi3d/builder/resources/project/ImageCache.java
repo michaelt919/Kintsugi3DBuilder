@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,12 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.SimpleLoadOptionsModel;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
 import kintsugi3d.gl.geometry.GeometryTextures;
@@ -34,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -165,7 +171,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 .flipVertical()
                 .create();
 
-            Random random = new Random();
+            Random random = new SecureRandom();
 
             // Somewhat arbitrary heuristic
             int maxAttempts = 3 + settings.getTextureWidth() * settings.getTextureHeight() / (settings.getSampledSize() * settings.getSampledSize());
@@ -281,19 +287,22 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setMaxProgress(resources.getViewSet().getCombinedCameraPoseCount());
+                monitor.setMaxProgress(resources.getViewSet().getViewCount());
             }
 
             // Loop over the images, processing each one at a time
-            for (int k = 0; k < resources.getViewSet().getCombinedCameraPoseCount(); k++)
+            // Includes both enabled and disabled views which will all be included in the cache.
+            int progressCount = 0;
+            for (View view : resources.getViewSet().getViews())
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCombinedCameraPoseCount()));
+                    monitor.setProgress(progressCount, MessageFormat.format("{0} ({1}/{2})",
+                        view, progressCount + 1, resources.getViewSet().getViewCount()));
                     monitor.allowUserCancellation();
                 }
 
-                try (SingleCalibratedImageResource<ContextType> image = resources.createSingleImageResource(k, loadOptions))
+                try (SingleCalibratedImageResource<ContextType> image = resources.createSingleImageResource(view, loadOptions))
                 {
                     fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                     image.setupShaderProgram(texSpaceProgram);
@@ -301,7 +310,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                     // Force PNG format for lossless encoding
                     String pngFilename = ImageFinder.getInstance().getImageFileNameWithExtension(
-                        resources.getViewSet().getImageFileName(k), "png");
+                        view.getImageFile().getName(), "png");
 
                     // "Sampled" image to store randomly selected pixels for preliminary optimization at a lower resolution.
                     BufferedImage sampled = new BufferedImage(settings.getSampledSize(), settings.getSampledSize(), BufferedImage.TYPE_INT_ARGB);
@@ -385,11 +394,13 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                     ImageIO.write(sampled, "PNG", new File(sampledDir, pngFilename));
                 }
+
+                progressCount++;
             }
 
             if (monitor != null)
             {
-                monitor.setProgress(resources.getViewSet().getCombinedCameraPoseCount(), "All images completed.");
+                monitor.setProgress(resources.getViewSet().getViewCount(), "All images completed.");
             }
         }
     }

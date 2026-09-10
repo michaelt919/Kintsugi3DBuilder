@@ -21,7 +21,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
@@ -85,8 +86,6 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
         selectImageFileLabel.visibleProperty().bind(selectImageFileButton.selectedProperty()
             .or(previousImageButton.selectedProperty().and(selectedImageFile.isNotNull())));
-        buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
-            selectImageFileLabel.setVisible(selectImageFileButton.isSelected()));
 
         this.getCanAdvanceObservable().bind(buttonGroup.selectedToggleProperty().isNotNull());
     }
@@ -105,9 +104,9 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
             previousImageButton.setText("Skip (no tone curve)");
         }
 
-        if (hasPreviousColorCheckerImage() || Global.state().getIOModel().getLoadedViewSet().hasCustomLuminanceEncoding())
+        if (hasPreviousColorCheckerImage())
         {
-            // Default unless the user has never selected a calibration image nor saved a luminance encoding.
+            // Default unless the user has never selected a calibration image.
             buttonGroup.selectToggle(previousImageButton);
         }
     }
@@ -126,14 +125,14 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         File imageFile = null;
         if (Objects.equals(buttonGroup.getSelectedToggle(), primaryViewImageButton))
         {
-            int primaryViewIndex = viewSet.getPrimaryViewIndex();
+            View primaryView = viewSet.getPrimaryView();
             try
             {
-                imageFile = viewSet.findFullResImageFile(primaryViewIndex);
+                imageFile = primaryView.findFullResImageFile();
             }
             catch (FileNotFoundException e)
             {
-                error("File not found", String.format("Could not find file: %s", viewSet.getFullResImageFile(primaryViewIndex)));
+                error("File not found", String.format("Could not find file: %s", primaryView.getFullResImageFile()));
                 return false;
             }
         }
@@ -157,8 +156,18 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
 
             viewSet.clearLuminanceEncoding();
 
-            LOG.debug("Setting new color calibration image: {}", imageFile);
-            getState().getProjectModel().setColorCheckerFile(imageFile);
+            // Don't remember the image if it was just the calibrated primary view.
+            // (We don't want users to be given the default option to use the old view for the eyedropper step
+            // if they switch to a new calibrated view.)
+            if (Objects.equals(buttonGroup.getSelectedToggle(), primaryViewImageButton))
+            {
+                getState().getProjectModel().setColorCheckerFile(null);
+            }
+            else
+            {
+                LOG.debug("Setting new color calibration image: {}", imageFile);
+                getState().getProjectModel().setColorCheckerFile(imageFile);
+            }
         }
 
         // Skip is selected if and only if there is no previous image (i.e. button is actually labelled "Skip")

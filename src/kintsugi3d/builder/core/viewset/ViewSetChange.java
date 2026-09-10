@@ -9,42 +9,31 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
-
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+package kintsugi3d.builder.core.viewset;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Objects;
+import java.util.Collections;
+import java.util.Map;
 
-public class NamedTextureReplaceData extends ImageReplaceData
+public class ViewSetChange
 {
-    private TextureDetails key;
-
-    @Override
-    public void replace() throws IOException
+    public enum Type
     {
-        getResources().replaceTextureWithSpecificFile(key, getNewImage());
+        ADDED, REMOVED, MODIFIED
     }
 
-    @Override
-    public void refreshCards()
+    public final Type type;
+    public final Map<File, View> viewMap;
+
+    ViewSetChange(Type type, Map<File, View> viewMap)
     {
-        Global.state().getTabModels().getTab("Textures").refreshCards(card ->
-            Objects.equals(card.getTitle(), key.friendlyName));
+        this.type = type;
+        this.viewMap = Collections.unmodifiableMap(viewMap);
     }
 
-    public NamedTextureReplaceData(TextureResources resources, TextureDetails key, File currentImage)
+    ViewSetChange(Type type, View view)
     {
-        super(resources);
-        this.key = key;
-        setCurrentImage(currentImage);
+        this.type = type;
+        this.viewMap = Map.of(view.imageFile, view);
     }
-
-    public TextureDetails getKey()
-    {
-        return key;
-    }
-
-
 }

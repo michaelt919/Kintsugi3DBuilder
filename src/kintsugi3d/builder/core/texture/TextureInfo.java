@@ -9,24 +9,28 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.texture;
 
+import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.state.scene.UserShader;
+
+import java.io.IOException;
 import java.util.Objects;
 
-public final class TextureDetails implements Comparable<TextureDetails>
+public abstract class TextureInfo implements Comparable<TextureInfo>
 {
     public final String name;
     public final String friendlyName;
     public final String purpose;
 
-    public TextureDetails(String name, String friendlyName, String purpose)
+    protected TextureInfo(String name, String friendlyName, String purpose)
     {
         this.name = name;
         this.friendlyName = friendlyName;
         this.purpose = purpose;
     }
 
-    public TextureDetails(String name)
+    protected TextureInfo(String name)
     {
         this.name = name;
         this.friendlyName = name;
@@ -36,7 +40,7 @@ public final class TextureDetails implements Comparable<TextureDetails>
     @Override
     public boolean equals(Object obj)
     {
-        return obj instanceof TextureDetails && Objects.equals(this.name, ((TextureDetails) obj).name);
+        return obj instanceof TextureInfo && Objects.equals(this.name, ((TextureInfo) obj).name);
     }
 
     @Override
@@ -46,8 +50,14 @@ public final class TextureDetails implements Comparable<TextureDetails>
     }
 
     @Override
-    public int compareTo(TextureDetails o)
+    public int compareTo(TextureInfo o)
     {
         return this.name.compareTo(o.name);
     }
+
+    public abstract UserShader getVisualizationShader();
+
+    public abstract void refresh(RenderableInstance<?> instance) throws IOException;
+
+    public abstract ImageReplaceData getReplaceData(RenderableInstance<?> instance);
 }

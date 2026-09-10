@@ -25,6 +25,7 @@ import kintsugi3d.util.RadianceImageLoader.Image;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
@@ -50,7 +51,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = ImageHelper.of(colorImg).withAlphaMask(maskImg).getBufferedImage();
+            this.colorImg = ImageHelper.wrap(colorImg).withAlphaMask(maskImg).getBufferedImage();
             this.flipVertical = flipVertical;
         }
 
@@ -113,12 +114,12 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         private final AbstractDataType<? super MappedType> mappedType;
         private final Function<Color, MappedType> mappingFunction;
 
-        OpenGLTexture2DMappedFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical,
-            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
+        OpenGLTexture2DMappedFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, RenderedImage maskImg, boolean flipVertical,
+                                             AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = ImageHelper.of(colorImg).withAlphaMask(colorImg).getBufferedImage();
+            this.colorImg = ImageHelper.wrap(colorImg).withAlphaMask(colorImg).getBufferedImage();
             if (maskImg != null)
             {
                 if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())

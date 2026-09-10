@@ -14,8 +14,12 @@ package kintsugi3d.builder.test;
 import kintsugi3d.builder.app.logging.LogMessage;
 import kintsugi3d.builder.app.logging.LogMessageListener;
 import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.io.ViewSetDirectories;
@@ -34,19 +38,22 @@ import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.Potato;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SmokeTest
 {
@@ -225,16 +232,16 @@ public class SmokeTest
                 System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
             },
             "Rodin_metashape");
-        int numLoadedCameras = viewSet.getCombinedCameraPoseCount();
+        int numLoadedCameras = viewSet.getViewCount();
         assertEquals(397, numLoadedCameras);
-        int numEnabledCameras = viewSet.getEnabledCameraPoseCount();
+        int numEnabledCameras = viewSet.getEnabledViewCount();
         assertEquals(397, numLoadedCameras);
-        int numDisabledCameras = viewSet.getDisabledCameraPoseCount();
+        int numDisabledCameras = viewSet.getDisabledViewCount();
         assertEquals(0, numDisabledCameras);
     }
 
     private void testFitMetashape(String cameras, String geometry, String imageDirectory,
-                                  Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
+                                  Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
@@ -262,7 +269,7 @@ public class SmokeTest
         }
     }
 
-    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
+    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
