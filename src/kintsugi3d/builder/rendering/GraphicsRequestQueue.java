@@ -9,13 +9,18 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.viewset.ViewSetChange;
+import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ProgressMonitoredGraphicsRequest;
 
-public interface Observable
+public interface GraphicsRequestQueue
 {
-    void registerObserver(Observer<ViewSetChange> observer);
-    void removeObserver(Observer<ViewSetChange> observer);
-    void notifyObservers(ViewSetChange change);
+    void addBackgroundGraphicsRequest(ProjectGraphicsRequest request);
+
+    void addGraphicsRequest(ProgressMonitoredProjectGraphicsRequest request);
+
+    void addBackgroundGraphicsRequest(GraphicsRequest request);
+
+    void addGraphicsRequest(ProgressMonitoredGraphicsRequest request);
 }

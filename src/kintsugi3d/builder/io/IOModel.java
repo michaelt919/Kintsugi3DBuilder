@@ -9,21 +9,23 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.io;
 
 import de.javagl.obj.Mtl;
 import de.javagl.obj.MtlReader;
 import de.javagl.obj.Obj;
 import de.javagl.obj.ObjReader;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.UnzipHelper;
@@ -48,139 +50,6 @@ import java.util.function.DoubleUnaryOperator;
 
 public class IOModel
 {
-    private static class AggregateProgressMonitor implements ProgressMonitor
-    {
-        private final Collection<ProgressMonitor> subMonitors = new ArrayList<>(8);
-
-        void addSubMonitor(ProgressMonitor monitor)
-        {
-            subMonitors.add(monitor);
-        }
-
-        @Override
-        public void allowUserCancellation() throws UserCancellationException
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.allowUserCancellation();
-            }
-        }
-
-        @Override
-        public void cancelComplete(UserCancellationException e)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.cancelComplete(e);
-            }
-        }
-
-        @Override
-        public void start()
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.start();
-            }
-        }
-
-        @Override
-        public void setProcessName(String processName)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.setProcessName(processName);
-            }
-        }
-
-        @Override
-        public void setStageCount(int count)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.setStageCount(count);
-            }
-        }
-
-        @Override
-        public void setStage(int stage, String message)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.setStage(stage, message);
-            }
-        }
-
-        @Override
-        public void advanceStage(String message)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.advanceStage(message);
-            }
-        }
-
-        @Override
-        public void setMaxProgress(double maxProgress)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.setMaxProgress(maxProgress);
-            }
-        }
-
-        @Override
-        public void setProgress(double progress, String message)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.setProgress(progress, message);
-            }
-        }
-
-        @Override
-        public void complete()
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.complete();
-            }
-        }
-
-        @Override
-        public void fail(Throwable e)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.fail(e);
-            }
-        }
-
-        @Override
-        public void warn(Throwable e)
-        {
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                monitor.warn(e);
-            }
-        }
-
-        @Override
-        public boolean isConflictingProcess()
-        {
-            boolean processing = false;
-            for (ProgressMonitor monitor : subMonitors)
-            {
-                if(monitor.isConflictingProcess())
-                {
-                    processing = true;
-                }
-            }
-
-            return processing;
-        }
-    }
-
     private static final Logger LOG = LoggerFactory.getLogger(IOModel.class);
 
     private IOHandler handler;

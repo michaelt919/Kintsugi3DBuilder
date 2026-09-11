@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -12,11 +12,13 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.IOHandler;
+import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
@@ -33,10 +35,7 @@ import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.interactive.InitializationException;
-import kintsugi3d.gl.interactive.InteractiveRenderableBase;
-import kintsugi3d.gl.interactive.RefreshableCollection;
-import kintsugi3d.gl.interactive.RenderRefreshable;
+import kintsugi3d.gl.interactive.*;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -236,16 +235,16 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 {
                     CardsModel<View> photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS, View.class);
 
-                    switch (change.type)
+                    switch (change.changeType)
                     {
                         case ADDED:
                             tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
                             break;
                         case REMOVED:
-                            photosTab.deleteCards(card -> change.viewMap.get(new File(card.getInternalName())) != null);
+                            photosTab.deleteCards(card -> change.changeMap.get(new File(card.getInternalName())) != null);
                             break;
                         case MODIFIED:
-                            photosTab.refreshCards(card -> change.viewMap.get(new File(card.getInternalName())));
+                            photosTab.refreshCards(card -> change.changeMap.get(new File(card.getInternalName())));
                             break;
                     }
                 });

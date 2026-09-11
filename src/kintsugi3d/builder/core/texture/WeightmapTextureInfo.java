@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 

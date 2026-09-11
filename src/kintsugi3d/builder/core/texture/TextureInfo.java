@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core.texture;
 
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.builder.state.scene.UserShader;
 
 import java.io.IOException;

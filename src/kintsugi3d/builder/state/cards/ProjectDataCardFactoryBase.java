@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.rendering.RenderableInstance;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;

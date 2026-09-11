@@ -12,9 +12,9 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
 import org.slf4j.Logger;

@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
-import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 

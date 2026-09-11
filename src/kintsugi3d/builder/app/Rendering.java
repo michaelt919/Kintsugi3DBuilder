@@ -13,8 +13,12 @@ package kintsugi3d.builder.app;
 
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.javafx.core.MultithreadState;
+import kintsugi3d.builder.rendering.GraphicsRequestManager;
+import kintsugi3d.builder.rendering.ProjectGraphicsRequest;
 import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.builder.state.SceneViewportModel;
@@ -583,11 +587,11 @@ public final class Rendering
             {
                 Class<?> requestClass = Class.forName(args[1]);
                 Method createMethod = requestClass.getDeclaredMethod("create", String[].class);
-                if (ObservableProjectGraphicsRequest.class.isAssignableFrom(createMethod.getReturnType())
+                if (ProgressMonitoredGraphicsRequest.class.isAssignableFrom(createMethod.getReturnType())
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {
                     // Add request to the queue
-                    requestQueue.addGraphicsRequest((ObservableProjectGraphicsRequest) createMethod.invoke(null, (Object[]) args));
+                    requestQueue.addGraphicsRequest((ProgressMonitoredGraphicsRequest) createMethod.invoke(null, (Object[]) args));
 
                     // Quit after the request finishes
                     // Use ProjectGraphicsRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,

@@ -12,11 +12,10 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.state.cards.TabsManager;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.vecmath.Vector3;
 
 class BackendProgressMonitor implements ProgressMonitor

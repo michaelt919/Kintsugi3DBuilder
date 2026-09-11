@@ -9,16 +9,17 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.rendering;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.GraphicsRequest;
-import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitoredGraphicsRequest;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class GraphicsRequestManager<ContextType extends Context<ContextType>> implements GraphicsRequestQueue<ContextType>
+public class GraphicsRequestManager<ContextType extends Context<ContextType>> implements GraphicsRequestQueue
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsRequestManager.class);
     private final ContextType context;
@@ -123,7 +124,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void addGraphicsRequest(ObservableProjectGraphicsRequest request)
+    public void addGraphicsRequest(ProgressMonitoredProjectGraphicsRequest request)
     {
         if (this.progressMonitor.isConflictingProcess())
         {
@@ -227,7 +228,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void addGraphicsRequest(ObservableGraphicsRequest request)
+    public void addGraphicsRequest(ProgressMonitoredGraphicsRequest request)
     {
         synchronized (requestList)
         {

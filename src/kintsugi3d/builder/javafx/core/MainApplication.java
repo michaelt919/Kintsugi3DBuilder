@@ -26,7 +26,7 @@ import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;

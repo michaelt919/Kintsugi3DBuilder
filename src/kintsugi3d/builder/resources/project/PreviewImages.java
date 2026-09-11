@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.viewset.DistortionProjection;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;

@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.export.resample;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
@@ -28,7 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 
-public class ResampleRequest implements ObservableProjectGraphicsRequest
+public class ResampleRequest implements ProgressMonitoredProjectGraphicsRequest
 {
     private final int resampleWidth;
     private final int resampleHeight;

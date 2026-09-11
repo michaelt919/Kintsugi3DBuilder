@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;

@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.core.viewset;
 
-import kintsugi3d.builder.core.Observable;
-import kintsugi3d.builder.core.Observer;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
-import kintsugi3d.builder.core.viewset.ViewSetChange.Type;
+import kintsugi3d.builder.core.viewset.MappedChange.Type;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
+import kintsugi3d.builder.util.Observable;
+import kintsugi3d.builder.util.Observer;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -41,11 +41,11 @@ import java.util.stream.Collectors;
  *
  * @author Michael Tetzlaff
  */
-public final class ViewSet implements ReadonlyViewSet, Observable
+public final class ViewSet implements ReadonlyViewSet, Observable<MappedChange<File, View>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
-    private final Collection<Observer<ViewSetChange>> observers = Collections.synchronizedList(new ArrayList<>(8));
+    private final Collection<Observer<MappedChange<File, View>>> observers = Collections.synchronizedList(new ArrayList<>(8));
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
@@ -588,7 +588,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             view.isEnabled = isEnabled;
             if (!isEnabled)
             {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, view));
+                notifyObservers(new MappedChange<>(Type.MODIFIED, view.imageFile, view));
             }
             // Else still enabled so nothing needs to change
         }
@@ -597,7 +597,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             view.isEnabled = isEnabled;
             if (isEnabled)
             {
-                notifyObservers(new ViewSetChange(Type.MODIFIED, view));
+                notifyObservers(new MappedChange<>(Type.MODIFIED, view.imageFile, view));
             }
             // Else still disabled so nothing needs to change
         }
@@ -618,7 +618,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         if (!imageFilesModified.isEmpty())
         {
-            notifyObservers(new ViewSetChange(Type.MODIFIED, imageFilesModified));
+            notifyObservers(new MappedChange<>(Type.MODIFIED, imageFilesModified));
         }
     }
 
@@ -1043,7 +1043,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
             }
         }
 
-        notifyObservers(new ViewSetChange(Type.ADDED, view));
+        notifyObservers(new MappedChange<>(Type.ADDED, view.imageFile, view));
     }
 
     public void removeViewByImageFilename(File image)
@@ -1076,7 +1076,7 @@ public final class ViewSet implements ReadonlyViewSet, Observable
 
         if (removed != null)
         {
-            notifyObservers(new ViewSetChange(Type.REMOVED, removed));
+            notifyObservers(new MappedChange<>(Type.REMOVED, removed.imageFile, removed));
         }
     }
 
@@ -1468,21 +1468,21 @@ public final class ViewSet implements ReadonlyViewSet, Observable
     }
 
     @Override
-    public void registerObserver(Observer<ViewSetChange> observer)
+    public void registerObserver(Observer<MappedChange<File, View>> observer)
     {
         observers.add(observer);
     }
 
     @Override
-    public void removeObserver(Observer<ViewSetChange> observer)
+    public void removeObserver(Observer<MappedChange<File, View>> observer)
     {
         observers.remove(observer);
     }
 
     @Override
-    public void notifyObservers(ViewSetChange change)
+    public void notifyObservers(MappedChange<File, View> change)
     {
-        for (Observer<ViewSetChange> observer : observers)
+        for (Observer<MappedChange<File, View>> observer : observers)
         {
             observer.update(change);
         }

@@ -11,17 +11,17 @@
 
 package kintsugi3d.builder.export.screenshot;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
-public class ScreenshotRequest implements ObservableProjectGraphicsRequest
+public class ScreenshotRequest implements ProgressMonitoredProjectGraphicsRequest
 {
     private final int width;
     private final int height;

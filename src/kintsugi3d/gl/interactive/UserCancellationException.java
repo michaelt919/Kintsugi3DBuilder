@@ -9,31 +9,21 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core.viewset;
+package kintsugi3d.gl.interactive;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Map;
-
-public class ViewSetChange
+/**
+ * Thrown when a user requests cancellation of an operation through the user interface, preventing it from completing normally.
+ */
+public class UserCancellationException extends Exception
 {
-    public enum Type
+    private static final long serialVersionUID = 4174732568487109007L;
+
+    public UserCancellationException()
     {
-        ADDED, REMOVED, MODIFIED
     }
 
-    public final Type type;
-    public final Map<File, View> viewMap;
-
-    ViewSetChange(Type type, Map<File, View> viewMap)
+    public UserCancellationException(String message)
     {
-        this.type = type;
-        this.viewMap = Collections.unmodifiableMap(viewMap);
-    }
-
-    ViewSetChange(Type type, View view)
-    {
-        this.type = type;
-        this.viewMap = Map.of(view.imageFile, view);
+        super(message);
     }
 }

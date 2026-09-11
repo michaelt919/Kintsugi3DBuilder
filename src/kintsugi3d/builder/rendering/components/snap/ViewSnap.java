@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.RenderedComponent;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;

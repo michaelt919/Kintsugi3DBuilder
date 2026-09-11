@@ -9,10 +9,30 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.core.viewset;
 
-@FunctionalInterface
-public interface Observer<ChangeType>
+import java.util.Collections;
+import java.util.Map;
+
+public class MappedChange<K, V>
 {
-    void update(ChangeType change);
+    public enum Type
+    {
+        ADDED, REMOVED, MODIFIED
+    }
+
+    public final Type changeType;
+    public final Map<K, V> changeMap;
+
+    MappedChange(Type changeType, Map<K, V> changeMap)
+    {
+        this.changeType = changeType;
+        this.changeMap = Collections.unmodifiableMap(changeMap);
+    }
+
+    MappedChange(Type changeType, K key, V value)
+    {
+        this.changeType = changeType;
+        this.changeMap = Map.of(key, value);
+    }
 }

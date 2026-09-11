@@ -15,7 +15,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.io.LoadOptionsModel;
 
 public class ObservableLoadOptionsModel implements LoadOptionsModel
 {

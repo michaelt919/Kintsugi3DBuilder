@@ -9,22 +9,33 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.rendering;
 
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 
 /**
- * An interface for an executable that requires a loaded model instance.
+ * An interface for an executable that requires a loaded model instance and can be observed by a loading monitor
  */
-public interface ProjectGraphicsRequest
+public interface ProgressMonitoredProjectGraphicsRequest extends ProjectGraphicsRequest
 {
     /**
      * The entry point for the executable.
-     * @param instance The implementation of Kintsugi 3D Builder's renderer.
+     * @param renderable The implementation of Kintsugi 3D Builder's renderer.
      *                   This can be used to dynamically generate renders of the current view,
      *                   or just to access the GraphicsResources and the graphics Context.
+     * @param monitor  A monitor that can be fired to update the loading bar.
+     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      * @param <ContextType> The type of the graphics context that the renderer implementation uses.
      * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
      */
-    <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> instance) throws Exception;
+    <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception;
+
+    @Override
+    default <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> instance) throws Exception
+    {
+        // Use a default ProgressMonitor that does nothing but doesn't cause null pointer exceptions
+        this.executeRequest(instance, new DefaultProgressMonitor());
+    }
 }

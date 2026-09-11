@@ -22,7 +22,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 
 import java.io.File;

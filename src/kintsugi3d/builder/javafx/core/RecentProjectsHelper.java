@@ -13,7 +13,7 @@ package kintsugi3d.builder.javafx.core;
 
 import javafx.scene.control.*;
 import kintsugi3d.builder.app.OperatingSystem;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.io.RecentProjects;
 
 import java.io.File;
 import java.util.ArrayList;

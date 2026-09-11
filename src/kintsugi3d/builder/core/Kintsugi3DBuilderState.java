@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.io.IOModel;
+import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;

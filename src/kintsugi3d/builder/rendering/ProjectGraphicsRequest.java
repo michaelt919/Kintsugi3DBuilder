@@ -9,15 +9,22 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.resources.project;
+package kintsugi3d.builder.rendering;
 
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.ProgressMonitor;
-import kintsugi3d.gl.interactive.UserCancellationException;
 
-import java.io.IOException;
-
-public interface GraphicsResourcesCacheable<ContextType extends Context<ContextType>> extends GraphicsResources<ContextType>
+/**
+ * An interface for an executable that requires a loaded model instance.
+ */
+public interface ProjectGraphicsRequest
 {
-    ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
+    /**
+     * The entry point for the executable.
+     * @param instance The implementation of Kintsugi 3D Builder's renderer.
+     *                   This can be used to dynamically generate renders of the current view,
+     *                   or just to access the GraphicsResources and the graphics Context.
+     * @param <ContextType> The type of the graphics context that the renderer implementation uses.
+     * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
+     */
+    <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> instance) throws Exception;
 }
