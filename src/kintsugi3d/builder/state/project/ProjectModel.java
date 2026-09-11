@@ -26,6 +26,8 @@ public interface ProjectModel
 {
     String NULL_PROJECT_NAME = "No Project";
 
+    File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException;
+
     File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException;
     void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException;
 

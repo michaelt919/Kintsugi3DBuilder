@@ -50,6 +50,12 @@ public class SynchronizedProjectModel implements ProjectModel
     }
 
     @Override
+    public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    {
+        return baseModel.getViewSetFileForProject(projectFile);
+    }
+
+    @Override
     public File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException
     {
         return baseModel.openProjectFile(projectFile);

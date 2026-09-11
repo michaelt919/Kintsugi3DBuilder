@@ -19,8 +19,6 @@ import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,8 +32,6 @@ import java.util.*;
  */
 public final class ViewSetReaderFromVSET implements ViewSetReader
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
-
     private static final ViewSetReaderFromVSET INSTANCE = new ViewSetReaderFromVSET();
 
     public static ViewSetReaderFromVSET getInstance()
@@ -61,7 +57,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         File root = directories.projectRoot;
         File supportingFilesDirectory = directories.supportingFilesDirectory;
         boolean needsUndistort = directories.fullResImagesNeedUndistort;
-        Date timestamp = new Date();
 
         ViewSetBuilder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
 
@@ -152,17 +147,18 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     }
                     case "i":
                     {
-                        File absoluteFile = new File(makePortableFilePath(scanner.nextLine().trim()));
+                        String filePath = makePortableFilePath(scanner.nextLine().trim());
+                        File absoluteFile = new File(filePath);
 
                         if (absoluteFile.exists())
                         {
                             // Intentionally use absolute path since preview images are probably stored in cache
                             // rather than being contained within this project.
-                            builder.setPreviewImageDirectory(new File(makePortableFilePath(scanner.nextLine().trim())));
+                            builder.setPreviewImageDirectory(absoluteFile);
                         }
                         else // Fallback for older projects that store relative paths
                         {
-                            builder.setRelativePreviewImagePathName(makePortableFilePath(scanner.nextLine().trim()));
+                            builder.setRelativePreviewImagePathName(filePath);
                         }
 
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
@@ -416,9 +412,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
-
-        LOG.info("View Set file loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
-
         return builder;
     }
 
@@ -437,7 +430,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    public ViewSetBuilder readFromStream(InputStream stream, File root)
+    private ViewSetBuilder readFromStream(InputStream stream, File root)
     {
         // Use root directory as supporting files directory
         ViewSetDirectories directories = new ViewSetDirectories();

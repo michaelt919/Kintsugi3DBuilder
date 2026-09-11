@@ -61,6 +61,23 @@ public abstract class ProjectModelBase<
 
     public abstract List<ObjectPoseType> getObjectPoseList();
 
+    @Override
+    public final File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    {
+        Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(projectFile);
+
+        Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
+        if (vsetNode instanceof Element)
+        {
+            return new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src")
+                .replace('/', File.separatorChar).replace('\\', File.separatorChar)); // Normalize Windows to Mac/Linux and vice versa
+        }
+        else
+        {
+            throw new IOException("Error while processing the ViewSet element.");
+        }
+    }
+
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
      * Returns the file containing the viewset with the actual image data.

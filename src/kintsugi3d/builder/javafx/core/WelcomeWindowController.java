@@ -28,15 +28,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.RecentProjects;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.File;
@@ -44,15 +43,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class WelcomeWindowController
 {
     private static final Logger LOG = LoggerFactory.getLogger(WelcomeWindowController.class);
-
-    private  static final String COULD_NOT_FIND_PREVIEW_IMAGE_FOR = "Could not find preview image for {}";
 
     private static WelcomeWindowController instance;
 
@@ -394,162 +392,26 @@ public class WelcomeWindowController
         setRecentButtonImg(recentButton, projFile);
     }
 
-    private static void logCouldNotFindImage(File projFile)
-    {
-        LOG.warn(COULD_NOT_FIND_PREVIEW_IMAGE_FOR, projFile.getName());
-    }
-
     private static void setRecentButtonImg(Button recentButton, File projFile)
     {
-        //open file and convert to xml document
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try
         {
-            String fullRes = "# Full resolution image file path";
-            String prevRes = "# Preview resolution image file path";
-
-            String prevResImgsPath = findImgsPath(factory, projFile, prevRes);
-            String fullResImgsPath = findImgsPath(factory, projFile, fullRes);
-
-            if ((prevResImgsPath == null) && (fullResImgsPath == null))
-            {
-                logCouldNotFindImage(projFile);
-                return;
-            }
-
-            String previewImgPath = null;
-
-            if (prevResImgsPath != null)
-            {
-                previewImgPath = getPreviewImgPath(prevResImgsPath, projFile);
-            }
-
-            if (previewImgPath == null)
-            {
-                //try full imgPath before giving up
-                if (fullResImgsPath == null)
-                {
-                    logCouldNotFindImage(projFile);
-                    return;
-                }
-
-                previewImgPath = getPreviewImgPath(fullResImgsPath, projFile);
-
-                if (previewImgPath == null)
-                {
-                    logCouldNotFindImage(projFile);
-                    return;
-                }
-            }
+            File vsetFile = Global.state().getProjectModel().getViewSetFileForProject(projFile);
+            ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile)
+                .finish();
+            File previewImageFile = viewSet.getRepresentativeView().getPreviewImageFile();
 
             ImageView previewImgView = new ImageView(
-                new Image(new File(previewImgPath).toURI().toString(),
-                    true));/*enable background loading so we don't freeze the builder*/
+                new Image(previewImageFile.toURI().toString(),
+                    true)); /* enable background loading so we don't freeze the builder */
 
             previewImgView.setFitHeight(80);
             previewImgView.setPreserveRatio(true);
             Platform.runLater(() -> recentButton.setGraphic(previewImgView));
         }
-        catch (ParserConfigurationException | IOException | SAXException e)
+        catch (IOException | ParserConfigurationException | SAXException e)
         {
-            LOG.warn(COULD_NOT_FIND_PREVIEW_IMAGE_FOR, projFile.getName(), e);
+            LOG.warn("Could not find preview image for {}", projFile.getName(), e);
         }
-    }
-
-    private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException
-    {
-        if (file.getName().toLowerCase(Locale.ROOT).endsWith("k3d") && file.exists())
-        {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(file);
-
-            //get view set path
-            Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
-            Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-            String viewSetPath = new File(file.getParent(), viewSetDomElement.getAttribute("src")).getPath();
-
-            //open images in view set path
-            File viewSetFile = new File(viewSetPath);
-
-            try (Scanner sc = new Scanner(viewSetFile, StandardCharsets.UTF_8))
-            {
-                while (sc.hasNextLine())
-                {
-                    String read = sc.nextLine();
-
-                    //if (read.equals("# Full resolution image file path")){
-                    //if (read.equals("# Preview resolution image file path")) {
-                    if (read.equals(target))
-                    {
-                        String imgsPath = sc.nextLine();
-                        //remove the first two chars of the path because it starts with "i "
-                        imgsPath = imgsPath.substring(2);
-
-                        //remove references to parent directories
-                        String parentPrefix = "..\\";
-                        String parentPrefixUnix = "../";
-                        while (imgsPath.startsWith(parentPrefix) || imgsPath.startsWith(parentPrefixUnix))
-                        {
-                            imgsPath = imgsPath.substring(parentPrefix.length());
-                        }
-                        return imgsPath;
-                    }
-                }
-
-                return null;
-            }
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    private static String getPreviewImgPath(String imgsPath, File projFile) throws IOException
-    {
-        //build path off of home directory if path is not complete, otherwise correct path would not be found
-        File imgFolder;
-        if (imgsPath.matches("^[A-Za-z]:\\\\.*"))
-        {
-            //full path is given (starting with C:\, G:\, etc)
-            imgFolder = new File(imgsPath);
-        }
-        else
-        {
-            String basePath = System.getProperty("user.home");
-            File baseDir = new File(basePath);
-            imgFolder = new File(baseDir, imgsPath);
-        }
-
-        String canonicalPath = imgFolder.getCanonicalPath();
-        File resolvedFile = new File(canonicalPath);
-
-        // Check if the path is a directory
-        if (!resolvedFile.isDirectory())
-        {
-            //try again w/ project file parent + imgFolder
-            imgFolder = new File(projFile.getParent(), imgsPath);
-            canonicalPath = imgFolder.getCanonicalPath();
-            resolvedFile = new File(canonicalPath);
-
-            if (!resolvedFile.isDirectory())
-            {
-                //not a warning because we might find the preview image in the other image path
-                //first checks preview images, then full res images
-                LOG.info("Could not find preview image for {} in {}", projFile.getName(), resolvedFile.getAbsolutePath());
-                return null;
-            }
-        }
-
-        // List child files
-        String[] childFilePaths = resolvedFile.list();
-
-        if ((childFilePaths == null) || (childFilePaths.length == 0))
-        {
-            LOG.warn("No preview images found in {}", resolvedFile.getAbsolutePath());
-            return null;
-        }
-
-        return new File(canonicalPath, childFilePaths[0]).getPath();
     }
 }
