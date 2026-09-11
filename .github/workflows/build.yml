@@ -1,0 +1,74 @@
+name: Build
+
+on:
+  push:
+    branches: [ 'main' ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ 'main' ]
+
+env:
+  java-version: 11
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }} distributions
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: '*setup.exe'
+            
+          - os: macos-latest
+            artifact: '*macos.dmg'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.java-version }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: '${{ env.java-version }}'
+          distribution: 'temurin'
+          cache: 'maven'
+          
+      - name: Maven build and test
+        run: mvn --batch-mode --update-snapshots verify
+
+      - name: Store build directory
+        id: build-dir
+        shell: bash
+        run: |
+          BUILD_DIR=$(mvn help:evaluate -Dexpression=project.build.directory -q -DforceStdout)
+          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_OUTPUT
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}.zip
+          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/*.zip
+
+      - name: Install NSIS
+        if: matrix.os == 'windows-latest' && github.ref_type == 'tag'
+        run: |
+          winget install NSIS.NSIS --silent --accept-source-agreements --accept-package-agreements
+          echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
+
+      - name: Maven install lifecycle
+        if: github.ref_type == 'tag'
+        run: mvn --batch-mode --update-snapshots install
+
+      - name: Upload release
+        shell: bash
+        if: github.ref_type == 'tag'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release upload ${{ github.ref_name }} ${{ steps.build-dir.outputs.BUILD_DIR }}/${{ matrix.artifact }} --clobber
+          else
+            gh release create ${{ github.ref_name }} ${{ steps.build-dir.outputs.BUILD_DIR }}/${{ matrix.artifact }} -t "${{ github.ref_name }}" -F RELEASE.md
+          fi
