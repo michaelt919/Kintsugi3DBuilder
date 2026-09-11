@@ -11,40 +11,39 @@
 
 package kintsugi3d.builder.io;
 
-import de.javagl.obj.Mtl;
-import de.javagl.obj.MtlReader;
-import de.javagl.obj.Obj;
-import de.javagl.obj.ObjReader;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.material.ImportedMaterial;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.Locale;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -90,7 +89,7 @@ public class IOModel
         return this.handler.getRenderableForShader(shader);
     }
 
-    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
+    public void addViewSetLoadCallback(Runnable callback)
     {
         this.handler.addViewSetLoadCallback(callback);
     }
@@ -290,8 +289,7 @@ public class IOModel
         progressMonitor.setFinishingUpText("This shouldn't take long...");
 
         copyMasks();
-        copyModel();
-        copyTextures();
+        copyModelAndTextures();
 
         RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
 
@@ -543,7 +541,7 @@ public class IOModel
      * Copies model and textures to an appropriate supporting files directory and changes the model directory accordingly.
      * If the model and textures were previously stored in a ZIP file, they will be unzipped to the new model directory.
      */
-    private void copyModel()
+    private void copyModelAndTextures()
     {
         ViewSet viewSet = getLoadedViewSet();
 
@@ -564,22 +562,23 @@ public class IOModel
 
         modelDestDir.mkdirs();
 
-        // Grab reference for thread synchronization, just in case.
-        File geometryFileRef = viewSet.getGeometryFile();
+        // Grab copy for thread synchronization, just in case.
+        File geometryFile = viewSet.getGeometryFile();
 
         // Unzip model and textures if needed
-        if (geometryFileRef.toString().endsWith(".zip"))
+        if (geometryFile.toString().endsWith(".zip"))
         {
             // Assuming a Metashape-zipped PLY model called "mesh.ply".
             LOG.info("Unzipping model folder...");
             try
             {
                 // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
-                UnzipHelper.unzipToDirectory(geometryFileRef, modelDestDir, null);
+                UnzipHelper.unzipToDirectory(geometryFile, modelDestDir, null);
 
-                // Use the destination directory as the model directory for validating (and thereafter)
                 viewSet.setGeometryFile(new File(modelDestDir, "mesh.ply"));
-                viewSet.setModelDirectory(modelDestDir);
+
+                // Copy textures from the destination directory.
+                copyTextures(modelDestDir);
             }
             catch (IOException e)
             {
@@ -588,7 +587,7 @@ public class IOModel
         }
         else
         {
-            copyFileSafe(geometryFileRef, modelDestDir);
+            copyFileSafe(geometryFile, modelDestDir);
 
             for (var resource : viewSet.getResourceMap().entrySet())
             {
@@ -598,154 +597,61 @@ public class IOModel
                 }
             }
 
-            // By definition of the property, the "original" file directory
-            // Needed for copying textures
-            viewSet.setModelDirectory(geometryFileRef.getParentFile());
-
             // Use the destination directory as the model directory to use from now on.
-            viewSet.setGeometryFile(new File(modelDestDir, geometryFileRef.getName()));
+            viewSet.setGeometryFile(new File(modelDestDir, geometryFile.getName()));
+
+            // Copy textures from the "original" file directory
+            copyTextures(geometryFile.getParentFile());
         }
     }
 
-    private void copyTextures()
+    private void copyTextures(File textureDirectory)
     {
-        ViewSet viewSet = getLoadedViewSet();
-        File xmlFile = new File(viewSet.getModelDirectory(), "doc.xml");
-        File geometryFile = viewSet.getGeometryFile();
-
-        if (xmlFile.exists())
+        if (textureDirectory != null)
         {
-            try
+            File metashapeModelXMLFile = new File(textureDirectory, "doc.xml");
+            if (metashapeModelXMLFile.exists())
             {
-                // Initialize document builder
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
+                copyTexturesFromSupplier(new MetashapeTextures(metashapeModelXMLFile));
+            }
+            else
+            {
+                VertexGeometry geometry = handler.getLoadedGeometry();
 
-                // Create a new document from the doc.xml
-                Document document = builder.parse(xmlFile);
-                document.getDocumentElement().normalize();
-
-                // Get all the textures
-                NodeList textures = document.getElementsByTagName("texture");
-
-                for (int i = 0; i < textures.getLength(); ++i)
+                if (geometry != null)
                 {
-                    Element e = (Element) textures.item(i);
+                    ImportedMaterial material = geometry.getMaterial();
 
-                    // Get some needed metadata
-                    String texType = e.getAttribute("type");
-                    String texName = ((Element) e.getElementsByTagName("page").item(0)).getAttribute("path");
-
-                    if ("normals".equals(texType))
+                    if (material != null)
                     {
-                        texType = "normal";
+                        copyTexturesFromSupplier(new OBJMaterialTextures(material, textureDirectory));
                     }
-
-                    saveTexture(texName, texType);
                 }
             }
-            catch (ParserConfigurationException | IOException | SAXException e)
-            {
-                LOG.error("Could not copy textures from Agisoft project.");
-            }
         }
-        else if (geometryFile.getName().endsWith(".obj"))
+    }
+
+    private void copyTexturesFromSupplier(TextureSupplier textureSupplier)
+    {
+        for (Entry<String, File> entry : textureSupplier.getTextures().entrySet())
         {
-            // Get our object file as an obj for parsing
-            Obj obj;
-            try (InputStream objStream = new FileInputStream(geometryFile))
+            copyTexture(entry.getValue(), entry.getKey());
+        }
+    }
+
+    private void copyTexture(File originalFile, String texName)
+    {
+        if (originalFile != null && originalFile.exists())
+        {
+            File outTex = TextureResources.getTextureFile(texName, getLoadedViewSet().getSupportingFilesDirectory());
+            try
             {
-                obj = ObjReader.read(objStream);
+                // Force conversion to PNG.
+                ImageHelper.read(originalFile).save("PNG", outTex);
             }
             catch (IOException e)
             {
-                LOG.error("Could not read materials from {}", geometryFile);
-                return;
-            }
-
-            // Iterate through all mtl files
-            // Should only be one, but for completeness’s sake
-            for (String mtlFileName : obj.getMtlFileNames())
-            {
-                File mtlFile = new File(viewSet.getModelDirectory(), mtlFileName);
-                if (mtlFile.exists())
-                {
-                    // Get all the materials from the material file
-                    try (InputStream mtlStream = new FileInputStream(mtlFile))
-                    {
-                        List<Mtl> mtls = MtlReader.read(mtlStream);
-
-                        // Map custom map_ao to material name (reading twice, yes)
-                        Map<String, String> aoMaps = new HashMap<>(1);
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mtlFile), StandardCharsets.UTF_8)))
-                        {
-                            String line;
-                            String currentMaterial = null;
-                            while ((line = reader.readLine()) != null)
-                            {
-                                line = line.trim();
-                                if (line.startsWith("newmtl "))
-                                {
-                                    currentMaterial = line.substring(7).trim();
-                                }
-                                else if (line.startsWith("map_ao ") && (currentMaterial != null))
-                                {
-                                    aoMaps.put(currentMaterial, line.substring(7).trim());
-                                    currentMaterial = null;
-                                }
-                            }
-                        }
-                        catch (IOException e)
-                        {
-                            LOG.error("Could not read occlusion for material {}", mtlFile);
-                            // No need to continue here, as the rest of the code will function without ao
-                        }
-
-
-                        // Iterate through all the materials
-                        // Should also only be one, but, ya know how it is
-                        for (Mtl mtl : mtls)
-                        {
-                            saveTexture(mtl.getMapKd(), "diffuse");
-                            saveTexture(mtl.getBump(), "normal");
-
-                            // Copy occlusion from obj using custom parser
-                            saveTexture(aoMaps.get(mtl.getName()), "occlusion");
-                        }
-                    }
-                    catch (IOException e)
-                    {
-                        LOG.error("Could not read material {}", mtlFile);
-                    }
-                }
-                else
-                {
-                    LOG.error("Could not find material {}", mtlFile);
-                }
-            }
-        }
-    }
-
-    private void saveTexture(String originalName, String saveName)
-    {
-        ViewSet viewSet = getLoadedViewSet();
-
-        // Mtl parsing compatibility
-        if (originalName != null)
-        {
-            File inTex = new File(viewSet.getModelDirectory(), originalName);
-            if (inTex.exists())
-            {
-                File outTex = new File(viewSet.getSupportingFilesDirectory(), String.format("%s.png", saveName));
-                try
-                {
-                    // Force conversion to PNG.
-                    ImageHelper.read(inTex).save("png", outTex);
-                }
-                catch (IOException e)
-                {
-                    LOG.error("Could not copy {} texture.", saveName);
-                }
+                LOG.error("Could not copy {} texture from {}.", texName, originalFile);
             }
         }
     }

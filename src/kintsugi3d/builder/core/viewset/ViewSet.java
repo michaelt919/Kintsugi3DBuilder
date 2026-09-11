@@ -125,10 +125,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable<MappedChange<F
      * The directory where the masks are stored, if any are present (null if no masks)
      */
     private volatile File masksDirectory;
-    /**
-     * The directory where the original model and imported textures (if any) are stored
-     */
-    private volatile File modelDirectory;
 
     /**
      * The mesh file.
@@ -510,7 +506,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable<MappedChange<F
         result.supportingFilesDirectory = this.supportingFilesDirectory;
         result.thumbnailImageDirectory = this.thumbnailImageDirectory;
         result.masksDirectory = this.masksDirectory;
-        result.modelDirectory = this.modelDirectory;
         result.geometryFile = this.geometryFile;
 
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -1408,17 +1403,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable<MappedChange<F
     public void setGeometryFile(File geometryFile)
     {
         this.geometryFile = geometryFile;
-    }
-
-    @Override
-    public File getModelDirectory()
-    {
-        return Optional.ofNullable(this.modelDirectory).orElse(this.rootDirectory);
-    }
-
-    public void setModelDirectory(File modelDirectory)
-    {
-        this.modelDirectory = modelDirectory;
     }
 
     @Override

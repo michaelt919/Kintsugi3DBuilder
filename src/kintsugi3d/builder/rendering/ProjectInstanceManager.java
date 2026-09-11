@@ -35,6 +35,7 @@ import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.*;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -65,6 +66,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         = new HashMap<>(8);
 
     private volatile ViewSet loadedViewSet;
+    private VertexGeometry loadedGeometry;
     private RenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
@@ -92,6 +94,21 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         synchronized (viewSetLoadCallbacks)
         {
             viewSetLoadCallbacks.add(callback);
+        }
+
+    }
+    /**
+     * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
+     * The callbacks will be cleared after being invoked.
+     *
+     * @param callback to add
+     */
+    @Override
+    public void addViewSetLoadCallback(Runnable callback)
+    {
+        synchronized (viewSetLoadCallbacks)
+        {
+            viewSetLoadCallbacks.add(viewSet -> callback.run());
         }
     }
 
@@ -154,6 +171,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         return loadedViewSet;
     }
 
+    @Override
+    public VertexGeometry getLoadedGeometry()
+    {
+        return loadedGeometry;
+    }
+
     private void invokeViewSetLoadCallbacks(ViewSet viewSet)
     {
         synchronized (viewSetLoadCallbacks)
@@ -172,6 +195,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
+        loadedGeometry = builder.getGeometry();
+
         int gpuBufferSize = loadedViewSet.getGPUBufferSize();
         if (gpuBufferSize > 1024 && progressMonitor != null)
         {
@@ -676,6 +701,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 renderableInstance.close();
                 renderableInstance = null;
                 loadedViewSet = null;
+                loadedGeometry = null;
 
                 Global.state().getProjectModel().setProjectLoaded(false);
                 Global.state().getProjectModel().setProjectProcessed(false);

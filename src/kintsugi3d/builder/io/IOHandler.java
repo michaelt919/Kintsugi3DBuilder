@@ -16,6 +16,7 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.util.EncodableColorImage;
 
@@ -30,12 +31,15 @@ import java.util.function.DoubleUnaryOperator;
 public interface IOHandler
 {
     ViewSet getLoadedViewSet();
+    VertexGeometry getLoadedGeometry();
 
     boolean isRenderableLoaded();
     RenderableInstance<?> getMainRenderable();
     RenderableInstance<?> getRenderableForShader(UserShader shader);
 
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
+    void addViewSetLoadCallback(Runnable callback);
+
     void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
 
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);

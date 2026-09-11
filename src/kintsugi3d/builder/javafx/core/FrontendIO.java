@@ -27,8 +27,6 @@ import kintsugi3d.builder.javafx.experience.CreateProject;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -45,8 +43,6 @@ public final class FrontendIO
     {
         return INSTANCE;
     }
-
-    private static final Logger LOG = LoggerFactory.getLogger(FrontendIO.class);
 
     private FileChooser projectFileChooser;
 
@@ -152,7 +148,7 @@ public final class FrontendIO
         createProject.setConfirmCallback(() ->
             // Force user to save the project before proceeding, so that they have a place to save the results
             // User can still cancel saving (TODO where does it save the results in that case?)
-            Global.state().getIOModel().addViewSetLoadCallback(viewSet -> saveProjectAs(parentWindow)));
+            Global.state().getIOModel().addViewSetLoadCallback(() -> saveProjectAs(parentWindow)));
         createProject.tryOpen();
     }
 
@@ -164,7 +160,7 @@ public final class FrontendIO
         CreateProject createProject = getCreateProjectExperience();
 
         // "force" the user to save their project (user can still cancel saving)
-        Global.state().getIOModel().addViewSetLoadCallback(viewSet -> saveProject(oldProjectFile, parentWindow));
+        Global.state().getIOModel().addViewSetLoadCallback(() -> saveProject(oldProjectFile, parentWindow));
 
         createProject.tryOpenHotSwap();
     }

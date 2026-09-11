@@ -239,6 +239,11 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             return viewSet;
         }
 
+        public VertexGeometry getGeometry()
+        {
+            return geometry;
+        }
+
         public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
         {
             this.viewSet = existingViewSet;
@@ -517,7 +522,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
     }
 
-    private static <ContextType extends Context<ContextType>> double getMinDepthFromTextureReader(
+    private static double getMinDepthFromTextureReader(
         DepthTextureReader textureReader, double nearPlane, double farPlane)
     {
         double minDepth = farPlane;
