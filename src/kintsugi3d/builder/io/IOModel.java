@@ -89,16 +89,6 @@ public class IOModel
         return this.handler.getRenderableForShader(shader);
     }
 
-    public void addViewSetLoadCallback(Runnable callback)
-    {
-        this.handler.addViewSetLoadCallback(callback);
-    }
-
-    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
-    {
-        this.handler.addViewSetLoadCallback(callback);
-    }
-
     public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
         this.handler.addMainRenderableLoadCallback(callback);
@@ -141,9 +131,9 @@ public class IOModel
         });
     }
 
-    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
+    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        load(() -> this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel));
+        load(() -> this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel));
     }
 
     public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
@@ -151,13 +141,13 @@ public class IOModel
         load(() ->
         {
             viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-            this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
+            this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
         });
     }
 
-    public void loadFromMetashapeModel(MetashapeModel model)
+    public void loadFromMetashapeModel(File newProjectFile, MetashapeModel model)
     {
-        load(() -> this.handler.loadFromMetashapeModel(model, imageLoadOptionsModel));
+        load(() -> this.handler.loadFromMetashapeModel(newProjectFile, model, imageLoadOptionsModel));
     }
 
     public void loadExistingProject(File projectFile)
@@ -254,8 +244,13 @@ public class IOModel
     /**
      * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
      * @param projectFile The file path for the project.
-     * @param finishedCallback
+     * @param finishedCallback Called after basis materials and textures have finished saving,
+     *                         which maybe asynchronous since this requires GPU access.
+     *                         No guarantees are made about which thread the callback will run on.
      * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
+     *         but the project itself (including the view set) should be fully written out to disk,
+     *
      * @throws IOException
      * @throws ParserConfigurationException
      * @throws TransformerException
@@ -314,23 +309,45 @@ public class IOModel
     }
 
     /**
+     * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
+     * @param projectFile The file path for the project.
+     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
+     *         but the project itself (including the view set) should be fully written out to disk,
+     *
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws TransformerException
+     */
+    public void saveProject(File projectFile) throws IOException, ParserConfigurationException, TransformerException
+    {
+        saveProject(projectFile, null);
+    }
+
+    /**
      * Saves the project, including textures and glTF model, using the current loaded project filename.
      * If the project file is not a .vset, the .vset will be created in a supporting files directory.
-     * @param finishedCallback
+     * @param finishedCallback Called after basis materials and textures have finished saving,
+     *                         which maybe asynchronous since this requires GPU access.
+     *                         No guarantees are made about which thread the callback will run on.
      * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
+     *         but the project itself (including the view set) should be fully written out to disk,
      * @throws IOException
      * @throws ParserConfigurationException
      * @throws TransformerException
      */
     public void saveProject(Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
     {
-        saveProject(getLoadedProjectFile(), null);
+        saveProject(getLoadedProjectFile(), finishedCallback);
     }
 
     /**
      * Saves the project, including textures and glTF model, using the current loaded project filename.
      * If the project file is not a .vset, the .vset will be created in a supporting files directory.
      * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
+     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
+     *         but the project itself (including the view set) should be fully written out to disk,
      * @throws IOException
      * @throws ParserConfigurationException
      * @throws TransformerException

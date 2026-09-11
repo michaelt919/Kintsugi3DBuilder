@@ -580,7 +580,7 @@ public class MainWindowController
 
     @FXML public void createProject()
     {
-        FrontendIO.getInstance().createProject(window);
+        FrontendIO.createProject(window);
     }
 
     @FXML public void openProject()
@@ -808,7 +808,7 @@ public class MainWindowController
 
     public void hotSwap()
     {
-        FrontendIO.getInstance().hotSwap(window);
+        FrontendIO.hotSwap(window);
     }
 
     public double getRightTabWidth()

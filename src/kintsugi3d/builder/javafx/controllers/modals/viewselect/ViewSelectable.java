@@ -23,5 +23,5 @@ public interface ViewSelectable
     double getViewRotation();
     void selectView(String viewName, double viewRotation);
 
-    void confirm();
+    boolean confirm();
 }

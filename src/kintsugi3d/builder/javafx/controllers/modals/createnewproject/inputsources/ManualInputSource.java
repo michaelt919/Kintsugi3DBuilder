@@ -22,6 +22,7 @@ import kintsugi3d.builder.io.imageset.MetashapeImageSetInfo;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.function.Supplier;
 
 public class ManualInputSource extends NonValidatedInputSourceBase
 {
@@ -32,6 +33,11 @@ public class ManualInputSource extends NonValidatedInputSourceBase
     private boolean needsUndistort;
 
     private boolean hotSwap;
+
+    public ManualInputSource(Supplier<File> specifyProjectFileToSave)
+    {
+        super(specifyProjectFileToSave);
+    }
 
     public File getCameraFile()
     {
@@ -73,7 +79,26 @@ public class ManualInputSource extends NonValidatedInputSourceBase
         return new ValidatedInputSourceBase(this, loadImageSetInfo())
         {
             @Override
-            public void confirm()
+            public boolean confirm()
+            {
+                if (hotSwap)
+                {
+                    Global.state().getIOModel().hotSwapLooseFiles(cameraFile.getPath(), cameraFile, getViewSetLoadOptions());
+                    return true;
+                }
+                else
+                {
+                    return super.confirm();
+                }
+            }
+
+            @Override
+            public void confirm(File projectFileToSave)
+            {
+                Global.state().getIOModel().loadFromLooseFiles(projectFileToSave, cameraFile.getPath(), cameraFile, getViewSetLoadOptions());
+            }
+
+            private ViewSetLoadOptions getViewSetLoadOptions()
             {
                 ViewSetLoadOptions loadOptions = new ViewSetLoadOptions();
                 loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
@@ -84,19 +109,7 @@ public class ManualInputSource extends NonValidatedInputSourceBase
                 loadOptions.orientationViewName = getViewSelection();
                 loadOptions.orientationViewRotation = getViewRotation();
                 loadOptions.disabledImages = getDisabledImages();
-
-                if (hotSwap)
-                {
-                    new Thread(() ->
-                        Global.state().getIOModel().hotSwapLooseFiles(cameraFile.getPath(), cameraFile, loadOptions))
-                        .start();
-                }
-                else
-                {
-                    new Thread(() ->
-                        Global.state().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile, loadOptions))
-                        .start();
-                }
+                return loadOptions;
             }
         };
     }

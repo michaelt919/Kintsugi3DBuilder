@@ -34,5 +34,7 @@ public interface InputSource
 
     boolean hasProjectMasks();
 
+    File specifyProjectFileToSave();
+
     Collection<File> getDisabledImages();
 }

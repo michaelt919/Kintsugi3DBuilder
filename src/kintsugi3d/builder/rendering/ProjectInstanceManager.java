@@ -27,7 +27,6 @@ import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
-import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
@@ -45,7 +44,6 @@ import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -76,41 +74,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private ReadonlyGeneralSettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
 
-    private final List<Consumer<ViewSet>> viewSetLoadCallbacks
-        = Collections.synchronizedList(new ArrayList<>(4));
-
     private final List<Consumer<RenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
-
-    /**
-     * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
-     * The callbacks will be cleared after being invoked.
-     *
-     * @param callback to add
-     */
-    @Override
-    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
-    {
-        synchronized (viewSetLoadCallbacks)
-        {
-            viewSetLoadCallbacks.add(callback);
-        }
-
-    }
-    /**
-     * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
-     * The callbacks will be cleared after being invoked.
-     *
-     * @param callback to add
-     */
-    @Override
-    public void addViewSetLoadCallback(Runnable callback)
-    {
-        synchronized (viewSetLoadCallbacks)
-        {
-            viewSetLoadCallbacks.add(viewSet -> callback.run());
-        }
-    }
 
     /**
      * Adds callbacks that will be invoked when the instance has finished loading.
@@ -141,7 +106,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    private void handleMissingFiles(Exception e)
+    private void handleGenericError(Exception e)
     {
         LOG.error("An error occurred loading project: ", e);
         if (progressMonitor != null)
@@ -177,28 +142,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         return loadedGeometry;
     }
 
-    private void invokeViewSetLoadCallbacks(ViewSet viewSet)
-    {
-        synchronized (viewSetLoadCallbacks)
-        {
-            // Invoke callbacks
-            for (Consumer<ViewSet> callback : viewSetLoadCallbacks)
-            {
-                callback.accept(viewSet);
-            }
-
-            // Clear the list of callbacks for the next load.
-            viewSetLoadCallbacks.clear();
-        }
-    }
-
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
      * @param id
      * @param builder
      * @throws UserCancellationException
      */
-    private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
+    @SuppressWarnings("OverlyBroadThrowsClause")
+    private void loadInstance(File newProjectFile, String id, Builder<ContextType> builder) throws Exception
     {
         loadedViewSet = builder.getViewSet();
         loadedGeometry = builder.getGeometry();
@@ -222,8 +173,17 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // TODO   for managing the list of photos (like the photos tab)
         Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViewsSorted());
 
-        // Invoke callbacks now that view set is loaded
-        invokeViewSetLoadCallbacks(loadedViewSet);
+        if (newProjectFile != null)
+        {
+            // Save the project before proceeding.
+            // Hypothetically if any textures existed already they would be saved out asynchronously
+            // but that shouldn't matter regardless since we just need to have a valid project file path right now.
+            Global.state().getIOModel().saveProject(newProjectFile);
+        }
+        // If no project file is specified, don't save the project but attempt to continue loading.
+        // This might result in some weird behavior but in theory could be successful.
+        // Many directory paths have fallbacks that aren't in a supporting files directory.
+        // In theory, this shouldn't ever happen since the UI should ideally prevent this.
 
         if (progressMonitor != null)
         {
@@ -345,7 +305,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 .setImageLoadOptions(loadOptions)
                 .loadVSETFile(vsetFile, supportingFilesDirectory);
 
-            loadInstance(id, contextTypeBuilder);
+            loadInstance(null, id, contextTypeBuilder);
         }
         catch (UserCancellationException e)
         {
@@ -355,14 +315,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         {
             handleMeshImportException(e);
         }
-        catch (IOException|RuntimeException e)
+        catch (Exception e)
         {
-            handleMissingFiles(e);
+            handleGenericError(e);
         }
     }
 
     @Override
-    public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
+    public void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
     {
 
         if (this.progressMonitor.isConflictingProcess())
@@ -384,7 +344,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 .setImageLoadOptions(loadOptionsModel)
                 .loadFromMetashapeModel(model)
                 .setOrientationView(orientationView, rotation);
-            loadInstance(parentChunk.getFramePath(), builder);
+            loadInstance(newProjectFile, parentChunk.getFramePath(), builder);
         }
         catch (UserCancellationException e)
         {
@@ -394,14 +354,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         {
             handleMeshImportException(e);
         }
-        catch (MissingImagesException | IOException | XMLStreamException e)
+        catch (Exception e)
         {
-            handleMissingFiles(e);
+            handleGenericError(e);
         }
     }
 
     @Override
-    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
+    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
+                                   ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
     {
         if (this.progressMonitor.isConflictingProcess())
         {
@@ -418,7 +379,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 .loadLooseFiles(xmlFile, viewSetLoadOptions);
 
             // Invoke callbacks now that view set is loaded
-            loadInstance(id, builder);
+            loadInstance(newProjectFile, id, builder);
         }
         catch (UserCancellationException e)
         {
@@ -426,7 +387,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
         catch (Exception e)
         {
-            handleMissingFiles(e);
+            handleGenericError(e);
         }
     }
 

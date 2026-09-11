@@ -78,8 +78,9 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
     }
 
     @Override
-    public void confirm()
+    public boolean confirm()
     {
         // Will be handled by the controller itself if a project is already loaded.
+        return true;
     }
 }

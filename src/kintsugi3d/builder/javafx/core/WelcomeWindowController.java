@@ -44,15 +44,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class WelcomeWindowController
 {
     private static final Logger LOG = LoggerFactory.getLogger(WelcomeWindowController.class);
+
+    private  static final String COULD_NOT_FIND_PREVIEW_IMAGE_FOR = "Could not find preview image for {}";
 
     private static WelcomeWindowController instance;
 
@@ -200,7 +200,7 @@ public class WelcomeWindowController
     {
         if (!FrontendIO.isCreateProjectWindowOpen())
         {
-            FrontendIO.getInstance().createProject(parentWindow);
+            FrontendIO.createProject(parentWindow);
         }
     }
 
@@ -394,6 +394,11 @@ public class WelcomeWindowController
         setRecentButtonImg(recentButton, projFile);
     }
 
+    private static void logCouldNotFindImage(File projFile)
+    {
+        LOG.warn(COULD_NOT_FIND_PREVIEW_IMAGE_FOR, projFile.getName());
+    }
+
     private static void setRecentButtonImg(Button recentButton, File projFile)
     {
         //open file and convert to xml document
@@ -408,7 +413,7 @@ public class WelcomeWindowController
 
             if ((prevResImgsPath == null) && (fullResImgsPath == null))
             {
-                LOG.warn("Could not find preview image for {}", projFile.getName());
+                logCouldNotFindImage(projFile);
                 return;
             }
 
@@ -424,7 +429,7 @@ public class WelcomeWindowController
                 //try full imgPath before giving up
                 if (fullResImgsPath == null)
                 {
-                    LOG.warn("Could not find preview image for {}", projFile.getName());
+                    logCouldNotFindImage(projFile);
                     return;
                 }
 
@@ -432,7 +437,7 @@ public class WelcomeWindowController
 
                 if (previewImgPath == null)
                 {
-                    LOG.warn("Could not find preview image for {}", projFile.getName());
+                    logCouldNotFindImage(projFile);
                     return;
                 }
             }
@@ -447,13 +452,13 @@ public class WelcomeWindowController
         }
         catch (ParserConfigurationException | IOException | SAXException e)
         {
-            LOG.warn("Could not find preview image for {}", projFile.getName(), e);
+            LOG.warn(COULD_NOT_FIND_PREVIEW_IMAGE_FOR, projFile.getName(), e);
         }
     }
 
     private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException
     {
-        if (file.exists())
+        if (file.getName().toLowerCase(Locale.ROOT).endsWith("k3d") && file.exists())
         {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(file);

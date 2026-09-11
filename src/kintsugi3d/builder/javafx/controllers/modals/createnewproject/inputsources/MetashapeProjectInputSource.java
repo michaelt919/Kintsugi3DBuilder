@@ -16,10 +16,16 @@ import kintsugi3d.builder.io.imageset.MetashapeImageSetInfo;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 
 import java.io.File;
+import java.util.function.Supplier;
 
 public class MetashapeProjectInputSource extends NonValidatedInputSourceBase
 {
     private MetashapeModel model;
+
+    public MetashapeProjectInputSource(Supplier<File> specifyProjectFileToSave)
+    {
+        super(specifyProjectFileToSave);
+    }
 
     @Override
     public File getMasksDirectory()
@@ -72,12 +78,12 @@ public class MetashapeProjectInputSource extends NonValidatedInputSourceBase
         return new ValidatedInputSourceBase(this, new MetashapeImageSetInfo(model, getDisabledImages()))
         {
             @Override
-            public void confirm()
+            public void confirm(File projectFileToSave)
             {
                 model.getLoadPreferences().setOrientationViewName(getViewSelection());
                 model.getLoadPreferences().setOrientationViewRotateDegrees(getViewRotation());
                 model.getLoadPreferences().setDisabledImageFiles(getDisabledImages());
-                new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
+                Global.state().getIOModel().loadFromMetashapeModel(projectFileToSave, model);
             }
         };
     }

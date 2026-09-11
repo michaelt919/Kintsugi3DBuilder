@@ -36,9 +36,6 @@ public interface IOHandler
     RenderableInstance<?> getMainRenderable();
     RenderableInstance<?> getRenderableForShader(UserShader shader);
 
-    void addViewSetLoadCallback(Consumer<ViewSet> callback);
-    void addViewSetLoadCallback(Runnable callback);
-
     void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
 
     /**
@@ -57,20 +54,27 @@ public interface IOHandler
      * @param viewSetLoadOptions
      * @param imageLoadOptions
      */
-    void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
+    void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
      * @param model
      * @param loadOptionsModel
      */
-    void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
+    void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
+
+    /**
+     *
+     * @param materialDirectory
+     * @param finishedCallback No guarantees are made about which thread the callback will run on.
+     */
     void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
+
     void saveGLTF(File outputDirectory, ExportSettings settings);
 
     /**

@@ -88,8 +88,7 @@ public class MasksImportController
     @Override
     public boolean confirm()
     {
-        source.confirm();
-        return true;
+        return source.confirm();
     }
 
     @FXML

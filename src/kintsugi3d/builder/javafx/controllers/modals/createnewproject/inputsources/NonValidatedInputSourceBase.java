@@ -15,10 +15,24 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 public abstract class NonValidatedInputSourceBase implements NonValidatedInputSource
 {
+    private final Supplier<File> specifyProjectFileToSave;
+
     private final Collection<File> disabledImages = new ArrayList<>(8);
+
+    protected NonValidatedInputSourceBase(Supplier<File> specifyProjectFileToSave)
+    {
+        this.specifyProjectFileToSave = specifyProjectFileToSave;
+    }
+
+    @Override
+    public File specifyProjectFileToSave()
+    {
+        return specifyProjectFileToSave.get();
+    }
 
     @Override
     public Collection<File> getDisabledImages()

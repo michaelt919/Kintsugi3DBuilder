@@ -30,6 +30,7 @@ import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
+import kintsugi3d.builder.javafx.core.FrontendIO;
 
 import java.io.File;
 import java.util.List;
@@ -105,7 +106,7 @@ public class MetashapeImportController extends ProjectImportController
     @Override
     protected MetashapeProjectInputSource getData()
     {
-        return new MetashapeProjectInputSource()
+        return new MetashapeProjectInputSource(() -> FrontendIO.getInstance().showSaveProjectDialog(getPageFrameController().getWindow()))
             .setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel());
     }
 

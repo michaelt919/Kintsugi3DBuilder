@@ -21,11 +21,9 @@ import java.io.IOException;
 public class CreateProject extends ExperienceBase
 {
     private static final String METASHAPE_IMPORT = "/fxml/modals/createnewproject/MetashapeImport.fxml";
-    public static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
+    private static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
     private static final String MASKS_IMPORT = "/fxml/modals/createnewproject/MasksImport.fxml";
-    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
-
-    private Runnable confirmCallback;
+    private static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
 
     @Override
     public String getName()
@@ -56,7 +54,6 @@ public class CreateProject extends ExperienceBase
         // finish manual import link to masks and wrap up
         manual.join(masks.getPage())
             .finish()
-            .setConfirmCallback(confirmCallback)
             .setMinContentWidth(800)
             .setMinContentHeight(512);
 
@@ -70,8 +67,7 @@ public class CreateProject extends ExperienceBase
             .then(MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, HotSwapController>::new, HotSwapController::new)
             .<MasksImportController>then(MASKS_IMPORT)
             .<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
-            .finish()
-            .setConfirmCallback(confirmCallback);
+            .finish();
     }
 
     public void tryOpenHotSwap()
@@ -82,15 +78,10 @@ public class CreateProject extends ExperienceBase
             {
                 openHotSwap();
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 handleError(e);
             }
         }
-    }
-
-    public void setConfirmCallback(Runnable confirmCallback)
-    {
-        this.confirmCallback = confirmCallback;
     }
 }

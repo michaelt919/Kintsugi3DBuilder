@@ -21,9 +21,9 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
+import kintsugi3d.builder.javafx.core.FrontendIO;
 
 import java.io.File;
 import java.util.List;
@@ -36,8 +36,6 @@ public class ManualImportController extends ProjectImportController
     @FXML private VBox root;
     @FXML private Label camPositionsTxt;
     @FXML private CheckBox undistortImagesCheckBox;
-
-    private Stage thisStage;
 
     private final FileChooser camFileChooser = new FileChooser();
     private final FileChooser objFileChooser = new FileChooser();
@@ -96,7 +94,7 @@ public class ManualImportController extends ProjectImportController
     @FXML
     private void camFileSelect()
     {
-        File file = camFileChooser.showOpenDialog(getStage());
+        File file = camFileChooser.showOpenDialog(getPageFrameController().getWindow());
 
         if (file != null)
         {
@@ -116,7 +114,7 @@ public class ManualImportController extends ProjectImportController
     @FXML
     private void objFileSelect()
     {
-        File file = objFileChooser.showOpenDialog(getStage());
+        File file = objFileChooser.showOpenDialog(getPageFrameController().getWindow());
 
         if (file != null)
         {
@@ -135,7 +133,7 @@ public class ManualImportController extends ProjectImportController
     @FXML
     private void photoDirectorySelect()
     {
-        File file = photoDirectoryChooser.showDialog(getStage());
+        File file = photoDirectoryChooser.showDialog(getPageFrameController().getWindow());
 
         if (file != null)
         {
@@ -171,19 +169,10 @@ public class ManualImportController extends ProjectImportController
         RecentProjects.setMostRecentDirectory(file);
     }
 
-    private Stage getStage()
-    {
-        if (thisStage == null)
-        {
-            thisStage = (Stage) root.getScene().getWindow();
-        }
-        return thisStage;
-    }
-
     @Override
     protected ManualInputSource getData()
     {
-        return new ManualInputSource()
+        return new ManualInputSource(() -> FrontendIO.getInstance().showSaveProjectDialog(getPageFrameController().getWindow()))
             .setCameraFile(cameraFile)
             .setMeshFile(meshFile)
             .setNeedsUndistort(undistortImagesCheckBox.isSelected())

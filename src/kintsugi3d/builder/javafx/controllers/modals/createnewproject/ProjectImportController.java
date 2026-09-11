@@ -108,7 +108,6 @@ public abstract class ProjectImportController extends DataSourcePageControllerBa
     @Override
     public boolean confirm()
     {
-        getPage().getOutData().confirm();
-        return true;
+        return getPage().getOutData().confirm();
     }
 }

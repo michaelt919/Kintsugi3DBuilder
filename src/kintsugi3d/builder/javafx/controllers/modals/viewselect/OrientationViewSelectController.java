@@ -54,9 +54,7 @@ public class OrientationViewSelectController extends ViewSelectController
         }
 
         // The input source will handle loading if a view set wasn't already loaded.
-        getData().confirm();
-
-        return true;
+        return getData().confirm();
     }
 
     @Override

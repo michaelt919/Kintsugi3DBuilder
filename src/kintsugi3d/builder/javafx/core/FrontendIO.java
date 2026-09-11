@@ -39,7 +39,7 @@ public final class FrontendIO
 {
     private static final FrontendIO INSTANCE = new FrontendIO();
 
-    static FrontendIO getInstance()
+    public static FrontendIO getInstance()
     {
         return INSTANCE;
     }
@@ -137,32 +137,19 @@ public final class FrontendIO
         return getCreateProjectExperience().isOpen();
     }
 
-    public void createProject(Window parentWindow)
+    public static void createProject(Window parentWindow)
     {
         if (!confirmClose("Are you sure you want to create a new project?"))
         {
             return;
         }
 
-        CreateProject createProject = getCreateProjectExperience();
-        createProject.setConfirmCallback(() ->
-            // Force user to save the project before proceeding, so that they have a place to save the results
-            // User can still cancel saving (TODO where does it save the results in that case?)
-            Global.state().getIOModel().addViewSetLoadCallback(() -> saveProjectAs(parentWindow)));
-        createProject.tryOpen();
+        getCreateProjectExperience().tryOpen();
     }
 
-    public void hotSwap(Window parentWindow)
+    public static void hotSwap(Window parentWindow)
     {
-        // remember old project filename
-        File oldProjectFile = Global.state().getIOModel().getLoadedProjectFile();
-
-        CreateProject createProject = getCreateProjectExperience();
-
-        // "force" the user to save their project (user can still cancel saving)
-        Global.state().getIOModel().addViewSetLoadCallback(() -> saveProject(oldProjectFile, parentWindow));
-
-        createProject.tryOpenHotSwap();
+        getCreateProjectExperience().tryOpenHotSwap();
     }
 
     public void openProject(Window parentWindow)
@@ -222,6 +209,7 @@ public final class FrontendIO
                 {
                     // Display message when all textures have been saved on graphics thread.
                     // TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                    // TODO should this be changed to an observer pattern?
                     Platform.runLater(() ->
                     {
                         Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
@@ -240,18 +228,10 @@ public final class FrontendIO
     }
 
     /**
-     * Prompts the user for a project name and saves the project.
-     * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
-     * <p>
-     * NOTE: After "Save As", view set will share the same UUID as the original project,
-     * including the preview resolution images and specular fit cache in the user's AppData folder.
-     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
-     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
-     * actual views (add / remove view) later on down the road.
-     *
+     * Should NOT run on the JavaFX thread otherwise it will deadlock while waiting for the save dialog.
      * @param parentWindow
      */
-    public void saveProjectAs(Window parentWindow)
+    public File showSaveProjectDialog(Window parentWindow)
     {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
@@ -302,9 +282,28 @@ public final class FrontendIO
             }
         }
 
-        if (fileContainer.selectedFile != null)
+        return fileContainer.selectedFile;
+    }
+
+    /**
+     * Prompts the user for a project name and saves the project.
+     * Blocks the thread while waiting for user input; does not need to be run on the JavaFX thread.
+     * <p>
+     * NOTE: After "Save As", view set will share the same UUID as the original project,
+     * including the preview resolution images and specular fit cache in the user's AppData folder.
+     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
+     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
+     * actual views (add / remove view) later on down the road.
+     *
+     * @param parentWindow
+     */
+    public void saveProjectAs(Window parentWindow)
+    {
+        File selectedFile = showSaveProjectDialog(parentWindow);
+
+        if (selectedFile != null)
         {
-            saveProject(fileContainer.selectedFile, parentWindow);
+            saveProject(selectedFile, parentWindow);
         }
     }
 
