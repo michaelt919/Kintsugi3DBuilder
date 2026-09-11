@@ -66,8 +66,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         = new HashMap<>(8);
 
     private volatile ViewSet loadedViewSet;
-    private VertexGeometry loadedGeometry;
-    private RenderableInstance<ContextType> renderableInstance;
+    private volatile VertexGeometry loadedGeometry;
+    private volatile RenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -192,6 +192,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
+    /**
+     * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
+     * @param id
+     * @param builder
+     * @throws UserCancellationException
+     */
     private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
@@ -494,28 +500,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    @Override
-    public void requestFragmentShader(File shaderFile)
+    private void requestFragmentShader(UserShader userShader)
     {
         if (renderableInstance != null)
         {
-            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(userShader.getFile(), userShader.getDefines());
         }
-    }
-
-    @Override
-    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
-    {
-        if (renderableInstance != null)
-        {
-            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
-        }
-    }
-
-    @Override
-    public void requestFragmentShader(UserShader userShader)
-    {
-        requestFragmentShader(userShader.getFile(), userShader.getDefines());
     }
 
     @Override
@@ -684,20 +674,21 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void unload()
+    public void unload(Runnable onUnloadComplete)
     {
-        // Also remove render views which will be tied to the loaded project.
-        renderViewMap.clear();
-        renderViews.clear();
-
-        // Empty sidebar; will be repopulated when another project is opened.
-        Global.state().getTabModels().clearTabs();
-
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
             if (renderableInstance != null)
             {
+                // Empty sidebar; will be repopulated when another project is opened.
+                // TODO rework this; might be a race condition and also isn't the best dependency
+                Global.state().getTabModels().clearTabs();
+
+                // Also remove render views which will be tied to the loaded project.
+                renderViewMap.clear();
+                renderViews.clear();
+
                 renderableInstance.close();
                 renderableInstance = null;
                 loadedViewSet = null;
@@ -708,6 +699,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 Global.state().getProjectModel().setProcessedTextureResolution(0);
                 Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
             }
+
+            onUnloadComplete.run();
         });
     }
 

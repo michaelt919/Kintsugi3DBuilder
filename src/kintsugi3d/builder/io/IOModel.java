@@ -94,6 +94,11 @@ public class IOModel
         this.handler.addViewSetLoadCallback(callback);
     }
 
+    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
+    {
+        this.handler.addViewSetLoadCallback(callback);
+    }
+
     public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
         this.handler.addMainRenderableLoadCallback(callback);
@@ -119,37 +124,40 @@ public class IOModel
         return loadedProjectFile;
     }
 
-    private void onLoadStart()
+    private void load(Runnable loader)
     {
-        onLoadStart("(Untitled)");
+        load("(Untitled)", loader);
     }
 
-    private void onLoadStart(String projectName)
+    private void load(String projectName, Runnable loader)
     {
-        unload();
+        unload(() ->
+        {
+            ProjectModel projectModel = Global.state().getProjectModel();
+            projectModel.setProjectOpen(true);
+            projectModel.setProjectName(projectName);
 
-        ProjectModel projectModel = Global.state().getProjectModel();
-        projectModel.setProjectOpen(true);
-        projectModel.setProjectName(projectName);
+            new Thread(loader, "Loading Thread").start();
+        });
     }
 
     public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
-        onLoadStart();
+        load(() -> this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel));
     }
 
     public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-        this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
-        onLoadStart();
+        load(() ->
+        {
+            viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
+            this.handler.loadFromLooseFiles(id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
+        });
     }
 
     public void loadFromMetashapeModel(MetashapeModel model)
     {
-        this.handler.loadFromMetashapeModel(model, imageLoadOptionsModel);
-        onLoadStart();
+        load(() -> this.handler.loadFromMetashapeModel(model, imageLoadOptionsModel));
     }
 
     public void loadExistingProject(File projectFile)
@@ -163,7 +171,7 @@ public class IOModel
         //open the project, update the recent files list & recentDirectory, disable shaders which aren't useful until processing textures
         RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
 
-        File vsetFile = null;
+        File vsetFile;
 
         ProjectModel projectModel = Global.state().getProjectModel();
         if (projectFile.getName().endsWith(".vset"))
@@ -179,76 +187,53 @@ public class IOModel
             catch (RuntimeException | IOException | SAXException | ParserConfigurationException e)
             {
                 ExceptionHandling.error("An error occurred opening project", e);
+                vsetFile = null;
             }
         }
 
+        loadExistingProject(projectFile, vsetFile);
+    }
+
+    private void loadExistingProject(File projectFile, File vsetFile)
+    {
         if (vsetFile != null)
         {
-            onLoadStart(projectFile.getName());
-            this.loadedProjectFile = projectFile;
-            this.loadedViewSetFile = vsetFile;
-
-            RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
-
-            startLoadingExistingProject(projectFile, vsetFile);
-        }
-    }
-
-    private void startLoadingExistingProject(File projectFile, File vsetFile)
-    {
-        if (Objects.equals(projectFile.getParentFile(), vsetFile.getParentFile()))
-        {
-            // VSET file is the project file or they're in the same directory.
-            // Use a supporting files directory underneath by default
-            new Thread(() ->
+            load(projectFile.getName(), () ->
             {
                 try
                 {
-                    File supportingFilesDirectory = getDefaultSupportingFilesDirectory(projectFile);
-                    loadVSETFile(vsetFile, supportingFilesDirectory);
+                    this.loadedProjectFile = projectFile;
+                    this.loadedViewSetFile = vsetFile;
+
+                    RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
+
+                    if (Objects.equals(projectFile.getParentFile(), vsetFile.getParentFile()))
+                    {
+                        // VSET file is the project file or they're in the same directory.
+                        // Use a supporting files directory underneath by default
+                        File supportingFilesDirectory = getDefaultSupportingFilesDirectory(projectFile);
+                        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, supportingFilesDirectory, imageLoadOptionsModel);
+                    }
+                    else
+                    {
+                        // VSET file is presumably already in a supporting files directory, so just use that directory by default
+                        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, vsetFile.getParentFile(), imageLoadOptionsModel);
+                    }
                 }
                 catch (RuntimeException e)
                 {
-                    LOG.error("Error loading view set file", e);
+                    LOG.error("Error loading project", e);
                 }
                 catch (Error e)
                 {
-                    LOG.error("Error loading view set file", e);
+                    LOG.error("Error loading project", e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
-            })
-                .start();
-        }
-        else
-        {
-            // VSET file is presumably already in a supporting files directory, so just use that directory by default
-            new Thread(() ->
-            {
-                try
-                {
-                    loadVSETFile(vsetFile, vsetFile.getParentFile());
-                }
-                catch (RuntimeException e)
-                {
-                    LOG.error("Error loading view set file", e);
-                }
-                catch (Error e)
-                {
-                    LOG.error("Error loading view set file", e);
-                    //noinspection ProhibitedExceptionThrown
-                    throw e;
-                }
-            })
-                .start();
-        }
+            });
 
-        // TODO might be some edge case issue here if the tone calibration window was already open (based on old TODO comment)?
-    }
-
-    private void loadVSETFile(File vsetFile, File supportingFilesDirectory)
-    {
-        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, supportingFilesDirectory, imageLoadOptionsModel);
+            // TODO might be some edge case issue here if the tone calibration window was already open (based on old TODO comment)?
+        }
     }
 
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
@@ -261,12 +246,7 @@ public class IOModel
         this.handler.loadBackplate(backplateFile);
     }
 
-    public void saveToVSETFile(File vsetFile) throws IOException
-    {
-        this.handler.saveToVSETFile(vsetFile);
-    }
-
-    public static File getDefaultSupportingFilesDirectory(File projectFile)
+    private static File getDefaultSupportingFilesDirectory(File projectFile)
     {
         return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
     }
@@ -303,7 +283,7 @@ public class IOModel
             viewSet.setRootDirectory(projectFile.getParentFile());
             viewSet.setSupportingFilesDirectory(filesDirectory);
 
-            saveToVSETFile(projectFile);
+            this.handler.saveToVSETFile(projectFile);
             loadedProjectFile = projectFile;
             loadedViewSetFile = projectFile;
             projectModel.setProjectName(projectFile.getName());
@@ -314,7 +294,7 @@ public class IOModel
             viewSet.setSupportingFilesDirectory(filesDirectory);
 
             File vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
-            saveToVSETFile(vsetFile);
+            this.handler.saveToVSETFile(vsetFile);
             loadedProjectFile = projectFile;
             loadedViewSetFile = vsetFile;
             projectModel.saveProjectFile(projectFile, vsetFile);
@@ -412,11 +392,16 @@ public class IOModel
         projectModel.clearProjectName();
     }
 
-    public void unload()
+    private void unload()
+    {
+        this.unload(() -> {});
+    }
+
+    private void unload(Runnable onUnloadComplete)
     {
         loadedViewSetFile = null;
         loadedProjectFile = null;
-        this.handler.unload();
+        this.handler.unload(onUnloadComplete);
     }
 
     public boolean hasLoadedRenderable()

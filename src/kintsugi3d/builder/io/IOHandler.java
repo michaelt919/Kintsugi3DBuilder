@@ -23,7 +23,6 @@ import kintsugi3d.util.EncodableColorImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -42,13 +41,30 @@ public interface IOHandler
 
     void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
 
+    /**
+     * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
+     * @param id
+     * @param vsetFile
+     * @param supportingFilesDirectory
+     * @param loadOptions
+     */
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
+
+    /**
+     * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
+     * @param id
+     * @param xmlFile
+     * @param viewSetLoadOptions
+     * @param imageLoadOptions
+     */
     void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
 
+    /**
+     * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
+     * @param model
+     * @param loadOptionsModel
+     */
     void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
-
-    void requestFragmentShader(File shaderFile);
-    void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;
@@ -57,9 +73,14 @@ public interface IOHandler
     void saveAllMaterialFiles(File materialDirectory, Runnable finishedCallback);
     void saveGLTF(File outputDirectory, ExportSettings settings);
 
-    void unload();
-
-    void requestFragmentShader(UserShader userShader);
+    /**
+     *
+     * @param onUnloadComplete Whether or not a project needs to be unloaded, will run once the unload process has finished.
+     *                         This callback is the point at which it is safe to start loading another project again without a race condition.
+     *                         The one exception to this rule is that UI elements may still update after the callable has run,
+     *                         but the request to update them will have been submitted so it should usually be fine with FIFO sequencing.
+     */
+    void unload(Runnable onUnloadComplete);
 
     void setProgressMonitor(ProgressMonitor progressMonitor);
 

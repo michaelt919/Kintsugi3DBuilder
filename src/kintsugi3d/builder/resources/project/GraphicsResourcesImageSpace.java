@@ -67,32 +67,30 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
-    public final UniformBuffer<ContextType> cameraProjectionBuffer;
+    private final UniformBuffer<ContextType> cameraProjectionBuffer;
 
     /**
      * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
      */
-    public final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+    private final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
 
-    /**
-     * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
-     */
-    public final Texture3D<ContextType> colorTextures;
+    private final Texture3D<ContextType> colorTextures;
 
     /**
      * A depth texture array containing a depth image for every view.
      */
-    public final Texture3D<ContextType> depthTextures;
+    private final Texture3D<ContextType> depthTextures;
 
     /**
      * A depth texture array containing a shadow map for every view.
      */
-    public final Texture3D<ContextType> shadowTextures;
+    private final Texture3D<ContextType> shadowTextures;
 
     /**
      * A GPU buffer containing the matrices that were used for each shadow map in the shadowTextures array.
      */
-    public final UniformBuffer<ContextType> shadowMatrixBuffer;
+    private final UniformBuffer<ContextType> shadowMatrixBuffer;
+
 
     public static final class Builder<ContextType extends Context<ContextType>>
     {
@@ -274,6 +272,13 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             return this;
         }
 
+        /**
+         * Must NOT be called on the rendering thread, because it needs to queue rendering jobs and wait for them to finish.
+         * If called on the rendering thread, this will deadlock since the jobs never run while waiting.
+         * @return
+         * @throws IOException
+         * @throws UserCancellationException
+         */
         public Builder<ContextType> generateAllPreviewImages() throws IOException, UserCancellationException
         {
             if (this.viewSet != null)

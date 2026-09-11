@@ -585,7 +585,7 @@ public class MainWindowController
 
     @FXML public void openProject()
     {
-        FrontendIO.getInstance().openProjectWithPrompt(window);
+        FrontendIO.getInstance().openProject(window);
     }
 
     @FXML public void saveProject()
@@ -780,7 +780,7 @@ public class MainWindowController
         miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
     }
 
-    public void setDarkestMiniBar()
+    private void setDarkestMiniBar()
     {
         miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
         miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");

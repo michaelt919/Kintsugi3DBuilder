@@ -132,7 +132,7 @@ public final class FrontendIO
         return ExperienceManager.getInstance().getExperience("CreateProject", CreateProject.class);
     }
 
-    public static boolean isCreateProjectWindowOpen()
+    static boolean isCreateProjectWindowOpen()
     {
         return getCreateProjectExperience().isOpen();
     }
@@ -165,7 +165,7 @@ public final class FrontendIO
         createProject.tryOpenHotSwap();
     }
 
-    public void openProjectWithPrompt(Window parentWindow)
+    public void openProject(Window parentWindow)
     {
         if (confirmClose("Are you sure you want to open another project?"))
         {
@@ -208,7 +208,7 @@ public final class FrontendIO
      *
      * @param parentWindow
      */
-    public void saveProject(File projectFile, Window parentWindow)
+    private void saveProject(File projectFile, Window parentWindow)
     {
         if (projectFile == null)
         {
