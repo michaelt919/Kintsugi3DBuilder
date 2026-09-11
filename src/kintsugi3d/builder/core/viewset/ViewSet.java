@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.core.viewset;
 
-import de.javagl.obj.Mtl;
-import de.javagl.obj.MtlReader;
-import de.javagl.obj.Obj;
-import de.javagl.obj.ObjReader;
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Observable;
 import kintsugi3d.builder.core.Observer;
 import kintsugi3d.builder.core.metrics.ViewRMSE;
@@ -29,26 +24,14 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
-import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.io.File;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -1395,102 +1378,6 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         }
     }
 
-    /**
-     * Checks for whether srcFile is null before copying into destDir.
-     *
-     * @param srcFile
-     * @param destDir
-     */
-    private static void copyFileSafe(File srcFile, File destDir)
-    {
-        if (srcFile != null)
-        {
-            try
-            {
-                File destFile = new File(destDir, srcFile.getName());
-                Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-            catch (IOException e)
-            {
-                LOG.error("Failed to copy {} to {}", srcFile.getName(), destDir.getPath());
-            }
-        }
-    }
-
-    /**
-     * Copies masks to an appropriate supporting files directory and changes the masks directory accordingly.
-     * If the masks were previously stored in a ZIP file, they will be unzipped to the new masks directory.
-     * Masks will be validated (see validateMasks()) as a result of this operation, possibly changing the recorded mask file name
-     * based on the mask files that are actually found (or eliminating masks if missing).
-     */
-    public void copyMasks()
-    {
-        File masksSrcDir = masksDirectory;
-        if (masksSrcDir == null)
-        {
-            return;
-        }
-
-        // Grab reference first just in case for thread synchronization.
-        File masksDestParentDir = supportingFilesDirectory;
-
-        File masksDestinationDir;
-        if (masksDestParentDir != null)
-        {
-            masksDestinationDir = new File(masksDestParentDir, "masks");
-        }
-        else
-        {
-            masksDestinationDir = new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.masks").toFile(), uuid.toString());
-        }
-
-        masksDestinationDir.mkdirs();
-
-        // Unzip masks if needed
-        if (masksSrcDir.toString().endsWith(".zip"))
-        {
-            LOG.info("Unzipping masks folder...");
-            try
-            {
-                // Just unzip everything for efficiency; could clean up any unused files (i.e. non-masks) but probably not necessary
-                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir, null);
-
-                // Use the destination directory as the masks directory for validating (and thereafter)
-                masksDirectory = masksDestinationDir;
-
-                // Make sure the masks are there after unzipping (might change the mask filenames stored)
-                validateMasks();
-            }
-            catch (IOException e)
-            {
-                LOG.error("Failed to unzip masks.", e);
-            }
-        }
-        else
-        {
-            // Validate masks first to make sure we're copying the right files (might change the mask filenames stored)
-            validateMasks();
-
-            // Copy the list for thread safety without blocking while it copies all the files.
-            Iterable<View> viewsCopy;
-
-            synchronized (views)
-            {
-                viewsCopy = new ArrayList<>(views.values());
-            }
-
-            // Copy the files that were actually found
-            for (View view : viewsCopy)
-            {
-                File maskSrcFile = view.getMaskFile();
-                copyFileSafe(maskSrcFile, masksDestinationDir);
-            }
-
-            // Use the destination directory as the masks directory to use from now on.
-            masksDirectory = masksDestinationDir;
-        }
-    }
-
     @Override
     public String getGeometryFileName()
     {
@@ -1523,212 +1410,15 @@ public final class ViewSet implements ReadonlyViewSet, Observable
         this.geometryFile = geometryFile;
     }
 
+    @Override
     public File getModelDirectory()
     {
         return Optional.ofNullable(this.modelDirectory).orElse(this.rootDirectory);
     }
 
-    /**
-     * Copies model and textures to an appropriate supporting files directory and changes the model directory accordingly.
-     * If the model and textures were previously stored in a ZIP file, they will be unzipped to the new model directory.
-     */
-    public void copyModel()
+    public void setModelDirectory(File modelDirectory)
     {
-        // Grab reference first just in case for thread synchronization.
-        File modelDestParentDir = supportingFilesDirectory;
-
-        File modelDestDir;
-        if (modelDestParentDir != null)
-        {
-            modelDestDir = new File(modelDestParentDir, "model");
-        }
-        else
-        {
-            modelDestDir = new File(ApplicationFolders.getExtensionDirectory().resolve("kintsugi3d.builder.model").toFile(), uuid.toString());
-        }
-
-        modelDestDir.mkdirs();
-
-        // Grab reference for thread synchronization, just in case.
-        File geometryFileRef = this.geometryFile;
-
-        // Unzip model and textures if needed
-        if (geometryFileRef.toString().endsWith(".zip"))
-        {
-            // Assuming a Metashape-zipped PLY model called "mesh.ply".
-            LOG.info("Unzipping model folder...");
-            try
-            {
-                // Just unzip everything for efficiency; could clean up any unused files but probably not necessary
-                UnzipHelper.unzipToDirectory(geometryFileRef, modelDestDir, null);
-
-                // Use the destination directory as the model directory for validating (and thereafter)
-                this.geometryFile = new File(modelDestDir, "mesh.ply");
-                modelDirectory = modelDestDir;
-            }
-            catch (IOException e)
-            {
-                LOG.error("Failed to unzip model / textures.", e);
-            }
-        }
-        else
-        {
-            copyFileSafe(geometryFileRef, modelDestDir);
-
-            for (var resource : resourceMap.entrySet())
-            {
-                if (resource.getKey().startsWith("texture."))
-                {
-                    copyFileSafe(resource.getValue(), modelDestDir);
-                }
-            }
-
-            // By definition of the property, the "original" file directory
-            // Needed for copying textures
-            modelDirectory = geometryFileRef.getParentFile();
-
-            // Use the destination directory as the model directory to use from now on.
-            this.geometryFile = new File(modelDestDir, geometryFileRef.getName());
-        }
-    }
-
-    public void copyTextures()
-    {
-        File xmlFile = new File(getModelDirectory(), "doc.xml");
-
-        if (xmlFile.exists())
-        {
-            try
-            {
-                // Initialize document builder
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
-
-                // Create a new document from the doc.xml
-                Document document = builder.parse(xmlFile);
-                document.getDocumentElement().normalize();
-
-                // Get all the textures
-                NodeList textures = document.getElementsByTagName("texture");
-
-                for (int i = 0; i < textures.getLength(); ++i)
-                {
-                    Element e = (Element) textures.item(i);
-
-                    // Get some needed metadata
-                    String texType = e.getAttribute("type");
-                    String texName = ((Element) e.getElementsByTagName("page").item(0)).getAttribute("path");
-
-                    if ("normals".equals(texType))
-                    {
-                        texType = "normal";
-                    }
-
-                    saveTexture(texName, texType);
-                }
-            }
-            catch (ParserConfigurationException | IOException | SAXException e)
-            {
-                LOG.error("Could not copy textures from Agisoft project.");
-            }
-        }
-        else if (geometryFile.getName().endsWith(".obj"))
-        {
-            // Get our object file as an obj for parsing
-            Obj obj;
-            try (InputStream objStream = new FileInputStream(geometryFile))
-            {
-                obj = ObjReader.read(objStream);
-            }
-            catch (IOException e)
-            {
-                LOG.error("Could not read materials from {}", geometryFile);
-                return;
-            }
-
-            // Iterate through all mtl files
-            // Should only be one, but for completeness’s sake
-            for (String mtlFileName : obj.getMtlFileNames())
-            {
-                File mtlFile = new File(getModelDirectory(), mtlFileName);
-                if (mtlFile.exists())
-                {
-                    // Get all the materials from the material file
-                    try (InputStream mtlStream = new FileInputStream(mtlFile))
-                    {
-                        List<Mtl> mtls = MtlReader.read(mtlStream);
-
-                        // Map custom map_ao to material name (reading twice, yes)
-                        Map<String, String> aoMaps = new HashMap<>(1);
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mtlFile), StandardCharsets.UTF_8)))
-                        {
-                            String line;
-                            String currentMaterial = null;
-                            while ((line = reader.readLine()) != null)
-                            {
-                                line = line.trim();
-                                if (line.startsWith("newmtl "))
-                                {
-                                    currentMaterial = line.substring(7).trim();
-                                }
-                                else if (line.startsWith("map_ao ") && (currentMaterial != null))
-                                {
-                                    aoMaps.put(currentMaterial, line.substring(7).trim());
-                                    currentMaterial = null;
-                                }
-                            }
-                        }
-                        catch (IOException e)
-                        {
-                            LOG.error("Could not read occlusion for material {}", mtlFile);
-                            // No need to continue here, as the rest of the code will function without ao
-                        }
-
-
-                        // Iterate through all the materials
-                        // Should also only be one, but, ya know how it is
-                        for (Mtl mtl : mtls)
-                        {
-                            saveTexture(mtl.getMapKd(), "diffuse");
-                            saveTexture(mtl.getBump(), "normal");
-
-                            // Copy occlusion from obj using custom parser
-                            saveTexture(aoMaps.get(mtl.getName()), "occlusion");
-                        }
-                    }
-                    catch (IOException e)
-                    {
-                        LOG.error("Could not read material {}", mtlFile);
-                    }
-                }
-                else
-                {
-                    LOG.error("Could not find material {}", mtlFile);
-                }
-            }
-        }
-    }
-
-    private void saveTexture(String originalName, String saveName)
-    {
-        // Mtl parsing compatibility
-        if (originalName != null)
-        {
-            File inTex = new File(getModelDirectory(), originalName);
-            if (inTex.exists())
-            {
-                File outTex = new File(getSupportingFilesDirectory(), saveName + ".png");
-                try
-                {
-                    // Force conversion to PNG.
-                    ImageHelper.read(inTex).save("png", outTex);
-                }
-                catch (IOException e)
-                {
-                    LOG.error("Could not copy {} texture.", saveName);
-                }
-            }
-        }
+        this.modelDirectory = modelDirectory;
     }
 
     @Override

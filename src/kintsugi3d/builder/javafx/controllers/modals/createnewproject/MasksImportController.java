@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,14 +20,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ValidatedInputSource;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
-import kintsugi3d.builder.javafx.controllers.paged.PageController;
 
 import java.io.File;
 
 public class MasksImportController
-    extends DataReceiverPageControllerBase<InputSource> implements PageController<InputSource>
+    extends DataReceiverPageControllerBase<ValidatedInputSource>
 {
     @FXML private Pane rootPane;
 
@@ -37,7 +36,7 @@ public class MasksImportController
 
     private DirectoryChooser masksDirectoryChooser;
 
-    private InputSource source;
+    private ValidatedInputSource source;
     private File fileChooserMasksDir; //represents the file chosen through file chooser, which may or may not be the final masks selection
 
     @Override
@@ -112,7 +111,7 @@ public class MasksImportController
     }
 
     @Override
-    public void receiveData(InputSource source)
+    public void receiveData(ValidatedInputSource source)
     {
         this.source = source;
     }

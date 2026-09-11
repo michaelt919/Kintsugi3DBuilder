@@ -9,18 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.primaryview;
+package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
-import javafx.scene.image.Image;
+import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-public interface ViewSelectionModel
+public interface ValidatedInputSource extends ViewSelectable, InputSource
 {
-    String getName();
-    List<PrimaryViewCandidate> getViews();
-    Map<Integer, Image> getThumbnailMap();
-    Optional<String> findFullResImagePath(String imageName);
 }

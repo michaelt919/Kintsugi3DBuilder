@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.primaryview;
+package kintsugi3d.builder.io.imageset;
 
 import javafx.scene.image.Image;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
@@ -35,11 +35,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public final class MetashapeViewSelectionModel implements ViewSelectionModel
+public final class MetashapeImageSetInfo implements ImageSetInfo
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MetashapeViewSelectionModel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeImageSetInfo.class);
     private final String chunkName;
-    private final List<PrimaryViewCandidate> primaryViewCandidates;
+    private final List<ImageIdentifier> primaryViewCandidates;
     private final List<Element> cameras;
     private File fullResSearchDir;
 
@@ -47,7 +47,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
     private final Map<Integer, Image> thumbnailMap;
 
     //custom import path
-    public MetashapeViewSelectionModel(File cameraFile, File fullResSearchDir, Collection<File> disabledImageFiles)
+    public MetashapeImageSetInfo(File cameraFile, File fullResSearchDir, Collection<File> disabledImageFiles)
             throws ParserConfigurationException, IOException, SAXException, MissingImagesException
     {
         this.fullResSearchDir = fullResSearchDir;
@@ -81,7 +81,8 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
 
         cameraIdToFullRes = new HashMap<>(primaryViewCandidates.size());
         List<File> missingImgs = new ArrayList<>(16);
-        for (PrimaryViewCandidate primaryViewCandidate : primaryViewCandidates)
+
+        for (ImageIdentifier primaryViewCandidate : primaryViewCandidates)
         {
             if (!disabledImageFiles.contains(new File(primaryViewCandidate.name)))
             {
@@ -89,21 +90,24 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
                 if (imgFile != null && primaryViewCandidate.id != -1)
                 {
                     cameraIdToFullRes.put(primaryViewCandidate.id, imgFile.getPath());
-                } else {
+                }
+                else
+                {
                     missingImgs.add(new File(primaryViewCandidate.name));
                 }
             }
         }
-        if (!missingImgs.isEmpty()) {
+
+        if (!missingImgs.isEmpty())
+        {
             throw new MissingImagesException(
-                    String.format("%d image(s) missing in %s", missingImgs.size(), fullResSearchDir),
-                    missingImgs, fullResSearchDir
-            );
+                String.format("%d image(s) missing in %s", missingImgs.size(), fullResSearchDir),
+                missingImgs, fullResSearchDir);
         }
     }
 
     //metashape import path
-    public MetashapeViewSelectionModel(MetashapeModel model, Collection<File> disabledImageFiles)
+    public MetashapeImageSetInfo(MetashapeModel model, Collection<File> disabledImageFiles)
             throws MissingImagesException, FileNotFoundException
     {
         MetashapeChunk parentChunk = model.getChunk();
@@ -121,7 +125,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
     }
 
     @Override
-    public List<PrimaryViewCandidate> getViews()
+    public List<ImageIdentifier> getViews()
     {
         return Collections.unmodifiableList(primaryViewCandidates);
     }
@@ -203,7 +207,7 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
         return Optional.empty();
     }
 
-    private static List<PrimaryViewCandidate> getViews(Stream<Element> cameras)
+    private static List<ImageIdentifier> getViews(Stream<Element> cameras)
     {
         return cameras
             .filter(camera ->
@@ -222,11 +226,11 @@ public final class MetashapeViewSelectionModel implements ViewSelectionModel
 
                 if ("group".equals(parent.getTagName())) // (either a group or the root node)
                 {
-                    return new PrimaryViewCandidate(label, parsedId, parent.getAttribute("label"));
+                    return new ImageIdentifier(label, parsedId, parent.getAttribute("label"));
                 }
                 else
                 {
-                    return new PrimaryViewCandidate(label, parsedId, null);
+                    return new ImageIdentifier(label, parsedId, null);
                 }
             })
             .collect(Collectors.toUnmodifiableList());

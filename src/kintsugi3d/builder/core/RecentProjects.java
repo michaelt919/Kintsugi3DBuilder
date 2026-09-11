@@ -17,7 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public final class RecentProjects
@@ -28,7 +31,7 @@ public final class RecentProjects
     public static final int MAX_RECENT_PROJECTS = 20;
 
     private static final Logger LOG = LoggerFactory.getLogger(RecentProjects.class);
-    private static File recentDirectory = null;
+    private static File recentDirectory;
 
     private static final Collection<Runnable> RECENT_FILES_CHANGED_LISTENERS = new ArrayList<>(1);
 

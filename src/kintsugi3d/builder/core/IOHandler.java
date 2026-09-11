@@ -37,8 +37,6 @@ public interface IOHandler
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
     void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
 
-    File getLoadedProjectFile();
-    void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,10 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
-import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
-
 import java.io.File;
 import java.util.Collection;
 
-public interface InputSource extends ViewSelectable
+public interface InputSource
 {
     /**
      * Return the known masks directory.
@@ -35,10 +33,6 @@ public interface InputSource extends ViewSelectable
     File getInitialMasksDirectory();
 
     boolean hasProjectMasks();
-
-    File getInitialPhotosDirectory();
-
-    void overrideFullResImageDirectory(File directory);
 
     Collection<File> getDisabledImages();
 }

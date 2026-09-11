@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,18 +12,12 @@
 package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.io.imageset.MetashapeImageSetInfo;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.io.primaryview.MetashapeViewSelectionModel;
-import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
-import kintsugi3d.builder.resources.project.MissingImagesException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Objects;
-import java.util.function.Consumer;
 
-public class MetashapeProjectInputSource extends InputSourceBase
+public class MetashapeProjectInputSource extends NonValidatedInputSourceBase
 {
     private MetashapeModel model;
 
@@ -53,41 +47,6 @@ public class MetashapeProjectInputSource extends InputSourceBase
         model.getChunk().setMasksDirectoryOverride(file);
     }
 
-    @Override
-    public boolean needsRefresh(ViewSelectable oldInstance)
-    {
-        if (oldInstance instanceof MetashapeProjectInputSource)
-        {
-            MetashapeProjectInputSource other = (MetashapeProjectInputSource) oldInstance;
-
-            // model and mask directory must be the same to not need refresh
-            return !Objects.equals(this.model, other.model)
-                || !Objects.equals(this.model.getChunk().getMasksDirectory(), other.model.getChunk().getMasksDirectory());
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    @Override
-    protected void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete)
-        throws FileNotFoundException, MissingImagesException
-    {
-        setViewSelectionModel(new MetashapeViewSelectionModel(model, getDisabledImages()));
-        onLoadComplete.accept(getViewSelectionModel());
-    }
-
-    //TODO: uncouple loadProject() from orientationView
-    @Override
-    public void confirm()
-    {
-        model.getLoadPreferences().setOrientationViewName(getViewSelection());
-        model.getLoadPreferences().setOrientationViewRotateDegrees(getViewRotation());
-        model.getLoadPreferences().setDisabledImageFiles(getDisabledImages());
-        new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
-    }
-
     public MetashapeProjectInputSource setMetashapeModel(MetashapeModel model)
     {
         this.model = model;
@@ -101,8 +60,25 @@ public class MetashapeProjectInputSource extends InputSourceBase
     }
 
     @Override
-    public void overrideFullResImageDirectory(File directory)
+    public MetashapeProjectInputSource overrideFullResImageDirectory(File directory)
     {
         model.getLoadPreferences().setFullResOverride(directory);
+        return this;
+    }
+
+    @Override
+    public ValidatedInputSource validate() throws Exception
+    {
+        return new ValidatedInputSourceBase(this, new MetashapeImageSetInfo(model, getDisabledImages()))
+        {
+            @Override
+            public void confirm()
+            {
+                model.getLoadPreferences().setOrientationViewName(getViewSelection());
+                model.getLoadPreferences().setOrientationViewRotateDegrees(getViewRotation());
+                model.getLoadPreferences().setDisabledImageFiles(getDisabledImages());
+                new Thread(() -> Global.state().getIOModel().loadFromMetashapeModel(model)).start();
+            }
+        };
     }
 }

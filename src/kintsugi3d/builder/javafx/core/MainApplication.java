@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -291,7 +291,7 @@ public class MainApplication extends Application
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         // Register JavaFX recent projects helper with the backend recent projects utility class.
-        RecentProjects.addRecentProjectsChangedListener(RecentProjectsHelper::updateAllControlStructures);
+        RecentProjects.addRecentProjectsChangedListener(() -> Platform.runLater(RecentProjectsHelper::updateAllControlStructures));
 
         initAccelerators(welcomeStage.getScene());
         initAccelerators(progressBarsStage.getScene());

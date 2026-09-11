@@ -9,27 +9,26 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.primaryview;
+package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
-public class PrimaryViewCandidate
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+
+public abstract class NonValidatedInputSourceBase implements NonValidatedInputSource
 {
-    public final String name;
-    public final String group;
-    public final int id;
+    private final Collection<File> disabledImages = new ArrayList<>(8);
 
-    public PrimaryViewCandidate(String name, int id, String group) {
-        this.name = name;
-        this.group = group;
-        this.id = id;
+    @Override
+    public Collection<File> getDisabledImages()
+    {
+        return Collections.unmodifiableCollection(disabledImages);
     }
 
-    public PrimaryViewCandidate(String name, String group)
+    @Override
+    public void disableImages(Collection<File> imagesToDisable)
     {
-        this(name, -1, group);
-    }
-
-    public PrimaryViewCandidate(String name)
-    {
-        this(name, null);
+        disabledImages.addAll(imagesToDisable);
     }
 }

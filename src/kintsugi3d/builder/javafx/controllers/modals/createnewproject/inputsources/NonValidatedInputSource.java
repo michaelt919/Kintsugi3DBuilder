@@ -9,15 +9,23 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources;
 
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
+import java.io.File;
+import java.util.Collection;
 
-public class HotSwapController extends ManualImportController
+public interface NonValidatedInputSource extends InputSource
 {
-    @Override
-    public ManualInputSource getData()
-    {
-        return super.getData().setHotSwap(true);
-    }
+    File getInitialPhotosDirectory();
+
+    void disableImages(Collection<File> imagesToDisable);
+
+    /**
+     * Specifies an image directory (overriding any implicit directory location from the camera calibration data).
+     * @param directory
+     * @throws Exception
+     */
+    NonValidatedInputSource overrideFullResImageDirectory(File directory);
+
+    ValidatedInputSource validate() throws Exception;
 }

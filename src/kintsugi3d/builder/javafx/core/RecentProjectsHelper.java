@@ -63,7 +63,7 @@ public final class RecentProjectsHelper
 
     private static void onMenuItemAction(String fileName)
     {
-        ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
+        FrontendIO.openProjectFromFile(new File(fileName));
     }
 
     private static void updateRecentProjectsInMenuBar()

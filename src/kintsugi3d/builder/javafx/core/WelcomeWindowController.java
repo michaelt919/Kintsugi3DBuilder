@@ -178,7 +178,7 @@ public class WelcomeWindowController
     private static void handleMenuItemSelection(MenuItem item)
     {
         String projectName = item.getText();
-        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
+        FrontendIO.getInstance().openProjectFromFile(new File(projectName));
     }
 
     public void splitMenuButtonActions(ActionEvent actionEvent)
@@ -198,16 +198,16 @@ public class WelcomeWindowController
 
     public void createProject()
     {
-        if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
+        if (!FrontendIO.getInstance().isCreateProjectWindowOpen())
         {
-            ProjectIO.getInstance().createProject(parentWindow);
+            FrontendIO.getInstance().createProject(parentWindow);
         }
     }
 
     @FXML
     private void openProject()
     {
-        ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
+        FrontendIO.getInstance().openProjectWithPrompt(parentWindow);
     }
 
     @FXML
@@ -245,7 +245,7 @@ public class WelcomeWindowController
         {
             if (Objects.equals(button, item))
             {
-                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+                FrontendIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
             }
             i++;
         }

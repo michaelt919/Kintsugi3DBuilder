@@ -580,27 +580,27 @@ public class MainWindowController
 
     @FXML public void createProject()
     {
-        ProjectIO.getInstance().createProject(window);
+        FrontendIO.getInstance().createProject(window);
     }
 
     @FXML public void openProject()
     {
-        ProjectIO.getInstance().openProjectWithPrompt(window);
+        FrontendIO.getInstance().openProjectWithPrompt(window);
     }
 
     @FXML public void saveProject()
     {
-        ProjectIO.getInstance().saveProject(window);
+        FrontendIO.getInstance().saveProject(window);
     }
 
     @FXML public void saveProjectAs()
     {
-        ProjectIO.getInstance().saveProjectAs(window);
+        FrontendIO.getInstance().saveProjectAs(window);
     }
 
     @FXML public void closeProject()
     {
-        ProjectIO.getInstance().closeProjectAfterConfirmation();
+        FrontendIO.closeProject();
     }
 
     @FXML public void exit()
@@ -808,7 +808,7 @@ public class MainWindowController
 
     public void hotSwap()
     {
-        ProjectIO.getInstance().hotSwap(window);
+        FrontendIO.getInstance().hotSwap(window);
     }
 
     public double getRightTabWidth()

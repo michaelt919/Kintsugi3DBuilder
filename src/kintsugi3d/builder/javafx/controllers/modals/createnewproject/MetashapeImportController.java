@@ -29,15 +29,13 @@ import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-public class MetashapeImportController extends DataSourcePageControllerBase<InputSource>
+public class MetashapeImportController extends ProjectImportController
 {
     @FXML private Label fileNameTxtField;
     @FXML private Pane rootPane;
@@ -105,19 +103,10 @@ public class MetashapeImportController extends DataSourcePageControllerBase<Inpu
     }
 
     @Override
-    public boolean advance()
+    protected MetashapeProjectInputSource getData()
     {
-        getPage().setOutData(
-            new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
-
-        return true;
-    }
-
-    @Override
-    public boolean confirm()
-    {
-        getPage().getOutData().confirm();
-        return true;
+        return new MetashapeProjectInputSource()
+            .setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel());
     }
 
     private static String getModelIDFromSelection(String selectionAsString)

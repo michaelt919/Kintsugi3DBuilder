@@ -9,15 +9,28 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.io.imageset;
 
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
-
-public class HotSwapController extends ManualImportController
+public class ImageIdentifier
 {
-    @Override
-    public ManualInputSource getData()
+    public final String name;
+    public final String group;
+    public final int id;
+
+    public ImageIdentifier(String name, int id, String group)
     {
-        return super.getData().setHotSwap(true);
+        this.name = name;
+        this.group = group;
+        this.id = id;
+    }
+
+    public ImageIdentifier(String name, String group)
+    {
+        this(name, -1, group);
+    }
+
+    public ImageIdentifier(String name)
+    {
+        this(name, null);
     }
 }

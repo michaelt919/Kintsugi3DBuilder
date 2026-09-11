@@ -9,15 +9,18 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.modals.createnewproject;
+package kintsugi3d.builder.io.imageset;
 
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
+import javafx.scene.image.Image;
 
-public class HotSwapController extends ManualImportController
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+public interface ImageSetInfo
 {
-    @Override
-    public ManualInputSource getData()
-    {
-        return super.getData().setHotSwap(true);
-    }
+    String getName();
+    List<ImageIdentifier> getViews();
+    Map<Integer, Image> getThumbnailMap();
+    Optional<String> findFullResImagePath(String imageName);
 }

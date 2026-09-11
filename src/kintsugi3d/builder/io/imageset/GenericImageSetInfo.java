@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.primaryview;
+package kintsugi3d.builder.io.imageset;
 
 import javafx.scene.image.Image;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
@@ -21,12 +21,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public final class GenericViewSelectionModel implements ViewSelectionModel
+public final class GenericImageSetInfo implements ImageSetInfo
 {
     private final String name;
     private final List<View> views;
 
-    public GenericViewSelectionModel(String name, ReadonlyViewSet viewSet)
+    public GenericImageSetInfo(String name, ReadonlyViewSet viewSet)
     {
         this.name = name;
 
@@ -41,10 +41,10 @@ public final class GenericViewSelectionModel implements ViewSelectionModel
     }
 
     @Override
-    public List<PrimaryViewCandidate> getViews()
+    public List<ImageIdentifier> getViews()
     {
         return views.stream()
-            .map(view -> new PrimaryViewCandidate(view.toString()))
+            .map(view -> new ImageIdentifier(view.toString()))
             .collect(Collectors.toUnmodifiableList());
     }
 

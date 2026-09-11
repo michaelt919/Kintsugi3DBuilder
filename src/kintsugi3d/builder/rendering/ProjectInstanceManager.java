@@ -81,8 +81,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final List<Consumer<RenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
-    private File loadedProjectFile;
-
     /**
      * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
      * The callbacks will be cleared after being invoked.
@@ -157,17 +155,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         return loadedViewSet;
     }
 
-    @Override
-    public File getLoadedProjectFile()
-    {
-        return loadedProjectFile;
-    }
-
-    @Override
-    public void setLoadedProjectFile(File loadedProjectFile)
-    {
-        this.loadedProjectFile = loadedProjectFile;
-    }
     private void invokeViewSetLoadCallbacks(ViewSet viewSet)
     {
         synchronized (viewSetLoadCallbacks)
@@ -675,8 +662,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     @Override
     public void unload()
     {
-        loadedProjectFile = null;
-
         // Also remove render views which will be tied to the loaded project.
         renderViewMap.clear();
         renderViews.clear();

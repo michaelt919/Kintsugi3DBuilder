@@ -164,35 +164,32 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
             renderable.reloadShaders();
 
-            IOModel ioModel = Global.state().getIOModel();
-
             // Save project to avoid inconsistency between results and settings
-            ioModel.saveProject();
-
-            // Export glTF for Kintsugi 3D Viewer even if not requested
-            // TODO: ensure that GLTF texture filenames match default material texture names;
-            //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
-            ioModel.saveGLTF();
-
-            // Save textures and basis functions
-            // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
-            resources.getTextureResources().saveAll(renderable.getViewSet().getSupportingFilesDirectory());
-
-            // Perform reconstruction
-            //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
-
-            if (settings.getExportSettings().shouldOpenViewerOnceComplete())
+            Global.state().getIOModel().saveProject(() ->
             {
-                Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
-            }
+                // Perform reconstruction
+                //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
 
-            ProjectModel projectModel = Global.state().getProjectModel();
-            projectModel.setProjectProcessed(true);
-            projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
-            projectModel.notifyProcessingComplete();
+                if (settings.getExportSettings().shouldOpenViewerOnceComplete())
+                {
+                    try
+                    {
+                        Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
+                    }
+                    catch (IOException e)
+                    {
+                        ExceptionHandling.error("Error launching Kintsugi 3D Viewer", e);
+                    }
+                }
 
-            // Refresh tabs
-            new TabsManager(renderable).refreshAllTabs();
+                ProjectModel projectModel = Global.state().getProjectModel();
+                projectModel.setProjectProcessed(true);
+                projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
+                projectModel.notifyProcessingComplete();
+
+                // Refresh tabs
+                new TabsManager(renderable).refreshAllTabs();
+            });
         }
         catch (IOException | ParserConfigurationException | TransformerException e)
         {

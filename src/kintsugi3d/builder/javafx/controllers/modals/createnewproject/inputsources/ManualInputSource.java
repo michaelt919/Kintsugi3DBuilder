@@ -16,23 +16,21 @@ import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
-import kintsugi3d.builder.io.primaryview.GenericViewSelectionModel;
-import kintsugi3d.builder.io.primaryview.MetashapeViewSelectionModel;
-import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
+import kintsugi3d.builder.io.imageset.GenericImageSetInfo;
+import kintsugi3d.builder.io.imageset.ImageSetInfo;
+import kintsugi3d.builder.io.imageset.MetashapeImageSetInfo;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.Objects;
-import java.util.function.Consumer;
 
-public class ManualInputSource extends InputSourceBase
+public class ManualInputSource extends NonValidatedInputSourceBase
 {
     private File cameraFile;
     private File meshFile;
     private File photosDir;
     private File masksDir;
     private boolean needsUndistort;
+
     private boolean hotSwap;
 
     public File getCameraFile()
@@ -62,31 +60,52 @@ public class ManualInputSource extends InputSourceBase
         return this.photosDir;
     }
 
-    public ManualInputSource setPhotosDir(File photosDir)
+    @Override
+    public ManualInputSource overrideFullResImageDirectory(File directory)
     {
-        this.photosDir = photosDir;
-        return this;
-    }
-
-    public ManualInputSource setNeedsUndistort(boolean needsUndistort)
-    {
-        this.needsUndistort = needsUndistort;
-        return this;
-    }
-
-    public ManualInputSource setHotSwap(boolean hotSwap)
-    {
-        this.hotSwap = hotSwap;
+        this.photosDir = directory;
         return this;
     }
 
     @Override
-    protected void loadForViewSelectionOrThrow(Consumer<ViewSelectionModel> onLoadComplete) throws Exception
+    public ValidatedInputSource validate() throws Exception
+    {
+        return new ValidatedInputSourceBase(this, loadImageSetInfo())
+        {
+            @Override
+            public void confirm()
+            {
+                ViewSetLoadOptions loadOptions = new ViewSetLoadOptions();
+                loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
+                loadOptions.geometryFile = meshFile;
+                loadOptions.masksDirectory = masksDir;
+                loadOptions.mainDirectories.fullResImageDirectory = photosDir;
+                loadOptions.mainDirectories.fullResImagesNeedUndistort = needsUndistort;
+                loadOptions.orientationViewName = getViewSelection();
+                loadOptions.orientationViewRotation = getViewRotation();
+                loadOptions.disabledImages = getDisabledImages();
+
+                if (hotSwap)
+                {
+                    new Thread(() ->
+                        Global.state().getIOModel().hotSwapLooseFiles(cameraFile.getPath(), cameraFile, loadOptions))
+                        .start();
+                }
+                else
+                {
+                    new Thread(() ->
+                        Global.state().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile, loadOptions))
+                        .start();
+                }
+            }
+        };
+    }
+
+    private ImageSetInfo loadImageSetInfo() throws Exception
     {
         if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
         {
-            setViewSelectionModel(new MetashapeViewSelectionModel(cameraFile, photosDir, getDisabledImages()));
-            onLoadComplete.accept(getViewSelectionModel());
+            return new MetashapeImageSetInfo(cameraFile, photosDir, getDisabledImages());
         }
         else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
         {
@@ -101,8 +120,7 @@ public class ManualInputSource extends InputSourceBase
                 .setMasksDirectory(masksDir)
                 .finish();
 
-            setViewSelectionModel(new GenericViewSelectionModel(cameraFile.getName(), viewSet));
-            onLoadComplete.accept(getViewSelectionModel());
+            return new GenericImageSetInfo(cameraFile.getName(), viewSet);
         }
         else
         {
@@ -111,59 +129,27 @@ public class ManualInputSource extends InputSourceBase
         }
     }
 
-    @Override
-    public void confirm()
+    public ManualInputSource setNeedsUndistort(boolean needsUndistort)
     {
-        ViewSetLoadOptions loadOptions = new ViewSetLoadOptions();
-        loadOptions.mainDirectories.projectRoot = cameraFile.getParentFile();
-        loadOptions.geometryFile = meshFile;
-        loadOptions.masksDirectory = masksDir;
-        loadOptions.mainDirectories.fullResImageDirectory = photosDir;
-        loadOptions.mainDirectories.fullResImagesNeedUndistort = needsUndistort;
-        loadOptions.orientationViewName = getViewSelection();
-        loadOptions.orientationViewRotation = getViewRotation();
-        loadOptions.disabledImages = getDisabledImages();
-        if (hotSwap)
-        {
-            new Thread(() ->
-                Global.state().getIOModel().hotSwapLooseFiles(cameraFile.getPath(), cameraFile, loadOptions))
-                .start();
-        }
-        else
-        {
-            new Thread(() ->
-                Global.state().getIOModel().loadFromLooseFiles(cameraFile.getPath(), cameraFile, loadOptions))
-                .start();
-        }
+        this.needsUndistort = needsUndistort;
+        return this;
     }
 
-    @Override
-    public boolean needsRefresh(ViewSelectable oldInstance)
+    public boolean shouldHotSwap()
     {
-        if (oldInstance instanceof ManualInputSource)
-        {
-            ManualInputSource other = (ManualInputSource) oldInstance;
-            return !(Objects.equals(this.cameraFile, other.cameraFile) ||
-                !Objects.equals(this.meshFile, other.meshFile) ||
-                !Objects.equals(this.photosDir, other.photosDir) ||
-                !Objects.equals(this.masksDir, other.masksDir));
-        }
-        else
-        {
-            return true;
-        }
+        return hotSwap;
+    }
+
+    public ManualInputSource setHotSwap(boolean hotSwap)
+    {
+        this.hotSwap = hotSwap;
+        return this;
     }
 
     @Override
     public File getInitialPhotosDirectory()
     {
         return photosDir != null ? photosDir : cameraFile.getParentFile();
-    }
-
-    @Override
-    public void overrideFullResImageDirectory(File directory)
-    {
-        setPhotosDir(directory);
     }
 
     @Override

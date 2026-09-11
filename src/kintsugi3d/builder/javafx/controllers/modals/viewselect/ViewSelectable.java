@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,22 +11,13 @@
 
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
-import javafx.stage.Window;
-import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
-
-import java.util.function.Consumer;
+import kintsugi3d.builder.io.imageset.ImageSetInfo;
 
 public interface ViewSelectable
 {
-    boolean needsRefresh(ViewSelectable oldInstance);
     String getAdvanceLabelOverride();
 
-    Window getModalWindow();
-    void setModalWindow(Window modalWindow);
-
-    void loadForViewSelection(Consumer<ViewSelectionModel> onLoadComplete);
-
-    ViewSelectionModel getViewSelectionModel();
+    ImageSetInfo getImageSetInfo();
 
     String getViewSelection();
     double getViewRotation();

@@ -19,13 +19,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.io.primaryview.PrimaryViewCandidate;
-import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
+import kintsugi3d.builder.io.imageset.ImageIdentifier;
+import kintsugi3d.builder.io.imageset.ImageSetInfo;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.SearchableTreeView;
 import kintsugi3d.builder.javafx.util.ScrollBarHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -36,8 +34,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class ViewSelectController extends DataReceiverPageControllerBase<ViewSelectable>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ViewSelectController.class);
-
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
@@ -84,7 +80,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             imageName -> new ImageSelectionLoader(
                 imageName,
                 new ImageSelectionPreview(primaryImgView, imgViewText, cache),
-                getData().getViewSelectionModel()));
+                data.getImageSetInfo()));
 
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
@@ -102,33 +98,30 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
     @Override
     public void refresh()
     {
-        if (newData != null && newData.needsRefresh(getData()))
+        if (newData != null && !newData.equals(data))
         {
             // check if sources are equal so we don't have to unzip images multiple times
             // sometimes this saves processing time, other times it leads to buggy behavior :/
             // really the only use case is saving time if a user flips back and forth between primary view selection and the previous page
             data = newData;
 
-            //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
+            // create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
             SearchableTreeView searchableTreeView =
                 SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode);
-            getData().setModalWindow(getRootNode().getScene().getWindow());
-            getData().loadForViewSelection(viewSelectionModel ->
-            {
-                addTreeElems(searchableTreeView, viewSelectionModel);
-                searchableTreeView.bind();
 
-                if (getData().getViewSelection() == null)
-                {
-                    searchableTreeView.getTreeView().getSelectionModel().select(1);
-                    setImageRotation(0);
-                }
-                else
-                {
-                    setDefaultSelection(searchableTreeView);
-                    setImageRotation(canRotateView() ? getData().getViewRotation() : 0);
-                }
-            });
+            addTreeElems(searchableTreeView, data.getImageSetInfo());
+            searchableTreeView.bind();
+
+            if (data.getViewSelection() == null)
+            {
+                searchableTreeView.getTreeView().getSelectionModel().select(1);
+                setImageRotation(0);
+            }
+            else
+            {
+                setDefaultSelection(searchableTreeView);
+                setImageRotation(canRotateView() ? data.getViewRotation() : 0);
+            }
         }
         else
         {
@@ -158,19 +151,19 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         searchableTreeView.getTreeView().getSelectionModel().select(selectionItem);
     }
 
-    private void addTreeElems(SearchableTreeView searchableTreeView, ViewSelectionModel viewSelectionModel)
+    private void addTreeElems(SearchableTreeView searchableTreeView, ImageSetInfo imageSetInfo)
     {
-        TreeItem<String> rootItem = new TreeItem<>(viewSelectionModel.getName());
+        TreeItem<String> rootItem = new TreeItem<>(imageSetInfo.getName());
         searchableTreeView.getTreeView().setRoot(rootItem);
 
-        List<PrimaryViewCandidate> primaryViewCandidates = viewSelectionModel.getViews();
+        List<ImageIdentifier> primaryViewCandidates = imageSetInfo.getViews();
 
         if (canSelectNullView())
         {
             rootItem.getChildren().add(NONE_ITEM);
         }
 
-        for (PrimaryViewCandidate primaryViewCandidate : primaryViewCandidates)
+        for (ImageIdentifier primaryViewCandidate : primaryViewCandidates)
         {
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
@@ -212,7 +205,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = createTreeItem(viewSelectionModel.getThumbnailMap(), primaryViewCandidate);
+            TreeItem<String> imageTreeItem = createTreeItem(imageSetInfo.getThumbnailMap(), primaryViewCandidate);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -220,7 +213,7 @@ public abstract class ViewSelectController extends DataReceiverPageControllerBas
         searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, PrimaryViewCandidate primaryViewCandidate)
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgMap, ImageIdentifier primaryViewCandidate)
     {
         ImageView thumbnailImgView;
         Image img = thumbnailImgMap.get(primaryViewCandidate.id);

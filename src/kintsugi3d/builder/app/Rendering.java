@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.app;
 
-import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.core.MultithreadState;
@@ -44,12 +43,9 @@ import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -577,27 +573,7 @@ public final class Rendering
         // Load project if requested
         if (args.length >= 1)
         {
-            if (args[0].endsWith(".vset"))
-            {
-                File vsetFile = new File(args[0]);
-                new Thread(() -> Global.state().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
-            }
-            else
-            {
-                // Using Platform.runLater since full projects include stuff that's managed by JavaFX (cameras, lights, etc.)
-                Platform.runLater(() ->
-                {
-                    try
-                    {
-                        File vsetFile = Global.state().getProjectModel().openProjectFile(new File(args[0]));
-                        new Thread(() -> Global.state().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
-                    }
-                    catch (IOException | ParserConfigurationException | SAXException e)
-                    {
-                        LOG.error("Error occurred processing arguments:", e);
-                    }
-                });
-            }
+            Global.state().getIOModel().loadExistingProject(new File(args[0])); // Should initialize requestQueue
         }
 
         // Execute command if requested, using reflection

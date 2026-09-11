@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,15 +14,19 @@ package kintsugi3d.builder.javafx.core;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExceptionHandling
+public final class ExceptionHandling
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExceptionHandling.class);
+
+    private ExceptionHandling()
+    {
+    }
 
     public static void error(String message, Throwable e)
     {
@@ -40,8 +44,8 @@ public class ExceptionHandling
     {
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
-            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            ButtonType ok = new ButtonType("OK", ButtonData.CANCEL_CLOSE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonData.YES);
             Alert alert = new Alert(AlertType.NONE,
                 String.format("%s:\n%s\nSee the log for more info.", message, e.getMessage()), ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(

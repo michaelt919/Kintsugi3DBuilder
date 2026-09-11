@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,14 +22,13 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
-import kintsugi3d.builder.javafx.controllers.paged.DataSourcePageControllerBase;
 import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
 
 import java.io.File;
 import java.util.List;
 
-public class ManualImportController extends DataSourcePageControllerBase<ManualInputSource>
+public class ManualImportController extends ProjectImportController
 {
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -136,7 +135,6 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
     @FXML
     private void photoDirectorySelect()
     {
-
         File file = photoDirectoryChooser.showDialog(getStage());
 
         if (file != null)
@@ -157,7 +155,6 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
     {
         return cameraFile != null && meshFile != null && photosDir != null;
     }
-
 
     private void setHomeDir(File home)
     {
@@ -184,20 +181,12 @@ public class ManualImportController extends DataSourcePageControllerBase<ManualI
     }
 
     @Override
-    public boolean advance()
+    protected ManualInputSource getData()
     {
-        getPage().setOutData(new ManualInputSource()
+        return new ManualInputSource()
             .setCameraFile(cameraFile)
             .setMeshFile(meshFile)
-            .setPhotosDir(photosDir)
-            .setNeedsUndistort(undistortImagesCheckBox.isSelected()));
-        return true;
-    }
-
-    @Override
-    public final boolean confirm()
-    {
-        getPage().getOutData().confirm();
-        return true;
+            .setNeedsUndistort(undistortImagesCheckBox.isSelected())
+            .overrideFullResImageDirectory(photosDir);
     }
 }
