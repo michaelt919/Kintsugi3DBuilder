@@ -19,6 +19,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -26,9 +27,11 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
@@ -67,7 +70,7 @@ public class WelcomeWindowController
 
     @FXML private SplitMenuButton recentProjectsSplitMenuButton;
 
-    private final List<Button> recentButtons = new ArrayList<>(16);
+    private final List<Button> recentButtons = new ArrayList<>(5);
 
     private Stage window;
     private Window parentWindow;
@@ -397,17 +400,41 @@ public class WelcomeWindowController
         try
         {
             File vsetFile = Global.state().getProjectModel().getViewSetFileForProject(projFile);
-            ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile)
-                .finish();
-            File previewImageFile = viewSet.getRepresentativeView().getPreviewImageFile();
+            ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
+            View representativeView = viewSet.getRepresentativeView();
+            File thumbnailImageFile = representativeView.getThumbnailImageFile();
 
-            ImageView previewImgView = new ImageView(
-                new Image(previewImageFile.toURI().toString(),
-                    true)); /* enable background loading so we don't freeze the builder */
+            if (thumbnailImageFile == null || !thumbnailImageFile.exists())
+            {
+                thumbnailImageFile =  representativeView.tryFindPreviewImageFile();
+            }
 
-            previewImgView.setFitHeight(80);
-            previewImgView.setPreserveRatio(true);
-            Platform.runLater(() -> recentButton.setGraphic(previewImgView));
+            if (thumbnailImageFile == null || !thumbnailImageFile.exists())
+            {
+                thumbnailImageFile = representativeView.tryFindFullResImageFile();
+            }
+
+            if (thumbnailImageFile != null && thumbnailImageFile.exists())
+            {
+                ImageView previewImgView = new ImageView(
+                    new Image(thumbnailImageFile.toURI().toString(),
+                        true)); /* enable background loading so we don't freeze the builder */
+
+                Platform.runLater(() ->
+                {
+                    previewImgView.setFitHeight(80);
+                    previewImgView.setFitWidth(80);
+                    previewImgView.setPreserveRatio(true);
+
+                    // Center image within button
+                    StackPane graphic = new StackPane(previewImgView);
+                    graphic.setPrefWidth(80);
+                    graphic.setPrefHeight(80);
+                    graphic.setAlignment(Pos.CENTER);
+
+                    recentButton.setGraphic(graphic);
+                });
+            }
         }
         catch (IOException | ParserConfigurationException | SAXException e)
         {

@@ -217,6 +217,7 @@ public class MainApplication extends Application
         welcomeStage.setTitle("Welcome!");
         welcomeStage.setScene(new Scene(welcomeRoot));
         welcomeStage.initOwner(primaryStage.getScene().getWindow());
+        welcomeStage.setResizable(false); //remove minimize and maximize buttons from system nav
 
         Stage sceneStage = new Stage();
         sceneStage.getIcons().add(icon);

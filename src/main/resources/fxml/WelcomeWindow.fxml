@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -46,28 +46,28 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
         </rowConstraints>
         <Button fx:id="recent1" alignment="BOTTOM_CENTER" disable="true" mnemonicParsing="false"
-                onAction="#recentButton" prefHeight="100.0" prefWidth="100.0"
+                onAction="#recentButton" prefHeight="120.0" prefWidth="120.0"
                 textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER"/>
         <Button fx:id="recent2" alignment="BOTTOM_CENTER" disable="true" mnemonicParsing="false"
-                onAction="#recentButton" prefHeight="100.0" prefWidth="100.0"
+                onAction="#recentButton" prefHeight="120.0" prefWidth="120.0"
                 textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER"
                 GridPane.columnIndex="1"/>
         <Button fx:id="recent3" alignment="BOTTOM_CENTER" disable="true" mnemonicParsing="false"
-                onAction="#recentButton" prefHeight="100.0" prefWidth="100.0"
+                onAction="#recentButton" prefHeight="120.0" prefWidth="120.0"
                 textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER"
                 GridPane.columnIndex="2"/>
         <Button fx:id="recent4" alignment="BOTTOM_CENTER" disable="true" mnemonicParsing="false"
-                onAction="#recentButton" prefHeight="100.0" prefWidth="100.0"
+                onAction="#recentButton" prefHeight="120.0" prefWidth="120.0"
                 textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER"
                 GridPane.rowIndex="1"/>
         <Button fx:id="recent5" alignment="BOTTOM_CENTER" disable="true" mnemonicParsing="false"
-                onAction="#recentButton" prefHeight="100.0" prefWidth="100.0"
+                onAction="#recentButton" prefHeight="120.0" prefWidth="120.0"
                 textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER"
                 GridPane.columnIndex="1" GridPane.rowIndex="1"/>
         <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER" contentDisplay="CENTER"
                          mnemonicParsing="false" onAction="#splitMenuButtonActions" onMouseExited="#hideMenu"
                          GridPane.halignment="CENTER" GridPane.valignment="CENTER" popupSide="RIGHT"
-                         prefHeight="100.0" prefWidth="100.0"
+                         prefHeight="120.0" prefWidth="120.0"
                          text=" Older Projects" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="2"
                          GridPane.rowIndex="1">
         </SplitMenuButton>
