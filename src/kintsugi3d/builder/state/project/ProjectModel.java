@@ -29,7 +29,7 @@ public interface ProjectModel
     /**
      * Parses an XML document, typically read from a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
      */
-    void openFromXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException;
+    void parseXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException;
 
     /**
      * Converts this project to an XML document that can be saved, typically as a Kintsugi 3D Builder project file (.k3d)
@@ -39,28 +39,27 @@ public interface ProjectModel
     File getColorCheckerFile();
     void setColorCheckerFile(File colorCheckerFile);
 
-    boolean isProjectOpen();
-    void setProjectOpen(boolean projectOpen);
-
     String getProjectName();
+
+    boolean isProjectOpen();
+    boolean isProjectLoaded();
+    boolean isProjectProcessed();
+    int getProcessedTextureResolution();
+    Vector3 getModelSize();
+
+    void confirm(String title, String header, String message, Runnable onConfirm);
+
+
+    void setProjectOpen(boolean projectOpen);
     void setProjectName(String projectName);
     default void clearProjectName()
     {
         this.setProjectName(NULL_PROJECT_NAME);
     }
-
-    boolean isProjectLoaded();
     void setProjectLoaded(boolean projectLoaded);
-
-    boolean isProjectProcessed();
     void setProjectProcessed(boolean projectProcessed);
-
-    int getProcessedTextureResolution();
     void setProcessedTextureResolution(int processedTextureResolution);
-
-    Vector3 getModelSize();
     void setModelSize(Vector3 modelSize);
 
-    void confirm(String title, String header, String message, Runnable onConfirm);
     void notifyProcessingComplete();
 }

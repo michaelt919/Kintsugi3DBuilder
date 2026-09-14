@@ -14,7 +14,7 @@ package kintsugi3d.gl.opengl;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.types.AbstractDataType;
-import kintsugi3d.util.RadianceImageLoader.Image;
+import kintsugi3d.gl.util.RadianceImageLoader.Image;
 import org.lwjgl.BufferUtils;
 
 import java.awt.*;

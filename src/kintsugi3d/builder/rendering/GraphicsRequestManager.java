@@ -16,9 +16,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.GraphicsRequest;
 import kintsugi3d.gl.interactive.ProgressMonitor;
-import kintsugi3d.gl.interactive.ProgressMonitoredGraphicsRequest;
 import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +32,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private final Collection<Runnable> requestAddedListeners = new ArrayList<>(1);
-    private ProjectInstanceManager<ContextType> instanceManager;
+    private RenderableInstanceManager<ContextType> instanceManager;
     private ProgressMonitor progressMonitor;
 
     public GraphicsRequestManager(ContextType context)
@@ -43,12 +41,13 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         this.requestList = new LinkedList<>();
     }
 
+    @Override
     public boolean isEmpty()
     {
         return requestList.isEmpty();
     }
 
-    public void setInstanceManager(ProjectInstanceManager<ContextType> instanceManager)
+    public void setInstanceManager(RenderableInstanceManager<ContextType> instanceManager)
     {
         this.instanceManager = instanceManager;
     }
@@ -69,6 +68,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         });
     }
 
+    @Override
     public void addRequestAddedListener(Runnable listener)
     {
         requestAddedListeners.add(listener);

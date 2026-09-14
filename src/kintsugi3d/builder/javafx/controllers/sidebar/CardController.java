@@ -25,9 +25,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
+import kintsugi3d.builder.util.AppIcon;
 
 import java.io.File;
 import java.util.Locale;
@@ -52,7 +52,7 @@ public class CardController
     private UUID cardId;
     private ObservableCardsModel<?> cardsModel;
 
-    private final ObjectProperty<Image> previewImage = new SimpleObjectProperty<>(MainApplication.getIcon());
+    private final ObjectProperty<Image> previewImage = new SimpleObjectProperty<>(AppIcon.getImage());
     private File currentPreviewImageFile;
     private File loadedPreviewImageFile;
 

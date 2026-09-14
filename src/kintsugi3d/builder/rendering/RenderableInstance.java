@@ -21,7 +21,7 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.gl.interactive.InteractiveRenderable;
+import kintsugi3d.gl.interactive.InteractiveRenderableResource;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -33,7 +33,7 @@ import java.util.function.Consumer;
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.
  */
-public interface RenderableInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
+public interface RenderableInstance<ContextType extends Context<ContextType>> extends InteractiveRenderableResource<ContextType>
 {
     /**
      * Sets the safe region for the target framebuffer.

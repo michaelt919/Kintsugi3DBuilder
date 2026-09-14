@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,13 +15,6 @@ import kintsugi3d.builder.javafx.internal.*;
 
 public final class JavaFXState
 {
-    private static final JavaFXState INSTANCE = new JavaFXState();
-
-    static JavaFXState getInstance()
-    {
-        return INSTANCE;
-    }
-
     private final ObservableCameraModel cameraModel;
     private final ObservableEnvironmentModel environmentModel;
     private final ObservableLightingEnvironmentModel lightingModel;
@@ -49,6 +42,11 @@ public final class JavaFXState
         carouselModel = new ObservableCarouselModel();
         tabModels = new ObservableTabsModel(carouselModel);
         cacheModel = new ObservableCacheModel();
+    }
+
+    public static JavaFXState create()
+    {
+        return new JavaFXState();
     }
 
     public ObservableCameraModel getCameraModel()

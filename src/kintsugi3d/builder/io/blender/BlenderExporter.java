@@ -12,11 +12,11 @@
 package kintsugi3d.builder.io.blender;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
+import kintsugi3d.builder.util.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

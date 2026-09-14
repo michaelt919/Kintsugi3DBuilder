@@ -34,9 +34,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.app.OperatingSystem;
-import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.WindowSynchronization;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
@@ -50,6 +49,7 @@ import kintsugi3d.builder.state.cards.ShaderDataCard;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.javafx.FramebufferView;
 
 import java.io.IOException;
@@ -156,7 +156,9 @@ public class MainWindowController
     public void init(Stage injectedStage, JavaFXState javaFXState, Runnable injectedUserDocumentationHandler)
     {
         this.window = injectedStage;
+
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+        WindowSynchronization.getInstance().addListener(framebufferView::closeCanvas);
 
         ExperienceManager.getInstance().initialize(this.getWindow(), javaFXState);
 

@@ -19,15 +19,14 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
 import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.rendering.Rendering;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -94,7 +94,7 @@ public class LightCalibrationController extends NonDataPageControllerBase
     @Override
     public boolean confirm()
     {
-        Global.state().getIOModel().applyLightCalibration();
+        Global.state().getIOModel().applyLightOffsetCalibration();
         settingsModel.set("lightCalibrationMode", false);
         unbind();
         return true;

@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.state.project;
 
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.io.IOModel;
+import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -43,6 +46,29 @@ public abstract class ProjectModelBase<
 {
     private final EnvironmentType noEnvironment = SerializableEnvironmentSettings.createNoEnvironment(this::constructEnvironmentSetting);
 
+    public void registerIOListeners()
+    {
+        IOModel ioModel = Global.state().getIOModel();
+
+        ioModel.projectOpenedListeners().addListener(event ->
+        {
+            setProjectOpen(true);
+            setProjectName(event.projectName);
+        });
+
+        ioModel.projectSavedListeners().addListener(event -> setProjectName(event.projectName));
+
+        ioModel.projectClosedListeners().addListener(event ->
+        {
+            setProjectOpen(false);
+            clearProjectName();
+            setProjectLoaded(false);
+            setProjectProcessed(false);
+            setProcessedTextureResolution(0);
+            setModelSize(new Vector3(1.0f));
+        });
+    }
+
     public abstract List<CameraType> getCameraList();
 
     public abstract List<EnvironmentType> getEnvironmentList();
@@ -52,7 +78,7 @@ public abstract class ProjectModelBase<
     public abstract List<ObjectPoseType> getObjectPoseList();
 
     @Override
-    public final void openFromXMLDocument(Document document)
+    public final void parseXMLDocument(Document document)
     {
         Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
         if (cameraListNode != null)

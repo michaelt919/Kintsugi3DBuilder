@@ -109,7 +109,7 @@ public final class FrontendIO
 
     private static boolean confirmClose(String text)
     {
-        if (JavaFXState.getInstance().getProjectModel().isProjectOpen())
+        if (Global.state().getProjectModel().isProjectOpen())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION,
                 "If you click OK, any unsaved changes to the current project will be lost.");

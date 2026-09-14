@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.util;
 
-import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.ViewSet;
 

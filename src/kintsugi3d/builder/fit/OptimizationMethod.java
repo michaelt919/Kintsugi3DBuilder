@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.stream.GraphicsStreamResource;
 
 @FunctionalInterface
 public interface OptimizationMethod<ContextType extends Context<ContextType>>

@@ -12,7 +12,6 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.io.IOModel;
-import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
@@ -42,9 +41,6 @@ public interface Kintsugi3DBuilderState
      * @return
      */
     GeneralSettingsModel getSettingsModel();
-
-    // Settings that must be applied prior to load
-    LoadOptionsModel getLoadOptionsModel();
 
     // Project cache info and access
     CacheModel getCacheModel();

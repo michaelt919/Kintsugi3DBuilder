@@ -117,11 +117,6 @@ public class ObservableProjectModel extends ProjectModelBase<
         return onProcessingComplete.get();
     }
 
-    public ObjectProperty<EventHandler<ProcessingCompleteEvent>> onProcessingCompleteProperty()
-    {
-        return onProcessingComplete;
-    }
-
     public void setOnProcessingComplete(EventHandler<ProcessingCompleteEvent> onProcessingComplete)
     {
         this.onProcessingComplete.set(onProcessingComplete);

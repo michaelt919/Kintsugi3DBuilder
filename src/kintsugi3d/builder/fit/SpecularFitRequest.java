@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
@@ -26,6 +25,7 @@ import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.ProgressMonitor;

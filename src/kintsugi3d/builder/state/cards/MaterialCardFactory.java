@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
-import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
         catch (FileNotFoundException e)
         {
             // Default to icon if thumbnail isn't found
-            thumbnailPath = MainApplication.ICON_PATH;
+            thumbnailPath = AppIcon.PATH;
         }
 
         UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,

@@ -15,8 +15,10 @@ import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.ReadableFramebuffer;
-import kintsugi3d.util.ColorList;
-import kintsugi3d.util.ColorNativeBufferList;
+import kintsugi3d.gl.stream.GraphicsStream;
+import kintsugi3d.gl.stream.GraphicsStreamBase;
+import kintsugi3d.gl.util.ColorList;
+import kintsugi3d.gl.util.ColorNativeBufferList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

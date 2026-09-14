@@ -30,9 +30,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
-import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import org.slf4j.Logger;
@@ -97,7 +97,7 @@ public class WelcomeWindowController
 
         shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
             .or(ProgressBarsController.getInstance().getProcessingProperty())
-            .or(JavaFXState.getInstance().getProjectModel().getProjectOpenProperty());
+            .or(state.getProjectModel().getProjectOpenProperty());
 
         InvalidationListener windowHide = obs ->
             // Delay to allow it to catch if the main window is being closed.
@@ -399,7 +399,7 @@ public class WelcomeWindowController
     {
         try
         {
-            File vsetFile = IOModel.getViewSetFileForProject(projFile);
+            File vsetFile = Global.state().getIOModel().getViewSetFileForProject(projFile);
             ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
             View representativeView = viewSet.getRepresentativeView();
             File thumbnailImageFile = representativeView.getThumbnailImageFile();

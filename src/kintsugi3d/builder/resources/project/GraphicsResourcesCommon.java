@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -237,7 +237,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
                         {
                             try
                             {
-                                return material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                                return ImportedMaterialResources.createFromMaterial(
+                                    context, material, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
                             }
                             catch (IOException e)
                             {

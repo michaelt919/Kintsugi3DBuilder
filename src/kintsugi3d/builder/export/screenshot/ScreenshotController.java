@@ -15,11 +15,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.export.screenshot.ScreenshotRequest.Builder;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.experience.Modal;
+import kintsugi3d.builder.rendering.Rendering;
 
 import java.io.File;
 

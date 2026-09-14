@@ -50,9 +50,9 @@ public class SynchronizedProjectModel implements ProjectModel
     }
 
     @Override
-    public void openFromXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException
+    public void parseXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException
     {
-        baseModel.openFromXMLDocument(document);
+        baseModel.parseXMLDocument(document);
     }
 
     @Override

@@ -11,18 +11,20 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.rendering.RenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.util.ApplicationFolders;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.material.ImportedMaterial;
@@ -54,25 +56,34 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class IOModel
+public class IOModel implements IO
 {
     private static final Logger LOG = LoggerFactory.getLogger(IOModel.class);
 
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
-    private ReadonlyLoadOptionsModel imageLoadOptionsModel;
+
+    // Set defaults just in case the load options model is never set (i.e. testing)
+    private ReadonlyLoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
 
     private File loadedProjectFile;
     private File loadedViewSetFile;
 
+    private final EventDispatcher<ProjectOpenedListener, ProjectOpenedEvent> projectOpened
+        = new EventDispatcher<>(ProjectOpenedListener::onProjectOpened);
+    private final EventDispatcher<ProjectSavedListener, ProjectSavedEvent> projectSaved
+        = new EventDispatcher<>(ProjectSavedListener::onProjectSaved);
+    private final EventDispatcher<ProjectClosedListener, ProjectClosedEvent> projectClosed
+        = new EventDispatcher<>(ProjectClosedListener::onProjectClosed);
+
+    private final EventDispatcher<ProjectLoadedListener, ProjectLoadedEvent> projectLoaded
+        = new EventDispatcher<>(ProjectLoadedListener::onProjectLoaded);
+    private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
+        = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
+
     public ProgressMonitor getProgressMonitor()
     {
         return progressMonitor;
-    }
-
-    public IOHandler getLoadingHandler()
-    {
-        return handler;
     }
 
     public void setLoadingHandler(IOHandler handler)
@@ -81,41 +92,84 @@ public class IOModel
         this.handler.setProgressMonitor(progressMonitor);
     }
 
+    @Override
     public void addProgressMonitor(ProgressMonitor monitor)
     {
         this.progressMonitor.addSubMonitor(monitor);
     }
 
-    public void setImageLoadOptionsModel(ReadonlyLoadOptionsModel imageLoadOptionsModel)
+    @Override
+    public ReadonlyLoadOptionsModel getLoadOptionsModel()
     {
-        this.imageLoadOptionsModel = imageLoadOptionsModel;
+        return this.loadOptionsModel;
     }
 
+    public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)
+    {
+        this.loadOptionsModel = loadOptionsModel;
+    }
+
+    @Override
+    public EventListeners<ProjectOpenedListener> projectOpenedListeners()
+    {
+        return projectOpened;
+    }
+
+    @Override
+    public EventListeners<ProjectSavedListener> projectSavedListeners()
+    {
+        return projectSaved;
+    }
+
+    @Override
+    public EventListeners<ProjectLoadedListener> projectLoadedListeners()
+    {
+        return projectLoaded;
+    }
+
+    @Override
+    public EventListeners<ProjectProcessedListener> projectProcessedListeners()
+    {
+        return projectProcessed;
+    }
+
+    @Override
+    public EventListeners<ProjectClosedListener> projectClosedListeners()
+    {
+        return projectClosed;
+    }
+
+    @Override
     public RenderableInstance<?> getRenderableForShader(UserShader shader)
     {
         return this.handler.getRenderableForShader(shader);
     }
 
+    @Override
     public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
     {
         this.handler.addMainRenderableLoadCallback(callback);
     }
 
+    @Override
     public ViewSet getLoadedViewSet()
     {
         return this.handler.getLoadedViewSet();
     }
 
+    @Override
     public RenderableInstance<?> getMainRenderable()
     {
         return this.handler.getMainRenderable();
     }
 
+    @Override
     public File getLoadedViewSetFile()
     {
         return loadedViewSetFile;
     }
 
+    @Override
     public File getLoadedProjectFile()
     {
         return loadedProjectFile;
@@ -130,38 +184,34 @@ public class IOModel
     {
         unload(() ->
         {
-            ProjectModel projectModel = Global.state().getProjectModel();
-            projectModel.setProjectOpen(true);
-            projectModel.setProjectName(projectName);
-
+            projectOpened.notifyListeners(new ProjectOpenedEvent(projectName));
             new Thread(loader, "Loading Thread").start();
         });
     }
 
+    @Override
     public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        load(() -> this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel));
+        load(() -> this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel));
     }
 
+    @Override
     public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
         load(() ->
         {
             viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-            this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, imageLoadOptionsModel);
+            this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
         });
     }
 
+    @Override
     public void loadFromMetashapeModel(File newProjectFile, MetashapeModel model)
     {
-        load(() -> this.handler.loadFromMetashapeModel(newProjectFile, model, imageLoadOptionsModel));
+        load(() -> this.handler.loadFromMetashapeModel(newProjectFile, model, loadOptionsModel));
     }
 
-    public static File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
-    {
-        return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
-    }
-
+    @Override
     public void loadExistingProject(File projectFile)
     {
         //need to check for conflicting process early so crucial info isn't unloaded
@@ -184,7 +234,7 @@ public class IOModel
             try
             {
                 Document document = openProjectFileAsXMLDocument(projectFile);
-                Global.state().getProjectModel().openFromXMLDocument(document);
+                Global.state().getProjectModel().parseXMLDocument(document);
                 vsetFile = new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(document));
             }
             catch (RuntimeException | IOException | SAXException | ParserConfigurationException e)
@@ -215,12 +265,12 @@ public class IOModel
                         // VSET file is the project file or they're in the same directory.
                         // Use a supporting files directory underneath by default
                         File supportingFilesDirectory = getDefaultSupportingFilesDirectory(projectFile);
-                        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, supportingFilesDirectory, imageLoadOptionsModel);
+                        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, supportingFilesDirectory, loadOptionsModel);
                     }
                     else
                     {
                         // VSET file is presumably already in a supporting files directory, so just use that directory by default
-                        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, vsetFile.getParentFile(), imageLoadOptionsModel);
+                        this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, vsetFile.getParentFile(), loadOptionsModel);
                     }
                 }
                 catch (RuntimeException e)
@@ -239,27 +289,14 @@ public class IOModel
         }
     }
 
-    /**
-     * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
-     * @param projectFile The file path for the project.
-     * @param finishedCallback Called after basis materials and textures have finished saving,
-     *                         which maybe asynchronous since this requires GPU access.
-     *                         No guarantees are made about which thread the callback will run on.
-     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
-     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
-     *         but the project itself (including the view set) should be fully written out to disk,
-     *
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
-     */
+    @Override
     public void saveProject(File projectFile, Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
     {
         ViewSet viewSet = getLoadedViewSet();
         setViewsetDirectories(projectFile, viewSet);
 
-        progressMonitor.setStage(0, "Preparing project...");
-        progressMonitor.setFinishingUpText("This shouldn't take long...");
+        this.progressMonitor.setStage(0, "Preparing project...");
+        this.progressMonitor.setFinishingUpText("This shouldn't take long...");
 
         copyMasks();
         copyModelAndTextures();
@@ -268,31 +305,27 @@ public class IOModel
 
         File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
-
-        ProjectModel projectModel = Global.state().getProjectModel();
+        viewSet.setSupportingFilesDirectory(filesDirectory);
 
         if (projectFile.getName().toLowerCase(Locale.ROOT).endsWith(".vset"))
         {
             viewSet.setRootDirectory(projectFile.getParentFile());
-            viewSet.setSupportingFilesDirectory(filesDirectory);
-
             this.handler.saveToVSETFile(projectFile);
-            loadedProjectFile = projectFile;
-            loadedViewSetFile = projectFile;
-            projectModel.setProjectName(projectFile.getName());
+            this.loadedViewSetFile = projectFile;
         }
         else
         {
             viewSet.setRootDirectory(filesDirectory);
-            viewSet.setSupportingFilesDirectory(filesDirectory);
 
             File vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
             this.handler.saveToVSETFile(vsetFile);
-            loadedProjectFile = projectFile;
-            loadedViewSetFile = vsetFile;
+            this.loadedViewSetFile = vsetFile;
+
             saveXMLProject(projectFile, vsetFile);
-            projectModel.setProjectName(projectFile.getName());
         }
+
+        this.loadedProjectFile = projectFile;
+        this.projectSaved.notifyListeners(new ProjectSavedEvent(projectFile.getName()));
 
         // Export glTF for Kintsugi 3D Viewer even if not requested
         // TODO: ensure that GLTF texture filenames match default material texture names;
@@ -304,6 +337,12 @@ public class IOModel
 
         // Add to recent files
         RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
+    }
+
+    @Override
+    public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    {
+        return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
     }
 
     private static Document openProjectFileAsXMLDocument(File projectFile) throws SAXException, IOException, ParserConfigurationException
@@ -344,61 +383,12 @@ public class IOModel
         }
     }
 
-    /**
-     * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
-     * @param projectFile The file path for the project.
-     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
-     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
-     *         but the project itself (including the view set) should be fully written out to disk,
-     *
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
-     */
-    public void saveProject(File projectFile) throws IOException, ParserConfigurationException, TransformerException
-    {
-        saveProject(projectFile, null);
-    }
-
-    /**
-     * Saves the project, including textures and glTF model, using the current loaded project filename.
-     * If the project file is not a .vset, the .vset will be created in a supporting files directory.
-     * @param finishedCallback Called after basis materials and textures have finished saving,
-     *                         which maybe asynchronous since this requires GPU access.
-     *                         No guarantees are made about which thread the callback will run on.
-     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
-     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
-     *         but the project itself (including the view set) should be fully written out to disk,
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
-     */
-    public void saveProject(Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
-    {
-        saveProject(getLoadedProjectFile(), finishedCallback);
-    }
-
-    /**
-     * Saves the project, including textures and glTF model, using the current loaded project filename.
-     * If the project file is not a .vset, the .vset will be created in a supporting files directory.
-     * @return The file path for the .vset (which may match the project name or be in a supporting files directory).
-     *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
-     *         but the project itself (including the view set) should be fully written out to disk,
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
-     */
-    public void saveProject() throws IOException, ParserConfigurationException, TransformerException
-    {
-        saveProject(getLoadedProjectFile(), null);
-    }
-
-    private static void setViewsetDirectories(File projectFile, ViewSet viewSet)
+    private void setViewsetDirectories(File projectFile, ViewSet viewSet)
     {
         File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
-        if (Objects.equals(Global.state().getIOModel().getLoadedViewSetFile(), projectFile)) // Saved as a VSET
+        if (Objects.equals(loadedViewSetFile, projectFile)) // Saved as a VSET
         {
             viewSet.setRootDirectory(projectFile.getParentFile());
         }
@@ -411,11 +401,13 @@ public class IOModel
         viewSet.setSupportingFilesDirectory(filesDirectory);
     }
 
+    @Override
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         return this.handler.loadEnvironmentMap(environmentMapFile);
     }
 
+    @Override
     public void loadBackplate(File backplateFile) throws FileNotFoundException
     {
         this.handler.loadBackplate(backplateFile);
@@ -426,38 +418,40 @@ public class IOModel
         return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
     }
 
+    @Override
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
         return this.handler.getLuminanceEncodingFunction();
     }
 
+    @Override
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
         this.handler.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
+    @Override
     public void clearTonemapping()
     {
         this.handler.clearTonemapping();
     }
 
+    @Override
     public void requestLightIntensityCalibration()
     {
         this.handler.requestLightIntensityCalibration();
     }
 
-    public void applyLightCalibration()
+    @Override
+    public void applyLightOffsetCalibration()
     {
         this.handler.applyLightCalibration();
     }
 
+    @Override
     public void closeProject()
     {
         unload();
-
-        ProjectModel projectModel = Global.state().getProjectModel();
-        projectModel.setProjectOpen(false);
-        projectModel.clearProjectName();
     }
 
     private void unload()
@@ -469,23 +463,23 @@ public class IOModel
     {
         loadedViewSetFile = null;
         loadedProjectFile = null;
+        projectClosed.notifyListeners(new ProjectClosedEvent());
         this.handler.unload(onUnloadComplete);
     }
 
+    @Override
     public boolean hasLoadedRenderable()
     {
         return this.handler != null && this.handler.isRenderableLoaded();
     }
 
+    @Override
     public boolean hasValidHandler()
     {
         return this.handler != null;
     }
 
-    /**
-     * Checks if this has a valid project instance loaded.  Otherwise, throws an IllegalStateException.
-     * @return This model if it has a valid project instance.
-     */
+    @Override
     public IOModel validateRenderable()
     {
         if (!hasLoadedRenderable())

@@ -11,11 +11,12 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.gl.interactive.GraphicsRequest;
-import kintsugi3d.gl.interactive.ProgressMonitoredGraphicsRequest;
-
 public interface GraphicsRequestQueue
 {
+    boolean isEmpty();
+
+    void addRequestAddedListener(Runnable listener);
+
     void addBackgroundGraphicsRequest(ProjectGraphicsRequest request);
 
     void addGraphicsRequest(ProgressMonitoredProjectGraphicsRequest request);

@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.util.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

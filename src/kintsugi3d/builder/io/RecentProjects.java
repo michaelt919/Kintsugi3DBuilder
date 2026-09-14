@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.util.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

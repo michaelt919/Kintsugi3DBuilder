@@ -121,6 +121,7 @@ class ImageReconstructionTests
             System.out.println(MessageFormat.format("[{0}/{1}] {2}", stage, stageCount, message));
         }
 
+        @Override
         public void advanceStage(String message)
         {
             setStage(stage + 1, message);

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
 import kintsugi3d.builder.core.viewset.View;
@@ -38,7 +37,6 @@ import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.*;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.FramebufferCanvas;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
@@ -52,7 +50,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public class ProjectInstanceManager<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements IOHandler
+    extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableInstanceManager<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectInstanceManager.class);
 
@@ -654,11 +652,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 renderableInstance = null;
                 loadedViewSet = null;
                 loadedGeometry = null;
-
-                Global.state().getProjectModel().setProjectLoaded(false);
-                Global.state().getProjectModel().setProjectProcessed(false);
-                Global.state().getProjectModel().setProcessedTextureResolution(0);
-                Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
             }
 
             onUnloadComplete.run();
@@ -698,13 +691,6 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         if (renderableInstance != null)
         {
             renderableInstance.close();
-
-            Global.state().getProjectModel().setProjectOpen(false);
-            Global.state().getProjectModel().clearProjectName();
-            Global.state().getProjectModel().setProjectLoaded(false);
-            Global.state().getProjectModel().setProjectProcessed(false);
-            Global.state().getProjectModel().setProcessedTextureResolution(0);
-            Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
         }
     }
 }

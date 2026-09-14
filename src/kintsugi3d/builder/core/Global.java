@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.javafx.core.MultithreadState;
+import kintsugi3d.app.MultithreadState;
 
 public final class Global
 {
@@ -19,6 +19,11 @@ public final class Global
     {
     }
 
+    /**
+     * Gets state that is shared between threads
+     * (typically owned by JavaFX for easy property binding, but accessible to other threads in a thread-safe manner)
+     * @return
+     */
     public static Kintsugi3DBuilderState state()
     {
         return MultithreadState.getInstance();
