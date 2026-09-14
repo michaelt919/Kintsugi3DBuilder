@@ -31,13 +31,20 @@ import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
@@ -150,6 +157,11 @@ public class IOModel
         load(() -> this.handler.loadFromMetashapeModel(newProjectFile, model, imageLoadOptionsModel));
     }
 
+    public static File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    {
+        return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
+    }
+
     public void loadExistingProject(File projectFile)
     {
         //need to check for conflicting process early so crucial info isn't unloaded
@@ -163,7 +175,6 @@ public class IOModel
 
         File vsetFile;
 
-        ProjectModel projectModel = Global.state().getProjectModel();
         if (projectFile.getName().endsWith(".vset"))
         {
             vsetFile = projectFile;
@@ -172,7 +183,9 @@ public class IOModel
         {
             try
             {
-                vsetFile = projectModel.openProjectFile(projectFile);
+                Document document = openProjectFileAsXMLDocument(projectFile);
+                Global.state().getProjectModel().openFromXMLDocument(document);
+                vsetFile = new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(document));
             }
             catch (RuntimeException | IOException | SAXException | ParserConfigurationException e)
             {
@@ -226,21 +239,6 @@ public class IOModel
         }
     }
 
-    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
-    {
-        return this.handler.loadEnvironmentMap(environmentMapFile);
-    }
-
-    public void loadBackplate(File backplateFile) throws FileNotFoundException
-    {
-        this.handler.loadBackplate(backplateFile);
-    }
-
-    private static File getDefaultSupportingFilesDirectory(File projectFile)
-    {
-        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
-    }
-
     /**
      * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
      * @param projectFile The file path for the project.
@@ -292,7 +290,7 @@ public class IOModel
             this.handler.saveToVSETFile(vsetFile);
             loadedProjectFile = projectFile;
             loadedViewSetFile = vsetFile;
-            projectModel.saveProjectFile(projectFile, vsetFile);
+            saveXMLProject(projectFile, vsetFile);
             projectModel.setProjectName(projectFile.getName());
         }
 
@@ -306,6 +304,44 @@ public class IOModel
 
         // Add to recent files
         RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
+    }
+
+    private static Document openProjectFileAsXMLDocument(File projectFile) throws SAXException, IOException, ParserConfigurationException
+    {
+        return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(projectFile);
+    }
+
+    private static String getViewSetFilenameFromXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException
+    {
+        Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
+        if (vsetNode instanceof Element)
+        {
+            return ((Element) vsetNode).getAttribute("src")
+                .replace('/', File.separatorChar).replace('\\', File.separatorChar); // Normalize Windows to Mac/Linux and vice versa
+        }
+        else
+        {
+            throw new IOException("Error while processing the ViewSet element.");
+        }
+    }
+
+    private static void saveXMLProject(File projectFile, File vsetFile) throws ParserConfigurationException, IOException, TransformerException
+    {
+        Document document = Global.state().getProjectModel().toXMLDocument();
+        Element rootElement = document.getDocumentElement();
+
+        Element vsetElement = document.createElement("ViewSet");
+        vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
+        rootElement.appendChild(vsetElement);
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        try (OutputStream out = new FileOutputStream(projectFile))
+        {
+            transformer.transform(new DOMSource(document), new StreamResult(out));
+        }
     }
 
     /**
@@ -373,6 +409,21 @@ public class IOModel
 
         // Requires root directory to be previously assigned
         viewSet.setSupportingFilesDirectory(filesDirectory);
+    }
+
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    {
+        return this.handler.loadEnvironmentMap(environmentMapFile);
+    }
+
+    public void loadBackplate(File backplateFile) throws FileNotFoundException
+    {
+        this.handler.loadBackplate(backplateFile);
+    }
+
+    private static File getDefaultSupportingFilesDirectory(File projectFile)
+    {
+        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
     }
 
     public DoubleUnaryOperator getLuminanceEncodingFunction()

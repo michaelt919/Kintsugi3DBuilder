@@ -12,10 +12,10 @@
 package kintsugi3d.builder.state.project;
 
 import kintsugi3d.gl.vecmath.Vector3;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
@@ -26,10 +26,15 @@ public interface ProjectModel
 {
     String NULL_PROJECT_NAME = "No Project";
 
-    File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException;
+    /**
+     * Parses an XML document, typically read from a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
+     */
+    void openFromXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException;
 
-    File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException;
-    void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException;
+    /**
+     * Converts this project to an XML document that can be saved, typically as a Kintsugi 3D Builder project file (.k3d)
+     */
+    Document toXMLDocument() throws ParserConfigurationException;
 
     File getColorCheckerFile();
     void setColorCheckerFile(File colorCheckerFile);

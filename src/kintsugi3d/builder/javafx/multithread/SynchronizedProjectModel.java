@@ -14,10 +14,10 @@ package kintsugi3d.builder.javafx.multithread;
 import javafx.application.Platform;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.gl.vecmath.Vector3;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
@@ -50,21 +50,15 @@ public class SynchronizedProjectModel implements ProjectModel
     }
 
     @Override
-    public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    public void openFromXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException
     {
-        return baseModel.getViewSetFileForProject(projectFile);
+        baseModel.openFromXMLDocument(document);
     }
 
     @Override
-    public File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    public Document toXMLDocument() throws ParserConfigurationException
     {
-        return baseModel.openProjectFile(projectFile);
-    }
-
-    @Override
-    public void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException
-    {
-        baseModel.saveProjectFile(projectFile, vsetFile);
+        return baseModel.toXMLDocument();
     }
 
     @Override
