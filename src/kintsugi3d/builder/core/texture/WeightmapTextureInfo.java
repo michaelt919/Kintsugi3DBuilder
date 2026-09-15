@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 
@@ -42,7 +42,7 @@ public class WeightmapTextureInfo extends TextureInfo
     }
 
     @Override
-    public void refresh(RenderableInstance<?> instance) throws IOException
+    public void refresh(ProjectRenderableInstance<?> instance) throws IOException
     {
         TextureResources<?> resources = instance.getResources().getTextureResources();
         resources.getBasisWeightResources().replaceWeightMapWithDefaultFile(
@@ -50,7 +50,7 @@ public class WeightmapTextureInfo extends TextureInfo
     }
 
     @Override
-    public ImageReplaceData getReplaceData(RenderableInstance<?> instance)
+    public ImageReplaceData getReplaceData(ProjectRenderableInstance<?> instance)
     {
         return new WeightmapReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
             new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),

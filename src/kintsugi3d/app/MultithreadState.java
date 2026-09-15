@@ -37,8 +37,6 @@ public final class MultithreadState implements Kintsugi3DBuilderState
 
     private final GeneralSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
-    private final SceneViewportModel sceneViewportModel;
-    private final CanvasModel mainCanvasModel;
     private final CanvasListModel canvasListModel;
     private final IOModel ioModel;
     private final CacheModel cacheModel;
@@ -72,8 +70,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         // In practice, this hasn't proven to be necessary.)
         cacheModel = base.getCacheModel();
 
-        sceneViewportModel = new SceneViewportModelImpl();
-        mainCanvasModel = new CanvasModelImpl();
+
         canvasListModel = new CanvasListModelImpl();
 
         loadOptionsModel = new SynchronizedLoadOptionsModel(base.getLoadOptionsModel());
@@ -129,21 +126,9 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public CanvasModel getMainCanvasModel()
-    {
-        return mainCanvasModel;
-    }
-
-    @Override
     public CanvasListModel getCanvasListModel()
     {
         return canvasListModel;
-    }
-
-    @Override
-    public SceneViewportModel getSceneViewportModel()
-    {
-        return sceneViewportModel;
     }
 
     @Override

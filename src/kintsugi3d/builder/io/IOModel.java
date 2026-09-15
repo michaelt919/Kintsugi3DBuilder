@@ -19,7 +19,7 @@ import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.builder.util.ApplicationFolders;
@@ -140,13 +140,13 @@ public class IOModel implements IO
     }
 
     @Override
-    public RenderableInstance<?> getRenderableForShader(UserShader shader)
+    public ProjectRenderableInstance<?> getRenderableForShader(UserShader shader)
     {
         return this.handler.getRenderableForShader(shader);
     }
 
     @Override
-    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback)
     {
         this.handler.addMainRenderableLoadCallback(callback);
     }
@@ -158,7 +158,7 @@ public class IOModel implements IO
     }
 
     @Override
-    public RenderableInstance<?> getMainRenderable()
+    public ProjectRenderableInstance<?> getMainRenderable()
     {
         return this.handler.getMainRenderable();
     }
@@ -192,7 +192,17 @@ public class IOModel implements IO
     @Override
     public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
-        load(() -> this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel));
+        load(() ->
+        {
+            try
+            {
+                this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+            }
+            catch (Exception e)
+            {
+                loadFailedOrCancelled();
+            }
+        });
     }
 
     @Override
@@ -200,15 +210,32 @@ public class IOModel implements IO
     {
         load(() ->
         {
-            viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-            this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+            try
+            {
+                viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
+                this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+            }
+            catch (Exception e)
+            {
+                loadFailedOrCancelled();
+            }
         });
     }
 
     @Override
     public void loadFromMetashapeModel(File newProjectFile, MetashapeModel model)
     {
-        load(() -> this.handler.loadFromMetashapeModel(newProjectFile, model, loadOptionsModel));
+        load(() ->
+        {
+            try
+            {
+                this.handler.loadFromMetashapeModel(newProjectFile, model, loadOptionsModel);
+            }
+            catch (Exception e)
+            {
+                loadFailedOrCancelled();
+            }
+        });
     }
 
     @Override
@@ -273,9 +300,10 @@ public class IOModel implements IO
                         this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, vsetFile.getParentFile(), loadOptionsModel);
                     }
                 }
-                catch (RuntimeException e)
+                catch (Exception e)
                 {
                     LOG.error("Error loading project", e);
+                    loadFailedOrCancelled();
                 }
                 catch (Error e)
                 {
@@ -343,6 +371,11 @@ public class IOModel implements IO
     public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
     {
         return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
+    }
+
+    private static void loadFailedOrCancelled()
+    {
+        Global.state().getProjectModel().setProjectOpen(false);
     }
 
     private static Document openProjectFileAsXMLDocument(File projectFile) throws SAXException, IOException, ParserConfigurationException

@@ -20,7 +20,8 @@ import java.util.function.Consumer;
 public interface CanvasListModel
 {
     void setInstanceManager(ProjectInstanceManager<?> instanceManager);
-    void createCanvas(UserShader shader, int width, int height, int safeStartX, int safeStartY, int safeEndX, int safeEndY,
+    void createCanvas(UserShader shader, int width, int height,
+                      int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
                       Consumer<FramebufferCanvas<?>> framebufferCallback);
     void removeCanvas(UserShader shader);
 }

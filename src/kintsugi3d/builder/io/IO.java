@@ -14,7 +14,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -45,10 +45,10 @@ public interface IO
     File getLoadedViewSetFile();
     File getLoadedProjectFile();
     ViewSet getLoadedViewSet();
-    RenderableInstance<?> getMainRenderable();
-    void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
+    ProjectRenderableInstance<?> getMainRenderable();
+    void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback);
 
-    RenderableInstance<?> getRenderableForShader(UserShader shader);
+    ProjectRenderableInstance<?> getRenderableForShader(UserShader shader);
 
     void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
     void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);

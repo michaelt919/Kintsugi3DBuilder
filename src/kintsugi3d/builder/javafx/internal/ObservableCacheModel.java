@@ -59,7 +59,7 @@ public class ObservableCacheModel extends CacheModelBase
     /**
      * Use a separate property for handling one-shot listeners
      * that we can dispose to dump in case the listener doesn't need to fire.
-     * Important: should only be accessed in blocks synchronized on CACHE_SIZE_CALC_THREAD_LOCK
+     * Important: should only be accessed in blocks synchronized on cacheSizeCalcThreadLock
      * to prevent concurrent modification issues.
      */
     private final Collection<ChangeListener<Number>> pendingCacheSizeCallbacks = new ArrayList<>(1);

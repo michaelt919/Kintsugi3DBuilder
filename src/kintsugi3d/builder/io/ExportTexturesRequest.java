@@ -14,7 +14,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
@@ -72,7 +72,7 @@ public class ExportTexturesRequest implements ProgressMonitoredProjectGraphicsRe
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
+        ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor)
     {
         // Includes textures is shouldSaveTextures is true
         renderable.saveGLTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings, this::onSaveComplete);

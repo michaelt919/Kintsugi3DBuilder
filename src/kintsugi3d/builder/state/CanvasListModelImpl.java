@@ -12,9 +12,9 @@
 package kintsugi3d.builder.state;
 
 import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
 import java.util.function.Consumer;
@@ -30,11 +30,12 @@ public class CanvasListModelImpl implements CanvasListModel
     }
 
     @Override
-    public void createCanvas(UserShader shader, int width, int height, int safeStartX, int safeStartY, int safeEndX, int safeEndY,
+    public void createCanvas(UserShader shader, int width, int height,
+                             int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
                              Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
-        instanceManager.addRenderView(shader, new FramebufferSize(width, height),
-            new IntVector2(safeStartX, safeStartY), new IntVector2(safeEndX, safeEndY), framebufferCallback);
+        Rendering.getInstanceManager().addRenderView(shader, new FramebufferSize(width, height),
+            safeLeftPadding, safeTopPadding, safeRightPadding, safeBottomPadding, framebufferCallback);
     }
 
     @Override

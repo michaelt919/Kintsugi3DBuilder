@@ -13,7 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
@@ -30,7 +30,7 @@ public class PhotoCardFactory extends ProjectDataCardFactoryBase<View>
 {
     private static final Logger LOG = LoggerFactory.getLogger(PhotoCardFactory.class);
 
-    public PhotoCardFactory(RenderableInstance<?> instance)
+    public PhotoCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }

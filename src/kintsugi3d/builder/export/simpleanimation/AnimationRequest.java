@@ -12,7 +12,7 @@
 package kintsugi3d.builder.export.simpleanimation;
 
 import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -100,7 +100,7 @@ public abstract class AnimationRequest implements ProgressMonitoredProjectGraphi
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         try

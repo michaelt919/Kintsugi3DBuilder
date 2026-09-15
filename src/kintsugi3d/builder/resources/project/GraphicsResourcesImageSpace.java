@@ -199,7 +199,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
             throws IOException, MeshImportException, XMLStreamException, MissingImagesException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles()).finish();
+            this.viewSet = ViewSetReaderFromAgisoftXML
+                .loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles())
+                .finish();
             updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;

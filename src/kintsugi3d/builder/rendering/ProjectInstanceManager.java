@@ -26,6 +26,7 @@ import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
+import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.state.CameraViewListModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
@@ -35,13 +36,15 @@ import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.*;
-import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.window.FramebufferCanvas;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -50,7 +53,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public class ProjectInstanceManager<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableInstanceManager<ContextType>
+    extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableManager<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectInstanceManager.class);
 
@@ -61,9 +64,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
+    private final SceneViewport sceneViewport = new ManagedSceneViewport(this);
+
     private volatile ViewSet loadedViewSet;
     private volatile VertexGeometry loadedGeometry;
-    private volatile RenderableInstance<ContextType> renderableInstance;
+    private volatile ProjectRenderableInstance<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -72,23 +77,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private ReadonlyGeneralSettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
 
-    private final List<Consumer<RenderableInstance<?>>> instanceLoadCallbacks
+    private final List<Consumer<ProjectRenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
-
-    /**
-     * Adds callbacks that will be invoked when the instance has finished loading.
-     * The callbacks will be cleared after being invoked.
-     *
-     * @param callback to add
-     */
-    @Override
-    public void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback)
-    {
-        synchronized (instanceLoadCallbacks)
-        {
-            instanceLoadCallbacks.add(callback);
-        }
-    }
 
     public ProjectInstanceManager(ContextType context)
     {
@@ -140,14 +130,34 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         return loadedGeometry;
     }
 
+    public SceneViewport getSceneViewport()
+    {
+        return sceneViewport;
+    }
+
+    /**
+     * Adds callbacks that will be invoked when the instance has finished loading.
+     * The callbacks will be cleared after being invoked.
+     *
+     * @param callback to add
+     */
+    @Override
+    public void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback)
+    {
+        synchronized (instanceLoadCallbacks)
+        {
+            instanceLoadCallbacks.add(callback);
+        }
+    }
+
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
      * @param id
      * @param builder
      * @throws UserCancellationException
      */
-    @SuppressWarnings("OverlyBroadThrowsClause")
-    private void loadInstance(File newProjectFile, String id, Builder<ContextType> builder) throws Exception
+    private void loadInstance(File newProjectFile, String id, Builder<ContextType> builder)
+        throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
         loadedGeometry = builder.getGeometry();
@@ -176,7 +186,14 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             // Save the project before proceeding.
             // Hypothetically if any textures existed already they would be saved out asynchronously
             // but that shouldn't matter regardless since we just need to have a valid project file path right now.
-            Global.state().getIOModel().saveProject(newProjectFile);
+            try
+            {
+                Global.state().getIOModel().saveProject(newProjectFile);
+            }
+            catch (IOException|ParserConfigurationException|TransformerException e)
+            {
+                LOG.error("Error saving project", e);
+            }
         }
         // If no project file is specified, don't save the project but attempt to continue loading.
         // This might result in some weird behavior but in theory could be successful.
@@ -200,7 +217,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        RenderableInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
+        ProjectRenderableInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -254,7 +271,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             }
 
             // Invoke callbacks
-            for (Consumer<RenderableInstance<?>> callback : instanceLoadCallbacks)
+            for (Consumer<ProjectRenderableInstance<?>> callback : instanceLoadCallbacks)
             {
                 callback.accept(renderableInstance);
             }
@@ -287,6 +304,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
+        throws UserCancellationException, MeshImportException, IOException
     {
         if (this.progressMonitor.isConflictingProcess())
         {
@@ -298,29 +316,37 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
         try
         {
-            Builder<ContextType> contextTypeBuilder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                .setProgressMonitor(this.progressMonitor)
-                .setImageLoadOptions(loadOptions)
-                .loadVSETFile(vsetFile, supportingFilesDirectory);
+            Builder<ContextType> builder;
+            try
+            {
+                builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setImageLoadOptions(loadOptions)
+                    .loadVSETFile(vsetFile, supportingFilesDirectory);
+            }
+            catch (MeshImportException e)
+            {
+                handleMeshImportException(e);
+                throw e;
+            }
+            catch (IOException|RuntimeException e)
+            {
+                handleGenericError(e);
+                throw e;
+            }
 
-            loadInstance(null, id, contextTypeBuilder);
+            loadInstance(null, id, builder);
         }
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
-        }
-        catch (MeshImportException e)
-        {
-            handleMeshImportException(e);
-        }
-        catch (Exception e)
-        {
-            handleGenericError(e);
+            throw e;
         }
     }
 
     @Override
     public void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
+        throws UserCancellationException, MissingImagesException, MeshImportException, IOException, XMLStreamException
     {
 
         if (this.progressMonitor.isConflictingProcess())
@@ -331,36 +357,46 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
 
+        MetashapeChunk parentChunk = model.getChunk();
+
         try
         {
-            MetashapeChunk parentChunk = model.getChunk();
-            String orientationView = model.getLoadPreferences().getOrientationViewName();
-            double rotation = model.getLoadPreferences().getOrientationViewRotateDegrees();
+            Builder<ContextType> builder;
+            try
+            {
+                String orientationView = model.getLoadPreferences().getOrientationViewName();
+                double rotation = model.getLoadPreferences().getOrientationViewRotateDegrees();
 
-            Builder<ContextType> builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                .setProgressMonitor(this.progressMonitor)
-                .setImageLoadOptions(loadOptionsModel)
-                .loadFromMetashapeModel(model)
-                .setOrientationView(orientationView, rotation);
+                builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setImageLoadOptions(loadOptionsModel)
+                    .loadFromMetashapeModel(model)
+                    .setOrientationView(orientationView, rotation);
+            }
+            catch (MeshImportException e)
+            {
+                handleMeshImportException(e);
+                throw e;
+            }
+            catch (IOException | RuntimeException | XMLStreamException | MissingImagesException e)
+            {
+                handleGenericError(e);
+                throw e;
+            }
+
             loadInstance(newProjectFile, parentChunk.getFramePath(), builder);
         }
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
-        }
-        catch (MeshImportException e)
-        {
-            handleMeshImportException(e);
-        }
-        catch (Exception e)
-        {
-            handleGenericError(e);
+            throw e;
         }
     }
 
     @Override
     public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
                                    ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
+        throws Exception
     {
         if (this.progressMonitor.isConflictingProcess())
         {
@@ -371,10 +407,21 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
         try
         {
-            Builder<ContextType> builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                .setProgressMonitor(this.progressMonitor)
-                .setImageLoadOptions(imageLoadOptions)
-                .loadLooseFiles(xmlFile, viewSetLoadOptions);
+            Builder<ContextType> builder;
+            try
+            {
+                builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setImageLoadOptions(imageLoadOptions)
+                    .loadLooseFiles(xmlFile, viewSetLoadOptions);
+            }
+            catch (Exception e)
+            {
+                handleGenericError(e);
+
+                //noinspection ProhibitedExceptionThrown
+                throw e; // Re-throw so that calling method can rollback any state changes to account for failure
+            }
 
             // Invoke callbacks now that view set is loaded
             loadInstance(newProjectFile, id, builder);
@@ -382,10 +429,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
-        }
-        catch (Exception e)
-        {
-            handleGenericError(e);
+            throw e; // Re-throw so that calling method can rollback any state changes to account for cancellation
         }
     }
 
@@ -394,15 +438,16 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         return renderViews;
     }
 
+    @Override
     public void addRenderView(UserShader shader, FramebufferSize initialSize,
-                              IntVector2 safeStartPixel, IntVector2 safeEndPixel,
+                              int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
                               Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ProjectRenderingEngine<ContextType> renderView =
             new ProjectRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
-        renderView.setSafeRegion(safeStartPixel, safeEndPixel);
+        renderView.setSafeRegionPadding(safeLeftPadding, safeTopPadding, safeRightPadding, safeBottomPadding);
         initializeSceneModel(renderView.getSceneModel());
 
         Rendering.runLater(() ->
@@ -468,7 +513,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public RenderableInstance<ContextType> getMainRenderable()
+    public ProjectRenderableInstance<ContextType> getMainRenderable()
     {
         return renderableInstance;
     }

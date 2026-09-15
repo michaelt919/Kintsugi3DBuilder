@@ -9,46 +9,44 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.util;
+package kintsugi3d.builder.core;
 
-import javafx.scene.image.Image;
-
-import java.io.File;
-import java.net.MalformedURLException;
-
-public final class AppIcon
+public final class GlobalBootstrap
 {
-    public static final String PATH = "Kintsugi3D-icon.png";
-
-    private static volatile Image image;
     private static final Object INITIALIZATION_LOCK = new Object();
 
-    private AppIcon()
+    private static volatile Kintsugi3DBuilderState state;
+
+    private GlobalBootstrap()
     {
     }
 
-    public static Image getImage()
-    {
-        if (image != null)
-        {
-            //noinspection StaticVariableUsedBeforeInitialization
-            return image;
-        }
-        else
-        {
-            throw new IllegalStateException("App icon has not been initialized.");
-        }
-    }
-
-    public static void initialize() throws MalformedURLException
+    public static void initialize(Kintsugi3DBuilderState injectedState)
     {
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)
         {
-            if (image == null)
+            if (state == null)
             {
-                image = new Image(new File(PATH).toURI().toURL().toExternalForm());
+                state = injectedState;
             }
+            else
+            {
+                throw new IllegalStateException("Global state has already been initialized.");
+            }
+        }
+    }
+
+    static Kintsugi3DBuilderState getState()
+    {
+        if (state != null)
+        {
+            //noinspection StaticVariableUsedBeforeInitialization
+            return state;
+        }
+        else
+        {
+            throw new IllegalStateException("Global state has not been initialized.");
         }
     }
 }

@@ -144,7 +144,7 @@ public class CarouselController
                                     Platform.runLater(() ->
                                     {
                                         // Connect the backend to the JavaFX frontend.
-                                        carouselCard.setupCanvas(addedItem.getCanvasModel());
+                                        carouselCard.setupCanvas(addedItem.getCanvas());
                                     });
                                 }
                             }

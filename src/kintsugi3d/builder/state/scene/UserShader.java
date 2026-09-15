@@ -16,7 +16,7 @@ import java.util.*;
 
 public class UserShader
 {
-    public static final String SHADER_DIR = "shaders";
+    private static final String SHADER_DIR = "shaders";
 
     private final String friendlyName;
     private final String filename;

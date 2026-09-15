@@ -13,12 +13,12 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.Refreshable;
+import kintsugi3d.gl.interactive.SimpleRefreshable;
 
 public final class Rendering
 {
     private static volatile Context<?> context;
-    private static volatile RenderableInstanceManager<?> instanceManager;
+    private static volatile RenderableManager<?> instanceManager;
     private static volatile GraphicsRequestManager<?> requestQueue;
 
     private static final Object INITIALIZATION_LOCK = new Object();
@@ -40,7 +40,7 @@ public final class Rendering
         }
     }
 
-    public static RenderableInstanceManager<?> getInstanceManager()
+    public static RenderableManager<?> getInstanceManager()
     {
         if (instanceManager != null)
         {
@@ -67,46 +67,30 @@ public final class Rendering
     }
 
     public static <ContextType extends Context<ContextType>> void initialize(
-        ContextType injectedContext, RenderableInstanceManager<ContextType> injectedInstanceManager)
+        ContextType injectedContext, RenderableManager<ContextType> injectedInstanceManager)
     {
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)
         {
-            if (requestQueue == null && context == null && instanceManager == null)
+            if (context == null && instanceManager == null)
             {
                 // Start the request queue as soon as we have a graphics context.
                 GraphicsRequestManager<ContextType> newRequestQueue = new GraphicsRequestManager<>(injectedContext);
-                newRequestQueue.setInstanceManager(injectedInstanceManager);
+                newRequestQueue.setRenderableManager(injectedInstanceManager);
                 newRequestQueue.setProgressMonitor(Global.state().getIOModel().getProgressMonitor());
 
-                injectedInstanceManager.getOwningApp().addRefreshable(new Refreshable()
+                if (injectedInstanceManager.getOwningApp() != null)
                 {
-                    @Override
-                    public boolean isInitialized()
-                    {
-                        return true;
-                    }
+                    injectedInstanceManager.getOwningApp().addRefreshable((SimpleRefreshable) newRequestQueue::executeQueue);
 
-                    @Override
-                    public void initialize()
-                    {
-                    }
-
-                    @Override
-                    public void refresh()
-                    {
-                        requestQueue.executeQueue();
-                    }
-
-                    @Override
-                    public void terminate()
-                    {
-                    }
-                });
-
-                context = injectedContext;
-                instanceManager = injectedInstanceManager;
-                requestQueue = newRequestQueue;
+                    context = injectedContext;
+                    instanceManager = injectedInstanceManager;
+                    requestQueue = newRequestQueue;
+                }
+                else
+                {
+                    throw new IllegalStateException("Instance manager has not been assigned to an interactive application.");
+                }
             }
             else
             {

@@ -11,10 +11,9 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.core.ReadableFramebuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -62,9 +61,9 @@ public class SceneViewportModel implements SceneViewport
         return this.sceneObjectIDLookup.get(sceneObjectTag);
     }
 
-    public <ContextType extends Context<ContextType>> void refreshBuffers(Matrix4 projection, FramebufferObject<ContextType> offscreenFBO)
+    public <ContextType extends Context<ContextType>> void refreshBuffers(Matrix4 newProjection, ReadableFramebuffer<ContextType> offscreenFBO)
     {
-        this.projection = projection;
+        this.projection = newProjection;
         this.fboSize = offscreenFBO.getSizeForRead();
 
         if (pixelObjectIDBuffer == null || pixelObjectIDBuffer.capacity() != 4 * fboSize.width * fboSize.height)

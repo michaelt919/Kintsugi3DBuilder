@@ -32,7 +32,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private final Collection<Runnable> requestAddedListeners = new ArrayList<>(1);
-    private RenderableInstanceManager<ContextType> instanceManager;
+    private RenderableManager<ContextType> renderableManager;
     private ProgressMonitor progressMonitor;
 
     public GraphicsRequestManager(ContextType context)
@@ -47,9 +47,9 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         return requestList.isEmpty();
     }
 
-    public void setInstanceManager(RenderableInstanceManager<ContextType> instanceManager)
+    public void setRenderableManager(RenderableManager<ContextType> renderableManager)
     {
-        this.instanceManager = instanceManager;
+        this.renderableManager = renderableManager;
     }
 
     public void setProgressMonitor(ProgressMonitor progressMonitor)
@@ -77,10 +77,10 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     @Override
     public void addBackgroundGraphicsRequest(ProjectGraphicsRequest request)
     {
-        if (instanceManager.getMainRenderable() == null)
+        if (renderableManager.getMainRenderable() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-            instanceManager.addMainRenderableLoadCallback(instance -> addBackgroundGraphicsRequest(request));
+            renderableManager.addMainRenderableLoadCallback(instance -> addBackgroundGraphicsRequest(request));
         }
         else
         {
@@ -89,10 +89,10 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 this.requestList.add(() ->
                 {
                     // Check again for null, just in case
-                    if (instanceManager.getMainRenderable() == null)
+                    if (renderableManager.getMainRenderable() == null)
                     {
                         // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-                        instanceManager.addMainRenderableLoadCallback(instance -> addBackgroundGraphicsRequest(request));
+                        renderableManager.addMainRenderableLoadCallback(instance -> addBackgroundGraphicsRequest(request));
                     }
                     else
                     {
@@ -101,7 +101,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                         //noinspection ErrorNotRethrown
                         try
                         {
-                            request.executeRequest(instanceManager.getMainRenderable());
+                            request.executeRequest(renderableManager.getMainRenderable());
                         }
                         catch (UserCancellationException e)
                         {
@@ -131,10 +131,10 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
             return;
         }
 
-        if (instanceManager.getMainRenderable() == null)
+        if (renderableManager.getMainRenderable() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-            instanceManager.addMainRenderableLoadCallback(instance -> addGraphicsRequest(request));
+            renderableManager.addMainRenderableLoadCallback(instance -> addGraphicsRequest(request));
         }
         else
         {
@@ -148,10 +148,10 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     }
 
                     // Check again for null, just in case
-                    if (instanceManager.getMainRenderable() == null)
+                    if (renderableManager.getMainRenderable() == null)
                     {
                         // Instance is currently null, wait for a load and then call this function again (recursive-ish)
-                        instanceManager.addMainRenderableLoadCallback(instance -> addGraphicsRequest(request));
+                        renderableManager.addMainRenderableLoadCallback(instance -> addGraphicsRequest(request));
                     }
                     else
                     {
@@ -160,7 +160,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                         //noinspection ErrorNotRethrown
                         try
                         {
-                            request.executeRequest(instanceManager.getMainRenderable(), progressMonitor);
+                            request.executeRequest(renderableManager.getMainRenderable(), progressMonitor);
                         }
                         catch (UserCancellationException e)
                         {

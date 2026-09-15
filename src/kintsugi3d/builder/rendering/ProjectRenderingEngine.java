@@ -30,7 +30,6 @@ import kintsugi3d.builder.resources.DynamicResourceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -39,7 +38,9 @@ import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
-import kintsugi3d.gl.vecmath.*;
+import kintsugi3d.gl.vecmath.Matrix3;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements RenderableInstance<ContextType>
+    extends InteractiveRenderableBase<ContextType> implements ProjectRenderableInstance<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
 
@@ -84,8 +85,10 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel sceneViewportModel;
 
-    private IntVector2 safeStartPixel;
-    private IntVector2 safeEndPixel;
+    private int paddingLeft;
+    private int paddingTop;
+    private int paddingRight;
+    private int paddingBottom;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
@@ -145,28 +148,22 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         return this.dynamicResourceLoader;
     }
 
-    public IntVector2 getSafeStartPixel()
+    @Override
+    public void setSafeRegionPadding(int left, int top, int right, int bottom)
     {
-        return safeStartPixel;
-    }
-
-    public IntVector2 getSafeEndPixel()
-    {
-        return safeEndPixel;
+        this.paddingLeft = left;
+        this.paddingTop = top;
+        this.paddingRight = right;
+        this.paddingBottom = bottom;
     }
 
     @Override
-    public void setSafeRegion(IntVector2 safeStartPixel, IntVector2 safeEndPixel)
+    public void clearSafeRegionPadding()
     {
-        this.safeStartPixel = safeStartPixel;
-        this.safeEndPixel = safeEndPixel;
-    }
-
-    @Override
-    public void clearSafeRegion()
-    {
-        this.safeStartPixel = null;
-        this.safeEndPixel = null;
+        this.paddingLeft = 0;
+        this.paddingTop = 0;
+        this.paddingRight = 0;
+        this.paddingBottom = 0;
     }
 
     @Override
@@ -373,28 +370,28 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             if (projectionOverride != null)
             {
+                // Ignore safe region if the projection was overridden.
                 projection = projectionOverride;
             }
-            else if (safeStartPixel != null && safeEndPixel != null)
+            else if (paddingLeft != 0 || paddingTop != 0 || paddingRight != 0 || paddingBottom != 0)
             {
                 FramebufferSize safeSize = new FramebufferSize(
-                    safeEndPixel.x - safeStartPixel.x,
-                    safeEndPixel.y - safeStartPixel.y);
+                    size.width - paddingLeft - paddingRight,
+                    size.height - paddingTop - paddingBottom);
 
                 projection =
                     // After scaling from safe clip space to actual FBO clip space,
                     // translate the origin to the location of the safe clip space center in FBO clip space.
                     // This translation needs to be in normalized device coordinates [-1, 1].
-                    // Adding the start and end pixels then dividing by the FBO size, then subtracting 1
-                    // effectively gives us the center point in NDC
-                    // (dividing by two would have given the center point in a [0, 1] range,
+                    // Adding the offsets (+L and -R; +T and -B), negating (-L + +R; -T + +B),
+                    // and dividing by the FBO size effectively gives us the center point in NDC
+                    // (dividing by two to get the average negative offset would have given the center point in a [0, 1] range,
                     // which is cancelled out by multiplying by 2 before subtracting 1 to get to NDC)
                     Matrix4.translate(
-                        safeStartPixel.asFloatingPoint().plus(safeEndPixel.asFloatingPoint())
-                            .dividedBy(new Vector2(size.width, size.height))
-                            .minus(new Vector2(1.0f))
-                            .negated()
-                            .asVector3())
+                        new Vector3(
+                            (float)(paddingRight - paddingLeft) / (float)size.width,
+                            (float)(paddingBottom - paddingTop) / (float)size.height,
+                            0))
                     // If the safe region is smaller than the full framebuffer, then scale down in clip space accordingly
                     // so that the content that should be visible is contained within that region.
                     .times(Matrix4.scale(
@@ -590,7 +587,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public SceneViewport getSceneViewportModel()
+    public SceneViewport getSceneViewport()
     {
         return sceneViewportModel;
     }

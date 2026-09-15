@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.SceneViewport;
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.rendering.SceneViewport;
 import kintsugi3d.builder.state.scene.LightWidgetModel;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -32,14 +32,14 @@ final class LightTool implements PickerTool
     private int lightIndex;
 
     private final ManipulableLightingEnvironmentModel lightingModel;
-    private final SceneViewportModel sceneViewportModel;
+    private final SceneViewport sceneViewport;
 
     private static class Builder extends ToolBuilderBase<LightTool>
     {
         @Override
         public LightTool create()
         {
-            return new LightTool(getLightingEnvironmentModel(), getSceneViewportModel());
+            return new LightTool(getLightingEnvironmentModel(), getSceneViewport());
         }
     }
 
@@ -48,14 +48,14 @@ final class LightTool implements PickerTool
         return new Builder();
     }
 
-    private LightTool(ManipulableLightingEnvironmentModel lightingModel, SceneViewportModel sceneViewportModel)
+    private LightTool(ManipulableLightingEnvironmentModel lightingModel, SceneViewport sceneViewport)
     {
         this.lightingModel = lightingModel;
-        this.sceneViewportModel = sceneViewportModel;
+        this.sceneViewport = sceneViewport;
     }
 
     @Override
-    public boolean mouseButtonPressed(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonPressed(Canvas3D<? extends Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
@@ -67,7 +67,7 @@ final class LightTool implements PickerTool
             double normalizedX = cursorPosition.x / canvasSize.width;
             double normalizedY = cursorPosition.y / canvasSize.height;
 
-            Object clickedObject = sceneViewportModel.getSceneViewport().getObjectAtCoordinates(normalizedX, normalizedY);
+            Object clickedObject = sceneViewport.getObjectAtCoordinates(normalizedX, normalizedY);
             if (clickedObject instanceof String)
             {
                 String clickedObjectName = (String)clickedObject;
@@ -144,7 +144,7 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean mouseButtonReleased(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonReleased(Canvas3D<? extends Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
@@ -165,7 +165,7 @@ final class LightTool implements PickerTool
         return updateFunction != null;
     }
 
-    private void updateForHoverState(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, double xPos, double yPos)
+    private void updateForHoverState(Canvas3D<? extends Context<?>> canvas, double xPos, double yPos)
     {
         for (int i = 0; i < lightingModel.getLightCount(); i++)
         {
@@ -181,7 +181,7 @@ final class LightTool implements PickerTool
         double normalizedX = xPos / canvasSize.width;
         double normalizedY = yPos / canvasSize.height;
 
-        Object hoverObject = sceneViewportModel.getSceneViewport().getObjectAtCoordinates(normalizedX, normalizedY);
+        Object hoverObject = sceneViewport.getObjectAtCoordinates(normalizedX, normalizedY);
         if (hoverObject instanceof String)
         {
             String clickedObjectName = (String)hoverObject;
@@ -220,7 +220,6 @@ final class LightTool implements PickerTool
 
     private float getAzimuthAtWindowPosition(DoubleVector2 normalizedPosition)
     {
-        SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         Vector3 viewportCenter = sceneViewport.getViewportCenter();
         Vector3 cursorDirection = sceneViewport.getViewingDirection(normalizedPosition.x, normalizedPosition.y);
 
@@ -240,7 +239,6 @@ final class LightTool implements PickerTool
 
     private float getInclinationAtWindowPosition(DoubleVector2 normalizedPosition)
     {
-        SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         Vector3 viewportCenter = sceneViewport.getViewportCenter();
         Vector3 cursorDirection = sceneViewport.getViewingDirection(normalizedPosition.x, normalizedPosition.y);
 
@@ -261,7 +259,6 @@ final class LightTool implements PickerTool
 
     private float getDistanceAtWindowPosition(DoubleVector2 normalizedPosition)
     {
-        SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         Vector3 viewportCenter = sceneViewport.getViewportCenter();
         Vector3 cursorDirection = sceneViewport.getViewingDirection(normalizedPosition.x, normalizedPosition.y);
 
@@ -292,7 +289,6 @@ final class LightTool implements PickerTool
 
     private void updateCenter(DoubleVector2 normalizedPosition)
     {
-        SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         if ("RenderingSubject".equals(sceneViewport.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
         {
             lightingModel.setLightCenter(lightIndex, sceneViewport.get3DPositionAtCoordinates(normalizedPosition.x, normalizedPosition.y));
@@ -300,7 +296,7 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean cursorMoved(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, double xPos, double yPos)
+    public boolean cursorMoved(Canvas3D<? extends Context<?>> canvas, double xPos, double yPos)
     {
         if (updateFunction == null)
         {

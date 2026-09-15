@@ -12,7 +12,10 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.io.IOModel;
-import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.CacheModel;
+import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.CanvasListModel;
+import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
@@ -45,13 +48,9 @@ public interface Kintsugi3DBuilderState
     // Project cache info and access
     CacheModel getCacheModel();
 
-    // Main view and carousel
-    CanvasModel getMainCanvasModel();
+    // Carousel
     CanvasListModel getCanvasListModel();
     CarouselModel getCarouselModel();
-
-    // Global access to 3D view
-    SceneViewportModel getSceneViewportModel();
 
     // Load / save / export of project elements -- not intended for frontend display
     IOModel getIOModel();

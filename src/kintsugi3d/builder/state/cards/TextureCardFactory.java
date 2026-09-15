@@ -17,7 +17,7 @@ import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
@@ -44,7 +44,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(RenderableInstance<?> instance)
+    public TextureCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }

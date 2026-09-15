@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.UserShader;
@@ -34,7 +34,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
-    public MaterialCardFactory(RenderableInstance<?> instance)
+    public MaterialCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }

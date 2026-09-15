@@ -21,9 +21,9 @@ import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
-import kintsugi3d.builder.state.ReadonlyCanvasModel;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.javafx.FramebufferView;
+import kintsugi3d.gl.window.FramebufferCanvas;
 
 /**
  * This is the controller for the carousel cards it handles what happens when the X button is clicked
@@ -110,9 +110,9 @@ public class CarouselCardController
         moveRight.setTooltip(rightTip);
     }
 
-    public void setupCanvas(ReadonlyCanvasModel canvasModel)
+    public void setupCanvas(FramebufferCanvas<?> canvas)
     {
-        framebufferView.setCanvas(canvasModel.getCanvas());
+        framebufferView.setCanvas(canvas);
     }
 
     /**

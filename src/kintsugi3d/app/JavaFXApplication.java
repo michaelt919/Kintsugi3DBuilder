@@ -13,26 +13,37 @@ package kintsugi3d.app;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.GlobalBootstrap;
 import kintsugi3d.builder.core.SynchronizedWindow;
 import kintsugi3d.builder.core.WindowSynchronization;
 import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.core.*;
+import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.builder.util.OperatingSystem;
+import kintsugi3d.gl.window.FramebufferCanvas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +63,9 @@ public class JavaFXApplication extends Application
     private static JavaFXState state;
 
     private static String[] arguments;
+
+    // Keep a reference to the main window to inject the canvas when the rendering thread has loaded
+    private static MainWindowController mainWindowController;
 
     static JavaFXState getState()
     {
@@ -154,6 +168,9 @@ public class JavaFXApplication extends Application
         //noinspection AssignmentToStaticFieldFromInstanceMethod
         state = JavaFXState.create();
 
+        // Inject dependency for global state.
+        GlobalBootstrap.initialize(MultithreadState.getInstance());
+
 //        for (String f : Font.getFamilies())
 //        {
 //            LOG.info(f);
@@ -205,7 +222,7 @@ public class JavaFXApplication extends Application
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
-        MainWindowController mainWindowController = mainWindowFXMLLoader.getController();
+        mainWindowController = mainWindowFXMLLoader.getController();
         WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
         ProgressBarsController progressBarsController = progressBarsFXMLLoader.getController();
 
@@ -255,21 +272,21 @@ public class JavaFXApplication extends Application
             welcomeStage.show();
         }
 
-        Global.state().getMainCanvasModel().addCanvasChangedListener(
-            canvas -> mainWindowController.getFramebufferView().setCanvas(canvas));
+        // Automatically adjust framebuffer padding as the carousel resizes.
+        setupCarouselListeners(state.getCarouselModel());
 
-        ObservableGeneralSettingsModel settingsModel = getState().getSettingsModel();
+        ObservableGeneralSettingsModel settingsModel = state.getSettingsModel();
         DefaultSettings.applyGlobalDefaults(settingsModel);
 
         // Load user preferences, injecting where needed
         LOG.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
         GlobalUserPreferencesManager.getInstance().load(
-            getState().getLoadOptionsModel(), getState().getSettingsModel());
+            state.getLoadOptionsModel(), state.getSettingsModel());
 
         if (GlobalUserPreferencesManager.getInstance().hasStartupFailures())
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            ButtonType ok = new ButtonType("OK", ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonData.YES);
             Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
                 event -> ExperienceManager.getInstance().getExperience("Log").tryOpen());
@@ -277,21 +294,21 @@ public class JavaFXApplication extends Application
         }
 
         //distribute to controllers
-        sceneController.init(
-            getState().getCameraModel(),
-            getState().getLightingModel(),
-            getState().getEnvironmentModel(),
-            getState().getObjectModel(),
-            getState().getProjectModel(),
-            Global.state().getSceneViewportModel());
+        sceneController.injectDependencies(
+            state.getCameraModel(),
+            state.getLightingModel(),
+            state.getEnvironmentModel(),
+            state.getObjectModel(),
+            state.getProjectModel(),
+            RenderingBootstrap.getSceneViewport());
 
         //init progress bars first so other controllers can access the progress bar fxml components
         progressBarsController.init(progressBarsStage);
 
-        mainWindowController.init(primaryStage, getState(),
+        mainWindowController.init(primaryStage, state,
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
-        welcomeWindowController.init(welcomeStage, getState(),
+        welcomeWindowController.init(welcomeStage, state,
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         // Register JavaFX recent projects helper with the backend recent projects utility class.
@@ -335,9 +352,70 @@ public class JavaFXApplication extends Application
             WindowSynchronization.getInstance().quit();
         });
 
+        state.getProjectModel().registerIOListeners();
+
         for (Consumer<Stage> l : START_LISTENERS)
         {
             l.accept(primaryStage);
+        }
+    }
+
+    /**
+     * Must not be called before start().
+     * @param canvas
+     */
+    static void setCanvas(FramebufferCanvas<?> canvas)
+    {
+        if (mainWindowController != null)
+        {
+            //noinspection StaticVariableUsedBeforeInitialization
+            mainWindowController.getFramebufferView().setCanvas(canvas);
+        }
+        else
+        {
+            throw new IllegalStateException("setCanvas called before start!");
+        }
+    }
+
+    private static void setupCarouselListeners(ObservableCarouselModel carouselModel)
+    {
+        carouselModel.carouselHeightProperty().addListener(
+            (observable, oldValue, newValue) ->
+        {
+            // Refresh safe region for main view
+            refreshMainViewSafeRegion(carouselModel.getCarouselHeight());
+        });
+
+        ObservableList<CarouselItem> items = carouselModel.getCarouselItems();
+        items.addListener((Observable observable) ->
+        {
+            if (items.isEmpty())
+            {
+                // Recenter main view now that the carousel is gone.
+                refreshMainViewSafeRegion(carouselModel.getCarouselHeight());
+            }
+            else
+            {
+                clearMainViewSafeRegion();
+            }
+        });
+    }
+
+    private static void clearMainViewSafeRegion()
+    {
+        ProjectRenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
+        if (instance != null)
+        {
+            instance.clearSafeRegionPadding();
+        }
+    }
+
+    private static void refreshMainViewSafeRegion(double carouselHeight)
+    {
+        ProjectRenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
+        if (instance != null)
+        {
+            instance.setSafeRegionPadding(0, 0, 0, (int)Math.round(carouselHeight));
         }
     }
 

@@ -9,14 +9,22 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.rendering;
 
+import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
 import java.util.function.Consumer;
 
-public interface ReadonlyCanvasModel
+public interface RenderableManager<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
-    FramebufferCanvas<?> getCanvas();
-    void addCanvasChangedListener(Consumer<FramebufferCanvas<?>> listener);
+    boolean isRenderableLoaded();
+    ProjectRenderableInstance<ContextType> getMainRenderable(); // TODO this would ideally just be a ViewportRenderable
+    void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback); // TODO this would ideally just be a ViewportRenderable
+    void addRenderView(UserShader shader, FramebufferSize initialSize,
+                       int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
+                       Consumer<FramebufferCanvas<?>> framebufferCallback);
 }

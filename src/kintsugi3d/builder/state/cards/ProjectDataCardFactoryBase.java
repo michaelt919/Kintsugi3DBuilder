@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.viewset.ViewSet;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
@@ -23,15 +23,15 @@ import java.util.stream.IntStream;
 
 public abstract class ProjectDataCardFactoryBase<T> implements ProjectDataCardFactory<T>
 {
-    private final RenderableInstance<?> instance;
+    private final ProjectRenderableInstance<?> instance;
     private ConfirmHandler confirmHandler;
 
-    protected ProjectDataCardFactoryBase(RenderableInstance<?> instance)
+    protected ProjectDataCardFactoryBase(ProjectRenderableInstance<?> instance)
     {
         this.instance = instance;
     }
 
-    protected RenderableInstance<?> getInstance()
+    protected ProjectRenderableInstance<?> getInstance()
     {
         return instance;
     }

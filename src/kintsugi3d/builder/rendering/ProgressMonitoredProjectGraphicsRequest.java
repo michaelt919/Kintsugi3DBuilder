@@ -30,10 +30,10 @@ public interface ProgressMonitoredProjectGraphicsRequest extends ProjectGraphics
      * @param <ContextType> The type of the graphics context that the renderer implementation uses.
      * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
      */
-    <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception;
+    <ContextType extends Context<ContextType>> void executeRequest(ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception;
 
     @Override
-    default <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> instance) throws Exception
+    default <ContextType extends Context<ContextType>> void executeRequest(ProjectRenderableInstance<ContextType> instance) throws Exception
     {
         // Use a default ProgressMonitor that does nothing but doesn't cause null pointer exceptions
         this.executeRequest(instance, new DefaultProgressMonitor());

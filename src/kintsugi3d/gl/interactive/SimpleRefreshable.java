@@ -9,11 +9,24 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.gl.interactive;
 
-import kintsugi3d.gl.window.FramebufferCanvas;
-
-public interface CanvasModel extends ReadonlyCanvasModel
+@FunctionalInterface
+public interface SimpleRefreshable extends Refreshable
 {
-    void setCanvas(FramebufferCanvas<?> canvas);
+    @Override
+    default boolean isInitialized()
+    {
+        return true;
+    }
+
+    @Override
+    default void initialize()
+    {
+    }
+
+    @Override
+    default void terminate()
+    {
+    }
 }

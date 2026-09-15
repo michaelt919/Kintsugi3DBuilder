@@ -14,7 +14,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.rendering.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.state.scene.UserShader;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -33,10 +33,10 @@ public interface IOHandler
     VertexGeometry getLoadedGeometry();
 
     boolean isRenderableLoaded();
-    RenderableInstance<?> getMainRenderable();
-    RenderableInstance<?> getRenderableForShader(UserShader shader);
+    ProjectRenderableInstance<?> getMainRenderable();
+    ProjectRenderableInstance<?> getRenderableForShader(UserShader shader);
 
-    void addMainRenderableLoadCallback(Consumer<RenderableInstance<?>> callback);
+    void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback);
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
@@ -45,7 +45,8 @@ public interface IOHandler
      * @param supportingFilesDirectory
      * @param loadOptions
      */
-    void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
+    void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
+        throws Exception;;
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
@@ -54,14 +55,17 @@ public interface IOHandler
      * @param viewSetLoadOptions
      * @param imageLoadOptions
      */
-    void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions);
+    void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
+                            ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
+        throws Exception;
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
      * @param model
      * @param loadOptionsModel
      */
-    void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel);
+    void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
+        throws Exception;;
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;

@@ -68,8 +68,6 @@ public final class FrontendIO
             @Override
             public void cancelComplete(UserCancellationException e)
             {
-                Global.state().getProjectModel().setProjectOpen(false);
-
                 // We know that the welcome window is going to be shown when the progress modal opens
                 // so wait until that happens so that the welcome window doesn't cover up the alert
                 // (and by extension, the main window as well as a parent of the welcome window)
@@ -86,12 +84,9 @@ public final class FrontendIO
             @Override
             public void fail(Throwable e)
             {
-                Global.state().getProjectModel().setProjectOpen(false);
-
                 if (e instanceof MeshImportException)
                 {
-                    String message = e.getMessage();
-                    ExceptionHandling.error(message, e);
+                    ExceptionHandling.error(e.getMessage(), e);
                 }
                 else
                 {

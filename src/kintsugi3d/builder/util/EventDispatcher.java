@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +21,8 @@ import java.util.function.BiConsumer;
 
 public class EventDispatcher<ListenerType, EventType> implements EventListeners<ListenerType>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(EventDispatcher.class);
+
     private final Collection<ListenerType> listeners = Collections.synchronizedList(new ArrayList<>(1));
     private final BiConsumer<ListenerType, EventType> notifyMethod;
 
@@ -44,7 +49,14 @@ public class EventDispatcher<ListenerType, EventType> implements EventListeners<
         {
             for (ListenerType listener : listeners)
             {
-                notifyMethod.accept(listener, event);
+                try
+                {
+                    notifyMethod.accept(listener, event);
+                }
+                catch (RuntimeException e)
+                {
+                    LOG.error(e.getMessage(), e);
+                }
             }
         }
     }
