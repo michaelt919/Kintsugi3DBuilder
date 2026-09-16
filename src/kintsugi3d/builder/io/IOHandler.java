@@ -50,7 +50,7 @@ public interface IOHandler
      * @param loadOptions
      */
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
-        throws Exception;;
+        throws Exception;
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
@@ -69,7 +69,7 @@ public interface IOHandler
      * @param loadOptionsModel
      */
     void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
-        throws Exception;;
+        throws Exception;
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;
