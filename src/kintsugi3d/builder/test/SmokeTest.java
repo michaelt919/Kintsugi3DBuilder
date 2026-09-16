@@ -25,6 +25,9 @@ import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeDocument;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
@@ -235,7 +238,81 @@ public class SmokeTest
         int numLoadedCameras = viewSet.getViewCount();
         assertEquals(397, numLoadedCameras);
         int numEnabledCameras = viewSet.getEnabledViewCount();
-        assertEquals(397, numLoadedCameras);
+        assertEquals(397, numEnabledCameras);
+        int numDisabledCameras = viewSet.getDisabledViewCount();
+        assertEquals(0, numDisabledCameras);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, from Psx import")
+    void testFit_rodinPsx() throws Exception
+    {
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitPsx(
+            "target/classes/test/Rodin/Mia_001239_Rodin_301.psx",
+                   "Rodin/Processed dark 25",
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+            },
+            "Rodin_psx");
+        int numLoadedCameras = viewSet.getViewCount();
+        assertEquals(228, numLoadedCameras);
+        int numEnabledCameras = viewSet.getEnabledViewCount();
+        assertEquals(228, numEnabledCameras);
+        int numDisabledCameras = viewSet.getDisabledViewCount();
+        assertEquals(0, numDisabledCameras);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, from Metashape export")
+    void testFit_katrinafullerMetashape() throws Exception
+    {
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitMetashape(
+            "KatrinaFuller/Mia_124131_KratinaFuller_168cameras.files.xml",
+            "KatrinaFuller/Mia_124131_KratinaFuller_64k.obj",
+            "KatrinaFuller/Downscaled25",
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+            },
+            "KatrinaFuller_metashape");
+        int numLoadedCameras = viewSet.getViewCount();
+        assertEquals(168, numLoadedCameras);
+        int numEnabledCameras = viewSet.getEnabledViewCount();
+        assertEquals(168, numEnabledCameras);
+        int numDisabledCameras = viewSet.getDisabledViewCount();
+        assertEquals(0, numDisabledCameras);
+    }
+
+        @Test
+    @DisplayName("Katrina Fuller fit, from Reality Capture export")
+    void testFit_katrinafullerRealityCapture() throws Exception
+    {
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitMetashape(
+            "KatrinaFuller/katrinafuller-realitycapture.csv",
+            "KatrinaFuller/katrinafuller-realitycapture.obj",
+            "KatrinaFuller/Downscaled25",
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+            },
+            "KatrinaFuller_realitycapture");
+        int numLoadedCameras = viewSet.getViewCount();
+        assertEquals(158, numLoadedCameras);
+        int numEnabledCameras = viewSet.getEnabledViewCount();
+        assertEquals(158, numEnabledCameras);
         int numDisabledCameras = viewSet.getDisabledViewCount();
         assertEquals(0, numDisabledCameras);
     }
@@ -261,6 +338,37 @@ public class SmokeTest
             .setImageLoadOptions(imageLoadOptions)
             .setProgressMonitor(progressMonitor)
             .loadLooseFiles(new File(classLoader.getResource("test/" + cameras).toURI()), viewSetLoadOptions)
+            .create())
+        {
+            resources.calibrateLightIntensities();
+            viewSet = resources.getViewSet();
+            testFit(resources, validation, testName);
+        }
+    }
+
+    private void testFitPsx(String psxFile, String imageDirectory, Consumer<ReadonlyColorAppearanceRMSE> validation,
+                            String testName) throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
+        imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
+        // These are set since they otherwise are set in JavaFX related code
+        IOModel.getInstance().setImageLoadOptionsModel(imageLoadOptions);
+        ProjectInstanceManager mockIOHandler = new ProjectInstanceManager<>(context);
+        mockIOHandler.setTestingViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
+        IOModel.getInstance().setLoadingHandler(mockIOHandler);
+
+        MetashapeDocument doc = new MetashapeDocument(psxFile);
+        MetashapeChunk chunk = doc.getSelectedChunk();
+        MetashapeModel model = chunk.getSelectedModel();
+
+        File imgDir = new File(classLoader.getResource("test/" + imageDirectory).toURI());
+        model.getLoadPreferences().setFullResOverride(imgDir);
+
+        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
+            .setImageLoadOptions(imageLoadOptions)
+            .setProgressMonitor(progressMonitor)
+            .loadFromMetashapeModel(model)
             .create())
         {
             resources.calibrateLightIntensities();
