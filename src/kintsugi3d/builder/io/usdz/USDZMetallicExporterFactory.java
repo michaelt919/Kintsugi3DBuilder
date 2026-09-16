@@ -15,17 +15,18 @@ import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
-public class USDZMetallicExporterFactory implements MaterialExporterFactory
+public final class USDZMetallicExporterFactory implements MaterialExporterFactory
 {
     private static final USDZMetallicExporterFactory INSTANCE = new USDZMetallicExporterFactory();
-    public static USDZMetallicExporterFactory getInstance()
-    {
-        return INSTANCE;
-    }
 
     private USDZMetallicExporterFactory()
     {
 
+    }
+
+    public static USDZMetallicExporterFactory getInstance()
+    {
+        return INSTANCE;
     }
 
     @Override

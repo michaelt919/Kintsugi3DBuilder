@@ -22,15 +22,15 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/classes/kintsugi3d-builder-about.txt</source>
+            <source>${project.build.directory}/classes/kintsugi3d-builder-about.txt</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/classes/export-classes.txt</source>
+            <source>${project.build.directory}/classes/export-classes.txt</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/Kintsugi3DBuilder.exe</source>
+            <source>${project.build.directory}/Kintsugi3DBuilder.exe</source>
             <outputDirectory></outputDirectory>
         </file>
     </files>
@@ -40,7 +40,7 @@
             <outputDirectory>shaders</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/jre</directory>
+            <directory>${project.build.directory}/jre</directory>
             <outputDirectory>jre</outputDirectory>
         </fileSet>
         <fileSet>
@@ -49,6 +49,10 @@
             <includes>
                 <include>**/*windows.exe</include>
             </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/scripts</directory>
+            <outputDirectory>scripts</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>

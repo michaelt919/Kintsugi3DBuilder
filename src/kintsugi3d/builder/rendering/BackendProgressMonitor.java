@@ -11,19 +11,16 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
-import kintsugi3d.builder.state.cards.TabsManager;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.vecmath.Vector3;
 
 class BackendProgressMonitor implements ProgressMonitor
 {
-    private final RenderableInstance<?> instance;
+    private final ProjectRenderableInstance<?> instance;
     private final ProgressMonitor base;
 
-    BackendProgressMonitor(RenderableInstance<?> instance, ProgressMonitor base)
+    BackendProgressMonitor(ProjectRenderableInstance<?> instance, ProgressMonitor base)
     {
         this.instance = instance;
         this.base = base;
@@ -41,8 +38,6 @@ class BackendProgressMonitor implements ProgressMonitor
     @Override
     public void cancelComplete(UserCancellationException e)
     {
-        Global.state().getTabModels().clearTabs(); // Loading cancelled; clear the tabs of the sidebar
-
         if (base != null)
         {
             base.cancelComplete(e);
@@ -118,27 +113,14 @@ class BackendProgressMonitor implements ProgressMonitor
     @Override
     public void complete()
     {
-        instance.getResources().calibrateLightIntensities();
+        // Zero vector signals that the light requires calibration.
+        // TODO support multiple light sources.
+        if (Vector3.ZERO.equals(instance.getViewSet().getLightIntensity(0)))
+        {
+            instance.getResources().calibrateLightIntensities();
+        }
+
         instance.reloadShaders();
-
-        Global.state().getProjectModel().setProjectLoaded(true);
-        Global.state().getProjectModel().setProjectProcessed(isProcessed());
-        Global.state().getProjectModel().setModelSize(instance.getGeometry().getBoundingBoxSize());
-
-        if (isProcessed())
-        {
-            BasisWeightResources<?> basisWeightResources =
-                instance.getResources().getTextureResources().getBasisWeightResources();
-
-            Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.weightMaps.getWidth());
-        }
-        else
-        {
-            Global.state().getProjectModel().setProcessedTextureResolution(0);
-        }
-
-        // Refresh tabs for materials
-        new TabsManager(instance).refreshAllTabs();
 
         if (base != null)
         {

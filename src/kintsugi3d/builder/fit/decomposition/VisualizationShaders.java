@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +28,10 @@ public final class VisualizationShaders
     {
     }
 
-    public static UserShader getForBasisMaterial(String filename, int materialIndex, String friendlyNameFormat)
+    public static ShaderInfo getForBasisMaterial(String filename, int materialIndex, String friendlyNameFormat)
     {
         Map<String, Optional<Object>> defines = new HashMap<>(1);
         defines.put("WEIGHTMAP_INDEX", Optional.of(materialIndex));
-        return new UserShader(String.format(friendlyNameFormat, materialIndex), filename, defines);
+        return new ShaderInfo(String.format(friendlyNameFormat, materialIndex), filename, defines);
     }
 }

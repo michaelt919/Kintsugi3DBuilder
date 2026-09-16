@@ -16,7 +16,7 @@ float calculateError(vec3 position, vec3 triangleNormal, vec3 estimatedNormal)
 {
     float error = 0.0;
 
-    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
+    for (int k = 0; k < VIEW_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
         vec3 view = normalize(getViewVector(k, position));

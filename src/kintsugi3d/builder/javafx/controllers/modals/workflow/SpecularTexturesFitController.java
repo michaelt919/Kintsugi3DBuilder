@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -19,12 +19,12 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.rendering.Rendering;
 
 public class SpecularTexturesFitController extends ProjectSettingsControllerBase
 {
@@ -83,7 +83,7 @@ public class SpecularTexturesFitController extends ProjectSettingsControllerBase
         // Apply settings so they're seen by the SpecularFitRequest and also remembered for later.
         applySettings();
 
-        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        if (Global.io().getProgressMonitor().isConflictingProcess())
         {
             error("Failed to start process", "Another process is already running.");
             return false;

@@ -22,11 +22,11 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.core.MainWindowController;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.state.CarouselItem;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,7 +133,8 @@ public class CarouselController
                                 if (carouselCard == null)
                                 {
                                     // Card load failed; clean up backend.
-                                    Global.state().getCanvasListModel().removeCanvas(addedItem.getShader());
+                                    ShaderInfo shader = addedItem.getShader();
+                                    Rendering.getInstanceManager().removeRenderView(shader);
                                 }
                                 else
                                 {
@@ -144,7 +145,7 @@ public class CarouselController
                                     Platform.runLater(() ->
                                     {
                                         // Connect the backend to the JavaFX frontend.
-                                        carouselCard.setupCanvas(addedItem.getCanvasModel());
+                                        carouselCard.setupCanvas(addedItem.getCanvas());
                                     });
                                 }
                             }
@@ -195,7 +196,7 @@ public class CarouselController
      * to detect when mainBox size changes and changes the cards height accordingly
      * @param shader
      */
-    private CarouselCardController loadCarouselCard(UserShader shader)
+    private CarouselCardController loadCarouselCard(ShaderInfo shader)
     {
         try
         {

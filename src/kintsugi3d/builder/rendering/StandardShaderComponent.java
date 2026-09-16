@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
@@ -34,11 +32,10 @@ import java.util.Map.Entry;
 public abstract class StandardShaderComponent<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(StandardShaderComponent.class);
+
     private final LightingResources<ContextType> lightingResources;
 
-
     protected final GraphicsResourcesImageSpace<ContextType> resources;
-
     protected final SceneModel sceneModel;
 
     private boolean lightCalibrationMode = false;
@@ -46,7 +43,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     // Set default shader to be the untextured IBR shader
     private File fragmentShaderFile;
     private Map<String, Optional<Object>> fragmentShaderDefines;
-
 
     protected StandardShaderComponent(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
         SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)
@@ -158,7 +154,6 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED", Optional.empty());
         defineMap.put("USE_VIEW_INDICES", Optional.empty());
 
-        defineMap.put("VIEW_COUNT", Optional.empty());
         defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.empty());
         defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.empty());
 
@@ -241,7 +236,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             float lightDistance = sceneModel.getLightModelViewMatrix(lightIndex).times(sceneModel.getCentroid().asPosition()).getXYZ().length();
 
             float lightScale = resources.getViewSet().getProjectSettings().getBoolean("infiniteLightSources") ? 1.0f :
-                resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
+                resources.getViewSet().getPrimaryView().getCameraPose()
                     .times(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                     .getXYZ().length();
             getDrawable().program().setUniform(String.format("lightIntensityVirtual[%d]", lightIndex),
@@ -311,7 +306,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
                     this.sceneModel.getLightingModel().getEnvironmentMapFilteringBias()
                         + (float)(0.5 *
                         Math.log(6 * (double)lightingResources.getEnvironmentMap().getFaceSize() * (double)lightingResources.getEnvironmentMap().getFaceSize()
-                            / (double) resources.getViewSet().getCombinedCameraPoseCount() )
+                            / (double) resources.getViewSet().getEnabledViewCount() )
                         / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", lightingResources.getEnvironmentMap().getMipmapLevelCount() - 1);
 

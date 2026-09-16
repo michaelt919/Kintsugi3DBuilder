@@ -39,6 +39,7 @@ uniform sampler2D constantTexture; // pass-through occlusion // TODO figure this
 
 layout(location = 0) out vec4 totalAlbedoOut;
 layout(location = 1) out vec4 ormOut;
+layout(location = 2) out vec4 metallicOut;
 
 void main()
 {
@@ -128,4 +129,5 @@ void main()
 #endif
 
     ormOut = vec4(occlusion, sqrtRoughness, metallicity, 1.0);
+    metallicOut = vec4(vec3(metallicity), 1.0);
 }

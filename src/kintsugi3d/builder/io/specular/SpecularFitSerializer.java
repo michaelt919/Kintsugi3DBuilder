@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -61,7 +61,8 @@ public final class SpecularFitSerializer
 
             try
             {
-                ImageIO.write(weightImg, "PNG", new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
+                ImageIO.write(weightImg, "PNG",
+                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b)));
             }
             catch (IOException e)
             {
@@ -76,7 +77,8 @@ public final class SpecularFitSerializer
         {
             try
             {
-                basisWeights.getColorTextureReader(b).saveToFile("PNG", new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
+                basisWeights.getColorTextureReader(b).saveToFile("PNG",
+                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b)));
             }
             catch (IOException e)
             {

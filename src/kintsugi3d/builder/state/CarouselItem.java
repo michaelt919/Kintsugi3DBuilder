@@ -11,25 +11,26 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.gl.window.FramebufferCanvas;
 
 public class CarouselItem
 {
-    private final UserShader shader;
-    private final ReadonlyCanvasModel canvas;
+    private final ShaderInfo shader;
+    private final FramebufferCanvas<?> canvas;
 
-    public CarouselItem(UserShader shader, ReadonlyCanvasModel canvas)
+    public CarouselItem(ShaderInfo shader, FramebufferCanvas<?> canvas)
     {
         this.shader = shader;
         this.canvas = canvas;
     }
 
-    public UserShader getShader()
+    public ShaderInfo getShader()
     {
         return shader;
     }
 
-    public ReadonlyCanvasModel getCanvasModel()
+    public FramebufferCanvas<?> getCanvas()
     {
         return canvas;
     }

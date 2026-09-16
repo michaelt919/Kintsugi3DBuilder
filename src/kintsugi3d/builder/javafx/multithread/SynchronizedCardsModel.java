@@ -16,15 +16,23 @@ import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class SynchronizedCardsModel implements CardsModel
+public class SynchronizedCardsModel<T> implements CardsModel<T>
 {
-    private final CardsModel base;
+    private final CardsModel<T> base;
 
-    public SynchronizedCardsModel(CardsModel base)
+    public SynchronizedCardsModel(CardsModel<T> base)
     {
         this.base = base;
+    }
+
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return base.getGlobalActions();
     }
 
     @Override
@@ -40,7 +48,7 @@ public class SynchronizedCardsModel implements CardsModel
     }
 
     @Override
-    public void refreshCards(Predicate<ProjectDataCard> filter)
+    public void refreshCards(Function<ProjectDataCard, T> filter)
     {
         Platform.runLater(() -> base.refreshCards(filter));
     }
@@ -49,11 +57,5 @@ public class SynchronizedCardsModel implements CardsModel
     public void deleteCards(Predicate<ProjectDataCard> filter)
     {
         Platform.runLater(() -> base.deleteCards(filter));
-    }
-
-    @Override
-    public void confirm(String title, String header, String message, Runnable onConfirm)
-    {
-        Platform.runLater(() -> base.confirm(title, header, message, onConfirm));
     }
 }

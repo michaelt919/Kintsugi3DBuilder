@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,8 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
@@ -57,28 +58,28 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     {
         if (resources instanceof GraphicsResourcesImageSpace)
         {
-            GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>)resources;
+            View selectedView = viewSelection.getSelectedView();
+            if (selectedView != null)
+            {
+                this.getContext().getState().disableBackFaceCulling();
 
-            FramebufferSize size = framebuffer.getSize();
+                this.getContext().getState().disableDepthWrite();
+                this.getContext().getState().enableDepthTest();
 
-            this.getContext().getState().disableBackFaceCulling();
+                Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
+                Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-            this.getContext().getState().disableDepthWrite();
-            this.getContext().getState().enableDepthTest();
+                resources.setupShaderProgram(this.getProgram()); // sets viewImages
+                this.getProgram().setUniform("viewIndex", selectedView.getGPUViewIndex());
+                this.getProgram().setUniform("model_view",
+                    cameraViewport.getView().times(snapViewInverse)
+                        .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
+                this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
+                this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
-            Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-            Vector3 frustumDims = viewSelection.getFrustumDimensions();
-
-            this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
-            this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
-            this.getProgram().setUniform("model_view",
-                cameraViewport.getView().times(snapViewInverse)
-                    .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
-            this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
-            this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
-
-            this.getContext().getState().enableDepthWrite();
-            this.getContext().getState().enableDepthTest();
+                this.getContext().getState().enableDepthWrite();
+                this.getContext().getState().enableDepthTest();
+            }
         }
     }
 

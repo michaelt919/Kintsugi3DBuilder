@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,24 +15,18 @@ import kintsugi3d.builder.javafx.internal.*;
 
 public final class JavaFXState
 {
-    private static final JavaFXState INSTANCE = new JavaFXState();
-
-    static JavaFXState getInstance()
-    {
-        return INSTANCE;
-    }
-
     private final ObservableCameraModel cameraModel;
     private final ObservableEnvironmentModel environmentModel;
     private final ObservableLightingEnvironmentModel lightingModel;
     private final ObservableObjectPoseModel objectModel;
-    private final ObservableUserShaderModel userShaderModel;
-    private final ObservableCameraViewListModel cameraViewListModel;
+    private final ObservableActiveShaderModel userShaderModel;
+    private final ObservableViewListModel cameraViewListModel;
     private final ObservableLoadOptionsModel loadOptionsModel;
     private final ObservableGeneralSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
     private final ObservableTabsModel tabModels;
     private final ObservableCarouselModel carouselModel;
+    private final ObservableCacheModel cacheModel;
 
     private JavaFXState()
     {
@@ -40,13 +34,19 @@ public final class JavaFXState
         environmentModel = new ObservableEnvironmentModel();
         objectModel = new ObservableObjectPoseModel();
         lightingModel = new ObservableLightingEnvironmentModel(environmentModel);
-        userShaderModel = new ObservableUserShaderModel();
-        cameraViewListModel = new ObservableCameraViewListModel();
+        userShaderModel = new ObservableActiveShaderModel();
+        cameraViewListModel = new ObservableViewListModel();
         loadOptionsModel = new ObservableLoadOptionsModel();
         settingsModel = new ObservableGeneralSettingsModel();
         projectModel = new ObservableProjectModel();
         carouselModel = new ObservableCarouselModel();
         tabModels = new ObservableTabsModel(carouselModel);
+        cacheModel = new ObservableCacheModel();
+    }
+
+    public static JavaFXState create()
+    {
+        return new JavaFXState();
     }
 
     public ObservableCameraModel getCameraModel()
@@ -64,12 +64,12 @@ public final class JavaFXState
         return objectModel;
     }
 
-    public ObservableUserShaderModel getUserShaderModel()
+    public ObservableActiveShaderModel getUserShaderModel()
     {
         return userShaderModel;
     }
 
-    public ObservableCameraViewListModel getCameraViewListModel()
+    public ObservableViewListModel getCameraViewListModel()
     {
         return cameraViewListModel;
     }
@@ -99,5 +99,10 @@ public final class JavaFXState
     public ObservableCarouselModel getCarouselModel()
     {
         return carouselModel;
+    }
+
+    public ObservableCacheModel getCacheModel()
+    {
+        return cacheModel;
     }
 }

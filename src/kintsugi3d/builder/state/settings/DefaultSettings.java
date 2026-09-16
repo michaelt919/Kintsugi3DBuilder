@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,8 +12,14 @@
 package kintsugi3d.builder.state.settings;
 
 import kintsugi3d.builder.io.ExportType;
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
+
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class DefaultSettings
 {
@@ -57,12 +63,42 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("buehlerViewCount", 8, true);
 
         // Cache cleaning options
-        settingsModel.createBooleanSetting("sizePromptEnabled", false, true);
+        settingsModel.createBooleanSetting("sizePromptEnabled", true, true);
         settingsModel.createNumericSetting("cacheSizeLimit", 32.0f, true);
         settingsModel.createBooleanSetting("recentPromptEnabled", true, true);
         settingsModel.createNumericSetting("recentProjectLimit", 20, true);
         settingsModel.createBooleanSetting("fileAgePromptEnabled", true, true);
         settingsModel.createNumericSetting("fileAgeLimit", 30, true);
+
+        // External application options
+        switch (OperatingSystem.getCurrentOS())
+        {
+            case WINDOWS:
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(Path.of("C:\\Program Files\\Blender Foundation\\"), "Blender*"))
+                {
+                    Path path = stream.iterator().next();
+
+                    if (!Files.exists(path))
+                    {
+                        throw new IOException("Could not find Blender.");
+                    }
+
+                    settingsModel.createObjectSetting("blenderLocation", path.resolve("blender.exe").toString());
+                }
+                catch (IOException e)
+                {
+                    settingsModel.createObjectSetting("blenderLocation", "");
+                }
+                break;
+
+            case MACOS:
+                settingsModel.createObjectSetting("blenderLocation", "/Applications/Blender.app/Contents/MacOS/Blender");
+                break;
+
+            default:
+                settingsModel.createObjectSetting("blenderLocation", "");
+                break;
+        }
     }
 
     public static void applyProjectDefaults(GeneralSettingsModel settingsModel)

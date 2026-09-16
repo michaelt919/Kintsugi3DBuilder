@@ -11,7 +11,9 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.normal.NormalOptimization;
@@ -20,13 +22,15 @@ import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.resources.project.stream.GraphicsStream;
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.stream.GraphicsStream;
+import kintsugi3d.gl.stream.GraphicsStreamResource;
+import kintsugi3d.gl.util.ColorList;
 import kintsugi3d.optimization.ReadonlyErrorReport;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.optimization.function.GeneralizedSmoothStepBasis;
-import kintsugi3d.util.ColorList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -430,13 +434,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     @Override
-    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
         // Convert to enum-based keys to string-based keys
-        Map<TextureDetails, Texture2D<ContextType>> standardTextures = StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
+        Map<TextureInfo, Texture2D<ContextType>> standardTextures = StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
 
         // make the previous result mutable and add non-standard textures
-        Map<TextureDetails, Texture2D<ContextType>> textures = new HashMap<>(standardTextures);
+        Map<TextureInfo, Texture2D<ContextType>> textures = new HashMap<>(standardTextures);
         textures.putAll(diffuseOptimization.getNonStandardTextures());
         return Collections.unmodifiableMap(textures);
     }
