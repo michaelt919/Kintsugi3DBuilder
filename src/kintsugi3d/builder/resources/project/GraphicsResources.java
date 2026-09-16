@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,13 +11,16 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.util.List;
@@ -75,6 +78,17 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      */
     void updateLightCalibration(Vector3 lightCalibration);
 
+    boolean hasProcessedWeightMaps();
+
+    /**
+     *
+     * @return The texture resolution of the weight maps if the project has been fully processed,
+     * otherwise throws IllegalStateException
+     */
+    IntVector2 getProcessedWeightMapResolution();
+
+    EventListeners<ProjectProcessedListener> weightMapsProcessedListeners();
+
     /**
      * Replace the specular material resources (textures); releasing the old resources if they were present
      * @param textureResources The new resources / textures
@@ -88,6 +102,10 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      */
     void initializeLightIntensities(Vector3 lightIntensity);
 
+    /**
+     * Stream over enabled views only -- disabled views are not included.
+     * @return
+     */
     @Override
     default GraphicsStreamFactory<ContextType> streamFactory()
     {

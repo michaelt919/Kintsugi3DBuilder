@@ -11,10 +11,13 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.util.List;
@@ -54,13 +57,13 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     @Override
     public float getCameraWeight(int index)
     {
-        return sharedResources.getCameraWeight(index);
+        return sharedResources.getViewWeight(index);
     }
 
     @Override
     public List<Float> getCameraWeights()
     {
-        return sharedResources.getCameraWeights();
+        return sharedResources.getViewWeights();
     }
 
     @Override
@@ -106,6 +109,24 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
         }
 
         sharedResources.updateLightData();
+    }
+
+    @Override
+    public boolean hasProcessedWeightMaps()
+    {
+        return sharedResources.hasProcessedWeightMaps();
+    }
+
+    @Override
+    public IntVector2 getProcessedWeightMapResolution()
+    {
+        return getSharedResources().getProcessedWeightMapResolution();
+    }
+
+    @Override
+    public EventListeners<ProjectProcessedListener> weightMapsProcessedListeners()
+    {
+        return getSharedResources().weightMapsProcessedListeners();
     }
 
     @Override

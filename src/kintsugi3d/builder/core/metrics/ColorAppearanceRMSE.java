@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,13 +14,14 @@ package kintsugi3d.builder.core.metrics;
 /**
  * Bundles linear (physical radiance), sRGB / gamma-encoded, and encoded (tonemapped) RMSE
  */
-public class ColorAppearanceRMSE
+public class ColorAppearanceRMSE implements ReadonlyColorAppearanceRMSE
 {
     private double normalizedLinear = Double.POSITIVE_INFINITY;
     private double normalizedSRGB = Double.POSITIVE_INFINITY;
     private double encodedGroundTruth = Double.POSITIVE_INFINITY;
     private long sampleCount = 0;
 
+    @Override
     public double getNormalizedLinear()
     {
         return normalizedLinear;
@@ -31,6 +32,7 @@ public class ColorAppearanceRMSE
         this.normalizedLinear = normalizedLinear;
     }
 
+    @Override
     public double getNormalizedSRGB()
     {
         return normalizedSRGB;
@@ -41,6 +43,7 @@ public class ColorAppearanceRMSE
         this.normalizedSRGB = normalizedSRGB;
     }
 
+    @Override
     public double getEncodedGroundTruth()
     {
         return encodedGroundTruth;
@@ -51,6 +54,7 @@ public class ColorAppearanceRMSE
         this.encodedGroundTruth = encodedGroundTruth;
     }
 
+    @Override
     public long getSampleCount()
     {
         return sampleCount;

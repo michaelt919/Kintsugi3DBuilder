@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.builder.rendering.RenderedComponent;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;

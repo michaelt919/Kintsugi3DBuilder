@@ -11,11 +11,12 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +44,7 @@ class SingleFrameRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ObservableProjectGraphicsRequest create()
+        public ProgressMonitoredProjectGraphicsRequest create()
         {
             return new SingleFrameRenderRequest(getWidth(), getHeight(), outputImageName, getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
@@ -51,7 +52,7 @@ class SingleFrameRenderRequest extends RenderRequestBase
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
@@ -62,15 +63,17 @@ class SingleFrameRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            if(monitor != null){
+            if(monitor != null)
+            {
                 monitor.setProcessName("Generic Export");
             }
 
-            program.setUniform("model_view", renderable.getViewSet().getCameraPose(0));
-            program.setUniform("projection",
-                renderable.getViewSet().getCameraProjectionForViewIndex(0)
-                    .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
-                        renderable.getViewSet().getRecommendedFarPlane()));
+            View repView = renderable.getViewSet().getRepresentativeView();
+            if (repView != null)
+            {
+                program.setUniform("model_view", repView.getCameraPose());
+                program.setUniform("projection", repView.getProjectionMatrix());
+            }
 
             render(drawable, framebuffer);
 

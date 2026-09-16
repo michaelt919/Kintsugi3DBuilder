@@ -12,14 +12,58 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.io.primaryview.GenericViewSelectionModel;
-import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.imageset.GenericImageSetInfo;
+import kintsugi3d.builder.io.imageset.ImageSetInfo;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 public class CurrentProjectViewSelectable extends ViewSelectableBase
 {
+    private final View initialView;
+    private final double initialViewRotationDegrees;
+    private final ImageSetInfo imageSetInfo;
+
+    public CurrentProjectViewSelectable(Function<ViewSet, View> getInitialSelection, ToDoubleFunction<ViewSet> getInitialRotationDegrees)
+    {
+        ViewSet currentViewSet = Global.io().validateRenderable().getLoadedViewSet();
+        this.initialView = getInitialSelection.apply(currentViewSet);
+
+        if (getInitialRotationDegrees != null)
+        {
+            this.initialViewRotationDegrees = getInitialRotationDegrees.applyAsDouble(currentViewSet);
+        }
+        else
+        {
+            this.initialViewRotationDegrees = 0.0;
+        }
+
+        if (initialView != null)
+        {
+            String viewName = initialView.getImageFile().getPath();
+            selectView(viewName, initialViewRotationDegrees);
+        }
+
+        this.imageSetInfo = new GenericImageSetInfo("Current Project", currentViewSet);
+    }
+
+    public CurrentProjectViewSelectable(Function<ViewSet, View> getInitialSelection)
+    {
+        this(getInitialSelection, null);
+    }
+
+    public View getInitialView()
+    {
+        return initialView;
+    }
+
+    public double getInitialViewRotationDegrees()
+    {
+        return initialViewRotationDegrees;
+    }
+
     @Override
     public String getAdvanceLabelOverride()
     {
@@ -28,23 +72,15 @@ public class CurrentProjectViewSelectable extends ViewSelectableBase
     }
 
     @Override
-    public void loadForViewSelection(Consumer<ViewSelectionModel> onLoadComplete)
+    public ImageSetInfo getImageSetInfo()
     {
-        ViewSet currentViewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
-        setViewSelectionModel(new GenericViewSelectionModel("Current Project", currentViewSet));
-
-        if (currentViewSet.getOrientationViewIndex() >= 0)
-        {
-            String viewName = currentViewSet.getImageFileName(currentViewSet.getOrientationViewIndex());
-            selectView(viewName, currentViewSet.getOrientationViewRotationDegrees());
-        }
-
-        onLoadComplete.accept(getViewSelectionModel());
+        return imageSetInfo;
     }
 
     @Override
-    public void confirm()
+    public boolean confirm()
     {
         // Will be handled by the controller itself if a project is already loaded.
+        return true;
     }
 }

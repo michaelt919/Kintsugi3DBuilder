@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -22,6 +22,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class KMeansClustering
@@ -53,12 +54,18 @@ public class KMeansClustering
         }
         while(colorMap.getAlpha(firstCenterIndex) < 1.0 && failsafeCounter <= colorMap.size()); // Make sure the center chosen is valid.
 
+        int basisCount = solutionOut.get(0).getNumElements();
+
         if (colorMap.getAlpha(firstCenterIndex) < 1.0)
         {
-            throw new IllegalStateException("Color map does not contain any valid elements.");
+            LOG.warn("Color map for k-means clustering does not contain any valid elements.");
+
+            // Just return a list of random colors so that the process can continue.
+            return IntStream.range(0, basisCount)
+                .mapToObj(i -> new Vector3(random.nextFloat(), random.nextFloat(), random.nextFloat()))
+                .collect(Collectors.toList());
         }
 
-        int basisCount = solutionOut.get(0).getNumElements();
         Vector3[] centers = new Vector3[basisCount];
         centers[0] = colorMap.getRGB(firstCenterIndex);
 

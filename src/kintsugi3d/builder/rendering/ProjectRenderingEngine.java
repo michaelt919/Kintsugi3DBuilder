@@ -11,8 +11,12 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.events.ProjectLoadedEvent;
+import kintsugi3d.builder.io.events.ProjectLoadedListener;
 import kintsugi3d.builder.io.gltf.ModelExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
@@ -23,17 +27,23 @@ import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
 import kintsugi3d.builder.rendering.components.split.SplitScreenComponent;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
+import kintsugi3d.builder.resources.DynamicResourceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.SceneViewport;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderableBase;
-import kintsugi3d.gl.vecmath.*;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.vecmath.Matrix3;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,10 +53,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements RenderableInstance<ContextType>
+    extends InteractiveRenderableBase<ContextType> implements ProjectRenderableInstance<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
 
@@ -78,13 +87,16 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel sceneViewportModel;
 
-    private IntVector2 safeStartPixel;
-    private IntVector2 safeEndPixel;
+    private int paddingLeft;
+    private int paddingTop;
+    private int paddingRight;
+    private int paddingBottom;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
 
-    private Consumer<ImageReplaceData> userImageReplaceHandler;
+    private final EventDispatcher<ProjectLoadedListener, ProjectLoadedEvent> projectLoaded
+        = new EventDispatcher<>(ProjectLoadedListener::onProjectLoaded);
 
     private boolean loaded = false;
 
@@ -122,6 +134,11 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         return id;
     }
 
+    public EventListeners<ProjectLoadedListener> projectLoadedListeners()
+    {
+        return projectLoaded;
+    }
+
     public RenderingSubject<ContextType> getSubject()
     {
         return subject;
@@ -139,28 +156,22 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         return this.dynamicResourceLoader;
     }
 
-    public IntVector2 getSafeStartPixel()
+    @Override
+    public void setSafeRegionPadding(int left, int top, int right, int bottom)
     {
-        return safeStartPixel;
-    }
-
-    public IntVector2 getSafeEndPixel()
-    {
-        return safeEndPixel;
+        this.paddingLeft = left;
+        this.paddingTop = top;
+        this.paddingRight = right;
+        this.paddingBottom = bottom;
     }
 
     @Override
-    public void setSafeRegion(IntVector2 safeStartPixel, IntVector2 safeEndPixel)
+    public void clearSafeRegionPadding()
     {
-        this.safeStartPixel = safeStartPixel;
-        this.safeEndPixel = safeEndPixel;
-    }
-
-    @Override
-    public void clearSafeRegion()
-    {
-        this.safeStartPixel = null;
-        this.safeEndPixel = null;
+        this.paddingLeft = 0;
+        this.paddingTop = 0;
+        this.paddingRight = 0;
+        this.paddingBottom = 0;
     }
 
     @Override
@@ -281,9 +292,9 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             if (viewSet != null)
             {
-                int referencePoseIndex = viewSet.getOrientationViewIndex();
+                View orientationView = viewSet.getOrientationView();
 
-                if (referencePoseIndex < 0) // check for override
+                if (orientationView == null) // check for override
                 {
                     // Imported orientation and object center if no override
                     // For now, this is all that we're importing from Metashape;
@@ -309,7 +320,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 {
                     // reference image based override, replaces any imported reference frame
                     // use centroid and scale based on geometry assuming the imported scale and center is invalid
-                    Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
+                    Matrix3 referenceCameraPose = orientationView.getCameraPose().getUpperLeft3x3();
                     sceneModel.setOrientation(Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
                         .times(referenceCameraPose));
                     sceneModel.setCentroid(resources.getGeometry().getCentroid());
@@ -367,28 +378,28 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
             if (projectionOverride != null)
             {
+                // Ignore safe region if the projection was overridden.
                 projection = projectionOverride;
             }
-            else if (safeStartPixel != null && safeEndPixel != null)
+            else if (paddingLeft != 0 || paddingTop != 0 || paddingRight != 0 || paddingBottom != 0)
             {
                 FramebufferSize safeSize = new FramebufferSize(
-                    safeEndPixel.x - safeStartPixel.x,
-                    safeEndPixel.y - safeStartPixel.y);
+                    size.width - paddingLeft - paddingRight,
+                    size.height - paddingTop - paddingBottom);
 
                 projection =
                     // After scaling from safe clip space to actual FBO clip space,
                     // translate the origin to the location of the safe clip space center in FBO clip space.
                     // This translation needs to be in normalized device coordinates [-1, 1].
-                    // Adding the start and end pixels then dividing by the FBO size, then subtracting 1
-                    // effectively gives us the center point in NDC
-                    // (dividing by two would have given the center point in a [0, 1] range,
+                    // Adding the offsets (+L and -R; +T and -B), negating (-L + +R; -T + +B),
+                    // and dividing by the FBO size effectively gives us the center point in NDC
+                    // (dividing by two to get the average negative offset would have given the center point in a [0, 1] range,
                     // which is cancelled out by multiplying by 2 before subtracting 1 to get to NDC)
                     Matrix4.translate(
-                        safeStartPixel.asFloatingPoint().plus(safeEndPixel.asFloatingPoint())
-                            .dividedBy(new Vector2(size.width, size.height))
-                            .minus(new Vector2(1.0f))
-                            .negated()
-                            .asVector3())
+                        new Vector3(
+                            (float)(paddingRight - paddingLeft) / (float)size.width,
+                            (float)(paddingBottom - paddingTop) / (float)size.height,
+                            0))
                     // If the safe region is smaller than the full framebuffer, then scale down in clip space accordingly
                     // so that the content that should be visible is contained within that region.
                     .times(Matrix4.scale(
@@ -456,6 +467,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 {
                     // First frame drawn successfully.
                     loaded = true;
+
+                    projectLoaded.notifyListeners(new ProjectLoadedEvent(getGeometry().getBoundingBoxSize()));
 
                     if (this.progressMonitor != null)
                     {
@@ -584,7 +597,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public SceneViewport getSceneViewportModel()
+    public SceneViewport getSceneViewport()
     {
         return sceneViewportModel;
     }
@@ -654,20 +667,5 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 LOG.error("Error occurred during glTF export:", e);
             }
         }
-    }
-
-    @Override
-    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
-    {
-        if (userImageReplaceHandler != null)
-        {
-            userImageReplaceHandler.accept(imageReplaceData);
-        }
-    }
-
-    @Override
-    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
-    {
-        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
@@ -40,10 +40,10 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         this.reconstructionSettings = reconstructionSettings;
     }
 
-    public List<Map<String, ColorAppearanceRMSE>> reconstruct(TextureResources<ContextType> specularFit,
-                                                              Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
-                                                              ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-                                                              File debugDirectory, File groundTruthDirectory)
+    public List<Map<String, ReadonlyColorAppearanceRMSE>> reconstruct(TextureResources<ContextType> specularFit,
+                                                                      Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
+                                                                      ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
+                                                                      File debugDirectory, File groundTruthDirectory)
     {
         if (debugDirectory != null)
         {
@@ -92,26 +92,26 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
             }
 
-            List<Map<String, ColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getCombinedCameraPoseCount());
+            List<Map<String, ReadonlyColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getEnabledViewCount());
 
             // Run the reconstruction and save the results to file
             for (ReconstructionView<ContextType> view : reconstruction)
             {
-                LOG.info("View {}:", view.getIndex());
+                LOG.info("View {}:", view.getView());
                 // Allocate hash map for the current view
                 rmseOut.add(new HashMap<>(drawableMap.size()));
 
                 for (var entry : drawableMap.entrySet())
                 {
-                    ColorAppearanceRMSE rmse = view.reconstruct(entry.getValue());
+                    ReadonlyColorAppearanceRMSE rmse = view.reconstruct(entry.getValue());
 
                     if (debugDirectory != null)
                     {
-                        saveImageToFile(new File(debugDirectory, entry.getKey()), view.getIndex(), view.getReconstructionFramebuffer());
+                        saveImageToFile(new File(debugDirectory, entry.getKey()), view.getView().getGPUViewIndex(), view.getReconstructionFramebuffer());
                     }
 
                     // Record RMSE
-                    rmseOut.get(view.getIndex()).put(entry.getKey(), rmse);
+                    rmseOut.get(view.getView().getGPUViewIndex()).put(entry.getKey(), rmse);
 
                     LOG.info("{}: \nencoded ground truth = {}\nnormalized sRGB = {}\nnormalized linear = {}",
                         entry.getKey(), rmse.getEncodedGroundTruth(), rmse.getNormalizedSRGB(), rmse.getNormalizedLinear());

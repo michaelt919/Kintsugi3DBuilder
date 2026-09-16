@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.rendering.SceneViewport;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
@@ -195,7 +195,7 @@ public final class ToolBox implements CanvasListener
     //builder
     private ToolBox(ManipulableViewpointModel cameraModel, ManipulableLightingEnvironmentModel lightingModel,
                     ManipulableObjectPoseModel objectModel, GeneralSettingsModel settingsModel,
-                    ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
+                    ToolBindingModel toolBindingModel, SceneViewport sceneViewport)
     {
         this.toolBindingModel = toolBindingModel;
 
@@ -224,7 +224,7 @@ public final class ToolBox implements CanvasListener
                     .setLightingEnvironmentModel(lightingModel)
                     .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
-                    .setSceneViewportModel(sceneViewportModel);
+                    .setSceneViewport(sceneViewport);
             }
         };
 
@@ -289,7 +289,7 @@ public final class ToolBox implements CanvasListener
         private GeneralSettingsModel settingsModel;
         private ManipulableLightingEnvironmentModel lightingModel;
         private ManipulableObjectPoseModel objectModel;
-        private SceneViewportModel sceneViewportModel;
+        private SceneViewport sceneViewport;
 
         public static Builder create()
         {
@@ -330,15 +330,15 @@ public final class ToolBox implements CanvasListener
             return this;
         }
 
-        public Builder setSceneViewportModel(SceneViewportModel sceneViewportModel)
+        public Builder setSceneViewport(SceneViewport sceneViewport)
         {
-            this.sceneViewportModel = sceneViewportModel;
+            this.sceneViewport = sceneViewport;
             return this;
         }
 
         public CanvasListener build()
         {
-            return new ToolBox(cameraModel, lightingModel, objectModel, settingsModel, toolBindingModel, sceneViewportModel);
+            return new ToolBox(cameraModel, lightingModel, objectModel, settingsModel, toolBindingModel, sceneViewport);
         }
     }
 }

@@ -71,7 +71,7 @@
                 <configuration>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>kintsugi3d.builder.app.Kintsugi3DBuilder</mainClass>
+                            <mainClass>kintsugi3d.app.Kintsugi3DBuilder</mainClass>
                         </transformer>
                         <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer" />
                     </transformers>
@@ -601,9 +601,14 @@
             <version>2.0.3</version>
         </dependency>
         <dependency>
+            <groupId>de.javagl</groupId>
+            <artifactId>obj</artifactId>
+            <version>0.4.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.25.4</version>
+            <version>2.25.5</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

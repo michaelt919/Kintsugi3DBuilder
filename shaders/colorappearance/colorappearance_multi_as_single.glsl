@@ -19,43 +19,43 @@ uniform int viewIndex;
 
 #line 21 1002
 
-#define cameraPose             (cameraPoses[viewIndex])
-#define lightPosition          (lightPositions[getLightIndex(viewIndex)].xyz)
-#define lightIntensity         (getLightIntensity(viewIndex).rgb)
+#define cameraPose      (cameraPoses[viewIndex])
+#define lightPosition   (lightPositions[getLightIndexByPhysicalIndex(viewIndex)].xyz)
+#define lightIntensity  (getLightIntensityByPhysicalIndex(viewIndex).rgb)
 
 vec3 getViewVector()
 {
-    return getViewVector(viewIndex);
+    return getViewVectorByPhysicalIndex(viewIndex);
 }
 
 vec3 getLightVector()
 {
-    return getLightVector(viewIndex);
+    return getLightVectorByPhysicalIndex(viewIndex);
 }
 
 vec3 getViewVector(vec3 position)
 {
-    return getViewVector(viewIndex, position);
+    return getViewVectorByPhysicalIndex(viewIndex, position);
 }
 
 vec3 getLightVector(vec3 position)
 {
-    return getLightVector(viewIndex, position);
+    return getLightVectorByPhysicalIndex(viewIndex, position);
 }
 
 vec4 getColor()
 {
-    return getColor(viewIndex);
+    return getColorByPhysicalIndex(viewIndex);
 }
 
 vec4 getLinearColor()
 {
-    return linearizeColor(getColor());
+    return getLinearColorByPhysicalIndex(viewIndex);
 }
 
 LightInfo getLightInfo()
 {
-    return getLightInfo(viewIndex);
+    return getLightInfoByPhysicalIndex(viewIndex);
 }
 
 #endif // COLOR_APPEARANCE_MULTI_AS_SINGLE_GLSL

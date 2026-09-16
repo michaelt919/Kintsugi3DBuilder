@@ -19,9 +19,8 @@
 
 uniform sampler2DArray viewImages;
 
-vec4 getColor(int virtualIndex)
+vec4 getColorByPhysicalIndex(int viewIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
     return texture(viewImages, vec3(fTexCoord, viewIndex));
 }
 
