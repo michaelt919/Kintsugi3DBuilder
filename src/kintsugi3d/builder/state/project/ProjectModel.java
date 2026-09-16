@@ -49,7 +49,6 @@ public interface ProjectModel
 
     void confirm(String title, String header, String message, Runnable onConfirm);
 
-
     void setProjectOpen(boolean projectOpen);
     void setProjectName(String projectName);
     default void clearProjectName()

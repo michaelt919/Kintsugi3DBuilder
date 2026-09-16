@@ -77,7 +77,7 @@ public final class Rendering
                 // Start the request queue as soon as we have a graphics context.
                 GraphicsRequestManager<ContextType> newRequestQueue = new GraphicsRequestManager<>(injectedContext);
                 newRequestQueue.setRenderableManager(injectedInstanceManager);
-                newRequestQueue.setProgressMonitor(Global.state().getIOModel().getProgressMonitor());
+                                newRequestQueue.setProgressMonitor(Global.io().getProgressMonitor());
 
                 if (injectedInstanceManager.getOwningApp() != null)
                 {

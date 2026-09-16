@@ -196,7 +196,9 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
     private void replaceTexture(TextureInfo texture)
     {
         Platform.runLater(() ->
-            Global.state().getIOModel().getMainRenderable().invokeUserImageReplacement(texture.getReplaceData(getInstance())));
+        {
+            Global.io().getMainRenderable().invokeUserImageReplacement(texture.getReplaceData(getInstance()));
+        });
     }
 
 }

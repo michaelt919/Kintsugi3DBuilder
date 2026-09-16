@@ -27,7 +27,7 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.builder.resources.project.MissingImagesException;
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
@@ -61,7 +61,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
 
     private final RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViews
         = new RefreshableCollection<>();
-    private final Map<UserShader, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
+    private final Map<ShaderInfo, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
     private final SceneViewport sceneViewport = new ManagedSceneViewport(this);
@@ -75,7 +75,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private ReadonlyViewpointModel cameraModel;
     private ReadonlyLightingEnvironmentModel lightingModel;
     private ReadonlyGeneralSettingsModel settingsModel;
-    private CameraViewListModel cameraViewListModel;
+    private SelectableViewListModel viewListModel;
 
     private final List<Consumer<ProjectRenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
@@ -179,7 +179,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         // Grab all views (not just enabled) for light calibration
         // TODO this is for the light calibration sidebar and should probably be migrated to a newer system
         // TODO   for managing the list of photos (like the photos tab)
-        Global.state().getCameraViewListModel().setCameraViewList(loadedViewSet.getViewsSorted());
+        Global.state().getViewListModel().setViewList(loadedViewSet.getViewsSorted());
 
         if (newProjectFile != null)
         {
@@ -188,7 +188,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             // but that shouldn't matter regardless since we just need to have a valid project file path right now.
             try
             {
-                Global.state().getIOModel().saveProject(newProjectFile);
+                Global.io().saveProject(newProjectFile);
             }
             catch (IOException|ParserConfigurationException|TransformerException e)
             {
@@ -299,7 +299,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         sceneModel.setCameraModel(this.cameraModel);
         sceneModel.setLightingModel(this.lightingModel);
         sceneModel.setSettingsModel(this.settingsModel);
-        sceneModel.setCameraViewListModel(this.cameraViewListModel);
+        sceneModel.setCameraViewListModel(this.viewListModel);
     }
 
     @Override
@@ -439,7 +439,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void addRenderView(UserShader shader, FramebufferSize initialSize,
+    public void addRenderView(ShaderInfo shader, FramebufferSize viewSize,
                               int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
                               Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
@@ -454,7 +454,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         {
             // Create framebuffer
             DoubleFramebufferObject<ContextType> framebuffer =
-                DoubleFramebufferFactory.create(context, initialSize.width, initialSize.height);
+                DoubleFramebufferFactory.create(context, viewSize.width, viewSize.height);
 
             // Create and initialize refreshable, which will manage the framebuffer object
             var refreshable = RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
@@ -488,12 +488,13 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectRenderingEngine<ContextType> getRenderableForShader(UserShader shader)
+    public ProjectRenderingEngine<ContextType> getRenderableForShader(ShaderInfo shader)
     {
         return renderViewMap.get(shader).getRenderable();
     }
 
-    public void removeRenderView(UserShader shader)
+    @Override
+    public void removeRenderView(ShaderInfo shader)
     {
         var renderViewToRemove = renderViewMap.get(shader);
 
@@ -504,11 +505,11 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    private void requestFragmentShader(UserShader userShader)
+    private void requestFragmentShader(ShaderInfo shaderInfo)
     {
         if (renderableInstance != null)
         {
-            renderableInstance.getDynamicResourceManager().requestFragmentShader(userShader.getFile(), userShader.getDefines());
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderInfo.getFile(), shaderInfo.getDefines());
         }
     }
 
@@ -575,12 +576,12 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    public void setCameraViewListModel(SelectableViewListModel viewListModel)
     {
-        this.cameraViewListModel = cameraViewListModel;
+        this.viewListModel = viewListModel;
         if (renderableInstance != null)
         {
-            renderableInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+            renderableInstance.getSceneModel().setCameraViewListModel(viewListModel);
         }
     }
 

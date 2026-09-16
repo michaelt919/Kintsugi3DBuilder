@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
 import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
@@ -30,7 +30,7 @@ public class SceneModel
     private ReadonlyViewpointModel cameraModel;
     private ReadonlyLightingEnvironmentModel lightingModel;
     private SafeReadonlyGlobalSettingsModel settingsModel = new DefaultGlobalSettingsModel();
-    private CameraViewListModel cameraViewListModel;
+    private SelectableViewListModel viewListModel;
 
     private Vector3 centroid = Vector3.ZERO;
     private Matrix3 orientation = Matrix3.IDENTITY;
@@ -58,11 +58,10 @@ public class SceneModel
         return this.settingsModel;
     }
 
-    public CameraViewListModel getCameraViewListModel()
+    public SelectableViewListModel getCameraViewListModel()
     {
-        return cameraViewListModel;
+        return viewListModel;
     }
-
 
     public Vector3 getCentroid()
     {
@@ -103,9 +102,9 @@ public class SceneModel
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
     }
 
-    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    public void setCameraViewListModel(SelectableViewListModel viewListModel)
     {
-        this.cameraViewListModel = cameraViewListModel;
+        this.viewListModel = viewListModel;
     }
 
     public void setCentroid(Vector3 centroid)

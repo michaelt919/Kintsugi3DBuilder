@@ -40,7 +40,7 @@ public class ViewSelectionImpl implements ViewSelection
     @Override
     public View getSelectedView()
     {
-        return sceneModel.getCameraViewListModel().getSelectedCameraView();
+        return sceneModel.getCameraViewListModel().getSelectedView();
     }
 
     @Override

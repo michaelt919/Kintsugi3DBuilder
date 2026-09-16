@@ -21,7 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
@@ -32,11 +32,11 @@ import kintsugi3d.gl.window.FramebufferCanvas;
  */
 public class CarouselCardController
 {
-    private static final UserShader DEFAULT_SHADER_UNPROCESSED =
-        new UserShader("Image-based", "rendermodes/ibrUntextured.frag");
+    private static final ShaderInfo DEFAULT_SHADER_UNPROCESSED =
+        new ShaderInfo("Image-based", "rendermodes/ibrUntextured.frag");
 
-    private static final UserShader DEFAULT_SHADER_PROCESSED =
-        new UserShader("Material (basis)", "rendermodes/basisMaterial.frag");
+    private static final ShaderInfo DEFAULT_SHADER_PROCESSED =
+        new ShaderInfo("Material (basis)", "rendermodes/basisMaterial.frag");
 
     @FXML private FramebufferView framebufferView;
     @FXML private CheckBox selectedCheckbox;
@@ -48,7 +48,7 @@ public class CarouselCardController
 
     private ObservableCarouselModel carouselModel;
     private CarouselController carousel;
-    private UserShader shader;
+    private ShaderInfo shader;
 
     /**
      * If the checkbox is selected it will apply the shader that is assigned to the card.
@@ -60,17 +60,17 @@ public class CarouselCardController
     {
         if (selectedCheckbox.isSelected())
         {
-            Global.state().getUserShaderModel().setUserShader(shader);
+            Global.state().getUserShaderModel().setActiveShader(shader);
         }
         else
         {
             if (Global.state().getProjectModel().isProjectProcessed())
             {
-                Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_PROCESSED);
+                Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_PROCESSED);
             }
             else
             {
-                Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_UNPROCESSED);
+                Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_UNPROCESSED);
             }
         }
     }
@@ -80,7 +80,7 @@ public class CarouselCardController
      * and changes the label to have the name of the shader
      * @param shader
      */
-    public void init(ObservableCarouselModel carouselModel, UserShader shader, CarouselController carousel)
+    public void init(ObservableCarouselModel carouselModel, ShaderInfo shader, CarouselController carousel)
     {
         this.carouselModel = carouselModel;
         this.carousel = carousel;
@@ -94,7 +94,7 @@ public class CarouselCardController
         to deselect its own checkbox.
         */
         Global.state().getUserShaderModel().registerHandler(this::updateCheckboxState);
-        updateCheckboxState(Global.state().getUserShaderModel().getUserShader());
+        updateCheckboxState(Global.state().getUserShaderModel().getActiveShader());
     }
     public void initialize()
     {
@@ -119,7 +119,7 @@ public class CarouselCardController
      * Will select or deselect the shader cards checkbox if another cards checkbox is selected
      * @param activeShader
      */
-    private void updateCheckboxState(UserShader activeShader)
+    private void updateCheckboxState(ShaderInfo activeShader)
     {
         selectedCheckbox.setSelected(shader != null && shader.equals(activeShader));
     }
@@ -138,15 +138,15 @@ public class CarouselCardController
             It will change the shader back to the default shader. Afterwords it will remove the
             cards shader from the global carousel shaders list.
              */
-            if (shader.equals(Global.state().getUserShaderModel().getUserShader()))
+            if (shader.equals(Global.state().getUserShaderModel().getActiveShader()))
             {
                 if(Global.state().getProjectModel().isProjectProcessed())
                 {
-                    Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_PROCESSED);
+                    Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_PROCESSED);
                 }
                 else
                 {
-                    Global.state().getUserShaderModel().setUserShader(DEFAULT_SHADER_UNPROCESSED);
+                    Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_UNPROCESSED);
                 }
             }
 
@@ -174,7 +174,7 @@ public class CarouselCardController
         carouselModel.moveCardRight(this);
     }
 
-    public UserShader getShader()
+    public ShaderInfo getShader()
     {
         return shader;
     }

@@ -17,49 +17,49 @@ import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 
 import java.util.Collections;
 import java.util.List;
 
-public class ObservableCameraViewListModel implements CameraViewListModel
+public class ObservableViewListModel implements SelectableViewListModel
 {
     private MultipleSelectionModel<View> selectedCameraViewModel;
     private Property<ObservableList<View>> cameraViewListProperty;
     private BooleanProperty cameraViewSnapEnabledProperty;
 
     @Override
-    public View getSelectedCameraView()
+    public View getSelectedView()
     {
         return selectedCameraViewModel.getSelectedItem();
     }
 
     @Override
-    public void setSelectedCameraView(View cameraView)
+    public void setSelectedView(View cameraView)
     {
         selectedCameraViewModel.select(cameraView);
     }
 
     @Override
-    public List<View> getCameraViewList()
+    public List<View> getViewList()
     {
         return Collections.unmodifiableList(cameraViewListProperty.getValue());
     }
 
     @Override
-    public void setCameraViewList(List<View> cameraViewList)
+    public void setViewList(List<View> cameraViewList)
     {
         cameraViewListProperty.setValue(new ObservableListWrapper<>(cameraViewList));
     }
 
     @Override
-    public boolean isCameraViewSnapEnabled()
+    public boolean isViewSnapEnabled()
     {
         return cameraViewSnapEnabledProperty.get();
     }
 
     @Override
-    public void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled)
+    public void setViewSnapEnabled(boolean cameraViewSnapEnabled)
     {
         this.cameraViewSnapEnabledProperty.set(cameraViewSnapEnabled);
     }

@@ -12,22 +12,22 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 
 import java.util.List;
 
-public class SynchronizedCameraViewListModel implements CameraViewListModel
+public class SynchronizedViewListModel implements SelectableViewListModel
 {
     private final SynchronizedValue<View> selectedCameraView;
     private final SynchronizedValue<List<View>> cameraViewList;
     private final SynchronizedValue<Boolean> cameraViewSnapEnabled;
-    private final CameraViewListModel baseModel;
+    private final SelectableViewListModel baseModel;
 
-    public SynchronizedCameraViewListModel(CameraViewListModel baseModel)
+    public SynchronizedViewListModel(SelectableViewListModel baseModel)
     {
-        this.selectedCameraView = SynchronizedValue.createFromFunctions(baseModel::getSelectedCameraView, baseModel::setSelectedCameraView);
-        this.cameraViewList = SynchronizedValue.createFromFunctions(baseModel::getCameraViewList, baseModel::setCameraViewList);
-        this.cameraViewSnapEnabled = SynchronizedValue.createFromFunctions(baseModel::isCameraViewSnapEnabled, baseModel::setCameraViewSnapEnabled);
+        this.selectedCameraView = SynchronizedValue.createFromFunctions(baseModel::getSelectedView, baseModel::setSelectedView);
+        this.cameraViewList = SynchronizedValue.createFromFunctions(baseModel::getViewList, baseModel::setViewList);
+        this.cameraViewSnapEnabled = SynchronizedValue.createFromFunctions(baseModel::isViewSnapEnabled, baseModel::setViewSnapEnabled);
         this.baseModel = baseModel;
     }
 
@@ -36,39 +36,39 @@ public class SynchronizedCameraViewListModel implements CameraViewListModel
      * @return
      */
     @Override
-    public View getSelectedCameraView()
+    public View getSelectedView()
     {
         // Not synchronized; should be fine -- worst case scenario it's just out-of-sync with the view index and/or view list model.
-        return baseModel.getSelectedCameraView();
+        return baseModel.getSelectedView();
     }
 
     @Override
-    public void setSelectedCameraView(View cameraView)
+    public void setSelectedView(View cameraView)
     {
         this.selectedCameraView.setValue(cameraView);
     }
 
     @Override
-    public List<View> getCameraViewList()
+    public List<View> getViewList()
     {
         return cameraViewList.getValue();
     }
 
     @Override
-    public void setCameraViewList(List<View> cameraViewList)
+    public void setViewList(List<View> cameraViewList)
     {
         // Need to run on JavaFX thread as this will completely change the backend model for the list view.
         this.cameraViewList.setValue(cameraViewList);
     }
 
     @Override
-    public boolean isCameraViewSnapEnabled()
+    public boolean isViewSnapEnabled()
     {
         return cameraViewSnapEnabled.getValue();
     }
 
     @Override
-    public void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled)
+    public void setViewSnapEnabled(boolean cameraViewSnapEnabled)
     {
         this.cameraViewSnapEnabled.setValue(cameraViewSnapEnabled);
     }

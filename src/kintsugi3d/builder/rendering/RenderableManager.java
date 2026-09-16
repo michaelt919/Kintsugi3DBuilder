@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
@@ -22,9 +22,12 @@ import java.util.function.Consumer;
 public interface RenderableManager<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
     boolean isRenderableLoaded();
+
     ProjectRenderableInstance<ContextType> getMainRenderable(); // TODO this would ideally just be a ViewportRenderable
     void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback); // TODO this would ideally just be a ViewportRenderable
-    void addRenderView(UserShader shader, FramebufferSize initialSize,
+
+    void addRenderView(ShaderInfo shader, FramebufferSize viewSize,
                        int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
                        Consumer<FramebufferCanvas<?>> framebufferCallback);
+    void removeRenderView(ShaderInfo shader);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,44 +13,44 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.builder.state.scene.UserShaderModel;
+import kintsugi3d.builder.state.scene.ActiveShaderModel;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public class ObservableUserShaderModel implements UserShaderModel
+public class ObservableActiveShaderModel implements ActiveShaderModel
 {
-    private final ObjectProperty<UserShader> userShader = new SimpleObjectProperty<>();
+    private final ObjectProperty<ShaderInfo> userShader = new SimpleObjectProperty<>();
 
-    private final Collection<Consumer<UserShader>> shaderHandlers = new ArrayList<>(1);
+    private final Collection<Consumer<ShaderInfo>> shaderHandlers = new ArrayList<>(1);
 
-    public ObjectProperty<UserShader> getUserShaderProperty()
+    public ObjectProperty<ShaderInfo> getUserShaderProperty()
     {
         return userShader;
     }
 
     @Override
-    public UserShader getUserShader()
+    public ShaderInfo getActiveShader()
     {
         return userShader.get();
     }
 
     @Override
-    public void registerHandler(Consumer<UserShader> shaderHandler)
+    public void registerHandler(Consumer<ShaderInfo> shaderHandler)
     {
         shaderHandlers.add(shaderHandler);
     }
 
     @Override
-    public void setUserShader(UserShader userShader)
+    public void setActiveShader(ShaderInfo shaderInfo)
     {
-        this.userShader.set(userShader);
+        this.userShader.set(shaderInfo);
 
         for (var shaderHandler : shaderHandlers)
         {
-            shaderHandler.accept(userShader);
+            shaderHandler.accept(shaderInfo);
         }
     }
 }

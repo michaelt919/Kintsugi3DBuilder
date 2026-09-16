@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.ProjectRenderableInstance;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.util.EncodableColorImage;
@@ -48,7 +48,7 @@ public interface IO
     ProjectRenderableInstance<?> getMainRenderable();
     void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback);
 
-    ProjectRenderableInstance<?> getRenderableForShader(UserShader shader);
+    ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader);
 
     void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
     void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);

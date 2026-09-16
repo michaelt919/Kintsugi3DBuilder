@@ -14,7 +14,7 @@ package kintsugi3d.builder.state.scene;
 import java.io.File;
 import java.util.*;
 
-public class UserShader
+public class ShaderInfo
 {
     private static final String SHADER_DIR = "shaders";
 
@@ -24,7 +24,7 @@ public class UserShader
 
     private final Map<String, Optional<Object>> defines;
 
-    public UserShader(String friendlyName, String filename)
+    public ShaderInfo(String friendlyName, String filename)
     {
         this.friendlyName = friendlyName;
         this.filename = filename;
@@ -32,7 +32,7 @@ public class UserShader
         this.subName = null;
     }
 
-    public UserShader(String friendlyName, String filename, Map<String, Optional<Object>> defines)
+    public ShaderInfo(String friendlyName, String filename, Map<String, Optional<Object>> defines)
     {
         this.friendlyName = friendlyName;
         this.filename = filename;
@@ -40,7 +40,7 @@ public class UserShader
         this.subName = null;
     }
 
-    public UserShader(String friendlyName, String filename, Map<String, Optional<Object>> defines, String subName)
+    public ShaderInfo(String friendlyName, String filename, Map<String, Optional<Object>> defines, String subName)
     {
         this.friendlyName = friendlyName;
         this.filename = filename;
@@ -76,9 +76,9 @@ public class UserShader
     @Override
     public boolean equals(Object obj)
     {
-        if (obj instanceof UserShader)
+        if (obj instanceof ShaderInfo)
         {
-            UserShader otherShader = (UserShader) obj;
+            ShaderInfo otherShader = (ShaderInfo) obj;
             return Objects.equals(this.filename, otherShader.filename)
                 && Objects.equals(this.defines, otherShader.defines);
         }

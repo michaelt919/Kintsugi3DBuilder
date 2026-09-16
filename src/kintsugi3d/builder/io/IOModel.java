@@ -21,7 +21,7 @@ import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.EventDispatcher;
 import kintsugi3d.builder.util.EventListeners;
@@ -140,7 +140,7 @@ public class IOModel implements IO
     }
 
     @Override
-    public ProjectRenderableInstance<?> getRenderableForShader(UserShader shader)
+    public ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader)
     {
         return this.handler.getRenderableForShader(shader);
     }

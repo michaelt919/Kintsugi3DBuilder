@@ -9,18 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state.scene;
 
-import kintsugi3d.builder.core.viewset.View;
-
-import java.util.List;
-
-public interface CameraViewListModel
+public interface ActiveShaderModel extends ReadonlyUserShaderModel
 {
-    View getSelectedCameraView();
-    void setSelectedCameraView(View cameraView);
-    List<View> getCameraViewList();
-    void setCameraViewList(List<View> cameraViewList);
-    boolean isCameraViewSnapEnabled();
-    void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled);
+    void setActiveShader(ShaderInfo shaderInfo);
 }

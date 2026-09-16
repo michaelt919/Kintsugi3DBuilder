@@ -399,7 +399,7 @@ public class WelcomeWindowController
     {
         try
         {
-            File vsetFile = Global.state().getIOModel().getViewSetFileForProject(projFile);
+            File vsetFile = Global.io().getViewSetFileForProject(projFile);
             ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
             View representativeView = viewSet.getRepresentativeView();
             File thumbnailImageFile = representativeView.getThumbnailImageFile();

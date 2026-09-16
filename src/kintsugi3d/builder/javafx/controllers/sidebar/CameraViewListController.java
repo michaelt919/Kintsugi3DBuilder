@@ -16,7 +16,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.javafx.internal.ObservableCameraViewListModel;
+import kintsugi3d.builder.javafx.internal.ObservableViewListModel;
 
 public class CameraViewListController
 {
@@ -26,7 +26,7 @@ public class CameraViewListController
 
     private SearchableListView<View> searchableListView;
 
-    public void init(ObservableCameraViewListModel cameraViewListModel)
+    public void init(ObservableViewListModel cameraViewListModel)
     {
         cameraViewListModel.setSelectedCameraViewModel(cameraViewList.getSelectionModel());
         cameraViewListModel.setCameraViewListProperty(cameraViewList.itemsProperty());

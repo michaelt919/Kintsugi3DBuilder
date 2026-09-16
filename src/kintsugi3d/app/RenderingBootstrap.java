@@ -17,11 +17,11 @@ import kintsugi3d.builder.core.SynchronizedWindow;
 import kintsugi3d.builder.core.WindowSynchronization;
 import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.rendering.*;
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
+import kintsugi3d.builder.state.scene.ActiveShaderModel;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
-import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.tools.*;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
@@ -162,10 +162,10 @@ public final class RenderingBootstrap
         ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
         ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
         ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
-        UserShaderModel userShaderModel = MultithreadState.getInstance().getUserShaderModel();
+        ActiveShaderModel activeShaderModel = MultithreadState.getInstance().getUserShaderModel();
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-        CameraViewListModel cameraViewListModel = Global.state().getCameraViewListModel();
-        IOModel ioModel = Global.state().getIOModel();
+        SelectableViewListModel viewListModel = Global.state().getViewListModel();
+        IOModel ioModel = Global.io();
 
         ToolBindingModel toolBindingModel = createToolBinding();
 
@@ -173,8 +173,8 @@ public final class RenderingBootstrap
         instanceManager.setObjectModel(objectModel);
         instanceManager.setCameraModel(cameraModel);
         instanceManager.setLightingModel(lightingModel);
-        instanceManager.setUserShaderModel(userShaderModel);
-        instanceManager.setCameraViewListModel(cameraViewListModel);
+        instanceManager.setUserShaderModel(activeShaderModel);
+        instanceManager.setCameraViewListModel(viewListModel);
         instanceManager.setSettingsModel(settingsModel);
 
         // Replace the temporary sentinel with the actual scene viewport from the instance manager.
@@ -225,8 +225,6 @@ public final class RenderingBootstrap
                 }
             }
         });
-
-        MultithreadState.getInstance().getCanvasListModel().setInstanceManager(instanceManager);
 
         GraphicsRequestQueue requestQueue = Rendering.getRequestQueue();
 
@@ -371,7 +369,7 @@ public final class RenderingBootstrap
         // Load project if requested
         if (args.length >= 1)
         {
-            Global.state().getIOModel().loadExistingProject(new File(args[0])); // Should initialize requestQueue
+             Global.io().loadExistingProject(new File(args[0])); // Should initialize requestQueue
         }
 
         // Execute command if requested, using reflection

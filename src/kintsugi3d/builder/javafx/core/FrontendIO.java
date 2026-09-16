@@ -62,8 +62,7 @@ public final class FrontendIO
     {
         // Try to initialize file chooser in advance of when it will be needed.
         Platform.runLater(this::getProjectFileChooserSafe);
-
-        Global.state().getIOModel().addProgressMonitor(new DefaultProgressMonitor()
+        Global.io().addProgressMonitor(new DefaultProgressMonitor()
         {
             @Override
             public void cancelComplete(UserCancellationException e)
@@ -160,7 +159,7 @@ public final class FrontendIO
             if (selectedFile != null)
             {
                 //opens project and also updates the recently opened files list
-                Global.state().getIOModel().loadExistingProject(selectedFile);
+                Global.io().loadExistingProject(selectedFile);
             }
         }
     }
@@ -169,7 +168,7 @@ public final class FrontendIO
     {
         if (confirmClose("Are you sure you want to open another project?"))
         {
-            Global.state().getIOModel().loadExistingProject(file);
+            Global.io().loadExistingProject(file);
         }
     }
 
@@ -181,7 +180,7 @@ public final class FrontendIO
      */
     public void saveProject(Window parentWindow)
     {
-        saveProject(Global.state().getIOModel().getLoadedProjectFile(), parentWindow);
+        saveProject(Global.io().getLoadedProjectFile(), parentWindow);
     }
 
     /**
@@ -200,7 +199,7 @@ public final class FrontendIO
         {
             try
             {
-                Global.state().getIOModel().saveProject(projectFile, () ->
+                Global.io().saveProject(projectFile, () ->
                 {
                     // Display message when all textures have been saved on graphics thread.
                     // TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
@@ -235,7 +234,7 @@ public final class FrontendIO
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
         fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
 
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
         File projectFile = ioModel.getLoadedProjectFile();
         File vsetFile = ioModel.getLoadedViewSetFile();
 
@@ -306,7 +305,7 @@ public final class FrontendIO
     {
         if (confirmClose("Are you sure you want to close the current project?"))
         {
-            Global.state().getIOModel().closeProject();
+            Global.io().closeProject();
         }
     }
 }

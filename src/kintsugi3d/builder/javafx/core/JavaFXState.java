@@ -19,8 +19,8 @@ public final class JavaFXState
     private final ObservableEnvironmentModel environmentModel;
     private final ObservableLightingEnvironmentModel lightingModel;
     private final ObservableObjectPoseModel objectModel;
-    private final ObservableUserShaderModel userShaderModel;
-    private final ObservableCameraViewListModel cameraViewListModel;
+    private final ObservableActiveShaderModel userShaderModel;
+    private final ObservableViewListModel cameraViewListModel;
     private final ObservableLoadOptionsModel loadOptionsModel;
     private final ObservableGeneralSettingsModel settingsModel;
     private final ObservableProjectModel projectModel;
@@ -34,8 +34,8 @@ public final class JavaFXState
         environmentModel = new ObservableEnvironmentModel();
         objectModel = new ObservableObjectPoseModel();
         lightingModel = new ObservableLightingEnvironmentModel(environmentModel);
-        userShaderModel = new ObservableUserShaderModel();
-        cameraViewListModel = new ObservableCameraViewListModel();
+        userShaderModel = new ObservableActiveShaderModel();
+        cameraViewListModel = new ObservableViewListModel();
         loadOptionsModel = new ObservableLoadOptionsModel();
         settingsModel = new ObservableGeneralSettingsModel();
         projectModel = new ObservableProjectModel();
@@ -64,12 +64,12 @@ public final class JavaFXState
         return objectModel;
     }
 
-    public ObservableUserShaderModel getUserShaderModel()
+    public ObservableActiveShaderModel getUserShaderModel()
     {
         return userShaderModel;
     }
 
-    public ObservableCameraViewListModel getCameraViewListModel()
+    public ObservableViewListModel getCameraViewListModel()
     {
         return cameraViewListModel;
     }

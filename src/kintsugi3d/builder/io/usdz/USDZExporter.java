@@ -159,7 +159,7 @@ public abstract class USDZExporter extends MaterialExporter
     public void saveTextures(File outputDirectory)
     {
         outputPath = outputDirectory;
-        tempPath = new File(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory(), "temp");
+        tempPath = new File(Global.io().getLoadedViewSet().getSupportingFilesDirectory(), "temp");
         super.saveTextures(tempPath);
     }
 }

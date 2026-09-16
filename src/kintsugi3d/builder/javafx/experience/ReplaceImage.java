@@ -33,7 +33,7 @@ public class ReplaceImage extends ExperienceBase
 
     private void initWithReattempt()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
         if (ioModel.hasValidHandler()) // might not be valid immediately as the rendering thread is booting up
         {
             ioModel.addMainRenderableLoadCallback(instance ->

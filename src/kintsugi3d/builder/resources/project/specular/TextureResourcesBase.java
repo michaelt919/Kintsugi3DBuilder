@@ -139,7 +139,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             try (BasisImageCreator<ContextType> basisImageCreator =
                      new BasisImageCreator<>(getContext(), getBasisResources().getBasisResolution()))
             {
-                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                ViewSet viewSet = Global.io().getLoadedViewSet();
                 basisImageCreator.createImages(this, viewSet.getThumbnailImageDirectory());
             }
             catch (IOException e)
@@ -160,7 +160,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
             try
             {
-                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                ViewSet viewSet = Global.io().getLoadedViewSet();
                 File supportingFilesDir = viewSet.getSupportingFilesDirectory();
 
                 // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)

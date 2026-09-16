@@ -169,7 +169,9 @@ public class JavaFXApplication extends Application
         state = JavaFXState.create();
 
         // Inject dependency for global state.
-        GlobalBootstrap.initialize(MultithreadState.getInstance());
+        MultithreadState multithreadState = MultithreadState.getInstance();
+        GlobalBootstrap.initialize(multithreadState,
+            multithreadState.getLoadOptionsModel(), multithreadState.getProjectModel());
 
 //        for (String f : Font.getFamilies())
 //        {
@@ -352,6 +354,7 @@ public class JavaFXApplication extends Application
             WindowSynchronization.getInstance().quit();
         });
 
+        // Allow frontend to react to IO events
         state.getProjectModel().registerIOListeners();
 
         for (Consumer<Stage> l : START_LISTENERS)
@@ -403,7 +406,7 @@ public class JavaFXApplication extends Application
 
     private static void clearMainViewSafeRegion()
     {
-        ProjectRenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
+                ProjectRenderableInstance<?> instance = Global.io().getMainRenderable();
         if (instance != null)
         {
             instance.clearSafeRegionPadding();
@@ -412,7 +415,7 @@ public class JavaFXApplication extends Application
 
     private static void refreshMainViewSafeRegion(double carouselHeight)
     {
-        ProjectRenderableInstance<?> instance = Global.state().getIOModel().getMainRenderable();
+                ProjectRenderableInstance<?> instance = Global.io().getMainRenderable();
         if (instance != null)
         {
             instance.setSafeRegionPadding(0, 0, 0, (int)Math.round(carouselHeight));

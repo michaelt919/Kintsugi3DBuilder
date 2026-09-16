@@ -48,7 +48,7 @@ public abstract class ProjectModelBase<
 
     public void registerIOListeners()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         ioModel.projectOpenedListeners().addListener(event ->
         {

@@ -103,7 +103,7 @@ public class ProgressBarsController
         cancelButton.disableProperty().bind(getProcessingProperty().not());
         doneButton.disableProperty().bind(getProcessingProperty());
 
-        Global.state().getIOModel().addProgressMonitor(
+                Global.io().addProgressMonitor(
             new Monitor(cancelRequested, localProgressBar, overallProgressBar, overallTextLabel, localTextLabel, cancelButton));
 
         INSTANCE = this;

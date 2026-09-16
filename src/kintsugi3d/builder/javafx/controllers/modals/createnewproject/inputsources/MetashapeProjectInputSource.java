@@ -83,7 +83,7 @@ public class MetashapeProjectInputSource extends NonValidatedInputSourceBase
                 model.getLoadPreferences().setOrientationViewName(getViewSelection());
                 model.getLoadPreferences().setOrientationViewRotateDegrees(getViewRotation());
                 model.getLoadPreferences().setDisabledImageFiles(getDisabledImages());
-                Global.state().getIOModel().loadFromMetashapeModel(projectFileToSave, model);
+                Global.io().loadFromMetashapeModel(projectFileToSave, model);
             }
         };
     }

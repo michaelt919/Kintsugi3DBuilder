@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,38 +12,38 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
-import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.builder.state.scene.UserShaderModel;
+import kintsugi3d.builder.state.scene.ActiveShaderModel;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.util.function.Consumer;
 
-public class SynchronizedUserShaderModel implements UserShaderModel
+public class SynchronizedActiveShaderModel implements ActiveShaderModel
 {
-    private final UserShaderModel base;
+    private final ActiveShaderModel base;
 
-    private final SynchronizedValue<UserShader> userShader;
+    private final SynchronizedValue<ShaderInfo> activeShader;
 
-    public SynchronizedUserShaderModel(UserShaderModel base)
+    public SynchronizedActiveShaderModel(ActiveShaderModel base)
     {
         this.base = base;
-        this.userShader = SynchronizedValue.createFromFunctions(base::getUserShader, base::setUserShader);
+        this.activeShader = SynchronizedValue.createFromFunctions(base::getActiveShader, base::setActiveShader);
     }
 
     @Override
-    public UserShader getUserShader()
+    public ShaderInfo getActiveShader()
     {
-        return userShader.getValue();
+        return activeShader.getValue();
     }
 
     @Override
-    public void registerHandler(Consumer<UserShader> shaderHandler)
+    public void registerHandler(Consumer<ShaderInfo> shaderHandler)
     {
         Platform.runLater(() -> base.registerHandler(shaderHandler));
     }
 
     @Override
-    public void setUserShader(UserShader userShader)
+    public void setActiveShader(ShaderInfo shaderInfo)
     {
-        this.userShader.setValue(userShader);
+        this.activeShader.setValue(shaderInfo);
     }
 }

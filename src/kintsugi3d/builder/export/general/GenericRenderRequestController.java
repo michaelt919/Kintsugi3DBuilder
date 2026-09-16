@@ -62,7 +62,7 @@ public class GenericRenderRequestController implements Initializable
 
     public void run()
     {
-        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        if (Global.io().getProgressMonitor().isConflictingProcess())
         {
             return;
         }

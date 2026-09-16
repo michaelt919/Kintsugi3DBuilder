@@ -198,7 +198,7 @@ public class EyedropperController extends NonDataPageControllerBase
             //initialize txtFields with their respective values
             if (hasValidIOModel())
             {
-                IOModel ioModel = Global.state().getIOModel();
+                IOModel ioModel = Global.io();
 
                 // Initialize from loaded view set (projectSettingsManager will handle flatfieldCorrected)
                 ViewSet viewSet = ioModel.getLoadedViewSet();
@@ -262,7 +262,7 @@ public class EyedropperController extends NonDataPageControllerBase
         }
         else
         {
-            ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
+            ViewSet viewSet = Global.io().validateRenderable().getLoadedViewSet();
             return viewSet.getPrimaryView().tryFindFullResImageFile();
         }
     }
@@ -281,7 +281,7 @@ public class EyedropperController extends NonDataPageControllerBase
         {
             projectSettingsManager.cancel(); // for flatfield setting
 
-            IOModel ioModel = Global.state().getIOModel();
+            IOModel ioModel = Global.io();
             ioModel.requestLightIntensityCalibration(); // in case "infinite light sources" was toggled
 
             // revert the tone calibration to what it was when the page was opened.
@@ -658,7 +658,7 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void apply()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         // light intensities depend on whether inverse-square attenuation is enabled
         ioModel.requestLightIntensityCalibration();
@@ -767,7 +767,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static boolean hasValidIOModel()
     {
-        return Global.state().getIOModel().hasLoadedRenderable();
+        return Global.io().hasLoadedRenderable();
     }
 
 //    public void ExitEyeDropper(){
@@ -804,7 +804,7 @@ public class EyedropperController extends NonDataPageControllerBase
         fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", VALID_EXTENSIONS));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+        ViewSet viewSet = Global.io().getLoadedViewSet();
         if (viewSet == null)
         {
             Alert alert = new Alert(AlertType.ERROR, "Please load a model before performing tone calibration.");
@@ -872,7 +872,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     public void reset()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         // Clear tonemapping and reset text fields to a standard curve
         ioModel.clearTonemapping();

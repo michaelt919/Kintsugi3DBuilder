@@ -12,17 +12,18 @@
 package kintsugi3d.app;
 
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.multithread.*;
-import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.CacheModel;
+import kintsugi3d.builder.state.CarouselModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.ActiveShaderModel;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
-import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
@@ -30,15 +31,13 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     private final ManipulableViewpointModel cameraModel;
     private final ManipulableLightingEnvironmentModel lightingModel;
     private final ManipulableObjectPoseModel objectModel;
-    private final UserShaderModel userShaderModel;
-    private final CameraViewListModel cameraViewListModel;
+    private final ActiveShaderModel activeShaderModel;
+    private final SelectableViewListModel viewListModel;
     private final ProjectModel projectModel;
     private final CarouselModel carouselModel;
 
     private final GeneralSettingsModel settingsModel;
     private final LoadOptionsModel loadOptionsModel;
-    private final CanvasListModel canvasListModel;
-    private final IOModel ioModel;
     private final CacheModel cacheModel;
 
     private final TabsModel tabsModel;
@@ -56,8 +55,8 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         cameraModel = new SynchronizedCameraModel(base.getCameraModel());
         objectModel = new SynchronizedObjectPoseModel(base.getObjectModel());
         lightingModel = new SynchronizedLightingEnvironmentModel(base.getLightingModel());
-        userShaderModel = new SynchronizedUserShaderModel(base.getUserShaderModel());
-        cameraViewListModel = new SynchronizedCameraViewListModel(base.getCameraViewListModel());
+        activeShaderModel = new SynchronizedActiveShaderModel(base.getUserShaderModel());
+        viewListModel = new SynchronizedViewListModel(base.getCameraViewListModel());
         projectModel = new SynchronizedProjectModel(base.getProjectModel());
         settingsModel = new SynchronizedGeneralSettingsModel(base.getSettingsModel());
         tabsModel = new SynchronizedTabsModel(base.getTabModels());
@@ -70,12 +69,7 @@ public final class MultithreadState implements Kintsugi3DBuilderState
         // In practice, this hasn't proven to be necessary.)
         cacheModel = base.getCacheModel();
 
-
-        canvasListModel = new CanvasListModelImpl();
-
         loadOptionsModel = new SynchronizedLoadOptionsModel(base.getLoadOptionsModel());
-        ioModel = new IOModel();
-        ioModel.setLoadOptionsModel(loadOptionsModel);
     }
 
     @Override
@@ -97,15 +91,15 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     }
 
     @Override
-    public UserShaderModel getUserShaderModel()
+    public ActiveShaderModel getUserShaderModel()
     {
-        return  userShaderModel;
+        return activeShaderModel;
     }
 
     @Override
-    public CameraViewListModel getCameraViewListModel()
+    public SelectableViewListModel getViewListModel()
     {
-        return cameraViewListModel;
+        return viewListModel;
     }
 
     @Override
@@ -117,18 +111,6 @@ public final class MultithreadState implements Kintsugi3DBuilderState
     public GeneralSettingsModel getSettingsModel()
     {
         return settingsModel;
-    }
-
-    @Override
-    public IOModel getIOModel()
-    {
-        return ioModel;
-    }
-
-    @Override
-    public CanvasListModel getCanvasListModel()
-    {
-        return canvasListModel;
     }
 
     @Override

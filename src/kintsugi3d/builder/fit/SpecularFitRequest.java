@@ -74,7 +74,7 @@ public class SpecularFitRequest implements ProgressMonitoredProjectGraphicsReque
 
     private static SpecularFitSettings getSettingsFromProject()
     {
-        GeneralSettingsModel projectSettings = Global.state().getIOModel()
+        GeneralSettingsModel projectSettings = Global.io()
             .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 
@@ -169,7 +169,7 @@ public class SpecularFitRequest implements ProgressMonitoredProjectGraphicsReque
             renderable.reloadShaders();
 
             // Save project to avoid inconsistency between results and settings
-            Global.state().getIOModel().saveProject(() ->
+            Global.io().saveProject(() ->
             {
                 // Perform reconstruction
                 //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());

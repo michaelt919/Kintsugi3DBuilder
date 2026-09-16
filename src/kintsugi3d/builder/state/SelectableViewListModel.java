@@ -11,17 +11,16 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
-import kintsugi3d.builder.state.scene.UserShader;
-import kintsugi3d.gl.window.FramebufferCanvas;
+import kintsugi3d.builder.core.viewset.View;
 
-import java.util.function.Consumer;
+import java.util.List;
 
-public interface CanvasListModel
+public interface SelectableViewListModel
 {
-    void setInstanceManager(ProjectInstanceManager<?> instanceManager);
-    void createCanvas(UserShader shader, int width, int height,
-                      int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
-                      Consumer<FramebufferCanvas<?>> framebufferCallback);
-    void removeCanvas(UserShader shader);
+    View getSelectedView();
+    void setSelectedView(View cameraView);
+    List<View> getViewList();
+    void setViewList(List<View> cameraViewList);
+    boolean isViewSnapEnabled();
+    void setViewSnapEnabled(boolean cameraViewSnapEnabled);
 }

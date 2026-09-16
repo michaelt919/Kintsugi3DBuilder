@@ -11,17 +11,23 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.io.IOModel;
+import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.state.project.ProjectModel;
+
 public final class GlobalBootstrap
 {
     private static final Object INITIALIZATION_LOCK = new Object();
 
     private static volatile Kintsugi3DBuilderState state;
+    private static final IOModel IO = new IOModel();
 
     private GlobalBootstrap()
     {
     }
 
-    public static void initialize(Kintsugi3DBuilderState injectedState)
+    public static void initialize(
+        Kintsugi3DBuilderState injectedState, ReadonlyLoadOptionsModel loadOptionsModel, ProjectModel projectModel)
     {
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)
@@ -29,6 +35,9 @@ public final class GlobalBootstrap
             if (state == null)
             {
                 state = injectedState;
+
+                IO.setLoadOptionsModel(loadOptionsModel);
+//                IO.setProjectModel(projectModel);
             }
             else
             {
@@ -48,5 +57,10 @@ public final class GlobalBootstrap
         {
             throw new IllegalStateException("Global state has not been initialized.");
         }
+    }
+
+    static IOModel getIOModel()
+    {
+        return IO;
     }
 }
