@@ -291,7 +291,7 @@ public class JavaFXApplication extends Application
             ButtonType showLog = new ButtonType("Show Log", ButtonData.YES);
             Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
-                event -> ExperienceManager.getInstance().getExperience("Log").tryOpen());
+                event -> ExperienceManager.getInstance().getExperience(ExperienceManager.LOG).tryOpen());
             alert.show();
         }
 
@@ -353,9 +353,6 @@ public class JavaFXApplication extends Application
             event.consume();
             WindowSynchronization.getInstance().quit();
         });
-
-        // Allow frontend to react to IO events
-        state.getProjectModel().registerIOListeners();
 
         for (Consumer<Stage> l : START_LISTENERS)
         {

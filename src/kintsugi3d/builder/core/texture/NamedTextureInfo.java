@@ -49,9 +49,9 @@ public class NamedTextureInfo extends TextureInfo
     }
 
     @Override
-    public ImageReplaceData getReplaceData(ProjectRenderableInstance<?> instance)
+    public ImageReplacer getReplaceData(ProjectRenderableInstance<?> instance)
     {
-                return new NamedTextureReplaceData(instance.getResources().getTextureResources(), this,
+                return new NamedTextureReplacer(instance.getResources().getTextureResources(), this,
             new File(Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
                 TextureResources.getTextureFilename(name)));
     }

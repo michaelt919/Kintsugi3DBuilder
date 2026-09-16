@@ -11,11 +11,12 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.texture.ImageReplaceData;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.events.ProjectLoadedEvent;
+import kintsugi3d.builder.io.events.ProjectLoadedListener;
 import kintsugi3d.builder.io.gltf.ModelExporter;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
@@ -30,6 +31,8 @@ import kintsugi3d.builder.resources.DynamicResourceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -50,7 +53,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements ProjectRenderableInstance<ContextType>
@@ -93,7 +95,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
 
-    private Consumer<ImageReplaceData> userImageReplaceHandler;
+    private final EventDispatcher<ProjectLoadedListener, ProjectLoadedEvent> projectLoaded
+        = new EventDispatcher<>(ProjectLoadedListener::onProjectLoaded);
 
     private boolean loaded = false;
 
@@ -129,6 +132,11 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
     public String getID()
     {
         return id;
+    }
+
+    public EventListeners<ProjectLoadedListener> projectLoadedListeners()
+    {
+        return projectLoaded;
     }
 
     public RenderingSubject<ContextType> getSubject()
@@ -460,6 +468,8 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                     // First frame drawn successfully.
                     loaded = true;
 
+                    projectLoaded.notifyListeners(new ProjectLoadedEvent(getGeometry().getBoundingBoxSize()));
+
                     if (this.progressMonitor != null)
                     {
                         this.progressMonitor.complete();
@@ -657,20 +667,5 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                 LOG.error("Error occurred during glTF export:", e);
             }
         }
-    }
-
-    @Override
-    public void invokeUserImageReplacement(ImageReplaceData imageReplaceData)
-    {
-        if (userImageReplaceHandler != null)
-        {
-            userImageReplaceHandler.accept(imageReplaceData);
-        }
-    }
-
-    @Override
-    public void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler)
-    {
-        this.userImageReplaceHandler = userImageReplaceHandler;
     }
 }

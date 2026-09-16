@@ -16,14 +16,12 @@ import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
 import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -182,14 +180,9 @@ public class SpecularFitRequest implements ProgressMonitoredProjectGraphicsReque
                     }
                     catch (IOException e)
                     {
-                        ExceptionHandling.error("Error launching Kintsugi 3D Viewer", e);
+                        Global.state().getProjectModel().error("Error launching Kintsugi 3D Viewer", e);
                     }
                 }
-
-                ProjectModel projectModel = Global.state().getProjectModel();
-                projectModel.setProjectProcessed(true);
-                projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
-                projectModel.notifyProcessingComplete();
 
                 // Refresh tabs
                 new TabsManager(renderable).refreshAllTabs();
@@ -197,7 +190,7 @@ public class SpecularFitRequest implements ProgressMonitoredProjectGraphicsReque
         }
         catch (IOException | ParserConfigurationException | TransformerException e)
         {
-            ExceptionHandling.error("Error executing specular fit request", e);
+            Global.state().getProjectModel().error("Error executing specular fit request", e);
         }
     }
 

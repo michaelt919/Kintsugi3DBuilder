@@ -50,9 +50,9 @@ public class WeightmapTextureInfo extends TextureInfo
     }
 
     @Override
-    public ImageReplaceData getReplaceData(ProjectRenderableInstance<?> instance)
+    public ImageReplacer getReplaceData(ProjectRenderableInstance<?> instance)
     {
-                return new WeightmapReplaceData(instance.getResources().getTextureResources(), weightmapIndex,
+                return new WeightmapReplacer(instance.getResources().getTextureResources(), weightmapIndex,
             new File(Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
                 TextureResources.getUnpackedWeightMapFilename(weightmapIndex)));
     }

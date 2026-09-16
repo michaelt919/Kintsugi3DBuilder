@@ -18,11 +18,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class WeightmapReplaceData extends ImageReplaceData
+public class WeightmapReplacer extends ImageReplacer
 {
     private final int weightmapIndex;
 
-    public WeightmapReplaceData(TextureResources<?> resources, int weightmapIndex, File currentImage)
+    public WeightmapReplacer(TextureResources<?> resources, int weightmapIndex, File currentImage)
     {
         super(resources);
         this.weightmapIndex = weightmapIndex;

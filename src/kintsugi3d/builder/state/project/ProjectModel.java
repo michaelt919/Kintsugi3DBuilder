@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.state.project;
 
+import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -24,8 +25,6 @@ import java.io.IOException;
  */
 public interface ProjectModel
 {
-    String NULL_PROJECT_NAME = "No Project";
-
     /**
      * Parses an XML document, typically read from a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
      */
@@ -40,25 +39,30 @@ public interface ProjectModel
     void setColorCheckerFile(File colorCheckerFile);
 
     String getProjectName();
-
     boolean isProjectOpen();
     boolean isProjectLoaded();
     boolean isProjectProcessed();
-    int getProcessedTextureResolution();
+    int getProcessedTextureWidth();
+    int getProcessedTextureHeight();
     Vector3 getModelSize();
 
+    /**
+     * Logs an error immediately and asynchronously displays an alert to the user.
+     * Expected to be thread-safe in all implementations.
+     * @param message
+     * @param e
+     */
+    void error(String message, Throwable e);
+
+    /**
+     * Logs a warning immediately and asynchronously displays an alert to the user.
+     * Expected to be thread-safe in all implementations.
+     * @param message
+     * @param e
+     */
+    void warn(String message, Throwable e);
+
+    void cancelled(String message);
     void confirm(String title, String header, String message, Runnable onConfirm);
-
-    void setProjectOpen(boolean projectOpen);
-    void setProjectName(String projectName);
-    default void clearProjectName()
-    {
-        this.setProjectName(NULL_PROJECT_NAME);
-    }
-    void setProjectLoaded(boolean projectLoaded);
-    void setProjectProcessed(boolean projectProcessed);
-    void setProcessedTextureResolution(int processedTextureResolution);
-    void setModelSize(Vector3 modelSize);
-
-    void notifyProcessingComplete();
+    void requestUserImageReplacement(ImageReplacer imageReplacer);
 }

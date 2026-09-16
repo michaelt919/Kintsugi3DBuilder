@@ -15,9 +15,14 @@ import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
+import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.io.events.ProjectProcessedEvent;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -28,6 +33,7 @@ import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,35 +49,35 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
      * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to determine view vectors, and for performing projective texture mapping with an image-space implementation.
      */
-    public final UniformBuffer<ContextType> cameraPoseBuffer;
+    private final UniformBuffer<ContextType> cameraPoseBuffer;
 
     /**
      * A GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light
      * fields).
      * Assumed by convention to be in camera space.
      */
-    public final UniformBuffer<ContextType> lightPositionBuffer;
+    private final UniformBuffer<ContextType> lightPositionBuffer;
 
     /**
      * A GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light
      * fields).
      */
-    public final UniformBuffer<ContextType> lightIntensityBuffer;
+    private final UniformBuffer<ContextType> lightIntensityBuffer;
 
     /**
      * A GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
      */
-    public final UniformBuffer<ContextType> lightIndexBuffer;
+    private final UniformBuffer<ContextType> lightIndexBuffer;
 
     /**
      * A GPU buffer containing the weights associated with all the views (determined by the distance from other views).
      */
-    public final UniformBuffer<ContextType> viewWeightBuffer;
+    private final UniformBuffer<ContextType> viewWeightBuffer;
 
     /**
      * A GPU buffer containing the indices of enabled and non-deleted cameras
      */
-    public final UniformBuffer<ContextType> viewIndexBuffer;
+    private final UniformBuffer<ContextType> viewIndexBuffer;
 
     /**
      * Contains the VBOs for positions, tex-coords, normals, and tangents
@@ -87,6 +93,9 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     private final ViewSet viewSet;
 
     private float[] viewWeights;
+
+    private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
+        = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     GraphicsResourcesCommon(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
@@ -466,7 +475,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     /**
      * Refresh the view index data in the uniform buffers using the current values in the view set.
      */
-    public void updateViewIndicesData()
+    private void updateViewIndicesData()
     {
         ReadonlyNativeVectorBuffer viewIndexData = viewSet.getViewIndexData();
         if (viewIndexBuffer != null && viewIndexData != null)
@@ -478,11 +487,43 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         computeViewWeights();
     }
 
-    public void replaceTextureResources(TextureResources<ContextType> textureResources)
+    public boolean hasProcessedWeightMaps()
+    {
+        return textureResources.getBasisWeightResources() != null;
+    }
+
+    /**
+     *
+     * @return The texture resolution of the weight maps if the project has been fully processed
+     */
+    public IntVector2 getProcessedWeightMapResolution()
+    {
+        BasisWeightResources<?> basisWeightResources = textureResources.getBasisWeightResources();
+        if (basisWeightResources != null)
+        {
+            return new IntVector2(basisWeightResources.weightMaps.getWidth(), basisWeightResources.weightMaps.getHeight());
+        }
+        else
+        {
+            throw new IllegalStateException("Project has not been processed.");
+        }
+    }
+
+    public EventListeners<ProjectProcessedListener> weightMapsProcessedListeners()
+    {
+        return projectProcessed;
+    }
+
+    public void replaceTextureResources(TextureResources<ContextType> newTextureResources)
     {
         this.textureResources.close();
+        this.textureResources = newTextureResources == null ? TextureResources.makeNull(context) : newTextureResources;
 
-        this.textureResources = textureResources == null ? TextureResources.makeNull(context) : textureResources;
+        if (hasProcessedWeightMaps())
+        {
+            IntVector2 processedTextureResolution = getProcessedWeightMapResolution();
+            projectProcessed.notifyListeners( new ProjectProcessedEvent(processedTextureResolution.x, processedTextureResolution.y));
+        }
     }
 
     /**

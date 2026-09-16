@@ -191,6 +191,9 @@ public final class RenderingBootstrap
         ioModel.setLoadingHandler(instanceManager);
         Rendering.initialize(context, instanceManager);
 
+        // Allow frontend to react to IO events
+        JavaFXApplication.getState().getProjectModel().registerIOListeners();
+
         CanvasListener canvasListener = ToolBox.Builder.create()
             .setCameraModel(cameraModel)
             .setLightingModel(lightingModel)

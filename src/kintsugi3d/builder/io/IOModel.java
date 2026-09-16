@@ -18,13 +18,13 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.EventDispatcher;
 import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.material.ImportedMaterial;
@@ -53,7 +53,6 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public class IOModel implements IO
@@ -75,11 +74,6 @@ public class IOModel implements IO
         = new EventDispatcher<>(ProjectSavedListener::onProjectSaved);
     private final EventDispatcher<ProjectClosedListener, ProjectClosedEvent> projectClosed
         = new EventDispatcher<>(ProjectClosedListener::onProjectClosed);
-
-    private final EventDispatcher<ProjectLoadedListener, ProjectLoadedEvent> projectLoaded
-        = new EventDispatcher<>(ProjectLoadedListener::onProjectLoaded);
-    private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
-        = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     public ProgressMonitor getProgressMonitor()
     {
@@ -124,13 +118,13 @@ public class IOModel implements IO
     @Override
     public EventListeners<ProjectLoadedListener> projectLoadedListeners()
     {
-        return projectLoaded;
+        return handler.projectLoadedListeners();
     }
 
     @Override
     public EventListeners<ProjectProcessedListener> projectProcessedListeners()
     {
-        return projectProcessed;
+        return handler.projectProcessedListeners();
     }
 
     @Override
@@ -146,15 +140,15 @@ public class IOModel implements IO
     }
 
     @Override
-    public void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback)
-    {
-        this.handler.addMainRenderableLoadCallback(callback);
-    }
-
-    @Override
     public ViewSet getLoadedViewSet()
     {
         return this.handler.getLoadedViewSet();
+    }
+
+    @Override
+    public ReadonlyVertexGeometry getLoadedGeometry()
+    {
+        return this.handler.getLoadedGeometry();
     }
 
     @Override
@@ -200,7 +194,7 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
-                loadFailedOrCancelled();
+                closeProject();
             }
         });
     }
@@ -217,7 +211,7 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
-                loadFailedOrCancelled();
+                closeProject();
             }
         });
     }
@@ -233,7 +227,7 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
-                loadFailedOrCancelled();
+                closeProject();
             }
         });
     }
@@ -266,7 +260,7 @@ public class IOModel implements IO
             }
             catch (RuntimeException | IOException | SAXException | ParserConfigurationException e)
             {
-                ExceptionHandling.error("An error occurred opening project", e);
+                Global.state().getProjectModel().error("An error occurred opening project", e);
                 vsetFile = null;
             }
         }
@@ -303,7 +297,7 @@ public class IOModel implements IO
                 catch (Exception e)
                 {
                     LOG.error("Error loading project", e);
-                    loadFailedOrCancelled();
+                    closeProject();
                 }
                 catch (Error e)
                 {
@@ -371,11 +365,6 @@ public class IOModel implements IO
     public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
     {
         return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
-    }
-
-    private static void loadFailedOrCancelled()
-    {
-        Global.state().getProjectModel().setProjectOpen(false);
     }
 
     private static Document openProjectFileAsXMLDocument(File projectFile) throws SAXException, IOException, ParserConfigurationException

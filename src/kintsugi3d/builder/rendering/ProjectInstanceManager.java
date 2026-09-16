@@ -20,6 +20,10 @@ import kintsugi3d.builder.io.IOHandler;
 import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.builder.io.events.ProjectLoadedEvent;
+import kintsugi3d.builder.io.events.ProjectLoadedListener;
+import kintsugi3d.builder.io.events.ProjectProcessedEvent;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
@@ -32,10 +36,13 @@ import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.*;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.window.FramebufferCanvas;
 import kintsugi3d.util.EncodableColorImage;
@@ -77,8 +84,15 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private ReadonlyGeneralSettingsModel settingsModel;
     private SelectableViewListModel viewListModel;
 
+    // These are one-shot callbacks for queuing up graphics requests before a project is loaded
     private final List<Consumer<ProjectRenderableInstance<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
+
+    // These are the ongoing listeners for UI synchronization
+    private final EventDispatcher<ProjectLoadedListener, ProjectLoadedEvent> projectLoaded
+        = new EventDispatcher<>(ProjectLoadedListener::onProjectLoaded);
+    private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
+        = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     public ProjectInstanceManager(ContextType context)
     {
@@ -110,6 +124,18 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         {
             progressMonitor.cancelComplete(e);
         }
+    }
+
+    @Override
+    public EventListeners<ProjectLoadedListener> projectLoadedListeners()
+    {
+        return projectLoaded;
+    }
+
+    @Override
+    public EventListeners<ProjectProcessedListener> projectProcessedListeners()
+    {
+        return projectProcessed;
     }
 
     @Override
@@ -270,14 +296,32 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
                 newInstance.close();
             }
 
-            // Invoke callbacks
-            for (Consumer<ProjectRenderableInstance<?>> callback : instanceLoadCallbacks)
+            synchronized (instanceLoadCallbacks)
             {
-                callback.accept(renderableInstance);
+                // Invoke callbacks
+                for (Consumer<ProjectRenderableInstance<?>> callback : instanceLoadCallbacks)
+                {
+                    callback.accept(renderableInstance);
+                }
+
+                // Clear the list of callbacks for the next load.
+                instanceLoadCallbacks.clear();
             }
 
-            // Clear the list of callbacks for the next load.
-            instanceLoadCallbacks.clear();
+            // Notify listeners that project has loaded
+            projectLoaded.notifyListeners(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
+
+            GraphicsResourcesImageSpace<ContextType> resources = renderableInstance.getResources();
+            if (resources.hasProcessedWeightMaps())
+            {
+                // Project has been processed previously; notify listeners
+                IntVector2 weightMapResolution = resources.getProcessedWeightMapResolution();
+                projectProcessed.notifyListeners(new ProjectProcessedEvent(
+                    weightMapResolution.x, weightMapResolution.y));
+            }
+
+            // Ensure that the listeners are also notified if the project is processed in the future.
+            resources.weightMapsProcessedListeners().addListener(projectProcessed::notifyListeners);
 
             // Update once before drawing
             newInstance.update();

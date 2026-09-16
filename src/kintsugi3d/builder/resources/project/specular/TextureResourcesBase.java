@@ -16,7 +16,6 @@ import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.io.specular.WeightImageWriter;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +143,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             }
             catch (IOException e)
             {
-                ExceptionHandling.error("Error saving basis image thumbnails", e);
+                Global.state().getProjectModel().error("Error saving basis image thumbnails", e);
             }
         }
     }

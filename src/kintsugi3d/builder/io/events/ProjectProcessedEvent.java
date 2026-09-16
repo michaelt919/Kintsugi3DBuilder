@@ -13,10 +13,12 @@ package kintsugi3d.builder.io.events;
 
 public class ProjectProcessedEvent
 {
-    public final int textureResolution;
+    public final int textureWidth;
+    public final int textureHeight;
 
-    public ProjectProcessedEvent(int textureResolution)
+    public ProjectProcessedEvent(int textureWidth, int textureHeight)
     {
-        this.textureResolution = textureResolution;
+        this.textureWidth = textureWidth;
+        this.textureHeight = textureHeight;
     }
 }

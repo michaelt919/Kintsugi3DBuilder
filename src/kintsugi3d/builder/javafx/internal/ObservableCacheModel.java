@@ -23,7 +23,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.state.CacheModelBase;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import org.slf4j.Logger;
@@ -251,7 +250,7 @@ public class ObservableCacheModel extends CacheModelBase
         }
     }
 
-    private void checkforCleanupPrompts(double newCacheSizeGB, Consumer<Double> promptWithCacheSizeGB,
+    private static void checkforCleanupPrompts(double newCacheSizeGB, Consumer<Double> promptWithCacheSizeGB,
                                                Consumer<Double> noCleanupNeededWithCacheSizeGB)
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
@@ -279,12 +278,5 @@ public class ObservableCacheModel extends CacheModelBase
 
         // If the cache does not need to be cleaned up, then fire the "no cleanup needed" callback.
         noCleanupNeededWithCacheSizeGB.accept(newCacheSizeGB);
-    }
-
-    @Override
-    protected void handleCacheCleanupError(Exception e)
-    {
-        super.handleCacheCleanupError(e);
-        ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 }

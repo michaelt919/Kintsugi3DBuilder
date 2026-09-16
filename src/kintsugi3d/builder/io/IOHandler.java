@@ -13,9 +13,12 @@ package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.events.ProjectLoadedListener;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.util.EncodableColorImage;
@@ -24,7 +27,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public interface IOHandler
@@ -32,11 +34,13 @@ public interface IOHandler
     ViewSet getLoadedViewSet();
     VertexGeometry getLoadedGeometry();
 
+
     boolean isRenderableLoaded();
     ProjectRenderableInstance<?> getMainRenderable();
     ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader);
 
-    void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback);
+    EventListeners<ProjectLoadedListener> projectLoadedListeners();
+    EventListeners<ProjectProcessedListener> projectProcessedListeners();
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.

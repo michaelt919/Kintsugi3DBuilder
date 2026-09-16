@@ -11,43 +11,13 @@
 
 package kintsugi3d.builder.javafx.experience;
 
-import javafx.application.Platform;
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.texture.ImageReplaceData;
-import kintsugi3d.builder.io.IOModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.core.texture.ImageReplacer;
 
 import java.io.IOException;
 
 public class ReplaceImage extends ExperienceBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ReplaceImage.class);
-
-    private ImageReplaceData currentData;
-
-    public ReplaceImage()
-    {
-        Platform.runLater(this::initWithReattempt);
-    }
-
-    private void initWithReattempt()
-    {
-        IOModel ioModel = Global.io();
-        if (ioModel.hasValidHandler()) // might not be valid immediately as the rendering thread is booting up
-        {
-            ioModel.addMainRenderableLoadCallback(instance ->
-                instance.setUserImageReplaceHandler(replaceData ->
-                {
-                    this.currentData = replaceData;
-                    this.tryOpen();
-                }));
-        }
-        else // if not ready yet, try again on the next JavaFX tick.
-        {
-            Platform.runLater(this::initWithReattempt);
-        }
-    }
+    private ImageReplacer currentData;
 
     @Override
     public String getName() { return "Replace Texture"; }
@@ -56,5 +26,10 @@ public class ReplaceImage extends ExperienceBase
     protected void open() throws IOException
     {
         this.buildPagedModal(currentData).then("/fxml/modals/workflow/ReplaceImage.fxml").finish();
+    }
+
+    public void setData(ImageReplacer data)
+    {
+        this.currentData = data;
     }
 }

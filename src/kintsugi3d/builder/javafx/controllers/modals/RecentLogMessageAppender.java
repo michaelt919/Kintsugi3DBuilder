@@ -9,15 +9,14 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.util.logging;
+package kintsugi3d.builder.javafx.controllers.modals;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.Core;
-import org.apache.logging.log4j.core.Filter;
-import org.apache.logging.log4j.core.LogEvent;
+import kintsugi3d.builder.util.logging.LogMessage;
+import kintsugi3d.builder.util.logging.LogMessageListener;
+import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
@@ -30,23 +29,26 @@ import org.slf4j.event.Level;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 @Plugin(
         name = "RecentLogMessageAppender",
         category = Core.CATEGORY_NAME,
         elementType = Appender.ELEMENT_TYPE
 )
-public class RecentLogMessageAppender extends AbstractAppender
+public final class RecentLogMessageAppender extends AbstractAppender
 {
     private static final Logger LOG = LoggerFactory.getLogger(RecentLogMessageAppender.class);
+
     private static final int MAX_MESSAGES = 2000;
     private static final int MESSAGE_TRUNC_SIZE = 10;
-    private static RecentLogMessageAppender INSTANCE;
-    private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
-    private final List<LogMessageListener> listeners = new ArrayList<>();
 
-    protected RecentLogMessageAppender(String name, Filter filter, PatternLayout layout)
+    private static RecentLogMessageAppender INSTANCE;
+
+    private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
+    private final Collection<LogMessageListener> listeners = new ArrayList<>(1);
+
+    private RecentLogMessageAppender(String name, Filter filter, Layout<String> layout)
     {
         super(name, filter, layout);
         INSTANCE = this;
@@ -56,8 +58,7 @@ public class RecentLogMessageAppender extends AbstractAppender
     public static RecentLogMessageAppender createAppender(
             @PluginAttribute("name") String name,
             @PluginElement("Filter") Filter filter,
-            @PluginElement("PatternLayout") PatternLayout layout
-            )
+            @PluginElement("PatternLayout") PatternLayout layout)
     {
         return new RecentLogMessageAppender(name, filter, layout);
     }
@@ -122,7 +123,7 @@ public class RecentLogMessageAppender extends AbstractAppender
         listeners.remove(listener);
     }
 
-    public boolean isLevelAvailable(Level level)
+    public static boolean isLevelAvailable(Level level)
     {
         return LOG.isEnabledForLevel(level);
     }

@@ -30,7 +30,7 @@
     <VBox alignment="TOP_CENTER" spacing="20.0" GridPane.vgrow="ALWAYS">
         <Button mnemonicParsing="false" onAction="#createProject" prefHeight="40.0" prefWidth="252.0" text="Create Project"/>
         <Button mnemonicParsing="false" onAction="#openProject" prefHeight="40.0" prefWidth="252.0" text="Open Project"/>
-        <Button mnemonicParsing="false" onAction="#help_userManual" prefHeight="40.0" prefWidth="252.0" text="Guides &amp; Documentation"/>
+        <Button mnemonicParsing="false" onAction="#userManual" prefHeight="40.0" prefWidth="252.0" text="Guides &amp; Documentation"/>
         <Button mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="40.0" prefWidth="252.0" text="Settings"/>
         <Button mnemonicParsing="false" onAction="#openAboutModal" prefHeight="40.0" prefWidth="252.0" text="About Kintsugi 3D Builder"/>
     </VBox>

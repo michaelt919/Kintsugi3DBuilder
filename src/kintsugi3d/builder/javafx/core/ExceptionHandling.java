@@ -49,7 +49,7 @@ public final class ExceptionHandling
             Alert alert = new Alert(AlertType.NONE,
                 String.format("%s:\n%s\nSee the log for more info.", message, e.getMessage()), ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
-                event -> ExperienceManager.getInstance().getExperience("Log").tryOpen());
+                event -> ExperienceManager.getInstance().getExperience(ExperienceManager.LOG).tryOpen());
             alert.show();
         });
     }

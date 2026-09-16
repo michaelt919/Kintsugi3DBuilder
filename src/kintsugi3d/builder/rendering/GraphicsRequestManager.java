@@ -11,10 +11,7 @@
 
 package kintsugi3d.builder.rendering;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
@@ -59,13 +56,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
 
     private static void handleCancellation()
     {
-        Platform.runLater(() ->
-        {
-            Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Processing has stopped.");
-            alert.setTitle("Cancelled");
-            alert.setHeaderText("Cancelled");
-            alert.show();
-        });
+        Global.state().getProjectModel().cancelled("The operation was cancelled. Processing has stopped.");
     }
 
     @Override
@@ -169,7 +160,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                         }
                         catch (Exception | AssertionError e)
                         {
-                            ExceptionHandling.error("Error occured while excecuting request", e);
+                            Global.state().getProjectModel().error("Error occured while excecuting request", e);
                         }
                     }
 
@@ -257,9 +248,8 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 }
                 catch (Exception | AssertionError e)
                 {
-                    LOG.error("Error occurred while executing request", e);
-                    Platform.runLater(() ->
-                        new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
+                    Global.state().getProjectModel().error(
+                        "An error occurred processing request. Processing has stopped.\nCheck the log for more info.", e);
                 }
 
                 if (progressMonitor != null)

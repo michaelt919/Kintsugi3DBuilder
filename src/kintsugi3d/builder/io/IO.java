@@ -17,6 +17,7 @@ import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.util.EncodableColorImage;
 import org.xml.sax.SAXException;
@@ -27,7 +28,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public interface IO
@@ -45,9 +45,9 @@ public interface IO
     File getLoadedViewSetFile();
     File getLoadedProjectFile();
     ViewSet getLoadedViewSet();
-    ProjectRenderableInstance<?> getMainRenderable();
-    void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback);
+    ReadonlyVertexGeometry getLoadedGeometry();
 
+    ProjectRenderableInstance<?> getMainRenderable();
     ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader);
 
     void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);

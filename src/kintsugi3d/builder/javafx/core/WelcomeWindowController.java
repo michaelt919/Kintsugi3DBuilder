@@ -212,7 +212,7 @@ public class WelcomeWindowController
     }
 
     @FXML
-    private void help_userManual()
+    private void userManual()
     {
         userDocumentationHandler.run();
     }
@@ -255,13 +255,13 @@ public class WelcomeWindowController
     @FXML
     public void openSystemSettingsModal()
     {
-        ExperienceManager.getInstance().getExperience("SystemSettings").tryOpen();
+        ExperienceManager.getInstance().getExperience(ExperienceManager.SYSTEM_SETTINGS).tryOpen();
     }
 
     @FXML
     public void openAboutModal()
     {
-        ExperienceManager.getInstance().getExperience("About").tryOpen();
+        ExperienceManager.getInstance().getExperience(ExperienceManager.ABOUT).tryOpen();
     }
 
     public void updateRecentProjects()

@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.texture.ImageReplaceData;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.resources.DynamicResourceManager;
@@ -25,7 +24,6 @@ import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.vecmath.Matrix4;
 
 import java.io.File;
-import java.util.function.Consumer;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
@@ -176,18 +174,4 @@ public interface ProjectRenderableInstance<ContextType extends Context<ContextTy
      * @param finishedCallback
      */
     void saveGLTF(File outputDirectory, String filename, ExportSettings settings, Runnable finishedCallback);
-
-    /**
-     * Invokes the specified handler for when the user is expected to specify a new image to replace an existing image resource.
-     * Typically, this will be handled by a user interface module such as JavaFX.
-     * @param imageReplaceData
-     */
-    void invokeUserImageReplacement(ImageReplaceData imageReplaceData);
-
-    /**
-     * Specifies a handler for when the user is expected to specify a new image to replace an existing image resource.
-     * Typically, this will be handled by a user interface module such as JavaFX.
-     * @param userImageReplaceHandler
-     */
-    void setUserImageReplaceHandler(Consumer<ImageReplaceData> userImageReplaceHandler);
 }

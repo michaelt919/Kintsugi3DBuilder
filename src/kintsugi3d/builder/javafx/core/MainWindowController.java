@@ -230,8 +230,9 @@ public class MainWindowController
             {
                 if (projectModel.isProjectProcessed())
                 {
-                    int resolution = projectModel.getProcessedTextureResolution();
-                    return String.format(" [Processed, %dx%d]", resolution, resolution);
+                    int width = projectModel.getProcessedTextureWidth();
+                    int height = projectModel.getProcessedTextureHeight();
+                    return String.format(" [Processed, %dx%d]", width, height);
                 }
                 else if (projectModel.isProjectLoaded())
                 {
@@ -249,7 +250,8 @@ public class MainWindowController
             projectModel.getProjectOpenProperty(),
             projectModel.getProjectLoadedProperty(),
             projectModel.getProjectProcessedProperty(),
-            projectModel.getProcessedTextureResolutionProperty());
+            projectModel.getProcessedTextureWidthProperty(),
+            projectModel.getProcessedTextureHeightProperty());
 
         injectedStage.titleProperty().bind(
             new SimpleStringProperty("Kintsugi 3D Builder : ")
@@ -630,7 +632,7 @@ public class MainWindowController
 
     @FXML public void lightCalibration()
     {
-        ExperienceManager.getInstance().getExperience("LightCalibration").tryOpen();
+        ExperienceManager.getInstance().getExperience(ExperienceManager.LIGHT_CALIBRATION).tryOpen();
     }
 
     private void setMiniProgressPaneVisible(boolean value)

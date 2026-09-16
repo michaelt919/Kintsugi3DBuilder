@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -123,22 +121,6 @@ class BackendProgressMonitor implements ProgressMonitor
         }
 
         instance.reloadShaders();
-
-        Global.state().getProjectModel().setProjectLoaded(true);
-        Global.state().getProjectModel().setProjectProcessed(isProcessed());
-        Global.state().getProjectModel().setModelSize(instance.getGeometry().getBoundingBoxSize());
-
-        if (isProcessed())
-        {
-            BasisWeightResources<?> basisWeightResources =
-                instance.getResources().getTextureResources().getBasisWeightResources();
-
-            Global.state().getProjectModel().setProcessedTextureResolution(basisWeightResources.weightMaps.getWidth());
-        }
-        else
-        {
-            Global.state().getProjectModel().setProcessedTextureResolution(0);
-        }
 
         if (base != null)
         {

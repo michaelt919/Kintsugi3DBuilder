@@ -18,11 +18,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class NamedTextureReplaceData extends ImageReplaceData
+public class NamedTextureReplacer extends ImageReplacer
 {
     private final TextureInfo texture;
 
-    public NamedTextureReplaceData(TextureResources<?> resources, TextureInfo texture, File currentImage)
+    public NamedTextureReplacer(TextureResources<?> resources, TextureInfo texture, File currentImage)
     {
         super(resources);
         this.texture = texture;

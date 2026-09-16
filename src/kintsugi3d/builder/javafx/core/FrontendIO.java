@@ -123,7 +123,7 @@ public final class FrontendIO
 
     private static CreateProject getCreateProjectExperience()
     {
-        return ExperienceManager.getInstance().getExperience("CreateProject", CreateProject.class);
+        return ExperienceManager.getInstance().getExperience(ExperienceManager.CREATE_PROJECT, CreateProject.class);
     }
 
     static boolean isCreateProjectWindowOpen()

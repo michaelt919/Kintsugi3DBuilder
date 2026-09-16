@@ -16,20 +16,20 @@ import kintsugi3d.builder.resources.project.specular.TextureResources;
 import java.io.File;
 import java.io.IOException;
 
-public abstract class ImageReplaceData
+public abstract class ImageReplacer
 {
     private final TextureResources<?> resources;
     private File currentImage;
     private File newImage;
 
-    protected ImageReplaceData()
+    protected ImageReplacer()
     {
         this.resources = null;
         this.currentImage = null;
         this.newImage = null;
     }
 
-    protected ImageReplaceData(TextureResources<?> resources)
+    protected ImageReplacer(TextureResources<?> resources)
     {
         this.resources = resources;
         this.currentImage = null;

@@ -59,5 +59,5 @@ public abstract class TextureInfo implements Comparable<TextureInfo>
 
     public abstract void refresh(ProjectRenderableInstance<?> instance) throws IOException;
 
-    public abstract ImageReplaceData getReplaceData(ProjectRenderableInstance<?> instance);
+    public abstract ImageReplacer getReplaceData(ProjectRenderableInstance<?> instance);
 }

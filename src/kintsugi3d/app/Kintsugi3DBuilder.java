@@ -11,6 +11,7 @@
 
 package kintsugi3d.app;
 
+import javafx.application.Application;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.OperatingSystem;
@@ -96,7 +97,7 @@ public final class Kintsugi3DBuilder
                 System.setErr(err);
 
                 log.info("Starting JavaFX UI");
-                new Thread(() -> JavaFXApplication.launchWrapper("")).start();
+                new Thread(() -> Application.launch("")).start();
 
                 log.info("Starting Render Window");
                 RenderingBootstrap.runProgram(args);

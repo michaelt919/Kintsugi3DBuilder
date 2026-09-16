@@ -30,8 +30,6 @@ import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.util.ApplicationFolders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
@@ -49,8 +47,6 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     @FXML private Label specularFitCacheLabel;
     @FXML private Label cacheSizeLabel;
     @FXML private Button cleanCacheButton;
-
-    private static final Logger LOG = LoggerFactory.getLogger(CacheSettingsController.class);
 
     private ObservableCacheModel cacheModel;
 
@@ -118,7 +114,8 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         {
             Desktop.getDesktop().open(file);
         }
-        catch(IOException ioe){
+        catch(IOException ioe)
+        {
             ExceptionHandling.error("Failed to open project directory", ioe);
         }
     }
@@ -126,12 +123,6 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     @FXML private void clearCache()
     {
         cacheModel.clearCachePrompt();
-    }
-
-    private static void handleCacheCleanupError(IOException e)
-    {
-        LOG.error(e.toString());
-        ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 
     @FXML private void cleanUpCacheButton()

@@ -44,6 +44,8 @@ public abstract class ProjectModelBase<
     ObjectPoseType extends SerializableObjectPoseSettings>
     implements ProjectModel
 {
+    protected static final String NULL_PROJECT_NAME = "No Project";
+
     private final EnvironmentType noEnvironment = SerializableEnvironmentSettings.createNoEnvironment(this::constructEnvironmentSetting);
 
     public void registerIOListeners()
@@ -61,11 +63,26 @@ public abstract class ProjectModelBase<
         ioModel.projectClosedListeners().addListener(event ->
         {
             setProjectOpen(false);
-            clearProjectName();
+            this.setProjectName(NULL_PROJECT_NAME);
             setProjectLoaded(false);
             setProjectProcessed(false);
-            setProcessedTextureResolution(0);
+            setProcessedTextureWidth(0);
+            setProcessedTextureWidth(0);
             setModelSize(new Vector3(1.0f));
+        });
+
+        ioModel.projectLoadedListeners().addListener(event ->
+        {
+            setProjectLoaded(true);
+            setModelSize(event.modelSize);
+        });
+
+        ioModel.projectProcessedListeners().addListener(event ->
+        {
+            setProjectProcessed(true);
+            setProcessedTextureWidth(event.textureWidth);
+            setProcessedTextureHeight(event.textureHeight);
+            notifyProcessingComplete();
         });
     }
 
@@ -242,4 +259,13 @@ public abstract class ProjectModelBase<
     {
         return this.noEnvironment;
     }
+
+    protected abstract void setProjectOpen(boolean projectOpen);
+    protected abstract void setProjectName(String projectName);
+    protected abstract void setProjectLoaded(boolean projectLoaded);
+    protected abstract void setModelSize(Vector3 modelSize);
+    protected abstract void setProjectProcessed(boolean projectProcessed);
+    protected abstract void setProcessedTextureWidth(int processedTextureWidth);
+    protected abstract void setProcessedTextureHeight(int processedTextureHeight);
+    protected abstract void notifyProcessingComplete();
 }
