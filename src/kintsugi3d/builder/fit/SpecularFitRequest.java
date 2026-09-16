@@ -11,21 +11,23 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-public class SpecularFitRequest implements ObservableProjectGraphicsRequest
+public class SpecularFitRequest implements ProgressMonitoredProjectGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitSettings settings;
@@ -70,7 +72,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
     private static SpecularFitSettings getSettingsFromProject()
     {
-        GeneralSettingsModel projectSettings = Global.state().getIOModel()
+        GeneralSettingsModel projectSettings = Global.io()
             .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 
@@ -130,7 +132,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
      *                   If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor)
         throws UserCancellationException
     {
         try
@@ -164,39 +166,31 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
             renderable.reloadShaders();
 
-            IOModel ioModel = Global.state().getIOModel();
-
             // Save project to avoid inconsistency between results and settings
-            ioModel.saveProject();
-
-            // Export glTF for Kintsugi 3D Viewer even if not requested
-            // TODO: ensure that GLTF texture filenames match default material texture names;
-            //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
-            ioModel.saveGLTF();
-
-            // Save textures and basis functions
-            // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
-            resources.getTextureResources().saveAll(renderable.getViewSet().getSupportingFilesDirectory());
-
-            // Perform reconstruction
-            //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
-
-            if (settings.getExportSettings().shouldOpenViewerOnceComplete())
+            Global.io().saveProject(() ->
             {
-                Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
-            }
+                // Perform reconstruction
+                //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
 
-            ProjectModel projectModel = Global.state().getProjectModel();
-            projectModel.setProjectProcessed(true);
-            projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
-            projectModel.notifyProcessingComplete();
+                if (settings.getExportSettings().shouldOpenViewerOnceComplete())
+                {
+                    try
+                    {
+                        Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
+                    }
+                    catch (IOException e)
+                    {
+                        Global.state().getProjectModel().error("Error launching Kintsugi 3D Viewer", e);
+                    }
+                }
 
-            // Refresh tabs
-            new TabsManager(renderable).refreshAllTabs();
+                // Refresh tabs
+                new TabsManager(renderable).refreshAllTabs();
+            });
         }
         catch (IOException | ParserConfigurationException | TransformerException e)
         {
-            ExceptionHandling.error("Error executing specular fit request", e);
+            Global.state().getProjectModel().error("Error executing specular fit request", e);
         }
     }
 

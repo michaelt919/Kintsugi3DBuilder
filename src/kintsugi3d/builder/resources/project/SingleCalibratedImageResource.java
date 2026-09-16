@@ -11,17 +11,17 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.viewset.DistortionProjection;
 import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.util.ImageUndistorter;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.util.ImageUndistorter;
 
 import java.io.File;
 import java.io.IOException;

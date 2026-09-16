@@ -12,9 +12,9 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.javafx.core.MainApplication;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.util.AppIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
 shaders will be available for the user to use.
  */
-public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
+public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
 
@@ -36,15 +36,15 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
      * assigns it to private variable in class
      * @param instance
      */
-    public ShaderCardFactory(RenderableInstance<?> instance)
+    public ShaderCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }
 
     @Override
-    public Class<UserShader> getDataClass()
+    public Class<ShaderInfo> getDataClass()
     {
-        return UserShader.class;
+        return ShaderInfo.class;
     }
 
     /**
@@ -57,7 +57,7 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
     public ProjectDataCard createCard(String title, String fileName)
     {
         // Creates shader with given title and filename
-        UserShader shader = new UserShader(title, fileName);
+        ShaderInfo shader = new ShaderInfo(title, fileName);
         return createCard(shader);
     }
 
@@ -67,9 +67,9 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<UserShader>
      * @return ProjectDataCard of the shader (single card).
      */
     @Override
-    public ProjectDataCard createCard(UserShader shader)
+    public ProjectDataCard createCard(ShaderInfo shader)
     {
-        return new ShaderDataCard(shader.getFilename(), shader, MainApplication.ICON_PATH);
+        return new ShaderDataCard(shader.getFilename(), shader, AppIcon.PATH);
     }
 
     /**

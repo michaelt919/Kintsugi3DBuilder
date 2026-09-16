@@ -12,9 +12,9 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ public class PhotoCardFactory extends ProjectDataCardFactoryBase<View>
 {
     private static final Logger LOG = LoggerFactory.getLogger(PhotoCardFactory.class);
 
-    public PhotoCardFactory(RenderableInstance<?> instance)
+    public PhotoCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }
@@ -52,7 +52,7 @@ public class PhotoCardFactory extends ProjectDataCardFactoryBase<View>
         catch (FileNotFoundException e)
         {
             // Default to icon if thumbnail isn't found
-            thumbnailPath = MainApplication.ICON_PATH;
+            thumbnailPath = AppIcon.PATH;
         }
 
         try

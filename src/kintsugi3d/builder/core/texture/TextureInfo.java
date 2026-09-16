@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.core.texture;
 
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -55,9 +55,9 @@ public abstract class TextureInfo implements Comparable<TextureInfo>
         return this.name.compareTo(o.name);
     }
 
-    public abstract UserShader getVisualizationShader();
+    public abstract ShaderInfo getVisualizationShader();
 
-    public abstract void refresh(RenderableInstance<?> instance) throws IOException;
+    public abstract void refresh(ProjectRenderableInstance<?> instance) throws IOException;
 
-    public abstract ImageReplaceData getReplaceData(RenderableInstance<?> instance);
+    public abstract ImageReplacer getReplaceData(ProjectRenderableInstance<?> instance);
 }

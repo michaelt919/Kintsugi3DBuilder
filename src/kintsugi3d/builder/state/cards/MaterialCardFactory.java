@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
-import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
-    public MaterialCardFactory(RenderableInstance<?> instance)
+    public MaterialCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }
@@ -58,10 +58,10 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
         catch (FileNotFoundException e)
         {
             // Default to icon if thumbnail isn't found
-            thumbnailPath = MainApplication.ICON_PATH;
+            thumbnailPath = AppIcon.PATH;
         }
 
-        UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
+        ShaderInfo shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
             cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
         return new ShaderDataCard(String.format("%d", cardIndex), String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
@@ -69,7 +69,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
                 Map.of(
                     "Highlight Material", () ->
                     {
-                        UserShader prevShader = Global.state().getUserShaderModel().getUserShader();
+                        ShaderInfo prevShader = Global.state().getUserShaderModel().getActiveShader();
                         var defines = new HashMap<>(prevShader.getDefines());
                         var overlayMode = defines.get("OVERLAY_MODE");
                         var overlayWeightmapIndex = defines.get("OVERLAY_WEIGHTMAP_INDEX");
@@ -91,8 +91,8 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
                             subName = String.format("Palette material %d", cardIndex);
                         }
 
-                        Global.state().getUserShaderModel().setUserShader(
-                            new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
+                        Global.state().getUserShaderModel().setActiveShader(
+                            new ShaderInfo(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
                 Map.of("Delete Material", () ->
                     Global.state().getProjectModel().confirm("Delete Material", "Delete Material?",

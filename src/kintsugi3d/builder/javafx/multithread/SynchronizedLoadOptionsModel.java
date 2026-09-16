@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.io.LoadOptionsModel;
 
 public class SynchronizedLoadOptionsModel implements LoadOptionsModel
 {

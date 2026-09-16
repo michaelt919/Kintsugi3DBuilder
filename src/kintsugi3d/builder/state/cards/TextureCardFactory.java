@@ -11,17 +11,15 @@
 
 package kintsugi3d.builder.state.cards;
 
-import javafx.application.Platform;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.util.ImageFinder;
@@ -44,7 +42,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(RenderableInstance<?> instance)
+    public TextureCardFactory(ProjectRenderableInstance<?> instance)
     {
         super(instance);
     }
@@ -95,7 +93,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
                 catch (FileNotFoundException e)
                 {
                     // Default to icon if thumbnail isn't found
-                    thumbnailPath = MainApplication.ICON_PATH;
+                    thumbnailPath = AppIcon.PATH;
                 }
 
                 IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
@@ -188,15 +186,13 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
             }
             catch (IOException | RuntimeException e)
             {
-                ExceptionHandling.error("Error refreshing texture", e);
+                Global.state().getProjectModel().error("Error refreshing texture", e);
             }
         });
     }
 
     private void replaceTexture(TextureInfo texture)
     {
-        Platform.runLater(() ->
-            Global.state().getIOModel().getMainRenderable().invokeUserImageReplacement(texture.getReplaceData(getInstance())));
+        Global.state().getProjectModel().requestUserImageReplacement(texture.getReplaceData(getInstance()));
     }
-
 }

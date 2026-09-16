@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.export.simpleanimation;
 
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.vecmath.Matrix4;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-public abstract class AnimationRequest implements ObservableProjectGraphicsRequest
+public abstract class AnimationRequest implements ProgressMonitoredProjectGraphicsRequest
 {
     private final int width;
     private final int height;
@@ -100,7 +100,7 @@ public abstract class AnimationRequest implements ObservableProjectGraphicsReque
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(RenderableInstance<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         try

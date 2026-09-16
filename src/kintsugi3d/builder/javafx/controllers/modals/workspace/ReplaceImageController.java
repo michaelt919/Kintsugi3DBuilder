@@ -21,20 +21,18 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.texture.ImageReplaceData;
+import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.rendering.Rendering;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplaceData>
+public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplacer>
 {
     @FXML private Pane root;
     @FXML private ImageView currentImageView;
@@ -46,8 +44,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
     private final FileChooser replacementFileChooser = new FileChooser();
     private Image currentImage;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplaceImageController.class);
-    private ImageReplaceData data;
+    private ImageReplacer data;
 
     @Override
     public Region getRootNode() { return root; }
@@ -59,7 +56,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
 
         replacementFileChooser.setTitle("Replace with...");
         replacementFileChooser.getExtensionFilters().add(new ExtensionFilter("Texture image", "*.png"));
-        setCurrentDirectoryFile(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory());
+        setCurrentDirectoryFile(Global.io().getLoadedViewSet().getSupportingFilesDirectory());
 
         setCanConfirm(true);
         setCanAdvance(true);
@@ -125,7 +122,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
     }
 
     @Override
-    public void receiveData(ImageReplaceData newData)
+    public void receiveData(ImageReplacer newData)
     {
         this.data = newData;
 

@@ -12,12 +12,13 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
+import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.gl.vecmath.Vector3;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
@@ -27,38 +28,26 @@ import java.io.IOException;
  */
 public class SynchronizedProjectModel implements ProjectModel
 {
+    public static final String NULL_PROJECT_NAME = "No Project";
     private final ProjectModel baseModel;
-
-    private final SynchronizedValue<Boolean> projectOpen;
-    private final SynchronizedValue<String> projectName;
-    private final SynchronizedValue<Boolean> projectLoaded;
-    private final SynchronizedValue<Boolean> projectProcessed;
-    private final SynchronizedValue<Integer> processedTextureResolution;
-    private final SynchronizedValue<Vector3> modelSize;
     private final SynchronizedValue<File> colorCheckerFile;
 
     public SynchronizedProjectModel(ProjectModel baseModel)
     {
         this.baseModel = baseModel;
-        this.projectOpen = SynchronizedValue.createFromFunctions(baseModel::isProjectOpen, baseModel::setProjectOpen);
-        this.projectName = SynchronizedValue.createFromFunctions(baseModel::getProjectName, baseModel::setProjectName);
-        this.projectLoaded = SynchronizedValue.createFromFunctions(baseModel::isProjectLoaded, baseModel::setProjectLoaded);
-        this.projectProcessed = SynchronizedValue.createFromFunctions(baseModel::isProjectProcessed, baseModel::setProjectProcessed);
-        this.processedTextureResolution = SynchronizedValue.createFromFunctions(baseModel::getProcessedTextureResolution, baseModel::setProcessedTextureResolution);
-        this.modelSize = SynchronizedValue.createFromFunctions(baseModel::getModelSize, baseModel::setModelSize);
         this.colorCheckerFile = SynchronizedValue.createFromFunctions(baseModel::getColorCheckerFile, baseModel::setColorCheckerFile);
     }
 
     @Override
-    public File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    public void parseXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException
     {
-        return baseModel.openProjectFile(projectFile);
+        baseModel.parseXMLDocument(document);
     }
 
     @Override
-    public void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException
+    public Document toXMLDocument() throws ParserConfigurationException
     {
-        baseModel.saveProjectFile(projectFile, vsetFile);
+        return baseModel.toXMLDocument();
     }
 
     @Override
@@ -74,75 +63,66 @@ public class SynchronizedProjectModel implements ProjectModel
     }
 
     @Override
-    public boolean isProjectOpen()
-    {
-        return projectOpen.getValue();
-    }
-
-    @Override
-    public void setProjectOpen(boolean projectOpen)
-    {
-        this.projectOpen.setValue(projectOpen);
-    }
-
-    @Override
     public String getProjectName()
     {
-        return projectName.getValue();
+        return baseModel.getProjectName();
     }
 
     @Override
-    public void setProjectName(String projectName)
+    public boolean isProjectOpen()
     {
-        this.projectName.setValue(projectName);
+        return baseModel.isProjectOpen();
     }
 
     @Override
     public boolean isProjectLoaded()
     {
-        return projectLoaded.getValue();
-    }
-
-    @Override
-    public void setProjectLoaded(boolean projectLoaded)
-    {
-        this.projectLoaded.setValue(projectLoaded);
+        return baseModel.isProjectLoaded();
     }
 
     @Override
     public boolean isProjectProcessed()
     {
-        return projectProcessed.getValue();
+        return baseModel.isProjectProcessed();
     }
 
     @Override
-    public void setProjectProcessed(boolean projectProcessed)
+    public int getProcessedTextureWidth()
     {
-        this.projectProcessed.setValue(projectProcessed);
+        return baseModel.getProcessedTextureHeight();
     }
 
     @Override
-    public int getProcessedTextureResolution()
+    public int getProcessedTextureHeight()
     {
-        return processedTextureResolution.getValue();
+        return baseModel.getProcessedTextureHeight();
     }
 
-    @Override
-    public void setProcessedTextureResolution(int processedTextureResolution)
-    {
-        this.processedTextureResolution.setValue(processedTextureResolution);
-    }
 
     @Override
     public Vector3 getModelSize()
     {
-        return modelSize.getValue();
+        return baseModel.getModelSize();
     }
 
     @Override
-    public void setModelSize(Vector3 modelSize)
+    public void error(String message, Throwable e)
     {
-        this.modelSize.setValue(modelSize);
+        // error() already runs its JavaFX code within a Platform.runLater, so it should be thread-safe.
+        baseModel.error(message, e);
+    }
+
+    @Override
+    public void warn(String message, Throwable e)
+    {
+        // warn() already runs its JavaFX code within a Platform.runLater, so it should be thread-safe.
+        baseModel.warn(message, e);
+    }
+
+    @Override
+    public void cancelled(String message)
+    {
+        Platform.runLater(() -> baseModel.cancelled(message));
     }
 
     @Override
@@ -152,8 +132,8 @@ public class SynchronizedProjectModel implements ProjectModel
     }
 
     @Override
-    public void notifyProcessingComplete()
+    public void requestUserImageReplacement(ImageReplacer imageReplacer)
     {
-        Platform.runLater(baseModel::notifyProcessingComplete);
+        Platform.runLater(() -> baseModel.requestUserImageReplacement(imageReplacer));
     }
 }

@@ -23,7 +23,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.state.CacheModelBase;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import org.slf4j.Logger;
@@ -59,7 +58,7 @@ public class ObservableCacheModel extends CacheModelBase
     /**
      * Use a separate property for handling one-shot listeners
      * that we can dispose to dump in case the listener doesn't need to fire.
-     * Important: should only be accessed in blocks synchronized on CACHE_SIZE_CALC_THREAD_LOCK
+     * Important: should only be accessed in blocks synchronized on cacheSizeCalcThreadLock
      * to prevent concurrent modification issues.
      */
     private final Collection<ChangeListener<Number>> pendingCacheSizeCallbacks = new ArrayList<>(1);
@@ -251,7 +250,7 @@ public class ObservableCacheModel extends CacheModelBase
         }
     }
 
-    private void checkforCleanupPrompts(double newCacheSizeGB, Consumer<Double> promptWithCacheSizeGB,
+    private static void checkforCleanupPrompts(double newCacheSizeGB, Consumer<Double> promptWithCacheSizeGB,
                                                Consumer<Double> noCleanupNeededWithCacheSizeGB)
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
@@ -279,12 +278,5 @@ public class ObservableCacheModel extends CacheModelBase
 
         // If the cache does not need to be cleaned up, then fire the "no cleanup needed" callback.
         noCleanupNeededWithCacheSizeGB.accept(newCacheSizeGB);
-    }
-
-    @Override
-    protected void handleCacheCleanupError(Exception e)
-    {
-        super.handleCacheCleanupError(e);
-        ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 }

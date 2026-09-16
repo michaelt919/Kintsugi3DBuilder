@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.RenderedComponent;
+import kintsugi3d.builder.rendering.SceneModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -73,9 +73,9 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
 
     private Matrix4 snapToView(Matrix4 targetView)
     {
-        CameraViewListModel cameraViewListModel = sceneModel.getCameraViewListModel();
+        SelectableViewListModel viewListModel = sceneModel.getCameraViewListModel();
 
-        if (cameraViewListModel.isCameraViewSnapEnabled())
+        if (viewListModel.isViewSnapEnabled())
         {
             Matrix4 viewInverse = targetView.quickInverse(0.01f);
             float maxSimilarity = Float.NEGATIVE_INFINITY;
@@ -110,16 +110,16 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
             {
                 // Snapped view has changed; set it on the global selection model and use it.
                 lastSnapView = snapView;
-                cameraViewListModel.setSelectedCameraView(snapView);
+                viewListModel.setSelectedView(snapView);
                 return currentViewSnap;
             }
         }
         else
         {
-            if (cameraViewListModel.getSelectedCameraView() == null && !cameraViewListModel.getCameraViewList().isEmpty())
+            if (viewListModel.getSelectedView() == null && !viewListModel.getViewList().isEmpty())
             {
                 // Select a view if none is selected.
-                cameraViewListModel.setSelectedCameraView(cameraViewListModel.getCameraViewList().get(0));
+                viewListModel.setSelectedView(viewListModel.getViewList().get(0));
             }
 
             // View snap is disabled; do not change the current view.

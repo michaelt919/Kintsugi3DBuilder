@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,8 +12,7 @@
 package kintsugi3d.builder.javafx.experience;
 
 import kintsugi3d.builder.javafx.controllers.modals.createnewproject.*;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ManualInputSource;
+import kintsugi3d.builder.javafx.controllers.modals.createnewproject.inputsources.ValidatedInputSource;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.OrientationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.paged.SimpleDataSourcePage;
 
@@ -22,11 +21,9 @@ import java.io.IOException;
 public class CreateProject extends ExperienceBase
 {
     private static final String METASHAPE_IMPORT = "/fxml/modals/createnewproject/MetashapeImport.fxml";
-    public static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
+    private static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
     private static final String MASKS_IMPORT = "/fxml/modals/createnewproject/MasksImport.fxml";
-    public static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
-
-    private Runnable confirmCallback;
+    private static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
 
     @Override
     public String getName()
@@ -40,7 +37,7 @@ public class CreateProject extends ExperienceBase
         // selection and Metashape import
         var metashape = buildPagedModal()
             .thenSelect("How are you importing your project?")
-            .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<InputSource, MetashapeImportController>::new);
+            .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<ValidatedInputSource, MetashapeImportController>::new);
 
         // Masks import linked from Metashape import
         var masks = metashape.<MasksImportController>then(MASKS_IMPORT);
@@ -49,15 +46,14 @@ public class CreateProject extends ExperienceBase
         var manual =
             masks.<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
                 .finish()
-            .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, RealityCaptureImportController>::new,
+            .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, RealityCaptureImportController>::new,
                     RealityCaptureImportController::new)
                 .join(masks.getPage())
-            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, ManualImportController>::new);
+            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, ManualImportController>::new);
 
         // finish manual import link to masks and wrap up
         manual.join(masks.getPage())
             .finish()
-            .setConfirmCallback(confirmCallback)
             .setMinContentWidth(800)
             .setMinContentHeight(512);
 
@@ -68,11 +64,10 @@ public class CreateProject extends ExperienceBase
     private void openHotSwap() throws IOException
     {
         buildPagedModal()
-            .then(MANUAL_IMPORT, SimpleDataSourcePage<ManualInputSource, HotSwapController>::new, HotSwapController::new)
+            .then(MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, HotSwapController>::new, HotSwapController::new)
             .<MasksImportController>then(MASKS_IMPORT)
             .<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
-            .finish()
-            .setConfirmCallback(confirmCallback);
+            .finish();
     }
 
     public void tryOpenHotSwap()
@@ -83,15 +78,10 @@ public class CreateProject extends ExperienceBase
             {
                 openHotSwap();
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 handleError(e);
             }
         }
-    }
-
-    public void setConfirmCallback(Runnable confirmCallback)
-    {
-        this.confirmCallback = confirmCallback;
     }
 }

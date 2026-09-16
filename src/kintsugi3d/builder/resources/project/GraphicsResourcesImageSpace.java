@@ -11,22 +11,20 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.ColorAppearanceMode;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
-import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.rendering.GraphicsRequest;
+import kintsugi3d.builder.rendering.Rendering;
+import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.VertexGeometry;
-import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
@@ -69,32 +67,30 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
-    public final UniformBuffer<ContextType> cameraProjectionBuffer;
+    private final UniformBuffer<ContextType> cameraProjectionBuffer;
 
     /**
      * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
      */
-    public final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+    private final UniformBuffer<ContextType> cameraProjectionIndexBuffer;
 
-    /**
-     * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
-     */
-    public final Texture3D<ContextType> colorTextures;
+    private final Texture3D<ContextType> colorTextures;
 
     /**
      * A depth texture array containing a depth image for every view.
      */
-    public final Texture3D<ContextType> depthTextures;
+    private final Texture3D<ContextType> depthTextures;
 
     /**
      * A depth texture array containing a shadow map for every view.
      */
-    public final Texture3D<ContextType> shadowTextures;
+    private final Texture3D<ContextType> shadowTextures;
 
     /**
      * A GPU buffer containing the matrices that were used for each shadow map in the shadowTextures array.
      */
-    public final UniformBuffer<ContextType> shadowMatrixBuffer;
+    private final UniformBuffer<ContextType> shadowMatrixBuffer;
+
 
     public static final class Builder<ContextType extends Context<ContextType>>
     {
@@ -203,7 +199,9 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         public Builder<ContextType> loadFromMetashapeModel(MetashapeModel model)
             throws IOException, MeshImportException, XMLStreamException, MissingImagesException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles()).finish();
+            this.viewSet = ViewSetReaderFromAgisoftXML
+                .loadViewsetFromChunk(model.getChunk(), model.getLoadPreferences().getDisabledImageFiles())
+                .finish();
             updateViewSetFromImageLoadOptions();
             loadAndValidateGeometry();
             return this;
@@ -241,6 +239,11 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             return viewSet;
         }
 
+        public VertexGeometry getGeometry()
+        {
+            return geometry;
+        }
+
         public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
         {
             this.viewSet = existingViewSet;
@@ -271,6 +274,13 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             return this;
         }
 
+        /**
+         * Must NOT be called on the rendering thread, because it needs to queue rendering jobs and wait for them to finish.
+         * If called on the rendering thread, this will deadlock since the jobs never run while waiting.
+         * @return
+         * @throws IOException
+         * @throws UserCancellationException
+         */
         public Builder<ContextType> generateAllPreviewImages() throws IOException, UserCancellationException
         {
             if (this.viewSet != null)
@@ -519,7 +529,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         }
     }
 
-    private static <ContextType extends Context<ContextType>> double getMinDepthFromTextureReader(
+    private static double getMinDepthFromTextureReader(
         DepthTextureReader textureReader, double nearPlane, double farPlane)
     {
         double minDepth = farPlane;

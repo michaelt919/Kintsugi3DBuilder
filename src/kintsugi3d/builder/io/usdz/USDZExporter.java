@@ -12,12 +12,12 @@
 package kintsugi3d.builder.io.usdz;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
+import kintsugi3d.builder.util.ApplicationFolders;
+import kintsugi3d.builder.util.OperatingSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,7 +159,7 @@ public abstract class USDZExporter extends MaterialExporter
     public void saveTextures(File outputDirectory)
     {
         outputPath = outputDirectory;
-        tempPath = new File(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory(), "temp");
+        tempPath = new File(Global.io().getLoadedViewSet().getSupportingFilesDirectory(), "temp");
         super.saveTextures(tempPath);
     }
 }

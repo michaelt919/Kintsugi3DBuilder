@@ -11,23 +11,19 @@
 
 package kintsugi3d.builder.test;
 
-import kintsugi3d.builder.app.logging.LogMessage;
-import kintsugi3d.builder.app.logging.LogMessageListener;
-import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.LoadOptionsModel;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
+import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.io.ViewSetDirectories;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.javafx.controllers.modals.RecentLogMessageAppender;
 import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.builder.rendering.ProjectInstanceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
@@ -35,9 +31,12 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
-import kintsugi3d.gl.core.Context;
+import kintsugi3d.builder.util.logging.LogMessage;
+import kintsugi3d.builder.util.logging.LogMessageListener;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -65,7 +64,7 @@ public class SmokeTest
     private ProgressMonitor progressMonitor;
     private ViewSet viewSet;
     private ViewSet tonemappedViewSet;
-    private Context context;
+    private OpenGLContext context;
     private VertexGeometry potatoGeometry;
     private Consumer<Program<OpenGLContext>> setupColor;
     private Consumer<Program<OpenGLContext>> setupMetallic;
@@ -324,10 +323,10 @@ public class SmokeTest
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         // These are set since they otherwise are set in JavaFX related code
-        IOModel.getInstance().setImageLoadOptionsModel(imageLoadOptions);
-        ProjectInstanceManager mockIOHandler = new ProjectInstanceManager<>(context);
-        mockIOHandler.setTestingViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
-        IOModel.getInstance().setLoadingHandler(mockIOHandler);
+        Global.io().setLoadOptionsModel(imageLoadOptions);
+        ProjectInstanceManager<OpenGLContext> mockIOHandler = new ProjectInstanceManager<>(context);
+        mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
+        Global.io().setLoadingHandler(mockIOHandler);
 
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
         viewSetLoadOptions.geometryFile = new File(classLoader.getResource("test/" + geometry).toURI());
@@ -353,10 +352,10 @@ public class SmokeTest
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         // These are set since they otherwise are set in JavaFX related code
-        IOModel.getInstance().setImageLoadOptionsModel(imageLoadOptions);
-        ProjectInstanceManager mockIOHandler = new ProjectInstanceManager<>(context);
-        mockIOHandler.setTestingViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
-        IOModel.getInstance().setLoadingHandler(mockIOHandler);
+        Global.io().setLoadOptionsModel(imageLoadOptions);
+        ProjectInstanceManager<OpenGLContext> mockIOHandler = new ProjectInstanceManager<>(context);
+        mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
+        Global.io().setLoadingHandler(mockIOHandler);
 
         MetashapeDocument doc = new MetashapeDocument(psxFile);
         MetashapeChunk chunk = doc.getSelectedChunk();
@@ -365,7 +364,7 @@ public class SmokeTest
         File imgDir = new File(classLoader.getResource("test/" + imageDirectory).toURI());
         model.getLoadPreferences().setFullResOverride(imgDir);
 
-        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
+        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.<OpenGLContext>getBuilderForContext(context)
             .setImageLoadOptions(imageLoadOptions)
             .setProgressMonitor(progressMonitor)
             .loadFromMetashapeModel(model)

@@ -34,22 +34,22 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.app.OperatingSystem;
-import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.core.WindowSynchronization;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.sidebar.CameraViewListController;
 import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
 import kintsugi3d.builder.javafx.controllers.sidebar.SideBarController;
 import kintsugi3d.builder.javafx.experience.ExportRender;
+import kintsugi3d.builder.javafx.internal.ObservableActiveShaderModel;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ShaderDataCard;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.javafx.FramebufferView;
 
 import java.io.IOException;
@@ -156,7 +156,9 @@ public class MainWindowController
     public void init(Stage injectedStage, JavaFXState javaFXState, Runnable injectedUserDocumentationHandler)
     {
         this.window = injectedStage;
+
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+        WindowSynchronization.getInstance().addListener(framebufferView::closeCanvas);
 
         ExperienceManager.getInstance().initialize(this.getWindow(), javaFXState);
 
@@ -189,11 +191,11 @@ public class MainWindowController
         toggleableShaders.add(weightmapMenu);
         toggleableShaders.add(paletteMaterialWeightedMenu);
 
-        ObservableUserShaderModel userShaderModel = javaFXState.getUserShaderModel();
+        ObservableActiveShaderModel userShaderModel = javaFXState.getUserShaderModel();
         shaderName.textProperty().bind(Bindings.createStringBinding(() ->
             {
-                UserShader userShader = userShaderModel.getUserShader();
-                return userShader != null ? userShader.getFullName() : "(no shader)";
+                ShaderInfo shaderInfo = userShaderModel.getActiveShader();
+                return shaderInfo != null ? shaderInfo.getFullName() : "(no shader)";
             },
             userShaderModel.getUserShaderProperty()));
 
@@ -202,7 +204,7 @@ public class MainWindowController
             Toggle toggle = renderGroup.getToggles().stream()
                 .filter(t ->
                 {
-                    UserShader shader = getUserShaderFromToggle(t);
+                    ShaderInfo shader = getUserShaderFromToggle(t);
                     return Objects.equals(newValue, shader);
                 })
                 .findFirst()
@@ -228,8 +230,9 @@ public class MainWindowController
             {
                 if (projectModel.isProjectProcessed())
                 {
-                    int resolution = projectModel.getProcessedTextureResolution();
-                    return String.format(" [Processed, %dx%d]", resolution, resolution);
+                    int width = projectModel.getProcessedTextureWidth();
+                    int height = projectModel.getProcessedTextureHeight();
+                    return String.format(" [Processed, %dx%d]", width, height);
                 }
                 else if (projectModel.isProjectLoaded())
                 {
@@ -247,7 +250,8 @@ public class MainWindowController
             projectModel.getProjectOpenProperty(),
             projectModel.getProjectLoadedProperty(),
             projectModel.getProjectProcessedProperty(),
-            projectModel.getProcessedTextureResolutionProperty());
+            projectModel.getProcessedTextureWidthProperty(),
+            projectModel.getProcessedTextureHeightProperty());
 
         injectedStage.titleProperty().bind(
             new SimpleStringProperty("Kintsugi 3D Builder : ")
@@ -465,7 +469,7 @@ public class MainWindowController
         {
             if (card instanceof ShaderDataCard)
             {
-                UserShader shader = ((ShaderDataCard) card).getShader();
+                ShaderInfo shader = ((ShaderDataCard) card).getShader();
 
                 paletteMaterialWeightedMenu.getItems().add(createMenuItemFromShader(shader));
             }
@@ -481,7 +485,7 @@ public class MainWindowController
         {
             if (card instanceof ShaderDataCard)
             {
-                UserShader shader = ((ShaderDataCard) card).getShader();
+                ShaderInfo shader = ((ShaderDataCard) card).getShader();
 
                 if (shader.getFilename().endsWith("viewTextureWeights.frag"))
                 {
@@ -497,7 +501,7 @@ public class MainWindowController
         }
     }
 
-    private RadioMenuItem createMenuItemFromShader(UserShader shader)
+    private RadioMenuItem createMenuItemFromShader(ShaderInfo shader)
     {
         RadioMenuItem item = new RadioMenuItem(shader.getFriendlyName());
         item.setToggleGroup(renderGroup);
@@ -516,11 +520,11 @@ public class MainWindowController
         {
             if (newValue != null)
             {
-                UserShader shader = getUserShaderFromToggle(newValue);
+                ShaderInfo shader = getUserShaderFromToggle(newValue);
 
                 if (shader != null)
                 {
-                    Global.state().getUserShaderModel().setUserShader(shader);
+                    Global.state().getUserShaderModel().setActiveShader(shader);
                 }
 
 //                if (shader == null)
@@ -532,18 +536,18 @@ public class MainWindowController
         });
 
         // Set default shader
-        Global.state().getUserShaderModel().setUserShader(getUserShaderFromToggle(renderGroup.getSelectedToggle()));
+        Global.state().getUserShaderModel().setActiveShader(getUserShaderFromToggle(renderGroup.getSelectedToggle()));
     }
 
-    private static UserShader getUserShaderFromToggle(Toggle newValue)
+    private static ShaderInfo getUserShaderFromToggle(Toggle newValue)
     {
         if (newValue instanceof MenuItem && newValue.getUserData() instanceof String)
         {
-            return new UserShader(((MenuItem) newValue).getText(), (String) newValue.getUserData());
+            return new ShaderInfo(((MenuItem) newValue).getText(), (String) newValue.getUserData());
         }
-        else if (newValue.getUserData() instanceof UserShader)
+        else if (newValue.getUserData() instanceof ShaderInfo)
         {
-            return (UserShader) newValue.getUserData();
+            return (ShaderInfo) newValue.getUserData();
         }
         else
         {
@@ -580,27 +584,27 @@ public class MainWindowController
 
     @FXML public void createProject()
     {
-        ProjectIO.getInstance().createProject(window);
+        FrontendIO.createProject(window);
     }
 
     @FXML public void openProject()
     {
-        ProjectIO.getInstance().openProjectWithPrompt(window);
+        FrontendIO.getInstance().openProject(window);
     }
 
     @FXML public void saveProject()
     {
-        ProjectIO.getInstance().saveProject(window);
+        FrontendIO.getInstance().saveProject(window);
     }
 
     @FXML public void saveProjectAs()
     {
-        ProjectIO.getInstance().saveProjectAs(window);
+        FrontendIO.getInstance().saveProjectAs(window);
     }
 
     @FXML public void closeProject()
     {
-        ProjectIO.getInstance().closeProjectAfterConfirmation();
+        FrontendIO.closeProject();
     }
 
     @FXML public void exit()
@@ -628,7 +632,7 @@ public class MainWindowController
 
     @FXML public void lightCalibration()
     {
-        ExperienceManager.getInstance().getExperience("LightCalibration").tryOpen();
+        ExperienceManager.getInstance().getExperience(ExperienceManager.LIGHT_CALIBRATION).tryOpen();
     }
 
     private void setMiniProgressPaneVisible(boolean value)
@@ -780,7 +784,7 @@ public class MainWindowController
         miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
     }
 
-    public void setDarkestMiniBar()
+    private void setDarkestMiniBar()
     {
         miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
         miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
@@ -808,7 +812,7 @@ public class MainWindowController
 
     public void hotSwap()
     {
-        ProjectIO.getInstance().hotSwap(window);
+        FrontendIO.hotSwap(window);
     }
 
     public double getRightTabWidth()

@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
@@ -61,10 +61,6 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
             View selectedView = viewSelection.getSelectedView();
             if (selectedView != null)
             {
-                GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>) resources;
-
-                FramebufferSize size = framebuffer.getSize();
-
                 this.getContext().getState().disableBackFaceCulling();
 
                 this.getContext().getState().disableDepthWrite();
@@ -73,7 +69,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
                 Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
                 Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-                this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
+                resources.setupShaderProgram(this.getProgram()); // sets viewImages
                 this.getProgram().setUniform("viewIndex", selectedView.getGPUViewIndex());
                 this.getProgram().setUniform("model_view",
                     cameraViewport.getView().times(snapViewInverse)

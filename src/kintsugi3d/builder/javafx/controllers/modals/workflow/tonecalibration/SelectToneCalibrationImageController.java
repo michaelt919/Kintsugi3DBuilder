@@ -120,7 +120,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
     @Override
     public boolean advance()
     {
-        ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
+        ViewSet viewSet = Global.io().validateRenderable().getLoadedViewSet();
 
         File imageFile = null;
         if (Objects.equals(buttonGroup.getSelectedToggle(), primaryViewImageButton))
@@ -199,7 +199,7 @@ public class SelectToneCalibrationImageController extends NonDataPageControllerB
         }
         else
         {
-            ViewSet viewSet = Global.state().getIOModel().validateRenderable().getLoadedViewSet();
+            ViewSet viewSet = Global.io().validateRenderable().getLoadedViewSet();
             imageFileChooser.setInitialDirectory(viewSet.getFullResImageDirectory());
         }
         File temp = imageFileChooser.showOpenDialog(rootPane.getScene().getWindow());

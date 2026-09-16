@@ -38,7 +38,7 @@ public class OrientationViewSelectController extends ViewSelectController
     public boolean confirm()
     {
         // If a view set was already loaded, apply changes.
-        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.io().getLoadedViewSet();
         if (currentViewSet != null)
         {
             if (getData().getViewSelection() == null)
@@ -54,9 +54,7 @@ public class OrientationViewSelectController extends ViewSelectController
         }
 
         // The input source will handle loading if a view set wasn't already loaded.
-        getData().confirm();
-
-        return true;
+        return getData().confirm();
     }
 
     @Override

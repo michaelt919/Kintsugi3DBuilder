@@ -71,7 +71,7 @@
                 <configuration>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>kintsugi3d.builder.app.Kintsugi3DBuilder</mainClass>
+                            <mainClass>kintsugi3d.app.Kintsugi3DBuilder</mainClass>
                         </transformer>
                         <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer" />
                     </transformers>

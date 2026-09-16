@@ -12,8 +12,8 @@
 package kintsugi3d.builder.javafx.core;
 
 import javafx.scene.control.*;
-import kintsugi3d.builder.app.OperatingSystem;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.io.RecentProjects;
+import kintsugi3d.builder.util.OperatingSystem;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public final class RecentProjectsHelper
 
     private static void onMenuItemAction(String fileName)
     {
-        ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
+        FrontendIO.openProjectFromFile(new File(fileName));
     }
 
     private static void updateRecentProjectsInMenuBar()

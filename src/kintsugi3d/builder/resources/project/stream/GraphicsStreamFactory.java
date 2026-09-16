@@ -17,7 +17,9 @@ import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.ReadableFramebuffer;
-import kintsugi3d.util.ColorList;
+import kintsugi3d.gl.stream.GraphicsStream;
+import kintsugi3d.gl.stream.GraphicsStreamResource;
+import kintsugi3d.gl.util.ColorList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

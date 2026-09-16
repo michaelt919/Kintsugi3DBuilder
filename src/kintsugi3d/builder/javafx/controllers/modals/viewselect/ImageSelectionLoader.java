@@ -15,7 +15,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import kintsugi3d.builder.io.primaryview.ViewSelectionModel;
+import kintsugi3d.builder.io.imageset.ImageSetInfo;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
@@ -30,12 +30,11 @@ class ImageSelectionLoader implements Runnable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImageSelectionLoader.class);
     private final String imageName;
-    private final ViewSelectionModel model;
+    private final ImageSetInfo model;
     private final ImageSelectionPreview preview;
     private volatile boolean stopRequested = false;
-    private volatile boolean isRunning = false;
 
-    ImageSelectionLoader(String imageName, ImageSelectionPreview preview, ViewSelectionModel model)
+    ImageSelectionLoader(String imageName, ImageSelectionPreview preview, ImageSetInfo model)
     {
         this.imageName = imageName;
         this.preview = preview;
@@ -45,7 +44,6 @@ class ImageSelectionLoader implements Runnable
     @Override
     public void run()
     {
-        isRunning = true;
         if (!stopRequested)
         {
             try
@@ -56,15 +54,8 @@ class ImageSelectionLoader implements Runnable
             {
                 preview.setImageViewText(
                     String.format("%s (full res image not found)", preview.getImageViewText()));
-                return;
             }
         }
-        isRunning = false;
-    }
-
-    public boolean isActive()
-    {
-        return isRunning;
     }
 
     public void stopThread()

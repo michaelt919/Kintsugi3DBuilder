@@ -11,13 +11,15 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.CacheModel;
+import kintsugi3d.builder.state.CarouselModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.ActiveShaderModel;
 import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
 import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
-import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public interface Kintsugi3DBuilderState
@@ -26,13 +28,16 @@ public interface Kintsugi3DBuilderState
     ReadonlyViewpointModel getCameraModel();
     ReadonlyLightingEnvironmentModel getLightingModel();
     ReadonlyObjectPoseModel getObjectModel();
-    UserShaderModel getUserShaderModel();
+    ActiveShaderModel getUserShaderModel();
 
     // Mainly for light calibration?
-    CameraViewListModel getCameraViewListModel();
+    SelectableViewListModel getViewListModel();
 
     // Cards and tabs
     TabsModel getTabModels();
+
+    // Carousel
+    CarouselModel getCarouselModel();
 
     // Global settings
     /**
@@ -41,22 +46,8 @@ public interface Kintsugi3DBuilderState
      */
     GeneralSettingsModel getSettingsModel();
 
-    // Settings that must be applied prior to load
-    LoadOptionsModel getLoadOptionsModel();
-
     // Project cache info and access
     CacheModel getCacheModel();
-
-    // Main view and carousel
-    CanvasModel getMainCanvasModel();
-    CanvasListModel getCanvasListModel();
-    CarouselModel getCarouselModel();
-
-    // Global access to 3D view
-    SceneViewportModel getSceneViewportModel();
-
-    // Load / save / export of project elements -- not intended for frontend display
-    IOModel getIOModel();
 
     // Global project state and other miscellaneous properties that are available for frontend display.
     ProjectModel getProjectModel();

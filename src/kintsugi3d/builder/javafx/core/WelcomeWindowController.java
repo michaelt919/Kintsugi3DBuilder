@@ -19,6 +19,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -26,17 +27,18 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.RecentProjects;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.File;
@@ -47,7 +49,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class WelcomeWindowController
@@ -69,7 +70,7 @@ public class WelcomeWindowController
 
     @FXML private SplitMenuButton recentProjectsSplitMenuButton;
 
-    private final List<Button> recentButtons = new ArrayList<>(16);
+    private final List<Button> recentButtons = new ArrayList<>(5);
 
     private Stage window;
     private Window parentWindow;
@@ -96,7 +97,7 @@ public class WelcomeWindowController
 
         shouldBeHidden = ExperienceManager.getInstance().getAnyModalOpenProperty()
             .or(ProgressBarsController.getInstance().getProcessingProperty())
-            .or(JavaFXState.getInstance().getProjectModel().getProjectOpenProperty());
+            .or(state.getProjectModel().getProjectOpenProperty());
 
         InvalidationListener windowHide = obs ->
             // Delay to allow it to catch if the main window is being closed.
@@ -178,7 +179,7 @@ public class WelcomeWindowController
     private static void handleMenuItemSelection(MenuItem item)
     {
         String projectName = item.getText();
-        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
+        FrontendIO.openProjectFromFile(new File(projectName));
     }
 
     public void splitMenuButtonActions(ActionEvent actionEvent)
@@ -198,25 +199,25 @@ public class WelcomeWindowController
 
     public void createProject()
     {
-        if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
+        if (!FrontendIO.isCreateProjectWindowOpen())
         {
-            ProjectIO.getInstance().createProject(parentWindow);
+            FrontendIO.createProject(parentWindow);
         }
     }
 
     @FXML
     private void openProject()
     {
-        ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
+        FrontendIO.getInstance().openProject(parentWindow);
     }
 
     @FXML
-    private void help_userManual()
+    private void userManual()
     {
         userDocumentationHandler.run();
     }
 
-    public void unrollMenu()
+    private void unrollMenu()
     {
         recentProjectsSplitMenuButton.show();
     }
@@ -237,7 +238,7 @@ public class WelcomeWindowController
         }
     }
 
-    public void handleButtonSelection(Button item)
+    private void handleButtonSelection(Button item)
     {
         ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getRecentProjectFilenames();
         int i = 0;
@@ -245,7 +246,7 @@ public class WelcomeWindowController
         {
             if (Objects.equals(button, item))
             {
-                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+                FrontendIO.openProjectFromFile(new File(recentFileNames.get(i)));
             }
             i++;
         }
@@ -254,13 +255,13 @@ public class WelcomeWindowController
     @FXML
     public void openSystemSettingsModal()
     {
-        ExperienceManager.getInstance().getExperience("SystemSettings").tryOpen();
+        ExperienceManager.getInstance().getExperience(ExperienceManager.SYSTEM_SETTINGS).tryOpen();
     }
 
     @FXML
     public void openAboutModal()
     {
-        ExperienceManager.getInstance().getExperience("About").tryOpen();
+        ExperienceManager.getInstance().getExperience(ExperienceManager.ABOUT).tryOpen();
     }
 
     public void updateRecentProjects()
@@ -396,155 +397,48 @@ public class WelcomeWindowController
 
     private static void setRecentButtonImg(Button recentButton, File projFile)
     {
-        //open file and convert to xml document
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try
         {
-            String fullRes = "# Full resolution image file path";
-            String prevRes = "# Preview resolution image file path";
+            File vsetFile = Global.io().getViewSetFileForProject(projFile);
+            ViewSet viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile).finish();
+            View representativeView = viewSet.getRepresentativeView();
+            File thumbnailImageFile = representativeView.getThumbnailImageFile();
 
-            String prevResImgsPath = findImgsPath(factory, projFile, prevRes);
-            String fullResImgsPath = findImgsPath(factory, projFile, fullRes);
-
-            if ((prevResImgsPath == null) && (fullResImgsPath == null))
+            if (thumbnailImageFile == null || !thumbnailImageFile.exists())
             {
-                LOG.warn("Could not find preview image for {}", projFile.getName());
-                return;
+                thumbnailImageFile =  representativeView.tryFindPreviewImageFile();
             }
 
-            String previewImgPath = null;
-
-            if (prevResImgsPath != null)
+            if (thumbnailImageFile == null || !thumbnailImageFile.exists())
             {
-                previewImgPath = getPreviewImgPath(prevResImgsPath, projFile);
+                thumbnailImageFile = representativeView.tryFindFullResImageFile();
             }
 
-            if (previewImgPath == null)
+            if (thumbnailImageFile != null && thumbnailImageFile.exists())
             {
-                //try full imgPath before giving up
-                if (fullResImgsPath == null)
+                ImageView previewImgView = new ImageView(
+                    new Image(thumbnailImageFile.toURI().toString(),
+                        true)); /* enable background loading so we don't freeze the builder */
+
+                Platform.runLater(() ->
                 {
-                    LOG.warn("Could not find preview image for {}", projFile.getName());
-                    return;
-                }
+                    previewImgView.setFitHeight(80);
+                    previewImgView.setFitWidth(80);
+                    previewImgView.setPreserveRatio(true);
 
-                previewImgPath = getPreviewImgPath(fullResImgsPath, projFile);
+                    // Center image within button
+                    StackPane graphic = new StackPane(previewImgView);
+                    graphic.setPrefWidth(80);
+                    graphic.setPrefHeight(80);
+                    graphic.setAlignment(Pos.CENTER);
 
-                if (previewImgPath == null)
-                {
-                    LOG.warn("Could not find preview image for {}", projFile.getName());
-                    return;
-                }
+                    recentButton.setGraphic(graphic);
+                });
             }
-
-            ImageView previewImgView = new ImageView(
-                new Image(new File(previewImgPath).toURI().toString(),
-                    true));/*enable background loading so we don't freeze the builder*/
-
-            previewImgView.setFitHeight(80);
-            previewImgView.setPreserveRatio(true);
-            Platform.runLater(() -> recentButton.setGraphic(previewImgView));
         }
-        catch (ParserConfigurationException | IOException | SAXException e)
+        catch (IOException | ParserConfigurationException | SAXException e)
         {
             LOG.warn("Could not find preview image for {}", projFile.getName(), e);
         }
-    }
-
-    private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException
-    {
-        if (file.exists())
-        {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(file);
-
-            //get view set path
-            Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
-            Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-            String viewSetPath = new File(file.getParent(), viewSetDomElement.getAttribute("src")).getPath();
-
-            //open images in view set path
-            File viewSetFile = new File(viewSetPath);
-
-            try (Scanner sc = new Scanner(viewSetFile, StandardCharsets.UTF_8))
-            {
-                while (sc.hasNextLine())
-                {
-                    String read = sc.nextLine();
-
-                    //if (read.equals("# Full resolution image file path")){
-                    //if (read.equals("# Preview resolution image file path")) {
-                    if (read.equals(target))
-                    {
-                        String imgsPath = sc.nextLine();
-                        //remove the first two chars of the path because it starts with "i "
-                        imgsPath = imgsPath.substring(2);
-
-                        //remove references to parent directories
-                        String parentPrefix = "..\\";
-                        String parentPrefixUnix = "../";
-                        while (imgsPath.startsWith(parentPrefix) || imgsPath.startsWith(parentPrefixUnix))
-                        {
-                            imgsPath = imgsPath.substring(parentPrefix.length());
-                        }
-                        return imgsPath;
-                    }
-                }
-
-                return null;
-            }
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    private static String getPreviewImgPath(String imgsPath, File projFile) throws IOException
-    {
-        //build path off of home directory if path is not complete, otherwise correct path would not be found
-        File imgFolder;
-        if (imgsPath.matches("^[A-Za-z]:\\\\.*"))
-        {
-            //full path is given (starting with C:\, G:\, etc)
-            imgFolder = new File(imgsPath);
-        }
-        else
-        {
-            String basePath = System.getProperty("user.home");
-            File baseDir = new File(basePath);
-            imgFolder = new File(baseDir, imgsPath);
-        }
-
-        String canonicalPath = imgFolder.getCanonicalPath();
-        File resolvedFile = new File(canonicalPath);
-
-        // Check if the path is a directory
-        if (!resolvedFile.isDirectory())
-        {
-            //try again w/ project file parent + imgFolder
-            imgFolder = new File(projFile.getParent(), imgsPath);
-            canonicalPath = imgFolder.getCanonicalPath();
-            resolvedFile = new File(canonicalPath);
-
-            if (!resolvedFile.isDirectory())
-            {
-                //not a warning because we might find the preview image in the other image path
-                //first checks preview images, then full res images
-                LOG.info("Could not find preview image for {} in {}", projFile.getName(), resolvedFile.getAbsolutePath());
-                return null;
-            }
-        }
-
-        // List child files
-        String[] childFilePaths = resolvedFile.list();
-
-        if ((childFilePaths == null) || (childFilePaths.length == 0))
-        {
-            LOG.warn("No preview images found in {}", resolvedFile.getAbsolutePath());
-            return null;
-        }
-
-        return new File(canonicalPath, childFilePaths[0]).getPath();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,6 +21,19 @@ import java.util.Objects;
 
 public final class ExperienceManager
 {
+    public static final String CREATE_PROJECT = "CreateProject";
+    public static final String OBJECT_ORIENTATION = "ObjectOrientation";
+    public static final String LIGHT_CALIBRATION = "LightCalibration";
+    public static final String MASK_OPTIONS = "MaskOptions";
+    public static final String TONE_CALIBRATION = "ToneCalibration";
+    public static final String SPECULAR_BASIS_FIT = "SpecularBasisFit";
+    public static final String SPECULAR_TEXTURE_FIT = "SpecularTextureFit";
+    public static final String EXPORT_MODEL = "ExportModel";
+    public static final String LOG = "Log";
+    public static final String SYSTEM_SETTINGS = "SystemSettings";
+    public static final String ABOUT = "About";
+    public static final String REPLACE_IMAGE = "ReplaceImage";
+
     private final Map<String, Experience> experiences = new HashMap<>(16);
     private final ExportRenderManager exportRenderManager = new ExportRenderManager();
 
@@ -30,18 +43,18 @@ public final class ExperienceManager
 
     private ExperienceManager()
     {
-        experiences.put("CreateProject", new CreateProject());
-        experiences.put("ObjectOrientation", new ObjectOrientation());
-        experiences.put("LightCalibration", new LightCalibration());
-        experiences.put("MaskOptions", new MaskOptions());
-        experiences.put("ToneCalibration", new ToneCalibration());
-        experiences.put("SpecularBasisFit", new SpecularBasisFit());
-        experiences.put("SpecularTextureFit", new SpecularTextureFit());
-        experiences.put("ExportModel", new ExportModel());
-        experiences.put("Log", new Log());
-        experiences.put("SystemSettings", new SystemSettings());
-        experiences.put("About", new About());
-        experiences.put("ReplaceModel", new ReplaceImage());
+        experiences.put(CREATE_PROJECT, new CreateProject());
+        experiences.put(OBJECT_ORIENTATION, new ObjectOrientation());
+        experiences.put(LIGHT_CALIBRATION, new LightCalibration());
+        experiences.put(MASK_OPTIONS, new MaskOptions());
+        experiences.put(TONE_CALIBRATION, new ToneCalibration());
+        experiences.put(SPECULAR_BASIS_FIT, new SpecularBasisFit());
+        experiences.put(SPECULAR_TEXTURE_FIT, new SpecularTextureFit());
+        experiences.put(EXPORT_MODEL, new ExportModel());
+        experiences.put(LOG, new Log());
+        experiences.put(SYSTEM_SETTINGS, new SystemSettings());
+        experiences.put(ABOUT, new About());
+        experiences.put(REPLACE_IMAGE, new ReplaceImage());
     }
 
     public static ExperienceManager getInstance()

@@ -20,8 +20,8 @@ import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
 import kintsugi3d.gl.util.ImageHelper;
-import kintsugi3d.util.RadianceImageLoader;
-import kintsugi3d.util.RadianceImageLoader.Image;
+import kintsugi3d.gl.util.RadianceImageLoader;
+import kintsugi3d.gl.util.RadianceImageLoader.Image;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

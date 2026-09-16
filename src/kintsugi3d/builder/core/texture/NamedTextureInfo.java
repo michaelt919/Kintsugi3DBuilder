@@ -12,9 +12,9 @@
 package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
+import kintsugi3d.builder.rendering.ProjectRenderableInstance;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,14 +34,14 @@ public class NamedTextureInfo extends TextureInfo
     }
 
     @Override
-    public UserShader getVisualizationShader()
+    public ShaderInfo getVisualizationShader()
     {
-        return new UserShader(friendlyName, "rendermodes/viewTextureSimple.frag",
+        return new ShaderInfo(friendlyName, "rendermodes/viewTextureSimple.frag",
             Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", name))));
     }
 
     @Override
-    public void refresh(RenderableInstance<?> instance) throws IOException
+    public void refresh(ProjectRenderableInstance<?> instance) throws IOException
     {
         // TODO switch to observable pattern for textures?
         TextureResources<?> resources = instance.getResources().getTextureResources();
@@ -49,10 +49,10 @@ public class NamedTextureInfo extends TextureInfo
     }
 
     @Override
-    public ImageReplaceData getReplaceData(RenderableInstance<?> instance)
+    public ImageReplacer getReplaceData(ProjectRenderableInstance<?> instance)
     {
-        return new NamedTextureReplaceData(instance.getResources().getTextureResources(), this,
-            new File(Global.state().getIOModel().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
+                return new NamedTextureReplacer(instance.getResources().getTextureResources(), this,
+            new File(Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
                 TextureResources.getTextureFilename(name)));
     }
 }
