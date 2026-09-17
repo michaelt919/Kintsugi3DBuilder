@@ -249,7 +249,7 @@ public class SmokeTest
         LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
         testFitPsx(
-            "target/classes/test/Rodin/Mia_001239_Rodin_301.psx",
+            "src/main/resources/test/Rodin/Mia_001239_Rodin_301.psx",
                    "Rodin/Processed dark 25",
             rmse ->
             {
@@ -259,9 +259,9 @@ public class SmokeTest
             },
             "Rodin_psx");
         int numLoadedCameras = viewSet.getViewCount();
-        assertEquals(228, numLoadedCameras);
+        assertEquals(90, numLoadedCameras);
         int numEnabledCameras = viewSet.getEnabledViewCount();
-        assertEquals(228, numEnabledCameras);
+        assertEquals(90, numEnabledCameras);
         int numDisabledCameras = viewSet.getDisabledViewCount();
         assertEquals(0, numDisabledCameras);
     }

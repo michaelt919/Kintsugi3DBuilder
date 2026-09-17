@@ -8,3 +8,21 @@
 *.glsl text
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.tiff filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+*.PNG filter=lfs diff=lfs merge=lfs -text
+*.JPG filter=lfs diff=lfs merge=lfs -text
+*.JPEG filter=lfs diff=lfs merge=lfs -text
+*.TIFF filter=lfs diff=lfs merge=lfs -text
+*.TIF filter=lfs diff=lfs merge=lfs -text
+*.obj filter=lfs diff=lfs merge=lfs -text
+*.mtl filter=lfs diff=lfs merge=lfs -text
+*.ply filter=lfs diff=lfs merge=lfs -text
+*.glb filter=lfs diff=lfs merge=lfs -text
+*.gltf filter=lfs diff=lfs merge=lfs -text
+*.OBJ filter=lfs diff=lfs merge=lfs -text
+*.MTL filter=lfs diff=lfs merge=lfs -text
+*.PLY filter=lfs diff=lfs merge=lfs -text
+*.GLB filter=lfs diff=lfs merge=lfs -text
+*.GLTF filter=lfs diff=lfs merge=lfs -text
