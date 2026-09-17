@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
@@ -164,10 +164,10 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
                 StandardTexture.ROUGHNESS, roughnessOptimization.getRoughnessTexture());
     }
 
-    protected Map<TextureDetails, Texture2D<ContextType>> getSpecularTextures()
+    protected Map<TextureInfo, Texture2D<ContextType>> getSpecularTextures()
     {
         //noinspection VariableNotUsedInsideIf
-        return (roughnessOptimization == null) ? Map.of() : StandardTexture.convertEnumMapToObjectMap(getStandardSpecularTextures());
+        return roughnessOptimization == null ? Map.of() : StandardTexture.convertEnumMapToObjectMap(getStandardSpecularTextures());
     }
 
     /**

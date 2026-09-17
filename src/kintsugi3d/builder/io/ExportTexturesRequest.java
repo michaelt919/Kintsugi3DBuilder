@@ -12,20 +12,20 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ImageBasedRenderable;
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 
-public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
+public class ExportTexturesRequest implements ProgressMonitoredProjectGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportTexturesRequest.class);
 
@@ -47,7 +47,7 @@ public class ExportTexturesRequest implements ObservableProjectGraphicsRequest
 
     private static ExportSettings getExportSettingsFromProject()
     {
-        GeneralSettingsModel projectSettings = Global.state().getIOModel()
+        GeneralSettingsModel projectSettings = Global.io()
             .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 

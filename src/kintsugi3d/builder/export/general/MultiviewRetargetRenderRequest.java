@@ -11,10 +11,15 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
@@ -45,7 +50,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ObservableProjectGraphicsRequest create()
+        public ProgressMonitoredProjectGraphicsRequest create()
         {
             return new MultiviewRetargetRenderRequest(getWidth(), getHeight(), getShaderSetupCallback(),
                 targetViewSet, getVertexShader(), getFragmentShader(), getOutputDirectory());
@@ -58,7 +63,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile).finish();
 
-        ReadonlyGraphicsResources<ContextType> resources = renderable.getResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (
@@ -67,23 +72,22 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            for (int i = 0; i < targetViewSet.getCombinedCameraPoseCount(); i++)
+            int progressCount = 0;
+            for (View view : targetViewSet.getEnabledViews())
             {
                 if (monitor != null)
                 {
                     monitor.allowUserCancellation();
                 }
 
-                program.setUniform("viewIndex", i);
-                program.setUniform("model_view", targetViewSet.getCameraPose(i));
-                program.setUniform("projection",
-                    targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
-                        .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+                program.setUniform("viewIndex", view.getGPUViewIndex());
+                program.setUniform("model_view", view.getCameraPose());
+                program.setUniform("projection", view.getProjectionMatrix());
 
                 render(drawable, framebuffer);
 
                 String fileName = ImageFinder.getInstance().getImageFileNameWithExtension(
-                    renderable.getViewSet().getImageFileName(i), "png");
+                    view.getImageFile().getName(), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
@@ -91,9 +95,12 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) resources.getViewSet().getCombinedCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCombinedCameraPoseCount()));
+                    monitor.setProgress((double) progressCount / (double) resources.getViewSet().getEnabledViewCount(),
+                        MessageFormat.format("{0} ({1}/{2})", view,
+                            progressCount + 1, resources.getViewSet().getEnabledViewCount()));
                 }
+
+                progressCount++;
             }
         }
     }

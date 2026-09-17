@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,7 +17,7 @@ import kintsugi3d.builder.javafx.controllers.scene.environment.RootEnvironmentSc
 import kintsugi3d.builder.javafx.controllers.scene.lights.RootLightSceneController;
 import kintsugi3d.builder.javafx.controllers.scene.object.RootObjectSceneController;
 import kintsugi3d.builder.javafx.internal.*;
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.rendering.SceneViewport;
 
 public class RootSceneController
 {
@@ -30,12 +30,13 @@ public class RootSceneController
     @FXML
     private RootObjectSceneController objectPosesController;
 
-    public void init(ObservableCameraModel cameraModel, ObservableLightingEnvironmentModel lightingModel, ObservableEnvironmentModel environmentMapModel,
-                     ObservableObjectPoseModel objectModel, ObservableProjectModel projectModel, SceneViewportModel sceneViewportModel)
+    public void injectDependencies(ObservableCameraModel cameraModel, ObservableLightingEnvironmentModel lightingModel,
+                                   ObservableEnvironmentModel environmentMapModel, ObservableObjectPoseModel objectModel,
+                                   ObservableProjectModel projectModel, SceneViewport sceneViewport)
     {
-        cameraController.init(cameraModel, projectModel);
-        lightsController.init(lightingModel, projectModel, sceneViewportModel);
-        environmentMapController.init(environmentMapModel, projectModel);
-        objectPosesController.init(objectModel, projectModel);
+        cameraController.injectDependencies(cameraModel, projectModel);
+        lightsController.injectDependencies(lightingModel, projectModel, sceneViewport);
+        environmentMapController.injectDependencies(environmentMapModel, projectModel);
+        objectPosesController.injectDependencies(objectModel, projectModel);
     }
 }

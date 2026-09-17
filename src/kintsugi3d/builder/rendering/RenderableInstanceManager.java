@@ -11,11 +11,19 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.IOHandler;
+import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.builder.io.events.ProjectLoadedEvent;
+import kintsugi3d.builder.io.events.ProjectLoadedListener;
+import kintsugi3d.builder.io.events.ProjectProcessedEvent;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
@@ -23,26 +31,27 @@ import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.builder.resources.project.MissingImagesException;
-import kintsugi3d.builder.state.CameraViewListModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
 import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.interactive.InitializationException;
-import kintsugi3d.gl.interactive.InteractiveRenderableBase;
-import kintsugi3d.gl.interactive.RefreshableCollection;
-import kintsugi3d.gl.interactive.RenderRefreshable;
+import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.interactive.*;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.FramebufferCanvas;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -51,64 +60,39 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public class RenderableInstanceManager<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements IOHandler
+    extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableManager<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(RenderableInstanceManager.class);
 
     private final ContextType context;
 
-    private final RefreshableCollection<RenderRefreshable<ContextType, ? extends ImageBasedRenderable<ContextType>>> renderViews
+    private final RefreshableCollection<RenderRefreshable<ContextType, ImageBasedRenderingEngine<ContextType>>> renderViews
         = new RefreshableCollection<>();
-    private final Map<UserShader, RenderRefreshable<ContextType, ImageBasedRenderable<ContextType>>> renderViewMap
+    private final Map<ShaderInfo, RenderRefreshable<ContextType, ImageBasedRenderingEngine<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
-    private ViewSet loadedViewSet;
-    private ImageBasedRenderable<ContextType> renderableInstance;
+    private final SceneViewport sceneViewport = new ManagedSceneViewport(this);
+
+    private volatile ViewSet loadedViewSet;
+    private volatile VertexGeometry loadedGeometry;
+    private volatile ImageBasedRenderable<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
     private ReadonlyViewpointModel cameraModel;
     private ReadonlyLightingEnvironmentModel lightingModel;
     private ReadonlyGeneralSettingsModel settingsModel;
-    private CameraViewListModel cameraViewListModel;
+    private SelectableViewListModel viewListModel;
 
-    private final List<Consumer<ViewSet>> viewSetLoadCallbacks
-        = Collections.synchronizedList(new ArrayList<>(4));
-
+    // These are one-shot callbacks for queuing up graphics requests before a project is loaded
     private final List<Consumer<ImageBasedRenderable<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
-    private File loadedProjectFile;
-
-    /**
-     * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
-     * The callbacks will be cleared after being invoked.
-     *
-     * @param callback to add
-     */
-    @Override
-    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
-    {
-        synchronized (viewSetLoadCallbacks)
-        {
-            viewSetLoadCallbacks.add(callback);
-        }
-    }
-
-    /**
-     * Adds callbacks that will be invoked when the instance has finished loading.
-     * The callbacks will be cleared after being invoked.
-     *
-     * @param callback to add
-     */
-    @Override
-    public void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback)
-    {
-        synchronized (instanceLoadCallbacks)
-        {
-            instanceLoadCallbacks.add(callback);
-        }
-    }
+    // These are the ongoing listeners for UI synchronization
+    private final EventDispatcher<ProjectLoadedListener, ProjectLoadedEvent> projectLoaded
+        = new EventDispatcher<>(ProjectLoadedListener::onProjectLoaded);
+    private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
+        = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     public RenderableInstanceManager(ContextType context)
     {
@@ -124,7 +108,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    private void handleMissingFiles(Exception e)
+    private void handleGenericError(Exception e)
     {
         LOG.error("An error occurred loading project: ", e);
         if (progressMonitor != null)
@@ -143,6 +127,18 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
+    public EventListeners<ProjectLoadedListener> projectLoadedListeners()
+    {
+        return projectLoaded;
+    }
+
+    @Override
+    public EventListeners<ProjectProcessedListener> projectProcessedListeners()
+    {
+        return projectProcessed;
+    }
+
+    @Override
     public boolean isRenderableLoaded()
     {
         return renderableInstance != null;
@@ -155,38 +151,47 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public File getLoadedProjectFile()
+    public VertexGeometry getLoadedGeometry()
     {
-        return loadedProjectFile;
+        return loadedGeometry;
     }
 
+    public SceneViewport getSceneViewport()
+    {
+        return sceneViewport;
+    }
+
+    /**
+     * Adds callbacks that will be invoked when the instance has finished loading.
+     * The callbacks will be cleared after being invoked.
+     *
+     * @param callback to add
+     */
     @Override
-    public void setLoadedProjectFile(File loadedProjectFile)
+    public void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback)
     {
-        this.loadedProjectFile = loadedProjectFile;
-    }
-    private void invokeViewSetLoadCallbacks(ViewSet viewSet)
-    {
-        synchronized (viewSetLoadCallbacks)
+        synchronized (instanceLoadCallbacks)
         {
-            // Invoke callbacks
-            for (Consumer<ViewSet> callback : viewSetLoadCallbacks)
-            {
-                callback.accept(viewSet);
-            }
-
-            // Clear the list of callbacks for the next load.
-            viewSetLoadCallbacks.clear();
+            instanceLoadCallbacks.add(callback);
         }
     }
 
-    private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
+    /**
+     * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
+     * @param id
+     * @param builder
+     * @throws UserCancellationException
+     */
+    private void loadInstance(File newProjectFile, String id, Builder<ContextType> builder)
+        throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
-        int cameraCount = loadedViewSet.getCombinedCameraPoseCount();
-        if (cameraCount > 1024 && progressMonitor != null)
+        loadedGeometry = builder.getGeometry();
+
+        int gpuBufferSize = loadedViewSet.getGPUBufferSize();
+        if (gpuBufferSize > 1024 && progressMonitor != null)
         {
-            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", cameraCount));
+            IOException e = new IOException(String.format("Dataset has %d cameras, which exceeds 1024 and may fail on many graphics cards.", gpuBufferSize));
             progressMonitor.warn(e);
         }
         boolean hasUnsupportedCorrections = loadedViewSet.hasUnsupportedCorrections();
@@ -196,15 +201,30 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
             progressMonitor.warn(e);
         }
 
-        List<File> imgFiles = loadedViewSet.getAllImageFiles();
-        List<String> imgFileNames = new ArrayList<>(imgFiles.size());
+        // getViews returns a copy
+        // Grab all views (not just enabled) for light calibration
+        // TODO this is for the light calibration sidebar and should probably be migrated to a newer system
+        // TODO   for managing the list of photos (like the photos tab)
+        Global.state().getViewListModel().setViewList(loadedViewSet.getViewsSorted());
 
-        imgFiles.forEach(file -> imgFileNames.add(file.getName()));
-
-        Global.state().getCameraViewListModel().setCameraViewList(imgFileNames);
-
-        // Invoke callbacks now that view set is loaded
-        invokeViewSetLoadCallbacks(loadedViewSet);
+        if (newProjectFile != null)
+        {
+            // Save the project before proceeding.
+            // Hypothetically if any textures existed already they would be saved out asynchronously
+            // but that shouldn't matter regardless since we just need to have a valid project file path right now.
+            try
+            {
+                Global.io().saveProject(newProjectFile);
+            }
+            catch (IOException|ParserConfigurationException|TransformerException e)
+            {
+                LOG.error("Error saving project", e);
+            }
+        }
+        // If no project file is specified, don't save the project but attempt to continue loading.
+        // This might result in some weird behavior but in theory could be successful.
+        // Many directory paths have fallbacks that aren't in a supporting files directory.
+        // In theory, this shouldn't ever happen since the UI should ideally prevent this.
 
         if (progressMonitor != null)
         {
@@ -245,18 +265,18 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
                 // Register observer for changes to the Photos tab
                 loadedViewSet.registerObserver(change ->
                 {
-                    CardsModel photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS);
+                    CardsModel<View> photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS, View.class);
 
-                    switch (change.type)
+                    switch (change.changeType)
                     {
                         case ADDED:
                             tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
                             break;
                         case REMOVED:
-                            photosTab.deleteCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            photosTab.deleteCards(card -> change.changeMap.get(new File(card.getInternalName())) != null);
                             break;
                         case MODIFIED:
-                            photosTab.refreshCards(card -> Objects.equals(card.getInternalName(), change.image.getPath()));
+                            photosTab.refreshCards(card -> change.changeMap.get(new File(card.getInternalName())));
                             break;
                     }
                 });
@@ -276,14 +296,32 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
                 newInstance.close();
             }
 
-            // Invoke callbacks
-            for (Consumer<ImageBasedRenderable<?>> callback : instanceLoadCallbacks)
+            synchronized (instanceLoadCallbacks)
             {
-                callback.accept(renderableInstance);
+                // Invoke callbacks
+                for (Consumer<ImageBasedRenderable<?>> callback : instanceLoadCallbacks)
+                {
+                    callback.accept(renderableInstance);
+                }
+
+                // Clear the list of callbacks for the next load.
+                instanceLoadCallbacks.clear();
             }
 
-            // Clear the list of callbacks for the next load.
-            instanceLoadCallbacks.clear();
+            // Notify listeners that project has loaded
+            projectLoaded.notifyListeners(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
+
+            GraphicsResourcesImageSpace<ContextType> resources = renderableInstance.getResources();
+            if (resources.hasProcessedWeightMaps())
+            {
+                // Project has been processed previously; notify listeners
+                IntVector2 weightMapResolution = resources.getProcessedWeightMapResolution();
+                projectProcessed.notifyListeners(new ProjectProcessedEvent(
+                    weightMapResolution.x, weightMapResolution.y));
+            }
+
+            // Ensure that the listeners are also notified if the project is processed in the future.
+            resources.weightMapsProcessedListeners().addListener(projectProcessed::notifyListeners);
 
             // Update once before drawing
             newInstance.update();
@@ -305,11 +343,12 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         sceneModel.setCameraModel(this.cameraModel);
         sceneModel.setLightingModel(this.lightingModel);
         sceneModel.setSettingsModel(this.settingsModel);
-        sceneModel.setCameraViewListModel(this.cameraViewListModel);
+        sceneModel.setCameraViewListModel(this.viewListModel);
     }
 
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
+        throws UserCancellationException, MeshImportException, IOException
     {
         if (this.progressMonitor.isConflictingProcess())
         {
@@ -321,29 +360,37 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
 
         try
         {
-            Builder<ContextType> contextTypeBuilder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                .setProgressMonitor(this.progressMonitor)
-                .setImageLoadOptions(loadOptions)
-                .loadVSETFile(vsetFile, supportingFilesDirectory);
+            Builder<ContextType> builder;
+            try
+            {
+                builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setImageLoadOptions(loadOptions)
+                    .loadVSETFile(vsetFile, supportingFilesDirectory);
+            }
+            catch (MeshImportException e)
+            {
+                handleMeshImportException(e);
+                throw e;
+            }
+            catch (IOException|RuntimeException e)
+            {
+                handleGenericError(e);
+                throw e;
+            }
 
-            loadInstance(id, contextTypeBuilder);
+            loadInstance(null, id, builder);
         }
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
-        }
-        catch (MeshImportException e)
-        {
-            handleMeshImportException(e);
-        }
-        catch (IOException|RuntimeException e)
-        {
-            handleMissingFiles(e);
+            throw e;
         }
     }
 
     @Override
-    public void loadFromMetashapeModel(MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
+    public void loadFromMetashapeModel(File newProjectFile, MetashapeModel model, ReadonlyLoadOptionsModel loadOptionsModel)
+        throws UserCancellationException, MissingImagesException, MeshImportException, IOException, XMLStreamException
     {
 
         if (this.progressMonitor.isConflictingProcess())
@@ -354,35 +401,46 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
 
+        MetashapeChunk parentChunk = model.getChunk();
+
         try
         {
-            MetashapeChunk parentChunk = model.getChunk();
-            String orientationView = model.getLoadPreferences().getOrientationViewName();
-            double rotation = model.getLoadPreferences().getOrientationViewRotateDegrees();
+            Builder<ContextType> builder;
+            try
+            {
+                String orientationView = model.getLoadPreferences().getOrientationViewName();
+                double rotation = model.getLoadPreferences().getOrientationViewRotateDegrees();
 
-            Builder<ContextType> builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                .setProgressMonitor(this.progressMonitor)
-                .setImageLoadOptions(loadOptionsModel)
-                .loadFromMetashapeModel(model)
-                .setOrientationView(orientationView, rotation);
-            loadInstance(parentChunk.getFramePath(), builder);
+                builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setImageLoadOptions(loadOptionsModel)
+                    .loadFromMetashapeModel(model)
+                    .setOrientationView(orientationView, rotation);
+            }
+            catch (MeshImportException e)
+            {
+                handleMeshImportException(e);
+                throw e;
+            }
+            catch (IOException | RuntimeException | XMLStreamException | MissingImagesException e)
+            {
+                handleGenericError(e);
+                throw e;
+            }
+
+            loadInstance(newProjectFile, parentChunk.getFramePath(), builder);
         }
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
-        }
-        catch (MeshImportException e)
-        {
-            handleMeshImportException(e);
-        }
-        catch (MissingImagesException | IOException | XMLStreamException e)
-        {
-            handleMissingFiles(e);
+            throw e;
         }
     }
 
     @Override
-    public void loadFromLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
+    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
+                                   ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
+        throws Exception
     {
         if (this.progressMonitor.isConflictingProcess())
         {
@@ -393,49 +451,57 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
 
         try
         {
-            Builder<ContextType> builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
-                .setProgressMonitor(this.progressMonitor)
-                .setImageLoadOptions(imageLoadOptions)
-                .loadLooseFiles(xmlFile, viewSetLoadOptions);
+            Builder<ContextType> builder;
+            try
+            {
+                builder = GraphicsResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setImageLoadOptions(imageLoadOptions)
+                    .loadLooseFiles(xmlFile, viewSetLoadOptions);
+            }
+            catch (Exception e)
+            {
+                handleGenericError(e);
+
+                //noinspection ProhibitedExceptionThrown
+                throw e; // Re-throw so that calling method can rollback any state changes to account for failure
+            }
 
             // Invoke callbacks now that view set is loaded
-            loadInstance(id, builder);
+            loadInstance(newProjectFile, id, builder);
         }
         catch (UserCancellationException e)
         {
             handleUserCancellation(e);
-        }
-        catch (Exception e)
-        {
-            handleMissingFiles(e);
+            throw e; // Re-throw so that calling method can rollback any state changes to account for cancellation
         }
     }
 
-    public RefreshableCollection<RenderRefreshable<ContextType, ? extends ImageBasedRenderable<ContextType>>> getRenderViews()
+    public RefreshableCollection<RenderRefreshable<ContextType, ImageBasedRenderingEngine<ContextType>>> getRenderViews()
     {
         return renderViews;
     }
 
-    public void addRenderView(UserShader shader, FramebufferSize initialSize,
-                              IntVector2 safeStartPixel, IntVector2 safeEndPixel,
+    @Override
+    public void addRenderView(ShaderInfo shader, FramebufferSize viewSize,
+                              int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,
                               Consumer<FramebufferCanvas<?>> framebufferCallback)
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ImageBasedRenderingEngine<ContextType> renderView =
             new ImageBasedRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
-        renderView.setSafeRegion(safeStartPixel, safeEndPixel);
+        renderView.setSafeRegionPadding(safeLeftPadding, safeTopPadding, safeRightPadding, safeBottomPadding);
         initializeSceneModel(renderView.getSceneModel());
 
         Rendering.runLater(() ->
         {
             // Create framebuffer
             DoubleFramebufferObject<ContextType> framebuffer =
-                DoubleFramebufferFactory.create(context, initialSize.width, initialSize.height);
+                DoubleFramebufferFactory.create(context, viewSize.width, viewSize.height);
 
             // Create and initialize refreshable, which will manage the framebuffer object
-            RenderRefreshable<ContextType, ImageBasedRenderable<ContextType>> refreshable =
-                RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
+            var refreshable = RenderRefreshable.createWithManagedFrambufferObject(context, renderView, framebuffer);
 
             try
             {
@@ -466,12 +532,13 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ImageBasedRenderable<ContextType> getRenderableForShader(UserShader shader)
+    public ImageBasedRenderingEngine<ContextType> getRenderableForShader(ShaderInfo shader)
     {
         return renderViewMap.get(shader).getRenderable();
     }
 
-    public void removeRenderView(UserShader shader)
+    @Override
+    public void removeRenderView(ShaderInfo shader)
     {
         var renderViewToRemove = renderViewMap.get(shader);
 
@@ -482,28 +549,12 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    @Override
-    public void requestFragmentShader(File shaderFile)
+    private void requestFragmentShader(ShaderInfo shaderInfo)
     {
         if (renderableInstance != null)
         {
-            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderInfo.getFile(), shaderInfo.getDefines());
         }
-    }
-
-    @Override
-    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
-    {
-        if (renderableInstance != null)
-        {
-            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
-        }
-    }
-
-    @Override
-    public void requestFragmentShader(UserShader userShader)
-    {
-        requestFragmentShader(userShader.getFile(), userShader.getDefines());
     }
 
     @Override
@@ -569,12 +620,12 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    public void setCameraViewListModel(SelectableViewListModel viewListModel)
     {
-        this.cameraViewListModel = cameraViewListModel;
+        this.viewListModel = viewListModel;
         if (renderableInstance != null)
         {
-            renderableInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+            renderableInstance.getSceneModel().setCameraViewListModel(viewListModel);
         }
     }
 
@@ -672,31 +723,28 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void unload()
+    public void unload(Runnable onUnloadComplete)
     {
-        loadedProjectFile = null;
-
-        // Also remove render views which will be tied to the loaded project.
-        renderViewMap.clear();
-        renderViews.clear();
-
-        // Empty sidebar; will be repopulated when another project is opened.
-        Global.state().getTabModels().clearTabs();
-
         // Use the runLater system so that the rendering loop knows that an operation that might take longer is queued.
         Rendering.runLater(() ->
         {
             if (renderableInstance != null)
             {
+                // Empty sidebar; will be repopulated when another project is opened.
+                // TODO rework this; might be a race condition and also isn't the best dependency
+                Global.state().getTabModels().clearTabs();
+
+                // Also remove render views which will be tied to the loaded project.
+                renderViewMap.clear();
+                renderViews.clear();
+
                 renderableInstance.close();
                 renderableInstance = null;
                 loadedViewSet = null;
-
-                Global.state().getProjectModel().setProjectLoaded(false);
-                Global.state().getProjectModel().setProjectProcessed(false);
-                Global.state().getProjectModel().setProcessedTextureResolution(0);
-                Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
+                loadedGeometry = null;
             }
+
+            onUnloadComplete.run();
         });
     }
 
@@ -733,13 +781,6 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
         if (renderableInstance != null)
         {
             renderableInstance.close();
-
-            Global.state().getProjectModel().setProjectOpen(false);
-            Global.state().getProjectModel().clearProjectName();
-            Global.state().getProjectModel().setProjectLoaded(false);
-            Global.state().getProjectModel().setProjectProcessed(false);
-            Global.state().getProjectModel().setProcessedTextureResolution(0);
-            Global.state().getProjectModel().setModelSize(new Vector3(1.0f));
         }
     }
 }

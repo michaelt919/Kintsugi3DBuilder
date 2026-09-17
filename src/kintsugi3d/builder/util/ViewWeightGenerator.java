@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.util;
 
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -18,5 +19,5 @@ import kintsugi3d.gl.vecmath.Matrix4;
 @FunctionalInterface
 public interface ViewWeightGenerator
 {
-    float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView);
+    float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView);
 }

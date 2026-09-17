@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
@@ -25,9 +25,9 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ShadingParameterMode;
 
-import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Map;
+
 public class RenderingSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
     private UniformBuffer<ContextType> viewIndexBufferOverride;
@@ -47,32 +47,17 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     }
 
     @Override
-    protected Drawable<ContextType> createDrawable(Program<ContextType> drawableProgram)
+    protected Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
         // Use GraphicsResources to create a drawable with all the available vertex buffers.
-        return resources.createDrawable(drawableProgram);
+        return resources.createDrawable(program);
     }
 
     private ReadonlyNativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
-                .generateWeights(resources,
-                    new AbstractList<>()
-                    {
-                        @Override
-                        public Integer get(int index)
-                        {
-                            return index;
-                        }
-
-                        @Override
-                        public int size()
-                        {
-                            return resources.getViewSet().getCombinedCameraPoseCount();
-                        }
-                    },
-                    targetView);
+                .generateWeights(resources, resources.getViewSet().getEnabledViews(), targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
@@ -96,9 +81,9 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
         }
     }
 
-    public void overrideViewIndexBuffer(UniformBuffer<ContextType> newViewIndexBufferOverride)
+    public void overrideViewIndexBuffer(UniformBuffer<ContextType> viewIndexBufferOverride)
     {
-        this.viewIndexBufferOverride = newViewIndexBufferOverride;
+        this.viewIndexBufferOverride = viewIndexBufferOverride;
     }
 
     @Override

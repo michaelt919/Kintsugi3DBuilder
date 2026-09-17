@@ -11,22 +11,22 @@
 
 package kintsugi3d.builder.rendering.components.scene.camera;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.RenderedComponent;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraFrustum;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
 public class CameraWidgetGroup<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private int cameraIndex;
+    private View currentView;
 
     private final ReadonlyGraphicsResources<ContextType> resources;
     private final SceneModel sceneModel;
@@ -34,7 +34,7 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     private final CameraVisual<ContextType> cameraVisual;
     private final CameraFrustum<ContextType> cameraFrustum;
 
-    public CameraWidgetGroup(ReadonlyGraphicsResourcesImageSpace<ContextType> resources,
+    public CameraWidgetGroup(ReadonlyGraphicsResources<ContextType> resources,
                              SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;
@@ -43,15 +43,15 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
         ViewSelection selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel)
         {
             @Override
-            public int getSelectedViewIndex()
+            public View getSelectedView()
             {
-                return cameraIndex;
+                return currentView;
             }
         };
 
         cameraVisual = new CameraVisual<>(resources, sceneViewportModel);
         cameraVisual.setViewSelection(selection);
-        cameraFrustum = new CameraFrustum<>(resources.getContext(), sceneViewportModel);
+        cameraFrustum = new CameraFrustum<>(resources, sceneViewportModel);
         cameraFrustum.setViewSelection(selection);
     }
 
@@ -74,8 +74,14 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     {
         if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
         {
-            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCombinedCameraPoseCount(); cameraIndex++)
+            // Don't render disabled views so that this can be used to visualize what's enabled
+            for (View view : resources.getViewSet().getEnabledViews())
             {
+                // Current view is captured by cameraVisual and cameraFrustum so that they know where we are in the loop.
+                // A bit of a hack to get a design that was built for a single frustum to work for rendering multiple.
+                // TODO maybe rework with a dedicated visual and frustum child for each camera?
+                currentView = view;
+
                 cameraVisual.draw(framebuffer, cameraViewport);
                 cameraFrustum.draw(framebuffer, cameraViewport);
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,7 +15,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import kintsugi3d.builder.core.LoadOptionsModel;
+import kintsugi3d.builder.io.LoadOptionsModel;
 
 public class ObservableLoadOptionsModel implements LoadOptionsModel
 {
@@ -106,6 +106,12 @@ public class ObservableLoadOptionsModel implements LoadOptionsModel
     public void setCompressionRequested(boolean compressionRequested)
     {
         compression.setValue(compressionRequested);
+    }
+
+    @Override
+    public void setAlphaRequested(boolean alphaRequested)
+    {
+        alpha.setValue(alphaRequested);
     }
 
     @Override

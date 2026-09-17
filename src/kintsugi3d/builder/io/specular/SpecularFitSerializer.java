@@ -65,7 +65,7 @@ public final class SpecularFitSerializer
             try
             {
                 ImageIO.write(weightImg, "PNG",
-                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
+                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b)));
             }
             catch (IOException e)
             {
@@ -80,7 +80,7 @@ public final class SpecularFitSerializer
             try
             {
                 basisWeights.getColorTextureReader(b).saveToFile("PNG",
-                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")));
+                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b)));
             }
             catch (IOException e)
             {

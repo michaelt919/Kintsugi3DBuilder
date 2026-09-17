@@ -11,8 +11,11 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
+import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.core.viewset.DistortionProjection;
+import kintsugi3d.builder.core.viewset.Projection;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
@@ -20,15 +23,18 @@ import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamResource;
+import kintsugi3d.builder.util.ImageUndistorter;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.ReadonlyImportedMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
+import kintsugi3d.gl.stream.GraphicsStreamResource;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
-import kintsugi3d.util.ImageUndistorter;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,8 +72,8 @@ public class SpecularFitProcess
         return new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> TextureResources<ContextType> optimizeFitWithCache(
-        ReadonlyGraphicsResources<ContextType> resources, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void optimizeFitWithCache(
+        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -84,24 +90,27 @@ public class SpecularFitProcess
         Duration duration = Duration.between(start, Instant.now());
         LOG.info("Cache found / generated in: {}", duration);
 
-        return optimizeFitWithCache(cache, monitor);
+        // Runs the fit (long process) and then replaces the old material resources / textures
+        TextureResources<ContextType> result = optimizeFitWithCache(cache, monitor);
+        resources.replaceTextureResources(result);
     }
 
-    public <ContextType extends Context<ContextType>> TextureResources<ContextType> reoptimizeTexturesWithCache(
-        ReadonlyGraphicsResources<ContextType> resources, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(
+        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         // Get cache (should already be generated).
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), null);
 
-        return reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor);
+        // Runs the fit (long process) and then replaces the old material resources / textures
+        resources.replaceTextureResources(reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor));
     }
 
     public <ContextType extends Context<ContextType>> void reconstructAll(
-        ReadonlyGraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        GraphicsResources<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ReadonlyColorAppearanceRMSE> reconstructionCallback)
         throws IOException
     {
-        ReadonlyViewSet viewSet = resources.getViewSet();
+        ViewSet viewSet = resources.getViewSet();
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
         try(ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             viewSet,
@@ -113,12 +122,12 @@ public class SpecularFitProcess
                 .addDepthAttachment(),
             ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
             resources,
-            viewIndex ->
+            view ->
             {
                 try
                 {
-                    Projection projection = resources.getViewSet().getCameraProjectionForViewIndex(viewIndex);
-                    ImageHelper image = viewSet.loadFullResMaskedImage(viewIndex);
+                    Projection projection = view.getCameraProjection();
+                    ImageHelper image = view.loadFullResMaskedImage();
 
                     if (projection instanceof DistortionProjection)
                     {
@@ -145,7 +154,7 @@ public class SpecularFitProcess
 
             for (ReconstructionView<ContextType> view : reconstruction)
             {
-                ColorAppearanceRMSE rmse = view.reconstruct(drawable);
+                ReadonlyColorAppearanceRMSE rmse = view.reconstruct(drawable);
                 reconstructionCallback.accept(view, rmse);
             }
         }

@@ -16,7 +16,7 @@ import kintsugi3d.gl.core.*;
 import java.util.List;
 
 public final class RenderRefreshable
-    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderableResource<ContextType>>
     implements Refreshable, ContextBound<ContextType>
 {
     private final ContextType context;
@@ -27,7 +27,7 @@ public final class RenderRefreshable
     private boolean initialized = false;
 
     public static
-    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderableResource<ContextType>>
     RenderRefreshable<ContextType, RenderableType> createWithManagedFrambufferObject(
         ContextType context, RenderableType renderable, DoubleFramebufferObject<ContextType> framebuffer)
     {
@@ -35,7 +35,7 @@ public final class RenderRefreshable
     }
 
     public static
-    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderableResource<ContextType>>
     RenderRefreshable<ContextType, RenderableType>  createWithDefaultFrambufferObject(
         ContextType context, RenderableType renderable)
     {

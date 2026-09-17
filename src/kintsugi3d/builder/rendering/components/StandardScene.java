@@ -11,17 +11,17 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.scene.camera.CameraWidgetGroup;
 import kintsugi3d.builder.rendering.components.scene.light.LightVisualsGroup;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.Context;
 
 public class StandardScene<ContextType extends Context<ContextType>> extends BaseScene<ContextType>
 {
-    public StandardScene(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+    public StandardScene(ReadonlyGraphicsResources<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         super(resources, sceneModel, sceneViewportModel);
     }

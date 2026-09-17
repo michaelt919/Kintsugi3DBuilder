@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,7 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.SceneViewport;
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.rendering.SceneViewport;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
@@ -20,14 +19,14 @@ import kintsugi3d.gl.window.CursorPosition;
 final class LookAtPointTool implements DragTool
 {
     private final ManipulableViewpointModel cameraModel;
-    private final SceneViewportModel sceneViewportModel;
+    private final SceneViewport sceneViewport;
 
     private static class Builder extends ToolBuilderBase<LookAtPointTool>
     {
         @Override
         public LookAtPointTool create()
         {
-            return new LookAtPointTool(getCameraModel(), getSceneViewportModel());
+            return new LookAtPointTool(getCameraModel(), getSceneViewport());
         }
     }
 
@@ -36,10 +35,10 @@ final class LookAtPointTool implements DragTool
         return new Builder();
     }
 
-    private LookAtPointTool(ManipulableViewpointModel cameraModel, SceneViewportModel sceneViewportModel)
+    private LookAtPointTool(ManipulableViewpointModel cameraModel, SceneViewport sceneViewport)
     {
         this.cameraModel = cameraModel;
-        this.sceneViewportModel = sceneViewportModel;
+        this.sceneViewport = sceneViewport;
     }
 
     @Override
@@ -48,7 +47,6 @@ final class LookAtPointTool implements DragTool
         double normalizedX = cursorPosition.x / canvasSize.width;
         double normalizedY = cursorPosition.y / canvasSize.height;
 
-        SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         Object clickedObject = sceneViewport.getObjectAtCoordinates(normalizedX, normalizedY);
         if ("RenderingSubject".equals(clickedObject))
         {

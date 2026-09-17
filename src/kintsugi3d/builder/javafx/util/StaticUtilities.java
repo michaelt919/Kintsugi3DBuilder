@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,6 +15,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import kintsugi3d.builder.core.Global;
 
 import java.util.Objects;
@@ -199,7 +200,7 @@ public final class StaticUtilities
     {
         if (Global.state().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
         {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Settings will be reverted to their previous values.");
+            Alert alert = new Alert(AlertType.CONFIRMATION, "Settings will be reverted to their previous values.");
             alert.setHeaderText("Discard changes?");
             var result = alert.showAndWait();
             return result.isPresent() && result.get().equals(ButtonType.OK);

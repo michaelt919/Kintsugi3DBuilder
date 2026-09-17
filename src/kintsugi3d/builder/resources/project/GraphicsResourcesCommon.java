@@ -11,32 +11,35 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
+import kintsugi3d.builder.io.events.ProjectProcessedEvent;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.EventDispatcher;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.UniformBuffer;
 import kintsugi3d.gl.geometry.GeometryResources;
-import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.AbstractList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.IntStream;
+import java.util.*;
 
-final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> implements ShaderProgramFactory<ContextType>
+final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesCommon.class);
     /**
@@ -66,7 +69,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
     /**
      * A GPU buffer containing the weights associated with all the views (determined by the distance from other views).
      */
-    private final UniformBuffer<ContextType> cameraWeightBuffer;
+    private final UniformBuffer<ContextType> viewWeightBuffer;
 
     /**
      * A GPU buffer containing the indices of enabled and non-deleted cameras
@@ -86,7 +89,10 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
 
     private final ViewSet viewSet;
 
-    private final float[] cameraWeights;
+    private float[] viewWeights;
+
+    private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
+        = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     GraphicsResourcesCommon(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
@@ -95,7 +101,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
 
         if (viewSet != null)
         {
-            viewSet.registerObserver(change -> updateViewIndicesData());
+            viewSet.registerObserver(change -> Rendering.runLater(this::updateViewIndicesData));
         }
 
         // Store the poses in a uniform buffer
@@ -167,11 +173,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
 
             if (viewSet != null)
             {
-                this.cameraWeights = computeCameraWeights(viewSet, geometry);
-
-                this.cameraWeightBuffer = context.createUniformBuffer()
-                        .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                1, viewSet.getCombinedCameraPoseCount(), this.cameraWeights));
+                this.viewWeightBuffer = context.createUniformBuffer(); // prereq for computeViewWeights
+                this.viewWeights = computeViewWeights();
 
                 ImportedMaterial material = geometry.getMaterial();
                 String geometryFileName = viewSet.getGeometryFileName();
@@ -240,7 +243,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
                         {
                             try
                             {
-                                return material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                                return ImportedMaterialResources.createFromMaterial(
+                                    context, material, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
                             }
                             catch (IOException e)
                             {
@@ -257,48 +261,56 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
             }
             else
             {
-                this.cameraWeights = null;
-                this.cameraWeightBuffer = null;
+                this.viewWeights = null;
+                this.viewWeightBuffer = null;
                 this.textureResources = TextureResources.makeNull(context);
             }
         }
         else
         {
             this.geometryResources = GeometryResources.createNullResources();
-            this.cameraWeights = null;
-            this.cameraWeightBuffer = null;
+            this.viewWeights = null;
+            this.viewWeightBuffer = null;
             this.textureResources = TextureResources.makeNull(context);
         }
     }
 
-    private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
+    private float[] computeViewWeights()
     {
-        float[] cameraWeights = new float[viewSet.getCombinedCameraPoseCount()];
+        // getViews makes a copy; save it here since we'll need it a couple times.
+        Collection<View> views = viewSet.getEnabledViews();
 
-        Vector3[] viewDirections = IntStream.range(0, viewSet.getCombinedCameraPoseCount())
-                .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
-                        .minus(geometry.getCentroid()).normalized())
-                .toArray(Vector3[]::new);
+        Vector3[] viewDirections = new Vector3[viewSet.getGPUBufferSize()];
+        for (View view : views)
+        {
+            viewDirections[view.getGPUViewIndex()] =
+                view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometryResources.geometry.getCentroid()).normalized();
+        }
 
-        int[] totals = new int[viewSet.getCombinedCameraPoseCount()];
-        int targetSampleCount = viewSet.getCombinedCameraPoseCount() * 256;
+        int[] totals = new int[viewDirections.length];
+        int targetSampleCount = viewDirections.length * 256;
         double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
         int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
 
         // Find the view with the greatest distance from any other view.
         // Directions that are further from any view than distance will be ignored in the view weight calculation.
         double maxMinDistance = 0.0;
-        for (int i = 0; i < viewSet.getCombinedCameraPoseCount(); i++)
+        for (int i = 0; i < viewDirections.length; i++)
         {
-            double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < viewSet.getCombinedCameraPoseCount(); j++)
+            Vector3 viewI = viewDirections[i];
+            if (viewI != null)
             {
-                if (i != j)
+                double minDistance = Double.MAX_VALUE;
+                for (int j = 0; j < viewDirections.length; j++)
                 {
-                    minDistance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j])))));
+                    Vector3 viewJ = viewDirections[j];
+                    if (viewJ != null && i != j)
+                    {
+                        minDistance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, viewI.dot(viewJ)))));
+                    }
                 }
+                maxMinDistance = Math.max(maxMinDistance, minDistance);
             }
-            maxMinDistance = Math.max(maxMinDistance, minDistance);
         }
 
         int actualSampleCount = 0;
@@ -316,20 +328,24 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
                         (float)(r * Math.sin(2 * Math.PI * (double)j / (double)sampleColumns)));
 
                 double minDistance = maxMinDistance;
-                int minIndex = -1;
-                for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
+                int minDirectionIndex = -1;
+                for (int k = 0; k < viewDirections.length; k++)
                 {
-                    double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
-                    if (distance < minDistance)
+                    Vector3 viewK = viewDirections[k];
+                    if (viewK != null)
                     {
-                        minDistance = distance;
-                        minIndex = k;
+                        double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewK))));
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            minDirectionIndex = k;
+                        }
                     }
                 }
 
-                if (minIndex >= 0)
+                if (minDirectionIndex >= 0)
                 {
-                    totals[minIndex]++;
+                    totals[minDirectionIndex]++;
                 }
 
                 actualSampleCount++;
@@ -338,16 +354,24 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
 
         LOG.info("View weights:");
 
-        for (int k = 0; k < viewSet.getCombinedCameraPoseCount(); k++)
+        this.viewWeights = new float[viewSet.getGPUBufferSize()];
+
+        if (actualSampleCount > 0) // avoid divide by zero
         {
-            cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            LOG.info("{}\t{}", viewSet.getImageFileName(k), cameraWeights[k]);
+            for (View view : views)
+            {
+                int index = view.getGPUViewIndex();
+                viewWeights[index] = (float) totals[index] / (float) actualSampleCount;
+                LOG.info("{}\t{}", view, viewWeights[index]);
+            }
         }
 
-        return cameraWeights;
+        this.viewWeightBuffer.setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
+            1, viewSet.getGPUBufferSize(), this.viewWeights));
+
+        return viewWeights;
     }
 
-    @Override
     public ContextType getContext()
     {
         return context;
@@ -358,40 +382,40 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         return viewSet;
     }
 
-    public float getCameraWeight(int index)
+    public float getViewWeight(int index)
     {
-        if (this.cameraWeights != null)
+        if (this.viewWeights != null)
         {
-            return this.cameraWeights[index];
+            return this.viewWeights[index];
         }
         else
         {
-            throw new IllegalStateException("Camera weights are unavailable.");
+            throw new IllegalStateException("View weights are unavailable.");
         }
     }
 
-    public List<Float> getCameraWeights()
+    public List<Float> getViewWeights()
     {
-        if (this.cameraWeights != null)
+        if (this.viewWeights != null)
         {
             return Collections.unmodifiableList(new AbstractList<>()
             {
                 @Override
                 public int size()
                 {
-                    return cameraWeights.length;
+                    return viewWeights.length;
                 }
 
                 @Override
                 public Float get(int index)
                 {
-                    return cameraWeights[index];
+                    return viewWeights[index];
                 }
             });
         }
         else
         {
-            throw new IllegalStateException("Camera weights are unavailable.");
+            throw new IllegalStateException("View weights are unavailable.");
         }
     }
 
@@ -448,19 +472,55 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
     /**
      * Refresh the view index data in the uniform buffers using the current values in the view set.
      */
-    public void updateViewIndicesData()
+    private void updateViewIndicesData()
     {
-        if (viewIndexBuffer != null)
+        ReadonlyNativeVectorBuffer viewIndexData = viewSet.getViewIndexData();
+        if (viewIndexBuffer != null && viewIndexData != null)
         {
-            viewIndexBuffer.setData(viewSet.getViewIndexData());
+            viewIndexBuffer.setData(viewIndexData);
         }
+
+        // Refreshes viewWeightBuffer
+        computeViewWeights();
+    }
+
+    public boolean hasProcessedWeightMaps()
+    {
+        return textureResources.getBasisWeightResources() != null;
+    }
+
+    /**
+     *
+     * @return The texture resolution of the weight maps if the project has been fully processed
+     */
+    public IntVector2 getProcessedWeightMapResolution()
+    {
+        ReadonlyBasisWeightResources<? extends Context<?>> basisWeightResources = textureResources.getBasisWeightResources();
+        if (basisWeightResources != null)
+        {
+            return new IntVector2(basisWeightResources.getWeightMaps().getWidth(), basisWeightResources.getWeightMaps().getHeight());
+        }
+        else
+        {
+            throw new IllegalStateException("Project has not been processed.");
+        }
+    }
+
+    public EventListeners<ProjectProcessedListener> weightMapsProcessedListeners()
+    {
+        return projectProcessed;
     }
 
     public void replaceTextureResources(TextureResources<ContextType> newTextureResources)
     {
         this.textureResources.close();
-
         this.textureResources = newTextureResources == null ? TextureResources.makeNull(context) : newTextureResources;
+
+        if (hasProcessedWeightMaps())
+        {
+            IntVector2 processedTextureResolution = getProcessedWeightMapResolution();
+            projectProcessed.notifyListeners( new ProjectProcessedEvent(processedTextureResolution.x, processedTextureResolution.y));
+        }
     }
 
     /**
@@ -482,7 +542,6 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
-    @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
         boolean basisEnabled = textureResources.getBasisResources() != null
@@ -513,14 +572,13 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
         return builder;
     }
 
-    @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
         viewSet.setupShaderProgram(program);
 
-        if (this.cameraWeightBuffer != null)
+        if (this.viewWeightBuffer != null)
         {
-            program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
+            program.setUniformBuffer("CameraWeights", this.viewWeightBuffer);
         }
 
         if (this.cameraPoseBuffer != null)
@@ -546,7 +604,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>> im
 
     public void close()
     {
-        this.cameraWeightBuffer.close();
+        this.viewWeightBuffer.close();
         this.cameraPoseBuffer.close();
         this.lightPositionBuffer.close();
         this.lightIntensityBuffer.close();

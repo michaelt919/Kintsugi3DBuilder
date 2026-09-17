@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.geometry.GeometryTextures;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

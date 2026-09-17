@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.rendering.components.scene.light;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.gl.core.*;
@@ -27,7 +27,7 @@ import java.util.Map;
 
 public class Lights<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private  static final String SCENE_OBJECT_TAG_FORMAT = "Light.%d";
+    private static final String SCENE_OBJECT_TAG_FORMAT = "Light.%d";
 
     private final SceneViewportModel sceneViewportModel;
     private final SceneModel sceneModel;

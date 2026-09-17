@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -23,7 +23,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
-import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -37,6 +37,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+
+/* TODO possibly refactor ModelExporter and MaterialExporter into an abstract Exporter class using
+    composition, that way other file exportation types have full control over both the model and materials
+    i.e. the USDZ and Blender exporter solutions could benefit from this extensibility
+ */
 public class ModelExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(ModelExporter.class);

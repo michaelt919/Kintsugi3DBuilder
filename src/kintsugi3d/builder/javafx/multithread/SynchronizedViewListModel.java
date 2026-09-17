@@ -1,0 +1,75 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.javafx.multithread;
+
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.state.SelectableViewListModel;
+
+import java.util.List;
+
+public class SynchronizedViewListModel implements SelectableViewListModel
+{
+    private final SynchronizedValue<View> selectedCameraView;
+    private final SynchronizedValue<List<View>> cameraViewList;
+    private final SynchronizedValue<Boolean> cameraViewSnapEnabled;
+    private final SelectableViewListModel baseModel;
+
+    public SynchronizedViewListModel(SelectableViewListModel baseModel)
+    {
+        this.selectedCameraView = SynchronizedValue.createFromFunctions(baseModel::getSelectedView, baseModel::setSelectedView);
+        this.cameraViewList = SynchronizedValue.createFromFunctions(baseModel::getViewList, baseModel::setViewList);
+        this.cameraViewSnapEnabled = SynchronizedValue.createFromFunctions(baseModel::isViewSnapEnabled, baseModel::setViewSnapEnabled);
+        this.baseModel = baseModel;
+    }
+
+    /**
+     * Not synchronized; may be out of sync with the view index and/or view list model.
+     * @return
+     */
+    @Override
+    public View getSelectedView()
+    {
+        // Not synchronized; should be fine -- worst case scenario it's just out-of-sync with the view index and/or view list model.
+        return baseModel.getSelectedView();
+    }
+
+    @Override
+    public void setSelectedView(View cameraView)
+    {
+        this.selectedCameraView.setValue(cameraView);
+    }
+
+    @Override
+    public List<View> getViewList()
+    {
+        return cameraViewList.getValue();
+    }
+
+    @Override
+    public void setViewList(List<View> cameraViewList)
+    {
+        // Need to run on JavaFX thread as this will completely change the backend model for the list view.
+        this.cameraViewList.setValue(cameraViewList);
+    }
+
+    @Override
+    public boolean isViewSnapEnabled()
+    {
+        return cameraViewSnapEnabled.getValue();
+    }
+
+    @Override
+    public void setViewSnapEnabled(boolean cameraViewSnapEnabled)
+    {
+        this.cameraViewSnapEnabled.setValue(cameraViewSnapEnabled);
+    }
+}

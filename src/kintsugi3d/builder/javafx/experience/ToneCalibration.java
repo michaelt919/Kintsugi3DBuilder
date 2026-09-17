@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.experience;
 
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.CurrentProjectViewSelectable;
 import kintsugi3d.builder.javafx.controllers.modals.viewselect.ViewSelectable;
 import kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration.EyedropperController;
@@ -36,7 +37,7 @@ public class ToneCalibration extends ExperienceBase
     @Override
     protected void open() throws IOException
     {
-        this.buildPagedModal(new CurrentProjectViewSelectable())
+        this.buildPagedModal(new CurrentProjectViewSelectable(ViewSet::getPrimaryView))
             .then(PRIMARY_VIEW_SELECT,
                 SimpleDataReceiverPage<ViewSelectable, ToneCalibrationViewSelectController>::new,
                 ToneCalibrationViewSelectController::new)

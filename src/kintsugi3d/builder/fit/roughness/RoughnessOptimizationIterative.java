@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.builders.ProgramBuilder;

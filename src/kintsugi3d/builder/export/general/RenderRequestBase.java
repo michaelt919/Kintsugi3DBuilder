@@ -12,7 +12,7 @@
 package kintsugi3d.builder.export.general;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.gl.core.*;
@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-abstract class RenderRequestBase implements ObservableProjectGraphicsRequest
+abstract class RenderRequestBase implements ProgressMonitoredProjectGraphicsRequest
 {
     private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();

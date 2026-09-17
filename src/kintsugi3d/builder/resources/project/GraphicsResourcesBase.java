@@ -11,19 +11,23 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.IOException;
 import java.util.List;
 
-public abstract class GraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResources<ContextType>
+public abstract class GraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResourcesCacheable<ContextType>
 {
     private final GraphicsResourcesCommon<ContextType> commonResources;
 
@@ -58,13 +62,13 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     @Override
     public float getCameraWeight(int index)
     {
-        return commonResources.getCameraWeight(index);
+        return commonResources.getViewWeight(index);
     }
 
     @Override
     public List<Float> getCameraWeights()
     {
-        return commonResources.getCameraWeights();
+        return commonResources.getViewWeights();
     }
 
     @Override
@@ -85,12 +89,18 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
         return commonResources.getLuminanceMapResources();
     }
 
-    @Override
-    public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
+    /**
+     * Creates a resource for just a single view, using the default image for that view but with custom load options
+     *
+     * @param view
+     * @param loadOptions
+     * @return
+     * @throws IOException
+     */
+    public SingleCalibratedImageResource<ContextType> createSingleImageResource(View view, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex,
-            getViewSet().findFullResImageFile(viewIndex), getGeometry(), loadOptions);
+        return new SingleCalibratedImageResource<>(getContext(), view, getGeometry(), loadOptions);
     }
 
     @Override
@@ -133,6 +143,24 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
         }
 
         commonResources.updateLightData();
+    }
+
+    @Override
+    public boolean hasProcessedWeightMaps()
+    {
+        return commonResources.hasProcessedWeightMaps();
+    }
+
+    @Override
+    public IntVector2 getProcessedWeightMapResolution()
+    {
+        return getCommonResources().getProcessedWeightMapResolution();
+    }
+
+    @Override
+    public EventListeners<ProjectProcessedListener> weightMapsProcessedListeners()
+    {
+        return getCommonResources().weightMapsProcessedListeners();
     }
 
     @Override

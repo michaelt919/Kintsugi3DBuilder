@@ -15,35 +15,14 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.core.ManagedResource;
 
-/**
- * An interface used with the InteractiveGraphics object to coordinate the initialization,
- * updating, drawing and deleting of an OpenGL-like renderable view.
- * 
- * @author Michael Tetzlaff
- * @see InteractiveGraphics
- */
 public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends ManagedResource
 {
     /**
      * Gets the application managing this renderable.
+     *
      * @return
      */
     InteractiveApplication getOwningApp();
-
-
-    /**
-     * Sets the application managing this renderable.
-     * @param app
-     */
-    void setOwningApp(InteractiveApplication app);
-
-    /**
-     * Execute any initialization needed prior to updating and drawing this object.  You
-     * should bring the internal state into being prepared to call update and draw.  Called
-     * once by the associated InteractiveApplication created by InteractiveGraphics.  The
-     * associated context will be made current first.
-     */
-    void initialize() throws InitializationException;
 
     /**
      * Adjust internal state that needs to change prior to drawing.  Called every time the
@@ -60,13 +39,4 @@ public interface InteractiveRenderable<ContextType extends Context<ContextType>>
      * immutable (no internal state should change) while executing this method.
      */
     void draw(Framebuffer<ContextType> framebuffer);
-
-    /**
-     * Execute any cleanup and bring the internal state out of being prepared to draw. Update
-     * and draw will not execute after this method without initialize first being called. Called
-     * once by the associated InteractiveApplication created by InteractiveGraphics when the
-     * application is terminating.  The associated context will be made current first.
-     */
-    @Override
-    void close();
 }

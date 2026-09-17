@@ -11,10 +11,12 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -27,11 +29,14 @@ import java.util.Map;
 
 public class CameraFrustum<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
+    private final ReadonlyGraphicsResources<ContextType> resources;
+
     private ViewSelection viewSelection;
 
-    public CameraFrustum(ContextType context, SceneViewportModel sceneViewportModel)
+    public CameraFrustum(ReadonlyGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
     {
-        super(context);
+        super(resources.getContext());
+        this.resources = resources;
     }
 
     @Override
@@ -67,17 +72,18 @@ public class CameraFrustum<ContextType extends Context<ContextType>> extends Sha
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        FramebufferSize size = framebuffer.getSize();
+        if (resources instanceof GraphicsResourcesImageSpace)
+        {
+            // Scale to match actual camera frustum.
+            Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
+            Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-        // Scale to match actual camera frustum.
-        Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-        Vector3 frustumDims = viewSelection.getFrustumDimensions();
-
-        this.getDrawable().program().setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-        this.getProgram().setUniform("model_view",
-            cameraViewport.getView().times(snapViewInverse).times(Matrix4.scale(frustumDims)));
-        this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
-        this.getDrawable().draw(PrimitiveMode.LINES, cameraViewport.ofFramebuffer(framebuffer));
+            this.getDrawable().program().setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+            this.getProgram().setUniform("model_view",
+                cameraViewport.getView().times(snapViewInverse).times(Matrix4.scale(frustumDims)));
+            this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
+            this.getDrawable().draw(PrimitiveMode.LINES, cameraViewport.ofFramebuffer(framebuffer));
+        }
     }
 
     public ViewSelection getViewSelection()

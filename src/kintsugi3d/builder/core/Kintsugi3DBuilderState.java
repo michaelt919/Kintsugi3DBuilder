@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,44 +11,44 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.state.CacheModel;
 import kintsugi3d.builder.state.CarouselModel;
-import kintsugi3d.builder.state.CameraViewListModel;
-import kintsugi3d.builder.state.CanvasListModel;
-import kintsugi3d.builder.state.CanvasModel;
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
+import kintsugi3d.builder.state.scene.ActiveShaderModel;
 import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
 import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
-import kintsugi3d.builder.state.scene.UserShaderModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 public interface Kintsugi3DBuilderState
 {
+    // Models related to presentation within Kintsugi 3D Builder
     ReadonlyViewpointModel getCameraModel();
     ReadonlyLightingEnvironmentModel getLightingModel();
     ReadonlyObjectPoseModel getObjectModel();
-    UserShaderModel getUserShaderModel();
+    ActiveShaderModel getUserShaderModel();
 
-    CameraViewListModel getCameraViewListModel();
+    // Mainly for light calibration?
+    SelectableViewListModel getViewListModel();
+
+    // Cards and tabs
     TabsModel getTabModels();
 
+    // Carousel
+    CarouselModel getCarouselModel();
+
+    // Global settings
     /**
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
      * @return
      */
     GeneralSettingsModel getSettingsModel();
 
-    CanvasModel getMainCanvasModel();
-    CanvasListModel getCanvasListModel();
+    // Project cache info and access
+    CacheModel getCacheModel();
 
-    SceneViewportModel getSceneViewportModel();
-    LoadOptionsModel getLoadOptionsModel();
-    IOModel getIOModel();
-
+    // Global project state and other miscellaneous properties that are available for frontend display.
     ProjectModel getProjectModel();
-    CarouselModel getCarouselModel();
-
-    // add get cache model
 }

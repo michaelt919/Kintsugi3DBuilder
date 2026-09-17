@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.resources;
 
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;

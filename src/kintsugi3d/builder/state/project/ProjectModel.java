@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,12 @@
 
 package kintsugi3d.builder.state.project;
 
+import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.gl.vecmath.Vector3;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
@@ -24,35 +25,44 @@ import java.io.IOException;
  */
 public interface ProjectModel
 {
-    String NULL_PROJECT_NAME = "No Project";
+    /**
+     * Parses an XML document, typically read from a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
+     */
+    void parseXMLDocument(Document document) throws IOException, ParserConfigurationException, SAXException;
 
-    File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException;
-    void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException;
+    /**
+     * Converts this project to an XML document that can be saved, typically as a Kintsugi 3D Builder project file (.k3d)
+     */
+    Document toXMLDocument() throws ParserConfigurationException;
 
     File getColorCheckerFile();
     void setColorCheckerFile(File colorCheckerFile);
 
-    boolean isProjectOpen();
-    void setProjectOpen(boolean projectOpen);
-
     String getProjectName();
-    void setProjectName(String projectName);
-    default void clearProjectName()
-    {
-        this.setProjectName(NULL_PROJECT_NAME);
-    }
-
+    boolean isProjectOpen();
     boolean isProjectLoaded();
-    void setProjectLoaded(boolean projectLoaded);
-
     boolean isProjectProcessed();
-    void setProjectProcessed(boolean projectProcessed);
-
-    int getProcessedTextureResolution();
-    void setProcessedTextureResolution(int processedTextureResolution);
-
+    int getProcessedTextureWidth();
+    int getProcessedTextureHeight();
     Vector3 getModelSize();
-    void setModelSize(Vector3 modelSize);
 
-    void notifyProcessingComplete();
+    /**
+     * Logs an error immediately and asynchronously displays an alert to the user.
+     * Expected to be thread-safe in all implementations.
+     * @param message
+     * @param e
+     */
+    void error(String message, Throwable e);
+
+    /**
+     * Logs a warning immediately and asynchronously displays an alert to the user.
+     * Expected to be thread-safe in all implementations.
+     * @param message
+     * @param e
+     */
+    void warn(String message, Throwable e);
+
+    void cancelled(String message);
+    void confirm(String title, String header, String message, Runnable onConfirm);
+    void requestUserImageReplacement(ImageReplacer imageReplacer);
 }

@@ -11,12 +11,13 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.core.ImageBasedRenderable;
-import kintsugi3d.builder.core.ObservableProjectGraphicsRequest;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +46,7 @@ class MultiframeRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ObservableProjectGraphicsRequest create()
+        public ProgressMonitoredProjectGraphicsRequest create()
         {
             return new MultiframeRenderRequest(getWidth(), getHeight(), frameCount, getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
@@ -56,7 +57,7 @@ class MultiframeRenderRequest extends RenderRequestBase
     public <ContextType extends Context<ContextType>> void executeRequest(ImageBasedRenderable<ContextType> renderable, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
-        ReadonlyGraphicsResources<ContextType> resources = renderable.getResources();
+        GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
 
         try
         (
@@ -77,11 +78,13 @@ class MultiframeRenderRequest extends RenderRequestBase
 
                 program.setUniform("frame", i);
                 program.setUniform("frameCount", frameCount);
-                program.setUniform("model_view", renderable.getViewSet().getCameraPose(0));
-                program.setUniform("projection",
-                    renderable.getViewSet().getCameraProjectionForViewIndex(0)
-                        .getProjectionMatrix(renderable.getViewSet().getRecommendedNearPlane(),
-                            renderable.getViewSet().getRecommendedFarPlane()));
+
+                View repView = renderable.getViewSet().getRepresentativeView();
+                if (repView != null)
+                {
+                    program.setUniform("model_view", repView.getCameraPose());
+                    program.setUniform("projection", repView.getProjectionMatrix());
+                }
 
                 render(drawable, framebuffer);
 

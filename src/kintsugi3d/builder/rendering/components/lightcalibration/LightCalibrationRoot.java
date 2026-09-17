@@ -11,25 +11,25 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.RenderedComponent;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSnap;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
 public class LightCalibrationRoot<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private final ReadonlyGraphicsResourcesImageSpace<ContextType> resources;
+    private final ReadonlyGraphicsResources<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;
 
     private ViewSnap<ContextType> viewSnapRoot;
 
-    public LightCalibrationRoot(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationRoot(ReadonlyGraphicsResources<ContextType> resources, SceneModel sceneModel,
                                 ViewSelection viewSelection, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;

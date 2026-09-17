@@ -28,8 +28,8 @@ import java.nio.ShortBuffer;
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
 public interface Texture2D<ContextType extends Context<ContextType>>
-    extends ManagedResource, FramebufferAttachment<ContextType>,
-            Blittable<ReadonlyTexture2D<ContextType>>, ReadonlyTexture2D<ContextType>
+    extends ManagedResource, ReadonlyTexture2D<ContextType>, FramebufferAttachment<ContextType>,
+            Blittable<ReadonlyTexture2D<ContextType>>
 {
     /**
      * Sets the texture wrap modes.

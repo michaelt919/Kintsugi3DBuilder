@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,13 +14,11 @@ package kintsugi3d.builder.tools;
 import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
 import kintsugi3d.builder.state.scene.SimpleCameraModel;
 import kintsugi3d.builder.state.scene.ViewpointModel;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.gl.window.Canvas3D;
-import kintsugi3d.gl.window.CanvasSize;
-import kintsugi3d.gl.window.Key;
-import kintsugi3d.gl.window.ModifierKeys;
+import kintsugi3d.gl.window.*;
 import kintsugi3d.gl.window.listeners.CursorPositionListener;
 import kintsugi3d.gl.window.listeners.KeyPressListener;
 import kintsugi3d.gl.window.listeners.KeyReleaseListener;
@@ -63,11 +61,11 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
         this.phi = 0.0f;
     }
 
-    public void addAsWindowListener(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas)
+    public void addAsWindowListener(WindowListenerManager windowListenerManager)
     {
-        canvas.addKeyPressListener(this);
-        canvas.addKeyReleaseListener(this);
-        canvas.addCursorPositionListener(this);
+        windowListenerManager.addKeyPressListener(this);
+        windowListenerManager.addKeyReleaseListener(this);
+        windowListenerManager.addCursorPositionListener(this);
     }
 
     public boolean getEnabled()
@@ -92,7 +90,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyPressed(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, Key key, ModifierKeys mods)
+    public void keyPressed(Canvas3D<? extends Context<?>> canvas, Key key, ModifierKeys mods)
     {
         if (enabled)
         {
@@ -140,7 +138,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyReleased(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, Key key, ModifierKeys mods)
+    public void keyReleased(Canvas3D<? extends Context<?>> canvas, Key key, ModifierKeys mods)
     {
         if (enabled)
         {
@@ -179,7 +177,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void cursorMoved(Canvas3D<? extends kintsugi3d.gl.core.Context<?>> canvas, double xPos, double yPos)
+    public void cursorMoved(Canvas3D<? extends Context<?>> canvas, double xPos, double yPos)
     {
         if (enabled)
         {

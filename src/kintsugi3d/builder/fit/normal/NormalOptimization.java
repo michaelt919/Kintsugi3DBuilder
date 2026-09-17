@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.fit.normal;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
