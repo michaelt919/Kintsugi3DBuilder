@@ -15,8 +15,8 @@ import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -29,27 +29,27 @@ import java.util.Map;
 
 public class CameraFrustum<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final GraphicsResources<ContextType> resources;
+    private final ShaderProgramFactory<ContextType> programFactory;
 
     private ViewSelection viewSelection;
 
-    public CameraFrustum(GraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraFrustum(ShaderProgramFactory<ContextType> programFactory, SceneViewportModel sceneViewportModel)
     {
-        super(resources.getContext());
-        this.resources = resources;
+        super(programFactory.getContext());
+        this.programFactory = programFactory;
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
         float[] frustum =
         {
@@ -64,7 +64,7 @@ public class CameraFrustum<ContextType extends Context<ContextType>> extends Sha
         };
 
         return Map.of("position",
-            context.createVertexBuffer()
+            getContext().createVertexBuffer()
                 .setData(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(3, 16, frustum)));
     }
@@ -72,12 +72,8 @@ public class CameraFrustum<ContextType extends Context<ContextType>> extends Sha
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof GraphicsResourcesImageSpace)
+        if (programFactory instanceof GraphicsResourcesImageSpace)
         {
-            GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>)resources;
-
-            FramebufferSize size = framebuffer.getSize();
-
             // Scale to match actual camera frustum.
             Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
             Vector3 frustumDims = viewSelection.getFrustumDimensions();

@@ -14,12 +14,14 @@ package kintsugi3d.builder.state.cards;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.rendering.Rendering;
-import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.util.AppIcon;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.util.ImageFinder;
@@ -42,7 +44,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
      * assigns it to private variable in class
      * @param instance
      */
-    public TextureCardFactory(ProjectRenderableInstance<?> instance)
+    public TextureCardFactory(ImageBasedRenderable<?> instance)
     {
         super(instance);
     }
@@ -135,10 +137,10 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
     public List<ProjectDataCard> createAllCards()
     {
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
-        GraphicsResources<?> resources = getInstance().getResources();
+        ReadonlyImageBasedGraphicsResources<? extends Context<?>> resources = getInstance().getResources();
         if (resources != null)
         {
-            TextureResources<?> texResources = resources.getTextureResources();
+            ReadonlyTextureResources<? extends Context<?>> texResources = resources.getTextureResources();
 
             var textures = texResources.getTextures();
             if (textures != null)
@@ -153,7 +155,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
                 }
             }
 
-            BasisResources<?> basisResources = texResources.getBasisResources();
+            ReadonlyBasisResources<? extends Context<?>> basisResources = texResources.getBasisResources();
             if (basisResources != null)
             {
                 for (int i = 0; i < basisResources.getBasisCount(); i++)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.gl.core;
 
 @FunctionalInterface
-public interface Croppable<ResourceType extends Resource>
+public interface Croppable<ResourceType extends ManagedResource>
 {
     /**
      * Creates a new resource that contains a cropped region of this resource.
@@ -24,5 +24,4 @@ public interface Croppable<ResourceType extends Resource>
      * @return The new cropped resource.
      */
     ResourceType crop(int x, int y, int cropWidth, int cropHeight);
-
 }

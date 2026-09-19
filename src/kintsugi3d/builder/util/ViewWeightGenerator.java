@@ -12,12 +12,12 @@
 package kintsugi3d.builder.util;
 
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
 
 @FunctionalInterface
 public interface ViewWeightGenerator
 {
-    float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView);
+    float[] generateWeights(ReadonlyImageBasedGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView);
 }

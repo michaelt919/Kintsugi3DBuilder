@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable
+public class LightingResources<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(LightingResources.class);
     private final ContextType context;
@@ -37,7 +37,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
     // A reference to the position buffer for the object casting shadows.
     // Not managed or released by LightingResources
-    private VertexBuffer<ContextType> shadowCastingPositionBuffer;
+    private ReadonlyVertexBuffer<ContextType> shadowCastingPositionBuffer;
 
     private Texture2D<ContextType> backplateTexture;
     private Cubemap<ContextType> environmentMap;
@@ -103,23 +103,23 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         }
     }
 
-    public Texture2D<ContextType> getBackplateTexture()
+    public ReadonlyTexture2D<ContextType> getBackplateTexture()
     {
         return backplateTexture;
     }
 
     /**
      * Assumes ownership of the backplate texture
-     * @param backplateTexture
+     * @param newBackplateTexture
      */
-    public void takeBackplateTexture(Texture2D<ContextType> backplateTexture)
+    public void takeBackplateTexture(Texture2D<ContextType> newBackplateTexture)
     {
         if (this.backplateTexture != null)
         {
             this.backplateTexture.close();
         }
 
-        this.backplateTexture = backplateTexture;
+        this.backplateTexture = newBackplateTexture;
     }
 
     public Cubemap<ContextType> getEnvironmentMap()
@@ -146,7 +146,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
      * Does not take ownership of this buffer.
      * @param positionBuffer
      */
-    public void setShadowCastingPositionBuffer(VertexBuffer<ContextType> positionBuffer)
+    public void setShadowCastingPositionBuffer(ReadonlyVertexBuffer<ContextType> positionBuffer)
     {
         shadowDrawable.addVertexBuffer("position", positionBuffer);
         this.shadowCastingPositionBuffer = positionBuffer;
@@ -189,7 +189,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         return Matrix4.perspective(fov, 1.0f, nearPlane, farPlane);
     }
 
-    public Texture3D<ContextType> getShadowMaps()
+    public ReadonlyTexture3D<ContextType> getShadowMaps()
     {
         return shadowMaps;
     }
@@ -233,7 +233,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
     }
 
-    public Texture2D<ContextType> getScreenSpaceDepthTexture()
+    public ReadonlyTexture2D<ContextType> getScreenSpaceDepthTexture()
     {
         return screenSpaceDepthFBO.getDepthAttachmentTexture();
     }

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ public class TabsManager
 
     private final List<TabInfo> factories = new ArrayList<>(4);
 
-    public TabsManager(ProjectRenderableInstance<?> instance)
+    public TabsManager(ImageBasedRenderable<?> instance)
     {
         factories.add(new TabInfo(PHOTOS, new PhotoCardFactory(instance), null));
                 factories.add(new TabInfo(TEXTURES, new TextureCardFactory(instance),

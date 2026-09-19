@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
-import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 import kintsugi3d.builder.resources.project.specular.TextureResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
@@ -71,7 +71,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
      * @throws FileNotFoundException
      */
     protected SpecularFitBase(ContextType context, TextureResolution textureResolution,
-        BasisSettings basisSettings) throws IOException
+        ReadonlyBasisSettings basisSettings) throws IOException
     {
         this(new BasisResources<>(context, basisSettings.getBasisCount(), basisSettings.getBasisResolution()),
             true, textureResolution);
@@ -121,13 +121,15 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     @Override
     public int getWidth()
     {
-        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getWidth();
+        return basisWeightResources == null || basisWeightResources.getWeightMaps() == null ?
+            0 : basisWeightResources.getWeightMaps().getWidth();
     }
 
     @Override
     public int getHeight()
     {
-        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getHeight();
+        return basisWeightResources == null || basisWeightResources.getWeightMaps() == null ?
+            0 : basisWeightResources.getWeightMaps().getHeight();
     }
 
     @Override
@@ -151,7 +153,8 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
 
     protected int getSpecularTextureCount()
     {
-        return roughnessOptimization == null ? 0 : 2;
+        //noinspection VariableNotUsedInsideIf
+        return (roughnessOptimization == null) ? 0 : 2;
     }
 
     protected Map<StandardTexture, Texture2D<ContextType>> getStandardSpecularTextures()
@@ -163,6 +166,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
 
     protected Map<TextureInfo, Texture2D<ContextType>> getSpecularTextures()
     {
+        //noinspection VariableNotUsedInsideIf
         return roughnessOptimization == null ? Map.of() : StandardTexture.convertEnumMapToObjectMap(getStandardSpecularTextures());
     }
 

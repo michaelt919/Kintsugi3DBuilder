@@ -12,7 +12,7 @@
 package kintsugi3d.builder.util;
 
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -29,7 +29,7 @@ public class PowerViewWeightGenerator implements ViewWeightGenerator
     }
 
     @Override
-    public float[] generateWeights(ReadonlyGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView)
+    public float[] generateWeights(ReadonlyImageBasedGraphicsResources<? extends Context<?>> resources, Iterable<View> activeViewList, Matrix4 targetView)
     {
         float[] viewWeights = new float[resources.getViewSet().getGPUBufferSize()];
         float viewWeightSum = 0.0f;

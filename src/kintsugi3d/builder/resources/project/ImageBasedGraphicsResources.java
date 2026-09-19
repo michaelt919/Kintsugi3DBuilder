@@ -12,51 +12,20 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.viewset.ViewSet;
-import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
-import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Resource;
-import kintsugi3d.gl.geometry.GeometryResources;
-import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.gl.vecmath.IntVector2;
+import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.vecmath.Vector3;
 
-import java.util.List;
-
-public interface GraphicsResources<ContextType extends Context<ContextType>> extends Resource, ReadonlyGraphicsResources<ContextType>
+public interface ImageBasedGraphicsResources<ContextType extends Context<ContextType>> extends ManagedResource, ReadonlyImageBasedGraphicsResources<ContextType>
 {
-    /**
-     * The view set that these resources were loaded from.
-     */
     @Override
     ViewSet getViewSet();
 
     @Override
-    default ReadonlyVertexGeometry getGeometry()
-    {
-        return getGeometryResources().geometry;
-    }
-
-    /**
-     * Gets a read-only view of the whole list of camera weights
-     * @return
-     */
-    List<Float> getCameraWeights();
-
-    GeometryResources<ContextType> getGeometryResources();
-
-    /**
-     * Diffuse, normal, specular, roughness maps
-     * @return
-     */
     TextureResources<ContextType> getTextureResources();
 
-    /**
-     * 1D textures for encoding and decoding
-     * @return
-     */
+    @Override
     LuminanceMapResources<ContextType> getLuminanceMapResources();
 
     /**
@@ -65,7 +34,6 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      * @param encodedLuminanceValues
      */
     void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
-
 
     /**
      * Clear the luminance map in the view set and free its corresponding textures.
@@ -77,17 +45,6 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      * @param lightCalibration
      */
     void updateLightCalibration(Vector3 lightCalibration);
-
-    boolean hasProcessedWeightMaps();
-
-    /**
-     *
-     * @return The texture resolution of the weight maps if the project has been fully processed,
-     * otherwise throws IllegalStateException
-     */
-    IntVector2 getProcessedWeightMapResolution();
-
-    EventListeners<ProjectProcessedListener> weightMapsProcessedListeners();
 
     /**
      * Replace the specular material resources (textures); releasing the old resources if they were present
@@ -101,14 +58,4 @@ public interface GraphicsResources<ContextType extends Context<ContextType>> ext
      * @param lightIntensity The default light intensity to apply to lights with an intensity of zero
      */
     void initializeLightIntensities(Vector3 lightIntensity);
-
-    /**
-     * Stream over enabled views only -- disabled views are not included.
-     * @return
-     */
-    @Override
-    default GraphicsStreamFactory<ContextType> streamFactory()
-    {
-        return new GraphicsStreamFactory<>(this);
-    }
 }

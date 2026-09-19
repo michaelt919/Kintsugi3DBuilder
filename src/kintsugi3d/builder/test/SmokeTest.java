@@ -14,7 +14,8 @@ package kintsugi3d.builder.test;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.viewset.ViewSet;
-import kintsugi3d.builder.fit.SpecularFitProcess;
+import kintsugi3d.builder.fit.BasisAndTexturesOptimizationProcess;
+import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
 import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.io.ViewSetDirectories;
@@ -25,7 +26,7 @@ import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.RecentLogMessageAppender;
 import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
-import kintsugi3d.builder.rendering.ProjectInstanceManager;
+import kintsugi3d.builder.rendering.ImageBasedRenderableManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.state.settings.DefaultSettings;
@@ -324,7 +325,7 @@ public class SmokeTest
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         // These are set since they otherwise are set in JavaFX related code
         Global.io().setLoadOptionsModel(imageLoadOptions);
-        ProjectInstanceManager<OpenGLContext> mockIOHandler = new ProjectInstanceManager<>(context);
+        ImageBasedRenderableManager<OpenGLContext> mockIOHandler = new ImageBasedRenderableManager<>(context);
         mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
         Global.io().setLoadingHandler(mockIOHandler);
 
@@ -353,7 +354,7 @@ public class SmokeTest
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         // These are set since they otherwise are set in JavaFX related code
         Global.io().setLoadOptionsModel(imageLoadOptions);
-        ProjectInstanceManager<OpenGLContext> mockIOHandler = new ProjectInstanceManager<>(context);
+        ImageBasedRenderableManager<OpenGLContext> mockIOHandler = new ImageBasedRenderableManager<>(context);
         mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
         Global.io().setLoadingHandler(mockIOHandler);
 
@@ -385,11 +386,11 @@ public class SmokeTest
         GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
         DefaultSettings.applyGlobalDefaults(settings);
         SpecularFitSettings params = new SpecularFitSettings(512, 512);
-        params.setOutputDirectory(outputDirectory);
         params.getImageCacheSettings().setCacheParentDirectory(new File (outputDirectory, "cache"));
 
         // Perform the specular fit
-        SpecularFitProcess specularFitProcess = new SpecularFitProcess(params);
+        BasisAndTexturesOptimizationProcess specularFitProcess =
+            new BasisAndTexturesOptimizationProcess(params, new BasisOptimizationSettings(), outputDirectory);
         specularFitProcess.optimizeFitWithCache(resources, progressMonitor);
 
         specularFitProcess.reconstructAll(resources,

@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
@@ -134,7 +134,7 @@ public class IOModel implements IO
     }
 
     @Override
-    public ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader)
+    public ImageBasedRenderable<?> getRenderableForShader(ShaderInfo shader)
     {
         return this.handler.getRenderableForShader(shader);
     }
@@ -152,7 +152,7 @@ public class IOModel implements IO
     }
 
     @Override
-    public ProjectRenderableInstance<?> getMainRenderable()
+    public ImageBasedRenderable<?> getMainRenderable()
     {
         return this.handler.getMainRenderable();
     }

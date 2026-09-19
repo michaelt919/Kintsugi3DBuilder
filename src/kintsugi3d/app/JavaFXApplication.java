@@ -38,7 +38,7 @@ import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.util.AppIcon;
@@ -403,7 +403,7 @@ public class JavaFXApplication extends Application
 
     private static void clearMainViewSafeRegion()
     {
-                ProjectRenderableInstance<?> instance = Global.io().getMainRenderable();
+                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
         if (instance != null)
         {
             instance.clearSafeRegionPadding();
@@ -412,7 +412,7 @@ public class JavaFXApplication extends Application
 
     private static void refreshMainViewSafeRegion(double carouselHeight)
     {
-                ProjectRenderableInstance<?> instance = Global.io().getMainRenderable();
+                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
         if (instance != null)
         {
             instance.setSafeRegionPadding(0, 0, 0, (int)Math.round(carouselHeight));

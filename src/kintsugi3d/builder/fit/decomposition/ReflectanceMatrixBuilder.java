@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisOptimizationSettings;
 import kintsugi3d.optimization.MatrixSystem;
 import kintsugi3d.optimization.function.BasisFunctions;
 import kintsugi3d.optimization.function.MatrixBuilder;
@@ -46,7 +46,7 @@ final class ReflectanceMatrixBuilder
      * Underlying matrix builder utility.
      */
     private final MatrixBuilder matrixBuilder;
-    private final BasisOptimizationSettings basisSettings;
+    private final ReadonlyBasisOptimizationSettings basisSettings;
 
     /**
      * Stores both the LHS and RHS of the system to be solved.
@@ -59,7 +59,7 @@ final class ReflectanceMatrixBuilder
      * Construct by accepting matrices where the final results will be stored.
      */
     ReflectanceMatrixBuilder(ReflectanceData reflectanceData, SpecularDecomposition solution,
-        BasisFunctions stepBasis, MatrixSystem contribution, BasisOptimizationSettings settings)
+        BasisFunctions stepBasis, MatrixSystem contribution, ReadonlyBasisOptimizationSettings settings)
     {
         this.solution = solution;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -33,24 +33,24 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitInitializer.class);
     private final ReadonlyGraphicsResources<ContextType> resources;
-    private final BasisSettings basisSettings;
+    private final ReadonlyBasisSettings basisSettings;
 
-    public SpecularFitInitializer(ReadonlyGraphicsResources<ContextType> resources, BasisSettings basisSettings)
+    public SpecularFitInitializer(ReadonlyGraphicsResources<ContextType> resources, ReadonlyBasisSettings basisSettings)
     {
         this.resources = resources;
         this.basisSettings = basisSettings;
     }
 
-    private ProgramObject<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+    private ProgramObject<ContextType> createAverageProgram() throws IOException
     {
-        return programFactory.createProgram(resources,
+        return resources.createProgram(
             new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/specularfit/average.frag"));
     }
 
-    public void initialize(SpecularFitProgramFactory<ContextType> programFactory, SpecularDecomposition solution)
+    public void initialize(SpecularDecomposition solution)
     {
-        try (ProgramObject<ContextType> averageProgram = createAverageProgram(programFactory);
+        try (ProgramObject<ContextType> averageProgram = createAverageProgram();
              FramebufferObject<ContextType> framebuffer =
                 resources.getContext().buildFramebufferObject(solution.getTextureResolution().width, solution.getTextureResolution().height)
                     .addColorAttachment(ColorFormat.RGBA32F)

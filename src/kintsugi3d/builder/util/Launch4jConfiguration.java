@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Launch4jConfiguration
+public final class Launch4jConfiguration
 {
     private static final Logger LOG = LoggerFactory.getLogger(Launch4jConfiguration.class);
 
@@ -43,7 +43,11 @@ public class Launch4jConfiguration
         writeTo(writer);
     }
 
-    public void writeAsSuperuser() throws IOException, IllegalStateException
+    /**
+     * @throws IOException
+     * @throws IllegalStateException
+     */
+    public void writeAsSuperuser() throws IOException
     {
         LOG.info("Writing launch4j configuration file AS ADMINISTRATOR to {}", l4jIniFile.toAbsolutePath());
         if (OperatingSystem.getCurrentOS() != OperatingSystem.WINDOWS)
@@ -100,12 +104,12 @@ public class Launch4jConfiguration
         return new Launch4jConfiguration();
     }
 
-    private static int parseMegabytesFromHeap(String heapArg)
+    private static int parseMegabytesFromHeap(CharSequence heapArg)
     {
         Pattern valPattern = Pattern.compile("\\d+");
         Matcher valMatcher = valPattern.matcher(heapArg);
 
-        Integer value;
+        int value;
         if (valMatcher.find())
         {
             value = Integer.parseInt(valMatcher.group());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,7 +20,7 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class BasisResources<ContextType extends Context<ContextType>> implements Resource, ContextBound<ContextType>
+public class BasisResources<ContextType extends Context<ContextType>> implements ManagedResource, ReadonlyBasisResources<ContextType>
 {
     private final ContextType context;
     private Texture2D<ContextType> basisMaps;
@@ -60,16 +60,19 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         return context;
     }
 
+    @Override
     public MaterialBasis getBasis()
     {
         return basis;
     }
 
+    @Override
     public int getBasisCount()
     {
         return basisCount;
     }
 
+    @Override
     public int getBasisResolution()
     {
         return basisResolution;
@@ -185,6 +188,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         }
     }
 
+    @Override
     public void useWithShaderProgram(Program<ContextType> program)
     {
         program.setTexture("basisFunctions", basisMaps);

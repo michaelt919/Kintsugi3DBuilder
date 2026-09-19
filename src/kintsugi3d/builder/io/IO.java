@@ -14,7 +14,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
@@ -47,8 +47,8 @@ public interface IO
     ViewSet getLoadedViewSet();
     ReadonlyVertexGeometry getLoadedGeometry();
 
-    ProjectRenderableInstance<?> getMainRenderable();
-    ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader);
+    ImageBasedRenderable<?> getMainRenderable();
+    ImageBasedRenderable<?> getRenderableForShader(ShaderInfo shader);
 
     void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
     void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);

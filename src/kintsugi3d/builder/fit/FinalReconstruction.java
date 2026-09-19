@@ -14,11 +14,11 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
-import kintsugi3d.builder.fit.settings.ReconstructionSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
@@ -31,16 +31,18 @@ import java.util.*;
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalReconstruction.class);
-    private final ReadonlyGraphicsResources<ContextType> resources;
-    private final ReconstructionSettings reconstructionSettings;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
+    private final ReadonlyReconstructionSettings reconstructionSettings;
 
-    public FinalReconstruction(ReadonlyGraphicsResources<ContextType> resources, TextureResolution textureResolution, ReconstructionSettings reconstructionSettings)
+    public FinalReconstruction(
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, TextureResolution textureResolution,
+        ReadonlyReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
         this.reconstructionSettings = reconstructionSettings;
     }
 
-    public List<Map<String, ReadonlyColorAppearanceRMSE>> reconstruct(TextureResources<ContextType> specularFit,
+    public List<Map<String, ReadonlyColorAppearanceRMSE>> reconstruct(ReadonlyTextureResources<ContextType> specularFit,
                                                                       Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
                                                                       ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
                                                                       File debugDirectory, File groundTruthDirectory)
@@ -70,9 +72,9 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             reconstructionViewSet = resources.getViewSet();
         }
 
-        try (@SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ResourceMap<String, ProgramObject<ContextType>> programMap
-                = new ResourceMap<>(reconstructionProgramBuilders.size());
-            ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
+        try (@SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ManagedResourceMap<String, ProgramObject<ContextType>> programMap
+                = new ManagedResourceMap<>(reconstructionProgramBuilders.size());
+             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
                 reconstructionViewSet,
                 builder -> builder
                     .addColorAttachment(ColorFormat.RGBA32F)

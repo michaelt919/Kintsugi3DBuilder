@@ -113,7 +113,7 @@ public class ObservableCarouselModel implements CarouselModel
             // After the canvas FBO is allocated we are notified on the graphics thread.
             // Use Platform runLater to set up the card on the JavaFX side.
             // This will trigger the FXML to load via observer and subsequently connect to the backend.
-            Rendering.getInstanceManager().addRenderView(shader, new FramebufferSize(initWidth, initHeight),
+            Rendering.getRenderableManager().addRenderView(shader, new FramebufferSize(initWidth, initHeight),
                 0, 0, initWidth, CARD_SAFE_REGION_BOTTOM_OFFSET, framebufferCanvas ->
                     {
                         // After the canvas FBO is allocated we are notified on the graphics thread.
@@ -141,7 +141,7 @@ public class ObservableCarouselModel implements CarouselModel
             carouselItems.removeIf(item -> Objects.equals(item.getShader(), shader));
 
             // Clean up the rendering backend for the card.
-            Rendering.getInstanceManager().removeRenderView(shader);
+            Rendering.getRenderableManager().removeRenderView(shader);
         }
     }
 
@@ -157,7 +157,7 @@ public class ObservableCarouselModel implements CarouselModel
             for (CarouselItem item : carouselItems)
             {
                 ShaderInfo shader = item.getShader();
-                Rendering.getInstanceManager().removeRenderView(shader);
+                Rendering.getRenderableManager().removeRenderView(shader);
             }
 
             carouselItems.clear();

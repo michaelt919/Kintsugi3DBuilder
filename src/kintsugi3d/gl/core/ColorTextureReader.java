@@ -43,10 +43,10 @@ public interface ColorTextureReader
      * @param destination The buffer into which to copy the framebuffer data.
      * @param x The column at which to begin reading.
      * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
+     * @param readWidth The number of columns to read.
+     * @param readHeight The number of rows to read.
      */
-    void readARGB(ByteBuffer destination, int x, int y, int width, int height);
+    void readARGB(ByteBuffer destination, int x, int y, int readWidth, int readHeight);
 
     /**
      * Reads the pixels from the texture as floating point numbers.
@@ -54,10 +54,10 @@ public interface ColorTextureReader
      * @param destination The buffer into which to copy the framebuffer data.
      * @param x The column at which to begin reading.
      * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
+     * @param readWidth The number of columns to read.
+     * @param readHeight The number of rows to read.
      */
-    void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height);
+    void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int readWidth, int readHeight);
 
     /**
      * Reads the pixels from the texture as 32-bit integers.
@@ -65,10 +65,10 @@ public interface ColorTextureReader
      * @param destination The buffer into which to copy the framebuffer data.
      * @param x The column at which to begin reading.
      * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
+     * @param readWidth The number of columns to read.
+     * @param readHeight The number of rows to read.
      */
-    void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height);
+    void readIntegerRGBA(IntBuffer destination, int x, int y, int readWidth, int readHeight);
 
     /**
      * Reads the pixels from the texture.

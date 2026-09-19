@@ -14,6 +14,7 @@ package kintsugi3d.builder.fit.finalize;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -143,7 +144,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         }
     }
 
-    public void execute(TextureResources<ContextType> specularFit)
+    public void execute(ReadonlyTextureResources<ContextType> specularFit)
     {
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getTexture(StandardTexture.DIFFUSE_COLOR));
@@ -245,7 +246,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         return StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
     }
 
-    private Texture2D<ContextType> extractMetallicFromOrm(ContextType context, Texture2D<ContextType> orm) throws IOException
+    private Texture2D<ContextType> extractMetallicFromOrm(ContextType context, ReadonlyTexture2D<ContextType> orm) throws IOException
     {
         ProgramObject<ContextType> program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

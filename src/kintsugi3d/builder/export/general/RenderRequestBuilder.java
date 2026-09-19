@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.export.general;
 
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 
@@ -31,7 +31,7 @@ public interface RenderRequestBuilder
      */
     RenderRequestBuilder setShaderSetupCallback(Consumer<Program<? extends Context<?>>> shaderSetupCallback);
 
-    ProgressMonitoredProjectGraphicsRequest create();
+    ProgressMonitoredImageBasedGraphicsRequest create();
     RenderRequestBuilder setWidth(int width);
     RenderRequestBuilder setHeight(int height);
 }

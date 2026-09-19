@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.resources.project.stream;
 
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.Context;
@@ -30,9 +30,9 @@ import java.io.IOException;
  */
 public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
 {
-    private final ReadonlyGraphicsResources<ContextType> resources;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
 
-    public GraphicsStreamFactory(ReadonlyGraphicsResources<ContextType> resources)
+    public GraphicsStreamFactory(ReadonlyImageBasedGraphicsResources<ContextType> resources)
     {
         this.resources = resources;
     }

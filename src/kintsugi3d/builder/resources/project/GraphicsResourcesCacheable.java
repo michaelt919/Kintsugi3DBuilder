@@ -17,7 +17,7 @@ import kintsugi3d.gl.interactive.UserCancellationException;
 
 import java.io.IOException;
 
-public interface GraphicsResourcesCacheable<ContextType extends Context<ContextType>> extends GraphicsResources<ContextType>
+public interface GraphicsResourcesCacheable<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResources<ContextType>
 {
-    ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
+    ImageCache<ContextType> cache(ReadonlyImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
 }

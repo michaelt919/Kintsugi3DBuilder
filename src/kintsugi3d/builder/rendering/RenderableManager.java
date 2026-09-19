@@ -23,8 +23,8 @@ public interface RenderableManager<ContextType extends Context<ContextType>> ext
 {
     boolean isRenderableLoaded();
 
-    ProjectRenderableInstance<ContextType> getMainRenderable(); // TODO this would ideally just be a ViewportRenderable
-    void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback); // TODO this would ideally just be a ViewportRenderable
+    ImageBasedRenderable<ContextType> getMainRenderable(); // TODO this would ideally just be a ViewportRenderable
+    void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback); // TODO this would ideally just be a ViewportRenderable
 
     void addRenderView(ShaderInfo shader, FramebufferSize viewSize,
                        int safeLeftPadding, int safeTopPadding, int safeRightPadding, int safeBottomPadding,

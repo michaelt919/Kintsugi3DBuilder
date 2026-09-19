@@ -30,7 +30,7 @@ import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.DynamicResourceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.util.EventDispatcher;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
@@ -54,10 +54,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
-    extends InteractiveRenderableBase<ContextType> implements ProjectRenderableInstance<ContextType>
+public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
+    extends InteractiveRenderableBase<ContextType> implements ImageBasedRenderable<ContextType>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectRenderingEngine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageBasedRenderingEngine.class);
 
     private final ContextType context;
 
@@ -100,7 +100,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 
     private boolean loaded = false;
 
-    ProjectRenderingEngine(String id, ContextType context, Builder<ContextType> resourceBuilder)
+    ImageBasedRenderingEngine(String id, ContextType context, Builder<ContextType> resourceBuilder)
     {
         this.id = id;
         this.context = context;
@@ -110,7 +110,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
         this.sceneViewportModel = createSceneViewportModel(this.sceneModel);
     }
 
-    ProjectRenderingEngine(String id, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
+    ImageBasedRenderingEngine(String id, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
     {
         this.id = id;
         this.context = context;
@@ -209,14 +209,14 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
 //            scene.setLightVisualsEnabled(true); // Enable light visuals when not in light calibration mode
             litRoot.takeLitContentRoot(scene);
             litRoot.initialize();
-            litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
+            litRoot.setShadowCaster(resources.getGeometryResources().getPositionBuffer());
 
             lightCalibration3DRoot = new LitRoot<>(context, sceneModel);
             LightCalibration3DScene<ContextType> lightCalibScene =
                 new LightCalibration3DScene<>(resources, sceneModel, sceneViewportModel, viewSelection);
             lightCalibration3DRoot.takeLitContentRoot(lightCalibScene);
             lightCalibration3DRoot.initialize();
-            lightCalibration3DRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
+            lightCalibration3DRoot.setShadowCaster(resources.getGeometryResources().getPositionBuffer());
 
             lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, lightCalibration3DRoot);
 
@@ -639,7 +639,7 @@ public class ProjectRenderingEngine<ContextType extends Context<ContextType>>
                     transform = Matrix4.scale(viewSet.getObjectScale()).times(transform);
                 }
 
-                TextureResources<ContextType> textureResources = resources.getTextureResources();
+                ReadonlyTextureResources<ContextType> textureResources = resources.getTextureResources();
 
                 ModelExporter exporter = ModelExporter.fromVertexGeometry(getGeometry(), transform);
                 settings.applyToExporter(exporter, textureResources, filename);

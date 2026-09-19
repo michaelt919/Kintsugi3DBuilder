@@ -16,7 +16,7 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.events.ProjectLoadedListener;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.geometry.VertexGeometry;
@@ -36,8 +36,8 @@ public interface IOHandler
 
 
     boolean isRenderableLoaded();
-    ProjectRenderableInstance<?> getMainRenderable();
-    ProjectRenderableInstance<?> getRenderableForShader(ShaderInfo shader);
+    ImageBasedRenderable<?> getMainRenderable();
+    ImageBasedRenderable<?> getRenderableForShader(ShaderInfo shader);
 
     EventListeners<ProjectLoadedListener> projectLoadedListeners();
     EventListeners<ProjectProcessedListener> projectProcessedListeners();

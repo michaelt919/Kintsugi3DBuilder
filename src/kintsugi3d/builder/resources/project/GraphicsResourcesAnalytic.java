@@ -20,7 +20,7 @@ import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
-public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     public GraphicsResourcesAnalytic(ContextType context, ViewSet viewSet, VertexGeometry geometry)
     {
@@ -34,7 +34,7 @@ public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>>
         // and should apply globally as defaults, but only for analytic / "fake" source photos.
         // The shader will not reload automatically when these change.
         // The defines can be overridden by the actual shader.
-        return getSharedResources().getShaderProgramBuilder()
+        return getCommonResources().getShaderProgramBuilder()
                 .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
                 .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
                 .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.ANALYTIC);
@@ -43,7 +43,7 @@ public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>>
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        getSharedResources().setupShaderProgram(program);
+        getCommonResources().setupShaderProgram(program);
     }
 
     @Override

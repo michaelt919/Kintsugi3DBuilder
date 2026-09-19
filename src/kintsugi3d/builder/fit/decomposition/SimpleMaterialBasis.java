@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -34,10 +34,10 @@ public class SimpleMaterialBasis implements MaterialBasis
 
     public SimpleMaterialBasis(int materialCount, int specularResolution)
     {
-        diffuseColors = IntStream.range(0, materialCount).mapToObj(b -> DoubleVector3.ZERO).collect(Collectors.toCollection(ArrayList::new));
-        redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toCollection(ArrayList::new));
-        greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toCollection(ArrayList::new));
-        blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toCollection(ArrayList::new));
+        diffuseColors = IntStream.range(0, materialCount).mapToObj(b -> DoubleVector3.ZERO).collect(Collectors.toList());
+        redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
+        greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
+        blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).collect(Collectors.toList());
         this.materialCount = materialCount;
         this.specularResolution = specularResolution;
     }
@@ -109,6 +109,13 @@ public class SimpleMaterialBasis implements MaterialBasis
     public void save(File outputDirectory, String filenameOverride)
     {
         SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory, filenameOverride);
+    }
+
+    @Override
+    public MaterialBasis copy()
+    {
+        return new SimpleMaterialBasis(diffuseColors.toArray(DoubleVector3[]::new),
+            List.copyOf(redBasis), List.copyOf(greenBasis), List.copyOf(blueBasis));
     }
 
     /**

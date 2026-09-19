@@ -70,7 +70,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     {
         try
         {
-            Texture2D<ContextType> tex = getTexture(texName);
+            ReadonlyTexture2D<ContextType> tex = getTexture(texName);
             if (tex != null)
             {
                 tex.getColorTextureReader().saveToFile(format, new File(outputDirectory,
@@ -90,7 +90,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
         {
             // Save the packed weight maps for opening in viewer
             try (WeightImageWriter<ContextType> weightImageWriter =
-                 new WeightImageWriter<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), WEIGHTS_PER_PACKED_CHANNEL))
+                 new WeightImageWriter<>(getContext(), TextureResolution.of(getBasisWeightResources().getWeightMaps()), WEIGHTS_PER_PACKED_CHANNEL))
             {
                 int fileCount = (getBasisResources().getBasisCount() + WEIGHTS_PER_PACKED_CHANNEL - 1) / WEIGHTS_PER_PACKED_CHANNEL;
                 weightImageWriter.saveImages(this, format, outputDirectory,
@@ -112,7 +112,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
         {
             // Save the unpacked weight maps for reloading the project in the future
             try (WeightImageWriter<ContextType> weightImageWriter =
-                     new WeightImageWriter<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 1))
+                     new WeightImageWriter<>(getContext(), TextureResolution.of(getBasisWeightResources().getWeightMaps()), 1))
             {
                 weightImageWriter.saveImages(this, format, outputDirectory,
                     IntStream.range(0, getBasisResources().getBasisCount())
