@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.resources;
 
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -37,7 +37,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
     // A reference to the position buffer for the object casting shadows.
     // Not managed or released by LightingResources
-    private VertexBuffer<ContextType> shadowCastingPositionBuffer;
+    private ReadonlyVertexBuffer<ContextType> shadowCastingPositionBuffer;
 
     private Texture2D<ContextType> backplateTexture;
     private Cubemap<ContextType> environmentMap;
@@ -146,7 +146,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
      * Does not take ownership of this buffer.
      * @param positionBuffer
      */
-    public void setShadowCastingPositionBuffer(VertexBuffer<ContextType> positionBuffer)
+    public void setShadowCastingPositionBuffer(ReadonlyVertexBuffer<ContextType> positionBuffer)
     {
         shadowDrawable.addVertexBuffer("position", positionBuffer);
         this.shadowCastingPositionBuffer = positionBuffer;

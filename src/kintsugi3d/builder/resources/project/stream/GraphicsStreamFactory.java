@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,28 +11,34 @@
 
 package kintsugi3d.builder.resources.project.stream;
 
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.ReadableFramebuffer;
-import kintsugi3d.util.ColorList;
+import kintsugi3d.gl.stream.GraphicsStream;
+import kintsugi3d.gl.stream.GraphicsStreamResource;
+import kintsugi3d.gl.util.ColorList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+/**
+ * Stream over enabled views only -- disabled views are not included.
+ * @param <ContextType>
+ */
 public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
 {
-    private final ReadonlyGraphicsResources<ContextType> resources;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
 
-    public GraphicsStreamFactory(ReadonlyGraphicsResources<ContextType> resources)
+    public GraphicsStreamFactory(ReadonlyImageBasedGraphicsResources<ContextType> resources)
     {
         this.resources = resources;
     }
 
     /**
-     * Returns a sequential stream with the views in the current project as its source.
+     * Returns a sequential stream with the enabled views in the current project as its source.
      * A shader program and a framebuffer (which may contain multiple attachments) must be specified in order to map
      * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
      * @param drawable A drawable (typically obtained using GraphicsResources.createDrawable)
@@ -44,11 +50,11 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList[]> stream(
         Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        return new SequentialViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, attachmentCount);
+        return new SequentialViewRenderStream<>(this.resources.getViewSet().getEnabledViews(), drawable, framebuffer, attachmentCount);
     }
 
     /**
-     * Returns a sequential stream with the views in the current project as its source.
+     * Returns a sequential stream with the enabled views in the current project as its source.
      * A shader program and a framebuffer (with a single attachment for this overload) must be specified in order to map
      * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
      * @param drawable A drawable (typically obtained using GraphicsResources.createDrawable)
@@ -59,12 +65,12 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList> stream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer)
     {
-        return new SequentialViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, 1)
+        return new SequentialViewRenderStream<>(this.resources.getViewSet().getEnabledViews(), drawable, framebuffer, 1)
             .map(singletonList -> singletonList[0]);
     }
 
     /**
-     * Returns a sequential stream with the views in the current project as its source.
+     * Returns a sequential stream with the enabled views in the current project as its source.
      * Unlike stream(), this function manages the allocation of the shader program and the framebuffer object
      * and returns an AutoCloseable so that they may be automatically deallocated using a try-with-resources block.
      * Builders for the shader program and framebuffer object must still be specified in order to map
@@ -82,12 +88,12 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new SequentialViewRenderStream<>(
-                this.resources.getViewSet().getCombinedCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
+                this.resources.getViewSet().getEnabledViews(), this.resources.createDrawable(program), framebuffer,
                 framebuffer.getColorAttachmentCount()));
     }
 
     /**
-     * Returns a parallel stream with the views in the current project as its source.
+     * Returns a parallel stream with the enabled views in the current project as its source.
      * A shader program and a framebuffer (which may contain multiple attachments) must be specified in order to map
      * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
      * @param drawable A drawable (typically obtained using GraphicsResources.createDrawable)
@@ -101,12 +107,12 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList[]> parallelStream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount, int maxRunningThreads)
     {
-        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer,
+        return new ParallelViewRenderStream<>(this.resources.getViewSet().getEnabledViews(), drawable, framebuffer,
                 attachmentCount, maxRunningThreads);
     }
 
     /**
-     * Returns a parallel stream with the views in the current project as its source,
+     * Returns a parallel stream with the enabled views in the current project as its source,
      * with a default limit for the number of threads running at once.
      * A shader program and a framebuffer (which may contain multiple attachments) must be specified in order to map
      * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
@@ -119,11 +125,11 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList[]> parallelStream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
     {
-        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, attachmentCount);
+        return new ParallelViewRenderStream<>(this.resources.getViewSet().getEnabledViews(), drawable, framebuffer, attachmentCount);
     }
 
     /**
-     * Returns a parallel stream with the views in the current project as its source.
+     * Returns a parallel stream with the enabled views in the current project as its source.
      * A shader program and a framebuffer (with a single attachment for this overload) must be specified in order to map
      * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
      * @param drawable A drawable (typically obtained using GraphicsResources.createDrawable)
@@ -134,12 +140,12 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStream<ColorList> parallelStream(
             Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer)
     {
-        return new ParallelViewRenderStream<>(this.resources.getViewSet().getCombinedCameraPoseCount(), drawable, framebuffer, 1)
+        return new ParallelViewRenderStream<>(this.resources.getViewSet().getEnabledViews(), drawable, framebuffer, 1)
             .map(singletonList -> singletonList[0]);
     }
 
     /**
-     * Returns a parallel stream with the views in the current project as its source.
+     * Returns a parallel stream with the enabled views in the current project as its source.
      * Unlike parallelStream(), this function manages the allocation of the shader program and the framebuffer object
      * and returns an AutoCloseable so that they may be automatically deallocated using a try-with-resources block.
      * Builders for the shader program and framebuffer object must still be specified in order to map
@@ -160,12 +166,12 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
-                this.resources.getViewSet().getCombinedCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
+                this.resources.getViewSet().getEnabledViews(), this.resources.createDrawable(program), framebuffer,
                 framebuffer.getColorAttachmentCount(), maxRunningThreads));
     }
 
     /**
-     * Returns a parallel stream with the views in the current project as its source,
+     * Returns a parallel stream with the enabled views in the current project as its source,
      * with a default limit for the number of threads running at once.
      * Unlike parallelStream(), this function manages the allocation of the shader program and the framebuffer object
      * and returns an AutoCloseable so that they may be automatically deallocated using a try-with-resources block.
@@ -184,7 +190,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
-                this.resources.getViewSet().getCombinedCameraPoseCount(), this.resources.createDrawable(program), framebuffer,
+                this.resources.getViewSet().getEnabledViews(), this.resources.createDrawable(program), framebuffer,
                 framebuffer.getColorAttachmentCount()));
     }
 }

@@ -11,8 +11,7 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ColorAppearanceMode;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
@@ -21,7 +20,7 @@ import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
-public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     public GraphicsResourcesAnalytic(ContextType context, ViewSet viewSet, VertexGeometry geometry)
     {

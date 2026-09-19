@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,7 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.Projection;
-import kintsugi3d.builder.core.SimpleProjection;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.core.ViewSet.Builder;
+import kintsugi3d.builder.core.viewset.*;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
@@ -23,8 +19,6 @@ import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,8 +32,6 @@ import java.util.*;
  */
 public final class ViewSetReaderFromVSET implements ViewSetReader
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
-
     private static final ViewSetReaderFromVSET INSTANCE = new ViewSetReaderFromVSET();
 
     public static ViewSetReaderFromVSET getInstance()
@@ -60,14 +52,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @throws IOException If I/O errors occur while reading the file.
      */
     @Override
-    public Builder readFromStream(InputStream stream, ViewSetDirectories directories)
+    public ViewSetBuilder readFromStream(InputStream stream, ViewSetDirectories directories)
     {
         File root = directories.projectRoot;
         File supportingFilesDirectory = directories.supportingFilesDirectory;
         boolean needsUndistort = directories.fullResImagesNeedUndistort;
-        Date timestamp = new Date();
 
-        Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
+        ViewSetBuilder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
 
         // Set default full res image directory in case it's not specified in the VSET file (could also be null).
         builder.setFullResImageDirectory(directories.fullResImageDirectory);
@@ -101,7 +92,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     }
                     case "O":
                     {
-                        builder.setOrientationViewIndex(scanner.nextInt());
+                        builder.setOrientationViewByIndex(scanner.nextInt());
                         scanner.nextLine();
                         break;
                     }
@@ -138,31 +129,44 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     case "m":
                     {
                         String original = scanner.nextLine().trim();
-                        builder.setGeometryFileName(makePortableRelativeFilePath(original));
+                        builder.setGeometryFileName(makePortableFilePath(original));
                             // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "M":
                     {
-                        builder.setMasksDirectory(new File(makePortableRelativeFilePath(scanner.nextLine().trim())));
+                        builder.setRelativeMasksPathName(makePortableFilePath(scanner.nextLine().trim()));
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "I":
                     {
-                        builder.setRelativeFullResImagePathName(makePortableRelativeFilePath(scanner.nextLine().trim()));
+                        builder.setRelativeFullResImagePathName(makePortableFilePath(scanner.nextLine().trim()));
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "i":
                     {
-                        builder.setRelativePreviewImagePathName(makePortableRelativeFilePath(scanner.nextLine().trim()));
+                        String filePath = makePortableFilePath(scanner.nextLine().trim());
+                        File absoluteFile = new File(filePath);
+
+                        if (absoluteFile.exists())
+                        {
+                            // Intentionally use absolute path since preview images are probably stored in cache
+                            // rather than being contained within this project.
+                            builder.setPreviewImageDirectory(absoluteFile);
+                        }
+                        else // Fallback for older projects that store relative paths
+                        {
+                            builder.setRelativePreviewImagePathName(filePath);
+                        }
+
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
                     case "t":
                     {
-                        builder.setRelativeSupportingFilesPathName(makePortableRelativeFilePath(scanner.nextLine().trim()));
+                        builder.setRelativeSupportingFilesPathName(makePortableFilePath(scanner.nextLine().trim()));
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
                         break;
                     }
@@ -306,30 +310,28 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         int projectionId = scanner.nextInt();
                         int lightId = scanner.nextInt();
 
-                        String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
+                        String imgFilename = makePortableFilePath(scanner.nextLine().trim());
 
-                        if (id.equals("vd"))
+                        if ("vd".equals(id))
                         {
                             // commit as disabled
                             builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                                 .setCurrentCameraProjectionIndex(projectionId)
                                 .setCurrentLightIndex(lightId)
-                                .setCurrentImageFile(new File(imgFilename))
-                                .commitCurrentCameraPoseAsDisabled();
+                                .commitCurrentViewAsDisabled(new File(imgFilename));
                             break;
                         }
                         builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)
-                            .setCurrentImageFile(new File(imgFilename))
-                            .commitCurrentCameraPose();
+                            .commitCurrentView(new File(imgFilename));
                         break;
                     }
                     case "k":
                     {
                         int cameraId = scanner.nextInt();
 
-                        String imgFilename = makePortableRelativeFilePath(scanner.nextLine().trim());
+                        String imgFilename = makePortableFilePath(scanner.nextLine().trim());
                         // ^ allow portability from Windows to Mac/Linux and vice-versa
 
                         builder.addMask(cameraId, imgFilename);
@@ -387,7 +389,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         break;
                     case "zr":
                         // resource file
-                        resourceMap.put(scanner.next(), new File(makePortableRelativeFilePath(scanner.nextLine().trim())));
+                        resourceMap.put(scanner.next(), new File(makePortableFilePath(scanner.nextLine().trim())));
                         break;
                     default:
                         // Skip unrecognized line
@@ -410,13 +412,10 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         builder.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
-
-        LOG.info("View Set file loaded in {} milliseconds.", new Date().getTime() - timestamp.getTime());
-
         return builder;
     }
 
-    private static String makePortableRelativeFilePath(String original)
+    private static String makePortableFilePath(String original)
     {
         return original
             .replace('/', File.separatorChar).replace('\\', File.separatorChar);
@@ -431,7 +430,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    public ViewSet.Builder readFromStream(InputStream stream, File root)
+    private ViewSetBuilder readFromStream(InputStream stream, File root)
     {
         // Use root directory as supporting files directory
         ViewSetDirectories directories = new ViewSetDirectories();
@@ -450,7 +449,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    public ViewSet.Builder readFromFile(File file, File supportingFilesDirectory) throws IOException
+    public ViewSetBuilder readFromFile(File file, File supportingFilesDirectory) throws IOException
     {
         try (InputStream stream = new FileInputStream(file))
         {
@@ -471,7 +470,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * after any additional options are specified.
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public Builder readFromFile(File file) throws IOException
+    public ViewSetBuilder readFromFile(File file) throws IOException
     {
         try (InputStream stream = new FileInputStream(file))
         {

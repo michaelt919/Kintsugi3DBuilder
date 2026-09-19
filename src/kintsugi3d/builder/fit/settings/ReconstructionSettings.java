@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,23 +11,14 @@
 
 package kintsugi3d.builder.fit.settings;
 
-import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 
-public class ReconstructionSettings
+public class ReconstructionSettings implements ReadonlyReconstructionSettings
 {
-    ReadonlyViewSet reconstructionViewSet = null;
-    boolean reconstructAll = false;
+    private ReadonlyViewSet reconstructionViewSet;
+    private boolean reconstructAll = false;
 
-    public ReconstructionSettings()
-    {
-    }
-
-    /**
-     * Should every image in the view set be reconstructed for validation, or just one key view?
-     * Reconstructing all uses a lot more hard drive space.
-     *
-     * @return true if all views should be reconstructed; false if only one view should be reconstructed.
-     */
+    @Override
     public boolean shouldReconstructAll()
     {
         return reconstructAll;
@@ -44,11 +35,7 @@ public class ReconstructionSettings
         this.reconstructAll = reconstructAll;
     }
 
-    /**
-     * Gets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
-     *
-     * @return
-     */
+    @Override
     public ReadonlyViewSet getReconstructionViewSet()
     {
         return reconstructionViewSet;

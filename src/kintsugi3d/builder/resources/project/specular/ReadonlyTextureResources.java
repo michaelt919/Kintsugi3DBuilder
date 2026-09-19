@@ -11,8 +11,9 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
+import kintsugi3d.builder.core.texture.NamedTextureInfo;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.gl.core.*;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public interface ReadonlyTextureResources<ContextType extends Context<ContextType>>
     extends ContextBound<ContextType>, TwoDimensional
 {
-    Map<TextureDetails, ? extends ReadonlyTexture2D<ContextType>> getTextures();
+    Map<TextureInfo, ? extends ReadonlyTexture2D<ContextType>> getTextures();
 
     /**
      * Returns a map containing only the standard textures
@@ -37,10 +38,10 @@ public interface ReadonlyTextureResources<ContextType extends Context<ContextTyp
 
     default ReadonlyTexture2D<ContextType> getTexture(String texName)
     {
-        return getTextures().get(new TextureDetails(texName));
+        return getTextures().get(new NamedTextureInfo(texName));
     }
 
-    default ReadonlyTexture2D<ContextType> getTexture(TextureDetails tex)
+    default ReadonlyTexture2D<ContextType> getTexture(TextureInfo tex)
     {
         return getTextures().get(tex);
     }

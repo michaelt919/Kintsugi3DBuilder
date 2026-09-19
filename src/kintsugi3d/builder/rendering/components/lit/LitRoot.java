@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.rendering.components.lit;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.RenderedComponent;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.core.VertexBuffer;
+import kintsugi3d.gl.core.ReadonlyVertexBuffer;
 
 public class LitRoot<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
@@ -118,7 +118,7 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
      * Must be called after initialize
      * @param shadowCaster
      */
-    public void setShadowCaster(VertexBuffer<ContextType> shadowCaster)
+    public void setShadowCaster(ReadonlyVertexBuffer<ContextType> shadowCaster)
     {
         lightingResources.setShadowCastingPositionBuffer(shadowCaster);
     }

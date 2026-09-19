@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -18,13 +18,22 @@ import javafx.beans.binding.StringExpression;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSettings;
 import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSettings;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightSettings;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObservableObjectPoseSettings;
+import kintsugi3d.builder.javafx.core.ExceptionHandling;
+import kintsugi3d.builder.javafx.core.ExperienceManager;
+import kintsugi3d.builder.javafx.experience.ReplaceImage;
 import kintsugi3d.builder.state.project.ProjectModelBase;
 import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,6 +46,8 @@ public class ObservableProjectModel extends ProjectModelBase<
     ObservableCameraSettings, ObservableEnvironmentSettings, ObservableLightGroupSettings,
     ObservableLightSettings, ObservableObjectPoseSettings>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ObservableProjectModel.class);
+
     private final ObservableList<ObservableCameraSettings> cameraList =
         new ObservableListWrapper<>(Collections.synchronizedList(new ArrayList<>(16)));
     private final ObservableList<ObservableEnvironmentSettings> environmentList =
@@ -52,7 +63,8 @@ public class ObservableProjectModel extends ProjectModelBase<
     private final StringProperty projectName = new SimpleStringProperty(NULL_PROJECT_NAME);
     private final BooleanProperty projectLoaded = new SimpleBooleanProperty();
     private final BooleanProperty projectProcessed = new SimpleBooleanProperty();
-    private final IntegerProperty processedTextureResolution = new SimpleIntegerProperty();
+    private final IntegerProperty processedTextureWidth = new SimpleIntegerProperty();
+    private final IntegerProperty processedTextureHeight = new SimpleIntegerProperty();
     private final ObjectProperty<Vector3> modelSize = new SimpleObjectProperty<>(new Vector3(1));
 
     private final ObjectProperty<EventHandler<ProcessingCompleteEvent>> onProcessingComplete = new SimpleObjectProperty<>();
@@ -112,11 +124,6 @@ public class ObservableProjectModel extends ProjectModelBase<
     public EventHandler<ProcessingCompleteEvent> getOnProcessingComplete()
     {
         return onProcessingComplete.get();
-    }
-
-    public ObjectProperty<EventHandler<ProcessingCompleteEvent>> onProcessingCompleteProperty()
-    {
-        return onProcessingComplete;
     }
 
     public void setOnProcessingComplete(EventHandler<ProcessingCompleteEvent> onProcessingComplete)
@@ -211,20 +218,37 @@ public class ObservableProjectModel extends ProjectModelBase<
     }
 
     @Override
-    public int getProcessedTextureResolution()
+    public int getProcessedTextureWidth()
     {
-        return processedTextureResolution.get();
+        return processedTextureWidth.get();
     }
 
     @Override
-    public void setProcessedTextureResolution(int processedTextureResolution)
+    public int getProcessedTextureHeight()
     {
-        this.processedTextureResolution.set(processedTextureResolution);
+        return processedTextureHeight.get();
     }
 
-    public IntegerExpression getProcessedTextureResolutionProperty()
+    @Override
+    public void setProcessedTextureWidth(int processedTextureWidth)
     {
-        return processedTextureResolution;
+        this.processedTextureWidth.set(processedTextureWidth);
+    }
+
+    @Override
+    protected void setProcessedTextureHeight(int processedTextureHeight)
+    {
+        this.processedTextureHeight.set(processedTextureHeight);
+    }
+
+    public IntegerExpression getProcessedTextureWidthProperty()
+    {
+        return processedTextureWidth;
+    }
+
+    public IntegerExpression getProcessedTextureHeightProperty()
+    {
+        return processedTextureHeight;
     }
 
     @Override
@@ -242,5 +266,57 @@ public class ObservableProjectModel extends ProjectModelBase<
     public ObjectProperty<Vector3> getModelSizeProperty()
     {
         return modelSize;
+    }
+
+    @Override
+    public void error(String message, Throwable e)
+    {
+        ExceptionHandling.error(message, e);
+    }
+
+    @Override
+    public void warn(String message, Throwable e)
+    {
+        ExceptionHandling.warn(message, e);
+    }
+
+    @Override
+    public void cancelled(String message)
+    {
+        Alert alert = new Alert(AlertType.INFORMATION, message);
+        alert.setTitle("Cancelled");
+        alert.setHeaderText("Cancelled");
+        alert.show();
+    }
+
+    @Override
+    public void confirm(String title, String header, String message, Runnable onConfirm)
+    {
+        // Temp solution -- will eventually create a custom modal.
+        Alert alert = new Alert(AlertType.CONFIRMATION, message);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        var result = alert.showAndWait();
+
+        if (result.isPresent() && result.get().equals(ButtonType.OK))
+        {
+            onConfirm.run();
+        }
+    }
+
+    @Override
+    public void requestUserImageReplacement(ImageReplacer imageReplacer)
+    {
+        ReplaceImage replaceImage = ExperienceManager.getInstance().getExperience(
+            ExperienceManager.REPLACE_IMAGE, ReplaceImage.class);
+        if (replaceImage != null)
+        {
+            replaceImage.setData(imageReplacer);
+            replaceImage.tryOpen();
+        }
+        else
+        {
+            LOG.error("Failed to open image replacement modal.");
+        }
     }
 }

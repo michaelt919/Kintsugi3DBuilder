@@ -11,21 +11,23 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.core.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
-import kintsugi3d.builder.fit.settings.BasisSettings;
-import kintsugi3d.builder.fit.settings.SpecularFitSettings;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.resources.project.GraphicsResources;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.fit.settings.*;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
+import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,16 +40,29 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-public class SpecularFitRequest implements ObservableProjectGraphicsRequest
+public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
-    private final SpecularFitSettings settings;
 
     private static final boolean DEBUG_IMAGES = false;
 
-    public SpecularFitRequest(SpecularFitSettings settings)
+    private final ReadonlySpecularFitSettings settings;
+    private final ReadonlyBasisOptimizationSettings basisOptimizationSettings;
+
+    private File outputDirectory;
+
+    private SpecularFitRequest(ReadonlySpecularFitSettings settings,
+                               ReadonlyBasisOptimizationSettings basisOptimizationSettings, File outputDirectory)
+    {
+        this(settings, basisOptimizationSettings);
+        this.outputDirectory = outputDirectory;
+    }
+
+    private SpecularFitRequest(ReadonlySpecularFitSettings settings,
+                               ReadonlyBasisOptimizationSettings basisOptimizationSettings)
     {
         this.settings = settings;
+        this.basisOptimizationSettings = basisOptimizationSettings;
     }
 
     /**
@@ -59,18 +74,23 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
     public static SpecularFitRequest create(String... args)
     {
         SpecularFitSettings params = new SpecularFitSettings(2048, 2048);
-        params.setOutputDirectory(new File(args[2]));
-        return new SpecularFitRequest(params);
+        File outputDirectory = new File(args[2]);
+        return new SpecularFitRequest(params, new BasisOptimizationSettings(), outputDirectory);
     }
 
-    public SpecularFitRequest()
+    public static SpecularFitRequest createReoptimizeTexturesRequest()
     {
-        this(getSettingsFromProject());
+        return new SpecularFitRequest(getSettingsFromProject(), null);
     }
 
-    private static SpecularFitSettings getSettingsFromProject()
+    public static SpecularFitRequest createBasisAndTexturesOptimizationRequest()
     {
-        GeneralSettingsModel projectSettings = Global.state().getIOModel()
+        return new SpecularFitRequest(getSettingsFromProject(), getBasisOptimizationSettingsFromProject());
+    }
+
+    private static ReadonlySpecularFitSettings getSettingsFromProject()
+    {
+        GeneralSettingsModel projectSettings = Global.io()
             .validateRenderable()
             .getLoadedViewSet().getProjectSettings();
 
@@ -78,21 +98,9 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         int textureSize = projectSettings.getInt("textureSize");
         SpecularFitSettings settings = new SpecularFitSettings(textureSize, textureSize);
 
-        // Basis settings
-        int basisResolution = projectSettings.getInt("basisResolution");
-        settings.getSpecularBasisSettings().setBasisResolution(basisResolution);
-        settings.getSpecularBasisSettings().setBasisCount(projectSettings.getInt("basisCount"));
-        settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(projectSettings.getBoolean("smithMaskingShadowingEnabled"));
-
-        // Specular / general settings
-        int specularMinWidthDiscrete = Math.round(projectSettings.getFloat("specularMinWidthFrac") * basisResolution);
-        settings.getSpecularBasisSettings().setSpecularMinWidth(specularMinWidthDiscrete);
-        settings.getSpecularBasisSettings().setSpecularMaxWidth(
-            Math.round(projectSettings.getFloat("specularMaxWidthFrac") * basisResolution));
-        settings.getSpecularBasisSettings().setBasisComplexity(
-            Math.round(projectSettings.getFloat("basisComplexityFrac") * (basisResolution - specularMinWidthDiscrete + 1)));
+        // General optimization settings
         settings.setConvergenceTolerance(projectSettings.getFloat("convergenceTolerance"));
-        settings.getSpecularBasisSettings().setMetallicity(projectSettings.getFloat("metallicity"));
+        settings.setSmithMaskingShadowingEnabled(projectSettings.getBoolean("smithMaskingShadowingEnabled"));
         settings.setShouldIncludeConstantTerm(projectSettings.getBoolean("constantTermEnabled"));
 
         // Normal estimation settings
@@ -115,7 +123,32 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
         return settings;
     }
 
-    public SpecularFitSettings getSettings()
+    private static ReadonlyBasisOptimizationSettings getBasisOptimizationSettingsFromProject()
+    {
+        GeneralSettingsModel projectSettings = Global.io()
+            .validateRenderable()
+            .getLoadedViewSet().getProjectSettings();
+
+        BasisOptimizationSettings settings = new BasisOptimizationSettings();
+
+        // Basis settings
+        int basisResolution = projectSettings.getInt("basisResolution");
+        settings.setBasisResolution(basisResolution);
+        settings.setBasisCount(projectSettings.getInt("basisCount"));
+
+        // Specular settings
+        int specularMinWidthDiscrete = Math.round(projectSettings.getFloat("specularMinWidthFrac") * basisResolution);
+        settings.setSpecularMinWidth(specularMinWidthDiscrete);
+        settings.setSpecularMaxWidth(
+            Math.round(projectSettings.getFloat("specularMaxWidthFrac") * basisResolution));
+        settings.setBasisComplexity(
+            Math.round(projectSettings.getFloat("basisComplexityFrac") * (basisResolution - specularMinWidthDiscrete + 1)));
+        settings.setMetallicity(projectSettings.getFloat("metallicity"));
+
+        return settings;
+    }
+
+    public ReadonlySpecularFitSettings getSettings()
     {
         return settings;
     }
@@ -130,14 +163,16 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
      *                   If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(
-        ImageBasedRenderable<ContextType> renderable, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> void executeRequest(ImageBasedRenderable<ContextType> renderable, ProgressMonitor monitor)
         throws UserCancellationException
     {
         try
         {
-            // Set the output directory based on the view set's texture fit file path
-            settings.setOutputDirectory(renderable.getViewSet().getSupportingFilesDirectory());
+            if (outputDirectory == null) // If the output directory wasn't overridden
+            {
+                // Set the output directory based on the view set's texture fit file path
+                outputDirectory = renderable.getViewSet().getSupportingFilesDirectory();
+            }
 
             if (monitor != null)
             {
@@ -145,88 +180,81 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
             }
 
             // Perform the specular fit
-            SpecularFitProcess process = new SpecularFitProcess(settings);
-            GraphicsResources<ContextType> resources = renderable.getResources();
+            ImageBasedGraphicsResources<ContextType> resources = renderable.getResources();
 
-            if (settings.shouldOptimizeBasis())
+            if (basisOptimizationSettings != null)
             {
-                // Runs the fit (long process) and then replaces the old material resources / textures
+                BasisAndTexturesOptimizationProcess process = new BasisAndTexturesOptimizationProcess(settings, basisOptimizationSettings, outputDirectory);
                 resources.replaceTextureResources(process.optimizeFitWithCache(resources, monitor));
             }
             else
             {
-                BasisSettings basisSettings = settings.getSpecularBasisSettings();
-                ReadonlyBasisResources<ContextType> basisResources = resources.getTextureResources().getBasisResources();
-                basisSettings.setBasisCount(basisResources.getBasisCount());
-                basisSettings.setDisabledBasisCount(basisResources.getDisabledBasisCount());
-                basisSettings.setBasisResolution(basisResources.getBasisResolution());
-
-                // Runs the fit (long process) and then replaces the old material resources / textures
+                ReoptimizeTexturesProcess process = new ReoptimizeTexturesProcess(settings, outputDirectory);
                 resources.replaceTextureResources(process.reoptimizeTexturesWithCache(resources, monitor));
             }
 
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
             renderable.reloadShaders();
 
-            IOModel ioModel = Global.state().getIOModel();
-
             // Save project to avoid inconsistency between results and settings
-            ioModel.saveProject();
-
-            // Export glTF for Kintsugi 3D Viewer even if not requested
-            // TODO: ensure that GLTF texture filenames match default material texture names;
-            //  otherwise might not work when launching Kintsugi 3D Viewer from Builder.
-            ioModel.saveGLTF();
-
-            // Save textures and basis functions
-            // Runs immediately, in part so that the thumbnails are there before the cards in the UI refresh.
-            resources.getTextureResources().saveAll(renderable.getViewSet().getSupportingFilesDirectory());
-
-            // Perform reconstruction
-            //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
-
-            if (settings.getExportSettings().shouldOpenViewerOnceComplete())
+            Global.io().saveProject(() ->
             {
-                Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
-            }
+                // Perform reconstruction
+                //performReconstruction(renderable.getGraphicsResources(), renderable.getGraphicsResources().getSpecularMaterialResources());
 
-            ProjectModel projectModel = Global.state().getProjectModel();
-            projectModel.setProjectProcessed(true);
-            projectModel.setProcessedTextureResolution(settings.getTextureResolution().width);
-            projectModel.notifyProcessingComplete();
+                if (settings.getExportSettings().shouldOpenViewerOnceComplete())
+                {
+                    try
+                    {
+                        Kintsugi3DViewerLauncher.launchViewer(new File(outputDirectory, "model.glb"));
+                    }
+                    catch (IOException e)
+                    {
+                        Global.state().getProjectModel().error("Error launching Kintsugi 3D Viewer", e);
+                    }
+                }
 
-            // Refresh tabs
-            new TabsManager(renderable).refreshAllTabs();
+                // Refresh tabs
+                new TabsManager(renderable).refreshAllTabs();
+            });
         }
         catch (IOException | ParserConfigurationException | TransformerException e)
         {
-            ExceptionHandling.error("Error executing specular fit request", e);
+            Global.state().getProjectModel().error("Error executing specular fit request", e);
         }
     }
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
-        ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit)
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit)
         throws IOException
     {
-        if (settings.getOutputDirectory() != null)
+        if (outputDirectory != null)
         {
             // Create output directory
-            settings.getOutputDirectory().mkdirs();
+            outputDirectory.mkdirs();
 
             if (resources.getViewSet() != null)
             {
+                // Determine basis count and resolution based on the new specularFit.
+                // This will result in a program factory that overrides whatever basis count and resolution
+                // would be specified by the original resources.
+                ReadonlyBasisResources<ContextType> basisResources = specularFit.getBasisResources();
+                ReadonlyBasisSettings basisSettings = new SimpleBasisSettings(
+                    basisResources.getBasisCount(), basisResources.getDisabledBasisCount(), basisResources.getBasisResolution());
+
                 // Reconstruct images both from basis functions and from fitted roughness
-                SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getSpecularBasisSettings());
+                ShaderProgramFactory<ContextType> programFactory =
+                    new SpecularFitResourcesWrapper<ContextType>(settings.isSmithMaskingShadowingEnabled(), basisSettings).wrap(resources);
                 FinalReconstruction<ContextType> reconstruction =
                     new FinalReconstruction<>(resources, settings.getTextureResolution(), settings.getReconstructionSettings());
 
                 LOG.info("Reconstructing:");
-                List<Map<String, ColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
-                        "basis", ReconstructionShaders.getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
-                        "reflectivity", ReconstructionShaders.getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),
-                    ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
-                    DEBUG_IMAGES ? settings.getOutputDirectory() : null,
-                    DEBUG_IMAGES ? new File(settings.getOutputDirectory(), "ground-truth") : null);
+                List<Map<String, ReadonlyColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
+                        "basis", ReconstructionShaders.getBasisModelReconstructionProgramBuilder(programFactory, specularFit),
+                        "reflectivity", ReconstructionShaders.getReflectivityModelReconstructionProgramBuilder(programFactory, specularFit)),
+                    ReconstructionShaders.getIncidentRadianceProgramBuilder(programFactory),
+                    DEBUG_IMAGES ? outputDirectory : null,
+                    DEBUG_IMAGES ? new File(outputDirectory, "ground-truth") : null);
 
                 double reconstructionRMSE = rmseList.stream().mapToDouble(map ->
                     {
@@ -244,7 +272,7 @@ public class SpecularFitRequest implements ObservableProjectGraphicsRequest
 
                 if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
                 {
-                    try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt"), StandardCharsets.UTF_8))
+                    try (PrintStream rmseOut = new PrintStream(new File(outputDirectory, "rmse.txt"), StandardCharsets.UTF_8))
                     // Text file containing error information
                     {
                         rmseOut.printf("basis, %s%n", reconstructionRMSE);

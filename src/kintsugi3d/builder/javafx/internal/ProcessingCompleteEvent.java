@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,11 +16,18 @@ import javafx.event.EventType;
 
 public class ProcessingCompleteEvent extends Event
 {
-    public static final EventType<ProcessingCompleteEvent> PROCESSING_COMPLETE
-        = new EventType<>(Event.ANY, "PROCESSING COMPLETE");
+    private static final EventType<ProcessingCompleteEvent> PROCESSING_COMPLETE
+        = new EventType<>(ANY, "PROCESSING COMPLETE");
+    private static final long serialVersionUID = -4030758122707208882L;
 
     public ProcessingCompleteEvent()
     {
         super(PROCESSING_COMPLETE);
+    }
+
+    @Override
+    public final ProcessingCompleteEvent clone() throws AssertionError
+    {
+        throw new AssertionError();
     }
 }

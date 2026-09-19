@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.UniformBuffer;
@@ -28,13 +28,13 @@ import kintsugi3d.gl.vecmath.Vector3;
 public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
 {
     private final ContextType context;
-    private final ReadonlyGraphicsResourcesImageSpace<ContextType> resources;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;
 
     private RenderingSubject<ContextType> renderingSubject;
 
-    public LightCalibrationContent(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationContent(ReadonlyImageBasedGraphicsResources<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();
@@ -90,7 +90,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
         try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
         {
             // TODO byte ordering seems to be OS-dependent when setting up this uniform buffer, or perhaps less tolerant of incomplete GLSL types
-            int selectedCameraViewIndex = sceneModel.getCameraViewListModel().getSelectedCameraViewIndex();
+            int selectedCameraViewIndex = sceneModel.getCameraViewListModel().getSelectedView().getGPUViewIndex();
             viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance()
                 .createFromIntArray(false, 4, 1,
                     selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex));

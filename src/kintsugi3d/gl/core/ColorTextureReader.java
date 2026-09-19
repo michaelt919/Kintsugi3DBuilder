@@ -11,9 +11,9 @@
 
 package kintsugi3d.gl.core;
 
+import kintsugi3d.gl.util.ColorList;
+import kintsugi3d.gl.util.ColorNativeBufferList;
 import kintsugi3d.gl.vecmath.IntVector4;
-import kintsugi3d.util.ColorList;
-import kintsugi3d.util.ColorNativeBufferList;
 
 import java.io.File;
 import java.io.IOException;

@@ -11,10 +11,11 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ShaderType;
 
 import java.io.File;
 
@@ -25,33 +26,30 @@ public final class ReconstructionShaders
     }
 
     public static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getIncidentRadianceProgramBuilder(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getIncidentRadianceProgramBuilder(ShaderProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(resources,
-            new File("shaders/common/imgspace.vert"),
-            new File("shaders/specularfit/incidentRadiance.frag"));
+        return programFactory.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX,  new File("shaders/common/imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/incidentRadiance.frag"));
     }
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
-        ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
-        SpecularFitProgramFactory<ContextType> programFactory)
+        ShaderProgramFactory<ContextType> programFactory, ReadonlyTextureResources<ContextType> specularFit)
     {
-        return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/imgspace.vert"),
-                new File("shaders/specularfit/reconstruction/basisModel.frag"))
+        return programFactory.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX,  new File("shaders/common/imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/reconstruction/basisModel.frag"))
             .define("USE_CONSTANT_MAP", specularFit.getTexture("constant") != null);
     }
 
     public static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
-        ReadonlyGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit,
-        SpecularFitProgramFactory<ContextType> programFactory)
+        ShaderProgramFactory<ContextType> programFactory, ReadonlyTextureResources<ContextType> specularFit)
     {
-        return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/imgspace.vert"),
-                new File("shaders/specularfit/reconstruction/reflectivityModel.frag"))
+        return programFactory.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX,  new File("shaders/common/imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/reconstruction/reflectivityModel.frag"))
             .define("USE_CONSTANT_MAP", specularFit.getTexture("constant") != null);
     }
 }

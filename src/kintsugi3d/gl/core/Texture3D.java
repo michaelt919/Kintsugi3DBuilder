@@ -31,7 +31,7 @@ import java.util.function.Function;
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
 public interface Texture3D<ContextType extends Context<ContextType>>
-    extends ManagedResource, Blittable<ReadonlyTexture3D<ContextType>>, ReadonlyTexture3D<ContextType>
+    extends ManagedResource, ReadonlyTexture3D<ContextType>, Blittable<ReadonlyTexture3D<ContextType>>
 {
     /**
      * Sets the texture wrap modes.
@@ -238,6 +238,11 @@ public interface Texture3D<ContextType extends Context<ContextType>>
         blitCropped(0, 0, 0, readSource, srcX, srcY, srcZ, srcWidth, srcHeight, srcDepth);
     }
 
+    /**
+     * Gets an object that encapsulates read capabilities for this texture as a color texture.
+     * @param layerIndex The index of the layer within the 3D texture to be read.
+     * @return the texture reader
+     */
     @Override
     default ColorTextureReader getColorTextureReader(int layerIndex)
     {
@@ -256,7 +261,7 @@ public interface Texture3D<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public void readARGB(ByteBuffer destination, int x, int y, int readWidth, int readHeight)
+            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -264,12 +269,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, readWidth, readHeight);
+                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, width, height);
                 }
             }
 
             @Override
-            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int readWidth, int readHeight)
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -277,12 +282,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, readWidth, readHeight);
+                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, width, height);
                 }
             }
 
             @Override
-            public void readIntegerRGBA(IntBuffer destination, int x, int y, int readWidth, int readHeight)
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
                     .buildFramebufferObject(this.getWidth(), this.getHeight())
@@ -290,12 +295,17 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, readWidth, readHeight);
+                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, width, height);
                 }
             }
         };
     }
 
+    /**
+     * Gets an object that encapsulates read capabilities for this texture as a depth texture.
+     * @param layerIndex The index of the layer within the 3D texture to be read.
+     * @return the texture reader
+     */
     @Override
     default DepthTextureReader getDepthTextureReader(int layerIndex)
     {

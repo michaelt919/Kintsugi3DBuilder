@@ -13,23 +13,24 @@ package kintsugi3d.builder.io.usdz;
 
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 
-public class USDZMetallicExporterFactory implements MaterialExporterFactory
+public final class USDZMetallicExporterFactory implements MaterialExporterFactory
 {
     private static final USDZMetallicExporterFactory INSTANCE = new USDZMetallicExporterFactory();
-    public static USDZMetallicExporterFactory getInstance()
-    {
-        return INSTANCE;
-    }
 
     private USDZMetallicExporterFactory()
     {
 
     }
 
+    public static USDZMetallicExporterFactory getInstance()
+    {
+        return INSTANCE;
+    }
+
     @Override
-    public MaterialExporter getExporter(TextureResources<?> resources)
+    public MaterialExporter getExporter(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> resources)
     {
         USDZMetallicExporter exporter = new USDZMetallicExporter();
         exporter.setTextureResources(resources);

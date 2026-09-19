@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,16 +11,15 @@
 
 package kintsugi3d.builder.fit.settings;
 
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.resources.project.ImageCacheSettings;
 
 import java.io.File;
 
-public class SpecularFitSettings
+public class SpecularFitSettings implements ReadonlySpecularFitSettings
 {
     private final TextureResolution textureResolution;
     private final NormalOptimizationSettings normalOptimizationSettings = new NormalOptimizationSettings();
-    private final BasisOptimizationSettings basisSettings = new BasisOptimizationSettings();
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
     private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
     private final ExportSettings exportSettings = new ExportSettings();
@@ -29,13 +28,10 @@ public class SpecularFitSettings
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;
 
+    private boolean smithMaskingShadowingEnabled = true;
     private boolean shouldIncludeConstantTerm;
 
-    private File priorSolutionDirectory = null;
-    private File outputDirectory;
-
-    private boolean shouldOptimizeBasis = true;
-
+    private File priorSolutionDirectory;
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
@@ -53,45 +49,37 @@ public class SpecularFitSettings
         imageCacheSettings.setSampledSize(256); // TODO expose this in the interface
     }
 
+    @Override
     public TextureResolution getTextureResolution()
     {
         return textureResolution;
     }
 
-    public BasisOptimizationSettings getSpecularBasisSettings()
-    {
-        return basisSettings;
-    }
-
+    @Override
     public NormalOptimizationSettings getNormalOptimizationSettings()
     {
         return normalOptimizationSettings;
     }
 
-    /**
-     * Gets a modifiable reference to the image cache settings for the specular fit
-     * @return
-     */
+    @Override
     public ImageCacheSettings getImageCacheSettings()
     {
         return imageCacheSettings;
     }
 
+    @Override
     public ReconstructionSettings getReconstructionSettings()
     {
         return reconstructionSettings;
     }
 
+    @Override
     public ExportSettings getExportSettings()
     {
         return exportSettings;
     }
 
-    /**
-     * Gets the convergence tolerance used to determine whether the Levenberg-Marquardt algorithm for optimizing
-     * the normal map has converged.
-     * @return
-     */
+    @Override
     public double getConvergenceTolerance()
     {
         return this.convergenceTolerance;
@@ -112,11 +100,7 @@ public class SpecularFitSettings
         this.convergenceTolerance = convergenceTolerance;
     }
 
-    /**
-     * Gets the convergence tolerance used to determine whether the Levenberg-Marquardt algorithm for optimizing
-     * the normal map has converged.
-     * @return
-     */
+    @Override
     public double getPreliminaryConvergenceTolerance()
     {
         return this.preliminaryConvergenceTolerance;
@@ -137,6 +121,22 @@ public class SpecularFitSettings
         this.preliminaryConvergenceTolerance = preliminaryConvergenceTolerance;
     }
 
+    @Override
+    public boolean isSmithMaskingShadowingEnabled()
+    {
+        return smithMaskingShadowingEnabled;
+    }
+
+    /**
+     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
+     * @param smithMaskingShadowingEnabled
+     */
+    public void setSmithMaskingShadowingEnabled(boolean smithMaskingShadowingEnabled)
+    {
+        this.smithMaskingShadowingEnabled = smithMaskingShadowingEnabled;
+    }
+
+    @Override
     public boolean shouldIncludeConstantTerm()
     {
         return shouldIncludeConstantTerm;
@@ -147,10 +147,7 @@ public class SpecularFitSettings
         this.shouldIncludeConstantTerm = shouldIncludeConstantTerm;
     }
 
-    /**
-     * Gets the directory from which to load a prior solution
-     * @return
-     */
+    @Override
     public File getPriorSolutionDirectory()
     {
         return priorSolutionDirectory;
@@ -163,25 +160,5 @@ public class SpecularFitSettings
     public void setPriorSolutionDirectory(File priorSolutionDirectory)
     {
         this.priorSolutionDirectory = priorSolutionDirectory;
-    }
-
-    public File getOutputDirectory()
-    {
-        return outputDirectory;
-    }
-
-    public void setOutputDirectory(File outputDirectory)
-    {
-        this.outputDirectory = outputDirectory;
-    }
-
-    public boolean shouldOptimizeBasis()
-    {
-        return shouldOptimizeBasis;
-    }
-
-    public void setShouldOptimizeBasis(boolean optimizeBasis)
-    {
-        this.shouldOptimizeBasis = optimizeBasis;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -18,20 +18,20 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.Callback;
-import kintsugi3d.builder.app.logging.LogMessage;
-import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
 import kintsugi3d.builder.javafx.util.ScrollBarHelper;
+import kintsugi3d.builder.util.logging.LogMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
@@ -55,36 +55,36 @@ public class LoggerController implements Initializable
     private RecentLogMessageAppender logMessages;
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
+    public void initialize(URL location, ResourceBundle resources)
     {
         logMessages = RecentLogMessageAppender.getInstance();
 
         messageListView.setCellFactory(new LogMessageCellFactory());
-        messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
+        messageListView.setItems(logMessages.getMessages().filtered(this::doesLogMessagePassFilter));
         messageListView.scrollTo(messageListView.getItems().size() - 1);
 
         // If the logger cannot log a level, disable a filter button
-        if (! logMessages.isLevelAvailable(Level.ERROR))
+        if (! RecentLogMessageAppender.isLevelAvailable(Level.ERROR))
         {
             toggleButtonError.setSelected(false);
             toggleButtonError.setDisable(true);
         }
-        if (! logMessages.isLevelAvailable(Level.WARN))
+        if (! RecentLogMessageAppender.isLevelAvailable(Level.WARN))
         {
             toggleButtonWarn.setSelected(false);
             toggleButtonWarn.setDisable(true);
         }
-        if (! logMessages.isLevelAvailable(Level.INFO))
+        if (! RecentLogMessageAppender.isLevelAvailable(Level.INFO))
         {
             toggleButtonInfo.setSelected(false);
             toggleButtonInfo.setDisable(true);
         }
-        if (! logMessages.isLevelAvailable(Level.DEBUG))
+        if (! RecentLogMessageAppender.isLevelAvailable(Level.DEBUG))
         {
             toggleButtonDebug.setSelected(false);
             toggleButtonDebug.setDisable(true);
         }
-        if (! logMessages.isLevelAvailable(Level.TRACE))
+        if (! RecentLogMessageAppender.isLevelAvailable(Level.TRACE))
         {
             toggleButtonTrace.setSelected(false);
             toggleButtonTrace.setDisable(true);
@@ -92,6 +92,7 @@ public class LoggerController implements Initializable
         ScrollBarHelper.scrollbarFix(messageListView);
     }
 
+    @FXML
     public void buttonOpenLogDir(ActionEvent actionEvent)
     {
         try
@@ -99,18 +100,20 @@ public class LoggerController implements Initializable
             File logDir = new File(System.getProperty("Kintsugi3D.logDir"));
             Desktop.getDesktop().open(logDir);
         }
-        catch (Exception e)
+        catch (IOException|RuntimeException e)
         {
             LOG.error("An error occurred while opening log directory:", e);
         }
     }
 
+    @FXML
     public void buttonChangeLogLevel(ActionEvent actionEvent)
     {
         FilteredList<LogMessage> filteredList = (FilteredList<LogMessage>) messageListView.getItems();
-        if (filteredList == null)
-            return;
-        filteredList.setPredicate(this::logMessagePassesFilter);
+        if (filteredList != null)
+        {
+            filteredList.setPredicate(this::doesLogMessagePassFilter);
+        }
     }
 
     public void buttonUpdatePaused(ActionEvent event)
@@ -129,32 +132,42 @@ public class LoggerController implements Initializable
             items = logMessages.getMessages();
         }
 
-        messageListView.setItems(items.filtered(this::logMessagePassesFilter));
+        messageListView.setItems(items.filtered(this::doesLogMessagePassFilter));
     }
 
-    private boolean logMessagePassesFilter(LogMessage message)
+    private boolean doesLogMessagePassFilter(LogMessage message)
     {
         switch (message.getLogLevel())
         {
             case ERROR:
                 if (! toggleButtonError.isSelected())
+                {
                     return false;
+                }
                 break;
             case WARN:
                 if (! toggleButtonWarn.isSelected())
+                {
                     return false;
+                }
                 break;
             case INFO:
                 if (! toggleButtonInfo.isSelected())
+                {
                     return false;
+                }
                 break;
             case DEBUG:
                 if (! toggleButtonDebug.isSelected())
+                {
                     return false;
+                }
                 break;
             case TRACE:
                 if (! toggleButtonTrace.isSelected())
+                {
                     return false;
+                }
                 break;
         }
 
@@ -192,7 +205,7 @@ public class LoggerController implements Initializable
                             {
                                 if (this.isSelected())
                                 {
-                                    labelText.append("\n");
+                                    labelText.append('\n');
                                     labelText.append(strStackTrace(message.getThrown()));
                                 }
                                 else
@@ -231,10 +244,12 @@ public class LoggerController implements Initializable
             };
         }
 
-        private String strStackTrace(Throwable thrown)
+        private static String strStackTrace(Throwable thrown)
         {
             if (thrown == null)
+            {
                 return "";
+            }
 
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
@@ -242,7 +257,7 @@ public class LoggerController implements Initializable
             return sw.toString().trim();
         }
 
-        private String formatTooltip(LogMessage message)
+        private static String formatTooltip(LogMessage message)
         {
             StringBuilder sb = new StringBuilder("Logged by ");
             sb.append(message.getSourceClassName());

@@ -385,7 +385,7 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      * @return true if the vertex attribute was successfully set;
      * false if the vertex attribute was not set because no vertex attribute exists at the specified location in this shader program.
      */
-    boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer);
+    boolean addVertexBuffer(int location, ReadonlyVertexBuffer<ContextType> buffer);
 
     /**
      * Designates a vertex buffer to be used for the vertex attribute with a particular shader name.
@@ -394,5 +394,5 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      * @return if the vertex attribute was successfully set;
      * false if the vertex attribute was not set because no vertex attribute exists at the specified location in this shader program.
      */
-    boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer);
+    boolean addVertexBuffer(String name, ReadonlyVertexBuffer<ContextType> buffer);
 }

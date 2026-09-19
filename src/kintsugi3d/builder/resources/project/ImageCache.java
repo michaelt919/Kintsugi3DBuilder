@@ -11,19 +11,24 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.io.SimpleLoadOptionsModel;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
 import kintsugi3d.gl.geometry.GeometryTextures;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.util.BufferedImageBuilder;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.util.BufferedImageBuilder;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -46,21 +52,26 @@ public class ImageCache<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImageCache.class);
     private final ContextType context;
-    private final GraphicsResourcesBase<ContextType> resources;
-    private final ImageCacheSettings settings;
+    private final ImageBasedGraphicsResourcesBase<ContextType> resources;
+    private final ReadonlyImageCacheSettings settings;
+
+    private final File cacheDirectory;
 
     private final File sampledDir;
     private final IntVector2[][] sampledPixelCoords;
 
     private boolean initialized = false;
 
-    ImageCache(GraphicsResourcesBase<ContextType> resources, ImageCacheSettings settings)
+    ImageCache(ImageBasedGraphicsResourcesBase<ContextType> resources, ReadonlyImageCacheSettings settings)
     {
         this.context = resources.getContext();
         this.resources = resources;
         this.settings = settings;
 
-        this.sampledDir = new File(settings.getCacheDirectory(), "sampled");
+        String cacheFolderName = getFolderNameFromSettings(resources.getViewSet().getUUID().toString(), settings);
+        this.cacheDirectory = new File(settings.getCacheParentDirectory(), cacheFolderName);
+
+        this.sampledDir = new File(cacheDirectory, "sampled");
 
         // Square 2D array to store sampled pixel coords.
         this.sampledPixelCoords = IntStream.range(0, settings.getSampledSize())
@@ -87,6 +98,28 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
+    private static String getFolderNameFromSettings(String cacheFolderName, ReadonlyImageCacheSettings settings)
+    {
+        if (cacheFolderName != null)
+        {
+            return String.format("%s/%d-%d-%d-%d", cacheFolderName, settings.getTextureWidth(), settings.getTextureHeight(), settings.getTextureSubdiv(), settings.getSampledSize());
+        }
+        else
+        {
+            return String.format("%d-%d-%d-%d", settings.getTextureWidth(), settings.getTextureHeight(), settings.getTextureSubdiv(), settings.getSampledSize());
+        }
+    }
+
+    public File getCacheDirectory()
+    {
+        return cacheDirectory;
+    }
+
+    public File getBlockDirectory(int i, int j)
+    {
+        return new File(cacheDirectory, String.format("%d_%d", i, j));
+    }
+
     public ContextType getContext()
     {
         return context;
@@ -102,7 +135,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return resources.getGeometry();
     }
 
-    public ImageCacheSettings getSettings()
+    public ReadonlyImageCacheSettings getSettings()
     {
         return settings;
     }
@@ -129,7 +162,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         {
             for (int j = 0; j < settings.getTextureSubdiv(); j++)
             {
-                settings.getBlockDir(i, j).mkdirs();
+                getBlockDirectory(i, j).mkdirs();
             }
         }
 
@@ -156,7 +189,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             maskDrawable.draw(fbo);
 
             // Debugging
-            File file = new File(settings.getCacheDirectory(), "debug.png");
+            File file = new File(cacheDirectory, "debug.png");
             fbo.getTextureReaderForColorAttachment(0).saveToFile("PNG", file);
 
             int[] mask = fbo.getTextureReaderForColorAttachment(0).readARGB();
@@ -165,7 +198,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 .flipVertical()
                 .create();
 
-            Random random = new Random();
+            Random random = new SecureRandom();
 
             // Somewhat arbitrary heuristic
             int maxAttempts = 3 + settings.getTextureWidth() * settings.getTextureHeight() / (settings.getSampledSize() * settings.getSampledSize());
@@ -205,7 +238,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private File getSampleLocationsFile()
     {
-        return new File(settings.getCacheDirectory(), "sampleLocations.txt");
+        return new File(cacheDirectory, "sampleLocations.txt");
     }
 
     private void writeSampleLocationsToFile() throws IOException
@@ -281,19 +314,22 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             if (monitor != null)
             {
-                monitor.setMaxProgress(resources.getViewSet().getCombinedCameraPoseCount());
+                monitor.setMaxProgress(resources.getViewSet().getViewCount());
             }
 
             // Loop over the images, processing each one at a time
-            for (int k = 0; k < resources.getViewSet().getCombinedCameraPoseCount(); k++)
+            // Includes both enabled and disabled views which will all be included in the cache.
+            int progressCount = 0;
+            for (View view : resources.getViewSet().getViews())
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCombinedCameraPoseCount()));
+                    monitor.setProgress(progressCount, MessageFormat.format("{0} ({1}/{2})",
+                        view, progressCount + 1, resources.getViewSet().getViewCount()));
                     monitor.allowUserCancellation();
                 }
 
-                try (SingleCalibratedImageResource<ContextType> image = resources.createSingleImageResource(k, loadOptions))
+                try (SingleCalibratedImageResource<ContextType> image = resources.createSingleImageResource(view, loadOptions))
                 {
                     fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                     image.setupShaderProgram(texSpaceProgram);
@@ -301,7 +337,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                     // Force PNG format for lossless encoding
                     String pngFilename = ImageFinder.getInstance().getImageFileNameWithExtension(
-                        resources.getViewSet().getImageFileName(k), "png");
+                        view.getImageFile().getName(), "png");
 
                     // "Sampled" image to store randomly selected pixels for preliminary optimization at a lower resolution.
                     BufferedImage sampled = new BufferedImage(settings.getSampledSize(), settings.getSampledSize(), BufferedImage.TYPE_INT_ARGB);
@@ -348,7 +384,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                             // Write the block image out to disk
                             ImageIO.write(blockImage, "PNG",
-                                new File(new File(settings.getCacheDirectory(), String.format("%d_%d", i, j)), pngFilename));
+                                new File(new File(cacheDirectory, String.format("%d_%d", i, j)), pngFilename));
 
                             // See derivations for x above
                             int ySampleStart = (int) Math.ceil((y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;
@@ -385,11 +421,13 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                     ImageIO.write(sampled, "PNG", new File(sampledDir, pngFilename));
                 }
+
+                progressCount++;
             }
 
             if (monitor != null)
             {
-                monitor.setProgress(resources.getViewSet().getCombinedCameraPoseCount(), "All images completed.");
+                monitor.setProgress(resources.getViewSet().getViewCount(), "All images completed.");
             }
         }
     }

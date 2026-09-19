@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.util.List;
 
 public interface CarouselModel
 {
     List<CarouselItem> getCarouselItems();
-    void addToCarousel(UserShader shader);
-    void removeFromCarousel(UserShader shader);
+    void addToCarousel(ShaderInfo shader);
+    void removeFromCarousel(ShaderInfo shader);
     void clearCarousel();
 }

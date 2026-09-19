@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,16 +11,16 @@
 
 package kintsugi3d.builder.fit.settings;
 
-public class BasisSettings
+public class BasisSettings implements ReadonlyBasisSettings
 {
     private int basisCount = 8;
     private int disabledBasisCount = 0;
     private int basisResolution = 90;
-    private boolean smithMaskingShadowingEnabled = true;
 
     /**
      * @return The number of basis functions to use for the specular lobe.
      */
+    @Override
     public int getBasisCount()
     {
         return basisCount;
@@ -41,6 +41,7 @@ public class BasisSettings
         }
     }
 
+    @Override
     public int getDisabledBasisCount()
     {
         return disabledBasisCount;
@@ -61,6 +62,7 @@ public class BasisSettings
     /**
      * @return The number of discrete values in the definition of the specular lobe.
      */
+    @Override
     public int getBasisResolution()
     {
         return basisResolution;
@@ -79,23 +81,5 @@ public class BasisSettings
         {
             this.basisResolution = basisResolution;
         }
-    }
-
-    /**
-     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
-     * @return
-     */
-    public boolean isSmithMaskingShadowingEnabled()
-    {
-        return smithMaskingShadowingEnabled;
-    }
-
-    /**
-     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
-     * @param smithMaskingShadowingEnabled
-     */
-    public void setSmithMaskingShadowingEnabled(boolean smithMaskingShadowingEnabled)
-    {
-        this.smithMaskingShadowingEnabled = smithMaskingShadowingEnabled;
     }
 }

@@ -11,69 +11,18 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.geometry.ReadonlyGeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 
-import java.io.IOException;
-import java.util.List;
-
 public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>> extends ShaderProgramFactory<ContextType>
 {
-    /**
-     * The graphics context associated with this instance.
-     *  @return The graphics context
-     */
-    @Override
-    ContextType getContext();
-
-    /**
-     * The view set that these resources were loaded from.
-     * @return A read-only view of the view set
-     */
-    ReadonlyViewSet getViewSet();
-
-    /**
-     * The geometry used with this instance.
-     * @return A read-only view of the geometry
-     */
-    ReadonlyVertexGeometry getGeometry();
-
-    ReadonlyGeometryResources<ContextType> getGeometryResources();
-
-    /**
-     * Diffuse, normal, specular, roughness maps, etc.
-     * @return
-     */
-    ReadonlyTextureResources<ContextType> getTextureResources();
-
-    /**
-     * 1D textures for encoding and decoding
-     * @return
-     */
-    ReadonlyLuminanceMapResources<ContextType> getLuminanceMapResources();
-
-    /**
-     * Gets a read-only view of the whole list of camera weights
-     * @return
-     */
-    List<Float> getCameraWeights();
-
-    /**
-     * Gets the weight associated with a given view/camera (determined by the distance from other views).
-     *
-     * @param index The index of the view for which to retrieve its weight.
-     * @return The weight for the specified view.
-     */
-    float getCameraWeight(int index);
+    default ReadonlyVertexGeometry getGeometry()
+    {
+        return getGeometryResources().getGeometry();
+    }
 
     /**
      * Creates a Drawable using this instance's geometry resources, and the specified shader program.
@@ -83,20 +32,5 @@ public interface ReadonlyGraphicsResources<ContextType extends Context<ContextTy
      */
     Drawable<ContextType> createDrawable(Program<ContextType> program);
 
-    default GraphicsStreamFactory<ContextType> streamFactory()
-    {
-        return new GraphicsStreamFactory<>(this);
-    }
-    /**
-     * Creates a resource for just a single view, using the default image for that view but with custom load options
-     *
-     * @param viewIndex
-     * @param loadOptions
-     * @return
-     * @throws IOException
-     */
-    SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
-        throws IOException;
-
-    ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
+    ReadonlyGeometryResources<ContextType> getGeometryResources();
 }

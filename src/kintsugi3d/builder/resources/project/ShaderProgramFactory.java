@@ -12,9 +12,13 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.ContextBound;
-import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public interface ShaderProgramFactory<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
@@ -36,4 +40,34 @@ public interface ShaderProgramFactory<ContextType extends Context<ContextType>> 
      * @param program The shader program to set up using this instance's resources.
      */
     void setupShaderProgram(Program<ContextType> program);
+
+    default ProgramObject<ContextType> createProgram(File vertexShader, File fragmentShader,
+                                                     Map<String, Object> additionalDefines)
+        throws IOException
+    {
+        // Common definitions for all specular fitting related shaders.
+        ProgramBuilder<ContextType> programBuilder = getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, vertexShader)
+            .addShader(ShaderType.FRAGMENT, fragmentShader);;
+
+        // Add additional defines provided to the function.
+        for (Entry<String, Object> definition : additionalDefines.entrySet())
+        {
+            programBuilder.define(definition.getKey(), definition.getValue());
+        }
+
+        // Actually create the program.
+        ProgramObject<ContextType> program = programBuilder.createProgram();
+
+        // Setup uniforms.
+        setupShaderProgram(program);
+
+        return program;
+    }
+
+    default ProgramObject<ContextType> createProgram(File vertexShader, File fragmentShader)
+        throws IOException
+    {
+        return createProgram(vertexShader, fragmentShader, Collections.emptyMap());
+    }
 }

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.scene.ShaderInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,18 +27,18 @@ import java.util.stream.Stream;
  */
 public class ShaderDataCard extends ProjectDataCard
 {
-    private final UserShader shader;
+    private final ShaderInfo shader;
 
     /**
      * Used in initialization
      * @param shader
      */
-    private static Map<String, Runnable> getActionMap(UserShader shader)
+    private static Map<String, Runnable> getActionMap(ShaderInfo shader)
     {
         Runnable viewShader = () ->
         {
             // Sets the model to the shader
-            Global.state().getUserShaderModel().setUserShader(shader);
+            Global.state().getUserShaderModel().setActiveShader(shader);
         };
 
         Runnable sendToCarousel = () ->
@@ -52,7 +52,7 @@ public class ShaderDataCard extends ProjectDataCard
             "Send to Carousel", sendToCarousel);
     }
 
-    public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, Map<String, String> textFields,
+    public ShaderDataCard(String internalName, String title, ShaderInfo shader, String imagePath, Map<String, String> textFields,
                           Collection<? extends Map<String, Runnable>> actionGroups)
     {
         super(internalName, title, imagePath, textFields,
@@ -60,7 +60,7 @@ public class ShaderDataCard extends ProjectDataCard
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, Map<String, String> textFields,
+    public ShaderDataCard(String internalName, String title, ShaderInfo shader, String imagePath, Map<String, String> textFields,
                           Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
     {
         super(internalName, title, imagePath, textFields,
@@ -69,31 +69,31 @@ public class ShaderDataCard extends ProjectDataCard
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields,
+    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath, Map<String, String> textFields,
                           Collection<? extends Map<String, Runnable>> actionGroups)
     {
         this(internalName, shader.getFriendlyName(), shader, imagePath, textFields, actionGroups);
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
+    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
     {
         super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader), actions));
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, Map<String, String> textFields)
+    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath, Map<String, String> textFields)
     {
         super(internalName, shader.getFriendlyName(), imagePath, textFields, getActionMap(shader));
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath)
+    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath)
     {
         super(internalName, shader.getFriendlyName(), imagePath, Map.of(), getActionMap(shader));
         this.shader = shader;
     }
 
-    public UserShader getShader()
+    public ShaderInfo getShader()
     {
         return shader;
     }

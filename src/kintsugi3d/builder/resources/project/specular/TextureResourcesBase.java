@@ -12,11 +12,10 @@
 package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.io.specular.WeightImageWriter;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,12 +138,12 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             try (BasisImageCreator<ContextType> basisImageCreator =
                      new BasisImageCreator<>(getContext(), getBasisResources().getBasisResolution()))
             {
-                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                ViewSet viewSet = Global.io().getLoadedViewSet();
                 basisImageCreator.createImages(this, viewSet.getThumbnailImageDirectory());
             }
             catch (IOException e)
             {
-                ExceptionHandling.error("Error saving basis image thumbnails", e);
+                Global.state().getProjectModel().error("Error saving basis image thumbnails", e);
             }
         }
     }
@@ -160,7 +159,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
             try
             {
-                ViewSet viewSet = Global.state().getIOModel().getLoadedViewSet();
+                ViewSet viewSet = Global.io().getLoadedViewSet();
                 File supportingFilesDir = viewSet.getSupportingFilesDirectory();
 
                 // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)

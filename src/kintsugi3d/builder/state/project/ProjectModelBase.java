@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,24 +11,17 @@
 
 package kintsugi3d.builder.state.project;
 
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.io.IOModel;
+import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,7 +44,47 @@ public abstract class ProjectModelBase<
     ObjectPoseType extends SerializableObjectPoseSettings>
     implements ProjectModel
 {
+    protected static final String NULL_PROJECT_NAME = "No Project";
+
     private final EnvironmentType noEnvironment = SerializableEnvironmentSettings.createNoEnvironment(this::constructEnvironmentSetting);
+
+    public void registerIOListeners()
+    {
+        IOModel ioModel = Global.io();
+
+        ioModel.projectOpenedListeners().addListener(event ->
+        {
+            setProjectOpen(true);
+            setProjectName(event.projectName);
+        });
+
+        ioModel.projectSavedListeners().addListener(event -> setProjectName(event.projectName));
+
+        ioModel.projectClosedListeners().addListener(event ->
+        {
+            setProjectOpen(false);
+            this.setProjectName(NULL_PROJECT_NAME);
+            setProjectLoaded(false);
+            setProjectProcessed(false);
+            setProcessedTextureWidth(0);
+            setProcessedTextureWidth(0);
+            setModelSize(new Vector3(1.0f));
+        });
+
+        ioModel.projectLoadedListeners().addListener(event ->
+        {
+            setProjectLoaded(true);
+            setModelSize(event.modelSize);
+        });
+
+        ioModel.projectProcessedListeners().addListener(event ->
+        {
+            setProjectProcessed(true);
+            setProcessedTextureWidth(event.textureWidth);
+            setProcessedTextureHeight(event.textureHeight);
+            notifyProcessingComplete();
+        });
+    }
 
     public abstract List<CameraType> getCameraList();
 
@@ -61,134 +94,104 @@ public abstract class ProjectModelBase<
 
     public abstract List<ObjectPoseType> getObjectPoseList();
 
-    /**
-     * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
-     * Returns the file containing the viewset with the actual image data.
-     *
-     * @param projectFile
-     * @return The .vset file containing the actual viewset.
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     */
-
     @Override
-    public final File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    public final void parseXMLDocument(Document document)
     {
-        Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(projectFile);
-
-        Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
-        if (vsetNode instanceof Element)
+        Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
+        if (cameraListNode != null)
         {
-            File newVsetFile = new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src")
-                .replace('/', File.separatorChar).replace('\\', File.separatorChar)); // Normalize Windows to Mac/Linux and vice versa
+            NodeList cameraNodes = cameraListNode.getChildNodes();
 
-            Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
-            if (cameraListNode != null)
+            synchronized (this.getCameraList())
             {
-                NodeList cameraNodes = cameraListNode.getChildNodes();
-
-                synchronized (this.getCameraList())
+                this.getCameraList().clear();
+                for (int i = 0; i < cameraNodes.getLength(); i++)
                 {
-                    this.getCameraList().clear();
-                    for (int i = 0; i < cameraNodes.getLength(); i++)
+                    Node cameraNode = cameraNodes.item(i);
+                    if (cameraNode instanceof Element)
                     {
-                        Node cameraNode = cameraNodes.item(i);
-                        if (cameraNode instanceof Element)
-                        {
-                            this.getCameraList().add(SerializableCameraSettings.fromDOMElement(
-                                (Element) cameraNode, this::constructCameraSetting));
-                        }
+                        this.getCameraList().add(SerializableCameraSettings.fromDOMElement(
+                            (Element) cameraNode, this::constructCameraSetting));
                     }
                 }
             }
-
-            Node environmentListNode = document.getElementsByTagName("EnvironmentList").item(0);
-            if (environmentListNode != null)
-            {
-                NodeList environmentNodes = environmentListNode.getChildNodes();
-
-                synchronized (this.getEnvironmentList())
-                {
-                    this.getEnvironmentList().clear();
-                    this.getEnvironmentList().add(noEnvironment);
-
-                    for (int i = 0; i < environmentNodes.getLength(); i++)
-                    {
-                        Node environmentNode = environmentNodes.item(i);
-                        if (environmentNode instanceof Element)
-                        {
-                            this.getEnvironmentList().add(SerializableEnvironmentSettings.fromDOMElement(
-                                (Element) environmentNode, this::constructEnvironmentSetting));
-                        }
-                    }
-                }
-            }
-
-            Node lightGroupListNode = document.getElementsByTagName("LightGroupList").item(0);
-            if (lightGroupListNode != null)
-            {
-                NodeList lightGroupNodes = lightGroupListNode.getChildNodes();
-
-                synchronized (this.getLightGroupList())
-                {
-                    this.getLightGroupList().clear();
-                    for (int i = 0; i < lightGroupNodes.getLength(); i++)
-                    {
-                        Node lightGroupNode = lightGroupNodes.item(i);
-                        if (lightGroupNode instanceof Element)
-                        {
-                            this.getLightGroupList().add(SerializableLightGroupSettings.fromDOMElement(
-                                (Element) lightGroupNode, this::constructLightGroupSetting));
-                        }
-                    }
-                }
-            }
-
-            Node objectPoseListNode = document.getElementsByTagName("ObjectPoseList").item(0);
-            if (objectPoseListNode != null)
-            {
-                NodeList objectPoseNodes = objectPoseListNode.getChildNodes();
-
-                synchronized (this.getObjectPoseList())
-                {
-                    this.getObjectPoseList().clear();
-                    for (int i = 0; i < objectPoseNodes.getLength(); i++)
-                    {
-                        Node objectPoseNode = objectPoseNodes.item(i);
-                        if (objectPoseNode instanceof Element)
-                        {
-                            this.getObjectPoseList().add(SerializableObjectPoseSettings.fromDOMElement(
-                                (Element) objectPoseNode, this::constructObjectPoseSetting));
-                        }
-                    }
-                }
-            }
-
-            Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
-            if (colorPickerImageNode != null)
-            {
-                this.setColorCheckerFile(new File(colorPickerImageNode.getTextContent()));
-            }
-
-            return newVsetFile;
         }
-        else
+
+        Node environmentListNode = document.getElementsByTagName("EnvironmentList").item(0);
+        if (environmentListNode != null)
         {
-            throw new IOException("Error while processing the ViewSet element.");
+            NodeList environmentNodes = environmentListNode.getChildNodes();
+
+            synchronized (this.getEnvironmentList())
+            {
+                this.getEnvironmentList().clear();
+                this.getEnvironmentList().add(noEnvironment);
+
+                for (int i = 0; i < environmentNodes.getLength(); i++)
+                {
+                    Node environmentNode = environmentNodes.item(i);
+                    if (environmentNode instanceof Element)
+                    {
+                        this.getEnvironmentList().add(SerializableEnvironmentSettings.fromDOMElement(
+                            (Element) environmentNode, this::constructEnvironmentSetting));
+                    }
+                }
+            }
+        }
+
+        Node lightGroupListNode = document.getElementsByTagName("LightGroupList").item(0);
+        if (lightGroupListNode != null)
+        {
+            NodeList lightGroupNodes = lightGroupListNode.getChildNodes();
+
+            synchronized (this.getLightGroupList())
+            {
+                this.getLightGroupList().clear();
+                for (int i = 0; i < lightGroupNodes.getLength(); i++)
+                {
+                    Node lightGroupNode = lightGroupNodes.item(i);
+                    if (lightGroupNode instanceof Element)
+                    {
+                        this.getLightGroupList().add(SerializableLightGroupSettings.fromDOMElement(
+                            (Element) lightGroupNode, this::constructLightGroupSetting));
+                    }
+                }
+            }
+        }
+
+        Node objectPoseListNode = document.getElementsByTagName("ObjectPoseList").item(0);
+        if (objectPoseListNode != null)
+        {
+            NodeList objectPoseNodes = objectPoseListNode.getChildNodes();
+
+            synchronized (this.getObjectPoseList())
+            {
+                this.getObjectPoseList().clear();
+                for (int i = 0; i < objectPoseNodes.getLength(); i++)
+                {
+                    Node objectPoseNode = objectPoseNodes.item(i);
+                    if (objectPoseNode instanceof Element)
+                    {
+                        this.getObjectPoseList().add(SerializableObjectPoseSettings.fromDOMElement(
+                            (Element) objectPoseNode, this::constructObjectPoseSetting));
+                    }
+                }
+            }
+        }
+
+        Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
+        if (colorPickerImageNode != null)
+        {
+            this.setColorCheckerFile(new File(colorPickerImageNode.getTextContent()));
         }
     }
 
     @Override
-    public final void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException
+    public final Document toXMLDocument() throws ParserConfigurationException
     {
         Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         Element rootElement = document.createElement("Project");
         document.appendChild(rootElement);
-
-        Element vsetElement = document.createElement("ViewSet");
-        vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
-        rootElement.appendChild(vsetElement);
 
         synchronized (this.getCameraList())
         {
@@ -237,20 +240,14 @@ public abstract class ProjectModelBase<
             }
         }
 
-        if (this.getColorCheckerFile() != null){
+        if (this.getColorCheckerFile() != null)
+        {
             Element colorPickerImageElement = document.createElement("ColorCheckerFile");
             colorPickerImageElement.setTextContent(this.getColorCheckerFile().getPath());
             rootElement.appendChild(colorPickerImageElement);
         }
 
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-
-        try (OutputStream out = new FileOutputStream(projectFile))
-        {
-            transformer.transform(new DOMSource(document), new StreamResult(out));
-        }
+        return document;
     }
 
     protected abstract CameraType constructCameraSetting();
@@ -262,4 +259,13 @@ public abstract class ProjectModelBase<
     {
         return this.noEnvironment;
     }
+
+    protected abstract void setProjectOpen(boolean projectOpen);
+    protected abstract void setProjectName(String projectName);
+    protected abstract void setProjectLoaded(boolean projectLoaded);
+    protected abstract void setModelSize(Vector3 modelSize);
+    protected abstract void setProjectProcessed(boolean projectProcessed);
+    protected abstract void setProcessedTextureWidth(int processedTextureWidth);
+    protected abstract void setProcessedTextureHeight(int processedTextureHeight);
+    protected abstract void notifyProcessingComplete();
 }

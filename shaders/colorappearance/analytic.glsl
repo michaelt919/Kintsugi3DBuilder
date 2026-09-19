@@ -28,14 +28,14 @@
 #define ANALYTIC_UV_SCALE 1.0
 #endif
 
-vec4 getColor(int index)
+vec4 getColorByPhysicalIndex(int viewIndex)
 {
     Material m = getMaterial();
 
     mat3 tbn = constructTBNExact();
 
     vec3 normal = tbn[2];
-    vec3 view = normalize(getViewVector(index));
+    vec3 view = normalize(getViewVectorByPhysicalIndex(viewIndex));
     float nDotV = max(0, dot(normal, view));
 
     if (nDotV > 0)
@@ -49,7 +49,7 @@ vec4 getColor(int index)
         vec3 shadingNormal = getRefinedWorldSpaceNormal(normal);
 #endif
 
-        LightInfo lightInfo = getLightInfo(index);
+        LightInfo lightInfo = getLightInfoByPhysicalIndex(viewIndex);
         vec3 light = lightInfo.normalizedDirection;
         float nDotL = max(0, dot(light, shadingNormal));
         nDotV = max(0, dot(view, shadingNormal));

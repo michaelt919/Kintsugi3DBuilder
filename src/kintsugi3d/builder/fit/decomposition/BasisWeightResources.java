@@ -16,9 +16,6 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +25,6 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     implements ManagedResource, ReadonlyBasisWeightResources<ContextType>
 {
     private final ContextType context;
-
-    private static final Logger LOG = LoggerFactory.getLogger(BasisWeightResources.class);
 
     private Texture3D<ContextType> weightMaps;
     private final Texture2D<ContextType> weightMask;
@@ -157,7 +152,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         {
             // Load weight maps
             resources.weightMaps.loadLayer(b,
-                new File(priorSolutionDirectory, TextureResources.getUnpackedWeightMapFilename(b, "PNG")),
+                new File(priorSolutionDirectory, TextureResources.getUnpackedWeightMapFilename(b)),
                 true);
         }
 
@@ -201,7 +196,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     public void replaceWeightMapWithDefaultFile(int weightmapIndex, File parentDirectory) throws IOException
     {
         replaceWeightMapWithSpecificFile(weightmapIndex,
-            new File(parentDirectory, TextureResources.getUnpackedWeightMapFilename(weightmapIndex, "PNG")));
+            new File(parentDirectory, TextureResources.getUnpackedWeightMapFilename(weightmapIndex)));
     }
 
     /**

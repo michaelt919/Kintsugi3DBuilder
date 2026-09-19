@@ -33,7 +33,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
      * @param width
      * @param height
      */
-    GeometryFramebuffer(ContextType context, int width, int height)
+    private GeometryFramebuffer(ContextType context, int width, int height)
     {
         this.context = context;
 
@@ -51,7 +51,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
      * @param height
      * @throws FileNotFoundException Thrown if there's trouble loading the geomBuffers shader for rendering to the framebuffer
      */
-    GeometryFramebuffer(GeometryResources<ContextType> geometry, int width, int height) throws IOException
+    GeometryFramebuffer(ReadonlyGeometryResources<ContextType> geometry, int width, int height) throws IOException
     {
         this(geometry.getContext(), width, height);
 

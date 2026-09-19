@@ -18,7 +18,6 @@ import kintsugi3d.gl.core.ReadonlyTexture1D;
 public interface ReadonlyLuminanceMapResources<ContextType extends Context<ContextType>>
 {
     ReadonlyTexture1D<ContextType> getLuminanceMap();
-
     ReadonlyTexture1D<ContextType> getInverseLuminanceMap();
 
     void setupShaderProgram(Program<ContextType> program);

@@ -11,11 +11,13 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -26,14 +28,14 @@ import java.util.Map;
 
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final ReadonlyGraphicsResourcesImageSpace<ContextType> resources;
+    private final ShaderProgramFactory<ContextType> programFactory;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(ReadonlyGraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraVisual(ShaderProgramFactory<ContextType> programFactory, SceneViewportModel sceneViewportModel)
     {
-        super(resources.getContext(), sceneViewportModel, "CameraVisual");
-        this.resources = resources;
+        super(programFactory.getContext(), sceneViewportModel, "CameraVisual");
+        this.programFactory = programFactory;
     }
 
     @Override
@@ -54,26 +56,31 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        FramebufferSize size = framebuffer.getSize();
+        if (programFactory instanceof GraphicsResourcesImageSpace)
+        {
+            View selectedView = viewSelection.getSelectedView();
+            if (selectedView != null)
+            {
+                this.getContext().getState().disableBackFaceCulling();
 
-        this.getContext().getState().disableBackFaceCulling();
+                this.getContext().getState().disableDepthWrite();
+                this.getContext().getState().enableDepthTest();
 
-        this.getContext().getState().disableDepthWrite();
-        this.getContext().getState().enableDepthTest();
+                Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
+                Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-        Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-        Vector3 frustumDims = viewSelection.getFrustumDimensions();
+                programFactory.setupShaderProgram(this.getProgram()); // sets viewImages
+                this.getProgram().setUniform("viewIndex", selectedView.getGPUViewIndex());
+                this.getProgram().setUniform("model_view",
+                    cameraViewport.getView().times(snapViewInverse)
+                        .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
+                this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
+                this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
-        this.getProgram().setTexture("viewImages", resources.getImageTextures());
-        this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
-        this.getProgram().setUniform("model_view",
-            cameraViewport.getView().times(snapViewInverse)
-                .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
-        this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
-        this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
-
-        this.getContext().getState().enableDepthWrite();
-        this.getContext().getState().enableDepthTest();
+                this.getContext().getState().enableDepthWrite();
+                this.getContext().getState().enableDepthTest();
+            }
+        }
     }
 
     public ViewSelection getViewSelection()

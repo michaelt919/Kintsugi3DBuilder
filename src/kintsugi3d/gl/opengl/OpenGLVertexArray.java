@@ -12,7 +12,7 @@
 package kintsugi3d.gl.opengl;
 
 import kintsugi3d.gl.core.ManagedResource;
-import kintsugi3d.gl.core.VertexBuffer;
+import kintsugi3d.gl.core.ReadonlyVertexBuffer;
 import kintsugi3d.gl.exceptions.NoSpecifiedVertexBuffersException;
 
 import static org.lwjgl.opengl.GL30.*;
@@ -39,7 +39,7 @@ class OpenGLVertexArray implements ManagedResource
         OpenGLContext.errorCheck();
     }
 
-    void addVertexBuffer(int attributeIndex, VertexBuffer<OpenGLContext> buffer)
+    void addVertexBuffer(int attributeIndex, ReadonlyVertexBuffer<OpenGLContext> buffer)
     {
         if (buffer instanceof OpenGLVertexBuffer)
         {
