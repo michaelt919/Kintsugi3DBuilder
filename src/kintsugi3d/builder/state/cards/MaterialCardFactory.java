@@ -13,9 +13,9 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
@@ -34,7 +34,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
 {
     private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
 
-    public MaterialCardFactory(ProjectRenderableInstance<?> instance)
+    public MaterialCardFactory(ImageBasedRenderable<?> instance)
     {
         super(instance);
     }
@@ -115,7 +115,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
     @Override
     public List<ProjectDataCard> createAllCards()
     {
-        BasisResources<?> basisResources = getInstance().getResources().getTextureResources().getBasisResources();
+        ReadonlyBasisResources<? extends kintsugi3d.gl.core.Context<?>> basisResources = getInstance().getResources().getTextureResources().getBasisResources();
         if (basisResources != null)
         {
             return IntStream.range(0, basisResources.getBasisCount())

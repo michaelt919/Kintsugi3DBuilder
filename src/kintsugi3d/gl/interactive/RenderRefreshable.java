@@ -22,7 +22,7 @@ public final class RenderRefreshable
     private final ContextType context;
     private final RenderableType renderable;
     private final DoubleFramebuffer<ContextType> framebuffer;
-    private final Iterable<Resource> managedResources;
+    private final Iterable<ManagedResource> managedResources;
 
     private boolean initialized = false;
 
@@ -43,7 +43,7 @@ public final class RenderRefreshable
     }
 
     private RenderRefreshable(ContextType context, RenderableType renderable,
-                             DoubleFramebuffer<ContextType> framebuffer, Iterable<Resource> managedResources)
+                             DoubleFramebuffer<ContextType> framebuffer, Iterable<ManagedResource> managedResources)
     {
         this.context = context;
         this.renderable = renderable;
@@ -97,7 +97,7 @@ public final class RenderRefreshable
     {
         context.makeContextCurrent();
 
-        for (Resource r : managedResources)
+        for (ManagedResource r : managedResources)
         {
             r.close();
         }

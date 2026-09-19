@@ -13,17 +13,12 @@ package kintsugi3d.builder.fit.settings;
 
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 
-public class ReconstructionSettings
+public class ReconstructionSettings implements ReadonlyReconstructionSettings
 {
     private ReadonlyViewSet reconstructionViewSet;
     private boolean reconstructAll = false;
 
-    /**
-     * Should every image in the view set be reconstructed for validation, or just one key view?
-     * Reconstructing all uses a lot more hard drive space.
-     *
-     * @return true if all views should be reconstructed; false if only one view should be reconstructed.
-     */
+    @Override
     public boolean shouldReconstructAll()
     {
         return reconstructAll;
@@ -40,11 +35,7 @@ public class ReconstructionSettings
         this.reconstructAll = reconstructAll;
     }
 
-    /**
-     * Gets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
-     *
-     * @return
-     */
+    @Override
     public ReadonlyViewSet getReconstructionViewSet()
     {
         return reconstructionViewSet;

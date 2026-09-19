@@ -16,22 +16,17 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 
-@SuppressWarnings("PublicField")
 public class BasisWeightResources<ContextType extends Context<ContextType>>
-    implements Resource, ContextBound<ContextType>, Croppable<BasisWeightResources<ContextType>>
+    implements ManagedResource, ReadonlyBasisWeightResources<ContextType>
 {
     private final ContextType context;
 
-    private static final Logger LOG = LoggerFactory.getLogger(BasisWeightResources.class);
-
-    public Texture3D<ContextType> weightMaps;
-    public final Texture2D<ContextType> weightMask;
+    private Texture3D<ContextType> weightMaps;
+    private final Texture2D<ContextType> weightMask;
 
     private final int width;
     private final int height;
@@ -78,6 +73,18 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     public ContextType getContext()
     {
         return context;
+    }
+
+    @Override
+    public Texture3D<ContextType> getWeightMaps()
+    {
+        return weightMaps;
+    }
+
+    @Override
+    public Texture2D<ContextType> getWeightMask()
+    {
+        return weightMask;
     }
 
     public void updateFromSolution(SpecularDecomposition solution)
@@ -140,6 +147,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         return resources;
     }
 
+    @Override
     public void useWithShaderProgram(Program<ContextType> program)
     {
         program.setTexture("weightMaps", weightMaps);

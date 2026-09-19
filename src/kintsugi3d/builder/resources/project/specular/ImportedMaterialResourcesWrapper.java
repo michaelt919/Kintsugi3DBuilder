@@ -17,6 +17,7 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.resources.project.ImportedMaterialResources;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
 
 import java.util.Map;
@@ -52,14 +53,14 @@ public final class ImportedMaterialResourcesWrapper<ContextType extends Context<
     @Override
     public int getWidth()
     {
-        Texture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
+        ReadonlyTexture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
         return diffuseTex == null ? 0 : diffuseTex.getWidth();
     }
 
     @Override
     public int getHeight()
     {
-        Texture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
+        ReadonlyTexture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
         return diffuseTex == null ? 0 : diffuseTex.getHeight();
     }
 

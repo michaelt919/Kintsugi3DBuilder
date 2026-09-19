@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 
@@ -41,7 +41,7 @@ public class NamedTextureInfo extends TextureInfo
     }
 
     @Override
-    public void refresh(ProjectRenderableInstance<?> instance) throws IOException
+    public void refresh(ImageBasedRenderable<?> instance) throws IOException
     {
         // TODO switch to observable pattern for textures?
         TextureResources<?> resources = instance.getResources().getTextureResources();
@@ -49,7 +49,7 @@ public class NamedTextureInfo extends TextureInfo
     }
 
     @Override
-    public ImageReplacer getReplaceData(ProjectRenderableInstance<?> instance)
+    public ImageReplacer getReplaceData(ImageBasedRenderable<?> instance)
     {
                 return new NamedTextureReplacer(instance.getResources().getTextureResources(), this,
             new File(Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),

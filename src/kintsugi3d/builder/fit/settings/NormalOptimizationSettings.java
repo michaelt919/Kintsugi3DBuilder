@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.settings;
 
-public class NormalOptimizationSettings
+public class NormalOptimizationSettings implements ReadonlyNormalOptimizationSettings
 {
     private boolean normalRefinementEnabled = true;
     private double minNormalDamping = 1.0;
@@ -19,15 +19,7 @@ public class NormalOptimizationSettings
     private boolean levenbergMarquardtEnabled = true;
     private int unsuccessfulLMIterationsAllowed = 0;
 
-    public NormalOptimizationSettings()
-    {
-    }
-
-    /**
-     * Gets whether normal refinement is enabled (if not, the vertex normals will be assumed to be accurate enough)
-     *
-     * @return
-     */
+    @Override
     public boolean isNormalRefinementEnabled()
     {
         return normalRefinementEnabled;
@@ -43,13 +35,7 @@ public class NormalOptimizationSettings
         this.normalRefinementEnabled = normalRefinementEnabled;
     }
 
-    /**
-     * Gets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
-     * Default is 1.0.
-     * Negative values will have the same effect as 0.0.
-     *
-     * @return
-     */
+    @Override
     public double getMinNormalDamping()
     {
         return minNormalDamping;
@@ -68,12 +54,7 @@ public class NormalOptimizationSettings
         this.minNormalDamping = minNormalDamping;
     }
 
-    /**
-     * Gets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
-     * Negative values will have the same effect as 0.
-     *
-     * @return
-     */
+    @Override
     public int getNormalSmoothingIterations()
     {
         return normalSmoothingIterations;
@@ -91,12 +72,7 @@ public class NormalOptimizationSettings
         this.normalSmoothingIterations = normalSmoothingIterations;
     }
 
-    /**
-     * Whether or not to use Levenberg-Marquardt for normal optimization.
-     * Default is true.  Highly recommended unless attempting to reproduce Nam et al. 2018.
-     *
-     * @return
-     */
+    @Override
     public boolean isLevenbergMarquardtEnabled()
     {
         return levenbergMarquardtEnabled;
@@ -113,12 +89,7 @@ public class NormalOptimizationSettings
         this.levenbergMarquardtEnabled = levenbergMarquardtEnabled;
     }
 
-    /**
-     * The number of unsuccessful iterations of Levenberg-Marquardt (iterations which fail to decrease the error
-     * by the required threshold) before the algorithm will be considered terminated.
-     *
-     * @return
-     */
+    @Override
     public int getUnsuccessfulLMIterationsAllowed()
     {
         return unsuccessfulLMIterationsAllowed;

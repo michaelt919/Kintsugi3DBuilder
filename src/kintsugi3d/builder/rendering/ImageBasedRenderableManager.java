@@ -59,23 +59,23 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class ProjectInstanceManager<ContextType extends Context<ContextType>>
+public class ImageBasedRenderableManager<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableManager<ContextType>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectInstanceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageBasedRenderableManager.class);
 
     private final ContextType context;
 
-    private final RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViews
+    private final RefreshableCollection<RenderRefreshable<ContextType, ImageBasedRenderingEngine<ContextType>>> renderViews
         = new RefreshableCollection<>();
-    private final Map<ShaderInfo, RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> renderViewMap
+    private final Map<ShaderInfo, RenderRefreshable<ContextType, ImageBasedRenderingEngine<ContextType>>> renderViewMap
         = new HashMap<>(8);
 
     private final SceneViewport sceneViewport = new ManagedSceneViewport(this);
 
     private volatile ViewSet loadedViewSet;
     private volatile VertexGeometry loadedGeometry;
-    private volatile ProjectRenderableInstance<ContextType> renderableInstance;
+    private volatile ImageBasedRenderable<ContextType> renderableInstance;
     private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectPoseModel objectModel;
@@ -85,7 +85,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private SelectableViewListModel viewListModel;
 
     // These are one-shot callbacks for queuing up graphics requests before a project is loaded
-    private final List<Consumer<ProjectRenderableInstance<?>>> instanceLoadCallbacks
+    private final List<Consumer<ImageBasedRenderable<?>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>(4));
 
     // These are the ongoing listeners for UI synchronization
@@ -94,7 +94,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
         = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
-    public ProjectInstanceManager(ContextType context)
+    public ImageBasedRenderableManager(ContextType context)
     {
         this.context = context;
     }
@@ -168,7 +168,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
      * @param callback to add
      */
     @Override
-    public void addMainRenderableLoadCallback(Consumer<ProjectRenderableInstance<?>> callback)
+    public void addMainRenderableLoadCallback(Consumer<ImageBasedRenderable<?>> callback)
     {
         synchronized (instanceLoadCallbacks)
         {
@@ -243,7 +243,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        ProjectRenderableInstance<ContextType> newInstance = new ProjectRenderingEngine<>(id, context, builder);
+        ImageBasedRenderable<ContextType> newInstance = new ImageBasedRenderingEngine<>(id, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -299,7 +299,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
             synchronized (instanceLoadCallbacks)
             {
                 // Invoke callbacks
-                for (Consumer<ProjectRenderableInstance<?>> callback : instanceLoadCallbacks)
+                for (Consumer<ImageBasedRenderable<?>> callback : instanceLoadCallbacks)
                 {
                     callback.accept(renderableInstance);
                 }
@@ -477,7 +477,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
         }
     }
 
-    public RefreshableCollection<RenderRefreshable<ContextType, ProjectRenderingEngine<ContextType>>> getRenderViews()
+    public RefreshableCollection<RenderRefreshable<ContextType, ImageBasedRenderingEngine<ContextType>>> getRenderViews()
     {
         return renderViews;
     }
@@ -489,8 +489,8 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     {
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
-        ProjectRenderingEngine<ContextType> renderView =
-            new ProjectRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
+        ImageBasedRenderingEngine<ContextType> renderView =
+            new ImageBasedRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
         renderView.setSafeRegionPadding(safeLeftPadding, safeTopPadding, safeRightPadding, safeBottomPadding);
         initializeSceneModel(renderView.getSceneModel());
 
@@ -532,7 +532,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectRenderingEngine<ContextType> getRenderableForShader(ShaderInfo shader)
+    public ImageBasedRenderingEngine<ContextType> getRenderableForShader(ShaderInfo shader)
     {
         return renderViewMap.get(shader).getRenderable();
     }
@@ -558,7 +558,7 @@ public class ProjectInstanceManager<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ProjectRenderableInstance<ContextType> getMainRenderable()
+    public ImageBasedRenderable<ContextType> getMainRenderable()
     {
         return renderableInstance;
     }

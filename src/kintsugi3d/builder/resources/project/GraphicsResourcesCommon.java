@@ -11,11 +11,10 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.io.events.ProjectProcessedEvent;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.rendering.Rendering;
@@ -26,7 +25,6 @@ import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
-import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.gl.core.UniformBuffer;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.VertexGeometry;
@@ -40,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.Map.Entry;
 
 final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
@@ -287,7 +284,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         for (View view : views)
         {
             viewDirections[view.getGPUViewIndex()] =
-                view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometryResources.geometry.getCentroid()).normalized();
+                view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometryResources.getGeometry().getCentroid()).normalized();
         }
 
         int[] totals = new int[viewDirections.length];
@@ -498,10 +495,10 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
      */
     public IntVector2 getProcessedWeightMapResolution()
     {
-        BasisWeightResources<?> basisWeightResources = textureResources.getBasisWeightResources();
+        ReadonlyBasisWeightResources<? extends Context<?>> basisWeightResources = textureResources.getBasisWeightResources();
         if (basisWeightResources != null)
         {
-            return new IntVector2(basisWeightResources.weightMaps.getWidth(), basisWeightResources.weightMaps.getHeight());
+            return new IntVector2(basisWeightResources.getWeightMaps().getWidth(), basisWeightResources.getWeightMaps().getHeight());
         }
         else
         {
@@ -554,7 +551,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         // The defines can be overridden by the actual shader.
         ProgramBuilder<ContextType> builder = viewSet.getShaderProgramBuilder(context);
 
-        for (Entry<TextureInfo, Texture2D<ContextType>> entry : textureResources.getTextures().entrySet())
+        for (var entry : textureResources.getTextures().entrySet())
         {
             builder.define(
                 String.format("TEXTURE_%s", entry.getKey().name.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "_")),

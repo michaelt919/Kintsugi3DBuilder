@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
@@ -22,17 +22,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private final BasisSettings basisSettings;
+    private final ReadonlyBasisSettings basisSettings;
 
     private final List<DoubleVector3> diffuseAlbedos;
     private SimpleMatrix specularRed;
     private SimpleMatrix specularGreen;
     private SimpleMatrix specularBlue;
 
-    public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
+    public SpecularDecompositionFromScratch(TextureResolution textureResolution, ReadonlyBasisSettings basisSettings)
     {
         super(textureResolution, basisSettings.getBasisCount());
         this.basisSettings = basisSettings;
@@ -150,6 +152,34 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             public void save(File outputDirectory, String filenameOverride)
             {
                 SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory, filenameOverride);
+            }
+
+            @Override
+            public MaterialBasis copy()
+            {
+                List<double[]> redBasis = IntStream.range(0, count)
+                    .mapToObj(b ->
+                        IntStream.range(0, resolution + 1)
+                            .mapToDouble(m -> evaluateSpecularRed(b, m))
+                            .toArray())
+                    .collect(Collectors.toList());
+
+                List<double[]> greenBasis = IntStream.range(0, count)
+                    .mapToObj(b ->
+                        IntStream.range(0, resolution + 1)
+                            .mapToDouble(m -> evaluateSpecularGreen(b, m))
+                            .toArray())
+                    .collect(Collectors.toList());
+
+                List<double[]> blueBasis = IntStream.range(0, count)
+                    .mapToObj(b ->
+                        IntStream.range(0, resolution + 1)
+                            .mapToDouble(m -> evaluateSpecularBlue(b, m))
+                            .toArray())
+                    .collect(Collectors.toList());
+
+                return new SimpleMaterialBasis(
+                    diffuseAlbedos.toArray(DoubleVector3[]::new), redBasis, greenBasis, blueBasis);
             }
         };
     }

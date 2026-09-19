@@ -37,7 +37,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
     private final SceneModel sceneModel;
 
     private ViewSelection viewSelection;
-    private Texture2D<ContextType> lightTexture;
+    private ReadonlyTexture2D<ContextType> lightTexture;
 
     public LightCalibrationVisual(ContextType context, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
     {
@@ -58,18 +58,18 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "grayscaleTexture.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override

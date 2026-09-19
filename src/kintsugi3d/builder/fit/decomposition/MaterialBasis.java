@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,50 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.gl.vecmath.DoubleVector3;
-
-import java.io.File;
-import java.util.List;
-
-public interface MaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
+public interface MaterialBasis extends ReadonlyMaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
-    /**
-     * Gets the diffuse color for a particular basis function.
-     * @param b the basis function for which to retrieve the diffuse color.
-     * @return the diffuse color as a DoubleVector3 for basis function b.
-     */
-    DoubleVector3 getDiffuseColor (int b);
-
-    List<DoubleVector3> getDiffuseColors();
-
-    /**
-     * Evaluates a red basis function
-     * @param b the basis function to evaluate
-     * @param m the discrete element at which to evaluate the basis function
-     * @return the value of red basis function b, at element m.
-     */
-    double evaluateSpecularRed(int b, int m);
-
-    /**
-     * Evaluates a green basis function
-     * @param b the basis function to evaluate
-     * @param m the discrete element at which to evaluate the basis function
-     * @return the value of green basis function b, at element m.
-     */
-    double evaluateSpecularGreen(int b, int m);
-
-    /**
-     * Evaluates a blue basis function
-     * @param b the basis function to evaluate
-     * @param m the discrete element at which to evaluate the basis function
-     * @return the value of blue basis function b, at element m.
-     */
-    double evaluateSpecularBlue(int b, int m);
-
-    int getMaterialCount();
-    int getSpecularResolution();
-
     void deleteMaterial(int b);
-
-    void save(File outputDirectory, String filenameOverride);
 }

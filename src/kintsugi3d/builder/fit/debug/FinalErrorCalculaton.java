@@ -13,10 +13,9 @@ package kintsugi3d.builder.fit.debug;
 
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.project.GraphicsResources;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
@@ -61,9 +60,9 @@ public final class FinalErrorCalculaton
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        GraphicsResources<ContextType> resources, TextureResources<ContextType> specularFit, PrintStream rmseOut)
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, ReadonlyTextureResources<ContextType> specularFit, PrintStream rmseOut)
     {
-        Texture2D<ContextType> priorNormalMap = resources.getTextureResources().getTexture(StandardTexture.NORMAL_MAP);
+        ReadonlyTexture2D<ContextType> priorNormalMap = resources.getTextureResources().getTexture(StandardTexture.NORMAL_MAP);
         if (CALCULATE_NORMAL_RMSE && priorNormalMap != null)
         {
             try (ProgramObject<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
@@ -112,11 +111,11 @@ public final class FinalErrorCalculaton
     }
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, ShaderProgramFactory<ContextType> programFactory,
+        ReadonlyTextureResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
-        try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory);
+        try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(programFactory);
             Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram))
         {
             // Calculate linear RMSE using basis diffuse
@@ -165,11 +164,11 @@ public final class FinalErrorCalculaton
      * @throws FileNotFoundException
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureResources<ContextType> specularFit, ReadableFramebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, ShaderProgramFactory<ContextType> programFactory,
+        ReadonlyTextureResources<ContextType> specularFit, ReadableFramebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws IOException
     {
-        try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory);
+        try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory);
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram))
         {
             specularFit.setupShaderProgram(ggxErrorCalcProgram);
@@ -247,23 +246,20 @@ public final class FinalErrorCalculaton
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramObject<ContextType> createFinalErrorCalcProgram(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+    ProgramObject<ContextType> createFinalErrorCalcProgram(ShaderProgramFactory<ContextType> programFactory) throws IOException
     {
-        return programFactory.createProgram(resources,
+        return programFactory.createProgram(
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
-            new File("shaders/specularfit/finalErrorCalc.frag"),
-            false); // Disable visibility and shadow tests for error calculation.
+            new File("shaders/specularfit/finalErrorCalc.frag")
+        ); // Disable visibility and shadow tests for error calculation.
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramObject<ContextType> createGGXErrorCalcProgram(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+    ProgramObject<ContextType> createGGXErrorCalcProgram(ShaderProgramFactory<ContextType> programFactory) throws IOException
     {
-        return programFactory.createProgram(resources,
+        return programFactory.createProgram(
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
-            new File("shaders/specularfit/ggxErrorCalc.frag"),
-            false); // Disable visibility and shadow tests for error calculation.
+            new File("shaders/specularfit/ggxErrorCalc.frag")
+        ); // Disable visibility and shadow tests for error calculation.
     }
-
 }

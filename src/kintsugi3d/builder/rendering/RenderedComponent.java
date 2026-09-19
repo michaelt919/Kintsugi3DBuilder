@@ -14,10 +14,10 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.vecmath.Matrix4;
 
-public interface RenderedComponent<ContextType extends Context<ContextType>> extends Resource
+public interface RenderedComponent<ContextType extends Context<ContextType>> extends ManagedResource
 {
     void initialize();
 

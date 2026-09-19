@@ -21,7 +21,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ImageUndistorter<ContextType extends Context<ContextType>> implements AutoCloseable
+public class ImageUndistorter<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private final Context<ContextType> context;
     private final ProgramObject<ContextType> program;
@@ -44,7 +44,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
     }
 
-    public Texture2D<ContextType> undistort(Texture2D<ContextType> inputImage, DistortionProjection distortion)
+    public Texture2D<ContextType> undistort(ReadonlyTexture2D<ContextType> inputImage, DistortionProjection distortion)
     {
         drawable.program().setTexture("inputImage", inputImage);
         drawable.program().setUniform("viewportSize", new Vector2(distortion.width, distortion.height));

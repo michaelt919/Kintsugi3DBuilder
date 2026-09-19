@@ -21,7 +21,7 @@ import kintsugi3d.builder.rendering.components.scene.Environment;
 import kintsugi3d.builder.rendering.components.scene.Grid;
 import kintsugi3d.builder.rendering.components.scene.GroundPlane;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.stream.IntStream;
 
 public class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
@@ -39,11 +39,11 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
     protected final ContextType context;
     protected final SceneModel sceneModel;
     protected final SceneViewportModel sceneViewportModel;
-    protected final List<RenderedComponent<ContextType>> components = new ArrayList<>();
-    protected final GraphicsResourcesImageSpace<ContextType> resources;
+    protected final Collection<RenderedComponent<ContextType>> components = new ArrayList<>(5);
+    protected final ReadonlyImageBasedGraphicsResources<ContextType> resources;
     private RenderingSubject<ContextType> renderingSubject;
 
-    public BaseScene(GraphicsResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+    public BaseScene(ReadonlyImageBasedGraphicsResources<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();
         this.sceneModel = sceneModel;
@@ -138,7 +138,7 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
             {
                 otherComponent.close();
             }
-            catch (Exception e)
+            catch (RuntimeException e)
             {
                 LOG.error("Error occurred while closing scene:", e);
             }

@@ -12,15 +12,14 @@
 package kintsugi3d.builder.io.specular;
 
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
 
-public class WeightImageWriter<ContextType extends Context<ContextType>> implements Resource
+public class WeightImageWriter<ContextType extends Context<ContextType>> implements ManagedResource
 {
-
     private final int weightsPerImage;
 
     private final ProgramObject<ContextType> program;
@@ -48,7 +47,7 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void saveImages(TextureResources<ContextType> specularFit, String format,
+    public void saveImages(ReadonlyTextureResources<ContextType> specularFit, String format,
                            File outputDirectory, String... filenames) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);

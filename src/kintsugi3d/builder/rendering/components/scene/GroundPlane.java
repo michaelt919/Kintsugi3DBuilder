@@ -16,21 +16,17 @@ import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Map;
 
 public class GroundPlane<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(GroundPlane.class);
-
-    public GroundPlane(GraphicsResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public GroundPlane(ReadonlyImageBasedGraphicsResources<ContextType> resources, LightingResources<ContextType> lightingResources,
                        SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         super(resources, sceneViewportModel, "SceneObject", sceneModel, lightingResources,
@@ -38,15 +34,15 @@ public class GroundPlane<ContextType extends Context<ContextType>> extends Stand
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
-    protected Drawable<ContextType> createDrawable(Program<ContextType> program)
+    protected Drawable<ContextType> createDrawable(Program<ContextType> drawableProgram)
     {
-        Drawable<ContextType> drawable = super.createDrawable(program);
+        Drawable<ContextType> drawable = super.createDrawable(drawableProgram);
         drawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
         return drawable;
     }

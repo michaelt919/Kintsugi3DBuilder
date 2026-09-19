@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.AppIcon;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
      * assigns it to private variable in class
      * @param instance
      */
-    public ShaderCardFactory(ProjectRenderableInstance<?> instance)
+    public ShaderCardFactory(ImageBasedRenderable<?> instance)
     {
         super(instance);
     }

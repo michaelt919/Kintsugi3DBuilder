@@ -12,7 +12,7 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.geometry.GeometryTextures;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements Resource
+public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureBlockResourceFactory.class);
     private final ImageCache<ContextType> imageCache;
@@ -56,8 +56,8 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         try
         {
             return new GraphicsResourcesTextureSpace<>(sharedResources,
-                () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCache.getSettings().getBlockDir(i, j),
-                loadOptions, width, height, monitor);
+                () -> fullGeometryTextures.createViewportCopy(x, y, width, height),
+                imageCache.getBlockDirectory(i, j), loadOptions, width, height, monitor);
         }
         catch (IOException e)
         {

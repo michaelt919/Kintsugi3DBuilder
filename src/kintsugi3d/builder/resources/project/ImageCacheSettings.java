@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,40 +13,39 @@ package kintsugi3d.builder.resources.project;
 
 import java.io.File;
 
-public class ImageCacheSettings
+public class ImageCacheSettings implements ReadonlyImageCacheSettings
 {
     private File cacheParentDirectory;
     private int textureWidth;
     private int textureHeight;
     private int textureSubdiv;
     private int sampledSize;
-    private String cacheFolderName;
 
-    public File getCacheDirectory()
-    {
-        return new File(cacheParentDirectory, getFolderNameFromSettings());
-    }
-
+    @Override
     public File getCacheParentDirectory()
     {
         return cacheParentDirectory;
     }
 
+    @Override
     public int getTextureWidth()
     {
         return textureWidth;
     }
 
+    @Override
     public int getTextureHeight()
     {
         return textureHeight;
     }
 
+    @Override
     public int getTextureSubdiv()
     {
         return textureSubdiv;
     }
 
+    @Override
     public int getSampledSize()
     {
         return sampledSize;
@@ -77,40 +76,15 @@ public class ImageCacheSettings
         this.sampledSize = sampledSize;
     }
 
-    public String getFolderNameFromSettings()
-    {
-        if (cacheFolderName != null)
-        {
-            return String.format("%s/%d-%d-%d-%d", cacheFolderName, textureWidth, textureHeight, textureSubdiv, sampledSize);
-        }
-        else
-        {
-            return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
-        }
-    }
-
-    public File getBlockDir(int i, int j)
-    {
-        return new File(getCacheDirectory(), String.format("%d_%d", i, j));
-    }
-
+    @Override
     public int getBlockStartX(int i)
     {
         return (int) Math.round((double) i * (double) textureWidth / (double) textureSubdiv);
     }
 
+    @Override
     public int getBlockStartY(int j)
     {
         return (int) Math.round((double) j * (double) textureHeight / (double) textureSubdiv);
-    }
-
-    public String getCacheFolderName()
-    {
-        return cacheFolderName;
-    }
-
-    public void setCacheFolderName(String cacheFolderName)
-    {
-        this.cacheFolderName = cacheFolderName;
     }
 }

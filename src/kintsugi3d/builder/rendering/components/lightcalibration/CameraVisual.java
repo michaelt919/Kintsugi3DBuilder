@@ -16,8 +16,8 @@ import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -28,35 +28,35 @@ import java.util.Map;
 
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final GraphicsResources<ContextType> resources;
+    private final ShaderProgramFactory<ContextType> programFactory;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(GraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraVisual(ShaderProgramFactory<ContextType> programFactory, SceneViewportModel sceneViewportModel)
     {
-        super(resources.getContext(), sceneViewportModel, "CameraVisual");
-        this.resources = resources;
+        super(programFactory.getContext(), sceneViewportModel, "CameraVisual");
+        this.programFactory = programFactory;
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture_imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "colorappearance"), "texture_multi_as_single.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof GraphicsResourcesImageSpace)
+        if (programFactory instanceof GraphicsResourcesImageSpace)
         {
             View selectedView = viewSelection.getSelectedView();
             if (selectedView != null)
@@ -69,7 +69,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
                 Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
                 Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-                resources.setupShaderProgram(this.getProgram()); // sets viewImages
+                programFactory.setupShaderProgram(this.getProgram()); // sets viewImages
                 this.getProgram().setUniform("viewIndex", selectedView.getGPUViewIndex());
                 this.getProgram().setUniform("model_view",
                     cameraViewport.getView().times(snapViewInverse)

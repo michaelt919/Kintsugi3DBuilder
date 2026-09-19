@@ -13,7 +13,7 @@ package kintsugi3d.builder.io.blender;
 
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 
 public final class CyclesExporterFactory implements MaterialExporterFactory
 {
@@ -29,7 +29,7 @@ public final class CyclesExporterFactory implements MaterialExporterFactory
     }
 
     @Override
-    public MaterialExporter getExporter(TextureResources<?> resources)
+    public MaterialExporter getExporter(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> resources)
     {
         BlenderExporter exporter = new BlenderExporter(true);
         exporter.setTextureResources(resources);

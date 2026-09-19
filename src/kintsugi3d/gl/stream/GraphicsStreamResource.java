@@ -24,7 +24,7 @@ import java.util.function.*;
  * and a resource that manages its own shader program and framebuffer object and can be auto-closed.
  * @param <ContextType>
  */
-public class GraphicsStreamResource<ContextType extends Context<ContextType>> implements GraphicsStream<ColorList[]>, AutoCloseable
+public class GraphicsStreamResource<ContextType extends Context<ContextType>> implements GraphicsStream<ColorList[]>, ManagedResource
 {
     private final ProgramObject<ContextType> program;
     private final FramebufferObject<ContextType> framebuffer;

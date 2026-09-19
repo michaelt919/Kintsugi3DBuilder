@@ -29,7 +29,7 @@ import java.io.IOException;
 /**
  * For use i.e. with projtex_single.frag
  */
-public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements Resource
+public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private final View view;
     private GeometryResources<ContextType> geometryResources;
