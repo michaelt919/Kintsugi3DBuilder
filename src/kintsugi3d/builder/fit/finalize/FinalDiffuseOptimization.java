@@ -15,9 +15,9 @@ import kintsugi3d.builder.core.texture.NamedTextureInfo;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.util.ShaderHoleFill;
@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
 
@@ -51,17 +51,19 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private final Drawable<ContextType> drawable;
 
-    public FinalDiffuseOptimization(ReadonlyGraphicsResources<ContextType> resources,
-        SpecularFitProgramFactory<ContextType> programFactory, TextureResolution settings, boolean includeConstant)
+    public FinalDiffuseOptimization(
+        ReadonlyGraphicsResources<ContextType> resources,
+        TextureResolution textureResolution, boolean includeConstant)
         throws IOException
     {
         this.context = resources.getContext();
-        this.estimationProgram = includeConstant ? createDiffuseTranslucentEstimationProgram(resources, programFactory)
-            : createDiffuseEstimationProgram(resources, programFactory);
-        this.textureResolution = settings;
+        this.estimationProgram = includeConstant ?
+            createDiffuseTranslucentEstimationProgram(resources)
+            : createDiffuseEstimationProgram(resources);
+        this.textureResolution = textureResolution;
         this.includeConstant = includeConstant;
 
-        framebuffer = createFramebuffer(context, settings, includeConstant);
+        framebuffer = createFramebuffer(context, textureResolution, includeConstant);
         drawable = resources.createDrawable(estimationProgram);
     }
 
@@ -81,7 +83,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return builder.createFramebufferObject();
     }
 
-    public void execute(TextureResources<ContextType> specularFit)
+    public void execute(ReadonlyTextureResources<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.getBasisResources().useWithShaderProgram(estimationProgram);
@@ -153,17 +155,15 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramObject<ContextType> createDiffuseEstimationProgram(
-            ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+    ProgramObject<ContextType> createDiffuseEstimationProgram(ShaderProgramFactory<ContextType> programFactory) throws IOException
     {
-        return programFactory.createProgram(resources,
+        return programFactory.createProgram(
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuse.frag"));
     }
     private static <ContextType extends Context<ContextType>>
-    ProgramObject<ContextType> createDiffuseTranslucentEstimationProgram(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
+    ProgramObject<ContextType> createDiffuseTranslucentEstimationProgram(ShaderProgramFactory<ContextType> programFactory) throws IOException
     {
-        return programFactory.createProgram(resources,
+        return programFactory.createProgram(
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuseTranslucent.frag"));
     }
 }

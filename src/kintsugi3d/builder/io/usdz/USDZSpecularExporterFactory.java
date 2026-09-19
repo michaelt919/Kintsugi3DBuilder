@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,7 +13,7 @@ package kintsugi3d.builder.io.usdz;
 
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 
 public final class USDZSpecularExporterFactory implements MaterialExporterFactory
 {
@@ -29,7 +29,7 @@ public final class USDZSpecularExporterFactory implements MaterialExporterFactor
     }
 
     @Override
-    public MaterialExporter getExporter(TextureResources<?> resources)
+    public MaterialExporter getExporter(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> resources)
     {
         USDZSpecularExporter exporter = new USDZSpecularExporter();
         exporter.setTextureResources(resources);

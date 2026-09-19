@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,7 +14,7 @@ package kintsugi3d.gl.opengl;
 import kintsugi3d.gl.core.DrawableBase;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.core.PrimitiveMode;
-import kintsugi3d.gl.core.VertexBuffer;
+import kintsugi3d.gl.core.ReadonlyVertexBuffer;
 import kintsugi3d.gl.exceptions.UnrecognizedPrimitiveModeException;
 import kintsugi3d.gl.vecmath.*;
 
@@ -119,7 +119,7 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext>
     }
 
     @Override
-    public boolean addVertexBuffer(int location, VertexBuffer<OpenGLContext> buffer)
+    public boolean addVertexBuffer(int location, ReadonlyVertexBuffer<OpenGLContext> buffer)
     {
         if (buffer instanceof OpenGLVertexBuffer)
         {
@@ -140,7 +140,7 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext>
     }
 
     @Override
-    public boolean addVertexBuffer(String name, VertexBuffer<OpenGLContext> buffer)
+    public boolean addVertexBuffer(String name, ReadonlyVertexBuffer<OpenGLContext> buffer)
     {
         return this.addVertexBuffer(program.getVertexAttribLocation(name), buffer);
     }

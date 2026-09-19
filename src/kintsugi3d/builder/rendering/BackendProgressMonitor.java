@@ -17,10 +17,10 @@ import kintsugi3d.gl.vecmath.Vector3;
 
 class BackendProgressMonitor implements ProgressMonitor
 {
-    private final ProjectRenderableInstance<?> instance;
+    private final ImageBasedRenderable<?> instance;
     private final ProgressMonitor base;
 
-    BackendProgressMonitor(ProjectRenderableInstance<?> instance, ProgressMonitor base)
+    BackendProgressMonitor(ImageBasedRenderable<?> instance, ProgressMonitor base)
     {
         this.instance = instance;
         this.base = base;

@@ -18,7 +18,7 @@ import kintsugi3d.gl.interactive.SimpleRefreshable;
 public final class Rendering
 {
     private static volatile Context<?> context;
-    private static volatile RenderableManager<?> instanceManager;
+    private static volatile RenderableManager<?> renderableManager;
     private static volatile GraphicsRequestManager<?> requestQueue;
 
     private static final Object INITIALIZATION_LOCK = new Object();
@@ -40,12 +40,12 @@ public final class Rendering
         }
     }
 
-    public static RenderableManager<?> getInstanceManager()
+    public static RenderableManager<?> getRenderableManager()
     {
-        if (instanceManager != null)
+        if (renderableManager != null)
         {
             //noinspection StaticVariableUsedBeforeInitialization
-            return instanceManager;
+            return renderableManager;
         }
         else
         {
@@ -67,24 +67,24 @@ public final class Rendering
     }
 
     public static <ContextType extends Context<ContextType>> void initialize(
-        ContextType injectedContext, RenderableManager<ContextType> injectedInstanceManager)
+        ContextType injectedContext, RenderableManager<ContextType> injectedRenderableManager)
     {
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)
         {
-            if (context == null && instanceManager == null)
+            if (context == null && renderableManager == null)
             {
                 // Start the request queue as soon as we have a graphics context.
                 GraphicsRequestManager<ContextType> newRequestQueue = new GraphicsRequestManager<>(injectedContext);
-                newRequestQueue.setRenderableManager(injectedInstanceManager);
+                newRequestQueue.setRenderableManager(injectedRenderableManager);
                                 newRequestQueue.setProgressMonitor(Global.io().getProgressMonitor());
 
-                if (injectedInstanceManager.getOwningApp() != null)
+                if (injectedRenderableManager.getOwningApp() != null)
                 {
-                    injectedInstanceManager.getOwningApp().addRefreshable((SimpleRefreshable) newRequestQueue::executeQueue);
+                    injectedRenderableManager.getOwningApp().addRefreshable((SimpleRefreshable) newRequestQueue::executeQueue);
 
                     context = injectedContext;
-                    instanceManager = injectedInstanceManager;
+                    renderableManager = injectedRenderableManager;
                     requestQueue = newRequestQueue;
                 }
                 else

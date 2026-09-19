@@ -14,6 +14,7 @@ package kintsugi3d.builder.io.gltf;
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class MaterialExporter
     private String filename;
     private boolean combineWeights;
 
-    private TextureResources<?> textureResources;
+    private ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> textureResources;
 
     private final Map<String, TextureExportSpecification> textures = new HashMap<>(StandardTexture.values().length);
 
@@ -114,12 +115,12 @@ public class MaterialExporter
     {
         this.textureFileFormat = textureFileFormat;
     }
-    public TextureResources<?> getTextureResources()
+    public ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> getTextureResources()
     {
         return textureResources;
     }
 
-    public void setTextureResources(TextureResources<?> textureResources)
+    public void setTextureResources(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> textureResources)
     {
         this.textureResources = textureResources;
     }

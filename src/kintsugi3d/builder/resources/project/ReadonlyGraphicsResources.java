@@ -11,60 +11,18 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
-import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
-import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.geometry.ReadonlyGeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 
-public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>>
+public interface ReadonlyGraphicsResources<ContextType extends Context<ContextType>> extends ShaderProgramFactory<ContextType>
 {
-    /**
-     * The graphics context associated with this instance.
-     *  @return The graphics context
-     */
-    ContextType getContext();
-
-    /**
-     * The view set that these resources were loaded from.
-     * @return A read-only view of the view set
-     */
-    ReadonlyViewSet getViewSet();
-
-    /**
-     * The geometry used with this instance.
-     * @return A read-only view of the geometry
-     */
-    ReadonlyVertexGeometry getGeometry();
-
-    /**
-     * Gets the weight associated with a given view/camera (determined by the distance from other views).
-     *
-     * @param index The index of the view for which to retrieve its weight.
-     * @return The weight for the specified view.
-     */
-    float getCameraWeight(int index);
-
-    /**
-     * Gets a shader program builder with any required preprocessor defines automatically injected based on the
-     * characteristics of this instance.
-     *
-     * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
-     * added as well as any additional application-specific preprocessor definitions.
-     */
-    ProgramBuilder<ContextType> getShaderProgramBuilder();
-
-    /**
-     * Sets up a shader program to use this instance's graphics resources.
-     * While the geometry is generally associated with a Drawable using the createDrawable function,
-     * this method binds all of the textures and associated data like camera poses, light positions, etc.
-     * to the shader program's uniform variables.
-     *
-     * @param program The shader program to set up using this instance's resources.
-     */
-    void setupShaderProgram(Program<ContextType> program);
+    default ReadonlyVertexGeometry getGeometry()
+    {
+        return getGeometryResources().getGeometry();
+    }
 
     /**
      * Creates a Drawable using this instance's geometry resources, and the specified shader program.
@@ -74,5 +32,5 @@ public interface ReadonlyGraphicsResources<ContextType extends Context<ContextTy
      */
     Drawable<ContextType> createDrawable(Program<ContextType> program);
 
-    GraphicsStreamFactory<ContextType> streamFactory();
+    ReadonlyGeometryResources<ContextType> getGeometryResources();
 }

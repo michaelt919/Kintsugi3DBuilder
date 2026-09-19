@@ -20,9 +20,9 @@ import java.util.List;
 public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
 {
     private final List<DoubleVector3> diffuseAlbedos;
-    private final MaterialBasis materialBasis;
+    private final ReadonlyMaterialBasis materialBasis;
 
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
+    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, ReadonlyMaterialBasis materialBasis)
     {
         super(textureResolution, materialBasis.getMaterialCount());
         this.diffuseAlbedos = materialBasis.getDiffuseColors();
@@ -36,7 +36,7 @@ public class SpecularDecompositionFromExistingBasis extends SpecularDecompositio
     }
 
     @Override
-    public MaterialBasis getMaterialBasis()
+    public ReadonlyMaterialBasis getMaterialBasis()
     {
         return materialBasis;
     }

@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.export.screenshot;
 
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
-import kintsugi3d.builder.rendering.ProjectRenderableInstance;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
-public class ScreenshotRequest implements ProgressMonitoredProjectGraphicsRequest
+public class ScreenshotRequest implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private final int width;
     private final int height;
@@ -81,7 +81,7 @@ public class ScreenshotRequest implements ProgressMonitoredProjectGraphicsReques
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        ProjectRenderableInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+        ImageBasedRenderable<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (

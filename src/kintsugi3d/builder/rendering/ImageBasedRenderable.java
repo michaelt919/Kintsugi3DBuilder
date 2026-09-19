@@ -29,7 +29,7 @@ import java.io.File;
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.
  */
-public interface ProjectRenderableInstance<ContextType extends Context<ContextType>>
+public interface ImageBasedRenderable<ContextType extends Context<ContextType>>
     extends InteractiveRenderableResource<ContextType>, ViewportRenderable<ContextType>
 {
     /**
@@ -133,7 +133,7 @@ public interface ProjectRenderableInstance<ContextType extends Context<ContextTy
 
     /**
      * Gets the scene resource manager (handles environment map, backplate, tonemapping, etc.)
-     * @return The secene resources manager
+     * @return The scene resource manager
      */
     DynamicResourceManager getDynamicResourceManager();
 

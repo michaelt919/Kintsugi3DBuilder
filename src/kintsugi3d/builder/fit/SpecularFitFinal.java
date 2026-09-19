@@ -16,9 +16,10 @@ import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
-import kintsugi3d.builder.fit.settings.BasisSettings;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +44,12 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
-        TextureResources<ContextType> original, TextureResolution textureResolution, BasisSettings basisSettings) throws IOException
+        ReadonlyTextureResources<ContextType> original, TextureResolution textureResolution, ReadonlyBasisSettings basisSettings) throws IOException
     {
         return new SpecularFitFinal<>(original, textureResolution, basisSettings);
     }
 
-    private SpecularFitFinal(TextureResources<ContextType> original, TextureResolution textureResolution, BasisSettings basisSettings)
+    private SpecularFitFinal(ReadonlyTextureResources<ContextType> original, TextureResolution textureResolution, ReadonlyBasisSettings basisSettings)
         throws IOException
     {
         super(original.getContext(), textureResolution, basisSettings);
@@ -69,10 +70,10 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                     .setLinearFilteringEnabled(true)
                     .createTexture())));
 
-        Texture2D<ContextType> occlusionMap = original.getTexture(StandardTexture.OCCLUSION);
+        ReadonlyTexture2D<ContextType> occlusionMap = original.getTexture(StandardTexture.OCCLUSION);
         albedoORMOptimization = occlusionMap == null ?
             AlbedoORMOptimization.createWithoutOcclusion(context, textureResolution) :
-            AlbedoORMOptimization.createWithOcclusion(occlusionMap, textureResolution);
+            AlbedoORMOptimization.createWithOcclusion(occlusionMap.copy(), textureResolution);
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(

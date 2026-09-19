@@ -29,7 +29,7 @@ import java.util.Map;
 
 // TODO Use more information from the material.  Currently just pulling texture names.
 // TODO use glTF instead of / in addition to OBJ material?
-public final class ImportedMaterialResources<ContextType extends Context<ContextType>> implements ContextBound<ContextType>, Resource
+public final class ImportedMaterialResources<ContextType extends Context<ContextType>> implements ContextBound<ContextType>, ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImportedMaterialResources.class);
 

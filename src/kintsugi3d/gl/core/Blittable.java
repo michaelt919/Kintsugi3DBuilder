@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,18 +11,20 @@
 
 package kintsugi3d.gl.core;
 
-public interface Blittable<SourceType extends Blittable<?>>
+public interface Blittable<SourceType extends TwoDimensional> extends TwoDimensional
 {
     /**
      * Gets the width of the blittable.
      * @return The width of the blittable.
      */
+    @Override
     int getWidth();
 
     /**
      * Gets the height of the blittable.
      * @return The height of the blittable.
      */
+    @Override
     int getHeight();
 
     /**

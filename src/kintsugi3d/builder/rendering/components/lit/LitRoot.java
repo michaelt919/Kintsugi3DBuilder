@@ -17,7 +17,7 @@ import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.core.VertexBuffer;
+import kintsugi3d.gl.core.ReadonlyVertexBuffer;
 
 public class LitRoot<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
@@ -118,7 +118,7 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
      * Must be called after initialize
      * @param shadowCaster
      */
-    public void setShadowCaster(VertexBuffer<ContextType> shadowCaster)
+    public void setShadowCaster(ReadonlyVertexBuffer<ContextType> shadowCaster)
     {
         lightingResources.setShadowCastingPositionBuffer(shadowCaster);
     }

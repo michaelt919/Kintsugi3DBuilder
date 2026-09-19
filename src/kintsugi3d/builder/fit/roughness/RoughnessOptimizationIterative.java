@@ -50,8 +50,8 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
      * @throws FileNotFoundException
      */
     public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
-        Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
+                                          BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
+                                          Supplier<ReadonlyTexture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws IOException
     {
         // Inherit from base class to facilitate initial fit.

@@ -13,9 +13,9 @@ package kintsugi3d.gl.interactive;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 
-public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends Resource
+public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends ManagedResource
 {
     /**
      * Gets the application managing this renderable.

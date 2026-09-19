@@ -54,8 +54,7 @@ import java.util.concurrent.ForkJoinPool;
  *
  * @param <ContextType>
  */
-public final class GraphicsResourcesImageSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
-    implements GraphicsResourcesCacheable<ContextType>
+public final class GraphicsResourcesImageSpace<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
@@ -642,7 +641,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         // Determine shader defines here that should apply globally as defaults, but only for image-space source photos.
         // The shader will not reload automatically when these change.
         // The defines can be overridden by the actual shader.
-        ProgramBuilder<ContextType> builder = getSharedResources().getShaderProgramBuilder()
+        ProgramBuilder<ContextType> builder = getCommonResources().getShaderProgramBuilder()
             .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE); // should default to this, but just in case
@@ -665,7 +664,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        getSharedResources().setupShaderProgram(program);
+        getCommonResources().setupShaderProgram(program);
 
         if (this.colorTextures != null)
         {
@@ -724,35 +723,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
                 LOG.error("Error loading shader to calculate primary view distance", e);
             }
         }
-    }
-
-    /**
-     * Creates a resource for just a single view, using the default image for that view but with custom load options
-     *
-     * @param view
-     * @param loadOptions
-     * @return
-     * @throws IOException
-     */
-    public SingleCalibratedImageResource<ContextType> createSingleImageResource(View view, ReadonlyLoadOptionsModel loadOptions)
-        throws IOException
-    {
-        return new SingleCalibratedImageResource<>(getContext(), view, getGeometry(), loadOptions);
-    }
-
-    @Override
-    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
-    {
-        settings.setCacheFolderName(getViewSet().getUUID().toString());
-
-        ImageCache<ContextType> cache = new ImageCache<>(this, settings);
-
-        if (!cache.isInitialized())
-        {
-            cache.initialize(monitor);
-        }
-
-        return cache;
     }
 
     /**

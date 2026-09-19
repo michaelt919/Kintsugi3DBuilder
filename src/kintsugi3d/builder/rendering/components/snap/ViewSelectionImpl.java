@@ -13,7 +13,6 @@ package kintsugi3d.builder.rendering.components.snap;
 
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
-import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -22,10 +21,10 @@ public class ViewSelectionImpl implements ViewSelection
 {
     private static final float FRUSTUM_VISUALIZATION_SCALE = 0.1f;
 
-    private final ViewSet viewSet;
+    private final ReadonlyViewSet viewSet;
     private final SceneModel sceneModel;
 
-    public ViewSelectionImpl(ViewSet viewSet, SceneModel sceneModel)
+    public ViewSelectionImpl(ReadonlyViewSet viewSet, SceneModel sceneModel)
     {
         this.viewSet = viewSet;
         this.sceneModel = sceneModel;

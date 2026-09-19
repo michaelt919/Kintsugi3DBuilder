@@ -11,77 +11,110 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector3;
 
+import java.io.IOException;
 import java.util.List;
 
-public abstract class GraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResources<ContextType>
+public abstract class ImageBasedGraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResourcesCacheable<ContextType>
 {
-    private final GraphicsResourcesCommon<ContextType> sharedResources;
+    private final GraphicsResourcesCommon<ContextType> commonResources;
 
     /**
      * Only one instance will be the owner of the shared resources (typicaly created when a project is loaded)
      */
     private final boolean ownerOfSharedResources;
 
-    GraphicsResourcesBase(GraphicsResourcesCommon<ContextType> sharedResources, boolean ownerOfSharedResources)
+    ImageBasedGraphicsResourcesBase(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfSharedResources)
     {
-        this.sharedResources = sharedResources;
+        this.commonResources = commonResources;
         this.ownerOfSharedResources = ownerOfSharedResources;
     }
 
-    GraphicsResourcesCommon<ContextType> getSharedResources()
+    GraphicsResourcesCommon<ContextType> getCommonResources()
     {
-        return sharedResources;
+        return commonResources;
     }
 
     @Override
     public final ContextType getContext()
     {
-        return sharedResources.getContext();
+        return commonResources.getContext();
     }
 
     @Override
     public final ViewSet getViewSet()
     {
-        return sharedResources.getViewSet();
+        return commonResources.getViewSet();
     }
 
     @Override
     public float getCameraWeight(int index)
     {
-        return sharedResources.getViewWeight(index);
+        return commonResources.getViewWeight(index);
     }
 
     @Override
     public List<Float> getCameraWeights()
     {
-        return sharedResources.getViewWeights();
+        return commonResources.getViewWeights();
     }
 
     @Override
     public final GeometryResources<ContextType> getGeometryResources()
     {
-        return sharedResources.getGeometryResources();
+        return commonResources.getGeometryResources();
     }
 
     @Override
     public final TextureResources<ContextType> getTextureResources()
     {
-        return sharedResources.getTextureResources();
+        return commonResources.getTextureResources();
     }
 
     @Override
     public final LuminanceMapResources<ContextType> getLuminanceMapResources()
     {
-        return sharedResources.getLuminanceMapResources();
+        return commonResources.getLuminanceMapResources();
+    }
+
+    /**
+     * Creates a resource for just a single view, using the default image for that view but with custom load options
+     *
+     * @param view
+     * @param loadOptions
+     * @return
+     * @throws IOException
+     */
+    public SingleCalibratedImageResource<ContextType> createSingleImageResource(View view, ReadonlyLoadOptionsModel loadOptions)
+        throws IOException
+    {
+        return new SingleCalibratedImageResource<>(getContext(), view, getGeometry(), loadOptions);
+    }
+
+    @Override
+    public ImageCache<ContextType> cache(ReadonlyImageCacheSettings settings, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
+    {
+        ImageCache<ContextType> cache = new ImageCache<>(this, settings);
+
+        if (!cache.isInitialized())
+        {
+            cache.initialize(monitor);
+        }
+
+        return cache;
     }
 
     @Override
@@ -89,7 +122,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     {
         this.getViewSet().setLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 
-        sharedResources.updateLuminanceMap();
+        commonResources.updateLuminanceMap();
     }
 
     @Override
@@ -97,7 +130,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     {
         this.getViewSet().clearLuminanceEncoding();
 
-        sharedResources.updateLuminanceMap();
+        commonResources.updateLuminanceMap();
     }
 
     @Override
@@ -108,31 +141,31 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
             this.getViewSet().setLightPosition(i, lightCalibration);
         }
 
-        sharedResources.updateLightData();
+        commonResources.updateLightData();
     }
 
     @Override
     public boolean hasProcessedWeightMaps()
     {
-        return sharedResources.hasProcessedWeightMaps();
+        return commonResources.hasProcessedWeightMaps();
     }
 
     @Override
     public IntVector2 getProcessedWeightMapResolution()
     {
-        return getSharedResources().getProcessedWeightMapResolution();
+        return getCommonResources().getProcessedWeightMapResolution();
     }
 
     @Override
     public EventListeners<ProjectProcessedListener> weightMapsProcessedListeners()
     {
-        return getSharedResources().weightMapsProcessedListeners();
+        return getCommonResources().weightMapsProcessedListeners();
     }
 
     @Override
     public void replaceTextureResources(TextureResources<ContextType> textureResources)
     {
-        sharedResources.replaceTextureResources(textureResources);
+        commonResources.replaceTextureResources(textureResources);
     }
 
     @Override
@@ -143,15 +176,15 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
             this.getViewSet().setLightIntensity(i, lightIntensity);
         }
 
-        this.sharedResources.updateLightData();
+        this.commonResources.updateLightData();
     }
 
     @Override
     public void close()
     {
-        if (this.ownerOfSharedResources && this.sharedResources != null)
+        if (this.ownerOfSharedResources && this.commonResources != null)
         {
-            this.sharedResources.close();
+            this.commonResources.close();
         }
     }
 }

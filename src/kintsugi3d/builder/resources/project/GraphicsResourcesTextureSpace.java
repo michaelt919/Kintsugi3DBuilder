@@ -31,7 +31,7 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.function.Supplier;
 
-public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesTextureSpace.class);
     /**
@@ -151,7 +151,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
         // and should apply globally as defaults, but only for texture-space source photos.
         // The shader will not reload automatically when these change.
         // The defines can be overridden by the actual shader.
-        return getSharedResources().getShaderProgramBuilder()
+        return getCommonResources().getShaderProgramBuilder()
             .define("GEOMETRY_TEXTURES_ENABLED", true)
             .define("GEOMETRY_MODE", GeometryMode.RECTANGLE)
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.TEXTURE_SPACE);
@@ -160,7 +160,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        getSharedResources().setupShaderProgram(program);
+        getCommonResources().setupShaderProgram(program);
         geometryTextures.setupShaderProgram(program);
         program.setTexture("viewImages", textureArray);
     }
@@ -168,7 +168,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
     @Override
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
-        Drawable<ContextType> drawable = getSharedResources().getContext().createDrawable(program);
+        Drawable<ContextType> drawable = getCommonResources().getContext().createDrawable(program);
         drawable.addVertexBuffer("position", rectangle);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         return drawable;

@@ -134,7 +134,7 @@ public class CarouselController
                                 {
                                     // Card load failed; clean up backend.
                                     ShaderInfo shader = addedItem.getShader();
-                                    Rendering.getInstanceManager().removeRenderView(shader);
+                                    Rendering.getRenderableManager().removeRenderView(shader);
                                 }
                                 else
                                 {

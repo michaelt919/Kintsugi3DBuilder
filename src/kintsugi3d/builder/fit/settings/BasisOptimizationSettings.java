@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,18 +11,14 @@
 
 package kintsugi3d.builder.fit.settings;
 
-public class BasisOptimizationSettings extends BasisSettings
+public class BasisOptimizationSettings extends BasisSettings implements ReadonlyBasisOptimizationSettings
 {
     private int basisComplexity = 73;
     private int specularMinWidth = 18;
     private int specularMaxWidth = 90;
     private double metallicity = 0.0;
 
-    /**
-     * The minimum width of the specular lobe when optimizing (the minimum width of the smoothstep function used).
-     * This setting is measured in discrete (integer) units and should be less than the basis resolution and the max width.
-     * @return
-     */
+    @Override
     public int getSpecularMinWidth()
     {
         return specularMinWidth;
@@ -38,11 +34,7 @@ public class BasisOptimizationSettings extends BasisSettings
         this.specularMinWidth = specularMinWidth;
     }
 
-    /**
-     * Gets the required smoothness for the specular lobe (the maximum width of the smoothstep function used to optimize it).
-     * This setting is measured in discrete (integer) units and should be less than the basis resolution.
-     * @return
-     */
+    @Override
     public int getSpecularMaxWidth()
     {
         return specularMaxWidth;
@@ -63,10 +55,7 @@ public class BasisOptimizationSettings extends BasisSettings
         this.specularMaxWidth = specularMaxWidth;
     }
 
-    /**
-     * Gets the number of representative functions that are used to optimize each basis function.
-     * @return
-     */
+    @Override
     public int getBasisComplexity()
     {
         return basisComplexity;
@@ -81,11 +70,7 @@ public class BasisOptimizationSettings extends BasisSettings
         this.basisComplexity = basisComplexity;
     }
 
-    /**
-     * Gets the assumed metallicity of the material (metallic meaning that the diffuse reflectance exhibits specular characteristics
-     * like the Fresnel effect and is scattered by first-surface microfacet geometry, not subsurface scattering)
-     * @return
-     */
+    @Override
     public double getMetallicity()
     {
         return this.metallicity;
