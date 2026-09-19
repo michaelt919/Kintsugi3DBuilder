@@ -14,10 +14,10 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
-import kintsugi3d.builder.fit.settings.ReconstructionSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -31,10 +31,12 @@ import java.util.*;
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(FinalReconstruction.class);
-    private final ReadonlyGraphicsResources<ContextType> resources;
-    private final ReconstructionSettings reconstructionSettings;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
+    private final ReadonlyReconstructionSettings reconstructionSettings;
 
-    public FinalReconstruction(ReadonlyGraphicsResources<ContextType> resources, TextureResolution textureResolution, ReconstructionSettings reconstructionSettings)
+    public FinalReconstruction(
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, TextureResolution textureResolution,
+        ReadonlyReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
         this.reconstructionSettings = reconstructionSettings;

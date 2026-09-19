@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
-import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 import kintsugi3d.builder.resources.project.specular.TextureResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
@@ -71,7 +71,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
      * @throws FileNotFoundException
      */
     protected SpecularFitBase(ContextType context, TextureResolution textureResolution,
-        BasisSettings basisSettings) throws IOException
+        ReadonlyBasisSettings basisSettings) throws IOException
     {
         this(new BasisResources<>(context, basisSettings.getBasisCount(), basisSettings.getBasisResolution()),
             true, textureResolution);

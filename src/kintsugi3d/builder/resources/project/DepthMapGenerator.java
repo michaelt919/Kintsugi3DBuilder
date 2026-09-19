@@ -14,7 +14,7 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.geometry.GeometryResources;
+import kintsugi3d.gl.geometry.ReadonlyGeometryResources;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -30,7 +30,7 @@ public final class DepthMapGenerator<ContextType extends Context<ContextType>> i
 {
     private final ProgramObject<ContextType> depthRenderingProgram;
     private final Drawable<ContextType> depthDrawable;
-    private final GeometryResources<ContextType> geometryResources;
+    private final ReadonlyGeometryResources<ContextType> geometryResources;
 
     /**
      *
@@ -39,17 +39,17 @@ public final class DepthMapGenerator<ContextType extends Context<ContextType>> i
      * @throws FileNotFoundException Thrown if the depth map shader cannot be loaded
      */
     public static <ContextType extends Context<ContextType>>DepthMapGenerator<ContextType> createFromGeometryResources(
-        GeometryResources<ContextType> geometryResources) throws IOException
+        ReadonlyGeometryResources<ContextType> geometryResources) throws IOException
     {
         return new DepthMapGenerator<>(geometryResources);
     }
 
-    private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws IOException
+    private DepthMapGenerator(ReadonlyGeometryResources<ContextType> geometryResources) throws IOException
     {
         this.geometryResources = geometryResources;
-        depthRenderingProgram = getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();
+        depthRenderingProgram = getDepthMapProgramBuilder(geometryResources.getContext()).createProgram();
         depthDrawable = depthRenderingProgram.getContext().createDrawable(depthRenderingProgram);
-        depthDrawable.addVertexBuffer("position", geometryResources.positionBuffer);
+        depthDrawable.addVertexBuffer("position", geometryResources.getPositionBuffer());
     }
 
     static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getDepthMapProgramBuilder(ContextType context)
@@ -81,7 +81,7 @@ public final class DepthMapGenerator<ContextType extends Context<ContextType>> i
 
         Matrix4 modelView = Matrix4.lookAt(
             view.getCameraPoseInverse().times(view.getLightPosition().asPosition()).getXYZ(),
-            geometryResources.geometry.getCentroid(),
+            geometryResources.getGeometry().getCentroid(),
             new Vector3(0, 1, 0));
         depthRenderingProgram.setUniform("model_view", modelView);
 

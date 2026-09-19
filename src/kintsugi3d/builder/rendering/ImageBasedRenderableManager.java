@@ -59,10 +59,10 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class RenderableInstanceManager<ContextType extends Context<ContextType>>
+public class ImageBasedRenderableManager<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableManager<ContextType>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(RenderableInstanceManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImageBasedRenderableManager.class);
 
     private final ContextType context;
 
@@ -94,7 +94,7 @@ public class RenderableInstanceManager<ContextType extends Context<ContextType>>
     private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
         = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
-    public RenderableInstanceManager(ContextType context)
+    public ImageBasedRenderableManager(ContextType context)
     {
         this.context = context;
     }

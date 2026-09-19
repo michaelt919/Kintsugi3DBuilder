@@ -20,7 +20,7 @@ import kintsugi3d.builder.rendering.components.lightcalibration.CameraFrustum;
 import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 
@@ -28,13 +28,13 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
 {
     private View currentView;
 
-    private final ReadonlyGraphicsResources<ContextType> resources;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
     private final SceneModel sceneModel;
 
     private final CameraVisual<ContextType> cameraVisual;
     private final CameraFrustum<ContextType> cameraFrustum;
 
-    public CameraWidgetGroup(ReadonlyGraphicsResources<ContextType> resources,
+    public CameraWidgetGroup(ReadonlyImageBasedGraphicsResources<ContextType> resources,
                              SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;

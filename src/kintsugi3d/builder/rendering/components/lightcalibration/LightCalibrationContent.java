@@ -16,7 +16,7 @@ import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.UniformBuffer;
@@ -28,13 +28,13 @@ import kintsugi3d.gl.vecmath.Vector3;
 public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
 {
     private final ContextType context;
-    private final ReadonlyGraphicsResources<ContextType> resources;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel sceneViewportModel;
 
     private RenderingSubject<ContextType> renderingSubject;
 
-    public LightCalibrationContent(ReadonlyGraphicsResources<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationContent(ReadonlyImageBasedGraphicsResources<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();

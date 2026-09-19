@@ -12,7 +12,7 @@
 package kintsugi3d.builder.resources;
 
 import kintsugi3d.builder.rendering.components.RenderingSubject;
-import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -37,7 +37,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private static final Logger LOG = LoggerFactory.getLogger(DynamicResourceLoader.class);
     private final ProgressMonitor progressMonitor;
     private final ContextType context;
-    private final GraphicsResources<ContextType> resources;
+    private final ImageBasedGraphicsResources<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
     private final RenderingSubject<ContextType> subject;
 
@@ -71,7 +71,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private EncodableColorImage currentEnvironmentMap;
 
-    public DynamicResourceLoader(ProgressMonitor progressMonitor, GraphicsResources<ContextType> resources,
+    public DynamicResourceLoader(ProgressMonitor progressMonitor, ImageBasedGraphicsResources<ContextType> resources,
         RenderingSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
     {
         this.progressMonitor = progressMonitor;

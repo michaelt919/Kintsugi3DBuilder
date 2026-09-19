@@ -11,13 +11,22 @@
 
 package kintsugi3d.gl.geometry;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.ContextBound;
-import kintsugi3d.gl.core.Drawable;
-import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.*;
 
 public interface ReadonlyGeometryResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
+    /**
+     *
+     * @return The geometry for this instance that the vertex buffers were loaded from.
+     */
+    ReadonlyVertexGeometry getGeometry();
+
+    /**
+     *
+     * @return A vertex buffer containing vertex positions.
+     */
+    ReadonlyVertexBuffer<ContextType> getPositionBuffer();
+
     /**
      * Creates a Drawable using this instance's geometry resources, and the specified shader program.
      * @param program The program to use to construct the Drawable.

@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -28,7 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 
-public class ResampleRequest implements ProgressMonitoredProjectGraphicsRequest
+public class ResampleRequest implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private final int resampleWidth;
     private final int resampleHeight;

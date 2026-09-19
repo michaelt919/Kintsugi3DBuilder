@@ -54,7 +54,7 @@ import java.util.concurrent.ForkJoinPool;
  *
  * @param <ContextType>
  */
-public final class GraphicsResourcesImageSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+public final class GraphicsResourcesImageSpace<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 

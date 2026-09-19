@@ -284,7 +284,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         for (View view : views)
         {
             viewDirections[view.getGPUViewIndex()] =
-                view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometryResources.geometry.getCentroid()).normalized();
+                view.getCameraPoseInverse().getColumn(3).getXYZ().minus(geometryResources.getGeometry().getCentroid()).normalized();
         }
 
         int[] totals = new int[viewDirections.length];

@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -50,7 +50,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ProgressMonitoredProjectGraphicsRequest create()
+        public ProgressMonitoredImageBasedGraphicsRequest create()
         {
             return new MultiviewRetargetRenderRequest(getWidth(), getHeight(), getShaderSetupCallback(),
                 targetViewSet, getVertexShader(), getFragmentShader(), getOutputDirectory());

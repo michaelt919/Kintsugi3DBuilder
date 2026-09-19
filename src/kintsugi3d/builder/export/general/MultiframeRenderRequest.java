@@ -13,7 +13,7 @@ package kintsugi3d.builder.export.general;
 
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -46,7 +46,7 @@ class MultiframeRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public ProgressMonitoredProjectGraphicsRequest create()
+        public ProgressMonitoredImageBasedGraphicsRequest create()
         {
             return new MultiframeRenderRequest(getWidth(), getHeight(), frameCount, getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());

@@ -17,10 +17,11 @@ import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.rendering.Rendering;
-import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.util.AppIcon;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.util.ImageFinder;
@@ -136,10 +137,10 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
     public List<ProjectDataCard> createAllCards()
     {
         List<ProjectDataCard> textureCards = new ArrayList<>(8);
-        GraphicsResources<?> resources = getInstance().getResources();
+        ReadonlyImageBasedGraphicsResources<? extends Context<?>> resources = getInstance().getResources();
         if (resources != null)
         {
-            ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> texResources = resources.getTextureResources();
+            ReadonlyTextureResources<? extends Context<?>> texResources = resources.getTextureResources();
 
             var textures = texResources.getTextures();
             if (textures != null)
@@ -154,7 +155,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
                 }
             }
 
-            ReadonlyBasisResources<? extends kintsugi3d.gl.core.Context<?>> basisResources = texResources.getBasisResources();
+            ReadonlyBasisResources<? extends Context<?>> basisResources = texResources.getBasisResources();
             if (basisResources != null)
             {
                 for (int i = 0; i < basisResources.getBasisCount(); i++)

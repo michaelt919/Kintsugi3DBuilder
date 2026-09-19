@@ -16,21 +16,17 @@ import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Map;
 
 public class GroundPlane<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(GroundPlane.class);
-
-    public GroundPlane(ReadonlyGraphicsResources<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public GroundPlane(ReadonlyImageBasedGraphicsResources<ContextType> resources, LightingResources<ContextType> lightingResources,
                        SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         super(resources, sceneViewportModel, "SceneObject", sceneModel, lightingResources,

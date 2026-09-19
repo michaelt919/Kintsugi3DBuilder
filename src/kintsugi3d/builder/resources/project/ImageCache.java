@@ -52,21 +52,26 @@ public class ImageCache<ContextType extends Context<ContextType>>
 {
     private static final Logger LOG = LoggerFactory.getLogger(ImageCache.class);
     private final ContextType context;
-    private final GraphicsResourcesBase<ContextType> resources;
-    private final ImageCacheSettings settings;
+    private final ImageBasedGraphicsResourcesBase<ContextType> resources;
+    private final ReadonlyImageCacheSettings settings;
+
+    private final File cacheDirectory;
 
     private final File sampledDir;
     private final IntVector2[][] sampledPixelCoords;
 
     private boolean initialized = false;
 
-    ImageCache(GraphicsResourcesBase<ContextType> resources, ImageCacheSettings settings)
+    ImageCache(ImageBasedGraphicsResourcesBase<ContextType> resources, ReadonlyImageCacheSettings settings)
     {
         this.context = resources.getContext();
         this.resources = resources;
         this.settings = settings;
 
-        this.sampledDir = new File(settings.getCacheDirectory(), "sampled");
+        String cacheFolderName = getFolderNameFromSettings(resources.getViewSet().getUUID().toString(), settings);
+        this.cacheDirectory = new File(settings.getCacheParentDirectory(), cacheFolderName);
+
+        this.sampledDir = new File(cacheDirectory, "sampled");
 
         // Square 2D array to store sampled pixel coords.
         this.sampledPixelCoords = IntStream.range(0, settings.getSampledSize())
@@ -93,6 +98,28 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
+    private static String getFolderNameFromSettings(String cacheFolderName, ReadonlyImageCacheSettings settings)
+    {
+        if (cacheFolderName != null)
+        {
+            return String.format("%s/%d-%d-%d-%d", cacheFolderName, settings.getTextureWidth(), settings.getTextureHeight(), settings.getTextureSubdiv(), settings.getSampledSize());
+        }
+        else
+        {
+            return String.format("%d-%d-%d-%d", settings.getTextureWidth(), settings.getTextureHeight(), settings.getTextureSubdiv(), settings.getSampledSize());
+        }
+    }
+
+    public File getCacheDirectory()
+    {
+        return cacheDirectory;
+    }
+
+    public File getBlockDirectory(int i, int j)
+    {
+        return new File(cacheDirectory, String.format("%d_%d", i, j));
+    }
+
     public ContextType getContext()
     {
         return context;
@@ -108,7 +135,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return resources.getGeometry();
     }
 
-    public ImageCacheSettings getSettings()
+    public ReadonlyImageCacheSettings getSettings()
     {
         return settings;
     }
@@ -135,7 +162,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         {
             for (int j = 0; j < settings.getTextureSubdiv(); j++)
             {
-                settings.getBlockDir(i, j).mkdirs();
+                getBlockDirectory(i, j).mkdirs();
             }
         }
 
@@ -162,7 +189,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             maskDrawable.draw(fbo);
 
             // Debugging
-            File file = new File(settings.getCacheDirectory(), "debug.png");
+            File file = new File(cacheDirectory, "debug.png");
             fbo.getTextureReaderForColorAttachment(0).saveToFile("PNG", file);
 
             int[] mask = fbo.getTextureReaderForColorAttachment(0).readARGB();
@@ -211,7 +238,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private File getSampleLocationsFile()
     {
-        return new File(settings.getCacheDirectory(), "sampleLocations.txt");
+        return new File(cacheDirectory, "sampleLocations.txt");
     }
 
     private void writeSampleLocationsToFile() throws IOException
@@ -357,7 +384,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                             // Write the block image out to disk
                             ImageIO.write(blockImage, "PNG",
-                                new File(new File(settings.getCacheDirectory(), String.format("%d_%d", i, j)), pngFilename));
+                                new File(new File(cacheDirectory, String.format("%d_%d", i, j)), pngFilename));
 
                             // See derivations for x above
                             int ySampleStart = (int) Math.ceil((y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;

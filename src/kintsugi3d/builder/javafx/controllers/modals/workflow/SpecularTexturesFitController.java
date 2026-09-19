@@ -92,8 +92,9 @@ public class SpecularTexturesFitController extends ProjectSettingsControllerBase
 
         // Run as a graphics request that optimizes from scratch.
         // Automatically pulls settings from project settings.
-        SpecularFitRequest request = new SpecularFitRequest();
-        request.getSettings().setShouldOptimizeBasis(shouldOptimizeBasis());
+        SpecularFitRequest request = shouldOptimizeBasis() ?
+            SpecularFitRequest.createBasisAndTexturesOptimizationRequest() :
+            SpecularFitRequest.createReoptimizeTexturesRequest();
         Rendering.getRequestQueue().addGraphicsRequest(request);
 
         return true;

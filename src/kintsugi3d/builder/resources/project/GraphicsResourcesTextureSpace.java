@@ -31,7 +31,7 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.function.Supplier;
 
-public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesTextureSpace.class);
     /**

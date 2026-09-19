@@ -12,7 +12,7 @@
 package kintsugi3d.builder.export.simpleanimation;
 
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -23,7 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-public abstract class AnimationRequest implements ProgressMonitoredProjectGraphicsRequest
+public abstract class AnimationRequest implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private final int width;
     private final int height;

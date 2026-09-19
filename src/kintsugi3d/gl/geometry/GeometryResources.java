@@ -24,30 +24,27 @@ public class GeometryResources<ContextType extends Context<ContextType>>
 
     private final ContextType context;
 
-    /**
-     * The geometry for this instance that the vertex buffers were loaded from.
-     */
-    public final ReadonlyVertexGeometry geometry;
+    private final ReadonlyVertexGeometry geometry;
 
     /**
      * A vertex buffer containing vertex positions.
      */
-    public final VertexBuffer<ContextType> positionBuffer;
+    private final VertexBuffer<ContextType> positionBuffer;
 
     /**
      * A vertex buffer containing texture coordinates.
      */
-    public final VertexBuffer<ContextType> texCoordBuffer;
+    private final VertexBuffer<ContextType> texCoordBuffer;
 
     /**
      * A vertex buffer containing surface normals.
      */
-    public final VertexBuffer<ContextType> normalBuffer;
+    private final VertexBuffer<ContextType> normalBuffer;
 
     /**
      * A vertex buffer containing tangent vectors.
      */
-    public final VertexBuffer<ContextType> tangentBuffer;
+    private final VertexBuffer<ContextType> tangentBuffer;
 
     /**
      * Default constructor: create null object
@@ -108,6 +105,18 @@ public class GeometryResources<ContextType extends Context<ContextType>>
     public ContextType getContext()
     {
         return context;
+    }
+
+    @Override
+    public ReadonlyVertexGeometry getGeometry()
+    {
+        return geometry;
+    }
+
+    @Override
+    public ReadonlyVertexBuffer<ContextType> getPositionBuffer()
+    {
+        return positionBuffer;
     }
 
     @Override

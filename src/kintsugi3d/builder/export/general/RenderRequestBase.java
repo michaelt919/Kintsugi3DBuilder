@@ -12,8 +12,9 @@
 package kintsugi3d.builder.export.general;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.rendering.ProgressMonitoredProjectGraphicsRequest;
+import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.gl.core.*;
 
@@ -22,7 +23,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-abstract class RenderRequestBase implements ProgressMonitoredProjectGraphicsRequest
+abstract class RenderRequestBase implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();
@@ -135,19 +136,19 @@ abstract class RenderRequestBase implements ProgressMonitoredProjectGraphicsRequ
     }
 
     protected <ContextType extends Context<ContextType>> ProgramObject<ContextType> createProgram(
-        ReadonlyGraphicsResources<ContextType> resources) throws IOException
+        ShaderProgramFactory<ContextType> programFactory) throws IOException
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
 
         ProgramObject<ContextType> program =
-            resources.getShaderProgramBuilder()
+            programFactory.getShaderProgramBuilder()
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", settingsModel.getBoolean("pbrGeometricAttenuationEnabled"))
                 .define("FRESNEL_EFFECT_ENABLED", settingsModel.getBoolean("fresnelEnabled"))
                 .addShader(ShaderType.VERTEX, vertexShader)
                 .addShader(ShaderType.FRAGMENT, fragmentShader)
                 .createProgram();
 
-        resources.setupShaderProgram(program);
+        programFactory.setupShaderProgram(program);
 
         program.setUniform("weightExponent", settingsModel.getFloat("weightExponent"));
         program.setUniform("isotropyFactor", settingsModel.getFloat("isotropyFactor"));

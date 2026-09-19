@@ -17,7 +17,7 @@ import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -28,14 +28,14 @@ import java.util.Map;
 
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final ReadonlyGraphicsResources<ContextType> resources;
+    private final ShaderProgramFactory<ContextType> programFactory;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(ReadonlyGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraVisual(ShaderProgramFactory<ContextType> programFactory, SceneViewportModel sceneViewportModel)
     {
-        super(resources.getContext(), sceneViewportModel, "CameraVisual");
-        this.resources = resources;
+        super(programFactory.getContext(), sceneViewportModel, "CameraVisual");
+        this.programFactory = programFactory;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof GraphicsResourcesImageSpace)
+        if (programFactory instanceof GraphicsResourcesImageSpace)
         {
             View selectedView = viewSelection.getSelectedView();
             if (selectedView != null)
@@ -69,7 +69,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
                 Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
                 Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-                resources.setupShaderProgram(this.getProgram()); // sets viewImages
+                programFactory.setupShaderProgram(this.getProgram()); // sets viewImages
                 this.getProgram().setUniform("viewIndex", selectedView.getGPUViewIndex());
                 this.getProgram().setUniform("model_view",
                     cameraViewport.getView().times(snapViewInverse)

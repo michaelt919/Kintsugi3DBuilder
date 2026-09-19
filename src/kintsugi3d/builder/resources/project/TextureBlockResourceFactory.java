@@ -56,8 +56,8 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         try
         {
             return new GraphicsResourcesTextureSpace<>(sharedResources,
-                () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCache.getSettings().getBlockDir(i, j),
-                loadOptions, width, height, monitor);
+                () -> fullGeometryTextures.createViewportCopy(x, y, width, height),
+                imageCache.getBlockDirectory(i, j), loadOptions, width, height, monitor);
         }
         catch (IOException e)
         {

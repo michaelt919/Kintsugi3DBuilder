@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.fit.settings.BasisSettings;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
@@ -27,14 +27,14 @@ import java.util.stream.IntStream;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private final BasisSettings basisSettings;
+    private final ReadonlyBasisSettings basisSettings;
 
     private final List<DoubleVector3> diffuseAlbedos;
     private SimpleMatrix specularRed;
     private SimpleMatrix specularGreen;
     private SimpleMatrix specularBlue;
 
-    public SpecularDecompositionFromScratch(TextureResolution textureResolution, BasisSettings basisSettings)
+    public SpecularDecompositionFromScratch(TextureResolution textureResolution, ReadonlyBasisSettings basisSettings)
     {
         super(textureResolution, basisSettings.getBasisCount());
         this.basisSettings = basisSettings;

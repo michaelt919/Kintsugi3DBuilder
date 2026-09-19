@@ -19,7 +19,7 @@ import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 
 import java.util.Locale;
 
-public class ExportSettings
+public class ExportSettings implements ReadonlyExportSettings
 {
     private boolean combineWeights = true;
     private MaterialExporterFactory exporterFactory = Kintsugi3DViewerExporterFactory.getInstance();
@@ -31,6 +31,7 @@ public class ExportSettings
 
     private boolean openViewerOnceComplete = false;
 
+    @Override
     public boolean shouldSaveTextures()
     {
         return exportTextures;
@@ -41,6 +42,7 @@ public class ExportSettings
         this.exportTextures = exportTextures;
     }
 
+    @Override
     public boolean shouldAppendModelNameToTextures()
     {
         return appendModelNameToTextures;
@@ -51,6 +53,7 @@ public class ExportSettings
         this.appendModelNameToTextures = appendModelNameToTextures;
     }
 
+    @Override
     public String getTextureFormat()
     {
         return textureFormat;
@@ -61,6 +64,7 @@ public class ExportSettings
         this.textureFormat = textureFormat;
     }
 
+    @Override
     public boolean shouldCombineWeights()
     {
         return combineWeights;
@@ -71,6 +75,7 @@ public class ExportSettings
         this.combineWeights = combineWeights;
     }
 
+    @Override
     public boolean shouldGenerateLowResTextures()
     {
         return generateLowResTextures;
@@ -81,6 +86,7 @@ public class ExportSettings
         this.generateLowResTextures = generateLowResTextures;
     }
 
+    @Override
     public int getMinimumTextureResolution()
     {
         return minimumTextureResolution;
@@ -91,6 +97,7 @@ public class ExportSettings
         this.minimumTextureResolution = minimumTextureResolution;
     }
 
+    @Override
     public boolean shouldOpenViewerOnceComplete()
     {
         return openViewerOnceComplete;
@@ -101,6 +108,7 @@ public class ExportSettings
         this.openViewerOnceComplete = openViewerOnceComplete;
     }
 
+    @Override
     public MaterialExporterFactory getExporterFactory()
     {
         return exporterFactory;
@@ -111,6 +119,7 @@ public class ExportSettings
         this.exporterFactory = exporterFactory;
     }
 
+    @Override
     public void applyToExporter(ModelExporter exporter, ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> textureResources, String filename)
     {
         MaterialExporter materialExporter = exporterFactory.getExporter(textureResources);

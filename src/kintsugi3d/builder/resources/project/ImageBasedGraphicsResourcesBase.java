@@ -27,7 +27,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class GraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResourcesCacheable<ContextType>
+public abstract class ImageBasedGraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResourcesCacheable<ContextType>
 {
     private final GraphicsResourcesCommon<ContextType> commonResources;
 
@@ -36,7 +36,7 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
      */
     private final boolean ownerOfSharedResources;
 
-    GraphicsResourcesBase(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfSharedResources)
+    ImageBasedGraphicsResourcesBase(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfSharedResources)
     {
         this.commonResources = commonResources;
         this.ownerOfSharedResources = ownerOfSharedResources;
@@ -104,10 +104,9 @@ public abstract class GraphicsResourcesBase<ContextType extends Context<ContextT
     }
 
     @Override
-    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
+    public ImageCache<ContextType> cache(ReadonlyImageCacheSettings settings, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
-        settings.setCacheFolderName(getViewSet().getUUID().toString());
-
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
 
         if (!cache.isInitialized())

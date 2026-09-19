@@ -9,22 +9,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.rendering;
+package kintsugi3d.gl.core;
 
-import kintsugi3d.gl.core.Context;
-
-/**
- * An interface for an executable that requires a loaded model instance.
- */
-public interface ProjectGraphicsRequest
+public interface ReadonlyVertexBuffer<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
     /**
-     * The entry point for the executable.
-     * @param instance The implementation of Kintsugi 3D Builder's renderer.
-     *                   This can be used to dynamically generate renders of the current view,
-     *                   or just to access the GraphicsResources and the graphics Context.
-     * @param <ContextType> The type of the graphics context that the renderer implementation uses.
-     * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
+     * Gets the number of vertices in the vertex buffer.
+     * @return The number of vertices.
      */
-    <ContextType extends Context<ContextType>> void executeRequest(ImageBasedRenderable<ContextType> instance) throws Exception;
+    int count();
 }

@@ -20,7 +20,7 @@ import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
-public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>> extends GraphicsResourcesBase<ContextType>
+public class GraphicsResourcesAnalytic<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     public GraphicsResourcesAnalytic(ContextType context, ViewSet viewSet, VertexGeometry geometry)
     {

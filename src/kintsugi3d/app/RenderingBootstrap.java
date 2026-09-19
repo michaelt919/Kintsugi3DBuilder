@@ -169,7 +169,7 @@ public final class RenderingBootstrap
 
         ToolBindingModel toolBindingModel = createToolBinding();
 
-        RenderableInstanceManager<OpenGLContext> instanceManager = new RenderableInstanceManager<>(context);
+        ImageBasedRenderableManager<OpenGLContext> instanceManager = new ImageBasedRenderableManager<>(context);
         instanceManager.setObjectModel(objectModel);
         instanceManager.setCameraModel(cameraModel);
         instanceManager.setLightingModel(lightingModel);
@@ -393,7 +393,7 @@ public final class RenderingBootstrap
                     // Quit after the request finishes
                     // Use ProjectGraphicsRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
                     // once the project has finished loading
-                    requestQueue.addBackgroundGraphicsRequest(new ProjectGraphicsRequest()
+                    requestQueue.addBackgroundGraphicsRequest(new ImageBasedGraphicsRequest()
                     {
                         @Override
                         public <ContextType extends Context<ContextType>> void executeRequest(ImageBasedRenderable<ContextType> instance)

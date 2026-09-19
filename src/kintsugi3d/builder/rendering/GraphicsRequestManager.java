@@ -66,7 +66,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void addBackgroundGraphicsRequest(ProjectGraphicsRequest request)
+    public void addBackgroundGraphicsRequest(ImageBasedGraphicsRequest request)
     {
         if (renderableManager.getMainRenderable() == null)
         {
@@ -115,7 +115,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public void addGraphicsRequest(ProgressMonitoredProjectGraphicsRequest request)
+    public void addGraphicsRequest(ProgressMonitoredImageBasedGraphicsRequest request)
     {
         if (this.progressMonitor.isConflictingProcess())
         {
