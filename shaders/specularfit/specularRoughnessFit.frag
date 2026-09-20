@@ -34,6 +34,7 @@ void main()
         discard;
     }
 
+#if BASIS_COUNT > 0
     vec3 f0 = vec3(0); // peak specular i.e. f(x0), not Fresnel
 
     float weights[BASIS_COUNT];
@@ -74,4 +75,9 @@ void main()
 
     specularColor = vec4(linearToSRGB(fresnel), 1.0);
     sqrtRoughness = vec4(vec3(sqrt(roughness)), 1.0);
+#else
+    // No specularity
+    specularColor = vec4(0.0, 0.0, 0.0, 1.0);
+    sqrtRoughness = vec4(1.0);
+#endif
 }

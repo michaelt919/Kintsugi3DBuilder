@@ -28,12 +28,12 @@ uniform sampler1DArray basisFunctions;
 
 layout(std140) uniform DiffuseColors
 {
-    #if BASIS_COUNT > 0
+#if BASIS_COUNT > 0
     vec4 diffuseColors[BASIS_COUNT];
-    #else
+#else
     // Prevent Errors being thrown if all materials are disabled/deleted
     vec4 diffuseColors[1];
-    #endif
+#endif
 };
 
 vec3 getMFDEstimateRaw(float w)
