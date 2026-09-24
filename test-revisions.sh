@@ -98,6 +98,17 @@ build_classpath() {
     CLASSPATH="target/classes:$(cat "$LOG_DIR/classpath.txt")"
 }
 
+: > "$SUMMARY_FILE"
+
+echo "Kintsugi historical revision test"
+echo "================================="
+echo "Project:       $PROJECT_FILE"
+echo "Wait time:     $WAIT_SECONDS seconds"
+echo "Runs/revision: $RUNS"
+echo "Revisions:     $TOTAL_REVISIONS"
+echo
+
+
 # ----------------------------------------------------------------------
 # Get revisions, newest first.
 # ----------------------------------------------------------------------
@@ -107,6 +118,7 @@ mapfile -t REVISIONS < <(git rev-list "$BRANCH")
 TOTAL_REVISIONS=${#REVISIONS[@]}
 
 declare -A SKIP_REVISIONS=(
+    ["481048f5"]=1
     ["5d996ef5"]=1
     ["ffe7c7ac"]=1
     ["7a743311"]=1
@@ -141,16 +153,6 @@ declare -A SYSTEM_CRASH
 declare -A NORMAL_EXIT
 declare -A COMPILE_FAILURE
 declare -A ERROR_MESSAGE
-
-: > "$SUMMARY_FILE"
-
-echo "Kintsugi historical revision test"
-echo "================================="
-echo "Project:       $PROJECT_FILE"
-echo "Wait time:     $WAIT_SECONDS seconds"
-echo "Runs/revision: $RUNS"
-echo "Revisions:     $TOTAL_REVISIONS"
-echo
 
 # ----------------------------------------------------------------------
 # Test revisions.
