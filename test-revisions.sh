@@ -110,6 +110,13 @@ if (( REVISION_LIMIT < TOTAL_REVISIONS )); then
     TOTAL_REVISIONS=$REVISION_LIMIT
 fi
 
+declare -A SKIP_REVISIONS=(
+    ["7a743311"]=1
+    ["b1dc403a"]=1
+    ["343d0608"]=1
+    ["ac263f12"]=1
+)
+
 # ----------------------------------------------------------------------
 # Per-revision counters.
 # ----------------------------------------------------------------------
@@ -139,6 +146,11 @@ for ((i=0; i<TOTAL_REVISIONS; i++)); do
 
     REVISION="${REVISIONS[$i]}"
     SHORT_REVISION="${REVISION:0:8}"
+
+    if [[ -n "${SKIP_REVISIONS[$SHORT_REVISION]+x}" ]]; then
+        echo "$SHORT_REVISION: skipped"
+        continue
+    fi
 
     echo
     echo "============================================================"
