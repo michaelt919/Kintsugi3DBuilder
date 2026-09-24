@@ -111,13 +111,15 @@ TOTAL_REVISIONS=${#REVISIONS[@]}
 
 echo "Kintsugi historical revision test"
 echo "================================="
-echo "Project:       $PROJECT_FILE"
-echo "Wait time:     $WAIT_SECONDS seconds"
-echo "Runs/revision: $RUNS"
-echo "Revisions:     $TOTAL_REVISIONS"
+echo "Project:        $PROJECT_FILE"
+echo "Wait time:      $WAIT_SECONDS seconds"
+echo "Runs/revision:  $RUNS"
+echo "Revision limit: $REVISION_LIMIT"
+echo "Max revisions:  $TOTAL_REVISIONS"
 echo
 
 declare -A SKIP_REVISIONS=(
+    ["d1a7b2b3"]=1
     ["e9f896bf"]=1
     ["481048f5"]=1
     ["5d996ef5"]=1
