@@ -197,7 +197,8 @@ for ((i=0; i<TOTAL_REVISIONS; i++)); do
 
         "$JAVA_HOME/bin/java" -cp "$CLASSPATH" \
             "$MAIN_CLASS" "$PROJECT_FILE" \
-            > >(tee "$RUN_LOG") 2>&1 &
+            #> >(tee "$RUN_LOG") 2>&1 &
+            >"$RUN_LOG" 2>&1 &
 
         PID=$!
 
@@ -341,7 +342,7 @@ for ((i=0; i<TOTAL_REVISIONS; i++)); do
     # Revision summary.
     # --------------------------------------------------------------
 
-    SUMMARY_LINE="$SHORT_REVISION: still running ${STILL_RUNNING[$REVISION]}, exception ${JAVA_EXCEPTION[$REVISION]}, system crash ${SYSTEM_CRASH[$REVISION]}, normal exit ${NORMAL_EXIT[$REVISION]}"
+    SUMMARY_LINE="$SHORT_REVISION: still running ${STILL_RUNNING[$REVISION]}, error log ${ERROR_MESSAGE[$REVISION]}, exception ${JAVA_EXCEPTION[$REVISION]}, system crash ${SYSTEM_CRASH[$REVISION]}, normal exit ${NORMAL_EXIT[$REVISION]}"
 
     echo
     echo "$SUMMARY_LINE"
@@ -362,7 +363,7 @@ echo "============================================================"
 printf "%-12s %12s %12s %12s %12s %12s %12s\n" \
     "Revision" \
     "Running" \
-    "ERROR" \
+    "Error log" \
     "Exception" \
     "Sys. Crash" \
     "Normal Exit" \
