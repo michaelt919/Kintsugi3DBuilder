@@ -76,6 +76,8 @@ cleanup() {
     if [[ -n "$ORIGINAL_BRANCH" ]]; then
         git checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1 || true
     fi
+
+    chmod +x test-revisions.sh
 }
 
 trap cleanup EXIT INT TERM
