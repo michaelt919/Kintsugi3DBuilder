@@ -91,6 +91,9 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
         {
             weightResources.deleteWeightMap(deleted.getGPUIndex());
 
+            // Need to refresh GPU indices before proceeding.
+            refreshGraphicsResources();
+
             try
             {
                 ViewSet viewSet = Global.io().getLoadedViewSet();
@@ -109,8 +112,6 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
                 LOG.error("An filesystem error occurred while deleting the basis material.", e);
             }
         }
-
-        refreshGraphicsResources();
         return deleted;
     }
 
