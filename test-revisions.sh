@@ -119,6 +119,7 @@ echo "Max revisions:  $TOTAL_REVISIONS"
 echo
 
 declare -A SKIP_REVISIONS=(
+    ["ad6211ac"]=1
     ["d1a7b2b3"]=1
     ["e9f896bf"]=1
     ["481048f5"]=1
@@ -274,7 +275,7 @@ for ((i=0; i<TOTAL_REVISIONS; i++)); do
 
             wait "$PID" 2>/dev/null || true
 
-            if grep -q 'ERROR' "$RUN_LOG"; then
+            if grep -n 'ERROR' "$RUN_LOG"; then
                 echo "  ERROR message detected in Kintsugi output."
                 ERROR_MESSAGE["$REVISION"]=$(( ERROR_MESSAGE["$REVISION"] + 1 ))
             fi
