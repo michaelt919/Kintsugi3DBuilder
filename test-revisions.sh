@@ -106,16 +106,30 @@ mapfile -t REVISIONS < <(git rev-list "$BRANCH")
 
 TOTAL_REVISIONS=${#REVISIONS[@]}
 
-if (( REVISION_LIMIT < TOTAL_REVISIONS )); then
-    TOTAL_REVISIONS=$REVISION_LIMIT
-fi
-
 declare -A SKIP_REVISIONS=(
+    ["5d996ef5"]=1
+    ["ffe7c7ac"]=1
     ["7a743311"]=1
     ["b1dc403a"]=1
     ["343d0608"]=1
     ["ac263f12"]=1
 )
+
+for REVISION in "${REVISIONS[@]}"; do
+    SHORT_REVISION="${REVISION:0:8}"
+
+    if [[ -z "${SKIP_REVISIONS[$SHORT_REVISION]+x}" ]]; then
+        TEST_REVISIONS+=("$REVISION")
+    else
+        echo "$SHORT_REVISION: skipped"
+    fi
+
+    if (( ${#TEST_REVISIONS[@]} >= REVISION_LIMIT )); then
+        break
+    fi
+done
+
+TOTAL_REVISIONS=${#TEST_REVISIONS[@]}
 
 # ----------------------------------------------------------------------
 # Per-revision counters.
@@ -144,13 +158,14 @@ echo
 
 for ((i=0; i<TOTAL_REVISIONS; i++)); do
 
-    REVISION="${REVISIONS[$i]}"
+    REVISION="${TEST_REVISIONS[$i]}"
     SHORT_REVISION="${REVISION:0:8}"
 
-    if [[ -n "${SKIP_REVISIONS[$SHORT_REVISION]+x}" ]]; then
-        echo "$SHORT_REVISION: skipped"
-        continue
-    fi
+    STILL_RUNNING["$REVISION"]=0
+    JAVA_EXCEPTION["$REVISION"]=0
+    SYSTEM_CRASH["$REVISION"]=0
+    NORMAL_EXIT["$REVISION"]=0
+    ERROR_MESSAGE["$REVISION"]=0
 
     echo
     echo "============================================================"
@@ -184,12 +199,6 @@ for ((i=0; i<TOTAL_REVISIONS; i++)); do
         COMPILE_FAILURE["$REVISION"]=1
         continue
     fi
-
-    STILL_RUNNING["$REVISION"]=0
-    JAVA_EXCEPTION["$REVISION"]=0
-    SYSTEM_CRASH["$REVISION"]=0
-    NORMAL_EXIT["$REVISION"]=0
-    ERROR_MESSAGE["$REVISION"]=0
 
     # --------------------------------------------------------------
     # Run application repeatedly.
@@ -397,7 +406,7 @@ printf "%-12s %12s %12s %12s %12s %12s %12s\n" \
 
 for ((i=0; i<TOTAL_REVISIONS; i++)); do
 
-    REVISION="${REVISIONS[$i]}"
+    REVISION="${TEST_REVISIONS[$i]}"
     SHORT_REVISION="${REVISION:0:8}"
 
     if [[ -n "${COMPILE_FAILURE[$REVISION]+x}" ]]; then
