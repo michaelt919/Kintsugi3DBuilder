@@ -199,8 +199,11 @@ for ((i=0; i<TOTAL_REVISIONS; i++)); do
 
         "$JAVA_HOME/bin/java" -cp "$CLASSPATH" \
             "$MAIN_CLASS" "$PROJECT_FILE" \
-            #> >(tee "$RUN_LOG") 2>&1 &
             >"$RUN_LOG" 2>&1 &
+
+#         "$JAVA_HOME/bin/java" -cp "$CLASSPATH" \
+#             "$MAIN_CLASS" "$PROJECT_FILE" \
+#             > >(tee "$RUN_LOG") 2>&1 &
 
         PID=$!
 
