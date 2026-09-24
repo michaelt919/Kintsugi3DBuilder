@@ -276,7 +276,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     {
         // Save the unpacked weight maps for reloading the project in the future
         try (WeightImageWriter<ContextType> weightImageWriter =
-                 new WeightImageWriter<>(getContext(), TextureResolution.of(weightMaps), 1))
+                 new WeightImageWriter<>(getContext(), TextureResolution.of(weightMaps), weightsPerImage))
         {
             int fileCount = (basis.getEnabledMaterialCount() + weightsPerImage - 1) / weightsPerImage;
             weightImageWriter.saveImages(this, materialCount, format, outputDirectory,
