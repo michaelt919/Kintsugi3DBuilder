@@ -98,6 +98,15 @@ build_classpath() {
     CLASSPATH="target/classes:$(cat "$LOG_DIR/classpath.txt")"
 }
 
+
+# ----------------------------------------------------------------------
+# Get revisions, newest first.
+# ----------------------------------------------------------------------
+
+mapfile -t REVISIONS < <(git rev-list "$BRANCH")
+
+TOTAL_REVISIONS=${#REVISIONS[@]}
+
 : > "$SUMMARY_FILE"
 
 echo "Kintsugi historical revision test"
@@ -108,16 +117,8 @@ echo "Runs/revision: $RUNS"
 echo "Revisions:     $TOTAL_REVISIONS"
 echo
 
-
-# ----------------------------------------------------------------------
-# Get revisions, newest first.
-# ----------------------------------------------------------------------
-
-mapfile -t REVISIONS < <(git rev-list "$BRANCH")
-
-TOTAL_REVISIONS=${#REVISIONS[@]}
-
 declare -A SKIP_REVISIONS=(
+    ["e9f896bf"]=1
     ["481048f5"]=1
     ["5d996ef5"]=1
     ["ffe7c7ac"]=1
