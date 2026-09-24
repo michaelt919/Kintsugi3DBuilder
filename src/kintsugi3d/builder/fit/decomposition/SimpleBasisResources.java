@@ -22,6 +22,7 @@ public class SimpleBasisResources<ContextType extends Context<ContextType>> exte
         // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
         super(context, materialBasis.getMaterialCount(), materialBasis.getSpecularResolution());
         this.materialBasis = materialBasis;
+        refreshGraphicsResources();
     }
 
     @Override

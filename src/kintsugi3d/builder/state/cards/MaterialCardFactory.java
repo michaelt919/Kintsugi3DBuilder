@@ -65,7 +65,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
 
         TextureResources<?> resources = getInstance().getResources().getTextureResources();
 
-        return new ShaderDataCard(name, String.format("Material %s", name), shader, thumbnailPath, Map.of(),
+        return new ShaderDataCard(name, material.getFriendlyName(), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
                     "Highlight Material", () ->

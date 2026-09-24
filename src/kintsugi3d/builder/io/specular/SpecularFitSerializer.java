@@ -209,7 +209,7 @@ public final class SpecularFitSerializer
                 String currentTag = in.next();
                 while (in.hasNext()) // stop at end of file
                 {
-                    String[] tagSplit = currentTag.split("#", 1);
+                    String[] tagSplit = currentTag.split("#", 2);
                     String tagType = tagSplit[0];
                     String name = tagSplit[1];
 

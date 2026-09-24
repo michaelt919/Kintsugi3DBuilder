@@ -35,18 +35,34 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
         // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
         super(context, basis.getMaterialCount(), basis.getSpecularResolution());
         this.basis = basis;
+
+        // Assign GPU indices before loading weightmaps
+        refreshGraphicsResources();
+
         this.weightResources = new BasisWeightResources<>(context,
             textureResolution.width, textureResolution.height, basis);
-        refreshGraphicsResources();
     }
 
-    private MutableBasisResources(ContextType context, MutableMaterialBasis basis, File priorSolutionDirectory) throws IOException
+    private MutableBasisResources(ContextType context, MutableMaterialBasis basis, File priorSolutionDirectory)
     {
         // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
         super(context, basis.getMaterialCount(), basis.getSpecularResolution());
         this.basis = basis;
-        this.weightResources = BasisWeightResources.loadFromPriorSolution(context, priorSolutionDirectory, basis);
+
+        // Assign GPU indices before loading weightmaps
         refreshGraphicsResources();
+
+        BasisWeightResources<ContextType> loadedWeightResources = null;
+        try
+        {
+            loadedWeightResources = BasisWeightResources.loadFromPriorSolution(context, priorSolutionDirectory, basis);
+        }
+        catch (IOException e)
+        {
+            LOG.error("Error loading weightmap resources from {}", priorSolutionDirectory, e);
+        }
+        this.weightResources = loadedWeightResources;
+
     }
 
     @Override
@@ -132,19 +148,25 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
      * @throws IOException If a part of the solution cannot be loaded form file.
      */
     public static <ContextType extends Context<ContextType>> MutableBasisResources<ContextType> loadFromPriorSolution(
-        ContextType context, File priorSolutionDirectory) throws IOException
+        ContextType context, File priorSolutionDirectory)
     {
-        MutableMaterialBasis basis =
-            SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
+        try
+        {
+            MutableMaterialBasis basis =
+                SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 
-        if (basis != null)
-        {
-            MutableBasisResources<ContextType> resources = new MutableBasisResources<>(context, basis, priorSolutionDirectory);
-            resources.refreshGraphicsResources();
-            return resources;
+            if (basis != null)
+            {
+                return new MutableBasisResources<>(context, basis, priorSolutionDirectory);
+            }
+            else
+            {
+                return null;
+            }
         }
-        else
+        catch (IOException e)
         {
+            LOG.error("Error loading basis functions from {}", priorSolutionDirectory, e);
             return null;
         }
     }

@@ -18,14 +18,19 @@ import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.gl.core.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
 public class WeightmapTextureInfo extends TextureInfo
 {
+    private static final Logger LOG = LoggerFactory.getLogger(WeightmapTextureInfo.class);
+
     private final BasisMaterialInfo material;
 
     public WeightmapTextureInfo(BasisMaterialInfo material)
@@ -55,8 +60,20 @@ public class WeightmapTextureInfo extends TextureInfo
     @Override
     public ImageReplacer getReplaceData(ImageBasedRenderable<?> instance)
     {
-        return new WeightmapReplacer(instance.getResources().getTextureResources(), material,
-            new File(Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
-                BasisWeightResources.getUnpackedWeightMapFilename(material.getName())));
+        File supportingFilesDirectory = Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory();
+        try
+        {
+            return new WeightmapReplacer(instance.getResources().getTextureResources(), material,
+                BasisWeightResources.findWeightmap(
+                    supportingFilesDirectory, material.getName()));
+        }
+        catch (FileNotFoundException e)
+        {
+            LOG.error("Could not find weightmap to be replaced: {}", material.getName(), e);
+
+            // Return an object with the expected path anyways and attempt to recover.
+            return new WeightmapReplacer(instance.getResources().getTextureResources(), material,
+                new File(supportingFilesDirectory, BasisWeightResources.getUnpackedWeightMapFilename(material.getName())));
+        }
     }
 }

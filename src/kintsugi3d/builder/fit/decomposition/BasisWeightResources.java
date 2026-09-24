@@ -20,10 +20,12 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.IntVector2;
+import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.IntFunction;
@@ -150,6 +152,41 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         }
     }
 
+    public static File findWeightmap(File solutionDirectory, String materialName) throws FileNotFoundException
+    {
+        File file = new File(solutionDirectory, getUnpackedWeightMapFilename(materialName));
+
+        try
+        {
+            return ImageFinder.getInstance().findImageFile(file);
+        }
+        catch (FileNotFoundException e)
+        {
+            try
+            {
+                // Fallback for loading older projects that may not have had zero-padding in basisFunctions.csv
+                int index = Integer.parseInt(materialName);
+                File altFile = ImageFinder.getInstance().tryFindImageFile(
+                    new File(solutionDirectory, getUnpackedWeightMapFilename(String.format("%02d", index))));
+
+                if (altFile != null)
+                {
+                    return altFile;
+                }
+                else
+                {
+                    // re-throw the original exception if the fallback failed.
+                    throw e;
+                }
+            }
+            catch (NumberFormatException ignored)
+            {
+                // re-throw the original exception if the fallback failed.
+                throw e;
+            }
+        }
+    }
+
     /**
      * Loads weight maps and basis functions from a prior solution.
      * Does not load diffuse basis colors, so a diffuse map should instead be optimized to cover diffuse.
@@ -159,10 +196,16 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
      * @throws IOException If a part of the solution cannot be loaded form file.
      */
     public static <ContextType extends Context<ContextType>> BasisWeightResources<ContextType> loadFromPriorSolution(
-        ContextType context, File priorSolutionDirectory, MaterialBasis basis) throws IOException
+        ContextType context, File priorSolutionDirectory, MaterialBasis basis)
+            throws IOException
     {
-        IntVector2 dimensions = ImageHelper.dimensionsOf(
-            new File(priorSolutionDirectory, getUnpackedWeightMapFilename(basis.getIndexableMaterialList().get(0).getName())));
+        String name = basis.getMaterials().stream()
+            .filter(BasisMaterialInfo::isEnabled)
+            .findAny().orElseThrow()
+            .getName();
+
+        IntVector2 dimensions = ImageHelper.dimensionsOf(findWeightmap(priorSolutionDirectory, name));
+
         int width = dimensions.x;
         int height = dimensions.y;
 
@@ -179,10 +222,16 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
         for (BasisMaterialInfo material : basis.getMaterials())
         {
-            // Load weight maps
-            resources.weightMaps.loadLayer(material.getGPUIndex(),
-                new File(priorSolutionDirectory, getUnpackedWeightMapFilename(material.getName())),
-                true);
+            File file = findWeightmap(priorSolutionDirectory, material.getName());
+            try
+            {
+                // Load weight maps
+                resources.weightMaps.loadLayer(material.getGPUIndex(), file, true);
+            }
+            catch (IOException e)
+            {
+                LOG.error("Error loading weight map: {}", file, e);
+            }
         }
 
         return resources;
@@ -275,8 +324,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
      */
     public void replaceWeightMapWithDefaultFile(String materialName, File parentDirectory) throws IOException
     {
-        replaceWeightMapWithSpecificFile(materialName,
-            new File(parentDirectory, getUnpackedWeightMapFilename(materialName)));
+        replaceWeightMapWithSpecificFile(materialName, findWeightmap(parentDirectory, materialName));
     }
 
     /**

@@ -94,7 +94,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
         ContextType context, MutableBasisResources<ContextType> basisResources, File priorSolutionDirectory)
         throws IOException
     {
-        super(context, basisResources, basisResources.getWeightResources(), priorSolutionDirectory);
+        super(context, basisResources, basisResources != null ? basisResources.getWeightResources() : null, priorSolutionDirectory);
 
         mutableBasisResources = basisResources;
 

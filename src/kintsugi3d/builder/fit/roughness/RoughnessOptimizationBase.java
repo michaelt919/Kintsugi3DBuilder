@@ -57,7 +57,10 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     @Override
     public final void setInputWeights(ReadonlyBasisWeightResources<ContextType> weightResources)
     {
-        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
+        if (weightResources != null)
+        {
+            weightResources.useWithShaderProgram(specularRoughnessFitProgram);
+        }
     }
 
     @Override
