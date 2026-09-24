@@ -13,9 +13,6 @@ package kintsugi3d.builder.fit.settings;
 
 public interface ReadonlyBasisSettings
 {
-    int getBasisCount();
-
-    int getDisabledBasisCount();
-
+    int getMaterialCount();
     int getBasisResolution();
 }

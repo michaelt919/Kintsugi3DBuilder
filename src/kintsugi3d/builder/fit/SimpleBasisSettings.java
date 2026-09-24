@@ -15,27 +15,19 @@ import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 
 public class SimpleBasisSettings implements ReadonlyBasisSettings
 {
-    private final int basisCount;
-    private final int disabledBasisCount;
+    private final int materialCount;
     private final int basisResolution;
 
-    public SimpleBasisSettings(int basisCount, int disabledBasisCount, int basisResolution)
+    public SimpleBasisSettings(int materialCount, int basisResolution)
     {
-        this.basisCount = basisCount;
-        this.disabledBasisCount = disabledBasisCount;
+        this.materialCount = materialCount;
         this.basisResolution = basisResolution;
     }
 
     @Override
-    public int getBasisCount()
+    public int getMaterialCount()
     {
-        return this.basisCount;
-    }
-
-    @Override
-    public int getDisabledBasisCount()
-    {
-        return disabledBasisCount;
+        return this.materialCount;
     }
 
     @Override

@@ -169,27 +169,27 @@ public final class RenderingBootstrap
 
         ToolBindingModel toolBindingModel = createToolBinding();
 
-        ImageBasedRenderableManager<OpenGLContext> instanceManager = new ImageBasedRenderableManager<>(context);
-        instanceManager.setObjectModel(objectModel);
-        instanceManager.setCameraModel(cameraModel);
-        instanceManager.setLightingModel(lightingModel);
-        instanceManager.setUserShaderModel(activeShaderModel);
-        instanceManager.setCameraViewListModel(viewListModel);
-        instanceManager.setSettingsModel(settingsModel);
+        ImageBasedRenderableManager<OpenGLContext> renderableManager = new ImageBasedRenderableManager<>(context);
+        renderableManager.setObjectModel(objectModel);
+        renderableManager.setCameraModel(cameraModel);
+        renderableManager.setLightingModel(lightingModel);
+        renderableManager.setUserShaderModel(activeShaderModel);
+        renderableManager.setCameraViewListModel(viewListModel);
+        renderableManager.setSettingsModel(settingsModel);
 
         // Replace the temporary sentinel with the actual scene viewport from the instance manager.
-        SCENE_VIEWPORT_WRAPPER.setSceneViewport(instanceManager.getSceneViewport());
+        SCENE_VIEWPORT_WRAPPER.setSceneViewport(renderableManager.getSceneViewport());
 
         // Create a new application to run our event loop and give it the WindowImpl for polling
         // of events and the OpenGL context.  The ULFRendererList provides the renderable.
-        InteractiveApplication app = InteractiveGraphics.createApplication(canvas, context, instanceManager);
+        InteractiveApplication app = InteractiveGraphics.createApplication(canvas, context, renderableManager);
         app.setFPSCap(60.0); // TODO make this configurable
 
-        app.addRefreshable(instanceManager.getRenderViews()); // i.e. views in carousel that also need to be in the refresh loop
+        app.addRefreshable(renderableManager.getRenderViews()); // i.e. views in carousel that also need to be in the refresh loop
 
         // Pass reference to instance manager to other components as needed.
-        ioModel.setLoadingHandler(instanceManager);
-        Rendering.initialize(context, instanceManager);
+        ioModel.setLoadingHandler(renderableManager);
+        Rendering.initialize(context, renderableManager);
 
         // Allow frontend to react to IO events
         JavaFXApplication.getState().getProjectModel().registerIOListeners();
@@ -200,7 +200,7 @@ public final class RenderingBootstrap
             .setObjectModel(objectModel)
             .setSettingsModel(settingsModel)
             .setToolBindingModel(toolBindingModel)
-            .setSceneViewport(instanceManager.getSceneViewport())
+            .setSceneViewport(renderableManager.getSceneViewport())
             .build();
 
         canvasListener.addToCanvas(canvas);
@@ -214,7 +214,7 @@ public final class RenderingBootstrap
                 try
                 {
                     // reload program
-                    instanceManager.getMainRenderable().reloadShaders();
+                    renderableManager.getMainRenderable().reloadShaders();
                 }
                 catch (RuntimeException e)
                 {

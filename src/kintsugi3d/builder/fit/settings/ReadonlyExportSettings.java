@@ -24,8 +24,6 @@ public interface ReadonlyExportSettings
 
     String getTextureFormat();
 
-    boolean shouldCombineWeights();
-
     boolean shouldGenerateLowResTextures();
 
     int getMinimumTextureResolution();

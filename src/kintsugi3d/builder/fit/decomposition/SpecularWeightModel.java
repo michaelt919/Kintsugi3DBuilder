@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,6 +15,7 @@ import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.LeastSquaresModel;
 
+import java.util.List;
 import java.util.function.IntFunction;
 
 import static java.lang.Math.PI;
@@ -68,33 +69,37 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
         int m2 = m1 + 1;
         double t = mExact - m1;
 
+        List<? extends BasisMaterialInfo> materials = solution.getMaterialBasis().getIndexableMaterialList();
+
         return b ->
         {
+            BasisMaterialInfo material = materials.get(b);
+
             // Evaluate the basis BRDF.
             // This will run a lot of times so write out vector math operations
             // to avoid unnecessary allocation of Vector objects
             if (m1 < specularResolution)
             {
                 return new DoubleVector3(
-                    solution.getDiffuseAlbedo(b).x / PI +
-                        (solution.getMaterialBasis().evaluateSpecularRed(b, m1) * (1 - t)
-                            + solution.getMaterialBasis().evaluateSpecularRed(b, m2) * t) * geomRatio,
-                    solution.getDiffuseAlbedo(b).y / PI +
-                        (solution.getMaterialBasis().evaluateSpecularGreen(b, m1) * (1 - t)
-                            + solution.getMaterialBasis().evaluateSpecularGreen(b, m2) * t) * geomRatio,
-                    solution.getDiffuseAlbedo(b).z / PI +
-                        (solution.getMaterialBasis().evaluateSpecularBlue(b, m1) * (1 - t)
-                            + solution.getMaterialBasis().evaluateSpecularBlue(b, m2) * t) * geomRatio);
+                    material.getDiffuseColor().x / PI +
+                        (material.evaluateSpecularRed(m1) * (1 - t)
+                            + material.evaluateSpecularRed(m2) * t) * geomRatio,
+                    material.getDiffuseColor().y / PI +
+                        (material.evaluateSpecularGreen(m1) * (1 - t)
+                            + material.evaluateSpecularGreen(m2) * t) * geomRatio,
+                    material.getDiffuseColor().z / PI +
+                        (material.evaluateSpecularBlue(m1) * (1 - t)
+                            + material.evaluateSpecularBlue(m2) * t) * geomRatio);
             }
             else
             {
                 return new DoubleVector3(
-                    solution.getDiffuseAlbedo(b).x / PI +
-                        solution.getMaterialBasis().evaluateSpecularRed(b, specularResolution) * geomRatio,
-                    solution.getDiffuseAlbedo(b).y / PI +
-                        solution.getMaterialBasis().evaluateSpecularGreen(b, specularResolution) * geomRatio,
-                    solution.getDiffuseAlbedo(b).z / PI +
-                        solution.getMaterialBasis().evaluateSpecularBlue(b, specularResolution) * geomRatio);
+                    material.getDiffuseColor().x / PI +
+                        material.evaluateSpecularRed(specularResolution) * geomRatio,
+                    material.getDiffuseColor().y / PI +
+                        material.evaluateSpecularGreen(specularResolution) * geomRatio,
+                    material.getDiffuseColor().z / PI +
+                        material.evaluateSpecularBlue(specularResolution) * geomRatio);
             }
         };
     }
@@ -102,7 +107,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     @Override
     public int getBasisFunctionCount()
     {
-        return solution.getMaterialBasis().getMaterialCount();
+        return solution.getMaterialBasis().getEnabledMaterialCount();
     }
 
     @Override

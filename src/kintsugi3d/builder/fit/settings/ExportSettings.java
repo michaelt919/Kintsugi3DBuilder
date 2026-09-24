@@ -16,12 +16,12 @@ import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.ModelExporter;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.gl.core.Context;
 
 import java.util.Locale;
 
 public class ExportSettings implements ReadonlyExportSettings
 {
-    private boolean combineWeights = true;
     private MaterialExporterFactory exporterFactory = Kintsugi3DViewerExporterFactory.getInstance();
     private boolean exportTextures = false;
     private boolean appendModelNameToTextures = false;
@@ -62,17 +62,6 @@ public class ExportSettings implements ReadonlyExportSettings
     public void setTextureFormat(String textureFormat)
     {
         this.textureFormat = textureFormat;
-    }
-
-    @Override
-    public boolean shouldCombineWeights()
-    {
-        return combineWeights;
-    }
-
-    public void setShouldCombineWeights(boolean combineWeights)
-    {
-        this.combineWeights = combineWeights;
     }
 
     @Override
@@ -120,12 +109,11 @@ public class ExportSettings implements ReadonlyExportSettings
     }
 
     @Override
-    public void applyToExporter(ModelExporter exporter, ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> textureResources, String filename)
+    public void applyToExporter(ModelExporter exporter, ReadonlyTextureResources<? extends Context<?>> textureResources, String filename)
     {
         MaterialExporter materialExporter = exporterFactory.getExporter(textureResources);
         exporter.setMaterialExporter(materialExporter);
         materialExporter.setFilename(filename);
-        materialExporter.setCombineWeights(combineWeights);
         materialExporter.setTextureFileFormat(textureFormat);
 
         if (generateLowResTextures)

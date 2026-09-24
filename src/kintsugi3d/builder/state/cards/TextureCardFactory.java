@@ -14,6 +14,7 @@ package kintsugi3d.builder.state.cards;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.rendering.Rendering;
@@ -158,9 +159,9 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
             ReadonlyBasisResources<? extends Context<?>> basisResources = texResources.getBasisResources();
             if (basisResources != null)
             {
-                for (int i = 0; i < basisResources.getBasisCount() + basisResources.getDisabledBasisCount(); i++)
+                for (BasisMaterialInfo material : basisResources.getBasis().getMaterials())
                 {
-                    ProjectDataCard card = createCard(new WeightmapTextureInfo(i));
+                    ProjectDataCard card = createCard(new WeightmapTextureInfo(material));
                     if (card != null)
                     {
                         textureCards.add(card);

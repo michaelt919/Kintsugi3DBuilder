@@ -61,7 +61,7 @@ public class ReoptimizeTexturesProcess extends SpecularFitProcess
             monitor.setStage(0, "Performing high-res fit...");
         }
 
-        MaterialBasis basis = original.getBasisResources().getBasis().copy();
+        MaterialBasis basis = original.getBasisResources().getBasis();
         return optimizeFullResTexturesWithCache(cache, monitor, original, basis, start);
     }
 

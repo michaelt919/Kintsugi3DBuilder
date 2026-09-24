@@ -40,7 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRequest
+public final class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
 
@@ -114,7 +114,6 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
         settings.getReconstructionSettings().setReconstructAll(false);
 
         // glTF export settings
-        settings.getExportSettings().setShouldCombineWeights(true);
         settings.getExportSettings().setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnProcessingComplete"));
 
         // Image cache settings
@@ -134,7 +133,7 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
         // Basis settings
         int basisResolution = projectSettings.getInt("basisResolution");
         settings.setBasisResolution(basisResolution);
-        settings.setBasisCount(projectSettings.getInt("basisCount"));
+        settings.setMaterialCount(projectSettings.getInt("basisCount"));
 
         // Specular settings
         int specularMinWidthDiscrete = Math.round(projectSettings.getFloat("specularMinWidthFrac") * basisResolution);
@@ -240,7 +239,7 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
                 // would be specified by the original resources.
                 ReadonlyBasisResources<ContextType> basisResources = specularFit.getBasisResources();
                 ReadonlyBasisSettings basisSettings = new SimpleBasisSettings(
-                    basisResources.getBasisCount(), basisResources.getDisabledBasisCount(), basisResources.getBasisResolution());
+                    basisResources.getActiveMaterialCount(), basisResources.getBasisResolution());
 
                 // Reconstruct images both from basis functions and from fitted roughness
                 ShaderProgramFactory<ContextType> programFactory =

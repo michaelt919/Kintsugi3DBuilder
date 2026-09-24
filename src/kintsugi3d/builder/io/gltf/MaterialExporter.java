@@ -16,6 +16,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +46,8 @@ public class MaterialExporter
     private String textureFilePrefix = "";
     private String textureFileFormat;
     private String filename;
-    private boolean combineWeights;
 
-    private ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> textureResources;
+    private ReadonlyTextureResources<? extends Context<?>> textureResources;
 
     private final Map<String, TextureExportSpecification> textures = new HashMap<>(StandardTexture.values().length);
 
@@ -63,16 +63,6 @@ public class MaterialExporter
     public final void setAsset(GltfAssetV2 asset)
     {
         this.asset = asset;
-    }
-
-    public void setCombineWeights(boolean combineWeights)
-    {
-        this.combineWeights = combineWeights;
-    }
-
-    public boolean shouldCombineWeights()
-    {
-        return this.combineWeights;
     }
 
     public void setFilename(String filename)
@@ -121,7 +111,7 @@ public class MaterialExporter
         return textureResources;
     }
 
-    public void setTextureResources(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> textureResources)
+    public void setTextureResources(ReadonlyTextureResources<? extends Context<?>> textureResources)
     {
         this.textureResources = textureResources;
     }
@@ -132,8 +122,6 @@ public class MaterialExporter
 
         for (Method method : this.getClass().getMethods()) // all methods in the current class and superclasses
         {
-            String texName;
-
             if (method.isAnnotationPresent(CustomTextureExport.class))
             {
                 supportedTextures.add(method.getAnnotation(CustomTextureExport.class).value());

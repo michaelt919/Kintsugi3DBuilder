@@ -10,22 +10,13 @@
  */
 
 package kintsugi3d.builder.fit.decomposition;
-
-import kintsugi3d.builder.core.texture.TextureResolution;
-
-public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
+public interface MutableMaterialBasis extends IndexAssignableMaterialBasis
 {
-    private final MaterialBasis materialBasis;
+    boolean isMaterialEnabled(String name);
 
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
-    {
-        super(textureResolution, materialBasis.getEnabledMaterialCount());
-        this.materialBasis = materialBasis;
-    }
+    BasisMaterialInfo deleteMaterial(String name);
 
-    @Override
-    public MaterialBasis getMaterialBasis()
-    {
-        return materialBasis;
-    }
+    BasisMaterialInfo disableMaterial(String name);
+
+    BasisMaterialInfo enableMaterial(String name);
 }

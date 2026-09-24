@@ -222,7 +222,7 @@ class ImageReconstructionTests
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
         BasisSettings basisSettings = new BasisOptimizationSettings();
-        basisSettings.setBasisCount(1);
+        basisSettings.setMaterialCount(1);
 
         SpecularFitResourcesWrapper<OpenGLContext> programFactory = new SpecularFitResourcesWrapper<>(true, basisSettings);
 
@@ -874,7 +874,7 @@ class ImageReconstructionTests
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
         BasisSettings basisSettings = new BasisOptimizationSettings();
-        basisSettings.setBasisCount(1);
+        basisSettings.setMaterialCount(1);
 
 
         try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry))

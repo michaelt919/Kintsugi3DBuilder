@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
@@ -49,27 +48,26 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void createImages(ReadonlyTextureResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(ReadonlyBasisResources<ContextType> basisResources, File outputDirectory) throws IOException
     {
-        specularFit.getBasisResources().useWithShaderProgram(program);
-        specularFit.getBasisWeightResources().useWithShaderProgram(program);
+        basisResources.useWithShaderProgram(program);
 
-        ReadonlyMaterialBasis basis = specularFit.getBasisResources().getBasis();
+        MaterialBasis basis = basisResources.getBasis();
 
-        // Save basis functions in image format.
-        for (int i = 0; i < basis.getMaterialCount() + basis.getDisabledMaterialCount(); i++)
+        // Save basis functions in image format.  Include disabled materials.
+        for (BasisMaterialInfo material : basis.getMaterials())
         {
-            drawable.program().setUniform("basisIndex", i);
-            drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
+            drawable.program().setUniform("basisIndex", material.getGPUIndex());
+            drawable.program().setUniform("diffuseColor", material.getDiffuseColor().asSinglePrecision());
             drawable.draw(framebuffer);
             framebuffer.getTextureReaderForColorAttachment(0)
-                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(Integer.parseInt(basis.getDisplayName(i)))));
+                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(material.getName())));
         }
     }
 
-    public static String getBasisImageFilename(int materialIndex)
+    public static String getBasisImageFilename(String materialName)
     {
-        return String.format("basis_%02d.png", materialIndex);
+        return String.format("basis_%s.png", materialName);
     }
 
     @Override

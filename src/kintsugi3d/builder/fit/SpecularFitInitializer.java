@@ -87,7 +87,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
             // Output for debugging
             LOG.info("Refined centers:");
-            for (int b = 0; b < basisSettings.getBasisCount(); b++)
+            for (int b = 0; b < basisSettings.getMaterialCount(); b++)
             {
                 LOG.info(centers.get(b).toString());
             }
@@ -111,7 +111,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             {
                 int bSelect = -1;
 
-                for (int b = 0; b < basisSettings.getBasisCount(); b++)
+                for (int b = 0; b < basisSettings.getMaterialCount(); b++)
                 {
                     if (solution.getWeights(p).get(b) > 0)
                     {

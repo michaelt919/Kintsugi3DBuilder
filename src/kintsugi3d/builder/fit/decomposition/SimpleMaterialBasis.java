@@ -15,186 +15,134 @@ import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-public class SimpleMaterialBasis implements MaterialBasis
+public class SimpleMaterialBasis implements MutableMaterialBasis
 {
-    private final List<BasisData> basisList;
-    private final List<BasisData> disabledBasisList;
+    /**
+     * Uses LinkedHashMap to preserve insertion order.
+     */
+    private final LinkedHashMap<String, MutableBasisMaterialInfo> basis;
 
-    private int materialCount;
-    private int disabledMaterialCount;
     private final int specularResolution;
 
-    public SimpleMaterialBasis(int materialCount, int specularResolution)
+    private int enabledMaterialCount;
+
+    SimpleMaterialBasis(DoubleVector3[] diffuseColors, List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis)
     {
-        this.basisList=new ArrayList<>(materialCount);
-        this.basisList.addAll(IntStream.range(0, materialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
-
-        this.disabledBasisList=new ArrayList<>(materialCount);
-
-        this.materialCount = materialCount;
-        this.disabledMaterialCount = 0;
-        this.specularResolution = specularResolution;
-    }
-
-    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    public SimpleMaterialBasis(DoubleVector3[] diffuseColors, List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis)
-    {
-        this.materialCount = redBasis.size();
-        this.disabledMaterialCount = 0;
+        this.enabledMaterialCount = redBasis.size();
         this.specularResolution = redBasis.get(0).length - 1;
 
-//        this.diffuseColors = new ArrayList<>(List.of(diffuseColors));
-        this.basisList = new ArrayList<>(materialCount);
-        this.basisList.addAll(IntStream.range(0, materialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setDiffuseColor(diffuseColors[i]));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setRedBasis(redBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setGreenBasis(greenBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setBlueBasis(blueBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setName(i));
+        this.basis = new LinkedHashMap<>(enabledMaterialCount);
 
-        this.disabledBasisList=new ArrayList<>(materialCount);
+        for (int b = 0; b < enabledMaterialCount; b++)
+        {
+            String name = String.format("%02d", b);
+            String friendlyName = String.format("Material %d", b);
+            this.basis.put(name, MutableBasisMaterialInfo.create(
+                name, friendlyName, diffuseColors[b], redBasis.get(b), greenBasis.get(b), blueBasis.get(b)));
+        }
     }
 
-    public SimpleMaterialBasis(List<BasisData> basisList, List<BasisData> disabledBasisList)
+    private SimpleMaterialBasis(LinkedHashMap<String, MutableBasisMaterialInfo> basis)
     {
-        this.materialCount = basisList.size();
-        this.disabledMaterialCount = disabledBasisList.size();
-        this.specularResolution = basisList.get(0).getRedBasis().length - 1;
-        this.basisList = basisList;
-        this.disabledBasisList = disabledBasisList;
+        this.basis = basis;
+        this.specularResolution = basis.values().stream().findAny().orElseThrow().getResolution();
+        this.enabledMaterialCount = (int)basis.values().stream().filter(BasisMaterialInfo::isEnabled).count();
     }
 
-    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    public SimpleMaterialBasis(List<Integer> names, List<DoubleVector3> diffuseColors,
-                               List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis,
-                               List<Integer> disabledNames, List<DoubleVector3> disabledDiffuseColors,
-                               List<double[]> disabledRedBasis, List<double[]> disabledGreenBasis, List<double[]> disabledBlueBasis)
+    /**
+     * Enabled basis materials will be automatically assigned a GPU index based on the traversal order of names.
+     * @param names
+     * @param disabledNames
+     * @param diffuseColors
+     * @param redBasis
+     * @param greenBasis
+     * @param blueBasis
+     * @param <KeyType>
+     */
+    public <KeyType> SimpleMaterialBasis(
+        Map<KeyType, String> names, Map<KeyType, String> disabledNames, Map<KeyType, DoubleVector3> diffuseColors,
+        Map<KeyType, double[]> redBasis, Map<KeyType, double[]> greenBasis, Map<KeyType, double[]> blueBasis)
     {
-        this.materialCount = redBasis.size();
-        this.specularResolution = redBasis.get(0).length - 1;
+        this.enabledMaterialCount = redBasis.size();
+        this.specularResolution = redBasis.values().stream().findAny().orElseThrow().length - 1;
 
-        this.basisList = new ArrayList<>(materialCount);
-        this.basisList.addAll(IntStream.range(0, materialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setDiffuseColor(diffuseColors.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setRedBasis(redBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setGreenBasis(greenBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setBlueBasis(blueBasis.get(i)));
-        IntStream.range(0, materialCount).forEach(i -> basisList.get(i).setName(names.get(i)));
+        this.basis = new LinkedHashMap<>(enabledMaterialCount);
 
-        this.disabledBasisList = new ArrayList<>(materialCount);
-        this.disabledMaterialCount = disabledRedBasis.size();
-        this.disabledBasisList.addAll(IntStream.range(0, disabledMaterialCount).mapToObj(b -> new BasisData()).collect(Collectors.toList()));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setDiffuseColor(disabledDiffuseColors.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setRedBasis(disabledRedBasis.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setGreenBasis(disabledGreenBasis.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setBlueBasis(disabledBlueBasis.get(i)));
-        IntStream.range(0, disabledMaterialCount).forEach(i -> disabledBasisList.get(i).setName(disabledNames.get(i)));
-        this.disabledBasisList.forEach(b -> b.setEnabled(false));
+        for (Entry<KeyType, String> entry : names.entrySet())
+        {
+            KeyType key = entry.getKey();
+            String name = entry.getValue();
+
+            basis.put(name, MutableBasisMaterialInfo.create(
+                name, getFriendlyName(name), diffuseColors.get(key), redBasis.get(key),  greenBasis.get(key), blueBasis.get(key)));
+        }
+
+        for (Entry<KeyType, String> entry : disabledNames.entrySet())
+        {
+            KeyType key = entry.getKey();
+            String name = entry.getValue();
+            basis.put(name, MutableBasisMaterialInfo.create(name, getFriendlyName(name), diffuseColors.get(key),
+                redBasis.get(key), greenBasis.get(key), blueBasis.get(key), false));
+        }
     }
 
-    public int getName(int index)
+    private static String getFriendlyName(String name)
     {
-        return getAllBasisData().get(index).getName();
+        try
+        {
+            // Try to simplify material number presentation and include the prefix "Material"
+            return String.format("Material %d", Integer.parseInt(name));
+        }
+        catch (NumberFormatException e)
+        {
+            return name;
+        }
     }
 
     @Override
-    public String getDisplayName(int cardIndex)
+    public Collection<? extends IndexAssignableBasisMaterialInfo> getMaterials()
     {
-        return Integer.toString(getAllBasisData().get(cardIndex).getName());
-    }
-
-    public List<BasisData> getEnabledBasisList()
-    {
-        return List.copyOf(this.basisList);
-    }
-
-    public List<BasisData> getCombinedBasisList()
-    {
-        return List.copyOf(getAllBasisData());
-    }
-
-    private List<BasisData> getAllBasisData()
-    {
-        List<BasisData> combinedList = new ArrayList<>(basisList.size() + disabledBasisList.size());
-        combinedList.addAll(basisList);
-        combinedList.addAll(disabledBasisList);
-        combinedList.sort(Comparator.comparing(BasisData::getName));
-        return combinedList;
-    }
-
-    public void setDiffuseAlbedo(int basisIndex, DoubleVector3 diffuseAlbedo)
-    {
-        basisList.get(basisIndex).setDiffuseColor(diffuseAlbedo);
+        return basis.values();
     }
 
     @Override
-    public DoubleVector3 getDiffuseColor(int b)
+    public List<BasisMaterialInfo> getIndexableMaterialList()
     {
-        return getAllBasisData().get(b).getDiffuseColor();
+        BasisMaterialInfo[] result = new BasisMaterialInfo[enabledMaterialCount];
+        for (BasisMaterialInfo material : basis.values())
+        {
+            if (material.isEnabled())
+            {
+                result[material.getGPUIndex()] = material;
+            }
+        }
+
+        return List.of(result);
     }
 
     @Override
-    public DoubleVector3 getEnabledDiffuseColor(int b)
+    public BasisMaterialInfo getMaterial(String materialName)
     {
-        return basisList.get(b).getDiffuseColor();
+        return basis.get(materialName);
     }
 
-    @Override
-    public List<DoubleVector3> getDiffuseColors()
-    {
-        return getAllBasisData().stream().map(BasisData::getDiffuseColor).collect(Collectors.toUnmodifiableList());
-    }
-
-    @Override
-    public double evaluateSpecularRed(int b, int m)
-    {
-        return getAllBasisData().get(b).getRedBasis()[m];
-    }
-
-    @Override
-    public double evaluateEnabledSpecularRed(int b, int m)
-    {
-        return basisList.get(b).getRedBasis()[m];
-    }
-
-    @Override
-    public double evaluateSpecularGreen(int b, int m)
-    {
-        return getAllBasisData().get(b).getGreenBasis()[m];
-    }
-
-    @Override
-    public double evaluateEnabledSpecularGreen(int b, int m)
-    {
-        return basisList.get(b).getGreenBasis()[m];
-    }
-
-    @Override
-    public double evaluateSpecularBlue(int b, int m)
-    {
-        return getAllBasisData().get(b).getBlueBasis()[m];
-    }
-
-    @Override
-    public double evaluateEnabledSpecularBlue(int b, int m)
-    {
-        return basisList.get(b).getBlueBasis()[m];
-    }
 
     @Override
     public int getMaterialCount()
     {
-        return materialCount;
+        return basis.size();
     }
 
     @Override
-    public int getDisabledMaterialCount()
+    public int getEnabledMaterialCount()
     {
-        return disabledMaterialCount;
+        return enabledMaterialCount;
     }
 
     @Override
@@ -204,115 +152,69 @@ public class SimpleMaterialBasis implements MaterialBasis
     }
 
     @Override
-    public void deleteMaterial(int name)
+    public IndexAssignableBasisMaterialInfo deleteMaterial(String name)
     {
-        Optional<BasisData> inList = getAllBasisData().stream().filter(basisData -> basisData.getName() == name).findFirst();
-        if (inList.isPresent())
+        MutableBasisMaterialInfo removed = basis.remove(name);
+        if (removed != null && removed.isEnabled())
         {
-            BasisData temp = inList.get();
-            if (basisList.contains(temp))
-            {
-                basisList.remove(temp);
-                materialCount--;
-            }
-            else
-            {
-                disabledBasisList.remove(temp);
-                disabledMaterialCount--;
-            }
+            enabledMaterialCount--;
         }
+        return removed;
     }
 
     @Override
     public void save(File outputDirectory, String filenameOverride)
     {
-        SpecularFitSerializer.serializeBasisFunctions(basisList.size() + disabledBasisList.size(), specularResolution, this, outputDirectory, filenameOverride);
+        SpecularFitSerializer.serializeBasisFunctions(specularResolution, this, outputDirectory, filenameOverride);
     }
 
+    /**
+     * Makes a deep copy in the sense that it copies each individual basis function.
+     * @return
+     */
     @Override
-    public MaterialBasis copy()
+    public MutableMaterialBasis copy()
     {
-        return new SimpleMaterialBasis(new ArrayList<>(basisList), new ArrayList<>(disabledBasisList));
-    }
-
-    @Override
-    public void disableMaterial(int name)
-    {
-        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == name).findFirst();
-        if (inEnabledList.isPresent())
+        LinkedHashMap<String, MutableBasisMaterialInfo> copy = new LinkedHashMap<>(basis.size());
+        for (var entry : basis.entrySet())
         {
-            // copy to disabled lists
-            disabledBasisList.add(inEnabledList.get());
-            disabledBasisList.get(disabledBasisList.size() - 1).setEnabled(false);
-            disabledBasisList.sort(Comparator.comparing(BasisData::getName));
-            // remove from enabled lists
-            basisList.remove(inEnabledList.get());
-            materialCount--;
-            disabledMaterialCount++;
+            copy.put(entry.getKey(), entry.getValue().copy());
         }
+
+        return new SimpleMaterialBasis(copy);
     }
 
     @Override
-    public void enableMaterial(int name)
+    public BasisMaterialInfo disableMaterial(String name)
     {
-        // get persistent name
-        Optional<BasisData> inDisabledList = disabledBasisList.stream().filter(basisData -> basisData.getName() == name).findFirst();
-        if (inDisabledList.isPresent())
+        MutableBasisMaterialInfo material = basis.get(name);
+
+        if (material.isEnabled())
         {
-            // add to enabled lists
-            basisList.add(inDisabledList.get());
-            basisList.get(basisList.size() - 1).setEnabled(true);
-            basisList.sort(Comparator.comparing(BasisData::getName));
-            // remove from disabled lists
-            disabledBasisList.remove(inDisabledList.get());
-            materialCount++;
-            disabledMaterialCount--;
+            material.setEnabled(false);
+            enabledMaterialCount--;
         }
+
+        return material;
     }
 
     @Override
-    public boolean getIsEnabled(int b)
+    public BasisMaterialInfo enableMaterial(String name)
     {
-        return getAllBasisData().get(b).isEnabled();
+        MutableBasisMaterialInfo material = basis.get(name);
+
+        if (!material.isEnabled())
+        {
+            material.setEnabled(true);
+            enabledMaterialCount++;
+        }
+
+        return material;
     }
 
     @Override
-    public boolean getIsEnabled(String name)
+    public boolean isMaterialEnabled(String name)
     {
-        Optional<BasisData> inEnabledList = basisList.stream().filter(basisData -> basisData.getName() == Integer.parseInt(name)).findFirst();
-        return inEnabledList.isPresent();
-    }
-
-    /**
-     * Sets an element of the red basis function
-     * @param b the basis function to modify
-     * @param m the discrete element of the basis function to modify
-     * @param value the new value of red basis function b, at element m.
-     */
-    public void setRed(int b, int m, double value)
-    {
-        getAllBasisData().get(b).getRedBasis()[m] = value;
-    }
-
-    /**
-     * Sets an element of the green basis function
-     * @param b the basis function to modify
-     * @param m the discrete element of the basis function to modify
-     * @param value the new value of green basis function b, at element m.
-     */
-    public void setGreen(int b, int m, double value)
-    {
-        getAllBasisData().get(b).getGreenBasis()[m] = value;
-    }
-
-    /**
-     * Sets an element of the blue basis function
-     * @param b the basis function to modify
-     * @param m the discrete element of the basis function to modify
-     * @param value the new value of blue basis function b, at element m.
-     */
-    public void setBlue(int b, int m, double value)
-    {
-        getAllBasisData().get(b).getBlueBasis()[m] = value;
+        return basis.get(name).isEnabled();
     }
 }

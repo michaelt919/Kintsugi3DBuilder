@@ -62,15 +62,12 @@ final class ReflectanceMatrixBuilder
         BasisFunctions stepBasis, MatrixSystem contribution, ReadonlyBasisOptimizationSettings settings)
     {
         this.solution = solution;
-
-        //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.reflectanceData = reflectanceData;
         this.basisSettings = settings;
-
         this.contribution = contribution;
 
         // Initialize running totals
-        matrixBuilder = new MatrixBuilder(this.basisSettings.getBasisCount(), 3, settings.getMetallicity(), stepBasis, contribution);
+        matrixBuilder = new MatrixBuilder(this.basisSettings.getMaterialCount(), 3, settings.getMetallicity(), stepBasis, contribution);
     }
 
     public void execute()
@@ -102,7 +99,7 @@ final class ReflectanceMatrixBuilder
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
         SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(),
-                basisSettings.getBasisCount() * (basisSettings.getBasisComplexity() + 1), DMatrixRMaj.class);
+                basisSettings.getMaterialCount() * (basisSettings.getBasisComplexity() + 1), DMatrixRMaj.class);
         SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);
@@ -131,7 +128,7 @@ final class ReflectanceMatrixBuilder
 
                 double diffuseFactor = matrixBuilder.getMetallicity() * geomRatio + (1 - matrixBuilder.getMetallicity());
 
-                for (int b = 0; b < basisSettings.getBasisCount(); b++)
+                for (int b = 0; b < basisSettings.getMaterialCount(); b++)
                 {
                     // diffuse
                     mA.set(p, b, addlWeight * solution.getWeights(p).get(b) * diffuseFactor);
@@ -152,7 +149,7 @@ final class ReflectanceMatrixBuilder
                             double fInterp = fFloor * t + fCeil * (1 - t);
 
                             // Index of the column where the coefficient will be stored in the big matrix.
-                            int j = basisSettings.getBasisCount() * (s + 1) + b;
+                            int j = basisSettings.getMaterialCount() * (s + 1) + b;
 
                             // specular with blending between the two sampled locations.
                             mA.set(p, j, addlWeight * geomRatio * solution.getWeights(p).get(b) * fInterp);
@@ -175,13 +172,17 @@ final class ReflectanceMatrixBuilder
 
         for (int i = 0; i < mATA.numRows(); i++)
         {
-            assertBool(Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001, "Red " + i);
-            assertBool(Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001, "Green  " + i);
-            assertBool(Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001, "Blue  " + i);
+            assertBool(Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001,
+                String.format("Red %d", i));
+            assertBool(Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001,
+                String.format("Green  %d", i));
+            assertBool(Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001,
+                String.format("Blue  %d", i));
 
             for (int j = 0; j < mATA.numCols(); j++)
             {
-                assertBool(Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001, "Matrix " + i + " " + j);
+                assertBool(Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001,
+                    String.format("Matrix %d %d", i, j));
             }
         }
     }

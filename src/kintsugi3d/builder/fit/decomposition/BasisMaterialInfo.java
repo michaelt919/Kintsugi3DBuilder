@@ -11,21 +11,32 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
-public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
+public interface BasisMaterialInfo
 {
-    private final MaterialBasis materialBasis;
+    DoubleVector3 getDiffuseColor();
 
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
-    {
-        super(textureResolution, materialBasis.getEnabledMaterialCount());
-        this.materialBasis = materialBasis;
-    }
+    /**
+     * Gets the number of intervals between discrete elements of this basis material.
+     * This ends up being the number of elements in each basis function array - 1
+     * (or in other words, the highest allowed value of m, inclusive, for the evaluate methods).
+     *
+     * @return
+     */
+    int getResolution();
 
-    @Override
-    public MaterialBasis getMaterialBasis()
-    {
-        return materialBasis;
-    }
+    double evaluateSpecularRed(int m);
+
+    double evaluateSpecularGreen(int m);
+
+    double evaluateSpecularBlue(int m);
+
+    String getFriendlyName();
+
+    String getName();
+
+    boolean isEnabled();
+
+    int getGPUIndex();
 }

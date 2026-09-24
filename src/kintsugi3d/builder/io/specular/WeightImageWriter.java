@@ -12,7 +12,7 @@
 package kintsugi3d.builder.io.specular;
 
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
@@ -47,18 +47,16 @@ public class WeightImageWriter<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void saveImages(ReadonlyTextureResources<ContextType> specularFit, String format,
-                           File outputDirectory, String... filenames) throws IOException
+    public void saveImages(ReadonlyBasisWeightResources<ContextType> resources, int materialCount,
+                           String format, File outputDirectory, String... filenames) throws IOException
     {
-        specularFit.getBasisWeightResources().useWithShaderProgram(program);
-
-        int basisCount = specularFit.getBasisResources().getBasisCount();
+        resources.useWithShaderProgram(program);
 
         // Loop over the index of each final image to export
-        for (int i = 0; i * weightsPerImage < basisCount && i < filenames.length; i++)
+        for (int i = 0; i * weightsPerImage < materialCount && i < filenames.length; i++)
         {
             drawable.program().setUniform("weightIndex", i * weightsPerImage);
-            drawable.program().setUniform("weightStride", Math.min(weightsPerImage, basisCount - i * weightsPerImage));
+            drawable.program().setUniform("weightStride", Math.min(weightsPerImage, materialCount - i * weightsPerImage));
             drawable.draw(framebuffer);
             framebuffer.getTextureReaderForColorAttachment(0).saveToFile(format, new File(outputDirectory, filenames[i]));
         }

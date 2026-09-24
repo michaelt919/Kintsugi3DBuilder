@@ -11,12 +11,7 @@
 
 package kintsugi3d.builder.io.specular;
 
-import kintsugi3d.builder.fit.decomposition.MaterialBasis;
-import kintsugi3d.builder.fit.decomposition.ReadonlyMaterialBasis;
-import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
-import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.gl.core.ReadonlyTexture3D;
+import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +24,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public final class SpecularFitSerializer
@@ -44,16 +36,16 @@ public final class SpecularFitSerializer
     {
     }
 
-    public static void saveWeightImages(int basisCount, int width, int height, SpecularBasisWeights basisWeights, File outputDirectory)
+    public static void saveWeightImages(MaterialBasis basis, int width, int height, SpecularBasisWeights basisWeights, File outputDirectory)
     {
-        for (int b = 0; b < basisCount; b++)
+        for (BasisMaterialInfo material : basis.getMaterials())
         {
             BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             int[] weightDataPacked = new int[width * height];
 
             for (int p = 0; p < width * height; p++)
             {
-                float weight = (float)basisWeights.getWeight(b, p);
+                float weight = (float)basisWeights.getWeight(material.getGPUIndex(), p);
 
                 // Flip vertically
                 int dataBufferIndex = p % width + width * (height - p / width - 1);
@@ -65,22 +57,7 @@ public final class SpecularFitSerializer
             try
             {
                 ImageIO.write(weightImg, "PNG",
-                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b)));
-            }
-            catch (IOException e)
-            {
-                LOG.error("An error occurred saving weight images:", e);
-            }
-        }
-    }
-    public static void saveWeightImages(ReadonlyTexture3D<?> basisWeights, File outputDirectory)
-    {
-        for (int b = 0; b < basisWeights.getDepth(); b++)
-        {
-            try
-            {
-                basisWeights.getColorTextureReader(b).saveToFile("PNG",
-                    new File(outputDirectory, TextureResources.getUnpackedWeightMapFilename(b)));
+                    new File(outputDirectory, BasisWeightResources.getUnpackedWeightMapFilename(material.getName())));
             }
             catch (IOException e)
             {
@@ -90,73 +67,89 @@ public final class SpecularFitSerializer
     }
 
     public static void serializeBasisFunctions(
-        int basisCount, int microfacetDistributionResolution, ReadonlyMaterialBasis basis, File outputDirectory, String filenameOverride)
+        int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory, String filenameOverride)
     {
         // Text file format
         try (PrintStream out = new PrintStream(new File(outputDirectory,
-            filenameOverride != null ? filenameOverride : TextureResources.getBasisFunctionsFilename()), StandardCharsets.UTF_8))
+            filenameOverride != null ? filenameOverride : BasisResources.getBasisFunctionsFilename()), StandardCharsets.UTF_8))
         {
-            for (int b = 0; b < basisCount; b++)
+            for (BasisMaterialInfo material : basis.getMaterials())
             {
-                boolean isEnabled = basis.getIsEnabled(basis.getDisplayName(b));
+                boolean isEnabled = material.isEnabled();
+                String name = material.getName();
+
+                // Red
                 if (isEnabled)
                 {
-                    out.printf("Red#%s", basis.getDisplayName(b));
+                    out.printf("Red#%s", name);
                 }
                 else
                 {
-                    out.printf("RedDisabled#%s", basis.getDisplayName(b));
+                    out.printf("RedDisabled#%s", name);
                 }
+
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
-                    out.print(basis.evaluateSpecularRed(b, m));
+                    out.print(material.evaluateSpecularRed(m));
                 }
+
                 out.println();
 
+                // Green
                 if (isEnabled)
                 {
-                    out.printf("Green#%s", basis.getDisplayName(b));
+                    out.printf("Green#%s", name);
                 }
                 else
                 {
-                    out.printf("GreenDisabled#%s", basis.getDisplayName(b));
+                    out.printf("GreenDisabled#%s", name);
                 }
+
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
-                    out.print(basis.evaluateSpecularGreen(b, m));
+                    out.print(material.evaluateSpecularGreen(m));
                 }
+
                 out.println();
 
+                // Blue
                 if (isEnabled)
                 {
-                    out.printf("Blue#%s", basis.getDisplayName(b));
+                    out.printf("Blue#%s", name);
                 }
                 else
                 {
-                    out.printf("BlueDisabled#%s", basis.getDisplayName(b));
+                    out.printf("BlueDisabled#%s", name);
                 }
+
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
-                    out.print(basis.evaluateSpecularBlue(b, m));
+                    out.print(material.evaluateSpecularBlue(m));
                 }
+
                 out.println();
             }
 
-            for (int b = 0; b < basisCount; b++)
+            // Write diffuse last for consistency with prior versions
+            // (Kintsugi 3D Viewer does not support other basis functions listed after for diffuse colors)
+            for (BasisMaterialInfo material : basis.getMaterials())
             {
+                String name = material.getName();
 
-                DoubleVector3 diffuseColor = basis.getDiffuseColor(b);
-                if (basis.getIsEnabled(basis.getDisplayName(b)))
+                // Diffuse
+                DoubleVector3 diffuseColor = material.getDiffuseColor();
+                if (material.isEnabled())
                 {
-                    out.printf("Diffuse#%s, %f, %f, %f", basis.getDisplayName(b), diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                    out.printf("Diffuse#%s, %f, %f, %f", name, diffuseColor.x, diffuseColor.y, diffuseColor.z);
                 }
                 else
                 {
-                    out.printf("DiffuseDisabled#%s, %f, %f, %f", basis.getDisplayName(b), diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                    out.printf("DiffuseDisabled#%s, %f, %f, %f", name, diffuseColor.x, diffuseColor.y, diffuseColor.z);
                 }
+
                 out.println();
             }
         }
@@ -172,10 +165,10 @@ public final class SpecularFitSerializer
      * @param priorSolutionDirectory
      * @return An object containing the red, green, and blue basis functions.
      */
-    public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory)
+    public static MutableMaterialBasis deserializeBasisFunctions(File priorSolutionDirectory)
         throws IOException
     {
-        File basisFile = new File(priorSolutionDirectory, TextureResources.getBasisFunctionsFilename());
+        File basisFile = new File(priorSolutionDirectory, BasisResources.getBasisFunctionsFilename());
 
         if (basisFile.exists())
         {
@@ -203,150 +196,160 @@ public final class SpecularFitSerializer
             {
                 in.useLocale(Locale.ROOT);
 
-                List<Integer> names = new ArrayList<>(8);
-                List<Integer> disabledNames = new ArrayList<>(8);
+                Collection<String> names = new LinkedHashSet<>(8); // preserve insertion order
+                Collection<String> disabledNames = new LinkedHashSet<>(8);
 
-                List<double[]> specularRedBasis = new ArrayList<>(8);
-                List<double[]> specularGreenBasis = new ArrayList<>(8);
-                List<double[]> specularBlueBasis = new ArrayList<>(8);
-                List<double[]> disabledSpecularRedBasis = new ArrayList<>(8);
-                List<double[]> disabledSpecularGreenBasis = new ArrayList<>(8);
-                List<double[]> disabledSpecularBlueBasis = new ArrayList<>(8);
+                Map<String, double[]> specularRedBasis = new HashMap<>(8);
+                Map<String, double[]> specularGreenBasis = new HashMap<>(8);
+                Map<String, double[]> specularBlueBasis = new HashMap<>(8);
+                Map<String, DoubleVector3> diffuseBasis = new HashMap<>(8);
 
                 in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
 
                 String currentTag = in.next();
-                int b = 0;
-                while (!currentTag.startsWith("Diffuse") && in.hasNext()) // stop at end of file or if diffuse albedos found
+                while (in.hasNext()) // stop at end of file
                 {
-                    // Beginning a new basis function for each RGB component.
-                    int name = Character.getNumericValue(currentTag.charAt(currentTag.indexOf('#') + 1));
-                    if (currentTag.equals(String.format("Red#%d", name)))
+                    String[] tagSplit = currentTag.split("#", 1);
+                    String tagType = tagSplit[0];
+                    String name = tagSplit[1];
+
+                    if ("Diffuse".equals(tagType))
                     {
                         names.add(name);
-                        specularRedBasis.add(new double[numElements]);
-                        for (int m = 0; m < numElements; m++)
-                        {
-                            specularRedBasis.get(specularRedBasis.size() - 1)[m] = in.nextDouble();
-                        }
+                        disabledNames.remove(name); // Ensure that a name is not in both lists.
+                        diffuseBasis.put(name, new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
                     }
-                    else if (currentTag.equals(String.format("RedDisabled#%d", name)))
+                    else if ("DiffuseDisabled".equals(tagType))
                     {
                         disabledNames.add(name);
-                        disabledSpecularRedBasis.add(new double[numElements]);
-                        for (int m = 0; m < numElements; m++)
-                        {
-                            disabledSpecularRedBasis.get(disabledSpecularRedBasis.size() - 1)[m] = in.nextDouble();
-                        }
+                        names.remove(name); // Ensure that a name is not in both lists.
+                        diffuseBasis.put(name, new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
                     }
                     else
                     {
-                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
-                    }
-                    // newline
-
-                    currentTag = in.next();
-                    if (currentTag.equals(String.format("Green#%d", name)))
-                    {
-                        specularGreenBasis.add(new double[numElements]);
-                        for (int m = 0; m < numElements; m++)
+                        // Tags which require an array of basis elements
+                        if ("Red".equals(tagType))
                         {
-                            specularGreenBasis.get(specularGreenBasis.size() - 1)[m] = in.nextDouble();
+                            specularRedBasis.put(name, readBasisLine(in, numElements));
+                            names.add(name);
+                            disabledNames.remove(name); // Ensure that a name is not in both lists.
+                        }
+                        else if ("RedDisabled".equals(tagType))
+                        {
+                            specularRedBasis.put(name, readBasisLine(in, numElements));
+                            disabledNames.add(name);
+                            names.remove(name); // Ensure that a name is not in both lists.
+                        }
+                        else if ("Green".equals(tagType))
+                        {
+                            specularGreenBasis.put(name, readBasisLine(in, numElements));
+                            names.add(name);
+                            disabledNames.remove(name); // Ensure that a name is not in both lists.
+                        }
+                        else if ("GreenDisabled".equals(tagType))
+                        {
+                            specularGreenBasis.put(name, readBasisLine(in, numElements));
+                            disabledNames.add(name);
+                            names.remove(name); // Ensure that a name is not in both lists.
+                        }
+                        else if ("Blue".equals(tagType))
+                        {
+                            specularBlueBasis.put(name, readBasisLine(in, numElements));
+                            names.add(name);
+                            disabledNames.remove(name); // Ensure that a name is not in both lists.
+                        }
+                        else if ("BlueDisabled".equals(tagType))
+                        {
+                            specularBlueBasis.put(name, readBasisLine(in, numElements));
+                            disabledNames.add(name);
+                            names.remove(name); // Ensure that a name is not in both lists.
+                        }
+                        else
+                        {
+                            throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
                         }
                     }
-                    else if (currentTag.equals(String.format("GreenDisabled#%d", name)))
-                    {
-                        disabledSpecularGreenBasis.add(new double[numElements]);
-                        for (int m = 0; m < numElements; m++)
-                        {
-                            disabledSpecularGreenBasis.get(disabledSpecularGreenBasis.size() - 1)[m] = in.nextDouble();
-                        }
-                    }
-                    else
-                    {
-                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
-                    }
-                    // newline
-
-                    currentTag = in.next(); // "Blue#{b}"
-                    if (currentTag.equals(String.format("Blue#%d", name)))
-                    {
-                        specularBlueBasis.add(new double[numElements]);
-                        for (int m = 0; m < numElements; m++)
-                        {
-                            specularBlueBasis.get(specularBlueBasis.size() - 1)[m] = in.nextDouble();
-                        }
-                    }
-                    else if (currentTag.equals(String.format("BlueDisabled#%d", name)))
-                    {
-                        disabledSpecularBlueBasis.add(new double[numElements]);
-                        for (int m = 0; m < numElements; m++)
-                        {
-                            disabledSpecularBlueBasis.get(disabledSpecularBlueBasis.size() - 1)[m] = in.nextDouble();
-                        }
-                    }
-                    else
-                    {
-                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
-                    }
-                    // newline
 
                     if (in.hasNext())
                     {
                         // Get tag of next element for while loop check
                         currentTag = in.next();
                     }
-
-                    b++;
                 }
 
-                List<DoubleVector3> diffuseBasis = new ArrayList<>(b); // "b" is the number of specular basis functions from the earlier loop
-                List<DoubleVector3> disabledDiffuseBasis = new ArrayList<>(b); // "b" is the number of specular basis functions from the earlier loop
-                int diffuseCount = 0;
-
-                while (in.hasNext()) // parse diffuse albedos if found
-                {
-                    diffuseCount = Character.getNumericValue(currentTag.charAt(currentTag.indexOf('#') + 1));
-                    if (currentTag.equals(String.format("Diffuse#%d", diffuseCount)))
-                    {
-                        diffuseBasis.add(new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
-                    }
-                    else if (currentTag.equals(String.format("DiffuseDisabled#%d", diffuseCount)))
-                    {
-                        disabledDiffuseBasis.add(new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble()));
-                    }
-                    else
-                    {
-                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
-                    }
-                    // newline
-
-                    if (in.hasNext())
-                    {
-                        // Get tag of next element
-                        currentTag = in.next();
-                    }
-
-                    diffuseCount++;
-                }
-
-                while (diffuseCount < diffuseBasis.size())
+                for (String name : names)
                 {
                     // Default to black if not found
-                    diffuseBasis.add(DoubleVector3.ZERO);
-                    diffuseCount++;
+                    if (!specularRedBasis.containsKey(name))
+                    {
+                        specularRedBasis.put(name, new double[numElements]);
+                    }
+
+                    if (!specularGreenBasis.containsKey(name))
+                    {
+                        specularGreenBasis.put(name, new double[numElements]);
+                    }
+
+                    if (!specularBlueBasis.containsKey(name))
+                    {
+                        specularBlueBasis.put(name, new double[numElements]);
+                    }
+
+                    if (!diffuseBasis.containsKey(name))
+                    {
+                        diffuseBasis.put(name, DoubleVector3.ZERO);
+                    }
                 }
 
-                return new SimpleMaterialBasis(
-                    names, diffuseBasis,
-                    specularRedBasis, specularGreenBasis, specularBlueBasis,
-                    disabledNames, disabledDiffuseBasis,
-                    disabledSpecularRedBasis, disabledSpecularGreenBasis, disabledSpecularBlueBasis);
+                for (String name : disabledNames)
+                {
+                    // Default to black if not found
+                    if (!specularRedBasis.containsKey(name))
+                    {
+                        specularRedBasis.put(name, new double[numElements]);
+                    }
+
+                    if (!specularGreenBasis.containsKey(name))
+                    {
+                        specularGreenBasis.put(name, new double[numElements]);
+                    }
+
+                    if (!specularBlueBasis.containsKey(name))
+                    {
+                        specularBlueBasis.put(name, new double[numElements]);
+                    }
+
+                    if (!diffuseBasis.containsKey(name))
+                    {
+                        diffuseBasis.put(name, DoubleVector3.ZERO);
+                    }
+                }
+
+                return new SimpleMaterialBasis(nameSetToMap(names), nameSetToMap(disabledNames), diffuseBasis,
+                    specularRedBasis, specularGreenBasis, specularBlueBasis
+                );
             }
         }
         else
         {
             return null;
         }
+    }
+
+    private static double[] readBasisLine(Scanner in, int numElements)
+    {
+        double[] newBasis = new double[numElements];
+        Arrays.setAll(newBasis, m -> in.nextDouble());
+        return newBasis;
+    }
+
+    private static Map<String, String> nameSetToMap(Collection<String> set)
+    {
+        Map<String, String> map = new HashMap<>(set.size());
+        for (String name : set)
+        {
+            map.put(name, name);
+        }
+        return map;
     }
 }
