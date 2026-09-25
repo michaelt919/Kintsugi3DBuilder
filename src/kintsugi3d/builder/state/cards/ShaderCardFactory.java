@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.core.Global;
+import kintsugi3d.app.JavaFXApplication;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.AppIcon;
@@ -88,7 +88,7 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
         shaderDataCards.add(createCard("Textured Lambertian", "rendermodes/texturedLambertian.frag"));
 
         //if model is not processed these shaders are not shown
-       if (Global.state().getProjectModel().isProjectProcessed())
+       if (JavaFXApplication.getState().getProjectModel().isProjectProcessed())
        {
             shaderDataCards.add(createCard("Material (metallicity)", "rendermodes/texturedORMMaterial.frag"));
             shaderDataCards.add(createCard("Material (reflectivity)", "rendermodes/texturedMaterial.frag"));
@@ -98,7 +98,7 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
         shaderDataCards.add(createCard("Image-based", "rendermodes/ibrUntextured.frag"));
 
         //if model is not processed these shaders are not shown
-        if (Global.state().getProjectModel().isProjectProcessed())
+        if (JavaFXApplication.getState().getProjectModel().isProjectProcessed())
         {
             shaderDataCards.add(createCard("Image-based with textures", "rendermodes/ibrTextured.frag"));
             shaderDataCards.add(createCard("Weight maps (combined)", "rendermodes/weightmaps/weightmapCombination.frag"));

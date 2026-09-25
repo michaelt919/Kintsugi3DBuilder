@@ -27,8 +27,8 @@ import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.javafx.controllers.modals.RecentLogMessageAppender;
 import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.builder.rendering.ImageBasedRenderableManager;
-import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
@@ -377,7 +377,7 @@ public class SmokeTest
         }
     }
 
-    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
+    private void testFit(ReadonlyImageBasedGraphicsResources<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         File outputDirectory = new File(TEST_OUTPUT_DIR, testName);

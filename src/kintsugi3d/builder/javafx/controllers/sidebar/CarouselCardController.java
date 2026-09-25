@@ -19,6 +19,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Duration;
+import kintsugi3d.app.JavaFXApplication;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
 import kintsugi3d.builder.state.scene.ShaderInfo;
@@ -64,7 +65,7 @@ public class CarouselCardController
         }
         else
         {
-            if (Global.state().getProjectModel().isProjectProcessed())
+            if (JavaFXApplication.getState().getProjectModel().isProjectProcessed())
             {
                 Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_PROCESSED);
             }
@@ -140,7 +141,7 @@ public class CarouselCardController
              */
             if (shader.equals(Global.state().getUserShaderModel().getActiveShader()))
             {
-                if(Global.state().getProjectModel().isProjectProcessed())
+                if(JavaFXApplication.getState().getProjectModel().isProjectProcessed())
                 {
                     Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_PROCESSED);
                 }

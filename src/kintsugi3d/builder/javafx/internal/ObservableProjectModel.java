@@ -146,7 +146,6 @@ public class ObservableProjectModel extends ProjectModelBase<
         this.colorCheckerFile.set(colorCheckerFile);
     }
 
-    @Override
     public boolean isProjectOpen()
     {
         return projectOpen.get();
@@ -162,7 +161,6 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectOpen;
     }
 
-    @Override
     public String getProjectName()
     {
         return projectName.get();
@@ -178,7 +176,6 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectName;
     }
 
-    @Override
     public boolean isProjectLoaded()
     {
         return projectLoaded.get();
@@ -194,7 +191,6 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectLoaded;
     }
 
-    @Override
     public boolean isProjectProcessed()
     {
         return projectProcessed.get();
@@ -210,13 +206,11 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectProcessed;
     }
 
-    @Override
     public int getProcessedTextureWidth()
     {
         return processedTextureWidth.get();
     }
 
-    @Override
     public int getProcessedTextureHeight()
     {
         return processedTextureHeight.get();
@@ -242,7 +236,6 @@ public class ObservableProjectModel extends ProjectModelBase<
         return processedTextureHeight;
     }
 
-    @Override
     public Vector3 getModelSize()
     {
         return modelSize.get();

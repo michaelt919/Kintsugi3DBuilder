@@ -16,7 +16,7 @@ import javafx.beans.property.Property;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import kintsugi3d.builder.core.Global;
+import kintsugi3d.app.JavaFXApplication;
 
 import java.util.Objects;
 
@@ -198,7 +198,7 @@ public final class StaticUtilities
 
     public static boolean confirmCancel()
     {
-        if (Global.state().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
+        if (JavaFXApplication.getState().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
         {
             Alert alert = new Alert(AlertType.CONFIRMATION, "Settings will be reverted to their previous values.");
             alert.setHeaderText("Discard changes?");

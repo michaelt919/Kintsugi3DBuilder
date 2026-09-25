@@ -67,7 +67,8 @@ public class JavaFXApplication extends Application
     // Keep a reference to the main window to inject the canvas when the rendering thread has loaded
     private static MainWindowController mainWindowController;
 
-    static JavaFXState getState()
+    // TODO make this package protected again
+    public static JavaFXState getState()
     {
         if (state != null)
         {

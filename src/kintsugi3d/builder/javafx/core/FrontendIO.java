@@ -20,6 +20,7 @@ import javafx.scene.control.Dialog;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
+import kintsugi3d.app.JavaFXApplication;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.io.RecentProjects;
@@ -103,7 +104,7 @@ public final class FrontendIO
 
     private static boolean confirmClose(String text)
     {
-        if (Global.state().getProjectModel().isProjectOpen())
+        if (JavaFXApplication.getState().getProjectModel().isProjectOpen())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION,
                 "If you click OK, any unsaved changes to the current project will be lost.");

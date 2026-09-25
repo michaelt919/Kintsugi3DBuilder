@@ -12,7 +12,6 @@
 package kintsugi3d.builder.state.project;
 
 import kintsugi3d.builder.core.texture.ImageReplacer;
-import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -37,14 +36,6 @@ public interface ProjectModel
 
     File getColorCheckerFile();
     void setColorCheckerFile(File colorCheckerFile);
-
-    String getProjectName();
-    boolean isProjectOpen();
-    boolean isProjectLoaded();
-    boolean isProjectProcessed();
-    int getProcessedTextureWidth();
-    int getProcessedTextureHeight();
-    Vector3 getModelSize();
 
     /**
      * Logs an error immediately and asynchronously displays an alert to the user.

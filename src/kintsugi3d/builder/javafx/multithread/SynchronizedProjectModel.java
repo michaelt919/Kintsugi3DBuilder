@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.multithread;
 import javafx.application.Platform;
 import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.builder.state.project.ProjectModel;
-import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -60,49 +59,6 @@ public class SynchronizedProjectModel implements ProjectModel
     public void setColorCheckerFile(File colorCheckerFile)
     {
         this.colorCheckerFile.setValue(colorCheckerFile);
-    }
-
-    @Override
-    public String getProjectName()
-    {
-        return baseModel.getProjectName();
-    }
-
-    @Override
-    public boolean isProjectOpen()
-    {
-        return baseModel.isProjectOpen();
-    }
-
-    @Override
-    public boolean isProjectLoaded()
-    {
-        return baseModel.isProjectLoaded();
-    }
-
-    @Override
-    public boolean isProjectProcessed()
-    {
-        return baseModel.isProjectProcessed();
-    }
-
-    @Override
-    public int getProcessedTextureWidth()
-    {
-        return baseModel.getProcessedTextureHeight();
-    }
-
-    @Override
-    public int getProcessedTextureHeight()
-    {
-        return baseModel.getProcessedTextureHeight();
-    }
-
-
-    @Override
-    public Vector3 getModelSize()
-    {
-        return baseModel.getModelSize();
     }
 
     @Override
