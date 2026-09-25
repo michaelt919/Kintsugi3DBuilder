@@ -9,25 +9,30 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.fit.decomposition;
+package kintsugi3d.builder.util;
 
-import kintsugi3d.gl.core.Context;
+import java.util.Collections;
+import java.util.Map;
 
-public class SimpleBasisResources<ContextType extends Context<ContextType>> extends BasisResourcesBase<ContextType>
+public class MappedChange<K, V>
 {
-    private final MaterialBasis materialBasis;
-
-    public SimpleBasisResources(ContextType context, MaterialBasis materialBasis)
+    public enum Type
     {
-        // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
-        super(context, materialBasis.getMaterialCount(), materialBasis.getSpecularResolution());
-        this.materialBasis = materialBasis;
-        refreshGraphicsResources();
+        ADDED, REMOVED, MODIFIED
     }
 
-    @Override
-    public MaterialBasis getBasis()
+    public final Type changeType;
+    public final Map<K, V> changeMap;
+
+    public MappedChange(Type changeType, Map<K, V> changeMap)
     {
-        return materialBasis;
+        this.changeType = changeType;
+        this.changeMap = Collections.unmodifiableMap(changeMap);
+    }
+
+    public MappedChange(Type changeType, K key, V value)
+    {
+        this.changeType = changeType;
+        this.changeMap = Map.of(key, value);
     }
 }

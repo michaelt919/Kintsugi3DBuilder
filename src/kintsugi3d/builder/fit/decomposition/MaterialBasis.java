@@ -17,10 +17,25 @@ import java.util.List;
 
 public interface MaterialBasis
 {
+    /**
+     * Returns a list of all materials.
+     * Typically, the initial ordering upon load should be preserved even while enabling / disabling materials.
+     * @return
+     */
     Collection<? extends BasisMaterialInfo> getMaterials();
 
+    /**
+     * Returns a list of all materials (enabled or disabled) indexed by their designated location for array storage in GPU memory.
+     * Enabled materials should always have indices that precede disabled materials.
+     * @return
+     */
     List<? extends BasisMaterialInfo> getIndexableMaterialList();
 
+    /**
+     * Finds the material with a specific internal name.
+     * @param materialName
+     * @return
+     */
     BasisMaterialInfo getMaterial(String materialName);
 
     int getMaterialCount();

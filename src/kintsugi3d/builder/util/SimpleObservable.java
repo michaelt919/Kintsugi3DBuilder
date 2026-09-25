@@ -9,30 +9,35 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core.viewset;
+package kintsugi3d.builder.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 
-public class MappedChange<K, V>
+public class SimpleObservable<K, V> implements Observable<MappedChange<K, V>>
 {
-    public enum Type
+    private final Collection<Observer<MappedChange<K, V>>> observers =
+        Collections.synchronizedList(new ArrayList<>(8));
+
+    @Override
+    public void registerObserver(Observer<MappedChange<K, V>> observer)
     {
-        ADDED, REMOVED, MODIFIED
+        observers.add(observer);
     }
 
-    public final Type changeType;
-    public final Map<K, V> changeMap;
-
-    MappedChange(Type changeType, Map<K, V> changeMap)
+    @Override
+    public void removeObserver(Observer<MappedChange<K, V>> observer)
     {
-        this.changeType = changeType;
-        this.changeMap = Collections.unmodifiableMap(changeMap);
+        observers.remove(observer);
     }
 
-    MappedChange(Type changeType, K key, V value)
+    @Override
+    public void notifyObservers(MappedChange<K, V> change)
     {
-        this.changeType = changeType;
-        this.changeMap = Map.of(key, value);
+        for (Observer<MappedChange<K, V>> observer : observers)
+        {
+            observer.update(change);
+        }
     }
 }

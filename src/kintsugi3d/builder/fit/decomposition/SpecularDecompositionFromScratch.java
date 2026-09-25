@@ -49,7 +49,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     }
 
     @Override
-    public IndexAssignableMaterialBasis getMaterialBasis()
+    public MaterialBasis getMaterialBasis()
     {
         return new OptimizableMaterialBasis();
     }
@@ -74,23 +74,21 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         return specularBlue;
     }
 
-    private final class OptimizableMaterialBasis implements IndexAssignableMaterialBasis
+    private final class OptimizableMaterialBasis implements MaterialBasis
     {
         @Override
-        public Collection<IndexAssignableBasisMaterialInfo> getMaterials()
+        public Collection<BasisMaterialInfo> getMaterials()
         {
             return getIndexableMaterialList();
         }
 
         @Override
-        public List<IndexAssignableBasisMaterialInfo> getIndexableMaterialList()
+        public List<BasisMaterialInfo> getIndexableMaterialList()
         {
             return IntStream.range(0, this.getEnabledMaterialCount())
                 .mapToObj(b ->
-                    new IndexAssignableBasisMaterialInfo()
+                    new BasisMaterialInfo()
                     {
-                        private int gpuIndex = b;
-
                         @Override
                         public DoubleVector3 getDiffuseColor()
                         {
@@ -142,13 +140,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
                         @Override
                         public int getGPUIndex()
                         {
-                            return gpuIndex;
-                        }
-
-                        @Override
-                        public void setGPUIndex(int gpuIndex)
-                        {
-                            this.gpuIndex = gpuIndex;
+                            return b;
                         }
                     })
                 .collect(Collectors.toList());
@@ -159,7 +151,15 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
         {
             try
             {
-                return getIndexableMaterialList().get(Integer.parseInt(materialName));
+                int index = Integer.parseInt(materialName);
+                if (index >= 0 && index < materialCount)
+                {
+                    return getIndexableMaterialList().get(index);
+                }
+                else
+                {
+                    return null;
+                }
             }
             catch (NumberFormatException e)
             {

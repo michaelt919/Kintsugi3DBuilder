@@ -14,8 +14,11 @@ package kintsugi3d.builder.resources.project.specular;
 import kintsugi3d.builder.core.texture.NamedTextureInfo;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
+import kintsugi3d.builder.util.MappedChange;
+import kintsugi3d.builder.util.Observable;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -232,6 +235,11 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             public void deleteBasisMaterial(String materialName)
             {
             }
+
+            @Override
+            public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
+            {
+            }
         };
     }
 
@@ -357,4 +365,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     {
         getTextures().get(key).load(newTextureFile, true);
     }
+
+    void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable);
 }

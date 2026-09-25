@@ -97,29 +97,12 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
                             new ShaderInfo(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
                 Map.of("Toggle Disabled", () ->
-                    Rendering.runLater(() ->
-                    {
-                        resources.toggleBasisMaterial(material.getName());
-
-                        // TODO setup listeners for materials
-                        Global.state().getTabModels().getTab(TabsManager.MATERIALS, BasisMaterialInfo.class)
-                            .refreshCards(card -> card.getInternalName().equals(name) ? material : null);
-                    }),
+                    // needs to run on graphics thread to replace GPU resources
+                    Rendering.runLater(() -> resources.toggleBasisMaterial(material.getName())),
                 "Delete Material", () ->
                     Global.state().getProjectModel().confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
-                        () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
-                        {
-                            try
-                            {
-                                resources.deleteBasisMaterial(material.getName());
-                            }
-                            finally // even if an exception is thrown, want to make sure we're in sync with the current state.
-                            {
-                                // TODO setup listeners for materials
-                                Global.state().getTabModels().getTab(TabsManager.MATERIALS, BasisMaterialInfo.class)
-                                    .deleteCards(card -> card.getInternalName().equals(name));
-                            }
-                        })))),
+                        // needs to run on graphics thread to replace GPU resources
+                        () -> Rendering.runLater(() -> resources.deleteBasisMaterial(material.getName()))))),
             !material.isEnabled());
     }
 

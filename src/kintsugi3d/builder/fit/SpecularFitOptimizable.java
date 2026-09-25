@@ -180,7 +180,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
         ReadonlyGraphicsResources<ContextType> resources, SpecularFitResourcesWrapper<ContextType> programFactory,
-        IndexAssignableMaterialBasis materialBasis, TextureResolution textureResolution,
+        MaterialBasis materialBasis, TextureResolution textureResolution,
         ReadonlyNormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws IOException
     {

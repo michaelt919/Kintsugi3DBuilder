@@ -39,12 +39,13 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
 
         this.basis = new LinkedHashMap<>(enabledMaterialCount);
 
+        // If we're creating a new basis without disabled materials, just use b as GPU index.
         for (int b = 0; b < enabledMaterialCount; b++)
         {
             String name = String.format("%02d", b);
             String friendlyName = String.format("Material %d", b);
             this.basis.put(name, MutableBasisMaterialInfo.create(
-                name, friendlyName, diffuseColors[b], redBasis.get(b), greenBasis.get(b), blueBasis.get(b)));
+                name, b, friendlyName, diffuseColors[b], redBasis.get(b), greenBasis.get(b), blueBasis.get(b)));
         }
     }
 
@@ -74,21 +75,26 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
 
         this.basis = new LinkedHashMap<>(enabledMaterialCount);
 
+        int gpuIndex = 0;
         for (Entry<KeyType, String> entry : names.entrySet())
         {
             KeyType key = entry.getKey();
             String name = entry.getValue();
 
             basis.put(name, MutableBasisMaterialInfo.create(
-                name, getFriendlyName(name), diffuseColors.get(key), redBasis.get(key),  greenBasis.get(key), blueBasis.get(key)));
+                name, gpuIndex, getFriendlyName(name), diffuseColors.get(key),
+                redBasis.get(key),  greenBasis.get(key), blueBasis.get(key)));
+            gpuIndex++;
         }
 
         for (Entry<KeyType, String> entry : disabledNames.entrySet())
         {
             KeyType key = entry.getKey();
             String name = entry.getValue();
-            basis.put(name, MutableBasisMaterialInfo.create(name, getFriendlyName(name), diffuseColors.get(key),
+            basis.put(name, MutableBasisMaterialInfo.create(
+                name, gpuIndex, getFriendlyName(name), diffuseColors.get(key),
                 redBasis.get(key), greenBasis.get(key), blueBasis.get(key), false));
+            gpuIndex++;
         }
     }
 
@@ -117,10 +123,7 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
         BasisMaterialInfo[] result = new BasisMaterialInfo[enabledMaterialCount];
         for (BasisMaterialInfo material : basis.values())
         {
-            if (material.isEnabled())
-            {
-                result[material.getGPUIndex()] = material;
-            }
+            result[material.getGPUIndex()] = material;
         }
 
         return List.of(result);
@@ -131,7 +134,6 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
     {
         return basis.get(materialName);
     }
-
 
     @Override
     public int getMaterialCount()
@@ -155,9 +157,21 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
     public IndexAssignableBasisMaterialInfo deleteMaterial(String name)
     {
         MutableBasisMaterialInfo removed = basis.remove(name);
-        if (removed != null && removed.isEnabled())
+        if (removed != null)
         {
-            enabledMaterialCount--;
+            // Shift indices of materials to the right of the one that was deleted.
+            for (MutableBasisMaterialInfo material : basis.values())
+            {
+                if (material.getGPUIndex() > removed.getGPUIndex())
+                {
+                    material.setGPUIndex(material.getGPUIndex() - 1);
+                }
+            }
+
+            if (removed.isEnabled())
+            {
+                enabledMaterialCount--;
+            }
         }
         return removed;
     }

@@ -27,7 +27,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
@@ -39,6 +42,8 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
     private Texture3D<ContextType> weightMaps;
     private final Texture2D<ContextType> weightMask;
+
+    private final Map<String, Integer> weightMapLocations = new HashMap<>(8);
 
     private final int width;
     private final int height;
@@ -81,6 +86,14 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         this.weightMaps = weightMaps;
         this.weightMask = weightMask;
         this.weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
+
+        for (BasisMaterialInfo material : basis.getMaterials())
+        {
+            if (material.isEnabled())
+            {
+                weightMapLocations.put(material.getName(), material.getGPUIndex());
+            }
+        }
     }
 
     @Override
@@ -115,6 +128,8 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
     public void updateFromSolution(SpecularDecomposition solution)
     {
+        weightMapLocations.clear();
+
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer buffer = factory.createEmpty(NativeDataType.FLOAT, 1,
             width * height);
@@ -127,6 +142,11 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
         weightMask.load(buffer);
 
+        // List contains both enabled and disabled materials -- but we'll just be accessing the enabled ones.
+        List<? extends BasisMaterialInfo> materials = solution.getMaterialBasis().getIndexableMaterialList();
+
+        // If we're updating from a solution, then we want to replace just the enabled materials,
+        // while disabled materials will get blacked out.
         int count = solution.getMaterialBasis().getEnabledMaterialCount();
         for (int b = 0; b < count; b++)
         {
@@ -138,14 +158,17 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
             // Immediately load the weight map so that we can reuse the local memory buffer.
             weightMaps.loadLayer(b, buffer);
+
+            weightMapLocations.put(materials.get(b).getName(), b);
         }
 
-        // Now fill any unused layers (i.e. disabled materials) with zeros.
+        // Set up buffer to black out disabled materials.
         for (int p = 0; p < width * height; p++)
         {
             buffer.set(p, 0, 0.0);
         }
 
+        // Fill any unused layers (i.e. disabled materials) with zeros.
         for (int b = count; b < weightMaps.getDepth(); b++)
         {
             weightMaps.loadLayer(b, buffer);
@@ -199,12 +222,12 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         ContextType context, File priorSolutionDirectory, MaterialBasis basis)
             throws IOException
     {
-        String name = basis.getMaterials().stream()
+        String testImageName = basis.getMaterials().stream()
             .filter(BasisMaterialInfo::isEnabled)
             .findAny().orElseThrow()
             .getName();
 
-        IntVector2 dimensions = ImageHelper.dimensionsOf(findWeightmap(priorSolutionDirectory, name));
+        IntVector2 dimensions = ImageHelper.dimensionsOf(findWeightmap(priorSolutionDirectory, testImageName));
 
         int width = dimensions.x;
         int height = dimensions.y;
@@ -222,11 +245,14 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
 
         for (BasisMaterialInfo material : basis.getMaterials())
         {
-            File file = findWeightmap(priorSolutionDirectory, material.getName());
+            int index = material.getGPUIndex();
+            String name = material.getName();
+            File file = findWeightmap(priorSolutionDirectory, name);
             try
             {
                 // Load weight maps
-                resources.weightMaps.loadLayer(material.getGPUIndex(), file, true);
+                resources.weightMaps.loadLayer(index, file, true);
+                resources.weightMapLocations.put(name, index);
             }
             catch (IOException e)
             {
@@ -293,19 +319,39 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         program.setTexture("weightMask", weightMask);
     }
 
-    public void deleteWeightMap(int mapIndex)
+    /**
+     * Updates
+     */
+    void refreshWeightMapOrdering()
     {
-        int texArrayDepth = weightMaps.getDepth();
-        Texture3D<ContextType> newWeightMaps = createWeightMaps(context, width, height, texArrayDepth - 1);
+        Collection<? extends BasisMaterialInfo> materials = basis.getIndexableMaterialList();
 
-        // Copy layers before the one removed.v
-        newWeightMaps.blitCropped(weightMaps, 0, 0, 0, width, height, mapIndex);
+        // Allocate a new texture array
+        Texture3D<ContextType> newWeightMaps = createWeightMaps(context, width, height, materials.size());
 
-        // Copy layers after the one removed.
-        newWeightMaps.blitCropped(0, 0, mapIndex,
-            weightMaps, 0, 0, mapIndex + 1, width, height, texArrayDepth - mapIndex - 1);
+        // Copy weight maps from the old texture array to the new one with the new ordering.
+        for (BasisMaterialInfo material : materials)
+        {
+            int newIndex = material.getGPUIndex();
+            if (newIndex >= 0 && newIndex < materials.size())
+            {
+                Integer oldIndex = weightMapLocations.get(material.getName());
+                if (oldIndex != null)
+                {
+                    newWeightMaps.blitCropped(0, 0, newIndex,
+                        weightMaps, 0, 0, oldIndex, width, height, 1);
+                }
+            }
+        }
 
-        // Replace
+        // Refresh the weight map locations.
+        weightMapLocations.clear();
+        for (BasisMaterialInfo material : materials)
+        {
+            weightMapLocations.put(material.getName(), material.getGPUIndex());
+        }
+
+        // Replace the texture array reference and close the old one.
         weightMaps.close();
         weightMaps = newWeightMaps;
     }
@@ -342,6 +388,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     {
         weightMaps.close();
         weightMask.close();
+        weightMapLocations.clear();
     }
 
     public static String getUnpackedWeightMapFilename(String materialName, String format, String filenamePrefix)

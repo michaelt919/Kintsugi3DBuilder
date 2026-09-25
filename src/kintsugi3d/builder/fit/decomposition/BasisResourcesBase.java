@@ -59,9 +59,6 @@ public abstract class BasisResourcesBase<ContextType extends Context<ContextType
     }
 
     @Override
-    public abstract IndexAssignableMaterialBasis getBasis();
-
-    @Override
     public int getMaterialCount()
     {
         return getBasis().getMaterialCount();
@@ -88,30 +85,29 @@ public abstract class BasisResourcesBase<ContextType extends Context<ContextType
         NativeVectorBuffer diffuseNativeBuffer =
             factory.createEmpty(NativeDataType.FLOAT, 4, getActiveMaterialCount());
 
-        // Include disabled materials which should come after all enabled materials.
-        int b = 0;
-        for (IndexAssignableBasisMaterialInfo material : getBasis().getMaterials())
+        // Assumes that GPU indices have already been assigned.
+        for (BasisMaterialInfo material : getBasis().getMaterials())
         {
-            // Update the index where the material lives in GPU memory.
-            material.setGPUIndex(b);
-
-            // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-            for (int m = 0; m <= basisResolution; m++)
+            if (material.isEnabled())
             {
-                // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, material.evaluateSpecularRed(m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, material.evaluateSpecularGreen(m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, material.evaluateSpecularBlue(m));
+                int b = material.getGPUIndex();
+
+                // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
+                for (int m = 0; m <= basisResolution; m++)
+                {
+                    // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
+                    basisMapBuffer.set(m + (basisResolution + 1) * b, 0, material.evaluateSpecularRed(m));
+                    basisMapBuffer.set(m + (basisResolution + 1) * b, 1, material.evaluateSpecularGreen(m));
+                    basisMapBuffer.set(m + (basisResolution + 1) * b, 2, material.evaluateSpecularBlue(m));
+                }
+
+                // Store each channel of the diffuse albedo in the local buffer.
+                DoubleVector3 diffuseColor = material.getDiffuseColor();
+                diffuseNativeBuffer.set(b, 0, diffuseColor.x);
+                diffuseNativeBuffer.set(b, 1, diffuseColor.y);
+                diffuseNativeBuffer.set(b, 2, diffuseColor.z);
+                diffuseNativeBuffer.set(b, 3, 1.0f);
             }
-
-            // Store each channel of the diffuse albedo in the local buffer.
-            DoubleVector3 diffuseColor = material.getDiffuseColor();
-            diffuseNativeBuffer.set(b, 0, diffuseColor.x);
-            diffuseNativeBuffer.set(b, 1, diffuseColor.y);
-            diffuseNativeBuffer.set(b, 2, diffuseColor.z);
-            diffuseNativeBuffer.set(b, 3, 1.0f);
-
-            b++;
         }
 
         if (getActiveMaterialCount() != basisMaps.getHeight()) // if the number of basis functions has changed, reallocate

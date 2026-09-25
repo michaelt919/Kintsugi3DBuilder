@@ -11,8 +11,12 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
+import kintsugi3d.builder.util.MappedChange;
+import kintsugi3d.builder.util.MappedChange.Type;
+import kintsugi3d.builder.util.Observable;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +25,8 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     implements TextureResources<ContextType>
 {
     protected static final Logger LOG = LoggerFactory.getLogger(TextureResourcesBase.class);
+
+    private Observable<MappedChange<String, BasisMaterialInfo>> basisObservable;
 
     protected abstract MutableBasisResources<ContextType> getMutableBasisResources();
 
@@ -36,7 +42,12 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
         MutableBasisResources<ContextType> basisResources = getMutableBasisResources();
         if (basisResources != null)
         {
-            basisResources.deleteBasisMaterial(materialName);
+            BasisMaterialInfo removed = basisResources.deleteBasisMaterial(materialName);
+
+            if (basisObservable != null)
+            {
+                basisObservable.notifyObservers(new MappedChange<>(Type.REMOVED, materialName, removed));
+            }
         }
     }
 
@@ -46,7 +57,18 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
         MutableBasisResources<ContextType> basisResources = getMutableBasisResources();
         if (basisResources != null)
         {
-            basisResources.toggleBasisMaterial(materialName);
+            BasisMaterialInfo toggled = basisResources.toggleBasisMaterial(materialName);
+
+            if (basisObservable != null)
+            {
+                basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, materialName, toggled));
+            }
         }
+    }
+
+    @Override
+    public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
+    {
+        this.basisObservable = basisObservable;
     }
 }

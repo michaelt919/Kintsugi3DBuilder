@@ -14,12 +14,16 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
 import kintsugi3d.builder.fit.decomposition.MutableMaterialBasis;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.util.MappedChange;
+import kintsugi3d.builder.util.MappedChange.Type;
+import kintsugi3d.builder.util.Observable;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
@@ -48,6 +52,8 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     private final MutableBasisResources<ContextType> mutableBasisResources;
+
+    private Observable<MappedChange<String, BasisMaterialInfo>> basisObservable;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
         ReadonlyTextureResources<ContextType> original, MutableMaterialBasis basis, TextureResolution textureResolution) throws IOException
@@ -167,13 +173,29 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
     @Override
     public void toggleBasisMaterial(String materialName)
     {
-        mutableBasisResources.toggleBasisMaterial(materialName);
+        BasisMaterialInfo toggled = mutableBasisResources.toggleBasisMaterial(materialName);
+
+        if (basisObservable != null)
+        {
+            basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, materialName, toggled));
+        }
     }
 
     @Override
     public void deleteBasisMaterial(String materialName)
     {
-        mutableBasisResources.deleteBasisMaterial(materialName);
+        BasisMaterialInfo removed = mutableBasisResources.deleteBasisMaterial(materialName);
+
+        if (basisObservable != null)
+        {
+            basisObservable.notifyObservers(new MappedChange<>(Type.REMOVED, materialName, removed));
+        }
+    }
+
+    @Override
+    public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
+    {
+        this.basisObservable = basisObservable;
     }
 
     public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()

@@ -13,12 +13,13 @@ package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
@@ -36,11 +37,11 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
         super(context, basis.getMaterialCount(), basis.getSpecularResolution());
         this.basis = basis;
 
-        // Assign GPU indices before loading weightmaps
-        refreshGraphicsResources();
-
         this.weightResources = new BasisWeightResources<>(context,
             textureResolution.width, textureResolution.height, basis);
+
+        refreshGraphicsResources();
+
     }
 
     private MutableBasisResources(ContextType context, MutableMaterialBasis basis, File priorSolutionDirectory)
@@ -48,9 +49,6 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
         // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
         super(context, basis.getMaterialCount(), basis.getSpecularResolution());
         this.basis = basis;
-
-        // Assign GPU indices before loading weightmaps
-        refreshGraphicsResources();
 
         BasisWeightResources<ContextType> loadedWeightResources = null;
         try
@@ -63,6 +61,7 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
         }
         this.weightResources = loadedWeightResources;
 
+        refreshGraphicsResources();
     }
 
     @Override
@@ -86,32 +85,31 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
     {
         // Delete the basis materials themselves and the corresponding weight maps
         BasisMaterialInfo deleted = basis.deleteMaterial(name);
+        refreshGraphicsResources();
 
         if (weightResources != null)
         {
-            weightResources.deleteWeightMap(deleted.getGPUIndex());
-
-            // Need to refresh GPU indices before proceeding.
-            refreshGraphicsResources();
+            weightResources.refreshWeightMapOrdering();
 
             try
             {
-                ViewSet viewSet = Global.io().getLoadedViewSet();
-                File supportingFilesDir = viewSet.getSupportingFilesDirectory();
-
                 // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
                 new BasisImageCreator<>(getContext(), 2 * getBasisResolution() + 1)
-                    .createImages(this, viewSet.getThumbnailImageDirectory());
+                    .createImages(this, Global.io().getLoadedViewSet().getThumbnailImageDirectory());
 
-                // Save basis functions and weight maps to prevent inconsistency with thumbnails if the user forgets to save manually.
-                save(supportingFilesDir);
-                weightResources.saveUnpacked("PNG", supportingFilesDir);
+                // Asynchronously save the project to prevent inconsistency with thumbnails if the user forgets to save manually.
+                Global.io().saveProject();
             }
             catch (IOException e)
             {
                 LOG.error("An filesystem error occurred while deleting the basis material.", e);
             }
+            catch (ParserConfigurationException|TransformerException e)
+            {
+                LOG.error("An error occurred while saving the project.", e);
+            }
         }
+
         return deleted;
     }
 

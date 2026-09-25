@@ -69,6 +69,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
         int m2 = m1 + 1;
         double t = mExact - m1;
 
+        // List may contain  both enabled and disabled materials, but the disabled materials shouldn't get accessed.
         List<? extends BasisMaterialInfo> materials = solution.getMaterialBasis().getIndexableMaterialList();
 
         return b ->
@@ -107,6 +108,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     @Override
     public int getBasisFunctionCount()
     {
+        // Only need enabled materials during optimization.
         return solution.getMaterialBasis().getEnabledMaterialCount();
     }
 

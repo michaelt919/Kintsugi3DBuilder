@@ -46,9 +46,11 @@ final class MutableBasisMaterialInfo implements IndexAssignableBasisMaterialInfo
     private int gpuIndex;
 
     private MutableBasisMaterialInfo(
-        String name, String friendlyName, DoubleVector3 diffuseColor, double[] redBasis, double[] greenBasis, double[] blueBasis, boolean enabled)
+        String name, int gpuIndex, String friendlyName, DoubleVector3 diffuseColor,
+        double[] redBasis, double[] greenBasis, double[] blueBasis, boolean enabled)
     {
         this.name = name;
+        this.gpuIndex = gpuIndex;
         this.friendlyName = friendlyName;
         this.diffuseColor = diffuseColor;
         this.redBasis = redBasis;
@@ -68,10 +70,11 @@ final class MutableBasisMaterialInfo implements IndexAssignableBasisMaterialInfo
      * @return
      */
     public static MutableBasisMaterialInfo create(
-        String name, String friendlyName, DoubleVector3 diffuseColor, double[] redBasis, double[] greenBasis, double[] blueBasis, boolean enabled)
+        String name, int gpuIndex, String friendlyName, DoubleVector3 diffuseColor,
+        double[] redBasis, double[] greenBasis, double[] blueBasis, boolean enabled)
     {
         return new MutableBasisMaterialInfo(
-            name, friendlyName, diffuseColor,
+            name, gpuIndex, friendlyName, diffuseColor,
             Arrays.copyOf(redBasis, redBasis.length),
             Arrays.copyOf(greenBasis, greenBasis.length),
             Arrays.copyOf(blueBasis, blueBasis.length),
@@ -88,9 +91,10 @@ final class MutableBasisMaterialInfo implements IndexAssignableBasisMaterialInfo
      * @return
      */
     public static MutableBasisMaterialInfo create(
-        String name, String friendlyName, DoubleVector3 diffuseColor, double[] redBasis, double[] greenBasis, double[] blueBasis)
+        String name, int gpuIndex, String friendlyName, DoubleVector3 diffuseColor,
+        double[] redBasis, double[] greenBasis, double[] blueBasis)
     {
-        return create(name, friendlyName, diffuseColor, redBasis, greenBasis, blueBasis, true);
+        return create(name, gpuIndex, friendlyName, diffuseColor, redBasis, greenBasis, blueBasis, true);
     }
 
     @Override
@@ -166,6 +170,6 @@ final class MutableBasisMaterialInfo implements IndexAssignableBasisMaterialInfo
     public MutableBasisMaterialInfo copy(String newName)
     {
         // Don't need to copy arrays since they should be effectively immutable
-        return new MutableBasisMaterialInfo(newName, friendlyName, diffuseColor, redBasis, greenBasis, blueBasis, enabled);
+        return new MutableBasisMaterialInfo(newName, gpuIndex, friendlyName, diffuseColor, redBasis, greenBasis, blueBasis, enabled);
     }
 }
