@@ -14,14 +14,16 @@ package kintsugi3d.builder.resources.project;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.io.events.ProjectProcessedEvent;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.util.EventDispatcher;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.*;
+import kintsugi3d.builder.util.Observable;
+import kintsugi3d.builder.util.Observer;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -93,6 +95,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
         = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
+
+    private final Observable<MappedChange<String, BasisMaterialInfo>> basisObservable = new SimpleObservable<>();
 
     GraphicsResourcesCommon(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
@@ -273,6 +277,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             this.viewWeightBuffer = null;
             this.textureResources = TextureResources.makeNull(context);
         }
+
+        this.textureResources.setBasisObservable(basisObservable);
     }
 
     private float[] computeViewWeights()
@@ -521,6 +527,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
             IntVector2 processedTextureResolution = getProcessedWeightMapResolution();
             projectProcessed.notifyListeners( new ProjectProcessedEvent(processedTextureResolution.x, processedTextureResolution.y));
         }
+
+        textureResources.setBasisObservable(basisObservable);
     }
 
     /**
@@ -565,7 +573,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         if (basisEnabled)
         {
             builder
-                .define("BASIS_COUNT", textureResources.getBasisResources().getBasisCount())
+                .define("BASIS_COUNT", textureResources.getBasisResources().getActiveMaterialCount())
                 .define("BASIS_RESOLUTION", textureResources.getBasisResources().getBasisResolution());
         }
 
@@ -613,5 +621,15 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         this.textureResources.close();
         this.luminanceMapResources.close();
         this.viewIndexBuffer.close();
+    }
+
+    public void registerBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
+    {
+        basisObservable.registerObserver(observer);
+    }
+
+    public void removeBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
+    {
+        basisObservable.removeObserver(observer);
     }
 }

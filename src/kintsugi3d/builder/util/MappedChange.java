@@ -9,23 +9,30 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.fit.decomposition;
+package kintsugi3d.builder.util;
 
-import kintsugi3d.builder.core.texture.TextureResolution;
+import java.util.Collections;
+import java.util.Map;
 
-public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
+public class MappedChange<K, V>
 {
-    private final MaterialBasis materialBasis;
-
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
+    public enum Type
     {
-        super(textureResolution, materialBasis.getEnabledMaterialCount());
-        this.materialBasis = materialBasis;
+        ADDED, REMOVED, MODIFIED
     }
 
-    @Override
-    public MaterialBasis getMaterialBasis()
+    public final Type changeType;
+    public final Map<K, V> changeMap;
+
+    public MappedChange(Type changeType, Map<K, V> changeMap)
     {
-        return materialBasis;
+        this.changeType = changeType;
+        this.changeMap = Collections.unmodifiableMap(changeMap);
+    }
+
+    public MappedChange(Type changeType, K key, V value)
+    {
+        this.changeType = changeType;
+        this.changeMap = Map.of(key, value);
     }
 }

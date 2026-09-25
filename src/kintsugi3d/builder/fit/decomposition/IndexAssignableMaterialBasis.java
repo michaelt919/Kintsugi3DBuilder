@@ -9,30 +9,12 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.core.viewset;
+package kintsugi3d.builder.fit.decomposition;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.Collection;
 
-public class MappedChange<K, V>
+public interface IndexAssignableMaterialBasis extends MaterialBasis
 {
-    public enum Type
-    {
-        ADDED, REMOVED, MODIFIED
-    }
-
-    public final Type changeType;
-    public final Map<K, V> changeMap;
-
-    MappedChange(Type changeType, Map<K, V> changeMap)
-    {
-        this.changeType = changeType;
-        this.changeMap = Collections.unmodifiableMap(changeMap);
-    }
-
-    MappedChange(Type changeType, K key, V value)
-    {
-        this.changeType = changeType;
-        this.changeMap = Map.of(key, value);
-    }
+    @Override
+    Collection<? extends IndexAssignableBasisMaterialInfo> getMaterials();
 }

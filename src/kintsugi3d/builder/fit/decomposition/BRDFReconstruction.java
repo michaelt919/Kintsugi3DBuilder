@@ -36,7 +36,7 @@ public class BRDFReconstruction
     {
         this.stepBasis = stepBasis;
         this.settings = settings;
-        matrixSize = this.settings.getBasisCount() * (this.settings.getBasisComplexity() + 1);
+        matrixSize = this.settings.getMaterialCount() * (this.settings.getBasisComplexity() + 1);
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution, ProgressMonitor monitor)
@@ -50,7 +50,7 @@ public class BRDFReconstruction
 
         LOG.info("DONE!");
 
-        for (int b = 0; b < settings.getBasisCount(); b++)
+        for (int b = 0; b < settings.getMaterialCount(); b++)
         {
             int bCopy = b;
 
@@ -146,7 +146,7 @@ public class BRDFReconstruction
             })
             .collect(() -> new MatrixSystem(matrixSize, 3, DMatrixRMaj.class), MatrixSystem::addContribution);
 
-        for (int b = 0; b < settings.getBasisCount(); b++)
+        for (int b = 0; b < settings.getMaterialCount(); b++)
         {
             StringBuilder sb = new StringBuilder();
             sb.append("RHS, red for BRDF #").append(b).append(": ");
@@ -155,7 +155,7 @@ public class BRDFReconstruction
             for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
-                sb.append(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
+                sb.append(system.rhs[0].get((m + 1) * settings.getMaterialCount() + b));
             }
             sb.append('\n');
 
@@ -165,7 +165,7 @@ public class BRDFReconstruction
             for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
-                sb.append(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
+                sb.append(system.rhs[1].get((m + 1) * settings.getMaterialCount() + b));
             }
             sb.append('\n');
 
@@ -175,7 +175,7 @@ public class BRDFReconstruction
             for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
-                sb.append(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));
+                sb.append(system.rhs[2].get((m + 1) * settings.getMaterialCount() + b));
             }
             LOG.debug(sb.toString());
         }

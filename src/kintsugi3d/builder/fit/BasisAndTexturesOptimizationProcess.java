@@ -15,7 +15,6 @@ import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
 import kintsugi3d.builder.fit.settings.ReadonlyBasisOptimizationSettings;
 import kintsugi3d.builder.fit.settings.ReadonlySpecularFitSettings;
-import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
 import kintsugi3d.builder.resources.project.GraphicsResourcesTextureSpace;
 import kintsugi3d.builder.resources.project.ImageCache;
 import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
@@ -24,8 +23,6 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
-import kintsugi3d.optimization.function.BasisFunctions;
-import kintsugi3d.optimization.function.GeneralizedSmoothStepBasis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +45,9 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
         super(settings, outputDirectory);
         this.basisOptimizationSettings = basisOptimizationSettings;
     }
-    public <ContextType extends Context<ContextType>> void optimizeFitWithCache(
-        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+
+    public <ContextType extends Context<ContextType>> TextureResources<ContextType> optimizeFitWithCache(
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
@@ -66,9 +64,8 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
         Duration duration = Duration.between(start, Instant.now());
         LOG.info("Cache found / generated in: {}", duration);
 
-        // Runs the fit (long process) and then replaces the old material resources / textures
-        TextureResources<ContextType> result = optimizeFitWithCache(cache, monitor);
-        resources.replaceTextureResources(result);
+        // Runs the fit (long process) and then returns the old material resources / textures
+        return optimizeFitWithCache(cache, monitor);
     }
 
     private <ContextType extends Context<ContextType>> TextureResources<ContextType> optimizeFitWithCache(
@@ -115,7 +112,8 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
             context.getState().disableBackFaceCulling();
 
             SpecularDecompositionFromScratch sampledDecomposition =
-                new SpecularDecompositionFromScratch(sampled.getTextureResolution(), basisOptimizationSettings);
+                new SpecularDecompositionFromScratch(sampled.getTextureResolution(),
+                    basisOptimizationSettings.getMaterialCount(), basisOptimizationSettings.getBasisResolution());
 
             try (SpecularFitOptimizable<ContextType> sampledFit = optimizeFit(sampled, sampledDecomposition, monitor)) // low-res fit happens here; takes a while
             {
@@ -134,7 +132,8 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
         throws IOException, UserCancellationException
     {
         SpecularDecompositionFromScratch decomposition =
-            new SpecularDecompositionFromScratch(getSettings().getTextureResolution(), basisOptimizationSettings);
+            new SpecularDecompositionFromScratch(getSettings().getTextureResolution(),
+                basisOptimizationSettings.getMaterialCount(), basisOptimizationSettings.getBasisResolution());
         return optimizeFit(resources, decomposition, monitor);
     }
 
@@ -155,21 +154,12 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
         }
 
         SpecularFitOptimizable<ContextType> specularFit = SpecularFitOptimizable.createNew(
-            resources, programFactory, decomposition.getTextureResolution(), basisOptimizationSettings,
+            resources, programFactory, decomposition.getMaterialBasis(), decomposition.getTextureResolution(),
             getSettings().getNormalOptimizationSettings(), false);
 
         try
         {
-            BasisFunctions basisFunctions = new GeneralizedSmoothStepBasis(
-                basisOptimizationSettings.getBasisResolution(),
-                basisOptimizationSettings.getMetallicity(),
-                basisOptimizationSettings.getSpecularMinWidth(),
-                basisOptimizationSettings.getSpecularMaxWidth(),
-                basisOptimizationSettings.getBasisComplexity(),
-                x -> 3 * x * x - 2 * x * x * x);
-//                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
-
-                // Preliminary optimization at low resolution to determine basis functions
+            // Preliminary optimization at low resolution to determine basis functions
             this.optimizeTexSpaceFit(resources, decomposition.getTextureResolution(),
                 (stream, monitorLocal) -> specularFit.optimizeFromScratch(
                     basisOptimizationSettings, decomposition, stream, getSettings().getPreliminaryConvergenceTolerance(),
@@ -191,7 +181,7 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
                 try (BasisImageCreator<ContextType> basisImageCreator =
                         new BasisImageCreator<>(resources.getContext(), basisOptimizationSettings.getBasisResolution()))
                 {
-                    basisImageCreator.createImages(specularFit, getOutputDirectory());
+                    basisImageCreator.createImages(specularFit.getBasisResources(), getOutputDirectory());
                 }
             }
 

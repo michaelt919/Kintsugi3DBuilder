@@ -15,10 +15,39 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ContextBound;
 import kintsugi3d.gl.core.Program;
 
+import java.io.File;
+
 public interface ReadonlyBasisResources<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
-    ReadonlyMaterialBasis getBasis();
-    int getBasisCount();
+    MaterialBasis getBasis();
+
+    /**
+     * Gets the number of materials, some of which could be inactive.
+     * @return
+     */
+    int getMaterialCount();
+
+    /**
+     * Gets the number of active materials, excluding inactive ones.
+     * @return
+     */
+    int getActiveMaterialCount();
+
     int getBasisResolution();
+
+    void save(File outputDirectory, String filenameOverride);
+
+    /**
+     * Saves basis function textures to the filesystem with a default filename.
+     *
+     * @param outputDirectory The directory in which to save the basis functions.
+     */
+    default void save(File outputDirectory)
+    {
+        save(outputDirectory, null);
+    }
+
     void useWithShaderProgram(Program<ContextType> program);
+
+    void refreshGraphicsResources();
 }

@@ -12,34 +12,41 @@
 package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
+import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.gl.core.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
 public class WeightmapTextureInfo extends TextureInfo
 {
-    private final int weightmapIndex;
+    private static final Logger LOG = LoggerFactory.getLogger(WeightmapTextureInfo.class);
 
-    public WeightmapTextureInfo(int weightmapIndex)
+    private final BasisMaterialInfo material;
+
+    public WeightmapTextureInfo(BasisMaterialInfo material)
     {
-        super(TextureResources.getUnpackedWeightMapName(weightmapIndex),
-            String.format("Weight map %d", weightmapIndex),
-            String.format("A grayscale map that determines where basis material %d is used.  Black (0) means that material is not used at all, white (1) means it is used exclusively.",
-                weightmapIndex));
-        this.weightmapIndex = weightmapIndex;
+        super(BasisWeightResources.getUnpackedWeightMapName(material.getName()),
+            material.getFriendlyName(),
+            String.format("A grayscale map that determines where %s is used.  Black (0) means that material is not used at all, white (1) means it is used exclusively.",
+                material.getFriendlyName()));
+        this.material = material;
     }
 
     @Override
     public ShaderInfo getVisualizationShader()
     {
         return new ShaderInfo(friendlyName, "rendermodes/viewTextureWeights.frag",
-            Map.of("WEIGHTMAP_INDEX", Optional.of(weightmapIndex)));
+            Map.of("WEIGHTMAP_INDEX", Optional.of(material.getGPUIndex())));
     }
 
     @Override
@@ -47,14 +54,26 @@ public class WeightmapTextureInfo extends TextureInfo
     {
         TextureResources<? extends Context<?>> resources = instance.getResources().getTextureResources();
         resources.getBasisWeightResources().replaceWeightMapWithDefaultFile(
-            weightmapIndex, instance.getViewSet().getSupportingFilesDirectory());
+            material.getName(), instance.getViewSet().getSupportingFilesDirectory());
     }
 
     @Override
     public ImageReplacer getReplaceData(ImageBasedRenderable<?> instance)
     {
-                return new WeightmapReplacer(instance.getResources().getTextureResources(), weightmapIndex,
-            new File(Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory(),
-                TextureResources.getUnpackedWeightMapFilename(weightmapIndex)));
+        File supportingFilesDirectory = Global.io().validateRenderable().getLoadedViewSet().getSupportingFilesDirectory();
+        try
+        {
+            return new WeightmapReplacer(instance.getResources().getTextureResources(), material,
+                BasisWeightResources.findWeightmap(
+                    supportingFilesDirectory, material.getName()));
+        }
+        catch (FileNotFoundException e)
+        {
+            LOG.error("Could not find weightmap to be replaced: {}", material.getName(), e);
+
+            // Return an object with the expected path anyways and attempt to recover.
+            return new WeightmapReplacer(instance.getResources().getTextureResources(), material,
+                new File(supportingFilesDirectory, BasisWeightResources.getUnpackedWeightMapFilename(material.getName())));
+        }
     }
 }

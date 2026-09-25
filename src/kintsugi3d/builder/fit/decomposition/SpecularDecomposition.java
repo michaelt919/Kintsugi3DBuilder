@@ -12,7 +12,6 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
@@ -20,34 +19,22 @@ import java.util.List;
 
 public interface SpecularDecomposition
 {
-    List<DoubleVector3> getDiffuseAlbedos();
-
-    ReadonlyMaterialBasis getMaterialBasis();
-    SpecularBasisWeights getWeights();
-
     TextureResolution getTextureResolution();
 
-    DoubleVector3 getDiffuseAlbedo(int basisIndex);
+    MaterialBasis getMaterialBasis();
+    SpecularBasisWeights getWeights();
 
     boolean areWeightsValid(int texelIndex);
-
-    double getWeight(int b, int p);
-
-    SimpleMatrix getWeights(int texelIndex);
-
-    void setWeights(int texelIndex, SimpleMatrix weights);
-
-    List<SimpleMatrix> getWeightsList();
-
+    void setWeightsValidity(int texelIndex, boolean validity);
     void invalidateWeights();
 
+    double getWeight(int b, int p);
+    SimpleMatrix getWeights(int texelIndex);
+    List<SimpleMatrix> getWeightsList();
+    void setWeights(int texelIndex, SimpleMatrix weights);
     void fillHoles();
 
-    void setWeightsValidity(int texelIndex, boolean validity);
-
     void saveBasisFunctions(File outputDirectory);
-
     void saveWeightMaps(File outputDirectory);
-
     void saveDiffuseMap(File outputDirectory);
 }

@@ -13,6 +13,7 @@ package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
@@ -20,40 +21,38 @@ import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.scene.ShaderInfo;
 import kintsugi3d.builder.util.AppIcon;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.ImageFinder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // TODO need object-oriented representation of single basis material
+public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMaterialInfo>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
-
     public MaterialCardFactory(ImageBasedRenderable<?> instance)
     {
         super(instance);
     }
 
     @Override
-    public Class<Integer> getDataClass()
+    public Class<BasisMaterialInfo> getDataClass()
     {
-        return Integer.class;
+        return BasisMaterialInfo.class;
     }
 
     @Override
-    public ProjectDataCard createCard(Integer cardIndex)
+    public ProjectDataCard createCard(BasisMaterialInfo material)
     {
+        String name = material.getName();
+
         String thumbnailPath;
         try
         {
             thumbnailPath = ImageFinder.getInstance().findImageFile(
                 new File(getViewSet().getThumbnailImageDirectory(),
-                    BasisImageCreator.getBasisImageFilename(cardIndex))).toString();
+                    BasisImageCreator.getBasisImageFilename(name))).toString();
         }
         catch (FileNotFoundException e)
         {
@@ -62,9 +61,11 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
         }
 
         ShaderInfo shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
-            cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
+            material.getGPUIndex(), VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
-        return new ShaderDataCard(String.format("%d", cardIndex), String.format("Material %d", cardIndex), shader, thumbnailPath, Map.of(),
+        TextureResources<?> resources = getInstance().getResources().getTextureResources();
+
+        return new ShaderDataCard(name, material.getFriendlyName(), shader, thumbnailPath, Map.of(),
             List.of(
                 Map.of(
                     "Highlight Material", () ->
@@ -77,7 +78,8 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
                         String subName;
 
                         if (overlayMode != null && overlayMode.isPresent() && overlayMode.get().equals("OVERLAY_MODE_WEIGHTMAP")
-                            && overlayWeightmapIndex != null && overlayWeightmapIndex.isPresent() && overlayWeightmapIndex.get().equals(cardIndex))
+                            && overlayWeightmapIndex != null && overlayWeightmapIndex.isPresent()
+                            && overlayWeightmapIndex.get().equals(material.getGPUIndex()))
                         {
                             // Overlay already active; toggle off
                             defines.remove("OVERLAY_MODE");
@@ -87,40 +89,34 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<Integer> // 
                         else
                         {
                             defines.put("OVERLAY_MODE", Optional.of("OVERLAY_MODE_WEIGHTMAP"));
-                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(cardIndex));
-                            subName = String.format("Palette material %d", cardIndex);
+                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(material.getGPUIndex()));
+                            subName = material.getFriendlyName();
                         }
 
                         Global.state().getUserShaderModel().setActiveShader(
                             new ShaderInfo(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
-                Map.of("Delete Material", () ->
-                    Global.state().getProjectModel().confirm("Delete Material", "Delete Material?",
-                        "This will delete the material from the project.",
-                        () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
-                        {
-                            try
-                            {
-                                TextureResources<?> resources = getInstance().getResources().getTextureResources();
-                                resources.deleteBasisMaterial(cardIndex);
-                            }
-                            finally // even if an exception is thrown, want to make sure we're in sync with the current state.
-                            {
-                                // hard reset of cards list to re-number, etc.
-                                Global.state().getTabModels().getTab(TabsManager.MATERIALS).setCardList(createAllCards());
-                            }
-                        })))));
+                Map.of("Toggle Disabled", () ->
+                    // needs to run on graphics thread to replace GPU resources
+                    Rendering.runLater(() -> resources.toggleBasisMaterial(material.getName())),
+                "Delete Material", () ->
+                    Global.state().getProjectModel().confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
+                        // needs to run on graphics thread to replace GPU resources
+                        () -> Rendering.runLater(() -> resources.deleteBasisMaterial(material.getName()))))),
+            !material.isEnabled());
     }
 
     @Override
     public List<ProjectDataCard> createAllCards()
     {
-        ReadonlyBasisResources<? extends kintsugi3d.gl.core.Context<?>> basisResources = getInstance().getResources().getTextureResources().getBasisResources();
+        ReadonlyBasisResources<? extends Context<?>> basisResources =
+            getInstance().getResources().getTextureResources().getBasisResources();
         if (basisResources != null)
         {
-            return IntStream.range(0, basisResources.getBasisCount())
-                .mapToObj(this::createCard)
+            return basisResources.getBasis().getMaterials().stream()
+                .map(this::createCard)
                 .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ProjectDataCard::getInternalName))
                 .collect(Collectors.toUnmodifiableList());
         }
         else

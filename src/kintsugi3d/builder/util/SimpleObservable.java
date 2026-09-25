@@ -9,23 +9,35 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.fit.decomposition;
+package kintsugi3d.builder.util;
 
-import kintsugi3d.builder.core.texture.TextureResolution;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
-public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
+public class SimpleObservable<K, V> implements Observable<MappedChange<K, V>>
 {
-    private final MaterialBasis materialBasis;
+    private final Collection<Observer<MappedChange<K, V>>> observers =
+        Collections.synchronizedList(new ArrayList<>(8));
 
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
+    @Override
+    public void registerObserver(Observer<MappedChange<K, V>> observer)
     {
-        super(textureResolution, materialBasis.getEnabledMaterialCount());
-        this.materialBasis = materialBasis;
+        observers.add(observer);
     }
 
     @Override
-    public MaterialBasis getMaterialBasis()
+    public void removeObserver(Observer<MappedChange<K, V>> observer)
     {
-        return materialBasis;
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(MappedChange<K, V> change)
+    {
+        for (Observer<MappedChange<K, V>> observer : observers)
+        {
+            observer.update(change);
+        }
     }
 }

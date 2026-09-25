@@ -48,10 +48,6 @@ public class ObservableCarouselModel implements CarouselModel
     private final DoubleBinding carouselCardWidth =
         carouselCardHeight.multiply((double) DEFAULT_CARD_WIDTH / (double) DEFAULT_CARD_HEIGHT);
 
-    public ObservableCarouselModel()
-    {
-    }
-
     /**
      * returns the list of items (shader + canvas backend reference) currently held in global carousel model.
      * @return

@@ -34,6 +34,7 @@ struct MFDEval
     float nDotH;
 };
 
+#if BASIS_COUNT > 0
 MFDEval evalMFD(int m, float weights[BASIS_COUNT])
 {
     MFDEval result;
@@ -50,6 +51,7 @@ MFDEval evalMFD(int m, float weights[BASIS_COUNT])
 
     return result;
 }
+#endif
 
 void main()
 {
@@ -58,6 +60,7 @@ void main()
         discard;
     }
 
+#if BASIS_COUNT > 0
     float weights[BASIS_COUNT];
 
     for (int b = 0; b < BASIS_COUNT; b++)
@@ -153,4 +156,9 @@ void main()
 
     specularColor = vec4(linearToSRGB(fresnelOverPi.rgb * PI), 1.0);
     sqrtRoughness = vec4(vec3(sqrt(roughness)), 1.0);
+#else
+    // No specularity
+    specularColor = vec4(0.0, 0.0, 0.0, 1.0);
+    sqrtRoughness = vec4(1.0);
+#endif
 }

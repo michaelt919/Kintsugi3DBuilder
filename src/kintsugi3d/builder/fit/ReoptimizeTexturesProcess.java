@@ -13,8 +13,8 @@ package kintsugi3d.builder.fit;
 
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.fit.settings.ReadonlySpecularFitSettings;
-import kintsugi3d.builder.resources.project.GraphicsResourcesCacheable;
 import kintsugi3d.builder.resources.project.ImageCache;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
@@ -32,15 +32,15 @@ public class ReoptimizeTexturesProcess extends SpecularFitProcess
         super(settings, outputDirectory);
     }
 
-    public <ContextType extends Context<ContextType>> void reoptimizeTexturesWithCache(
-        GraphicsResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
+    public <ContextType extends Context<ContextType>> TextureResources<ContextType> reoptimizeTexturesWithCache(
+        ReadonlyImageBasedGraphicsResources<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         // Get cache (should already be generated).
         ImageCache<ContextType> cache = resources.cache(getSettings().getImageCacheSettings(), null);
 
-        // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceTextureResources(reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor));
+        // Runs the fit (long process) and then returns the old material resources / textures
+       return reoptimizeTexturesWithCache(cache, resources.getTextureResources(), monitor);
     }
 
     private <ContextType extends Context<ContextType>> TextureResources<ContextType> reoptimizeTexturesWithCache(
@@ -61,7 +61,7 @@ public class ReoptimizeTexturesProcess extends SpecularFitProcess
             monitor.setStage(0, "Performing high-res fit...");
         }
 
-        MaterialBasis basis = original.getBasisResources().getBasis().copy();
+        MaterialBasis basis = original.getBasisResources().getBasis();
         return optimizeFullResTexturesWithCache(cache, monitor, original, basis, start);
     }
 

@@ -9,15 +9,34 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.resources.project;
+package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.ProgressMonitor;
-import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
-import java.io.IOException;
-
-public interface GraphicsResourcesCacheable<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResources<ContextType>
+public interface BasisMaterialInfo
 {
-    ImageCache<ContextType> cache(ReadonlyImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
+    DoubleVector3 getDiffuseColor();
+
+    /**
+     * Gets the number of intervals between discrete elements of this basis material.
+     * This ends up being the number of elements in each basis function array - 1
+     * (or in other words, the highest allowed value of m, inclusive, for the evaluate methods).
+     *
+     * @return
+     */
+    int getResolution();
+
+    double evaluateSpecularRed(int m);
+
+    double evaluateSpecularGreen(int m);
+
+    double evaluateSpecularBlue(int m);
+
+    String getFriendlyName();
+
+    String getName();
+
+    boolean isEnabled();
+
+    int getGPUIndex();
 }

@@ -13,6 +13,7 @@ package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
 import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.io.gltf.CustomTextureExport;
 import kintsugi3d.builder.io.gltf.PBRExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
@@ -62,31 +63,18 @@ public class Kintsugi3DViewerExporter extends PBRExporter
     {
         if (getTextureResources().getBasisResources() != null)
         {
-            int basisCount = getTextureResources().getBasisResources().getBasisCount();
-            if (basisCount > 0)
+            int materialCount = getTextureResources().getBasisResources().getActiveMaterialCount();
+            if (materialCount > 0)
             {
                 // Add weight images
                 SpecularWeights weights = new SpecularWeights();
+                weights.setStride(TextureResources.WEIGHTS_PER_CHANNEL_PACKED_IMAGE);
 
-                if (shouldCombineWeights())
+                for (int b = 0; b * weights.getStride() < materialCount; b++)
                 {
-                    weights.setStride(TextureResources.WEIGHTS_PER_PACKED_CHANNEL);
-                    for (int b = 0; b * weights.getStride() < basisCount; b++)
-                    {
-                        String weightmapName = TextureResources.getPackedWeightMapName(b);
-                        TextureInfo weightTexInfo = addTexture(weightmapName, true);
-                        weights.addTexture(weightTexInfo);
-                    }
-                }
-                else
-                {
-                    weights.setStride(1);
-                    for (int b = 0; b < basisCount; b++)
-                    {
-                        String weightmapName = TextureResources.getUnpackedWeightMapName(b);
-                        TextureInfo weightTexInfo = addTexture(weightmapName, true);
-                        weights.addTexture(weightTexInfo);
-                    }
+                    String weightmapName = TextureResources.getPackedWeightMapName(b);
+                    TextureInfo weightTexInfo = addTexture(weightmapName, true);
+                    weights.addTexture(weightTexInfo);
                 }
 
                 extras.setSpecularWeights(weights);
@@ -101,18 +89,10 @@ public class Kintsugi3DViewerExporter extends PBRExporter
 
         // Check if we need to fallback to PNG to ensure alpha channels exist.
         String format = determineFileFormat(getTextureFileFormat(), true);
-
-        if (shouldCombineWeights())
-        {
-            getTextureResources().savePackedWeightMaps(format, outputDirectory, getTextureFilePrefix());
-        }
-        else
-        {
-            getTextureResources().saveUnpackedWeightMaps(format, outputDirectory, getTextureFilePrefix());
-        }
+        getTextureResources().savePackedWeightMaps(format, outputDirectory, getTextureFilePrefix());
 
         getTextureResources().saveBasisFunctions(outputDirectory,
-            TextureResources.getBasisFunctionsFilename(getTextureFilePrefix()));
+            BasisResources.getBasisFunctionsFilename(getTextureFilePrefix()));
     }
 
     @Override

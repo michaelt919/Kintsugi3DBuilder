@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.internal;
 
 import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.IntegerExpression;
 import javafx.beans.binding.StringExpression;
@@ -21,7 +22,9 @@ import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.ImageReplacer;
+import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.javafx.controllers.scene.camera.ObservableCameraSettings;
 import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.javafx.controllers.scene.lights.ObservableLightGroupSettings;
@@ -132,12 +135,6 @@ public class ObservableProjectModel extends ProjectModelBase<
     }
 
     @Override
-    public void notifyProcessingComplete()
-    {
-        onProcessingComplete.get().handle(new ProcessingCompleteEvent());
-    }
-
-    @Override
     public File getColorCheckerFile()
     {
         return this.colorCheckerFile.get();
@@ -155,8 +152,7 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectOpen.get();
     }
 
-    @Override
-    public void setProjectOpen(boolean projectOpen)
+    private void setProjectOpen(boolean projectOpen)
     {
         this.projectOpen.set(projectOpen);
     }
@@ -172,8 +168,7 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectName.get();
     }
 
-    @Override
-    public void setProjectName(String projectName)
+    private void setProjectName(String projectName)
     {
         this.projectName.set(projectName);
     }
@@ -189,8 +184,7 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectLoaded.get();
     }
 
-    @Override
-    public void setProjectLoaded(boolean projectLoaded)
+    private void setProjectLoaded(boolean projectLoaded)
     {
         this.projectLoaded.set(projectLoaded);
     }
@@ -206,8 +200,7 @@ public class ObservableProjectModel extends ProjectModelBase<
         return projectProcessed.get();
     }
 
-    @Override
-    public void setProjectProcessed(boolean projectProcessed)
+    private void setProjectProcessed(boolean projectProcessed)
     {
         this.projectProcessed.set(projectProcessed);
     }
@@ -229,14 +222,12 @@ public class ObservableProjectModel extends ProjectModelBase<
         return processedTextureHeight.get();
     }
 
-    @Override
-    public void setProcessedTextureWidth(int processedTextureWidth)
+    private void setProcessedTextureWidth(int processedTextureWidth)
     {
         this.processedTextureWidth.set(processedTextureWidth);
     }
 
-    @Override
-    protected void setProcessedTextureHeight(int processedTextureHeight)
+    private void setProcessedTextureHeight(int processedTextureHeight)
     {
         this.processedTextureHeight.set(processedTextureHeight);
     }
@@ -257,8 +248,7 @@ public class ObservableProjectModel extends ProjectModelBase<
         return modelSize.get();
     }
 
-    @Override
-    public void setModelSize(Vector3 modelSize)
+    private void setModelSize(Vector3 modelSize)
     {
         this.modelSize.set(modelSize);
     }
@@ -266,6 +256,11 @@ public class ObservableProjectModel extends ProjectModelBase<
     public ObjectProperty<Vector3> getModelSizeProperty()
     {
         return modelSize;
+    }
+
+    private void notifyProcessingComplete()
+    {
+        onProcessingComplete.get().handle(new ProcessingCompleteEvent());
     }
 
     @Override
@@ -318,5 +313,48 @@ public class ObservableProjectModel extends ProjectModelBase<
         {
             LOG.error("Failed to open image replacement modal.");
         }
+    }
+
+    public void registerIOListeners()
+    {
+        IOModel ioModel = Global.io();
+
+        ioModel.projectOpenedListeners().addListener(event ->
+            Platform.runLater(() ->
+            {
+                setProjectOpen(true);
+                setProjectName(event.projectName);
+            }));
+
+        ioModel.projectSavedListeners().addListener(event ->
+            Platform.runLater(() -> setProjectName(event.projectName)));
+
+        ioModel.projectClosedListeners().addListener(event ->
+            Platform.runLater(() ->
+            {
+                setProjectOpen(false);
+                this.setProjectName(NULL_PROJECT_NAME);
+                setProjectLoaded(false);
+                setProjectProcessed(false);
+                setProcessedTextureWidth(0);
+                setProcessedTextureWidth(0);
+                setModelSize(new Vector3(1.0f));
+            }));
+
+        ioModel.projectLoadedListeners().addListener(event ->
+            Platform.runLater(() ->
+            {
+                setProjectLoaded(true);
+                setModelSize(event.modelSize);
+            }));
+
+        ioModel.projectProcessedListeners().addListener(event ->
+            Platform.runLater(() ->
+            {
+                setProjectProcessed(true);
+                setProcessedTextureWidth(event.textureWidth);
+                setProcessedTextureHeight(event.textureHeight);
+                notifyProcessingComplete();
+            }));
     }
 }

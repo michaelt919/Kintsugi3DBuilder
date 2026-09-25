@@ -13,10 +13,13 @@ package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.MappedChange;
+import kintsugi3d.builder.util.Observer;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -27,19 +30,19 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class ImageBasedGraphicsResourcesBase<ContextType extends Context<ContextType>> implements GraphicsResourcesCacheable<ContextType>
+public abstract class ImageBasedGraphicsResourcesBase<ContextType extends Context<ContextType>> implements ImageBasedGraphicsResources<ContextType>
 {
     private final GraphicsResourcesCommon<ContextType> commonResources;
 
     /**
      * Only one instance will be the owner of the shared resources (typicaly created when a project is loaded)
      */
-    private final boolean ownerOfSharedResources;
+    private final boolean ownerOfCommonResources;
 
-    ImageBasedGraphicsResourcesBase(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfSharedResources)
+    ImageBasedGraphicsResourcesBase(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfCommonResources)
     {
         this.commonResources = commonResources;
-        this.ownerOfSharedResources = ownerOfSharedResources;
+        this.ownerOfCommonResources = ownerOfCommonResources;
     }
 
     GraphicsResourcesCommon<ContextType> getCommonResources()
@@ -182,9 +185,19 @@ public abstract class ImageBasedGraphicsResourcesBase<ContextType extends Contex
     @Override
     public void close()
     {
-        if (this.ownerOfSharedResources && this.commonResources != null)
+        if (this.ownerOfCommonResources && this.commonResources != null)
         {
             this.commonResources.close();
         }
+    }
+
+    public void registerBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
+    {
+        commonResources.registerBasisObserver(observer);
+    }
+
+    public void removeBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
+    {
+        commonResources.removeBasisObserver(observer);
     }
 }

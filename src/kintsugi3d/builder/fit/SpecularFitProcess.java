@@ -17,7 +17,6 @@ import kintsugi3d.builder.core.viewset.DistortionProjection;
 import kintsugi3d.builder.core.viewset.Projection;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.fit.decomposition.MaterialBasis;
-import kintsugi3d.builder.fit.decomposition.ReadonlyMaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
 import kintsugi3d.builder.fit.settings.ReadonlySpecularFitSettings;
@@ -137,21 +136,17 @@ public abstract class SpecularFitProcess
     }
 
     protected <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> optimizeFullResTexturesWithCache(
-        ImageCache<ContextType> cache, ProgressMonitor monitor, ReadonlyTextureResources<ContextType> reference,
+        ImageCache<ContextType> cache, ProgressMonitor monitor, ReadonlyTextureResources<ContextType> original,
         MaterialBasis basis, Temporal start) throws IOException, UserCancellationException
     {
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-        SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(reference,
-            settings.getTextureResolution(), new SimpleBasisSettings(basis.getMaterialCount(), basis.getSpecularResolution()));
+        // Basis functions are not spatial, so we want to just copy for future use
+        // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
+        SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original, basis.copy(), settings.getTextureResolution());
 
         try
         {
-            // Basis functions are not spatial, so we want to just copy for future use
-            // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
-            assert fullResolution.getBasisResources() != null;
-            fullResolution.getBasisResources().setBasis(basis);
-
             // Find the original normal map imported with the geometry
             // TODO support importing in other ways, such as from Metashape project or manually
             // If normal map optimization is enabled, this will be used as the starting point.
@@ -213,7 +208,7 @@ public abstract class SpecularFitProcess
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
         Blittable<ReadonlyTextureResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
-        ReadonlyMaterialBasis basis,
+        MaterialBasis basis,
         File inputNormalMapFile,
         ProgressMonitor monitor)
         throws IOException, UserCancellationException
@@ -290,8 +285,9 @@ public abstract class SpecularFitProcess
                     {
                         TextureResolution blockResolution = blockResources.getTextureResolution();
                         try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.createNew(
-                            blockResources, resourcesWrapper, blockResolution,
-                            new SimpleBasisSettings(basis.getMaterialCount(), basis.getSpecularResolution()),
+                            // Basis copy technically needed here since the GPU indices for basis functions
+                            // could technically be modified while setting up the new instance of the basis resources.
+                            blockResources, resourcesWrapper, basis.copy(), blockResolution,
                             settings.getNormalOptimizationSettings(), settings.shouldIncludeConstantTerm()))
                         {
                             if (inputNormalMapFile != null)
@@ -309,7 +305,7 @@ public abstract class SpecularFitProcess
                             SpecularDecomposition blockDecomposition =
                                 new SpecularDecompositionFromExistingBasis(blockResolution, basis);
 
-                            if (basis.getMaterialCount() == 1)
+                            if (basis.getEnabledMaterialCount() == 1)
                             {
                                 // special case for a single basis function: pre-fill with default weights so that optimization is unnecesssary.
                                 int weightCount = blockResolution.width * blockResolution.height;

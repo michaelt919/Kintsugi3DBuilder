@@ -13,30 +13,30 @@ package kintsugi3d.builder.fit.settings;
 
 public class BasisSettings implements ReadonlyBasisSettings
 {
-    private int basisCount = 8;
+    private int materialCount = 8;
     private int basisResolution = 90;
 
     /**
      * @return The number of basis functions to use for the specular lobe.
      */
     @Override
-    public int getBasisCount()
+    public int getMaterialCount()
     {
-        return basisCount;
+        return materialCount;
     }
 
     /**
-     * @param basisCount The number of basis functions to use for the specular lobe.
+     * @param materialCount The number of basis functions to use for the specular lobe.
      */
-    public void setBasisCount(int basisCount)
+    public void setMaterialCount(int materialCount)
     {
-        if (basisCount <= 0)
+        if (materialCount <= 0)
         {
             throw new IllegalArgumentException("Basis count must be greater than zero.");
         }
         else
         {
-            this.basisCount = basisCount;
+            this.materialCount = materialCount;
         }
     }
 

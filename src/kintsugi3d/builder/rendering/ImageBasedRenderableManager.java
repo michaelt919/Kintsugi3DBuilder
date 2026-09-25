@@ -15,6 +15,7 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.IOHandler;
 import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
@@ -277,6 +278,24 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
                             break;
                         case MODIFIED:
                             photosTab.refreshCards(card -> change.changeMap.get(new File(card.getInternalName())));
+                            break;
+                    }
+                });
+
+                newInstance.getResources().registerBasisObserver(change ->
+                {
+                    CardsModel<BasisMaterialInfo> materialsTab = Global.state().getTabModels().getTab(TabsManager.MATERIALS, BasisMaterialInfo.class);
+
+                    switch (change.changeType)
+                    {
+                        case ADDED:
+                            tabsManager.refreshTab(TabsManager.MATERIALS); // TODO implement support for adding individual card without rebuilding
+                            break;
+                        case REMOVED:
+                            materialsTab.deleteCards(card -> change.changeMap.get(card.getInternalName()) != null);
+                            break;
+                        case MODIFIED:
+                            materialsTab.refreshCards(card -> change.changeMap.get(card.getInternalName()));
                             break;
                     }
                 });

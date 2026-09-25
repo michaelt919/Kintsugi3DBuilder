@@ -11,20 +11,22 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.gl.core.Context;
 
-public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
+public class SimpleBasisResources<ContextType extends Context<ContextType>> extends BasisResourcesBase<ContextType>
 {
     private final MaterialBasis materialBasis;
 
-    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
+    public SimpleBasisResources(ContextType context, MaterialBasis materialBasis)
     {
-        super(textureResolution, materialBasis.getEnabledMaterialCount());
+        // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
+        super(context, materialBasis.getMaterialCount(), materialBasis.getSpecularResolution());
         this.materialBasis = materialBasis;
+        refreshGraphicsResources();
     }
 
     @Override
-    public MaterialBasis getMaterialBasis()
+    public MaterialBasis getBasis()
     {
         return materialBasis;
     }

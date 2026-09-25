@@ -17,8 +17,11 @@ import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.vecmath.IntVector2;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface ReadonlyImageBasedGraphicsResources<ContextType extends Context<ContextType>> extends ReadonlyGraphicsResources<ContextType>
@@ -74,4 +77,6 @@ public interface ReadonlyImageBasedGraphicsResources<ContextType extends Context
     {
         return new GraphicsStreamFactory<>(this);
     }
+
+    ImageCache<ContextType> cache(ReadonlyImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
 }

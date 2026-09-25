@@ -14,8 +14,11 @@ package kintsugi3d.builder.resources.project.specular;
 import kintsugi3d.builder.core.texture.NamedTextureInfo;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
+import kintsugi3d.builder.util.MappedChange;
+import kintsugi3d.builder.util.Observable;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +31,7 @@ import java.util.Map;
 public interface TextureResources<ContextType extends Context<ContextType>>
     extends Blittable<ReadonlyTextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, ManagedResource
 {
-    int WEIGHTS_PER_PACKED_CHANNEL = 4;
+    int WEIGHTS_PER_CHANNEL_PACKED_IMAGE = 4;
 
     Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
@@ -62,9 +65,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     {
         return getTextures().get(tex.details);
     }
-
-    @Override
-    BasisResources<ContextType> getBasisResources();
 
     @Override
     BasisWeightResources<ContextType> getBasisWeightResources();
@@ -171,7 +171,7 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             }
 
             @Override
-            public BasisResources<ContextType> getBasisResources()
+            public MutableBasisResources<ContextType> getBasisResources()
             {
                 return null;
             }
@@ -217,12 +217,27 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             }
 
             @Override
+            public void saveUnpackedWeightMaps(String format, File outputDirectory)
+            {
+            }
+
+            @Override
             public void saveBasisFunctions(File outputDirectory, String filenameOverride)
             {
             }
 
             @Override
-            public void deleteBasisMaterial(int materialIndex)
+            public void toggleBasisMaterial(String materialName)
+            {
+            }
+
+            @Override
+            public void deleteBasisMaterial(String materialName)
+            {
+            }
+
+            @Override
+            public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
             {
             }
         };
@@ -270,38 +285,8 @@ public interface TextureResources<ContextType extends Context<ContextType>>
 
     static String getPackedWeightMapName(int index)
     {
-        int scaledWeightMapIndex = index * WEIGHTS_PER_PACKED_CHANNEL;
-        return String.format("weights%02d%02d", scaledWeightMapIndex, scaledWeightMapIndex + (WEIGHTS_PER_PACKED_CHANNEL - 1));
-    }
-
-    static String getUnpackedWeightMapFilename(int index, String format, String filenamePrefix)
-    {
-        return getTextureFilename(getUnpackedWeightMapName(index), format, filenamePrefix);
-    }
-
-    static String getUnpackedWeightMapFilename(int index, String format)
-    {
-        return getUnpackedWeightMapFilename(index, format, "");
-    }
-
-    static String getUnpackedWeightMapFilename(int index)
-    {
-        return getUnpackedWeightMapFilename(index, "PNG");
-    }
-
-    static String getUnpackedWeightMapName(int index)
-    {
-        return String.format("weights%02d", index);
-    }
-
-    static String getBasisFunctionsFilename()
-    {
-        return getBasisFunctionsFilename("");
-    }
-
-    static String getBasisFunctionsFilename(String filenamePrefix)
-    {
-        return String.format("%sbasisFunctions.csv", filenamePrefix);
+        int scaledWeightMapIndex = index * WEIGHTS_PER_CHANNEL_PACKED_IMAGE;
+        return String.format("weights%02d%02d", scaledWeightMapIndex, scaledWeightMapIndex + (WEIGHTS_PER_CHANNEL_PACKED_IMAGE - 1));
     }
 
     static File getTextureFile(StandardTexture t, File directory)
@@ -349,13 +334,15 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return loadTexture(tex.details.name, directory, getContext());
     }
 
+    void toggleBasisMaterial(String materialName);
+
     /**
      * Deletes one of the basis materials.
      * This will cause the basis materials, weight maps, and thumbnail images to be automatically re-saved
      * to the project's supporting files directory.
-      * @param materialIndex
+      * @param materialName
      */
-    void deleteBasisMaterial(int materialIndex);
+    void deleteBasisMaterial(String materialName);
 
     /**
      * Refreshes a texture specified by key using the default location for the given texture.
@@ -378,4 +365,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     {
         getTextures().get(key).load(newTextureFile, true);
     }
+
+    void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable);
 }
