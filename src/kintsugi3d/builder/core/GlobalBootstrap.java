@@ -13,7 +13,6 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
-import kintsugi3d.builder.state.project.ProjectModel;
 
 public final class GlobalBootstrap
 {
@@ -27,7 +26,7 @@ public final class GlobalBootstrap
     }
 
     public static void initialize(
-        Kintsugi3DBuilderState injectedState, ReadonlyLoadOptionsModel loadOptionsModel, ProjectModel projectModel)
+        Kintsugi3DBuilderState injectedState, ReadonlyLoadOptionsModel loadOptionsModel)
     {
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)
@@ -37,7 +36,6 @@ public final class GlobalBootstrap
                 state = injectedState;
 
                 IO.setLoadOptionsModel(loadOptionsModel);
-//                IO.setProjectModel(projectModel);
             }
             else
             {

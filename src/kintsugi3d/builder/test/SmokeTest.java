@@ -12,6 +12,7 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.GlobalBootstrap;
 import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.BasisAndTexturesOptimizationProcess;
@@ -324,7 +325,8 @@ public class SmokeTest
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         // These are set since they otherwise are set in JavaFX related code
-        Global.io().setLoadOptionsModel(imageLoadOptions);
+        TestingState state = new TestingState();
+        GlobalBootstrap.initialize(state, imageLoadOptions);
         ImageBasedRenderableManager<OpenGLContext> mockIOHandler = new ImageBasedRenderableManager<>(context);
         mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
         Global.io().setLoadingHandler(mockIOHandler);
@@ -353,9 +355,11 @@ public class SmokeTest
         LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         // These are set since they otherwise are set in JavaFX related code
-        Global.io().setLoadOptionsModel(imageLoadOptions);
+        TestingState state = new TestingState();
+        GlobalBootstrap.initialize(state, imageLoadOptions);
         ImageBasedRenderableManager<OpenGLContext> mockIOHandler = new ImageBasedRenderableManager<>(context);
-        mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
+        mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a
+        // better way to do this instead of using a new method for it
         Global.io().setLoadingHandler(mockIOHandler);
 
         MetashapeDocument doc = new MetashapeDocument(psxFile);

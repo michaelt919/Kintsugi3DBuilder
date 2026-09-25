@@ -171,8 +171,7 @@ public class JavaFXApplication extends Application
 
         // Inject dependency for global state.
         MultithreadState multithreadState = MultithreadState.getInstance();
-        GlobalBootstrap.initialize(multithreadState,
-            multithreadState.getLoadOptionsModel(), multithreadState.getProjectModel());
+        GlobalBootstrap.initialize(multithreadState, multithreadState.getLoadOptionsModel());
 
 //        for (String f : Font.getFamilies())
 //        {

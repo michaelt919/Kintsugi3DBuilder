@@ -9,16 +9,37 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state.project;
+package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.texture.ImageReplacer;
+import kintsugi3d.builder.state.project.*;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class TestingProjectModel extends ProjectModelBase<SerializableCameraSettings, SerializableEnvironmentSettings,
     SerializableLightGroupSettings<SerializableLightSettings>, SerializableLightSettings, SerializableObjectPoseSettings>
 {
+    public static final class ErrorMessage
+    {
+        public final String message;
+        public final Throwable throwable;
+
+        private ErrorMessage(String message, Throwable throwable)
+        {
+            this.message = message;
+            this.throwable = throwable;
+        }
+    }
+
+    private File colorCheckerFile;
+
+    private final Collection<ErrorMessage> errors = new ArrayList<>(1);
+    private final Collection<ErrorMessage> warnings = new ArrayList<>(1);
+
     @Override
     public List<SerializableCameraSettings> getCameraList()
     {
@@ -46,46 +67,49 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     @Override
     protected SerializableCameraSettings constructCameraSetting()
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     protected SerializableEnvironmentSettings constructEnvironmentSetting()
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     protected SerializableLightGroupSettings<SerializableLightSettings> constructLightGroupSetting()
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     protected SerializableObjectPoseSettings constructObjectPoseSetting()
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public File getColorCheckerFile()
     {
-        return null;
+        return colorCheckerFile;
     }
 
     @Override
     public void setColorCheckerFile(File colorCheckerFile)
     {
+        this.colorCheckerFile = colorCheckerFile;
     }
 
     @Override
     public void error(String message, Throwable e)
     {
+        errors.add(new ErrorMessage(message, e));
     }
 
     @Override
     public void warn(String message, Throwable e)
     {
+        warnings.add(new ErrorMessage(message, e));
     }
 
     @Override
@@ -102,5 +126,15 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     @Override
     public void requestUserImageReplacement(ImageReplacer imageReplacer)
     {
+    }
+
+    public Collection<ErrorMessage> getErrors()
+    {
+        return Collections.unmodifiableCollection(errors);
+    }
+
+    public Collection<ErrorMessage> getWarnings()
+    {
+        return Collections.unmodifiableCollection(warnings);
     }
 }
