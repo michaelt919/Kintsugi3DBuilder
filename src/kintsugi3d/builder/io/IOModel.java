@@ -20,7 +20,7 @@ import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.EventDispatcher;
 import kintsugi3d.builder.util.EventListeners;

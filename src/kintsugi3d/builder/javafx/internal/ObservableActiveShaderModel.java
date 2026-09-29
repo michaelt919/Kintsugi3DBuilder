@@ -13,8 +13,8 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import kintsugi3d.builder.state.scene.ActiveShaderModel;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ActiveShaderModel;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -9,29 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state;
+package kintsugi3d.builder.state.shader;
 
-import kintsugi3d.builder.state.shader.ShaderInfo;
-import kintsugi3d.gl.window.FramebufferCanvas;
-
-public class CarouselItem
+public interface ActiveShaderModel extends ReadonlyActiveShaderModel
 {
-    private final ShaderInfo shader;
-    private final FramebufferCanvas<?> canvas;
-
-    public CarouselItem(ShaderInfo shader, FramebufferCanvas<?> canvas)
-    {
-        this.shader = shader;
-        this.canvas = canvas;
-    }
-
-    public ShaderInfo getShader()
-    {
-        return shader;
-    }
-
-    public FramebufferCanvas<?> getCanvas()
-    {
-        return canvas;
-    }
+    void setActiveShader(ShaderInfo shaderInfo);
 }

@@ -22,7 +22,7 @@ import kintsugi3d.builder.javafx.controllers.sidebar.CarouselController;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.state.CarouselItem;
 import kintsugi3d.builder.state.CarouselModel;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.gl.core.FramebufferSize;
 
 import java.util.Objects;
@@ -97,8 +97,8 @@ public class ObservableCarouselModel implements CarouselModel
     @Override
     public void addToCarousel(ShaderInfo shader)
     {
-        // Prevents duplicate shaders in carousel / if the shaders don't match
-        // then shader is sent to carousel
+        // Prevents duplicate shaders in carousel
+        // If the shaders don't match then shader is sent to carousel
         if (carouselItems.stream().noneMatch(item -> Objects.equals(item.getShader(), shader)))
         {
             int initWidth = (int) Math.round(getCarouselCardWidth());
@@ -110,7 +110,7 @@ public class ObservableCarouselModel implements CarouselModel
             // Use Platform runLater to set up the card on the JavaFX side.
             // This will trigger the FXML to load via observer and subsequently connect to the backend.
             Rendering.getRenderableManager().addRenderView(shader, new FramebufferSize(initWidth, initHeight),
-                0, 0, initWidth, CARD_SAFE_REGION_BOTTOM_OFFSET, framebufferCanvas ->
+                0, 0, 0, CARD_SAFE_REGION_BOTTOM_OFFSET, framebufferCanvas ->
                     {
                         // After the canvas FBO is allocated we are notified on the graphics thread.
                         // Use Platform runLater to set up the card on the JavaFX side.

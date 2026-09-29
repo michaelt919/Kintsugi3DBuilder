@@ -20,11 +20,11 @@ import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
-import kintsugi3d.builder.state.scene.ActiveShaderModel;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.state.shader.ActiveShaderModel;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
 {

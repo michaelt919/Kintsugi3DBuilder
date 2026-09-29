@@ -9,9 +9,21 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state.scene;
+package kintsugi3d.builder.state.shader;
 
-public interface ActiveShaderModel extends ReadonlyUserShaderModel
+import java.io.File;
+import java.util.Map;
+import java.util.Optional;
+
+public interface ShaderInfo
 {
-    void setActiveShader(ShaderInfo shaderInfo);
+    String getFriendlyName();
+
+    String getFullName();
+
+    String getFilename();
+
+    File getFile();
+
+    Map<String, Optional<Object>> getDefines();
 }

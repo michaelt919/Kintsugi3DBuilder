@@ -41,7 +41,7 @@ vec3 getMFDGradient(float nDotH)
     float wLow = wMid - 1.0 / BASIS_RESOLUTION;
     float wHigh = wMid + 1.0 / BASIS_RESOLUTION;
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         estimate += texture(weightMaps, vec3(fTexCoord, b))[0]
             * (texture(basisFunctions, vec2(wHigh, b)).rgb - texture(basisFunctions, vec2(wLow, b)).rgb);

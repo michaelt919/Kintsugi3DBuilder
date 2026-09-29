@@ -11,15 +11,12 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 
@@ -85,29 +82,11 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
     {
         // Delete the basis materials themselves and the corresponding weight maps
         BasisMaterialInfo deleted = basis.deleteMaterial(name);
-        refreshGraphicsResources();
+        refreshGraphicsResources(); // order of materials may have changed.
 
         if (weightResources != null)
         {
             weightResources.refreshWeightMapOrdering();
-
-            try
-            {
-                // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
-                new BasisImageCreator<>(getContext(), 2 * getBasisResolution() + 1)
-                    .createImages(this, Global.io().getLoadedViewSet().getThumbnailImageDirectory());
-
-                // Asynchronously save the project to prevent inconsistency with thumbnails if the user forgets to save manually.
-                Global.io().saveProject();
-            }
-            catch (IOException e)
-            {
-                LOG.error("An filesystem error occurred while deleting the basis material.", e);
-            }
-            catch (ParserConfigurationException|TransformerException e)
-            {
-                LOG.error("An error occurred while saving the project.", e);
-            }
         }
 
         return deleted;
@@ -115,29 +94,40 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
 
     private BasisMaterialInfo disableBasisMaterial(String name)
     {
-        return basis.disableMaterial(name);
+        BasisMaterialInfo result = basis.disableMaterial(name);
+        refreshGraphicsResources(); // order of materials may have changed.
+
+        if (weightResources != null)
+        {
+            weightResources.refreshWeightMapOrdering();
+        }
+
+        return result;
     }
 
     private BasisMaterialInfo enableBasisMaterial(String name)
     {
-        return basis.enableMaterial(name);
+        BasisMaterialInfo result = basis.enableMaterial(name);
+        refreshGraphicsResources(); // order of materials may have changed.
+
+        if (weightResources != null)
+        {
+            weightResources.refreshWeightMapOrdering();
+        }
+
+        return result;
     }
 
     public BasisMaterialInfo toggleBasisMaterial(String name)
     {
-        BasisMaterialInfo result;
         if (basis.isMaterialEnabled(name))
         {
-            result = disableBasisMaterial(name);
+            return disableBasisMaterial(name);
         }
         else
         {
-            result = enableBasisMaterial(name);
+            return enableBasisMaterial(name);
         }
-
-        refreshGraphicsResources();
-
-        return result;
     }
 
     /**

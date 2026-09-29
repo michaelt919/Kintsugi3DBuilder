@@ -26,6 +26,10 @@ uniform sampler1DArray basisFunctions;
 #define BASIS_COUNT 8
 #endif
 
+#ifndef ACTIVE_BASIS_COUNT
+#define ACTIVE_BASIS_COUNT BASIS_COUNT
+#endif
+
 layout(std140) uniform DiffuseColors
 {
 #if BASIS_COUNT > 0
@@ -40,7 +44,7 @@ vec3 getMFDEstimateRaw(float w)
 {
     vec3 estimate = vec3(0);
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * texture(basisFunctions, vec2(w, b)).rgb;
     }
@@ -63,7 +67,7 @@ vec3 getDiffuseEstimate()
 {
     vec3 estimate = vec3(0);
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * diffuseColors[b].rgb;
     }
@@ -76,7 +80,7 @@ vec3 getBRDFEstimate(float nDotH, float geomFactor)
     vec3 estimate = vec3(0);
     float w = getMFDLookupCoord(nDotH);
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * (diffuseColors[b].rgb / PI + texture(basisFunctions, vec2(w, b)).rgb * geomFactor);
     }

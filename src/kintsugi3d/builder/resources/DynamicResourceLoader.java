@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
@@ -49,7 +50,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private final Object loadEnvironmentLock = new Object();
 
     private volatile File desiredShaderFile;
-    private volatile Map<String, Optional<Object>> shaderDefines;
+    private volatile Supplier<Map<String, Optional<Object>>> shaderDefinesFactory;
 
     private volatile File desiredEnvironmentFile;
 
@@ -98,7 +99,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         if (this.desiredShaderFile != null)
         {
             this.subject.useFragmentShader(desiredShaderFile);
-            this.subject.setExtraFragmentShaderDefines(this.shaderDefines);
+            this.subject.setExtraFragmentShaderDefinesFactory(this.shaderDefinesFactory);
             this.subject.reloadShaders();
 
             this.desiredShaderFile = null;
@@ -233,10 +234,10 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     }
 
     @Override
-    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    public void requestFragmentShader(File shaderFile, Supplier<Map<String, Optional<Object>>> extraDefinesFactory)
     {
         this.desiredShaderFile = shaderFile;
-        this.shaderDefines = extraDefines;
+        this.shaderDefinesFactory = extraDefinesFactory;
     }
 
     @Override

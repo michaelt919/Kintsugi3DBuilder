@@ -573,7 +573,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         if (basisEnabled)
         {
             builder
-                .define("BASIS_COUNT", textureResources.getBasisResources().getActiveMaterialCount())
+                .define("ACTIVE_BASIS_COUNT", textureResources.getBasisResources().getActiveMaterialCount())
+                .define("BASIS_COUNT", textureResources.getBasisResources().getMaterialCount())
                 .define("BASIS_RESOLUTION", textureResources.getBasisResources().getBasisResolution());
         }
 

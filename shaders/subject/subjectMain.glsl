@@ -132,7 +132,7 @@ void main()
 
     Material m = getMaterial();
 
-    vec3 radiance = emissive(m);
+    vec3 radiance = vec3(0.0);
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
     radiance += global(v, m);
@@ -208,6 +208,9 @@ void main()
 #else
     alpha = 1.0;
 #endif
+
+    // Add emissive last since it should not be modulated.
+    radiance += emissive(m);
 
     fragColor = tonemap(radiance, alpha);
 
