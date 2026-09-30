@@ -70,10 +70,10 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
         Map<KeyType, String> names, Map<KeyType, String> disabledNames, Map<KeyType, DoubleVector3> diffuseColors,
         Map<KeyType, double[]> redBasis, Map<KeyType, double[]> greenBasis, Map<KeyType, double[]> blueBasis)
     {
-        this.enabledMaterialCount = redBasis.size();
+        this.enabledMaterialCount = names.size();
         this.specularResolution = redBasis.values().stream().findAny().orElseThrow().length - 1;
 
-        this.basis = new LinkedHashMap<>(enabledMaterialCount);
+        this.basis = new LinkedHashMap<>(enabledMaterialCount + disabledNames.size());
 
         int gpuIndex = 0;
         for (Entry<KeyType, String> entry : names.entrySet())
