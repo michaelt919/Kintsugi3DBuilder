@@ -21,6 +21,9 @@ import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Map;
+
 public abstract class TextureResourcesBase<ContextType extends Context<ContextType>> extends ReadonlyTextureResourcesBase<ContextType>
     implements TextureResources<ContextType>
 {
@@ -47,6 +50,36 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             if (basisObservable != null)
             {
                 basisObservable.notifyObservers(new MappedChange<>(Type.REMOVED, materialName, removed));
+            }
+        }
+    }
+
+    @Override
+    public void disableBasisMaterials(Collection<String> materialNames)
+    {
+        MutableBasisResources<ContextType> basisResources = getMutableBasisResources();
+        if (basisResources != null)
+        {
+            Map<String, BasisMaterialInfo> disabled = basisResources.disableBasisMaterials(materialNames);
+
+            if (basisObservable != null)
+            {
+                basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, disabled));
+            }
+        }
+    }
+
+    @Override
+    public void enableBasisMaterials(Collection<String> materialNames)
+    {
+        MutableBasisResources<ContextType> basisResources = getMutableBasisResources();
+        if (basisResources != null)
+        {
+            Map<String, BasisMaterialInfo> enabled = basisResources.enableBasisMaterials(materialNames);
+
+            if (basisObservable != null)
+            {
+                basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, enabled));
             }
         }
     }

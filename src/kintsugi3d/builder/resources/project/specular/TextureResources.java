@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 
@@ -232,6 +233,16 @@ public interface TextureResources<ContextType extends Context<ContextType>>
             }
 
             @Override
+            public void disableBasisMaterials(Collection<String> materialNames)
+            {
+            }
+
+            @Override
+            public void enableBasisMaterials(Collection<String> materialNames)
+            {
+            }
+
+            @Override
             public void deleteBasisMaterial(String materialName)
             {
             }
@@ -333,6 +344,10 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     {
         return loadTexture(tex.details.name, directory, getContext());
     }
+
+    void disableBasisMaterials(Collection<String> materialNames);
+
+    void enableBasisMaterials(Collection<String> materialNames);
 
     void toggleBasisMaterial(String materialName);
 

@@ -19,6 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MutableBasisResources<ContextType extends Context<ContextType>> extends BasisResourcesBase<ContextType>
 {
@@ -82,39 +85,21 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
     {
         // Delete the basis materials themselves and the corresponding weight maps
         BasisMaterialInfo deleted = basis.deleteMaterial(name);
-        refreshGraphicsResources(); // order of materials may have changed.
-
-        if (weightResources != null)
-        {
-            weightResources.refreshWeightMapOrdering();
-        }
-
+        invalidateBasisIndexing(); // order of materials may have changed.
         return deleted;
     }
 
     private BasisMaterialInfo disableBasisMaterial(String name)
     {
         BasisMaterialInfo result = basis.disableMaterial(name);
-        refreshGraphicsResources(); // order of materials may have changed.
-
-        if (weightResources != null)
-        {
-            weightResources.refreshWeightMapOrdering();
-        }
-
+        invalidateBasisIndexing(); // order of materials may have changed.
         return result;
     }
 
     private BasisMaterialInfo enableBasisMaterial(String name)
     {
         BasisMaterialInfo result = basis.enableMaterial(name);
-        refreshGraphicsResources(); // order of materials may have changed.
-
-        if (weightResources != null)
-        {
-            weightResources.refreshWeightMapOrdering();
-        }
-
+        invalidateBasisIndexing(); // order of materials may have changed.
         return result;
     }
 
@@ -127,6 +112,48 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
         else
         {
             return enableBasisMaterial(name);
+        }
+    }
+
+    public Map<String, BasisMaterialInfo> disableBasisMaterials(Collection<String> materialNames)
+    {
+        Map<String, BasisMaterialInfo> disabled = new HashMap<>(materialNames.size());
+
+        for (String name : materialNames)
+        {
+            BasisMaterialInfo material = basis.disableMaterial(name);
+            disabled.put(name, material);
+        }
+
+        // order of materials may have changed.
+        invalidateBasisIndexing();
+
+        return disabled;
+    }
+
+    public Map<String, BasisMaterialInfo> enableBasisMaterials(Collection<String> materialNames)
+    {
+        Map<String, BasisMaterialInfo> enabled = new HashMap<>(materialNames.size());
+
+        for (String name : materialNames)
+        {
+            BasisMaterialInfo material = basis.enableMaterial(name);
+            enabled.put(name, material);
+        }
+
+        // order of materials may have changed.
+        invalidateBasisIndexing();
+
+        return enabled;
+    }
+
+    private void invalidateBasisIndexing()
+    {
+        refreshGraphicsResources();
+
+        if (weightResources != null)
+        {
+            weightResources.refreshWeightMapOrdering();
         }
     }
 

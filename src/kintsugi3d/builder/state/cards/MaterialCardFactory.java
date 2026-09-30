@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMaterialInfo>
@@ -38,6 +39,27 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
     public MaterialCardFactory(ImageBasedRenderable<?> instance)
     {
         super(instance);
+    }
+
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        TextureResources<?> resources = getInstance().getResources().getTextureResources();
+        return List.of(Map.of(
+            "Disable All", () ->
+                // needs to run on graphics thread to replace GPU resources
+                Rendering.runLater(() -> resources.disableBasisMaterials(
+                    resources.getBasisResources().getBasis().getMaterials().stream()
+                        .filter(BasisMaterialInfo::isEnabled)
+                        .map(BasisMaterialInfo::getName)
+                        .collect(Collectors.toList()))),
+            "Enable All", () ->
+                // needs to run on graphics thread to replace GPU resources
+                Rendering.runLater(() ->  resources.enableBasisMaterials(
+                    resources.getBasisResources().getBasis().getMaterials().stream()
+                        .filter(Predicate.not(BasisMaterialInfo::isEnabled))
+                        .map(BasisMaterialInfo::getName)
+                        .collect(Collectors.toList())))));
     }
 
     @Override
