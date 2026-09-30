@@ -22,7 +22,8 @@ import javafx.util.Duration;
 import kintsugi3d.app.JavaFXApplication;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCarouselModel;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.builder.state.shader.SimpleShaderInfo;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
@@ -34,10 +35,10 @@ import kintsugi3d.gl.window.FramebufferCanvas;
 public class CarouselCardController
 {
     private static final ShaderInfo DEFAULT_SHADER_UNPROCESSED =
-        new ShaderInfo("Image-based", "rendermodes/ibrUntextured.frag");
+        new SimpleShaderInfo("Image-based", "rendermodes/ibrUntextured.frag");
 
     private static final ShaderInfo DEFAULT_SHADER_PROCESSED =
-        new ShaderInfo("Material (basis)", "rendermodes/basisMaterial.frag");
+        new SimpleShaderInfo("Material (basis)", "rendermodes/basisMaterial.frag");
 
     @FXML private FramebufferView framebufferView;
     @FXML private CheckBox selectedCheckbox;

@@ -34,8 +34,8 @@ struct MFDEval
     float nDotH;
 };
 
-#if BASIS_COUNT > 0
-MFDEval evalMFD(int m, float weights[BASIS_COUNT])
+#if ACTIVE_BASIS_COUNT > 0
+MFDEval evalMFD(int m, float weights[ACTIVE_BASIS_COUNT])
 {
     MFDEval result;
 
@@ -44,7 +44,7 @@ MFDEval evalMFD(int m, float weights[BASIS_COUNT])
     result.nDotH = cos(result.thetaH);
 
     result.mfd = vec3(0.0);
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         result.mfd += weights[b] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
     }
@@ -60,10 +60,10 @@ void main()
         discard;
     }
 
-#if BASIS_COUNT > 0
-    float weights[BASIS_COUNT];
+#if ACTIVE_BASIS_COUNT > 0
+    float weights[ACTIVE_BASIS_COUNT];
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b))[0];
     }

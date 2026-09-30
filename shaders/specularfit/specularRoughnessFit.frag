@@ -34,12 +34,12 @@ void main()
         discard;
     }
 
-#if BASIS_COUNT > 0
+#if ACTIVE_BASIS_COUNT > 0
     vec3 f0 = vec3(0); // peak specular i.e. f(x0), not Fresnel
 
-    float weights[BASIS_COUNT];
+    float weights[ACTIVE_BASIS_COUNT];
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b))[0];
         f0 += weights[b] * texelFetch(basisFunctions, ivec2(0, b), 0).rgb;
@@ -53,7 +53,7 @@ void main()
     for (int m = 1; m < BASIS_RESOLUTION; m++)
     {
         vec3 f = vec3(0);
-        for (int b = 0; b < BASIS_COUNT; b++)
+        for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
         {
             f += weights[b] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
         }

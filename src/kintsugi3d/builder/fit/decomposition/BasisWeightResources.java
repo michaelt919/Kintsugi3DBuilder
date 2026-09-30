@@ -304,7 +304,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         try (WeightImageWriter<ContextType> weightImageWriter =
                  new WeightImageWriter<>(getContext(), TextureResolution.of(weightMaps), weightsPerImage))
         {
-            int fileCount = (basis.getEnabledMaterialCount() + weightsPerImage - 1) / weightsPerImage;
+            int fileCount = (materialCount + weightsPerImage - 1) / weightsPerImage;
             weightImageWriter.saveImages(this, materialCount, format, outputDirectory,
                 IntStream.range(0, fileCount)
                     .mapToObj(filenameGenerator)

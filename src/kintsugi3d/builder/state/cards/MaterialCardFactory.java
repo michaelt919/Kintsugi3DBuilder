@@ -19,14 +19,19 @@ import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.builder.state.shader.WeightmapOverlayShaderInfo;
 import kintsugi3d.builder.util.AppIcon;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.ImageFinder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMaterialInfo>
@@ -34,6 +39,27 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
     public MaterialCardFactory(ImageBasedRenderable<?> instance)
     {
         super(instance);
+    }
+
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        TextureResources<?> resources = getInstance().getResources().getTextureResources();
+        return List.of(Map.of(
+            "Disable All", () ->
+                // needs to run on graphics thread to replace GPU resources
+                Rendering.runLater(() -> resources.disableBasisMaterials(
+                    resources.getBasisResources().getBasis().getMaterials().stream()
+                        .filter(BasisMaterialInfo::isEnabled)
+                        .map(BasisMaterialInfo::getName)
+                        .collect(Collectors.toList()))),
+            "Enable All", () ->
+                // needs to run on graphics thread to replace GPU resources
+                Rendering.runLater(() ->  resources.enableBasisMaterials(
+                    resources.getBasisResources().getBasis().getMaterials().stream()
+                        .filter(Predicate.not(BasisMaterialInfo::isEnabled))
+                        .map(BasisMaterialInfo::getName)
+                        .collect(Collectors.toList())))));
     }
 
     @Override
@@ -60,8 +86,9 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
             thumbnailPath = AppIcon.PATH;
         }
 
-        ShaderInfo shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
-            material.getGPUIndex(), VisualizationShaders.FORMAT_PALETTE_MATERIAL);
+        ShaderInfo shader =
+            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
+                material, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
         TextureResources<?> resources = getInstance().getResources().getTextureResources();
 
@@ -71,36 +98,37 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
                     "Highlight Material", () ->
                     {
                         ShaderInfo prevShader = Global.state().getUserShaderModel().getActiveShader();
-                        var defines = new HashMap<>(prevShader.getDefines());
-                        var overlayMode = defines.get("OVERLAY_MODE");
-                        var overlayWeightmapIndex = defines.get("OVERLAY_WEIGHTMAP_INDEX");
 
-                        String subName;
-
-                        if (overlayMode != null && overlayMode.isPresent() && overlayMode.get().equals("OVERLAY_MODE_WEIGHTMAP")
-                            && overlayWeightmapIndex != null && overlayWeightmapIndex.isPresent()
-                            && overlayWeightmapIndex.get().equals(material.getGPUIndex()))
+                        // Determine if we're toggling on or off
+                        if (prevShader instanceof WeightmapOverlayShaderInfo)
                         {
-                            // Overlay already active; toggle off
-                            defines.remove("OVERLAY_MODE");
-                            defines.remove("OVERLAY_WEIGHTMAP_INDEX");
-                            subName = null;
+                            WeightmapOverlayShaderInfo prevOverlayShader = (WeightmapOverlayShaderInfo) prevShader;
+
+                            if (prevOverlayShader.getWeightmapMaterial().getName().equals(material.getName()))
+                            {
+                                // Overlay already active; toggle off
+                                Global.state().getUserShaderModel().setActiveShader(prevOverlayShader.getBaseShader());
+                            }
+                            else
+                            {
+                                // Overlay active for a different weightmap; switch to this one.
+                                Global.state().getUserShaderModel().setActiveShader(
+                                    new WeightmapOverlayShaderInfo(prevOverlayShader.getBaseShader(), material));
+                            }
                         }
                         else
                         {
-                            defines.put("OVERLAY_MODE", Optional.of("OVERLAY_MODE_WEIGHTMAP"));
-                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(material.getGPUIndex()));
-                            subName = material.getFriendlyName();
+                            // Overlay currently inactive, toggle on
+                            Global.state().getUserShaderModel().setActiveShader(
+                                new WeightmapOverlayShaderInfo(prevShader, material));
                         }
-
-                        Global.state().getUserShaderModel().setActiveShader(
-                            new ShaderInfo(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
                 Map.of("Toggle Disabled", () ->
                     // needs to run on graphics thread to replace GPU resources
                     Rendering.runLater(() -> resources.toggleBasisMaterial(material.getName())),
                 "Delete Material", () ->
-                    Global.state().getProjectModel().confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
+                    Global.state().getProjectModel().confirm("Delete Material", "Delete Material?",
+                        "This will delete the material from the project.",
                         // needs to run on graphics thread to replace GPU resources
                         () -> Rendering.runLater(() -> resources.deleteBasisMaterial(material.getName()))))),
             !material.isEnabled());

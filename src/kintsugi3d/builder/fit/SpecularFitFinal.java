@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -189,6 +190,28 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
         if (basisObservable != null)
         {
             basisObservable.notifyObservers(new MappedChange<>(Type.REMOVED, materialName, removed));
+        }
+    }
+
+    @Override
+    public void disableBasisMaterials(Collection<String> materialNames)
+    {
+        Map<String, BasisMaterialInfo> disabled = mutableBasisResources.disableBasisMaterials(materialNames);
+
+        if (basisObservable != null)
+        {
+            basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, disabled));
+        }
+    }
+
+    @Override
+    public void enableBasisMaterials(Collection<String> materialNames)
+    {
+        Map<String, BasisMaterialInfo> enabled = mutableBasisResources.enableBasisMaterials(materialNames);
+
+        if (basisObservable != null)
+        {
+            basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, enabled));
         }
     }
 

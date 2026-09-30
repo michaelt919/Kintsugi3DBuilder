@@ -38,7 +38,10 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         specularRoughnessFitProgram = basisResources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
+            // Treat active/enabled material count as the total basis count while optimizing.
+            // Disabled materials shouldn't affect the optimization process.
                 .define("BASIS_COUNT", basisResources.getActiveMaterialCount())
+                .define("ACTIVE_BASIS_COUNT", basisResources.getActiveMaterialCount())
                 .define("BASIS_RESOLUTION", basisResources.getBasisResolution())
                 .createProgram();
 

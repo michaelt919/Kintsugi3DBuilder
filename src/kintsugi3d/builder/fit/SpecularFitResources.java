@@ -48,7 +48,9 @@ final class SpecularFitResources<ContextType extends Context<ContextType>> imple
             // If basis settings are defined, override whatever basis count and basis resolution
             // would otherwise be specified by the wrapped resources.
             builder
+                // basisSettings.getMaterialCount() should always refer to the active/enabled material count while optimizing.
                 .define("BASIS_COUNT", basisSettings.getMaterialCount())
+                .define("ACTIVE_BASIS_COUNT", basisSettings.getMaterialCount())
                 .define("BASIS_RESOLUTION", basisSettings.getBasisResolution());
         }
 

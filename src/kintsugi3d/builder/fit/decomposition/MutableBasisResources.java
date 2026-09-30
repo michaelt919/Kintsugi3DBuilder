@@ -11,17 +11,17 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MutableBasisResources<ContextType extends Context<ContextType>> extends BasisResourcesBase<ContextType>
 {
@@ -85,59 +85,76 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
     {
         // Delete the basis materials themselves and the corresponding weight maps
         BasisMaterialInfo deleted = basis.deleteMaterial(name);
-        refreshGraphicsResources();
-
-        if (weightResources != null)
-        {
-            weightResources.refreshWeightMapOrdering();
-
-            try
-            {
-                // Refresh thumbnails since names will have shifted (brute force but fine since this shouldn't take long)
-                new BasisImageCreator<>(getContext(), 2 * getBasisResolution() + 1)
-                    .createImages(this, Global.io().getLoadedViewSet().getThumbnailImageDirectory());
-
-                // Asynchronously save the project to prevent inconsistency with thumbnails if the user forgets to save manually.
-                Global.io().saveProject();
-            }
-            catch (IOException e)
-            {
-                LOG.error("An filesystem error occurred while deleting the basis material.", e);
-            }
-            catch (ParserConfigurationException|TransformerException e)
-            {
-                LOG.error("An error occurred while saving the project.", e);
-            }
-        }
-
+        invalidateBasisIndexing(); // order of materials may have changed.
         return deleted;
     }
 
     private BasisMaterialInfo disableBasisMaterial(String name)
     {
-        return basis.disableMaterial(name);
+        BasisMaterialInfo result = basis.disableMaterial(name);
+        invalidateBasisIndexing(); // order of materials may have changed.
+        return result;
     }
 
     private BasisMaterialInfo enableBasisMaterial(String name)
     {
-        return basis.enableMaterial(name);
+        BasisMaterialInfo result = basis.enableMaterial(name);
+        invalidateBasisIndexing(); // order of materials may have changed.
+        return result;
     }
 
     public BasisMaterialInfo toggleBasisMaterial(String name)
     {
-        BasisMaterialInfo result;
         if (basis.isMaterialEnabled(name))
         {
-            result = disableBasisMaterial(name);
+            return disableBasisMaterial(name);
         }
         else
         {
-            result = enableBasisMaterial(name);
+            return enableBasisMaterial(name);
+        }
+    }
+
+    public Map<String, BasisMaterialInfo> disableBasisMaterials(Collection<String> materialNames)
+    {
+        Map<String, BasisMaterialInfo> disabled = new HashMap<>(materialNames.size());
+
+        for (String name : materialNames)
+        {
+            BasisMaterialInfo material = basis.disableMaterial(name);
+            disabled.put(name, material);
         }
 
+        // order of materials may have changed.
+        invalidateBasisIndexing();
+
+        return disabled;
+    }
+
+    public Map<String, BasisMaterialInfo> enableBasisMaterials(Collection<String> materialNames)
+    {
+        Map<String, BasisMaterialInfo> enabled = new HashMap<>(materialNames.size());
+
+        for (String name : materialNames)
+        {
+            BasisMaterialInfo material = basis.enableMaterial(name);
+            enabled.put(name, material);
+        }
+
+        // order of materials may have changed.
+        invalidateBasisIndexing();
+
+        return enabled;
+    }
+
+    private void invalidateBasisIndexing()
+    {
         refreshGraphicsResources();
 
-        return result;
+        if (weightResources != null)
+        {
+            weightResources.refreshWeightMapOrdering();
+        }
     }
 
     /**

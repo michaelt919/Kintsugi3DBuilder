@@ -40,12 +40,12 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     /**
      *
      * @param basisResources
-     * @param roughnessTexResolution
+     * @param textureResolution
      * @throws FileNotFoundException
      */
     protected SpecularFitBase(
         ContextType context, BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> basisWeightResources, TextureResolution roughnessTexResolution)
+        BasisWeightResources<ContextType> basisWeightResources, TextureResolution textureResolution)
         throws IOException
     {
         this.context = context;
@@ -58,7 +58,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
         {
             // Specular roughness / reflectivity module that manages its own resources
             this.roughnessOptimization =
-                new RoughnessOptimizationSimple<>(basisResources, basisWeightResources, roughnessTexResolution);
+                new RoughnessOptimizationSimple<>(basisResources, basisWeightResources, textureResolution);
             //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
             this.roughnessOptimization.clear();
         }

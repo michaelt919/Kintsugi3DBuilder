@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.util.Collection;
 import java.util.List;

@@ -35,7 +35,7 @@ float calculateError(vec3 diffuse, vec3 reflectivity, float roughness)
 
         // Calculate from basis functions
         vec3 target = vec3(0);
-        for (int b = 0; b < BASIS_COUNT; b++)
+        for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
         {
             target += texture(weightMaps, vec3(fTexCoord, b))[0] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
         }

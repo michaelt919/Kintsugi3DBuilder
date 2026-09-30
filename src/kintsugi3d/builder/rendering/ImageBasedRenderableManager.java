@@ -35,8 +35,12 @@ import kintsugi3d.builder.resources.project.MissingImagesException;
 import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.scene.*;
+import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
+import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
+import kintsugi3d.builder.state.shader.ReadonlyActiveShaderModel;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.builder.util.EventDispatcher;
 import kintsugi3d.builder.util.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
@@ -536,7 +540,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
 
             // Set to use the specified shader.
             RenderingSubject<ContextType> subject = renderView.getSubject();
-            subject.setExtraFragmentShaderDefines(shader.getDefines());
+            subject.setExtraFragmentShaderDefinesFactory(shader::getDefines);
             subject.useFragmentShader(shader.getFile());
 
             // render views will defer actually adding it to its main list until its own refresh call
@@ -572,7 +576,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
     {
         if (renderableInstance != null)
         {
-            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderInfo.getFile(), shaderInfo.getDefines());
+            renderableInstance.getDynamicResourceManager().requestFragmentShader(shaderInfo.getFile(), shaderInfo::getDefines);
         }
     }
 
@@ -675,7 +679,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         }
     }
 
-    public void setUserShaderModel(ReadonlyUserShaderModel userShaderModel)
+    public void setUserShaderModel(ReadonlyActiveShaderModel userShaderModel)
     {
         userShaderModel.registerHandler(this::requestFragmentShader);
     }

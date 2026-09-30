@@ -14,12 +14,11 @@ package kintsugi3d.builder.core.texture;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.builder.state.shader.TextureVisualizationShaderInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
 
 public class NamedTextureInfo extends TextureInfo
 {
@@ -36,8 +35,7 @@ public class NamedTextureInfo extends TextureInfo
     @Override
     public ShaderInfo getVisualizationShader()
     {
-        return new ShaderInfo(friendlyName, "rendermodes/viewTextureSimple.frag",
-            Map.of("VIEW_TEX", Optional.of(String.format("tex_%s", name))));
+        return new TextureVisualizationShaderInfo(this, "rendermodes/viewTextureSimple.frag");
     }
 
     @Override

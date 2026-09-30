@@ -16,7 +16,8 @@ import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.BasisIndexedShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +25,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
 
 public class WeightmapTextureInfo extends TextureInfo
 {
@@ -45,8 +44,7 @@ public class WeightmapTextureInfo extends TextureInfo
     @Override
     public ShaderInfo getVisualizationShader()
     {
-        return new ShaderInfo(friendlyName, "rendermodes/viewTextureWeights.frag",
-            Map.of("WEIGHTMAP_INDEX", Optional.of(material.getGPUIndex())));
+        return new BasisIndexedShaderInfo(friendlyName, "rendermodes/viewTextureWeights.frag", material);
     }
 
     @Override

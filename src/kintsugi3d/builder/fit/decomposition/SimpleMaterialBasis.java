@@ -70,10 +70,10 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
         Map<KeyType, String> names, Map<KeyType, String> disabledNames, Map<KeyType, DoubleVector3> diffuseColors,
         Map<KeyType, double[]> redBasis, Map<KeyType, double[]> greenBasis, Map<KeyType, double[]> blueBasis)
     {
-        this.enabledMaterialCount = redBasis.size();
+        this.enabledMaterialCount = names.size();
         this.specularResolution = redBasis.values().stream().findAny().orElseThrow().length - 1;
 
-        this.basis = new LinkedHashMap<>(enabledMaterialCount);
+        this.basis = new LinkedHashMap<>(enabledMaterialCount + disabledNames.size());
 
         int gpuIndex = 0;
         for (Entry<KeyType, String> entry : names.entrySet())
@@ -120,7 +120,7 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
     @Override
     public List<BasisMaterialInfo> getIndexableMaterialList()
     {
-        BasisMaterialInfo[] result = new BasisMaterialInfo[enabledMaterialCount];
+        BasisMaterialInfo[] result = new BasisMaterialInfo[basis.size()];
         for (BasisMaterialInfo material : basis.values())
         {
             result[material.getGPUIndex()] = material;
@@ -203,8 +203,20 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
     {
         MutableBasisMaterialInfo material = basis.get(name);
 
-        if (material.isEnabled())
+        if (material.isEnabled()) // no-op if already enabled
         {
+            if (material.getGPUIndex() != enabledMaterialCount - 1)
+            {
+                // Find the material whose GPU index is the one that will no longer be used after disabling another material.
+                MutableBasisMaterialInfo swapMaterial = basis.entrySet().stream()
+                    .filter(entry -> entry.getValue().getGPUIndex() == enabledMaterialCount - 1)
+                    .findAny().map(Entry::getValue).orElseThrow();
+
+                // Swap locations of the two materials.
+                swapMaterial.setGPUIndex(material.getGPUIndex());
+                material.setGPUIndex(enabledMaterialCount - 1);
+            }
+
             material.setEnabled(false);
             enabledMaterialCount--;
         }
@@ -217,8 +229,20 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
     {
         MutableBasisMaterialInfo material = basis.get(name);
 
-        if (!material.isEnabled())
+        if (!material.isEnabled()) // no-op if already disabled
         {
+            if (material.getGPUIndex() != enabledMaterialCount)
+            {
+                // Find the material whose GPU index is the one that will become enabled.
+                MutableBasisMaterialInfo swapMaterial = basis.entrySet().stream()
+                    .filter(entry -> entry.getValue().getGPUIndex() == enabledMaterialCount)
+                    .findAny().map(Entry::getValue).orElseThrow();
+
+                // Swap locations of the two materials.
+                swapMaterial.setGPUIndex(material.getGPUIndex());
+                material.setGPUIndex(enabledMaterialCount);
+            }
+
             material.setEnabled(true);
             enabledMaterialCount++;
         }

@@ -47,7 +47,8 @@ import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ShaderDataCard;
 import kintsugi3d.builder.state.cards.TabsManager;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.builder.state.shader.SimpleShaderInfo;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.javafx.FramebufferView;
@@ -543,9 +544,9 @@ public class MainWindowController
     {
         if (newValue instanceof MenuItem && newValue.getUserData() instanceof String)
         {
-            return new ShaderInfo(((MenuItem) newValue).getText(), (String) newValue.getUserData());
+            return new SimpleShaderInfo(((MenuItem) newValue).getText(), (String) newValue.getUserData());
         }
-        else if (newValue.getUserData() instanceof ShaderInfo)
+        else if (newValue.getUserData() instanceof SimpleShaderInfo)
         {
             return (ShaderInfo) newValue.getUserData();
         }

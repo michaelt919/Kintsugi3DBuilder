@@ -81,39 +81,37 @@ public abstract class BasisResourcesBase<ContextType extends Context<ContextType
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
-            getActiveMaterialCount() * (basisResolution + 1));
+            getMaterialCount() * (basisResolution + 1));
         NativeVectorBuffer diffuseNativeBuffer =
-            factory.createEmpty(NativeDataType.FLOAT, 4, getActiveMaterialCount());
+            factory.createEmpty(NativeDataType.FLOAT, 4, getMaterialCount());
 
         // Assumes that GPU indices have already been assigned.
+        // Include disabled materials for visualization shaders.
         for (BasisMaterialInfo material : getBasis().getMaterials())
         {
-            if (material.isEnabled())
+            int b = material.getGPUIndex();
+
+            // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
+            for (int m = 0; m <= basisResolution; m++)
             {
-                int b = material.getGPUIndex();
-
-                // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-                for (int m = 0; m <= basisResolution; m++)
-                {
-                    // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                    basisMapBuffer.set(m + (basisResolution + 1) * b, 0, material.evaluateSpecularRed(m));
-                    basisMapBuffer.set(m + (basisResolution + 1) * b, 1, material.evaluateSpecularGreen(m));
-                    basisMapBuffer.set(m + (basisResolution + 1) * b, 2, material.evaluateSpecularBlue(m));
-                }
-
-                // Store each channel of the diffuse albedo in the local buffer.
-                DoubleVector3 diffuseColor = material.getDiffuseColor();
-                diffuseNativeBuffer.set(b, 0, diffuseColor.x);
-                diffuseNativeBuffer.set(b, 1, diffuseColor.y);
-                diffuseNativeBuffer.set(b, 2, diffuseColor.z);
-                diffuseNativeBuffer.set(b, 3, 1.0f);
+                // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, material.evaluateSpecularRed(m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, material.evaluateSpecularGreen(m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, material.evaluateSpecularBlue(m));
             }
+
+            // Store each channel of the diffuse albedo in the local buffer.
+            DoubleVector3 diffuseColor = material.getDiffuseColor();
+            diffuseNativeBuffer.set(b, 0, diffuseColor.x);
+            diffuseNativeBuffer.set(b, 1, diffuseColor.y);
+            diffuseNativeBuffer.set(b, 2, diffuseColor.z);
+            diffuseNativeBuffer.set(b, 3, 1.0f);
         }
 
-        if (getActiveMaterialCount() != basisMaps.getHeight()) // if the number of basis functions has changed, reallocate
+        if (getMaterialCount() != basisMaps.getHeight()) // if the number of basis functions has changed, reallocate
         {
             basisMaps.close();
-            basisMaps = createBasisMaps(context, getActiveMaterialCount(), basisResolution);
+            basisMaps = createBasisMaps(context, getMaterialCount(), basisResolution);
         }
 
         // Send the basis functions to the GPU.
