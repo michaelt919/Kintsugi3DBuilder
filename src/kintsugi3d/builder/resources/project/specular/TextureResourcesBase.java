@@ -11,17 +11,23 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
-import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
-import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.texture.TextureInfo;
+import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
+import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.util.MappedChange;
 import kintsugi3d.builder.util.MappedChange.Type;
 import kintsugi3d.builder.util.Observable;
+import kintsugi3d.gl.core.Blittable;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.TwoDimensional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class TextureResourcesBase<ContextType extends Context<ContextType>> extends ReadonlyTextureResourcesBase<ContextType>
@@ -30,6 +36,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     protected static final Logger LOG = LoggerFactory.getLogger(TextureResourcesBase.class);
 
     private Observable<MappedChange<String, BasisMaterialInfo>> basisObservable;
+    private Observable<MappedChange<String, TextureInfo>> texturesObservable;
 
     protected abstract MutableBasisResources<ContextType> getMutableBasisResources();
 
@@ -37,6 +44,14 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     public final ReadonlyBasisResources<ContextType> getBasisResources()
     {
         return getMutableBasisResources();
+    }
+
+    protected abstract BasisWeightResources<ContextType> getMutableBasisWeightResources();
+
+    @Override
+    public final ReadonlyBasisWeightResources<ContextType> getBasisWeightResources()
+    {
+        return getMutableBasisWeightResources();
     }
 
     @Override
@@ -100,8 +115,190 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
     }
 
     @Override
+    public void replaceTextureWithDefaultFile(TextureInfo key, File parentDirectory) throws IOException
+    {
+        getTextures().get(key).load(new File(parentDirectory, String.format("%s.png", key.name)), true);
+
+        if (texturesObservable != null)
+        {
+            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, key.name, key));
+        }
+    }
+
+    @Override
+    public void replaceTextureWithSpecificFile(TextureInfo key, File newTextureFile) throws IOException
+    {
+        getTextures().get(key).load(newTextureFile, true);
+
+        // Save project so that the new texture is saved to disk and to ensure saved project consistency.
+        Global.io().saveProject(() ->
+        {
+            // Don't notify observers until after project is saved so that i.e. thumbnails are refreshed.
+            if (texturesObservable != null)
+            {
+                texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, key.name, key));
+            }
+        });
+    }
+
+    @Override
+    public void replaceWeightMapWithDefaultFile(BasisMaterialInfo material, File parentDirectory) throws IOException
+    {
+        getMutableBasisWeightResources().replaceWeightMapWithDefaultFile(material.getName(), parentDirectory);
+
+        if (texturesObservable != null)
+        {
+            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED,
+                BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material)));
+        }
+    }
+
+    @Override
+    public void replaceWeightMapWithSpecificFile(BasisMaterialInfo material, File newTextureFile) throws IOException
+    {
+        getMutableBasisWeightResources().replaceWeightMapWithSpecificFile(material.getName(), newTextureFile);
+
+        // Save project so that the new weightmap is saved to disk and to ensure saved project consistency.
+        Global.io().saveProject(() ->
+        {
+            // Don't notify observers until after project is saved so that i.e. thumbnails are refreshed.
+            if (texturesObservable != null)
+            {
+                texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED,
+                    BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material)));
+            }
+        });
+    }
+
+    @Override
+    public void replaceAllTexturesWithDefaultFiles(File parentDirectory) throws IOException
+    {
+        // normal textures
+        for (var texture : getTextures().entrySet())
+        {
+            texture.getValue().load(new File(parentDirectory, String.format("%s.png", texture.getKey().name)), true);
+        }
+
+        // weightmaps
+        for (BasisMaterialInfo material : getBasisResources().getBasis().getMaterials())
+        {
+            getMutableBasisWeightResources().replaceWeightMapWithDefaultFile(material.getName(), parentDirectory);
+        }
+
+        // notify observers
+        if (texturesObservable != null)
+        {
+            Map<String, TextureInfo> changeMap = new HashMap<>(getTextures().size());
+
+            for (var texture : getTextures().keySet())
+            {
+                changeMap.put(texture.name, texture);
+            }
+
+            for (BasisMaterialInfo material : getBasisResources().getBasis().getMaterials())
+            {
+                changeMap.put(BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material));
+            }
+
+            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, changeMap));
+        }
+    }
+
+    private <SourceType extends TwoDimensional> void blitCroppedAndScaledSingle(
+        Blittable<SourceType> destTex, int destX, int destY, int destWidth, int destHeight,
+        TwoDimensional readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
+        boolean linearFiltering)
+    {
+        if (destTex != null && srcTex != null)
+        {
+            if (destTex.getWidth() == this.getWidth() && destTex.getHeight() == this.getHeight()
+                && srcTex.getWidth() == readSource.getWidth() && srcTex.getHeight() == readSource.getHeight())
+            {
+                // dimensions match, so just do a normal blit
+                destTex.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                    srcTex, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            }
+            else
+            {
+                // dimensions do not match; try to remap rectangles to grab the same relative area in each
+                destTex.blitCroppedAndScaled(
+                    (int) Math.round((double) destX * destTex.getWidth() / this.getWidth()),
+                    (int) Math.round((double) destY * destTex.getHeight() / this.getHeight()),
+                    (int) Math.round((double) destWidth * destTex.getWidth() / this.getWidth()),
+                    (int) Math.round((double) destHeight * destTex.getHeight() / this.getHeight()),
+                    srcTex,
+                    (int) Math.round((double) srcX * srcTex.getWidth() / readSource.getWidth()),
+                    (int) Math.round((double) srcY * srcTex.getHeight() / readSource.getHeight()),
+                    (int) Math.round((double) srcWidth * srcTex.getWidth() / readSource.getWidth()),
+                    (int) Math.round((double) srcHeight * srcTex.getHeight() / readSource.getHeight()),
+                    linearFiltering);
+            }
+        }
+    }
+
+    /**
+     * Copies pixels from part of a blittable to another.  The copying operation will be start at (x, y) within
+     * this blittable, and resize if the requested source and destination rectangles are not the same size.
+     *
+     * @param destX           The left edge of the rectangle to copy into within this blittable.
+     * @param destY           The bottom edge of the rectangle to copy into within this blittable.
+     * @param destWidth       The width of the rectangle to copy at the destination resolution.
+     * @param destHeight      The height of the rectangle to copy at the destination resolution.
+     * @param readSource      The blittable source to copy from.
+     * @param srcX            The left edge of the rectangle to copy from within the source.
+     * @param srcY            The bottom edge of the rectangle to copy from within the source.
+     * @param srcWidth        The width of the rectangle to copy at the source resolution.
+     * @param srcHeight       The height of the rectangle to copy at the source resolution.
+     * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
+     */
+    @Override
+    public void blitCroppedAndScaled(
+        int destX, int destY, int destWidth, int destHeight,
+        ReadonlyTextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight,
+        boolean linearFiltering)
+    {
+        // Blit each individual texture -- i.e. diffuse, normal, specular reflectivity, specular roughness
+        for (var texEntry : getTextures().entrySet())
+        {
+            if (readSource.getTextures().containsKey(texEntry.getKey())) // both source and destination must contain the texture to blit
+            {
+                this.blitCroppedAndScaledSingle(texEntry.getValue(), destX, destY, destWidth, destHeight,
+                    readSource, readSource.getTexture(texEntry.getKey()), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            }
+        }
+
+        // Blit weight maps, weight mask -- handled separately
+        if (this.getBasisWeightResources() != null && readSource.getBasisWeightResources() != null)
+        {
+            blitCroppedAndScaledSingle(this.getMutableBasisWeightResources().getWeightMaps(), destX, destY, destWidth, destHeight,
+                readSource, readSource.getBasisWeightResources().getWeightMaps(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            blitCroppedAndScaledSingle(this.getMutableBasisWeightResources().getWeightMask(), destX, destY, destWidth, destHeight,
+                readSource, readSource.getBasisWeightResources().getWeightMask(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        // Notify observers
+        if (texturesObservable != null)
+        {
+            Map<String, TextureInfo> changeMap = new HashMap<>(getTextures().size());
+
+            for (var texture : getTextures().keySet())
+            {
+                changeMap.put(texture.name, texture);
+            }
+
+            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, changeMap));
+        }
+    }
+
+    @Override
     public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
     {
         this.basisObservable = basisObservable;
+    }
+
+    @Override
+    public void setTexturesObservable(Observable<MappedChange<String, TextureInfo>> texturesObservable)
+    {
+        this.texturesObservable = texturesObservable;
     }
 }

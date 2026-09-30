@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
@@ -97,6 +98,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     private final Observable<MappedChange<String, BasisMaterialInfo>> basisObservable = new SimpleObservable<>();
+    private final Observable<MappedChange<String, TextureInfo>> texturesObservable = new SimpleObservable<>();
 
     GraphicsResourcesCommon(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
@@ -279,6 +281,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
 
         this.textureResources.setBasisObservable(basisObservable);
+        this.textureResources.setTexturesObservable(texturesObservable);
     }
 
     private float[] computeViewWeights()
@@ -529,6 +532,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
 
         textureResources.setBasisObservable(basisObservable);
+        textureResources.setTexturesObservable(texturesObservable);
     }
 
     /**
@@ -632,5 +636,15 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     public void removeBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
     {
         basisObservable.removeObserver(observer);
+    }
+
+    public void registerTextureObserver(Observer<MappedChange<String, TextureInfo>> observer)
+    {
+        texturesObservable.registerObserver(observer);
+    }
+
+    public void removeTextureObserver(Observer<MappedChange<String, TextureInfo>> observer)
+    {
+        texturesObservable.removeObserver(observer);
     }
 }

@@ -14,16 +14,13 @@ package kintsugi3d.builder.fit;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
+import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
 import kintsugi3d.builder.fit.decomposition.MutableMaterialBasis;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.util.MappedChange;
-import kintsugi3d.builder.util.MappedChange.Type;
-import kintsugi3d.builder.util.Observable;
+import kintsugi3d.builder.resources.project.specular.TextureResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
@@ -32,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +41,7 @@ import java.util.stream.Collectors;
  * @param <ContextType>
  */
 public final class SpecularFitFinal<ContextType extends Context<ContextType>>
-    extends SpecularFitBase<ContextType> implements TextureResources<ContextType>
+    extends TextureResourcesBase<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitFinal.class);
 
@@ -54,7 +50,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
 
     private final MutableBasisResources<ContextType> mutableBasisResources;
 
-    private Observable<MappedChange<String, BasisMaterialInfo>> basisObservable;
+    private final SpecularFitBase<ContextType> base;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
         ReadonlyTextureResources<ContextType> original, MutableMaterialBasis basis, TextureResolution textureResolution) throws IOException
@@ -66,7 +62,8 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
                              MutableBasisResources<ContextType> basisResources, TextureResolution textureResolution)
         throws IOException
     {
-        super(basisResources.getContext(), basisResources, basisResources.getWeightResources(), textureResolution);
+        base = new SpecularFitBase<>(
+            basisResources.getContext(), basisResources, basisResources.getWeightResources(), textureResolution);
         this.mutableBasisResources = basisResources;
 
         ContextType context = original.getContext();
@@ -101,7 +98,8 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
         ContextType context, MutableBasisResources<ContextType> basisResources, File priorSolutionDirectory)
         throws IOException
     {
-        super(context, basisResources, basisResources != null ? basisResources.getWeightResources() : null, priorSolutionDirectory);
+        base = new SpecularFitBase<>(context, basisResources,
+            basisResources != null ? basisResources.getWeightResources() : null, priorSolutionDirectory);
 
         mutableBasisResources = basisResources;
 
@@ -161,64 +159,44 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
     }
 
     @Override
+    public int getWidth()
+    {
+        return base.getWidth();
+    }
+
+    @Override
+    public int getHeight()
+    {
+        return base.getHeight();
+    }
+
+    @Override
+    public ContextType getContext()
+    {
+        return base.getContext();
+    }
+
+    @Override
     public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
         Map<TextureInfo, Texture2D<ContextType>> mergedMaps =
-            new HashMap<>(getSpecularTextureCount() + managedTextures.size() + albedoORMOptimization.getTextureCount());
-        mergedMaps.putAll(getSpecularTextures());
+            new HashMap<>(base.getSpecularTextureCount() + managedTextures.size() + albedoORMOptimization.getTextureCount());
+        mergedMaps.putAll(base.getTextures());
         mergedMaps.putAll(managedTextures);
         mergedMaps.putAll(albedoORMOptimization.getTextures());
         return Collections.unmodifiableMap(mergedMaps);
     }
 
     @Override
-    public void toggleBasisMaterial(String materialName)
+    protected MutableBasisResources<ContextType> getMutableBasisResources()
     {
-        BasisMaterialInfo toggled = mutableBasisResources.toggleBasisMaterial(materialName);
-
-        if (basisObservable != null)
-        {
-            basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, materialName, toggled));
-        }
+        return mutableBasisResources;
     }
 
     @Override
-    public void deleteBasisMaterial(String materialName)
+    public BasisWeightResources<ContextType> getMutableBasisWeightResources()
     {
-        BasisMaterialInfo removed = mutableBasisResources.deleteBasisMaterial(materialName);
-
-        if (basisObservable != null)
-        {
-            basisObservable.notifyObservers(new MappedChange<>(Type.REMOVED, materialName, removed));
-        }
-    }
-
-    @Override
-    public void disableBasisMaterials(Collection<String> materialNames)
-    {
-        Map<String, BasisMaterialInfo> disabled = mutableBasisResources.disableBasisMaterials(materialNames);
-
-        if (basisObservable != null)
-        {
-            basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, disabled));
-        }
-    }
-
-    @Override
-    public void enableBasisMaterials(Collection<String> materialNames)
-    {
-        Map<String, BasisMaterialInfo> enabled = mutableBasisResources.enableBasisMaterials(materialNames);
-
-        if (basisObservable != null)
-        {
-            basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, enabled));
-        }
-    }
-
-    @Override
-    public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
-    {
-        this.basisObservable = basisObservable;
+        return base.getBasisWeightResources();
     }
 
     public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()
@@ -229,7 +207,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
     @Override
     public void close()
     {
-        super.close();
+        base.close();
 
         for (Texture2D<ContextType> texture : managedTextures.values())
         {

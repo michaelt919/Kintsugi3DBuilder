@@ -29,8 +29,6 @@ import kintsugi3d.builder.rendering.Rendering;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplacer>
 {
@@ -76,13 +74,8 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
             try
             {
                 // Try to load the texture
+                // If successful, this should trigger saving the project and also notify observers that the texture has changed.
                 data.replace();
-
-                // If load was successful, then copy the file into the project files directory.
-                Files.copy(data.getNewImage().toPath(), data.getCurrentImage().toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-                // Finally, attempt to refresh the card (including thumbnail from the version saved to disk).
-                data.refreshCard();
             }
             catch (IOException | RuntimeException e)
             {

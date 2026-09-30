@@ -391,12 +391,12 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         weightMapLocations.clear();
     }
 
-    public static String getUnpackedWeightMapFilename(String materialName, String format, String filenamePrefix)
+    private static String getUnpackedWeightMapFilename(String materialName, String format, String filenamePrefix)
     {
         return TextureResources.getTextureFilename(getUnpackedWeightMapName(materialName), format, filenamePrefix);
     }
 
-    public static String getUnpackedWeightMapFilename(String materialName, String format)
+    private static String getUnpackedWeightMapFilename(String materialName, String format)
     {
         return getUnpackedWeightMapFilename(materialName, format, "");
     }

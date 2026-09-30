@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
@@ -199,5 +200,15 @@ public abstract class ImageBasedGraphicsResourcesBase<ContextType extends Contex
     public void removeBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
     {
         commonResources.removeBasisObserver(observer);
+    }
+
+    public void registerTextureObserver(Observer<MappedChange<String, TextureInfo>> observer)
+    {
+        commonResources.registerTextureObserver(observer);
+    }
+
+    public void removeTextureObserver(Observer<MappedChange<String, TextureInfo>> observer)
+    {
+        commonResources.removeTextureObserver(observer);
     }
 }

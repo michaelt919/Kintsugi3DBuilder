@@ -312,7 +312,7 @@ public class IOModel implements IO
     }
 
     @Override
-    public void saveProject(File projectFile, Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
+    public void saveProject(File projectFile, Runnable finishedCallback) throws IOException
     {
         ViewSet viewSet = getLoadedViewSet();
         setViewsetDirectories(projectFile, viewSet);
@@ -362,9 +362,16 @@ public class IOModel implements IO
     }
 
     @Override
-    public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    public File getViewSetFileForProject(File projectFile) throws IOException
     {
-        return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
+        try
+        {
+            return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
+        }
+        catch (ParserConfigurationException | SAXException e)
+        {
+            throw new IOException(e);
+        }
     }
 
     private static Document openProjectFileAsXMLDocument(File projectFile) throws SAXException, IOException, ParserConfigurationException
@@ -386,22 +393,29 @@ public class IOModel implements IO
         }
     }
 
-    private static void saveXMLProject(File projectFile, File vsetFile) throws ParserConfigurationException, IOException, TransformerException
+    private static void saveXMLProject(File projectFile, File vsetFile) throws IOException
     {
-        Document document = Global.state().getProjectModel().toXMLDocument();
-        Element rootElement = document.getDocumentElement();
-
-        Element vsetElement = document.createElement("ViewSet");
-        vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
-        rootElement.appendChild(vsetElement);
-
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-
-        try (OutputStream out = new FileOutputStream(projectFile))
+        try
         {
-            transformer.transform(new DOMSource(document), new StreamResult(out));
+            Document document = Global.state().getProjectModel().toXMLDocument();
+            Element rootElement = document.getDocumentElement();
+
+            Element vsetElement = document.createElement("ViewSet");
+            vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
+            rootElement.appendChild(vsetElement);
+
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            try (OutputStream out = new FileOutputStream(projectFile))
+            {
+                transformer.transform(new DOMSource(document), new StreamResult(out));
+            }
+        }
+        catch (TransformerException | ParserConfigurationException e)
+        {
+            throw new IOException(e);
         }
     }
 

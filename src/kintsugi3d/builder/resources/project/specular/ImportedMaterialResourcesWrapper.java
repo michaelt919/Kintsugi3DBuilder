@@ -83,7 +83,7 @@ public final class ImportedMaterialResourcesWrapper<ContextType extends Context<
     }
 
     @Override
-    public BasisWeightResources<ContextType> getBasisWeightResources()
+    public BasisWeightResources<ContextType> getMutableBasisWeightResources()
     {
         return null;
     }
