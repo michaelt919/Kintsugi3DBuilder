@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -656,7 +658,7 @@ public final class ViewSet implements ReadonlyViewSet
         File effectiveSupportingFilesDirectory = this.getSupportingFilesDirectory();
         try
         {
-            return this.rootDirectory.toPath().relativize(effectiveSupportingFilesDirectory.toPath()).toString();
+            return this.getAbsoluteRootDirectory().relativize(effectiveSupportingFilesDirectory.toPath().toAbsolutePath()).toString();
         }
         catch (RuntimeException e) // If the root and other directories are located under different drive letters on windows
         {
@@ -673,7 +675,12 @@ public final class ViewSet implements ReadonlyViewSet
     public void setSupportingFilesDirectory(File supportingFilesDirectory)
     {
         this.supportingFilesDirectory = supportingFilesDirectory;
-        setRelativeThumbnailImagePathName(new File(supportingFilesDirectory, "thumbnails").toString());
+
+        Path root = getAbsoluteRootDirectory().normalize();
+        Path thumbs = new File(supportingFilesDirectory, "thumbnails")
+            .toPath().toAbsolutePath().normalize();
+
+        setRelativeThumbnailImagePathName(root.relativize(thumbs).toString());
     }
 
     @Override
@@ -701,13 +708,18 @@ public final class ViewSet implements ReadonlyViewSet
 
         try
         {
-            return this.rootDirectory.toPath().relativize(effectiveFullResImageDirectory.toPath()).toString();
+            return getAbsoluteRootDirectory().relativize(effectiveFullResImageDirectory.toPath().toAbsolutePath()).toString();
         }
         catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
         {
             LOG.warn("Could not relativize full resolution image directory", e);
             return effectiveFullResImageDirectory == null ? null : effectiveFullResImageDirectory.toString();
         }
+    }
+
+    private Path getAbsoluteRootDirectory()
+    {
+        return this.rootDirectory.toPath().toAbsolutePath();
     }
 
     /**
@@ -717,7 +729,7 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
     {
-        this.fullResImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+        this.fullResImageDirectory = this.getAbsoluteRootDirectory().resolve(relativeImagePath).toFile();
     }
 
     @Override
@@ -748,7 +760,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         try
         {
-            return this.rootDirectory.toPath().relativize(effectivePreviewImageDirectory.toPath()).toString();
+            return this.getAbsoluteRootDirectory().relativize(effectivePreviewImageDirectory.toPath().toAbsolutePath()).toString();
         }
         catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
         {
@@ -764,17 +776,17 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
-        this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+        this.previewImageDirectory = this.getAbsoluteRootDirectory().resolve(relativeImagePath).toFile();
     }
 
     public void setRelativeThumbnailImagePathName(String relativeImagePath)
     {
-        this.thumbnailImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+        this.thumbnailImageDirectory = this.getAbsoluteRootDirectory().resolve(relativeImagePath).toFile();
     }
 
     public void setRelativeMasksPathName(String relativeMasksPath)
     {
-        this.masksDirectory = this.rootDirectory.toPath().resolve(relativeMasksPath).toFile();
+        this.masksDirectory = this.getAbsoluteRootDirectory().resolve(relativeMasksPath).toFile();
     }
 
     @Override
@@ -1391,7 +1403,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         try
         {
-            return this.rootDirectory.toPath().relativize(masksDirectoryRef.toPath()).toString();
+            return this.getAbsoluteRootDirectory().relativize(masksDirectoryRef.toPath().toAbsolutePath()).toString();
         }
         catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
         {
@@ -1449,7 +1461,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         try
         {
-            return this.rootDirectory.toPath().relativize(geometryFileRef.toPath()).toString();
+            return this.getAbsoluteRootDirectory().relativize(geometryFileRef.toPath().toAbsolutePath()).toString();
         }
         catch (RuntimeException e) // If the root and other directories are located under different drive letters on windows
         {

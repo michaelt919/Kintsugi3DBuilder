@@ -194,6 +194,7 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
+                LOG.error("loadFromLooseFiles failed", e);
                 closeProject();
             }
         });
@@ -211,6 +212,7 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
+                LOG.error("hotSwapLooseFiles failed", e);
                 closeProject();
             }
         });
@@ -227,6 +229,7 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
+                LOG.error("loadFromMetashapeModel failed", e);
                 closeProject();
             }
         });
@@ -343,6 +346,7 @@ public class IOModel implements IO
             this.handler.saveToVSETFile(vsetFile);
             this.loadedViewSetFile = vsetFile;
 
+            // Fails to save test file as xml project
             saveXMLProject(projectFile, vsetFile);
         }
 
@@ -401,7 +405,7 @@ public class IOModel implements IO
             Element rootElement = document.getDocumentElement();
 
             Element vsetElement = document.createElement("ViewSet");
-            vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
+            vsetElement.setAttribute("src", projectFile.getAbsoluteFile().getParentFile().toPath().toAbsolutePath().relativize(vsetFile.toPath().toAbsolutePath()).toString());
             rootElement.appendChild(vsetElement);
 
             Transformer transformer = TransformerFactory.newInstance().newTransformer();

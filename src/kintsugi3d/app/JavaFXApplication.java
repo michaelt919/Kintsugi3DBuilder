@@ -64,6 +64,8 @@ public class JavaFXApplication extends Application
 
     private static String[] arguments;
 
+    private static boolean initialized = false;
+
     // Keep a reference to the main window to inject the canvas when the rendering thread has loaded
     private static MainWindowController mainWindowController;
 
@@ -84,6 +86,11 @@ public class JavaFXApplication extends Application
     public static void setArgs(String[] args)
     {
         arguments = args;
+    }
+
+    public static boolean isInitialized()
+    {
+        return initialized;
     }
 
     private static class StageSynchronization implements SynchronizedWindow
@@ -168,7 +175,7 @@ public class JavaFXApplication extends Application
     {
         //noinspection AssignmentToStaticFieldFromInstanceMethod
         state = JavaFXState.create();
-
+        initialized = true;
         // Inject dependency for global state.
         MultithreadState multithreadState = MultithreadState.getInstance();
         GlobalBootstrap.initialize(multithreadState, multithreadState.getLoadOptionsModel());

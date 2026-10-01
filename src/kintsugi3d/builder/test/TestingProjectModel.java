@@ -12,6 +12,7 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.texture.ImageReplacer;
+import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.state.project.*;
 
 import java.io.File;
@@ -36,7 +37,6 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     }
 
     private File colorCheckerFile;
-
     private final Collection<ErrorMessage> errors = new ArrayList<>(1);
     private final Collection<ErrorMessage> warnings = new ArrayList<>(1);
 
@@ -73,7 +73,7 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     @Override
     protected SerializableEnvironmentSettings constructEnvironmentSetting()
     {
-        throw new UnsupportedOperationException();
+        return new ObservableEnvironmentSettings();
     }
 
     @Override

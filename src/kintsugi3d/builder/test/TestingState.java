@@ -12,26 +12,195 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.javafx.internal.ObservableViewListModel;
+import kintsugi3d.builder.javafx.multithread.SynchronizedViewListModel;
 import kintsugi3d.builder.state.CacheModel;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.SelectableViewListModel;
+import kintsugi3d.builder.state.cards.CardsModel;
+import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
-import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
-import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
-import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.scene.*;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
 import kintsugi3d.builder.test.TestingProjectModel.ErrorMessage;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 class TestingState implements Kintsugi3DBuilderState
 {
     private final TestingProjectModel projectModel = new TestingProjectModel();
     private final GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
+    private final ReadonlyViewpointModel cameraModel = new SimpleCameraModel();
+    private final ReadonlyLightingEnvironmentModel lightingEnvironmentModel = new ReadonlyLightingEnvironmentModel()
+    {
+        @Override
+        public ReadonlyLightWidgetModel getLightWidgetModel(int index)
+        {
+            return null;
+        }
+
+        @Override
+        public int getLightCount()
+        {
+            return 0;
+        }
+
+        @Override
+        public int getMaxLightCount()
+        {
+            return 0;
+        }
+
+        @Override
+        public boolean isLightVisualizationEnabled(int index)
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isLightWidgetEnabled(int index)
+        {
+            return false;
+        }
+
+        @Override
+        public boolean areLightWidgetsEthereal()
+        {
+            return false;
+        }
+
+        @Override
+        public float getAmbientLightIntensity()
+        {
+            return 0;
+        }
+
+        @Override
+        public Vector3 getAmbientLightColor()
+        {
+            return null;
+        }
+
+        @Override
+        public boolean isEnvironmentMappingEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public Matrix4 getEnvironmentMapMatrix()
+        {
+            return null;
+        }
+
+        @Override
+        public float getEnvironmentMapFilteringBias()
+        {
+            return 0;
+        }
+
+        @Override
+        public ReadonlyLightPrototypeModel getLightPrototype(int i)
+        {
+            return null;
+        }
+
+        @Override
+        public Matrix4 getLightMatrix(int i)
+        {
+            return null;
+        }
+
+        @Override
+        public Vector3 getLightCenter(int i)
+        {
+            return null;
+        }
+
+        @Override
+        public float getBackgroundIntensity()
+        {
+            return 0;
+        }
+
+        @Override
+        public Vector3 getBackgroundColor()
+        {
+            return null;
+        }
+
+        @Override
+        public BackgroundMode getBackgroundMode()
+        {
+            return null;
+        }
+
+        @Override
+        public Vector3 getGroundPlaneColor()
+        {
+            return null;
+        }
+
+        @Override
+        public boolean isGroundPlaneEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public float getGroundPlaneHeight()
+        {
+            return 0;
+        }
+
+        @Override
+        public float getGroundPlaneSize()
+        {
+            return 0;
+        }
+    };
+    private final SelectableViewListModel viewListModel = new ObservableViewListModel();
+    private final TabsModel tabsModel = new TabsModel()
+    {
+        @Override
+        public <T> void addTab(String tabName, ProjectDataCardFactory<T> cardFactory, String path)
+        {
+
+        }
+
+        @Override
+        public void clearTabs()
+        {
+
+        }
+
+        @Override
+        public CardsModel<?> getTab(String label)
+        {
+            return null;
+        }
+
+        @Override
+        public <T> CardsModel<T> getTab(String label, Class<T> dataClass)
+        {
+            return null;
+        }
+
+        @Override
+        public Map<String, ? extends CardsModel<?>> getTabsMap()
+        {
+            return Map.of();
+        }
+    };
 
     TestingState()
     {
@@ -41,13 +210,13 @@ class TestingState implements Kintsugi3DBuilderState
     @Override
     public ReadonlyViewpointModel getCameraModel()
     {
-        throw new UnsupportedOperationException();
+        return cameraModel;
     }
 
     @Override
     public ReadonlyLightingEnvironmentModel getLightingModel()
     {
-        throw new UnsupportedOperationException();
+        return lightingEnvironmentModel;
     }
 
     @Override
@@ -65,13 +234,13 @@ class TestingState implements Kintsugi3DBuilderState
     @Override
     public SelectableViewListModel getViewListModel()
     {
-        throw new UnsupportedOperationException();
+        return viewListModel;
     }
 
     @Override
     public TabsModel getTabModels()
     {
-        throw new UnsupportedOperationException();
+        return tabsModel;
     }
 
     @Override

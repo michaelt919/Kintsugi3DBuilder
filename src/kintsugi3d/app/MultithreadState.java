@@ -42,12 +42,24 @@ public final class MultithreadState implements Kintsugi3DBuilderState
 
     private final TabsModel tabsModel;
 
-    private static final MultithreadState INSTANCE = new MultithreadState(JavaFXApplication.getState());
+    private static  MultithreadState INSTANCE;
 
     // TODO make private
     public static MultithreadState getInstance()
     {
+        if (INSTANCE == null)
+        {
+            if (isInitialized())
+            {
+                INSTANCE = new MultithreadState(JavaFXApplication.getState());
+            }
+        }
         return INSTANCE;
+    }
+
+    public static boolean isInitialized()
+    {
+        return JavaFXApplication.isInitialized();
     }
 
     private MultithreadState(JavaFXState base)
