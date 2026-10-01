@@ -495,6 +495,27 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             shadowTextures = null;
             shadowMatrixBuffer = null;
         }
+
+        if (viewSet != null)
+        {
+            viewSet.lightCalibrationChangedListeners().register(event ->
+            {
+                if (event.wereLightPositionsChanged())
+                {
+                    Rendering.runLater(() ->
+                    {
+                        try
+                        {
+                            updateShadowTextures();
+                        }
+                        catch (IOException e)
+                        {
+                            LOG.error("Error updating light calibration:", e);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     private double getMinDepthForView(View view) throws IOException
@@ -595,25 +616,6 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
     }
 
     /**
-     * Refresh the light data in the uniform buffers using the current values in the view set,
-     * and also update the shadow textures.
-     */
-    @Override
-    public void updateLightCalibration(Vector3 lightCalibration)
-    {
-        super.updateLightCalibration(lightCalibration);
-
-        try
-        {
-            updateShadowTextures();
-        }
-        catch (IOException e)
-        {
-            LOG.error("Error updating light calibration:", e);
-        }
-    }
-
-    /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
      * characteristics of this instance:
      * <ul>
@@ -708,7 +710,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
         if (getViewSet().getProjectSettings().getBoolean("infiniteLightSources"))
         {
             // Use unit light intensity if light sources don't have inverse-square falloff.
-            initializeLightIntensities(new Vector3(1.0f));
+            this.getViewSet().setAllLightIntensities(new Vector3(1.0f));
         }
         else
         {
@@ -716,7 +718,7 @@ public final class GraphicsResourcesImageSpace<ContextType extends Context<Conte
             {
                 double primaryViewDistance = getMinDepthForView(getViewSet().getPrimaryView());
                 Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
-                initializeLightIntensities(lightIntensity);
+                this.getViewSet().setAllLightIntensities(lightIntensity);
             }
             catch (IOException e)
             {

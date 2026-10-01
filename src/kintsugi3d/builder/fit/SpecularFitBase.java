@@ -29,7 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
-public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
+public class SpecularFitBase<ContextType extends Context<ContextType>>
     extends ReadonlyTextureResourcesBase<ContextType> implements ManagedResource
 {
     private final ContextType context;
@@ -136,17 +136,18 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
         return (roughnessOptimization == null) ? 0 : 2;
     }
 
-    protected Map<StandardTexture, Texture2D<ContextType>> getStandardSpecularTextures()
+    @Override
+    public Map<StandardTexture, Texture2D<ContextType>> getStandardTextures()
     {
         return roughnessOptimization == null ? Map.of() :
             Map.of(StandardTexture.SPECULAR_COLOR, roughnessOptimization.getReflectivityTexture(),
                 StandardTexture.ROUGHNESS, roughnessOptimization.getRoughnessTexture());
     }
 
-    protected Map<TextureInfo, Texture2D<ContextType>> getSpecularTextures()
+    @Override
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
-        //noinspection VariableNotUsedInsideIf
-        return roughnessOptimization == null ? Map.of() : StandardTexture.convertEnumMapToObjectMap(getStandardSpecularTextures());
+        return StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
     }
 
     /**

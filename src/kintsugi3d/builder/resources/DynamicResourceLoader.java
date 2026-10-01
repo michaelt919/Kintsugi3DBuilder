@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources;
 
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
 import kintsugi3d.gl.core.*;
@@ -206,15 +207,17 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
         }
 
+        ViewSet viewSet = this.resources.getViewSet();
+
         if (this.newLuminanceEncodingDataAvailable)
         {
             if (this.newLinearLuminanceValues != null && this.newEncodedLuminanceValues != null)
             {
-                this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+                viewSet.setLuminanceEncoding(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
             }
             else
             {
-                this.resources.clearLuminanceMap();
+                viewSet.clearLuminanceEncoding();
             }
 
             this.newLuminanceEncodingDataAvailable = false;
@@ -222,7 +225,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLightCalibrationAvailable)
         {
-            this.resources.updateLightCalibration(this.newLightCalibration);
+            viewSet.setAllLightPositions(this.newLightCalibration);
             this.newLightCalibrationAvailable = false;
         }
     }

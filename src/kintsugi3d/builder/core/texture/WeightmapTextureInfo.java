@@ -51,8 +51,7 @@ public class WeightmapTextureInfo extends TextureInfo
     public void refresh(ImageBasedRenderable<?> instance) throws IOException
     {
         TextureResources<? extends Context<?>> resources = instance.getResources().getTextureResources();
-        resources.getBasisWeightResources().replaceWeightMapWithDefaultFile(
-            material.getName(), instance.getViewSet().getSupportingFilesDirectory());
+        resources.replaceWeightMapWithDefaultFile(material, instance.getViewSet().getSupportingFilesDirectory());
     }
 
     @Override
@@ -62,8 +61,7 @@ public class WeightmapTextureInfo extends TextureInfo
         try
         {
             return new WeightmapReplacer(instance.getResources().getTextureResources(), material,
-                BasisWeightResources.findWeightmap(
-                    supportingFilesDirectory, material.getName()));
+                BasisWeightResources.findWeightmap(supportingFilesDirectory, material.getName()));
         }
         catch (FileNotFoundException e)
         {

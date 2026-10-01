@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
@@ -21,9 +22,9 @@ import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.util.*;
-import kintsugi3d.builder.util.Observable;
-import kintsugi3d.builder.util.Observer;
+import kintsugi3d.builder.util.events.*;
+import kintsugi3d.builder.util.events.Observable;
+import kintsugi3d.builder.util.events.Observer;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -97,6 +98,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
 
     private final Observable<MappedChange<String, BasisMaterialInfo>> basisObservable = new SimpleObservable<>();
+    private final Observable<MappedChange<String, TextureInfo>> texturesObservable = new SimpleObservable<>();
 
     GraphicsResourcesCommon(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
@@ -105,7 +107,9 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
         if (viewSet != null)
         {
-            viewSet.registerObserver(change -> Rendering.runLater(this::updateViewIndicesData));
+            viewSet.viewsChangedListeners().register(event -> Rendering.runNowOrLater(this::updateViewIndicesData));
+            viewSet.lightCalibrationChangedListeners().register(event -> Rendering.runNowOrLater(this::updateLightData));
+            viewSet.luminanceEncodingChangedListeners().register(event -> Rendering.runNowOrLater(this::updateLuminanceMap));
         }
 
         // Store the poses in a uniform buffer
@@ -279,6 +283,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         }
 
         this.textureResources.setBasisObservable(basisObservable);
+        this.textureResources.setTexturesObservable(texturesObservable);
     }
 
     private float[] computeViewWeights()
@@ -450,7 +455,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     /**
      * Refresh the luminance map textures using the current values in the view set.
      */
-    public void updateLuminanceMap()
+    private void updateLuminanceMap()
     {
         luminanceMapResources.update(viewSet.hasCustomLuminanceEncoding() ? viewSet.getLuminanceEncoding() : null);
     }
@@ -458,7 +463,7 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     /**
      * Refresh the light data in the uniform buffers using the current values in the view set.
      */
-    public void updateLightData()
+    private void updateLightData()
     {
         // Store the light positions in a uniform buffer
         if (lightPositionBuffer != null && getViewSet().getLightPositionData() != null)
@@ -525,10 +530,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         if (hasProcessedWeightMaps())
         {
             IntVector2 processedTextureResolution = getProcessedWeightMapResolution();
-            projectProcessed.notifyListeners( new ProjectProcessedEvent(processedTextureResolution.x, processedTextureResolution.y));
+            projectProcessed.notify( new ProjectProcessedEvent(processedTextureResolution.x, processedTextureResolution.y));
         }
 
         textureResources.setBasisObservable(basisObservable);
+        textureResources.setTexturesObservable(texturesObservable);
     }
 
     /**
@@ -624,13 +630,13 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
         this.viewIndexBuffer.close();
     }
 
-    public void registerBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
+    public EventListeners<Observer<MappedChange<String, BasisMaterialInfo>>> basisListeners()
     {
-        basisObservable.registerObserver(observer);
+        return basisObservable;
     }
 
-    public void removeBasisObserver(Observer<MappedChange<String, BasisMaterialInfo>> observer)
+    public EventListeners<Observer<MappedChange<String, TextureInfo>>> texturesListeners()
     {
-        basisObservable.removeObserver(observer);
+        return texturesObservable;
     }
 }

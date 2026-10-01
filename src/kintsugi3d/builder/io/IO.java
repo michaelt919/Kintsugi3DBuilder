@@ -16,14 +16,11 @@ import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.shader.ShaderInfo;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.util.EncodableColorImage;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,7 +51,7 @@ public interface IO
     void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
     void loadFromMetashapeModel(File newProjectFile, MetashapeModel model);
     void loadExistingProject(File projectFile);
-    File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException;
+    File getViewSetFileForProject(File projectFile) throws IOException;
 
     /**
      * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
@@ -67,10 +64,8 @@ public interface IO
      *         but the project itself (including the view set) should be fully written out to disk,
      *
      * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
      */
-    void saveProject(File projectFile, Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException;
+    void saveProject(File projectFile, Runnable finishedCallback) throws IOException;
 
     /**
      * Saves the project, including textures and glTF model.  If the project file is not a .vset, the .vset will be created in a supporting files directory.
@@ -80,10 +75,8 @@ public interface IO
      *         but the project itself (including the view set) should be fully written out to disk,
      *
      * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
      */
-    default void saveProject(File projectFile) throws IOException, ParserConfigurationException, TransformerException
+    default void saveProject(File projectFile) throws IOException
     {
         saveProject(projectFile, null);
     }
@@ -98,10 +91,8 @@ public interface IO
      *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
      *         but the project itself (including the view set) should be fully written out to disk,
      * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
      */
-    default void saveProject(Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
+    default void saveProject(Runnable finishedCallback) throws IOException
     {
         saveProject(getLoadedProjectFile(), finishedCallback);
     }
@@ -113,10 +104,8 @@ public interface IO
      *         On return, the textures and basis materials may not have been saved yet (which happens asynchronously),
      *         but the project itself (including the view set) should be fully written out to disk,
      * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws TransformerException
      */
-    default void saveProject() throws IOException, ParserConfigurationException, TransformerException
+    default void saveProject() throws IOException
     {
         saveProject(getLoadedProjectFile(), null);
     }

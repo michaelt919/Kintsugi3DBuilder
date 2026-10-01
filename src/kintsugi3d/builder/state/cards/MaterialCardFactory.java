@@ -44,22 +44,37 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
     @Override
     public List<? extends Map<String, Runnable>> getGlobalActions()
     {
-        TextureResources<?> resources = getInstance().getResources().getTextureResources();
         return List.of(Map.of(
             "Disable All", () ->
                 // needs to run on graphics thread to replace GPU resources
-                Rendering.runLater(() -> resources.disableBasisMaterials(
-                    resources.getBasisResources().getBasis().getMaterials().stream()
-                        .filter(BasisMaterialInfo::isEnabled)
-                        .map(BasisMaterialInfo::getName)
-                        .collect(Collectors.toList()))),
+                Rendering.runLater(() ->
+                {
+                    TextureResources<?> resources = getInstance().getResources().getTextureResources();
+                    ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
+                    if (basisResources != null)
+                    {
+                        resources.disableBasisMaterials(
+                            basisResources.getBasis().getMaterials().stream()
+                                .filter(BasisMaterialInfo::isEnabled)
+                                .map(BasisMaterialInfo::getName)
+                                .collect(Collectors.toList()));
+                    }
+                }),
             "Enable All", () ->
                 // needs to run on graphics thread to replace GPU resources
-                Rendering.runLater(() ->  resources.enableBasisMaterials(
-                    resources.getBasisResources().getBasis().getMaterials().stream()
-                        .filter(Predicate.not(BasisMaterialInfo::isEnabled))
-                        .map(BasisMaterialInfo::getName)
-                        .collect(Collectors.toList())))));
+                Rendering.runLater(() ->
+                {
+                    TextureResources<?> resources = getInstance().getResources().getTextureResources();
+                    ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
+                    if (basisResources != null)
+                    {
+                        resources.enableBasisMaterials(
+                            basisResources.getBasis().getMaterials().stream()
+                                .filter(Predicate.not(BasisMaterialInfo::isEnabled))
+                                .map(BasisMaterialInfo::getName)
+                                .collect(Collectors.toList()));
+                    }
+                })));
     }
 
     @Override

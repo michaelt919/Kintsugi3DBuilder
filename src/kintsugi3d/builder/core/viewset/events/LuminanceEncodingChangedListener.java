@@ -9,11 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.events;
+package kintsugi3d.builder.core.viewset.events;
 
-/**
- * Triggered when the project is closed.
- */
-public class ProjectClosedEvent
+@FunctionalInterface
+public interface LuminanceEncodingChangedListener
 {
+    void onLuminanceEncodingChanged(LuminanceEncodingChangedEvent event);
 }

@@ -12,6 +12,7 @@
 package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.core.viewset.ViewSet;
@@ -41,8 +42,10 @@ import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ReadonlyActiveShaderModel;
 import kintsugi3d.builder.state.shader.ShaderInfo;
-import kintsugi3d.builder.util.EventDispatcher;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventDispatcher;
+import kintsugi3d.builder.util.events.EventListeners;
+import kintsugi3d.builder.util.events.MappedChange;
+import kintsugi3d.builder.util.events.Observer;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
@@ -54,15 +57,14 @@ import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+import java.util.function.Function;
 
 public class ImageBasedRenderableManager<ContextType extends Context<ContextType>>
     extends InteractiveRenderableBase<ContextType> implements IOHandler, RenderableManager<ContextType>
@@ -221,7 +223,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             {
                 Global.io().saveProject(newProjectFile);
             }
-            catch (IOException|ParserConfigurationException|TransformerException e)
+            catch (IOException e)
             {
                 LOG.error("Error saving project", e);
             }
@@ -267,42 +269,17 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
                 TabsManager tabsManager = new TabsManager(newInstance);
                 tabsManager.rebuildTabs();
 
-                // Register observer for changes to the Photos tab
-                loadedViewSet.registerObserver(change ->
-                {
-                    CardsModel<View> photosTab = Global.state().getTabModels().getTab(TabsManager.PHOTOS, View.class);
+                GraphicsResourcesImageSpace<ContextType> resources = newInstance.getResources();
 
-                    switch (change.changeType)
-                    {
-                        case ADDED:
-                            tabsManager.refreshTab(TabsManager.PHOTOS); // TODO implement support for adding individual card without rebuilding
-                            break;
-                        case REMOVED:
-                            photosTab.deleteCards(card -> change.changeMap.get(new File(card.getInternalName())) != null);
-                            break;
-                        case MODIFIED:
-                            photosTab.refreshCards(card -> change.changeMap.get(new File(card.getInternalName())));
-                            break;
-                    }
-                });
-
-                newInstance.getResources().registerBasisObserver(change ->
-                {
-                    CardsModel<BasisMaterialInfo> materialsTab = Global.state().getTabModels().getTab(TabsManager.MATERIALS, BasisMaterialInfo.class);
-
-                    switch (change.changeType)
-                    {
-                        case ADDED:
-                            tabsManager.refreshTab(TabsManager.MATERIALS); // TODO implement support for adding individual card without rebuilding
-                            break;
-                        case REMOVED:
-                            materialsTab.deleteCards(card -> change.changeMap.get(card.getInternalName()) != null);
-                            break;
-                        case MODIFIED:
-                            materialsTab.refreshCards(card -> change.changeMap.get(card.getInternalName()));
-                            break;
-                    }
-                });
+                // Register observer for changes in each tab
+                loadedViewSet.viewsChangedListeners().register(
+                    getMappedChangeObserver(tabsManager, TabsManager.PHOTOS, View.class, File::new));
+                resources.basisListeners().register(
+                    getMappedChangeObserver(tabsManager, TabsManager.MATERIALS, BasisMaterialInfo.class));
+                resources.texturesListeners().register(
+                    getMappedChangeObserver(tabsManager, TabsManager.TEXTURES, TextureInfo.class));
+                // Currently the shaders tab is not expected to have changes other than when textures are processed,
+                // which is handled separately via an event listener.
 
                 // Check for an old instance just to be safe
                 if (renderableInstance != null)
@@ -332,19 +309,19 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             }
 
             // Notify listeners that project has loaded
-            projectLoaded.notifyListeners(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
+            projectLoaded.notify(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
 
             GraphicsResourcesImageSpace<ContextType> resources = renderableInstance.getResources();
             if (resources.hasProcessedWeightMaps())
             {
                 // Project has been processed previously; notify listeners
                 IntVector2 weightMapResolution = resources.getProcessedWeightMapResolution();
-                projectProcessed.notifyListeners(new ProjectProcessedEvent(
+                projectProcessed.notify(new ProjectProcessedEvent(
                     weightMapResolution.x, weightMapResolution.y));
             }
 
             // Ensure that the listeners are also notified if the project is processed in the future.
-            resources.weightMapsProcessedListeners().addListener(projectProcessed::notifyListeners);
+            resources.weightMapsProcessedListeners().register(projectProcessed::notify);
 
             // Update once before drawing
             newInstance.update();
@@ -358,6 +335,34 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
                 newInstance.draw(tempFBO);
             }
         });
+    }
+
+    private static <K, V> Observer<MappedChange<K, V>> getMappedChangeObserver(
+        TabsManager tabsManager, String tabName, Class<V> dataClass, Function<String, K> keyConstructor)
+    {
+        return change ->
+        {
+            CardsModel<V> texturesTab = Global.state().getTabModels().getTab(tabName, dataClass);
+
+            switch (change.changeType)
+            {
+                case ADDED:
+                    tabsManager.refreshTab(tabName); // TODO implement support for adding individual card without rebuilding
+                    break;
+                case REMOVED:
+                    texturesTab.deleteCards(card -> change.changeMap.get(keyConstructor.apply(card.getInternalName())) != null);
+                    break;
+                case MODIFIED:
+                    texturesTab.refreshCards(card -> change.changeMap.get(keyConstructor.apply(card.getInternalName())));
+                    break;
+            }
+        };
+    }
+
+    private static <V> Observer<MappedChange<String, V>> getMappedChangeObserver(
+        TabsManager tabsManager, String tabName, Class<V> dataClass)
+    {
+        return getMappedChangeObserver(tabsManager, tabName, dataClass, Function.identity());
     }
 
     private void initializeSceneModel(SceneModel sceneModel)

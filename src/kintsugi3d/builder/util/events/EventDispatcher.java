@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.util;
+package kintsugi3d.builder.util.events;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,18 +32,18 @@ public class EventDispatcher<ListenerType, EventType> implements EventListeners<
     }
 
     @Override
-    public void addListener(ListenerType listener)
+    public void register(ListenerType listener)
     {
         listeners.add(listener);
     }
 
     @Override
-    public void removeListener(ListenerType listener)
+    public void unregister(ListenerType listener)
     {
         listeners.remove(listener);
     }
 
-    public void notifyListeners(EventType event)
+    public void notify(EventType event)
     {
         synchronized(listeners)
         {

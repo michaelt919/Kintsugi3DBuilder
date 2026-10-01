@@ -31,8 +31,6 @@ import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -217,7 +215,7 @@ public final class SpecularFitRequest implements ProgressMonitoredImageBasedGrap
                 new TabsManager(renderable).refreshAllTabs();
             });
         }
-        catch (IOException | ParserConfigurationException | TransformerException e)
+        catch (IOException e)
         {
             Global.state().getProjectModel().error("Error executing specular fit request", e);
         }

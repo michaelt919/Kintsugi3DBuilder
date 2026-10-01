@@ -11,13 +11,11 @@
 
 package kintsugi3d.builder.core.texture;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 public class WeightmapReplacer extends ImageReplacer
 {
@@ -33,16 +31,6 @@ public class WeightmapReplacer extends ImageReplacer
     @Override
     public void replace() throws IOException
     {
-        getResources().getBasisWeightResources().replaceWeightMapWithSpecificFile(material.getName(), getNewImage());
-    }
-
-    @Override
-    public void refreshCard()
-    {
-        // TODO switch to observable pattern for textures?
-        WeightmapTextureInfo weightmapTextureInfo = new WeightmapTextureInfo(material);
-        Global.state().getTabModels().getTab("Textures", TextureInfo.class).refreshCard(
-            card -> Objects.equals(card.getInternalName(), weightmapTextureInfo.name),
-            weightmapTextureInfo);
+        getResources().replaceWeightMapWithSpecificFile(material, getNewImage());
     }
 }

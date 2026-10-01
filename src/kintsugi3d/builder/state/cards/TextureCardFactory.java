@@ -51,6 +51,12 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
     }
 
     @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return List.of(Map.of("Refresh All", this::refreshAll));
+    }
+
+    @Override
     public Class<TextureInfo> getDataClass()
     {
         return TextureInfo.class;
@@ -181,15 +187,30 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
         {
             try
             {
+                // Refreshing the texture should trigger observers to update the cards.
                 texture.refresh(getInstance());
-
-                // TODO switch to observable pattern for textures?
-                Global.state().getTabModels().getTab("Textures", TextureInfo.class)
-                    .refreshCard(card -> Objects.equals(card.getInternalName(), texture.name), texture);
             }
             catch (IOException | RuntimeException e)
             {
-                Global.state().getProjectModel().error("Error refreshing texture", e);
+                Global.state().getProjectModel().error(String.format("Error refreshing texture: %s", texture.name), e);
+            }
+        });
+    }
+
+    private void refreshAll()
+    {
+        // Texture replacement must happen on graphics thread.
+        Rendering.runLater(() ->
+        {
+            try
+            {
+                // Refreshing the textures should trigger observers to update the cards.
+                TextureResources<?> resources = getInstance().getResources().getTextureResources();
+                resources.replaceAllTexturesWithDefaultFiles(getInstance().getViewSet().getSupportingFilesDirectory());
+            }
+            catch (IOException | RuntimeException e)
+            {
+                Global.state().getProjectModel().error("Error refreshing all textures", e);
             }
         });
     }

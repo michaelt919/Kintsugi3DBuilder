@@ -17,11 +17,9 @@ import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
-import kintsugi3d.builder.util.MappedChange;
-import kintsugi3d.builder.util.Observable;
+import kintsugi3d.builder.util.events.MappedChange;
+import kintsugi3d.builder.util.events.Observable;
 import kintsugi3d.gl.core.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +31,6 @@ public interface TextureResources<ContextType extends Context<ContextType>>
     extends Blittable<ReadonlyTextureResources<ContextType>>, ReadonlyTextureResources<ContextType>, ManagedResource
 {
     int WEIGHTS_PER_CHANNEL_PACKED_IMAGE = 4;
-
-    Logger LOG = LoggerFactory.getLogger(TextureResources.class);
 
     @Override
     Map<TextureInfo, ? extends Texture2D<ContextType>> getTextures();
@@ -67,192 +63,62 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return getTextures().get(tex.details);
     }
 
-    @Override
-    BasisWeightResources<ContextType> getBasisWeightResources();
+    void disableBasisMaterials(Collection<String> materialNames);
 
-    private <SourceType extends TwoDimensional> void blitCroppedAndScaledSingle(
-        Blittable<SourceType> destTex, int destX, int destY, int destWidth, int destHeight,
-        ReadonlyTextureResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
-        boolean linearFiltering)
-    {
-        if (destTex != null && srcTex != null)
-        {
-            if (destTex.getWidth() == this.getWidth() && destTex.getHeight() == this.getHeight()
-                && srcTex.getWidth() == readSource.getWidth() && srcTex.getHeight() == readSource.getHeight())
-            {
-                // dimensions match, so just do a normal blit
-                destTex.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                    srcTex, srcX, srcY, srcWidth, srcHeight, linearFiltering);
-            }
-            else
-            {
-                // dimensions do not match; try to remap rectangles to grab the same relative area in each
-                destTex.blitCroppedAndScaled(
-                    (int) Math.round((double) destX * destTex.getWidth() / this.getWidth()),
-                    (int) Math.round((double) destY * destTex.getHeight() / this.getHeight()),
-                    (int) Math.round((double) destWidth * destTex.getWidth() / this.getWidth()),
-                    (int) Math.round((double) destHeight * destTex.getHeight() / this.getHeight()),
-                    srcTex,
-                    (int) Math.round((double) srcX * srcTex.getWidth() / readSource.getWidth()),
-                    (int) Math.round((double) srcY * srcTex.getHeight() / readSource.getHeight()),
-                    (int) Math.round((double) srcWidth * srcTex.getWidth() / readSource.getWidth()),
-                    (int) Math.round((double) srcHeight * srcTex.getHeight() / readSource.getHeight()),
-                    linearFiltering);
-            }
-        }
-    }
+    void enableBasisMaterials(Collection<String> materialNames);
+
+    void toggleBasisMaterial(String materialName);
 
     /**
-     * Copies pixels from part of a blittable to another.  The copying operation will be start at (x, y) within
-     * this blittable, and resize if the requested source and destination rectangles are not the same size.
-     *
-     * @param destX           The left edge of the rectangle to copy into within this blittable.
-     * @param destY           The bottom edge of the rectangle to copy into within this blittable.
-     * @param destWidth       The width of the rectangle to copy at the destination resolution.
-     * @param destHeight      The height of the rectangle to copy at the destination resolution.
-     * @param readSource      The blittable source to copy from.
-     * @param srcX            The left edge of the rectangle to copy from within the source.
-     * @param srcY            The bottom edge of the rectangle to copy from within the source.
-     * @param srcWidth        The width of the rectangle to copy at the source resolution.
-     * @param srcHeight       The height of the rectangle to copy at the source resolution.
-     * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
+     * Deletes one of the basis materials.
+     * This will cause the basis materials, weight maps, and thumbnail images to be automatically re-saved
+     * to the project's supporting files directory.
+      * @param materialName
      */
-    @Override
-    default void blitCroppedAndScaled(
-        int destX, int destY, int destWidth, int destHeight,
-        ReadonlyTextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight,
-        boolean linearFiltering)
-    {
-        // Blit each individual texture -- i.e. diffuse, normal, specular reflectivity, specular roughness
-        for (var texEntry : getTextures().entrySet())
-        {
-            if (readSource.getTextures().containsKey(texEntry.getKey())) // both source and destination must contain the texture to blit
-            {
-                this.blitCroppedAndScaledSingle(texEntry.getValue(), destX, destY, destWidth, destHeight,
-                    readSource, readSource.getTexture(texEntry.getKey()), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-            }
-        }
+    void deleteBasisMaterial(String materialName);
 
-        // Blit weight maps, weight mask -- handled separately
-        if (this.getBasisWeightResources() != null && readSource.getBasisWeightResources() != null)
-        {
-            blitCroppedAndScaledSingle(this.getBasisWeightResources().getWeightMaps(), destX, destY, destWidth, destHeight,
-                readSource, readSource.getBasisWeightResources().getWeightMaps(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-            blitCroppedAndScaledSingle(this.getBasisWeightResources().getWeightMask(), destX, destY, destWidth, destHeight,
-                readSource, readSource.getBasisWeightResources().getWeightMask(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        }
-    }
+    /**
+     * Refreshes a texture specified by key using the default location for the given texture.
+     * @param key The TextureDetails used to choose which texture to refresh.
+     * @param parentDirectory
+     * @throws IOException
+     */
+    void replaceTextureWithDefaultFile(TextureInfo key, File parentDirectory) throws IOException;
 
-    static <ContextType extends Context<ContextType>> TextureResources<ContextType> makeNull(ContextType context)
-    {
-        return new TextureResources<>()
-        {
-            @Override
-            public ContextType getContext()
-            {
-                return context;
-            }
+    /**
+     * Replaces a texture by key with a specific file.
+     * @param key
+     * @param newTextureFile
+     * @throws IOException
+     */
+    void replaceTextureWithSpecificFile(TextureInfo key, File newTextureFile) throws IOException;
 
-            @Override
-            public int getWidth()
-            {
-                return 0;
-            }
+    /**
+     * Refreshes a weightmap specified by its associated basis material using the default location for the given texture.
+     * @param material The basis material associated with the texture to refresh.
+     * @param parentDirectory
+     * @throws IOException
+     */
+    void replaceWeightMapWithDefaultFile(BasisMaterialInfo material, File parentDirectory) throws IOException;
 
-            @Override
-            public int getHeight()
-            {
-                return 0;
-            }
+    /**
+     * Replaces a weightmap specified by its associated basis material with a specific file.
+     * @param material The basis material associated with the texture to refresh.
+     * @param newTextureFile
+     * @throws IOException
+     */
+    void replaceWeightMapWithSpecificFile(BasisMaterialInfo material, File newTextureFile) throws IOException;
 
-            @Override
-            public Map<TextureInfo, Texture2D<ContextType>> getTextures()
-            {
-                return Map.of();
-            }
+    /**
+     * Refreshes all textures (including weightmaps) using the default location for each texture.
+     * @param parentDirectory
+     * @throws IOException
+     */
+    void replaceAllTexturesWithDefaultFiles(File parentDirectory) throws IOException;
 
-            @Override
-            public MutableBasisResources<ContextType> getBasisResources()
-            {
-                return null;
-            }
+    void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable);
 
-            @Override
-            public BasisWeightResources<ContextType> getBasisWeightResources()
-            {
-                return null;
-            }
-
-            @Override
-            public void close()
-            {
-            }
-
-            @Override
-            public void blitCroppedAndScaled(
-                int destX, int destY, int destWidth, int destHeight,
-                ReadonlyTextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight,
-                boolean linearFiltering)
-            {
-                // Do nothing
-            }
-
-            @Override
-            public void setupShaderProgram(Program<ContextType> program)
-            {
-            }
-
-            @Override
-            public void saveTexture(String texName, String format, File outputDirectory, String filenameOverride)
-            {
-            }
-
-            @Override
-            public void savePackedWeightMaps(String format, File outputDirectory, String filenamePrefix)
-            {
-            }
-
-            @Override
-            public void saveUnpackedWeightMaps(String format, File outputDirectory, String filenamePrefix)
-            {
-            }
-
-            @Override
-            public void saveUnpackedWeightMaps(String format, File outputDirectory)
-            {
-            }
-
-            @Override
-            public void saveBasisFunctions(File outputDirectory, String filenameOverride)
-            {
-            }
-
-            @Override
-            public void toggleBasisMaterial(String materialName)
-            {
-            }
-
-            @Override
-            public void disableBasisMaterials(Collection<String> materialNames)
-            {
-            }
-
-            @Override
-            public void enableBasisMaterials(Collection<String> materialNames)
-            {
-            }
-
-            @Override
-            public void deleteBasisMaterial(String materialName)
-            {
-            }
-
-            @Override
-            public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
-            {
-            }
-        };
-    }
+    void setTexturesObservable(Observable<MappedChange<String, TextureInfo>> texturesObservable);
 
     static String getTextureFilename(StandardTexture tex, String format)
     {
@@ -345,41 +211,159 @@ public interface TextureResources<ContextType extends Context<ContextType>>
         return loadTexture(tex.details.name, directory, getContext());
     }
 
-    void disableBasisMaterials(Collection<String> materialNames);
-
-    void enableBasisMaterials(Collection<String> materialNames);
-
-    void toggleBasisMaterial(String materialName);
-
-    /**
-     * Deletes one of the basis materials.
-     * This will cause the basis materials, weight maps, and thumbnail images to be automatically re-saved
-     * to the project's supporting files directory.
-      * @param materialName
-     */
-    void deleteBasisMaterial(String materialName);
-
-    /**
-     * Refreshes a texture specified by key using the default location for the given texture.
-     * @param key The TextureDetails used to choose which texture to refresh.
-     * @param parentDirectory
-     * @throws IOException
-     */
-    default void replaceTextureWithDefaultFile(TextureInfo key, File parentDirectory) throws IOException
+    static <ContextType extends Context<ContextType>> TextureResources<ContextType> makeNull(ContextType context)
     {
-        getTextures().get(key).load(new File(parentDirectory, key.name + ".png"), true);
-    }
+        return new TextureResources<>()
+        {
+            @Override
+            public ContextType getContext()
+            {
+                return context;
+            }
 
-    /**
-     * Replaces a texture by key with a specific file.
-     * @param key
-     * @param newTextureFile
-     * @throws IOException
-     */
-    default void replaceTextureWithSpecificFile(TextureInfo key, File newTextureFile) throws IOException
-    {
-        getTextures().get(key).load(newTextureFile, true);
-    }
+            @Override
+            public int getWidth()
+            {
+                return 0;
+            }
 
-    void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable);
+            @Override
+            public int getHeight()
+            {
+                return 0;
+            }
+
+            @Override
+            public Map<TextureInfo, Texture2D<ContextType>> getTextures()
+            {
+                return Map.of();
+            }
+
+            @Override
+            public MutableBasisResources<ContextType> getBasisResources()
+            {
+                return null;
+            }
+
+            @Override
+            public BasisWeightResources<ContextType> getBasisWeightResources()
+            {
+                return null;
+            }
+
+            @Override
+            public void close()
+            {
+            }
+
+            /**
+             * Copies pixels from part of a blittable to another.  The copying operation will be start at (x, y) within
+             * this blittable, and resize if the requested source and destination rectangles are not the same size.
+             *
+             * @param destX           The left edge of the rectangle to copy into within this blittable.
+             * @param destY           The bottom edge of the rectangle to copy into within this blittable.
+             * @param destWidth       The width of the rectangle to copy at the destination resolution.
+             * @param destHeight      The height of the rectangle to copy at the destination resolution.
+             * @param readSource      The blittable source to copy from.
+             * @param srcX            The left edge of the rectangle to copy from within the source.
+             * @param srcY            The bottom edge of the rectangle to copy from within the source.
+             * @param srcWidth        The width of the rectangle to copy at the source resolution.
+             * @param srcHeight       The height of the rectangle to copy at the source resolution.
+             * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
+             */
+            @Override
+            public void blitCroppedAndScaled(
+                int destX, int destY, int destWidth, int destHeight,
+                ReadonlyTextureResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight,
+                boolean linearFiltering)
+            {
+                // Do nothing
+            }
+
+            @Override
+            public void setupShaderProgram(Program<ContextType> program)
+            {
+            }
+
+            @Override
+            public void saveTexture(String texName, String format, File outputDirectory, String filenameOverride)
+            {
+            }
+
+            @Override
+            public void savePackedWeightMaps(String format, File outputDirectory, String filenamePrefix)
+            {
+            }
+
+            @Override
+            public void saveUnpackedWeightMaps(String format, File outputDirectory, String filenamePrefix)
+            {
+            }
+
+            @Override
+            public void saveUnpackedWeightMaps(String format, File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveBasisFunctions(File outputDirectory, String filenameOverride)
+            {
+            }
+            @Override
+            public void replaceTextureWithSpecificFile(TextureInfo key, File newTextureFile)
+            {
+            }
+
+            @Override
+            public void replaceTextureWithDefaultFile(TextureInfo key, File parentDirectory)
+            {
+            }
+
+            @Override
+            public void replaceWeightMapWithDefaultFile(BasisMaterialInfo material, File parentDirectory)
+            {
+            }
+
+            @Override
+            public void replaceWeightMapWithSpecificFile(BasisMaterialInfo material, File newTextureFile)
+            {
+            }
+
+            @Override
+            public void replaceAllTexturesWithDefaultFiles(File parentDirectory)
+            {
+            }
+
+
+            @Override
+            public void toggleBasisMaterial(String materialName)
+            {
+            }
+
+            @Override
+            public void disableBasisMaterials(Collection<String> materialNames)
+            {
+            }
+
+            @Override
+            public void enableBasisMaterials(Collection<String> materialNames)
+            {
+            }
+
+            @Override
+            public void deleteBasisMaterial(String materialName)
+            {
+            }
+
+            @Override
+            public void setBasisObservable(Observable<MappedChange<String, BasisMaterialInfo>> basisObservable)
+            {
+            }
+
+            @Override
+            public void setTexturesObservable(Observable<MappedChange<String, TextureInfo>> texturesObservable)
+            {
+            }
+        };
+    }
 }

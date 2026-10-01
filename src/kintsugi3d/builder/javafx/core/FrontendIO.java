@@ -29,8 +29,6 @@ import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -215,7 +213,7 @@ public final class FrontendIO
                     });
                 });
             }
-            catch (RuntimeException | IOException | ParserConfigurationException | TransformerException e)
+            catch (RuntimeException | IOException e)
             {
                 ExceptionHandling.error("An error occurred saving project", e);
             }

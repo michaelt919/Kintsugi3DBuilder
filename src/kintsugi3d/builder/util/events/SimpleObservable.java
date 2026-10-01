@@ -9,11 +9,28 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.events;
+package kintsugi3d.builder.util.events;
 
-/**
- * Triggered when the project is closed.
- */
-public class ProjectClosedEvent
+public class SimpleObservable<K, V> implements Observable<MappedChange<K, V>>
 {
+    private final EventDispatcher<Observer<MappedChange<K, V>>, MappedChange<K, V>> eventDispatcher
+        = new EventDispatcher<>(Observer::update);
+
+    @Override
+    public void register(Observer<MappedChange<K, V>> observer)
+    {
+        eventDispatcher.register(observer);
+    }
+
+    @Override
+    public void unregister(Observer<MappedChange<K, V>> observer)
+    {
+        eventDispatcher.unregister(observer);
+    }
+
+    @Override
+    public void notify(MappedChange<K, V> change)
+    {
+        eventDispatcher.notify(change);
+    }
 }

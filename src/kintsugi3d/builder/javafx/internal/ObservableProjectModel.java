@@ -312,17 +312,17 @@ public class ObservableProjectModel extends ProjectModelBase<
     {
         IOModel ioModel = Global.io();
 
-        ioModel.projectOpenedListeners().addListener(event ->
+        ioModel.projectOpenedListeners().register(event ->
             Platform.runLater(() ->
             {
                 setProjectOpen(true);
                 setProjectName(event.projectName);
             }));
 
-        ioModel.projectSavedListeners().addListener(event ->
+        ioModel.projectSavedListeners().register(event ->
             Platform.runLater(() -> setProjectName(event.projectName)));
 
-        ioModel.projectClosedListeners().addListener(event ->
+        ioModel.projectClosedListeners().register(event ->
             Platform.runLater(() ->
             {
                 setProjectOpen(false);
@@ -334,14 +334,14 @@ public class ObservableProjectModel extends ProjectModelBase<
                 setModelSize(new Vector3(1.0f));
             }));
 
-        ioModel.projectLoadedListeners().addListener(event ->
+        ioModel.projectLoadedListeners().register(event ->
             Platform.runLater(() ->
             {
                 setProjectLoaded(true);
                 setModelSize(event.modelSize);
             }));
 
-        ioModel.projectProcessedListeners().addListener(event ->
+        ioModel.projectProcessedListeners().register(event ->
             Platform.runLater(() ->
             {
                 setProjectProcessed(true);
