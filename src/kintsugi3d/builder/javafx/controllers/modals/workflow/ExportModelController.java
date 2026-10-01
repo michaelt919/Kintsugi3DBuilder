@@ -19,15 +19,14 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
 import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.rendering.Rendering;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +108,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
         generateLowResolutionCheckBox.disableProperty().bind(gltfSelected.not());
         openViewerOnceCheckBox.disableProperty().bind(gltfSelected.not());
 
-        File loadedProjectFile = Global.state().getIOModel().validateRenderable().getLoadedProjectFile();
+        File loadedProjectFile = Global.io().validateRenderable().getLoadedProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());
@@ -124,7 +123,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
     {
         applySettings();
 
-        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        if (Global.io().getProgressMonitor().isConflictingProcess())
         {
             error("Failed to export model", "Another process is already running.");
             return false;

@@ -34,7 +34,7 @@ uniform sampler2D roughnessEstimate;
 uniform sampler2D tex_specular;
 
 #if TEXTURE_CONSTANT
-uniform sampler2D constantTexture; // pass-through occlusion // TODO figure this out after implementing Godot shader
+uniform sampler2D constantTexture; // TODO figure this out after implementing Godot shader
 #endif
 
 layout(location = 0) out vec4 totalAlbedoOut;

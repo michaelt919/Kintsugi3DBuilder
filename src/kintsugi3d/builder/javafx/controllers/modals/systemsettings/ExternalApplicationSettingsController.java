@@ -19,7 +19,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.core.JavaFXState;
 
-import java.awt.*;
 import java.io.File;
 
 public class ExternalApplicationSettingsController implements SystemSettingsControllerBase

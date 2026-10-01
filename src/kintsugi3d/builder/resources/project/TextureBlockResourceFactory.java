@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.resources.project;
 
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Resource;
+import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.geometry.GeometryTextures;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements Resource
+public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(TextureBlockResourceFactory.class);
     private final ImageCache<ContextType> imageCache;
@@ -56,8 +56,8 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         try
         {
             return new GraphicsResourcesTextureSpace<>(sharedResources,
-                () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCache.getSettings().getBlockDir(i, j),
-                loadOptions, width, height, monitor);
+                () -> fullGeometryTextures.createViewportCopy(x, y, width, height),
+                imageCache.getBlockDirectory(i, j), loadOptions, width, height, monitor);
         }
         catch (IOException e)
         {

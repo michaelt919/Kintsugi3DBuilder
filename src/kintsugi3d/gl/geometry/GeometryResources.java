@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,35 +17,34 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class GeometryResources<ContextType extends Context<ContextType>> implements Resource
+public class GeometryResources<ContextType extends Context<ContextType>>
+    implements ReadonlyGeometryResources<ContextType>, ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(GeometryResources.class);
-    public final ContextType context;
 
-    /**
-     * The geometry for this instance that the vertex buffers were loaded from.
-     */
-    public final ReadonlyVertexGeometry geometry;
+    private final ContextType context;
+
+    private final ReadonlyVertexGeometry geometry;
 
     /**
      * A vertex buffer containing vertex positions.
      */
-    public final VertexBuffer<ContextType> positionBuffer;
+    private final VertexBuffer<ContextType> positionBuffer;
 
     /**
      * A vertex buffer containing texture coordinates.
      */
-    public final VertexBuffer<ContextType> texCoordBuffer;
+    private final VertexBuffer<ContextType> texCoordBuffer;
 
     /**
      * A vertex buffer containing surface normals.
      */
-    public final VertexBuffer<ContextType> normalBuffer;
+    private final VertexBuffer<ContextType> normalBuffer;
 
     /**
      * A vertex buffer containing tangent vectors.
      */
-    public final VertexBuffer<ContextType> tangentBuffer;
+    private final VertexBuffer<ContextType> tangentBuffer;
 
     /**
      * Default constructor: create null object
@@ -102,11 +101,25 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         }
     }
 
-    /**
-     * Creates a Drawable using this instance's geometry resources, and the specified shader program.
-     * @param program The program to use to construct the Drawable.
-     * @return A Drawable for rendering this instance using the specified shader program.
-     */
+    @Override
+    public ContextType getContext()
+    {
+        return context;
+    }
+
+    @Override
+    public ReadonlyVertexGeometry getGeometry()
+    {
+        return geometry;
+    }
+
+    @Override
+    public ReadonlyVertexBuffer<ContextType> getPositionBuffer()
+    {
+        return positionBuffer;
+    }
+
+    @Override
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
         Drawable<ContextType> drawable = program.getContext().createDrawable(program);
@@ -117,6 +130,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         return drawable;
     }
 
+    @Override
     public GeometryFramebuffer<ContextType> createGeometryFramebuffer(int width, int height)
     {
         try
@@ -130,6 +144,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         }
     }
 
+    @Override
     public boolean isNull()
     {
         return this.positionBuffer == null;

@@ -12,10 +12,9 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,18 +26,18 @@ import java.util.stream.Stream;
  */
 public class ShaderDataCard extends ProjectDataCard
 {
-    private final UserShader shader;
+    private final ShaderInfo shader;
 
     /**
      * Used in initialization
      * @param shader
      */
-    private static Map<String, Runnable> getActionMap(UserShader shader)
+    private static Map<String, Runnable> getActionMap(ShaderInfo shader)
     {
         Runnable viewShader = () ->
         {
             // Sets the model to the shader
-            Global.state().getUserShaderModel().setUserShader(shader);
+            Global.state().getUserShaderModel().setActiveShader(shader);
         };
 
         Runnable sendToCarousel = () ->
@@ -59,42 +58,46 @@ public class ShaderDataCard extends ProjectDataCard
             "Send to Split View", sendToSplitView);
     }
 
-    public ShaderDataCard(String internalName, String title, UserShader shader, String imagePath, String filePath, Map<String, String> textFields,
-                          Collection<? extends Map<String, Runnable>> actionGroups)
+    /**
+     * Overrides the shader's friendly name with a specified title.
+     * @param internalName
+     * @param title
+     * @param shader
+     * @param thumbnailPath
+     * @param fullResImageFilePath
+     * @param textFields
+     * @param actionGroups
+     * @param isDisabled
+     */
+    public ShaderDataCard(
+        String internalName, String title, ShaderInfo shader, String thumbnailPath, String fullResImageFilePath,
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
     {
-        super(internalName, title, imagePath, textFields,
-            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()), filePath);
+        super(internalName, title, fullResImageFilePath, thumbnailPath, textFields,
+            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()),
+            isDisabled);
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath, Map<String, String> textFields,
-                          Collection<? extends Map<String, Runnable>> actionGroups)
+    /**
+     * Uses the shader's friendly name as the title.
+     * @param internalName
+     * @param shader
+     * @param thumbnailPath
+     * @param fullResImageFilePath
+     * @param textFields
+     * @param actionGroups
+     * @param isDisabled
+     */
+    public ShaderDataCard(
+        String internalName, ShaderInfo shader, String thumbnailPath, String fullResImageFilePath,
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
     {
-        // FIX: Swapped 'filePath' position to match the primary constructor above
-        this(internalName, shader.getFriendlyName(), shader, imagePath, filePath, textFields, actionGroups);
+        this(internalName, shader.getFriendlyName(), shader, thumbnailPath, fullResImageFilePath, textFields,
+            actionGroups, isDisabled);
     }
 
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath, Map<String, String> textFields, Map<String, Runnable> actions)
-    {
-        super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader), actions), filePath);
-        this.shader = shader;
-    }
-
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath, Map<String, String> textFields)
-    {
-        // FIX: Wrapped getActionMap in List.of() to match List<? extends Map> signature
-        super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader)), filePath);
-        this.shader = shader;
-    }
-
-    public ShaderDataCard(String internalName, UserShader shader, String imagePath, String filePath)
-    {
-        // FIX: Wrapped getActionMap in List.of() to match List<? extends Map> signature
-        super(internalName, shader.getFriendlyName(), imagePath, Map.of(), List.of(getActionMap(shader)), filePath);
-        this.shader = shader;
-    }
-
-    public UserShader getShader()
+    public ShaderInfo getShader()
     {
         return shader;
     }

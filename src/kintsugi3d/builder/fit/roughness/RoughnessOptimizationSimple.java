@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,10 +11,11 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -30,8 +31,9 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
 {
     private final FramebufferObject<ContextType> specularTexFramebuffer;
 
-    public RoughnessOptimizationSimple(BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> weightResources, TextureResolution settings)
+    public RoughnessOptimizationSimple(
+        BasisResources<ContextType> basisResources, ReadonlyBasisWeightResources<ContextType> weightResources,
+        TextureResolution settings)
         throws IOException
     {
         super(basisResources);
@@ -45,7 +47,9 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
             .createFramebufferObject();
     }
 
-    public RoughnessOptimizationSimple(BasisResources<ContextType> basisResources, File priorSolutionDirectory)
+    public RoughnessOptimizationSimple(
+        ReadonlyBasisResources<ContextType> basisResources, ReadonlyBasisWeightResources<ContextType> weightResources,
+        File priorSolutionDirectory)
         throws IOException
     {
         super(basisResources);
@@ -87,6 +91,8 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
         }
 
         specularTexFramebuffer.setColorAttachment(1, roughnessTex);
+
+        setInputWeights(weightResources);
     }
 
     @Override

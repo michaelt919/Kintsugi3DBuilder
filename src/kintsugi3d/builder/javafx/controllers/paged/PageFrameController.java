@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -48,8 +48,6 @@ public class PageFrameController
 
     private Function<FXMLLoader, FXMLLoader> pageFactory;
     private final ObjectProperty<Page<?,?>> currentPage = new SimpleObjectProperty<>();
-
-    private Runnable confirmCallback;
 
     private Window window;
     private JavaFXState state;
@@ -291,11 +289,6 @@ public class PageFrameController
                     {
                         isConfirmed = true;
 
-                        if (confirmCallback != null)
-                        {
-                            confirmCallback.run();
-                        }
-
                         Modal.requestClose(currentPage.get().getController().getRootNode());
                     }
                 }
@@ -338,16 +331,5 @@ public class PageFrameController
     public void setCurrentPage(Page<?, ?> page)
     {
         currentPage.set(page);
-    }
-
-    public Runnable getConfirmCallback()
-    {
-        return confirmCallback;
-    }
-
-    public PageFrameController setConfirmCallback(Runnable confirmCallback)
-    {
-        this.confirmCallback = confirmCallback;
-        return this;
     }
 }

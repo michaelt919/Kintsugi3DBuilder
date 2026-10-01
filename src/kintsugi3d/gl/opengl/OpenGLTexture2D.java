@@ -15,16 +15,18 @@ import kintsugi3d.gl.builders.base.ColorTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthStencilTextureBuilderBase;
 import kintsugi3d.gl.builders.base.DepthTextureBuilderBase;
 import kintsugi3d.gl.builders.base.StencilTextureBuilderBase;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
 import kintsugi3d.gl.util.ImageHelper;
-import kintsugi3d.util.RadianceImageLoader;
-import kintsugi3d.util.RadianceImageLoader.Image;
+import kintsugi3d.gl.util.RadianceImageLoader;
+import kintsugi3d.gl.util.RadianceImageLoader.Image;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
@@ -50,7 +52,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = ImageHelper.of(colorImg).withAlphaMask(maskImg).getBufferedImage();
+            this.colorImg = ImageHelper.wrap(colorImg).withAlphaMask(maskImg).getBufferedImage();
             this.flipVertical = flipVertical;
         }
 
@@ -113,12 +115,12 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         private final AbstractDataType<? super MappedType> mappedType;
         private final Function<Color, MappedType> mappingFunction;
 
-        OpenGLTexture2DMappedFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical,
-            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
+        OpenGLTexture2DMappedFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, RenderedImage maskImg, boolean flipVertical,
+                                             AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
         {
             super(context);
             this.textureTarget = textureTarget;
-            this.colorImg = ImageHelper.of(colorImg).withAlphaMask(colorImg).getBufferedImage();
+            this.colorImg = ImageHelper.wrap(colorImg).withAlphaMask(colorImg).getBufferedImage();
             if (maskImg != null)
             {
                 if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
@@ -748,6 +750,74 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             return new OpenGLTexture2D(this.context, this.openGLTextureTarget, parameters.multisamples,
                 getTextureType(), precision, newWidth, newHeight, parameters.format, parameters.fixedMultisampleLocations,
                 parameters.useLinearFiltering, parameters.useMipmaps, parameters.maxMipmapLevel, parameters.maxAnisotropy);
+        }
+    }
+
+    @Override
+    public void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight, ReadonlyTexture2D<OpenGLContext> readSource,
+                              int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
+    {
+        if (this.isInternalFormatCompressed())
+        {
+            throw new UnsupportedOperationException("Cannot blit to a compressed texture.");
+        }
+        else if (readSource.isInternalFormatCompressed())
+        {
+            throw new UnsupportedOperationException("Cannot blit from a compressed texture.");
+        }
+        else if (!(readSource instanceof OpenGLTexture2D))
+        {
+            throw new UnsupportedOperationException("Incompatible source texture for blit operation.");
+        }
+        else
+        {
+            // readSource and this are both uncompressed and instances of OpenGLTexture2D
+
+            FramebufferObjectBuilder<OpenGLContext> fboBuilder = getContext().buildFramebufferObject(readSource.getWidth(), readSource.getHeight());
+
+            if (this.getTextureType() == TextureType.COLOR)
+            {
+                // Color attachments need to be declared in advance; depth and stencil are assumed to always be a possibility
+                fboBuilder.addEmptyColorAttachment();
+            }
+
+            // If readSource is an OpenGLTexture2D, then it can be used as a framebuffer attachment to simplify the blit implementation.
+            @SuppressWarnings("unchecked")
+            FramebufferAttachment<OpenGLContext> sourceAttachment = (FramebufferAttachment<OpenGLContext>) readSource;
+
+            try (FramebufferObject<OpenGLContext> sourceFBO = fboBuilder.createFramebufferObject();
+                 FramebufferObject<OpenGLContext> destFBO = fboBuilder.createFramebufferObject())
+            {
+                switch (this.getTextureType())
+                {
+                    case COLOR:
+                        sourceFBO.setColorAttachment(0, sourceAttachment);
+                        destFBO.setColorAttachment(0, this);
+                        destFBO.getViewport(destX, destY, destWidth, destHeight)
+                            .blitColorAttachmentFromFramebuffer(0, sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight), 0);
+                        break;
+                    case DEPTH:
+                    case FLOATING_POINT_DEPTH:
+                        sourceFBO.setDepthAttachment(sourceAttachment);
+                        destFBO.setDepthAttachment(this);
+                        destFBO.getViewport(destX, destY, destWidth, destHeight)
+                            .blitDepthAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                        break;
+                    case STENCIL:
+                        sourceFBO.setStencilAttachment(sourceAttachment);
+                        destFBO.setStencilAttachment(this);
+                        destFBO.getViewport(destX, destY, destWidth, destHeight)
+                            .blitStencilAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                        break;
+                    case DEPTH_STENCIL:
+                    case FLOATING_POINT_DEPTH_STENCIL:
+                        sourceFBO.setDepthStencilAttachment(sourceAttachment);
+                        destFBO.setDepthStencilAttachment(this);
+                        destFBO.getViewport(destX, destY, destWidth, destHeight)
+                            .blitDepthStencilAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                        break;
+                }
+            }
         }
     }
 }

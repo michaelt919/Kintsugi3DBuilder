@@ -13,21 +13,26 @@ package kintsugi3d.builder.javafx.internal;
 
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.state.CacheModelBase;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 
@@ -53,7 +58,7 @@ public class ObservableCacheModel extends CacheModelBase
     /**
      * Use a separate property for handling one-shot listeners
      * that we can dispose to dump in case the listener doesn't need to fire.
-     * Important: should only be accessed in blocks synchronized on CACHE_SIZE_CALC_THREAD_LOCK
+     * Important: should only be accessed in blocks synchronized on cacheSizeCalcThreadLock
      * to prevent concurrent modification issues.
      */
     private final Collection<ChangeListener<Number>> pendingCacheSizeCallbacks = new ArrayList<>(1);
@@ -99,7 +104,7 @@ public class ObservableCacheModel extends CacheModelBase
     @Override
     protected void setCacheSizeCalcInProgress(boolean cacheSizeCalcInProgress)
     {
-        this.cacheSizeCalcInProgress.set(cacheSizeCalcInProgress);
+        Platform.runLater(() -> this.cacheSizeCalcInProgress.set(cacheSizeCalcInProgress));
     }
 
     @Override
@@ -245,7 +250,7 @@ public class ObservableCacheModel extends CacheModelBase
         }
     }
 
-    private void checkforCleanupPrompts(double newCacheSizeGB, Consumer<Double> promptWithCacheSizeGB,
+    private static void checkforCleanupPrompts(double newCacheSizeGB, Consumer<Double> promptWithCacheSizeGB,
                                                Consumer<Double> noCleanupNeededWithCacheSizeGB)
     {
         GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
@@ -273,12 +278,5 @@ public class ObservableCacheModel extends CacheModelBase
 
         // If the cache does not need to be cleaned up, then fire the "no cleanup needed" callback.
         noCleanupNeededWithCacheSizeGB.accept(newCacheSizeGB);
-    }
-
-    @Override
-    protected void handleCacheCleanupError(Exception e)
-    {
-        super.handleCacheCleanupError(e);
-        ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 }

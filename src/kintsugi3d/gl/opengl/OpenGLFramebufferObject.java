@@ -30,7 +30,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     private final Contents contents;
     private final int width;
     private final int height;
-    private final AbstractCollection<Resource> ownedAttachments;
+    private final AbstractCollection<ManagedResource> ownedAttachments;
     private final OpenGLFramebufferAttachment[] colorAttachments;
     private OpenGLFramebufferAttachment depthAttachment;
     private OpenGLFramebufferAttachment stencilAttachment;
@@ -81,7 +81,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 }
             }
 
-            return new OpenGLFramebufferObject(context, width, height, colorAttachments, depthAttachment, stencilAttachment, depthStencilAttachment);
+            return new OpenGLFramebufferObject(super.context, super.width, super.height, colorAttachments, depthAttachment, stencilAttachment, depthStencilAttachment);
         }
     }
 
@@ -228,16 +228,16 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
             }
 
             @Override
-            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            public void readARGB(ByteBuffer destination, int x, int y, int readWidth, int readHeight)
             {
-                if (destination.remaining() < width * height * 4)
+                if (destination.remaining() < readWidth * readHeight * 4)
                 {
                     throw new IllegalArgumentException(
                         MessageFormat.format(
                             "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
                                 "is not big enough to hold the requested data (width: {4}, height: {5}).",
                             destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
-                            width, height));
+                            readWidth, readHeight));
                 }
 
                 getReadContents().bindForRead(attachmentIndex);
@@ -246,21 +246,21 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 OpenGLContext.errorCheck();
 
                 // use BGRA because due to byte order differences it ends up being ARGB
-                glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
+                glReadPixels(x, y, readWidth, readHeight, GL_BGRA, GL_UNSIGNED_BYTE, destination);
                 OpenGLContext.errorCheck();
             }
 
             @Override
-            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int readWidth, int readHeight)
             {
-                if (destination.remaining() < width * height * 4)
+                if (destination.remaining() < readWidth * readHeight * 4)
                 {
                     throw new IllegalArgumentException(
                         MessageFormat.format(
                             "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
                                 "is not big enough to hold the requested data (width: {4}, height: {5}).",
                             destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
-                            width, height));
+                            readWidth, readHeight));
                 }
 
                 getReadContents().bindForRead(attachmentIndex);
@@ -268,21 +268,21 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 glPixelStorei(GL_PACK_ALIGNMENT, 4);
                 OpenGLContext.errorCheck();
 
-                glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, destination);
+                glReadPixels(x, y, readWidth, readHeight, GL_RGBA, GL_FLOAT, destination);
                 OpenGLContext.errorCheck();
             }
 
             @Override
-            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int readWidth, int readHeight)
             {
-                if (destination.remaining() < width * height * 4)
+                if (destination.remaining() < readWidth * readHeight * 4)
                 {
                     throw new IllegalArgumentException(
                         MessageFormat.format(
                             "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
                                 "is not big enough to hold the requested data (width: {4}, height: {5}).",
                             destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
-                            width, height));
+                            readWidth, readHeight));
                 }
 
                 getReadContents().bindForRead(attachmentIndex);
@@ -290,7 +290,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 glPixelStorei(GL_PACK_ALIGNMENT, 4);
                 OpenGLContext.errorCheck();
 
-                glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, destination);
+                glReadPixels(x, y, readWidth, readHeight, GL_RGBA_INTEGER, GL_INT, destination);
                 OpenGLContext.errorCheck();
             }
         };
@@ -372,7 +372,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 if (this.ownedAttachments.remove(this.colorAttachments[index]))
                 {
                     // Delete it
-                    ((Resource)this.colorAttachments[index]).close();
+                    ((ManagedResource)this.colorAttachments[index]).close();
                 }
             }
 
@@ -413,7 +413,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 if (this.ownedAttachments.remove(this.depthAttachment))
                 {
                     // Delete it
-                    ((Resource)this.depthAttachment).close();
+                    ((ManagedResource)this.depthAttachment).close();
                 }
             }
 
@@ -456,7 +456,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 if (this.ownedAttachments.remove(this.stencilAttachment))
                 {
                     // Delete it
-                    ((Resource)this.stencilAttachment).close();
+                    ((ManagedResource)this.stencilAttachment).close();
                 }
             }
 
@@ -499,7 +499,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 if (this.ownedAttachments.remove(this.depthStencilAttachment))
                 {
                     // Delete it
-                    ((Resource)this.depthStencilAttachment).close();
+                    ((ManagedResource)this.depthStencilAttachment).close();
                 }
             }
 
@@ -528,7 +528,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
         {
             glDeleteFramebuffers(contents.fboId);
             OpenGLContext.errorCheck();
-            for (Resource attachment : ownedAttachments)
+            for (ManagedResource attachment : ownedAttachments)
             {
                 attachment.close();
             }

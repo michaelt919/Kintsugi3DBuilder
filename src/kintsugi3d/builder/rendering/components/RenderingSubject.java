@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.builder.util.KNNViewWeightGenerator;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -25,22 +25,22 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ShadingParameterMode;
 
-import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Map;
+
 public class RenderingSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
     private UniformBuffer<ContextType> viewIndexBufferOverride;
     private UniformBuffer<ContextType> weightBuffer;
 
-    public RenderingSubject(GraphicsResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel,
-        SceneModel sceneModel, LightingResources<ContextType> lightingResources)
+    public RenderingSubject(ReadonlyImageBasedGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel,
+                            SceneModel sceneModel, LightingResources<ContextType> lightingResources)
     {
         super (resources, sceneViewportModel, "RenderingSubject", sceneModel, lightingResources);
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
         // Vertex buffers come from the GraphicsResources and don't need to be created.
         return Collections.emptyMap();
@@ -57,22 +57,7 @@ public class RenderingSubject<ContextType extends Context<ContextType>> extends 
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
-                .generateWeights(resources,
-                    new AbstractList<Integer>()
-                    {
-                        @Override
-                        public Integer get(int index)
-                        {
-                            return index;
-                        }
-
-                        @Override
-                        public int size()
-                        {
-                            return resources.getViewSet().getCombinedCameraPoseCount();
-                        }
-                    },
-                    targetView);
+                .generateWeights(resources, resources.getViewSet().getEnabledViews(), targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,10 +21,10 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RecentProjects;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.experience.Modal;
+import kintsugi3d.builder.rendering.Rendering;
 
 import java.io.File;
 import java.net.URL;
@@ -62,7 +62,7 @@ public class GenericRenderRequestController implements Initializable
 
     public void run()
     {
-        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        if (Global.io().getProgressMonitor().isConflictingProcess())
         {
             return;
         }

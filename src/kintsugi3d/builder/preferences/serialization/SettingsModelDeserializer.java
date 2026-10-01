@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -26,6 +26,7 @@ import kintsugi3d.gl.vecmath.Vector4;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class SettingsModelDeserializer extends StdDeserializer<GeneralSettingsModel>
 {
@@ -34,7 +35,7 @@ public class SettingsModelDeserializer extends StdDeserializer<GeneralSettingsMo
         this(null);
     }
 
-    protected SettingsModelDeserializer(Class<?> vc)
+    private SettingsModelDeserializer(Class<?> vc)
     {
         super(vc);
     }
@@ -42,7 +43,7 @@ public class SettingsModelDeserializer extends StdDeserializer<GeneralSettingsMo
     @Override
     public GeneralSettingsModel deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException
     {
-        SimpleGeneralSettingsModel outputModel = new SimpleGeneralSettingsModel();
+        GeneralSettingsModel outputModel = new SimpleGeneralSettingsModel();
         ObjectMapper mapper = new ObjectMapper();
 
         SimpleModule module = new SimpleModule();
@@ -53,7 +54,7 @@ public class SettingsModelDeserializer extends StdDeserializer<GeneralSettingsMo
 
 
         JsonNode rootNode = jsonParser.getCodec().readTree(jsonParser);
-        for (Iterator<Map.Entry<String, JsonNode>> it = rootNode.fields(); it.hasNext(); )
+        for (Iterator<Entry<String, JsonNode>> it = rootNode.fields(); it.hasNext(); )
         {
             Map.Entry<String, JsonNode> entry = it.next();
             JsonNode node = entry.getValue();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,15 +11,16 @@
 
 package kintsugi3d.builder.preferences;
 
-import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
-public class GlobalUserPreferencesManager
+public final class GlobalUserPreferencesManager
 {
     private static final GlobalUserPreferencesManager INSTANCE = new GlobalUserPreferencesManager();
     private final UserPreferencesSerializer serializer = new JacksonUserPreferencesSerializer();
@@ -37,7 +38,9 @@ public class GlobalUserPreferencesManager
     public UserPreferencesModel getPreferences()
     {
         if (!modelLoaded)
+        {
             rollback();
+        }
 
         return preferencesModel;
     }
@@ -52,36 +55,46 @@ public class GlobalUserPreferencesManager
         return serializer.getStartupExceptions();
     }
 
-    public void load()
+    /**
+     *
+     * @param loadOptionsModel The model into which to load options related to content loading.
+     * @param settingsModel THe model into which to load general settings.
+     */
+    public void load(LoadOptionsModel loadOptionsModel, GeneralSettingsModel settingsModel)
     {
         rollback();
-        inject();
+        inject(loadOptionsModel, settingsModel);
     }
 
-    public void save() throws IOException
+    /**
+     *
+     * @param loadOptionsModel The model containing content loading options to save.
+     * @param settingsModel THe model containing general settings to save.
+     */
+    public void save(LoadOptionsModel loadOptionsModel, GeneralSettingsModel settingsModel) throws IOException
     {
-        collect();
+        collect(loadOptionsModel, settingsModel);
         commit();
     }
 
-    private void inject()
+    private void inject(LoadOptionsModel loadOptionsModel, GeneralSettingsModel settingsModel)
     {
-        Global.state().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
-        Global.state().getSettingsModel().copyFrom(preferencesModel.getSettings());
+        loadOptionsModel.copyFrom(preferencesModel.getLoadOptions());
+        settingsModel.copyFrom(preferencesModel.getSettings());
     }
 
-    private void collect()
+    private void collect(LoadOptionsModel loadOptionsModel, GeneralSettingsModel settingsModel)
     {
-        preferencesModel.setLoadOptions(Global.state().getLoadOptionsModel());
-        preferencesModel.setSettings(Global.state().getSettingsModel());
+        preferencesModel.setLoadOptions(loadOptionsModel);
+        preferencesModel.setSettings(settingsModel);
     }
 
-    public void commit() throws IOException
+    private void commit() throws IOException
     {
         serializer.writeUserPreferences(preferencesModel);
     }
 
-    public void rollback()
+    private void rollback()
     {
         preferencesModel = serializer.readOrDefault();
         modelLoaded = true;

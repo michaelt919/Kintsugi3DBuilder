@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -34,7 +34,7 @@ import java.util.Map;
  * Abstract implementations should be parameterized so that subclasses can fulfill this constraint.
  * This type parameter ensures that all the objects created by this context are mutually compatible with each other and the context itself.
  */
-public interface Context<ContextType extends Context<ContextType>> extends AutoCloseable
+public interface Context<ContextType extends Context<ContextType>> extends ManagedResource
 {
     /**
      * Designates this context as the "current" context that should be used for all subsequent GL operations.

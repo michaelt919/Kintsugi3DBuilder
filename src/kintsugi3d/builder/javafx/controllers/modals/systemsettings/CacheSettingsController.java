@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,25 +13,23 @@ package kintsugi3d.builder.javafx.controllers.modals.systemsettings;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Window;
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.javafx.internal.ObservableCacheModel;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
 import kintsugi3d.builder.javafx.core.JavaFXState;
+import kintsugi3d.builder.javafx.internal.ObservableCacheModel;
 import kintsugi3d.builder.javafx.internal.ObservableGeneralSettingsModel;
 import kintsugi3d.builder.javafx.util.SafeFloatStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.util.ApplicationFolders;
 
 import java.awt.*;
 import java.io.File;
@@ -49,8 +47,6 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     @FXML private Label specularFitCacheLabel;
     @FXML private Label cacheSizeLabel;
     @FXML private Button cleanCacheButton;
-
-    private static final Logger LOG = LoggerFactory.getLogger(CacheSettingsController.class);
 
     private ObservableCacheModel cacheModel;
 
@@ -118,7 +114,8 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         {
             Desktop.getDesktop().open(file);
         }
-        catch(IOException ioe){
+        catch(IOException ioe)
+        {
             ExceptionHandling.error("Failed to open project directory", ioe);
         }
     }
@@ -126,12 +123,6 @@ public class CacheSettingsController implements SystemSettingsControllerBase
     @FXML private void clearCache()
     {
         cacheModel.clearCachePrompt();
-    }
-
-    private static void handleCacheCleanupError(IOException e)
-    {
-        LOG.error(e.toString());
-        ExceptionHandling.error("An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 
     @FXML private void cleanUpCacheButton()

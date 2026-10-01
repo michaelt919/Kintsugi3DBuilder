@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -111,8 +111,8 @@ public abstract class EnvironmentModelFromSettings implements EnvironmentModel
         {
             try
             {
-                LOG.info("Loading environment map file " + newFile.getName());
-                Optional<EncodableColorImage> environmentMapImage = Global.state().getIOModel().loadEnvironmentMap(newFile);
+                LOG.info("Loading environment map file {}", newFile.getName());
+                Optional<EncodableColorImage> environmentMapImage = Global.io().loadEnvironmentMap(newFile);
                 onEnvironmentMapImageLoaded(environmentMapImage.orElse(null));
             }
             catch (FileNotFoundException e)
@@ -141,8 +141,8 @@ public abstract class EnvironmentModelFromSettings implements EnvironmentModel
         {
             try
             {
-                LOG.info("Loading backplate file " + newFile.getName());
-                Global.state().getIOModel().loadBackplate(newFile);
+                LOG.info("Loading backplate file {}", newFile.getName());
+                Global.io().loadBackplate(newFile);
             }
             catch (FileNotFoundException e)
             {

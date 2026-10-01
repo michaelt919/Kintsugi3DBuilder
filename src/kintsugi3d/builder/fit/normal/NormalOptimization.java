@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,10 @@
 
 package kintsugi3d.builder.fit.normal;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
-import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureResolution;
+import kintsugi3d.builder.fit.settings.ReadonlyNormalOptimizationSettings;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
@@ -29,27 +28,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Function;
 
-public class NormalOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public class NormalOptimization<ContextType extends Context<ContextType>> implements ManagedResource
 {
     private static final Logger LOG = LoggerFactory.getLogger(NormalOptimization.class);
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> smoothNormals;
-    private final NormalOptimizationSettings normalOptimizationSettings;
+    private final ReadonlyNormalOptimizationSettings normalOptimizationSettings;
 
     private boolean firstSmooth = true;
 
     public NormalOptimization(
-        ReadonlyGraphicsResources<ContextType> resources,
-        SpecularFitProgramFactory<ContextType> programFactory,
+        ShaderProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
-        TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings)
+        TextureResolution textureResolution, ReadonlyNormalOptimizationSettings normalOptimizationSettings)
         throws IOException
     {
         this.normalOptimizationSettings = normalOptimizationSettings;
 
         estimateNormals = new ShaderBasedOptimization<>(
-            getNormalEstimationProgramBuilder(resources, programFactory),
-            resources.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
+            getNormalEstimationProgramBuilder(programFactory),
+            programFactory.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
@@ -59,8 +57,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         estimateNormals.getBackFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
         smoothNormals = new ShaderBasedOptimization<>(
-            getNormalSmoothProgramBuilder(resources, programFactory),
-            resources.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
+            getNormalSmoothProgramBuilder(programFactory),
+            programFactory.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);
@@ -102,15 +100,9 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             LOG.debug("Smoothing normals...");
         });
 
-        estimateNormals.addPostUpdateCallback(framebuffer ->
-        {
-            LOG.debug("DONE!");
-        });
+        estimateNormals.addPostUpdateCallback(framebuffer -> LOG.debug("DONE!"));
 
-        smoothNormals.addPostUpdateCallback(framebuffer ->
-        {
-            LOG.debug("DONE!");
-        });
+        smoothNormals.addPostUpdateCallback(framebuffer -> LOG.debug("DONE!"));
     }
 
     @Override
@@ -195,24 +187,20 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+    private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(ShaderProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/texspace_dynamic.vert"),
-                new File("shaders/specularfit/estimateNormals.frag"),
-                true)
+        return programFactory.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/estimateNormals.frag"))
             .define("USE_LEVENBERG_MARQUARDT", normalOptimizationSettings.isLevenbergMarquardtEnabled())
             .define("MIN_DAMPING", normalOptimizationSettings.getMinNormalDamping());
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(
-        ReadonlyGraphicsResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(ShaderProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/texspace_dynamic.vert"),
-                new File("shaders/specularfit/smoothNormals.frag"),
-                true);
+        return programFactory.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/smoothNormals.frag"));
     }
 }

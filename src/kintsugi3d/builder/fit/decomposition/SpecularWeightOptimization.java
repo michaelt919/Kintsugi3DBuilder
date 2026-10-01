@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import kintsugi3d.gl.stream.GraphicsStream;
 import kintsugi3d.optimization.NonNegativeWeightOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,18 +28,18 @@ public class SpecularWeightOptimization
 
     private final int weightBlockSize;
 
-    public SpecularWeightOptimization(TextureResolution textureResolution, int basisCount, int weightBlockSize)
+    public SpecularWeightOptimization(TextureResolution textureResolution, int materialCount, int weightBlockSize)
     {
         this.textureResolution = textureResolution;
         this.weightBlockSize = weightBlockSize;
-        base = new NonNegativeWeightOptimization(weightBlockSize, basisCount,
+        base = new NonNegativeWeightOptimization(weightBlockSize, materialCount,
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
     }
 
-    public SpecularWeightOptimization(TextureResolution textureResolution, int basisCount)
+    public SpecularWeightOptimization(TextureResolution textureResolution, int materialCount)
     {
         // Default weight block size (only one weight block)
-        this(textureResolution, basisCount, textureResolution.width * textureResolution.height);
+        this(textureResolution, materialCount, textureResolution.width * textureResolution.height);
     }
 
     public int getWeightBlockSize()

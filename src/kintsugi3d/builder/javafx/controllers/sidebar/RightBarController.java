@@ -16,14 +16,17 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import kintsugi3d.builder.javafx.internal.ObservableActiveShaderModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
-import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
 
-
-import java.util.*;
+import java.util.Objects;
 
 public class RightBarController
 {
@@ -65,7 +68,7 @@ public class RightBarController
         return mainBox;
     }
 
-    public void init(ObservableTabsModel tabsModel, ObservableUserShaderModel shaderModel)
+    public void init(ObservableTabsModel tabsModel, ObservableActiveShaderModel shaderModel)
     {
         //Listener for any changes to selectedCards in tabModels
         tabsModel.getAllCards().addListener((ListChangeListener<String>) change ->

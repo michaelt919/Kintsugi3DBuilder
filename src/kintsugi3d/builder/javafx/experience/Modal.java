@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -21,8 +21,9 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.javafx.core.Accelerators;
 import kintsugi3d.builder.javafx.core.MainWindowController;
+import kintsugi3d.builder.util.AppIcon;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -78,13 +79,13 @@ public class Modal
         Parent root = fxmlLoader.load();
 
         this.stage = new Stage();
-        stage.getIcons().add(MainApplication.getIcon());
+        stage.getIcons().add(AppIcon.getImage());
         stage.setTitle(title);
         stage.setScene(new Scene(root));
         stage.initOwner(parentWindow);
         stage.setResizable(false);
         openProperty.bind(stage.showingProperty());
-        MainApplication.initAccelerators(stage.getScene());
+        Accelerators.initForScene(stage.getScene());
 
         return fxmlLoader.getController();
     }
@@ -106,7 +107,10 @@ public class Modal
 
     public static void requestClose(Window window)
     {
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+        if (window != null)
+        {
+            window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+        }
     }
 
     private static FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException

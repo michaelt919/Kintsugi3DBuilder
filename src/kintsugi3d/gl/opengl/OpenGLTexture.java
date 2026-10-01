@@ -14,7 +14,7 @@ package kintsugi3d.gl.opengl;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.types.AbstractDataType;
-import kintsugi3d.util.RadianceImageLoader.Image;
+import kintsugi3d.gl.util.RadianceImageLoader.Image;
 import org.lwjgl.BufferUtils;
 
 import java.awt.*;
@@ -31,7 +31,8 @@ import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL44.*;
 
-abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment {
+abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment, ManagedResource
+{
     protected final OpenGLContext context;
 
     private final int textureId;

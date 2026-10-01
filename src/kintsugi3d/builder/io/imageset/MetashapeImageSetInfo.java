@@ -1,0 +1,251 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.io.imageset;
+
+import javafx.scene.image.Image;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
+import kintsugi3d.builder.resources.project.MissingImagesException;
+import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+public final class MetashapeImageSetInfo implements ImageSetInfo
+{
+    private static final Logger LOG = LoggerFactory.getLogger(MetashapeImageSetInfo.class);
+    private final String chunkName;
+    private final List<ImageIdentifier> primaryViewCandidates;
+    private final List<Element> cameras;
+    private File fullResSearchDir;
+
+    private final Map<Integer, String> cameraIdToFullRes;
+    private final Map<Integer, Image> thumbnailMap;
+
+    //custom import path
+    public MetashapeImageSetInfo(File cameraFile, File fullResSearchDir, Collection<File> disabledImageFiles)
+            throws ParserConfigurationException, IOException, SAXException, MissingImagesException
+    {
+        this.fullResSearchDir = fullResSearchDir;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        builder = factory.newDocumentBuilder();
+
+        Document cameraDocument = builder.parse(cameraFile);
+
+        //get chunk name
+        Element chunkElem = (Element) cameraDocument.getElementsByTagName("chunk").item(0);
+        chunkName = chunkElem.getAttribute("label");
+
+        //get enabled cameras
+        NodeList cameraNodes = cameraDocument.getElementsByTagName("camera");
+
+        cameras = IntStream.range(0, cameraNodes.getLength())
+            .mapToObj(cameraNodes::item)
+            .filter(camera -> camera.getNodeType() == Node.ELEMENT_NODE)
+            .map(camera -> (Element) camera)
+            .collect(Collectors.toUnmodifiableList());
+
+        primaryViewCandidates = getViews(IntStream.range(0, cameraNodes.getLength())
+            .mapToObj(cameraNodes::item)
+            .filter(camera -> camera.getNodeType() == Node.ELEMENT_NODE)
+            .map(camera -> (Element) camera));
+
+        //prev-res images haven't been generated and no thumbnails are present,
+        //so leave thumbnails list empty
+        thumbnailMap = new HashMap<>(16);
+
+        cameraIdToFullRes = new HashMap<>(primaryViewCandidates.size());
+        List<File> missingImgs = new ArrayList<>(16);
+
+        for (ImageIdentifier primaryViewCandidate : primaryViewCandidates)
+        {
+            if (!disabledImageFiles.contains(new File(primaryViewCandidate.name)))
+            {
+                File imgFile = ImageFinder.getInstance().tryFindImageFile(new File(fullResSearchDir, primaryViewCandidate.name));
+                if (imgFile != null && primaryViewCandidate.id != -1)
+                {
+                    cameraIdToFullRes.put(primaryViewCandidate.id, imgFile.getPath());
+                }
+                else
+                {
+                    missingImgs.add(new File(primaryViewCandidate.name));
+                }
+            }
+        }
+
+        if (!missingImgs.isEmpty())
+        {
+            throw new MissingImagesException(
+                String.format("%d image(s) missing in %s", missingImgs.size(), fullResSearchDir),
+                missingImgs, fullResSearchDir);
+        }
+    }
+
+    //metashape import path
+    public MetashapeImageSetInfo(MetashapeModel model, Collection<File> disabledImageFiles)
+            throws MissingImagesException, FileNotFoundException
+    {
+        MetashapeChunk parentChunk = model.getChunk();
+        this.chunkName = parentChunk.getLabel();
+        this.cameras = parentChunk.findEnabledCameras();
+        this.primaryViewCandidates = getViews(cameras.stream());
+        this.thumbnailMap = parentChunk.loadThumbnailImageList();
+        this.cameraIdToFullRes = parentChunk.buildCameraPathsMap(false, disabledImageFiles);
+    }
+
+    @Override
+    public String getName()
+    {
+        return chunkName;
+    }
+
+    @Override
+    public List<ImageIdentifier> getViews()
+    {
+        return Collections.unmodifiableList(primaryViewCandidates);
+    }
+
+    @Override
+    public Map<Integer, Image> getThumbnailMap()
+    {
+        return Collections.unmodifiableMap(thumbnailMap);
+    }
+
+    @Override
+    public Optional<String> findFullResImagePath(String imageName)
+    {
+        //find the camera (in chunk.xml) which holds the desired image
+        //may have slightly different label from imageName --> "Processed\img123.jpg" vs. "img123.jpg"
+        Element selectedItemCam = findTargetCamera(imageName);
+        if (selectedItemCam == null)
+        {
+            return Optional.empty();
+        }
+
+        //hopefully the camera is in the camera paths map and we don't really have to do much work
+        String selectedCamId = selectedItemCam.getAttribute("id");
+        if (!selectedCamId.isBlank())
+        {
+            try
+            {
+                int id = Integer.parseInt(selectedCamId);
+                String path = cameraIdToFullRes.get(id);
+                if (path != null)
+                {
+                    return Optional.of(path);
+                }
+            }
+            catch (NumberFormatException nfe)
+            {
+                LOG.warn("Failed to parse camera id.", nfe);
+            }
+        }
+
+        //need full label to find img path
+        String pathAttribute = selectedItemCam.getAttribute("label");
+        String pathAttributeName = new File(pathAttribute).getName();
+        File imageFile = new File(fullResSearchDir, pathAttributeName);
+
+        File finalImgFile;
+
+        //return original file
+        finalImgFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
+        if (finalImgFile != null)
+        {
+            return Optional.of(finalImgFile.getPath());
+        }
+
+        //return file by searching canonical path
+        try
+        {
+            finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getCanonicalPath()));
+            if (finalImgFile != null)
+            {
+                return Optional.of(finalImgFile.getPath());
+            }
+        }
+        catch (IOException e)
+        {
+            LOG.warn("Error retrieving canonical file path for {}", imageFile.getPath(), e);
+        }
+
+        //throw a hail mary and see if it sticks
+        finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getAbsolutePath()
+            .replace("..\\", "")
+            .replace("../", "")));
+        if (finalImgFile != null)
+        {
+            return Optional.of(finalImgFile.getPath());
+        }
+
+        //give up
+        return Optional.empty();
+    }
+
+    private static List<ImageIdentifier> getViews(Stream<Element> cameras)
+    {
+        return cameras
+            .filter(camera ->
+            {
+                String enabled = camera.getAttribute("enabled");
+                return "true".equals(enabled) ||
+                    "1".equals(enabled) ||
+                    enabled.isEmpty(); /*cam is enabled by default*/
+            })
+            .map(camera ->
+            {
+                Element parent = (Element) camera.getParentNode();
+                String label = camera.getAttribute("label");
+                String id = camera.getAttribute("id");
+                int parsedId = id.isBlank() ? -1 : Integer.parseInt(id);
+
+                if ("group".equals(parent.getTagName())) // (either a group or the root node)
+                {
+                    return new ImageIdentifier(label, parsedId, parent.getAttribute("label"));
+                }
+                else
+                {
+                    return new ImageIdentifier(label, parsedId, null);
+                }
+            })
+            .collect(Collectors.toUnmodifiableList());
+    }
+
+    private Element findTargetCamera(String imageName)
+    {
+        for (Element camera : cameras)
+        {
+            if (camera.getAttribute("label").matches(".*" + imageName + ".*"))
+            {
+                return camera;
+            }
+        }
+
+        return null;
+    }
+}

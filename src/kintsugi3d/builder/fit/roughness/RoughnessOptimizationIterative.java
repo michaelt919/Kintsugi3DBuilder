@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -50,8 +50,8 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
      * @throws FileNotFoundException
      */
     public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
-        Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
+                                          ReadonlyBasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
+                                          Supplier<ReadonlyTexture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws IOException
     {
         // Inherit from base class to facilitate initial fit.

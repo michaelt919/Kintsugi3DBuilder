@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,28 +11,16 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-
-import java.util.Collections;
-import java.util.List;
+import kintsugi3d.builder.core.texture.TextureResolution;
 
 public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
 {
-    private final List<DoubleVector3> diffuseAlbedos;
     private final MaterialBasis materialBasis;
 
     public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, MaterialBasis materialBasis)
     {
-        super(textureResolution, materialBasis.getMaterialCount());
-        this.diffuseAlbedos = materialBasis.getDiffuseColors();
+        super(textureResolution, materialBasis.getEnabledMaterialCount());
         this.materialBasis = materialBasis;
-    }
-
-    @Override
-    public List<DoubleVector3> getDiffuseAlbedos()
-    {
-        return Collections.unmodifiableList(diffuseAlbedos);
     }
 
     @Override

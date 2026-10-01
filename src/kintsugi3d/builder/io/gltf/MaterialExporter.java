@@ -13,9 +13,10 @@ package kintsugi3d.builder.io.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +46,8 @@ public class MaterialExporter
     private String textureFilePrefix = "";
     private String textureFileFormat;
     private String filename;
-    private boolean combineWeights;
 
-    private TextureResources<?> textureResources;
+    private ReadonlyTextureResources<? extends Context<?>> textureResources;
 
     private final Map<String, TextureExportSpecification> textures = new HashMap<>(StandardTexture.values().length);
 
@@ -63,16 +63,6 @@ public class MaterialExporter
     public final void setAsset(GltfAssetV2 asset)
     {
         this.asset = asset;
-    }
-
-    public void setCombineWeights(boolean combineWeights)
-    {
-        this.combineWeights = combineWeights;
-    }
-
-    public boolean shouldCombineWeights()
-    {
-        return this.combineWeights;
     }
 
     public void setFilename(String filename)
@@ -115,12 +105,13 @@ public class MaterialExporter
     {
         this.textureFileFormat = textureFileFormat;
     }
-    public TextureResources<?> getTextureResources()
+
+    public ReadonlyTextureResources<?> getTextureResources()
     {
         return textureResources;
     }
 
-    public void setTextureResources(TextureResources<?> textureResources)
+    public void setTextureResources(ReadonlyTextureResources<? extends Context<?>> textureResources)
     {
         this.textureResources = textureResources;
     }
@@ -131,8 +122,6 @@ public class MaterialExporter
 
         for (Method method : this.getClass().getMethods()) // all methods in the current class and superclasses
         {
-            String texName;
-
             if (method.isAnnotationPresent(CustomTextureExport.class))
             {
                 supportedTextures.add(method.getAnnotation(CustomTextureExport.class).value());
@@ -375,20 +364,20 @@ public class MaterialExporter
 
             extras.setBaseRes(baseRes);
 
-            String filename = baseUri;
+            String strippedFilename = baseUri;
             String extension = "";
-            int i = filename.lastIndexOf('.'); //Strip file extension
+            int i = strippedFilename.lastIndexOf('.'); //Strip file extension
             if (i > 0)
             {
-                extension = filename.substring(i);
-                filename = filename.substring(0, i);
+                extension = strippedFilename.substring(i);
+                strippedFilename = strippedFilename.substring(0, i);
             }
 
             // size = 2048, 1024, 512... minRes
             for (int size = baseRes / 2; size >= minRes; size /= 2)
             {
                 Image image = new Image();
-                image.setUri(String.format("%s-%d%s", filename, size, extension));
+                image.setUri(String.format("%s-%d%s", strippedFilename, size, extension));
                 gltf.addImages(image);
                 int imageIndex = gltf.getImages().size() - 1;
                 extras.setLodImageIndex(size, imageIndex);

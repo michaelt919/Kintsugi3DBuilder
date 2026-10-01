@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RecentProjects;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import kintsugi3d.builder.util.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,7 @@ public abstract class CacheModelBase implements CacheModel
 
     protected abstract void removeAllCacheSizeChangeCallbacks();
 
-    protected Map<File, Consumer<File[]>> getDeleteMethods()
+    protected static Map<File, Consumer<File[]>> getDeleteMethods()
     {
         File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
         File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
@@ -82,14 +82,16 @@ public abstract class CacheModelBase implements CacheModel
             fitCacheDir, files -> tryDeleteFitCacheFiles(fitCacheDir, files));
     }
 
-    private Collection<File> getCleanableCacheDirectories()
+    private static Collection<File> getCleanableCacheDirectories()
     {
         return getDeleteMethods().keySet();
     }
 
-    protected void handleCacheCleanupError(Exception e)
+    private static void handleCacheCleanupError(Exception e)
     {
         LOG.error(e.toString());
+        Global.state().getProjectModel().error(
+            "An error occurred while cleaning up cache.  Consider deleting cache files manually.", e);
     }
 
     @Override
@@ -202,7 +204,7 @@ public abstract class CacheModelBase implements CacheModel
         }
     }
 
-    private void tryDeletePreviewCacheFiles(File directory, File[] projects)
+    private static void tryDeletePreviewCacheFiles(File directory, File[] projects)
     {
         try
         {
@@ -318,7 +320,7 @@ public abstract class CacheModelBase implements CacheModel
         }
     }
 
-    private void tryDeleteFitCacheFiles(File directory, File[] projects)
+    private static void tryDeleteFitCacheFiles(File directory, File[] projects)
     {
         try
         {
@@ -764,14 +766,14 @@ public abstract class CacheModelBase implements CacheModel
      *
      * @return
      */
-    protected int getNumCachedProjects()
+    protected static int getNumCachedProjects()
     {
         return getCleanableCacheDirectories().stream()
             .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
             .max().orElse(0);
     }
 
-    protected boolean checkOldFilesExist()
+    protected static boolean checkOldFilesExist()
     {
         Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
             .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))

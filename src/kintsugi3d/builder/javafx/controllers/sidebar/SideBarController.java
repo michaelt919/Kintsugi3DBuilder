@@ -66,6 +66,7 @@ public class SideBarController
     private ObservableTabsModel tabModels;
     private String lastSelectedTabLabel;
     private boolean minimized = false;
+    private boolean resizingSidebar = false;
 
     public Node getRootNode()
     {
@@ -78,7 +79,7 @@ public class SideBarController
 
         tabModels.getAllTabs().forEach(this::addTab);
 
-        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel>) change ->
+        tabModels.getObservableTabsMap().addListener((MapChangeListener<String, ObservableCardsModel<?>>) change ->
         {
             if (change.wasAdded())
             {
@@ -146,7 +147,7 @@ public class SideBarController
         }
     }
 
-    private void addTab(ObservableCardsModel model)
+    private void addTab(ObservableCardsModel<?> model)
     {
         RadioButton newButton = createButton(model.getModelLabel());
         VBox newTab = createTab(model);
@@ -190,7 +191,7 @@ public class SideBarController
         return button;
     }
 
-    private VBox createTab(ObservableCardsModel model)
+    private VBox createTab(ObservableCardsModel<?> model)
     {
         VBox newTab = null;
         FXMLLoader loader = new FXMLLoader();
@@ -254,6 +255,21 @@ public class SideBarController
         else
         {
             mainBox.setCursor(Cursor.DEFAULT);
+        }
+    }
+
+    /**
+     * This method is for resizing the scroll bar and will trigger events to try to stop the
+     * scroll bar flicker
+     * @param event
+     */
+    @FXML
+    public void mousePressed(MouseEvent event)
+    {
+        if (Objects.equals(mainBox.getCursor(), Cursor.E_RESIZE))
+        {
+            resizingSidebar = true;
+            tabControllers.forEach(CardTabController::onDragStarted);
         }
     }
 
@@ -323,6 +339,10 @@ public class SideBarController
     @FXML
     public void mouseReleased(MouseEvent event)
     {
+        resizingSidebar = false;
+
+        tabControllers.forEach(CardTabController::onDragEnded); //Calls methods to stop scroll bar flicker
+
         if (minimized)
         {
             resizeWidth(MINIMIZED_WIDTH);
@@ -427,11 +447,17 @@ public class SideBarController
         mainBox.setPrefWidth(width);
         mainBox.setMinWidth(width);
         mainBox.setMaxWidth(width);
+
+        //Calls methods to stop scroll bar flicker
+        if (resizingSidebar)
+        {
+            tabControllers.forEach(controller -> controller.onSidebarWidthChanged(width));
+        }
     }
 
     public void refreshTabs()
     {
-        tabControllers.forEach(CardTabController::refreshCardList);
+        tabControllers.forEach(CardTabController::reloadCardList);
     }
     public double getTabWidth() {return mainBox.getWidth();}
 }

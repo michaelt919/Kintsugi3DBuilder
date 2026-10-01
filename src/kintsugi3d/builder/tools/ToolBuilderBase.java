@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.tools;
 
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.rendering.SceneViewport;
 import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
 import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
@@ -22,7 +22,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     private ManipulableViewpointModel cameraModel;
     private ManipulableLightingEnvironmentModel lightingEnvironmentModel;
     private ManipulableObjectPoseModel objectModel;
-    private SceneViewportModel sceneViewportModel;
+    private SceneViewport sceneViewport;
     private GeneralSettingsModel settingsModel;
 
     protected ToolBuilderBase()
@@ -51,9 +51,9 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setSceneViewportModel(SceneViewportModel sceneViewportModel)
+    public ToolBuilder<ToolType> setSceneViewport(SceneViewport sceneViewport)
     {
-        this.sceneViewportModel = sceneViewportModel;
+        this.sceneViewport = sceneViewport;
         return this;
     }
 
@@ -79,9 +79,9 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return objectModel;
     }
 
-    SceneViewportModel getSceneViewportModel()
+    SceneViewport getSceneViewport()
     {
-        return sceneViewportModel;
+        return sceneViewport;
     }
 
     GeneralSettingsModel getSettingsModel()

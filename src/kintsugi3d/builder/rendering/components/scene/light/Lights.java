@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,8 @@
 
 package kintsugi3d.builder.rendering.components.scene.light;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.gl.core.*;
@@ -27,10 +27,12 @@ import java.util.Map;
 
 public class Lights<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
+    private static final String SCENE_OBJECT_TAG_FORMAT = "Light.%d";
+
     private final SceneViewportModel sceneViewportModel;
     private final SceneModel sceneModel;
 
-    private Texture2D<ContextType> lightTexture;
+    private ReadonlyTexture2D<ContextType> lightTexture;
 
     public Lights(ContextType context, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
     {
@@ -40,8 +42,13 @@ public class Lights<ContextType extends Context<ContextType>> extends ShaderComp
 
         for (int i = 0; i < sceneModel.getLightingModel().getMaxLightCount(); i++)
         {
-            sceneViewportModel.addSceneObjectType("Light." + i);
+            sceneViewportModel.addSceneObjectType(getSceneObjectTag(i));
         }
+    }
+
+    private static String getSceneObjectTag(int i)
+    {
+        return String.format(SCENE_OBJECT_TAG_FORMAT, i);
     }
 
     @Override
@@ -57,18 +64,18 @@ public class Lights<ContextType extends Context<ContextType>> extends ShaderComp
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "grayscaleTexture.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
@@ -92,7 +99,7 @@ public class Lights<ContextType extends Context<ContextType>> extends ShaderComp
                     Matrix4 widgetTransformation = cameraViewport.getView().times(sceneModel.getInverseLightViewMatrix(i));
 
                     getContext().getState().setBlendFunction(new BlendFunction(Weight.ONE, Weight.ONE));
-                    this.getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i));
+                    this.getDrawable().program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID(getSceneObjectTag(i)));
                     this.getDrawable().program().setUniform("color", sceneModel.getLightingModel().getLightPrototype(i).getColor().times((float) Math.PI));
 
                     Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();

@@ -34,7 +34,8 @@ struct MFDEval
     float nDotH;
 };
 
-MFDEval evalMFD(int m, float weights[BASIS_COUNT])
+#if ACTIVE_BASIS_COUNT > 0
+MFDEval evalMFD(int m, float weights[ACTIVE_BASIS_COUNT])
 {
     MFDEval result;
 
@@ -43,13 +44,14 @@ MFDEval evalMFD(int m, float weights[BASIS_COUNT])
     result.nDotH = cos(result.thetaH);
 
     result.mfd = vec3(0.0);
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         result.mfd += weights[b] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
     }
 
     return result;
 }
+#endif
 
 void main()
 {
@@ -58,9 +60,10 @@ void main()
         discard;
     }
 
-    float weights[BASIS_COUNT];
+#if ACTIVE_BASIS_COUNT > 0
+    float weights[ACTIVE_BASIS_COUNT];
 
-    for (int b = 0; b < BASIS_COUNT; b++)
+    for (int b = 0; b < ACTIVE_BASIS_COUNT; b++)
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b))[0];
     }
@@ -153,4 +156,9 @@ void main()
 
     specularColor = vec4(linearToSRGB(fresnelOverPi.rgb * PI), 1.0);
     sqrtRoughness = vec4(vec3(sqrt(roughness)), 1.0);
+#else
+    // No specularity
+    specularColor = vec4(0.0, 0.0, 0.0, 1.0);
+    sqrtRoughness = vec4(1.0);
+#endif
 }

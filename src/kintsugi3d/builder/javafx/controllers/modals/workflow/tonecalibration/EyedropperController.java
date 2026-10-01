@@ -34,15 +34,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.SampledLuminanceEncoding;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.IOModel;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController;
-import kintsugi3d.builder.core.RecentProjects;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.SRGB;
@@ -61,7 +63,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
-    private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
+    private static final double[] LINEAR_LUMINANCE_VALUES = { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
     @FXML private VBox eydropperImageRoot;
     @FXML private VBox outerVbox;
@@ -203,7 +205,7 @@ public class EyedropperController extends NonDataPageControllerBase
             //initialize txtFields with their respective values
             if (hasValidIOModel())
             {
-                IOModel ioModel = Global.state().getIOModel();
+                IOModel ioModel = Global.io();
 
                 // Initialize from loaded view set (projectSettingsManager will handle flatfieldCorrected)
                 ViewSet viewSet = ioModel.getLoadedViewSet();
@@ -252,9 +254,24 @@ public class EyedropperController extends NonDataPageControllerBase
         }
 
         // Set color checker image
-        setImage(getState().getProjectModel().getColorCheckerFile());
+        setImage(getColorCheckerFile());
 
         autoApply();
+    }
+
+    private File getColorCheckerFile()
+    {
+        File colorCheckerFile = getState().getProjectModel().getColorCheckerFile();
+
+        if (colorCheckerFile != null)
+        {
+            return colorCheckerFile;
+        }
+        else
+        {
+            ViewSet viewSet = Global.io().validateRenderable().getLoadedViewSet();
+            return viewSet.getPrimaryView().tryFindFullResImageFile();
+        }
     }
 
     @Override
@@ -271,7 +288,7 @@ public class EyedropperController extends NonDataPageControllerBase
         {
             projectSettingsManager.cancel(); // for flatfield setting
 
-            IOModel ioModel = Global.state().getIOModel();
+            IOModel ioModel = Global.io();
             ioModel.requestLightIntensityCalibration(); // in case "infinite light sources" was toggled
 
             // revert the tone calibration to what it was when the page was opened.
@@ -666,7 +683,7 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void apply()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         // light intensities depend on whether inverse-square attenuation is enabled
         ioModel.requestLightIntensityCalibration();
@@ -755,7 +772,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static boolean hasValidIOModel()
     {
-        return Global.state().getIOModel().hasLoadedRenderable();
+        return Global.io().hasLoadedRenderable();
     }
 
     @FXML
@@ -782,24 +799,38 @@ public class EyedropperController extends NonDataPageControllerBase
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", VALID_EXTENSIONS));
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", VALID_EXTENSIONS));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        try
+        ViewSet viewSet = Global.io().getLoadedViewSet();
+        if (viewSet == null)
         {
-            fileChooser.setInitialDirectory(Global.state().getIOModel().getLoadedViewSet().getFullResImageFile(0).getParentFile());
-        }
-        catch (NullPointerException e)
-        {
-            Alert alert = new Alert(AlertType.ERROR, "Please load a model before using the color checker.");
+            Alert alert = new Alert(AlertType.ERROR, "Please load a model before performing tone calibration.");
             alert.setGraphic(null);
             alert.show();
-            return;
         }
+        else
+        {
+            View view = viewSet.getRepresentativeView();
+            if (view != null)
+            {
+                fileChooser.setInitialDirectory(view.getFullResImageFile().getParentFile());
+            }
 
-        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-        File file = fileChooser.showOpenDialog(stage);
-        setImage(file);
+            Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            File file = fileChooser.showOpenDialog(stage);
+            setImage(file);
+
+            // This saves the file to the location path listed
+            try
+            {
+                getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
+            }
+            catch (RuntimeException e)
+            {
+                LOG.error("Could not save file");
+            }
+        }
     }
 
     private void setImage(File file)
@@ -830,28 +861,12 @@ public class EyedropperController extends NonDataPageControllerBase
             //update buttons
             chooseImageButton.setVisible(false);
             chooseNewImageButton.setVisible(true);
-
-            //testing the code for saving the file
-            //Note: Code bellow saves the file however it's not audiomatic. The user has to select where to save it and name the file as well.
-            //Stage secondStage = new Stage();
-            //File savefile = fileChooser.showSaveDialog(secondStage);
-            //fileChooser.setInitialFileName("colorPickerImage");
-
-            //This saves the file to the location path listed
-            try
-            {
-                getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
-            }
-            catch (RuntimeException e)
-            {
-                LOG.error("Could not save file");
-            }
         }
     }
 
     public void reset()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         // Clear tonemapping and reset text fields to a standard curve
         ioModel.clearTonemapping();

@@ -11,127 +11,161 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
 import kintsugi3d.builder.fit.decomposition.BasisImageCreator;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.decomposition.VisualizationShaders;
-import kintsugi3d.builder.javafx.core.MainApplication;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.UserShader;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.builder.state.shader.WeightmapOverlayShaderInfo;
+import kintsugi3d.builder.util.AppIcon;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.ImageFinder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-public class MaterialCardFactory implements ProjectDataCardFactory
+public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMaterialInfo>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MaterialCardFactory.class);
-
-    private final RenderableInstance<?> instance;
-
-    public MaterialCardFactory(RenderableInstance<?> instance)
+    public MaterialCardFactory(ImageBasedRenderable<?> instance)
     {
-        this.instance = instance;
+        super(instance);
     }
 
-    public ProjectDataCard createCard(CardsModel cardsModel, TextureResources<?> resources, int cardIndex)
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
     {
+        return List.of(Map.of(
+            "Disable All", () ->
+                // needs to run on graphics thread to replace GPU resources
+                Rendering.runLater(() ->
+                {
+                    TextureResources<?> resources = getInstance().getResources().getTextureResources();
+                    ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
+                    if (basisResources != null)
+                    {
+                        resources.disableBasisMaterials(
+                            basisResources.getBasis().getMaterials().stream()
+                                .filter(BasisMaterialInfo::isEnabled)
+                                .map(BasisMaterialInfo::getName)
+                                .collect(Collectors.toList()));
+                    }
+                }),
+            "Enable All", () ->
+                // needs to run on graphics thread to replace GPU resources
+                Rendering.runLater(() ->
+                {
+                    TextureResources<?> resources = getInstance().getResources().getTextureResources();
+                    ReadonlyBasisResources<?> basisResources = resources.getBasisResources();
+                    if (basisResources != null)
+                    {
+                        resources.enableBasisMaterials(
+                            basisResources.getBasis().getMaterials().stream()
+                                .filter(Predicate.not(BasisMaterialInfo::isEnabled))
+                                .map(BasisMaterialInfo::getName)
+                                .collect(Collectors.toList()));
+                    }
+                })));
+    }
+
+    @Override
+    public Class<BasisMaterialInfo> getDataClass()
+    {
+        return BasisMaterialInfo.class;
+    }
+
+    @Override
+    public ProjectDataCard createCard(BasisMaterialInfo material)
+    {
+        String name = material.getName();
+
         String thumbnailPath;
         try
         {
             thumbnailPath = ImageFinder.getInstance().findImageFile(
-                new File(instance.getViewSet().getThumbnailImageDirectory(),
-                    BasisImageCreator.getBasisImageFilename(cardIndex))).toString();
+                new File(getViewSet().getThumbnailImageDirectory(),
+                    BasisImageCreator.getBasisImageFilename(name))).toString();
         }
         catch (FileNotFoundException e)
         {
             // Default to icon if thumbnail isn't found
-            thumbnailPath = MainApplication.ICON_PATH;
+            thumbnailPath = AppIcon.PATH;
         }
 
-        UserShader shader = VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
-            cardIndex, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
+        ShaderInfo shader =
+            VisualizationShaders.getForBasisMaterial(VisualizationShaders.BASIS_MATERIAL_WEIGHTED,
+                material, VisualizationShaders.FORMAT_PALETTE_MATERIAL);
 
-        return new ShaderDataCard(String.format("%d", cardIndex), String.format("Material %d", cardIndex), shader, thumbnailPath, null, Map.of(),
+        TextureResources<?> resources = getInstance().getResources().getTextureResources();
+
+        return new ShaderDataCard(name, material.getFriendlyName(), shader, thumbnailPath, null, Map.of(),
             List.of(
                 Map.of(
                     "Highlight Material", () ->
                     {
-                        UserShader prevShader = Global.state().getUserShaderModel().getUserShader();
-                        var defines = new HashMap<>(prevShader.getDefines());
-                        var overlayMode = defines.get("OVERLAY_MODE");
-                        var overlayWeightmapIndex = defines.get("OVERLAY_WEIGHTMAP_INDEX");
+                        ShaderInfo prevShader = Global.state().getUserShaderModel().getActiveShader();
 
-                        String subName;
-
-                        if (overlayMode != null && overlayMode.isPresent() && overlayMode.get().equals("OVERLAY_MODE_WEIGHTMAP")
-                            && overlayWeightmapIndex != null && overlayWeightmapIndex.isPresent() && overlayWeightmapIndex.get().equals(cardIndex))
+                        // Determine if we're toggling on or off
+                        if (prevShader instanceof WeightmapOverlayShaderInfo)
                         {
-                            // Overlay already active; toggle off
-                            defines.remove("OVERLAY_MODE");
-                            defines.remove("OVERLAY_WEIGHTMAP_INDEX");
-                            subName = null;
+                            WeightmapOverlayShaderInfo prevOverlayShader = (WeightmapOverlayShaderInfo) prevShader;
+
+                            if (prevOverlayShader.getWeightmapMaterial().getName().equals(material.getName()))
+                            {
+                                // Overlay already active; toggle off
+                                Global.state().getUserShaderModel().setActiveShader(prevOverlayShader.getBaseShader());
+                            }
+                            else
+                            {
+                                // Overlay active for a different weightmap; switch to this one.
+                                Global.state().getUserShaderModel().setActiveShader(
+                                    new WeightmapOverlayShaderInfo(prevOverlayShader.getBaseShader(), material));
+                            }
                         }
                         else
                         {
-                            defines.put("OVERLAY_MODE", Optional.of("OVERLAY_MODE_WEIGHTMAP"));
-                            defines.put("OVERLAY_WEIGHTMAP_INDEX", Optional.of(cardIndex));
-                            subName = String.format("Palette material %d", cardIndex);
+                            // Overlay currently inactive, toggle on
+                            Global.state().getUserShaderModel().setActiveShader(
+                                new WeightmapOverlayShaderInfo(prevShader, material));
                         }
-
-                        Global.state().getUserShaderModel().setUserShader(
-                            new UserShader(prevShader.getFriendlyName(), prevShader.getFilename(), defines, subName));
                     }),
-                Map.of("Delete Material", () ->
-                    cardsModel.confirm("Delete Material", "Delete Material?", "This will delete the material from the project.",
-                        () -> Rendering.runLater(() -> // needs to run on graphics thread to replace GPU resources
-                        {
-                            try
-                            {
-                                resources.deleteBasisMaterial(cardIndex);
-                            }
-                            finally // even if an exception is thrown, want to make sure we're in sync with the current state.
-                            {
-                                // hard reset of cards list to re-number, etc.
-                                cardsModel.setCardList(createAllCards(cardsModel));
-                            }
-                        })))));
+                Map.of("Toggle Disabled", () ->
+                    // needs to run on graphics thread to replace GPU resources
+                    Rendering.runLater(() -> resources.toggleBasisMaterial(material.getName())),
+                "Delete Material", () ->
+                    Global.state().getProjectModel().confirm("Delete Material", "Delete Material?",
+                        "This will delete the material from the project.",
+                        // needs to run on graphics thread to replace GPU resources
+                        () -> Rendering.runLater(() -> resources.deleteBasisMaterial(material.getName()))))),
+            !material.isEnabled());
     }
 
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
+    public List<ProjectDataCard> createAllCards()
     {
-        if (instance.getResources() != null)
+        ReadonlyBasisResources<? extends Context<?>> basisResources =
+            getInstance().getResources().getTextureResources().getBasisResources();
+        if (basisResources != null)
         {
-            TextureResources<?> resources = instance.getResources().getTextureResources();
-            BasisResources<?> basisResources = resources.getBasisResources();
-            if (basisResources != null)
-            {
-                return IntStream.range(0, basisResources.getBasisCount())
-                    .mapToObj(i -> createCard(cardsModel, resources, i))
-                    .collect(Collectors.toUnmodifiableList());
-            }
+            return basisResources.getBasis().getMaterials().stream()
+                .map(this::createCard)
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ProjectDataCard::getInternalName))
+                .collect(Collectors.toUnmodifiableList());
         }
-
-        // If not yet initialized, return empty list.
-        return List.of();
-    }
-
-    @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
-    {
-        LOG.warn("refreshCards not implemented for textures.");
-        return Map.of();
+        else
+        {
+            // If not yet initialized, return empty list.
+            return List.of();
+        }
     }
 }

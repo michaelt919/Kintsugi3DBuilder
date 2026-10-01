@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,8 +28,7 @@ import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.layout.VBox;
 import kintsugi3d.builder.javafx.internal.ObservableLightingEnvironmentModel;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.state.SceneViewport;
-import kintsugi3d.builder.state.SceneViewportModel;
+import kintsugi3d.builder.rendering.SceneViewport;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
@@ -55,7 +54,7 @@ public class RootLightSceneController implements Initializable
     private int lastSelectedIndex = -1;
 
     private ObservableProjectModel projectModel;
-    private SceneViewportModel sceneViewportModel;
+    private SceneViewport sceneViewport;
 
     @SuppressWarnings("rawtypes")
     @Override
@@ -67,7 +66,7 @@ public class RootLightSceneController implements Initializable
         {
             if (param.getValue().isLocked())
             {
-                return new SimpleStringProperty("(L) " + param.getValue().getName());
+                return new SimpleStringProperty(String.format("(L) %s", param.getValue().getName()));
             }
             else
             {
@@ -152,10 +151,11 @@ public class RootLightSceneController implements Initializable
         };
     }
 
-    public void init(ObservableLightingEnvironmentModel lightingModel, ObservableProjectModel injectedProjectModel, SceneViewportModel injectedSceneViewportModel)
+    public void injectDependencies(ObservableLightingEnvironmentModel lightingModel,
+                                   ObservableProjectModel injectedProjectModel, SceneViewport injectedSceneViewport)
     {
         this.projectModel = injectedProjectModel;
-        this.sceneViewportModel = injectedSceneViewportModel;
+        this.sceneViewport = injectedSceneViewport;
 
         ObservableList<ObservableLightGroupSettings> lightGroupList = projectModel.getLightGroupList();
         tableView.setItems(lightGroupList);
@@ -323,8 +323,8 @@ public class RootLightSceneController implements Initializable
         if (lightGroupList.size() > selectedRow && selectedRow >= 0)
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
-            confirmation.setHeaderText( "Are you sure you want to delete the following light group: "
-                + lightGroupList.get(selectedRow).getName() + '?');
+            confirmation.setHeaderText(String.format("Are you sure you want to delete the following light group: %s?",
+                lightGroupList.get(selectedRow).getName()));
             confirmation.setTitle("Delete Confirmation");
 
             confirmation.showAndWait()
@@ -339,8 +339,6 @@ public class RootLightSceneController implements Initializable
         ObservableLightGroupSettings selectedLightGroup = getSelectedLightGroup();
         if (selectedLightGroup != null)
         {
-            SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
-
             if (lastSelectedIndex >= 0 && lastSelectedIndex < selectedLightGroup.getLightCount())
             {
                 ObservableLightSettings lastSelectedLight = selectedLightGroup.lightListProperty().get(lastSelectedIndex);
@@ -419,8 +417,8 @@ public class RootLightSceneController implements Initializable
         if (selectedLightGroup != null && lastSelectedIndex >= 0 && lastSelectedIndex < selectedLightGroup.getLightCount())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
-            confirmation.setHeaderText("Are you sure you want to delete light " + (lastSelectedIndex + 1) + " from the following group: "
-                + selectedLightGroup.getName() + '?');
+            confirmation.setHeaderText(String.format("Are you sure you want to delete light %d from the following group: %s?",
+                lastSelectedIndex + 1, selectedLightGroup.getName()));
             confirmation.setTitle("Delete Confirmation");
 
             confirmation.showAndWait()

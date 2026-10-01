@@ -20,22 +20,17 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.app.Rendering;
+import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ImageReplaceData;
+import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.builder.javafx.controllers.paged.DataReceiverPageControllerBase;
 import kintsugi3d.builder.javafx.core.ExceptionHandling;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.rendering.Rendering;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.Objects;
 
-public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplaceData>
+public class ReplaceImageController extends DataReceiverPageControllerBase<ImageReplacer>
 {
     @FXML private Pane root;
     @FXML private ImageView currentImageView;
@@ -47,8 +42,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
     private final FileChooser replacementFileChooser = new FileChooser();
     private Image currentImage;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReplaceImageController.class);
-    private ImageReplaceData data;
+    private ImageReplacer data;
 
     @Override
     public Region getRootNode() { return root; }
@@ -59,8 +53,8 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
         newFileButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("dark-button"), true);
 
         replacementFileChooser.setTitle("Replace with...");
-        replacementFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture image", "*.png"));
-        setCurrentDirectoryFile(Global.state().getIOModel().getLoadedViewSet().getSupportingFilesDirectory());
+        replacementFileChooser.getExtensionFilters().add(new ExtensionFilter("Texture image", "*.png"));
+        setCurrentDirectoryFile(Global.io().getLoadedViewSet().getSupportingFilesDirectory());
 
         setCanConfirm(true);
         setCanAdvance(true);
@@ -80,13 +74,8 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
             try
             {
                 // Try to load the texture
+                // If successful, this should trigger saving the project and also notify observers that the texture has changed.
                 data.replace();
-
-                // If load was successful, then copy the file into the project files directory.
-                Files.copy(data.getNewImage().toPath(), data.getCurrentImage().toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-                // Finally, attempt to refresh the card (including thumbnail from the version saved to disk).
-                data.refreshCards();
             }
             catch (IOException | RuntimeException e)
             {
@@ -126,7 +115,7 @@ public class ReplaceImageController extends DataReceiverPageControllerBase<Image
     }
 
     @Override
-    public void receiveData(ImageReplaceData newData)
+    public void receiveData(ImageReplacer newData)
     {
         this.data = newData;
 
