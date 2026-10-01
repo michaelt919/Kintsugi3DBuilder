@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.app.MultithreadState;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
@@ -213,10 +212,8 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         // Grab all views (not just enabled) for light calibration
         // TODO this is for the light calibration sidebar and should probably be migrated to a newer system
         // TODO   for managing the list of photos (like the photos tab)
-        if (MultithreadState.isInitialized())
-        {
-            Global.state().getViewListModel().setViewList(loadedViewSet.getViewsSorted());
-        }
+        Global.state().getViewListModel().setViewList(loadedViewSet.getViewsSorted());
+
         if (newProjectFile != null)
         {
             // Save the project before proceeding.

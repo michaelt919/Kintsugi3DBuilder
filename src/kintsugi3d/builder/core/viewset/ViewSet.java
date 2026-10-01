@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -681,6 +680,9 @@ public final class ViewSet implements ReadonlyViewSet
             .toPath().toAbsolutePath().normalize();
 
         setRelativeThumbnailImagePathName(root.relativize(thumbs).toString());
+
+        // TODO would this work?
+        //this.thumbnailImageDirectory = new File(supportingFilesDirectory, "thumbnails");
     }
 
     @Override

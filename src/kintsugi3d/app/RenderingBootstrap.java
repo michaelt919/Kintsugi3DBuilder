@@ -18,11 +18,11 @@ import kintsugi3d.builder.core.WindowSynchronization;
 import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.rendering.*;
 import kintsugi3d.builder.state.SelectableViewListModel;
-import kintsugi3d.builder.state.scene.*;
-import kintsugi3d.builder.state.settings.DefaultSettings;
+import kintsugi3d.builder.state.scene.ManipulableLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
+import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
-import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.builder.tools.*;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.Context;
@@ -191,11 +191,8 @@ public final class RenderingBootstrap
         }
         else
         {
-            GeneralSettingsModel settingsModel= new SimpleGeneralSettingsModel();
-            ReadonlyLightingEnvironmentModel lightingModel = Global.state().getLightingModel();
-            DefaultSettings.applyGlobalDefaults(settingsModel);
-            renderableManager.setSettingsModel(settingsModel);
-            renderableManager.setLightingModel(lightingModel);
+            renderableManager.setSettingsModel(Global.state().getSettingsModel());
+            renderableManager.setLightingModel(Global.state().getLightingModel());
             renderableManager.setCameraModel(Global.state().getCameraModel());
             renderableManager.setCameraViewListModel(Global.state().getViewListModel());
         }
