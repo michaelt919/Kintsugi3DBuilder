@@ -31,8 +31,8 @@ import kintsugi3d.builder.resources.DynamicResourceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
-import kintsugi3d.builder.util.EventDispatcher;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventDispatcher;
+import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -468,7 +468,7 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
                     // First frame drawn successfully.
                     loaded = true;
 
-                    projectLoaded.notifyListeners(new ProjectLoadedEvent(getGeometry().getBoundingBoxSize()));
+                    projectLoaded.notify(new ProjectLoadedEvent(getGeometry().getBoundingBoxSize()));
 
                     if (this.progressMonitor != null)
                     {

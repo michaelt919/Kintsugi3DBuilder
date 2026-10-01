@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.resources.project.specular.SpecularTextures;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ManagedResource;
@@ -20,7 +20,7 @@ import java.io.File;
 
 public interface RoughnessOptimization<ContextType extends Context<ContextType>> extends SpecularTextures<ContextType>, ManagedResource
 {
-    void setInputWeights(BasisWeightResources<ContextType> weightResources);
+    void setInputWeights(ReadonlyBasisWeightResources<ContextType> weightResources);
     void clear();
     void execute();
     void saveTextures(File outputDirectory);

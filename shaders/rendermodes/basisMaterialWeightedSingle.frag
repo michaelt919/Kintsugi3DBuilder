@@ -44,11 +44,13 @@ vec3 global(ViewingParameters v, Material m)
 #define MODULATE_ENABLED 1
 vec4 modulate(Material m)
 {
+// Make sure there are at least two materials (active materials plus the selected weightmap) to compare
+#if ACTIVE_BASIS_COUNT > 1 || (ACTIVE_BASIS_COUNT == 1 && WEIGHTMAP_INDEX >= ACTIVE_BASIS_COUNT)
     float thisWeight = texture(weightMaps, vec3(fTexCoord, WEIGHTMAP_INDEX)).r;
 
     float maxWeight = thisWeight;
 
-    for (int i = 0; i < BASIS_COUNT; i++)
+    for (int i = 0; i < ACTIVE_BASIS_COUNT; i++)
     {
         if (i != WEIGHTMAP_INDEX)
         {
@@ -58,6 +60,9 @@ vec4 modulate(Material m)
     }
 
     return vec4(vec3(smoothstep(0.0, maxWeight, thisWeight)), 1.0);
+#else
+    return vec4(1.0);
+#endif
 }
 
 vec3 specular(LightingParameters l, Material m)

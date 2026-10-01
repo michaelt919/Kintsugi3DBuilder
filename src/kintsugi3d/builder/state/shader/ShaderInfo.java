@@ -9,15 +9,21 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.resources.project;
+package kintsugi3d.builder.state.shader;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.ProgressMonitor;
-import kintsugi3d.gl.interactive.UserCancellationException;
+import java.io.File;
+import java.util.Map;
+import java.util.Optional;
 
-import java.io.IOException;
-
-public interface GraphicsResourcesCacheable<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResources<ContextType>
+public interface ShaderInfo
 {
-    ImageCache<ContextType> cache(ReadonlyImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException;
+    String getFriendlyName();
+
+    String getFullName();
+
+    String getFilename();
+
+    File getFile();
+
+    Map<String, Optional<Object>> getDefines();
 }

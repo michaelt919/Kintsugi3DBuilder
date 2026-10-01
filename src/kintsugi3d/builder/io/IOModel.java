@@ -20,10 +20,10 @@ import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
-import kintsugi3d.builder.util.EventDispatcher;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventDispatcher;
+import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -178,7 +178,7 @@ public class IOModel implements IO
     {
         unload(() ->
         {
-            projectOpened.notifyListeners(new ProjectOpenedEvent(projectName));
+            projectOpened.notify(new ProjectOpenedEvent(projectName));
             new Thread(loader, "Loading Thread").start();
         });
     }
@@ -312,7 +312,7 @@ public class IOModel implements IO
     }
 
     @Override
-    public void saveProject(File projectFile, Runnable finishedCallback) throws IOException, ParserConfigurationException, TransformerException
+    public void saveProject(File projectFile, Runnable finishedCallback) throws IOException
     {
         ViewSet viewSet = getLoadedViewSet();
         setViewsetDirectories(projectFile, viewSet);
@@ -347,7 +347,7 @@ public class IOModel implements IO
         }
 
         this.loadedProjectFile = projectFile;
-        this.projectSaved.notifyListeners(new ProjectSavedEvent(projectFile.getName()));
+        this.projectSaved.notify(new ProjectSavedEvent(projectFile.getName()));
 
         // Export glTF for Kintsugi 3D Viewer even if not requested
         // TODO: ensure that GLTF texture filenames match default material texture names;
@@ -362,9 +362,16 @@ public class IOModel implements IO
     }
 
     @Override
-    public File getViewSetFileForProject(File projectFile) throws IOException, ParserConfigurationException, SAXException
+    public File getViewSetFileForProject(File projectFile) throws IOException
     {
-        return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
+        try
+        {
+            return new File(projectFile.getParent(), getViewSetFilenameFromXMLDocument(openProjectFileAsXMLDocument(projectFile)));
+        }
+        catch (ParserConfigurationException | SAXException e)
+        {
+            throw new IOException(e);
+        }
     }
 
     private static Document openProjectFileAsXMLDocument(File projectFile) throws SAXException, IOException, ParserConfigurationException
@@ -386,22 +393,29 @@ public class IOModel implements IO
         }
     }
 
-    private static void saveXMLProject(File projectFile, File vsetFile) throws ParserConfigurationException, IOException, TransformerException
+    private static void saveXMLProject(File projectFile, File vsetFile) throws IOException
     {
-        Document document = Global.state().getProjectModel().toXMLDocument();
-        Element rootElement = document.getDocumentElement();
-
-        Element vsetElement = document.createElement("ViewSet");
-        vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
-        rootElement.appendChild(vsetElement);
-
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-
-        try (OutputStream out = new FileOutputStream(projectFile))
+        try
         {
-            transformer.transform(new DOMSource(document), new StreamResult(out));
+            Document document = Global.state().getProjectModel().toXMLDocument();
+            Element rootElement = document.getDocumentElement();
+
+            Element vsetElement = document.createElement("ViewSet");
+            vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
+            rootElement.appendChild(vsetElement);
+
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            try (OutputStream out = new FileOutputStream(projectFile))
+            {
+                transformer.transform(new DOMSource(document), new StreamResult(out));
+            }
+        }
+        catch (TransformerException | ParserConfigurationException e)
+        {
+            throw new IOException(e);
         }
     }
 
@@ -485,7 +499,7 @@ public class IOModel implements IO
     {
         loadedViewSetFile = null;
         loadedProjectFile = null;
-        projectClosed.notifyListeners(new ProjectClosedEvent());
+        projectClosed.notify(new ProjectClosedEvent());
         this.handler.unload(onUnloadComplete);
     }
 

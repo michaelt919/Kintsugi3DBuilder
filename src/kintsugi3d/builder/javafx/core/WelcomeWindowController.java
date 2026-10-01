@@ -37,9 +37,7 @@ import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
@@ -436,7 +434,7 @@ public class WelcomeWindowController
                 });
             }
         }
-        catch (IOException | ParserConfigurationException | SAXException e)
+        catch (IOException e)
         {
             LOG.warn("Could not find preview image for {}", projFile.getName(), e);
         }

@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.interactive.InteractiveRenderable;

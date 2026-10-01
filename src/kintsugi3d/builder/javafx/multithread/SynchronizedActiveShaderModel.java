@@ -12,8 +12,8 @@
 package kintsugi3d.builder.javafx.multithread;
 
 import javafx.application.Platform;
-import kintsugi3d.builder.state.scene.ActiveShaderModel;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ActiveShaderModel;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.util.function.Consumer;
 

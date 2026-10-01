@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.state.project;
 
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.io.IOModel;
-import kintsugi3d.gl.vecmath.Vector3;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -47,44 +44,6 @@ public abstract class ProjectModelBase<
     protected static final String NULL_PROJECT_NAME = "No Project";
 
     private final EnvironmentType noEnvironment = SerializableEnvironmentSettings.createNoEnvironment(this::constructEnvironmentSetting);
-
-    public void registerIOListeners()
-    {
-        IOModel ioModel = Global.io();
-
-        ioModel.projectOpenedListeners().addListener(event ->
-        {
-            setProjectOpen(true);
-            setProjectName(event.projectName);
-        });
-
-        ioModel.projectSavedListeners().addListener(event -> setProjectName(event.projectName));
-
-        ioModel.projectClosedListeners().addListener(event ->
-        {
-            setProjectOpen(false);
-            this.setProjectName(NULL_PROJECT_NAME);
-            setProjectLoaded(false);
-            setProjectProcessed(false);
-            setProcessedTextureWidth(0);
-            setProcessedTextureWidth(0);
-            setModelSize(new Vector3(1.0f));
-        });
-
-        ioModel.projectLoadedListeners().addListener(event ->
-        {
-            setProjectLoaded(true);
-            setModelSize(event.modelSize);
-        });
-
-        ioModel.projectProcessedListeners().addListener(event ->
-        {
-            setProjectProcessed(true);
-            setProcessedTextureWidth(event.textureWidth);
-            setProcessedTextureHeight(event.textureHeight);
-            notifyProcessingComplete();
-        });
-    }
 
     public abstract List<CameraType> getCameraList();
 
@@ -259,13 +218,4 @@ public abstract class ProjectModelBase<
     {
         return this.noEnvironment;
     }
-
-    protected abstract void setProjectOpen(boolean projectOpen);
-    protected abstract void setProjectName(String projectName);
-    protected abstract void setProjectLoaded(boolean projectLoaded);
-    protected abstract void setModelSize(Vector3 modelSize);
-    protected abstract void setProjectProcessed(boolean projectProcessed);
-    protected abstract void setProcessedTextureWidth(int processedTextureWidth);
-    protected abstract void setProcessedTextureHeight(int processedTextureHeight);
-    protected abstract void notifyProcessingComplete();
 }

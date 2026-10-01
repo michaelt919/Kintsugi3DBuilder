@@ -9,13 +9,34 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state.scene;
+package kintsugi3d.builder.fit.decomposition;
 
-import java.util.function.Consumer;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
-public interface ReadonlyUserShaderModel
+public interface BasisMaterialInfo
 {
-    ShaderInfo getActiveShader();
+    DoubleVector3 getDiffuseColor();
 
-    void registerHandler(Consumer<ShaderInfo> shaderHandler);
+    /**
+     * Gets the number of intervals between discrete elements of this basis material.
+     * This ends up being the number of elements in each basis function array - 1
+     * (or in other words, the highest allowed value of m, inclusive, for the evaluate methods).
+     *
+     * @return
+     */
+    int getResolution();
+
+    double evaluateSpecularRed(int m);
+
+    double evaluateSpecularGreen(int m);
+
+    double evaluateSpecularBlue(int m);
+
+    String getFriendlyName();
+
+    String getName();
+
+    boolean isEnabled();
+
+    int getGPUIndex();
 }

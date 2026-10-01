@@ -9,88 +9,65 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.state.scene;
+package kintsugi3d.builder.state.shader;
 
 import java.io.File;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-public class ShaderInfo
+public class SimpleShaderInfo implements ShaderInfo
 {
     private static final String SHADER_DIR = "shaders";
 
     private final String friendlyName;
     private final String filename;
-    private final String subName;
 
-    private final Map<String, Optional<Object>> defines;
-
-    public ShaderInfo(String friendlyName, String filename)
+    public SimpleShaderInfo(String friendlyName, String shaderFilename)
     {
         this.friendlyName = friendlyName;
-        this.filename = filename;
-        this.defines = new HashMap<>(0);
-        this.subName = null;
+        this.filename = shaderFilename;
     }
 
-    public ShaderInfo(String friendlyName, String filename, Map<String, Optional<Object>> defines)
-    {
-        this.friendlyName = friendlyName;
-        this.filename = filename;
-        this.defines = Collections.unmodifiableMap(defines);
-        this.subName = null;
-    }
-
-    public ShaderInfo(String friendlyName, String filename, Map<String, Optional<Object>> defines, String subName)
-    {
-        this.friendlyName = friendlyName;
-        this.filename = filename;
-        this.defines = Collections.unmodifiableMap(defines);
-        this.subName = subName;
-    }
-
+    @Override
     public String getFriendlyName()
     {
         return friendlyName;
     }
 
+    @Override
     public String getFullName()
     {
-        return subName == null ? friendlyName : String.format("%s [%s]", friendlyName, subName);
+        return friendlyName;
     }
 
+    @Override
     public String getFilename()
     {
         return filename;
     }
 
+    @Override
     public File getFile()
     {
         return new File(SHADER_DIR, filename);
     }
 
+    @Override
     public Map<String, Optional<Object>> getDefines()
     {
-        return Collections.unmodifiableMap(defines);
+        return Map.of();
     }
 
     @Override
     public boolean equals(Object obj)
     {
-        if (obj instanceof ShaderInfo)
-        {
-            ShaderInfo otherShader = (ShaderInfo) obj;
-            return Objects.equals(this.filename, otherShader.filename)
-                && Objects.equals(this.defines, otherShader.defines);
-        }
-        else
-        {
-            return false;
-        }
+        return obj instanceof SimpleShaderInfo && Objects.equals(this.filename, ((SimpleShaderInfo) obj).filename);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(filename, defines);
+        return filename.hashCode();
     }
 }

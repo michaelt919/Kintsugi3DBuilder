@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources;
 
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
 import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
 import kintsugi3d.gl.core.*;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
@@ -49,7 +51,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private final Object loadEnvironmentLock = new Object();
 
     private volatile File desiredShaderFile;
-    private volatile Map<String, Optional<Object>> shaderDefines;
+    private volatile Supplier<Map<String, Optional<Object>>> shaderDefinesFactory;
 
     private volatile File desiredEnvironmentFile;
 
@@ -98,7 +100,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         if (this.desiredShaderFile != null)
         {
             this.subject.useFragmentShader(desiredShaderFile);
-            this.subject.setExtraFragmentShaderDefines(this.shaderDefines);
+            this.subject.setExtraFragmentShaderDefinesFactory(this.shaderDefinesFactory);
             this.subject.reloadShaders();
 
             this.desiredShaderFile = null;
@@ -205,15 +207,17 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
         }
 
+        ViewSet viewSet = this.resources.getViewSet();
+
         if (this.newLuminanceEncodingDataAvailable)
         {
             if (this.newLinearLuminanceValues != null && this.newEncodedLuminanceValues != null)
             {
-                this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+                viewSet.setLuminanceEncoding(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
             }
             else
             {
-                this.resources.clearLuminanceMap();
+                viewSet.clearLuminanceEncoding();
             }
 
             this.newLuminanceEncodingDataAvailable = false;
@@ -221,7 +225,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLightCalibrationAvailable)
         {
-            this.resources.updateLightCalibration(this.newLightCalibration);
+            viewSet.setAllLightPositions(this.newLightCalibration);
             this.newLightCalibrationAvailable = false;
         }
     }
@@ -233,10 +237,10 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     }
 
     @Override
-    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    public void requestFragmentShader(File shaderFile, Supplier<Map<String, Optional<Object>>> extraDefinesFactory)
     {
         this.desiredShaderFile = shaderFile;
-        this.shaderDefines = extraDefines;
+        this.shaderDefinesFactory = extraDefinesFactory;
     }
 
     @Override

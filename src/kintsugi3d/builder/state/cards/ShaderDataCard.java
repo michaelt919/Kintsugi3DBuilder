@@ -12,7 +12,7 @@
 package kintsugi3d.builder.state.cards;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -57,6 +57,15 @@ public class ShaderDataCard extends ProjectDataCard
     {
         super(internalName, title, imagePath, textFields,
             Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
+        this.shader = shader;
+    }
+
+    public ShaderDataCard(String internalName, String title, ShaderInfo shader, String imagePath, Map<String, String> textFields,
+                          Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
+    {
+        super(internalName, title, imagePath, textFields,
+            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
+        setIsDisabled(isDisabled);
         this.shader = shader;
     }
 

@@ -11,12 +11,10 @@
 
 package kintsugi3d.builder.core.texture;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 public class NamedTextureReplacer extends ImageReplacer
 {
@@ -40,10 +38,4 @@ public class NamedTextureReplacer extends ImageReplacer
         getResources().replaceTextureWithSpecificFile(texture, getNewImage());
     }
 
-    @Override
-    public void refreshCard()
-    {
-        Global.state().getTabModels().getTab("Textures", TextureInfo.class)
-            .refreshCard(card -> Objects.equals(card.getInternalName(), texture.name), texture);
-    }
 }

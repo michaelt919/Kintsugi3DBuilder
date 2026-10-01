@@ -18,12 +18,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public interface DynamicResourceManager
 {
     void requestFragmentShader(File shaderFile);
 
-    void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
+    void requestFragmentShader(File shaderFile, Supplier<Map<String, Optional<Object>>> extraDefinesFactory);
 
     /**
      * Load a new backplate image.

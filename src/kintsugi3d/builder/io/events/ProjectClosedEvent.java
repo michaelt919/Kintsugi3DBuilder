@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.io.events;
 
+/**
+ * Triggered when the project is closed.
+ */
 public class ProjectClosedEvent
 {
 }

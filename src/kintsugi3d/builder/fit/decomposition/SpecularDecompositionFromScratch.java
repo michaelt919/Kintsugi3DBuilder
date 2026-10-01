@@ -12,181 +12,51 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.core.texture.TextureResolution;
-import kintsugi3d.builder.fit.settings.ReadonlyBasisSettings;
 import kintsugi3d.builder.io.specular.SpecularFitSerializer;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 {
-    private final ReadonlyBasisSettings basisSettings;
+    private final int materialCount;
+    private final int basisResolution;
 
-    private final List<DoubleVector3> diffuseAlbedos;
-    private SimpleMatrix specularRed;
-    private SimpleMatrix specularGreen;
-    private SimpleMatrix specularBlue;
+    private final DoubleVector3[] diffuseAlbedos;
+    private final SimpleMatrix specularRed;
+    private final SimpleMatrix specularGreen;
+    private final SimpleMatrix specularBlue;
 
-    public SpecularDecompositionFromScratch(TextureResolution textureResolution, ReadonlyBasisSettings basisSettings)
+    public SpecularDecompositionFromScratch(TextureResolution textureResolution, int materialCount, int basisResolution)
     {
-        super(textureResolution, basisSettings.getBasisCount());
-        this.basisSettings = basisSettings;
+        super(textureResolution, materialCount);
+        this.materialCount = materialCount;
+        this.basisResolution = basisResolution;
 
-        diffuseAlbedos = new ArrayList<>(this.basisSettings.getBasisCount());
+        diffuseAlbedos = new DoubleVector3[materialCount];
+        Arrays.fill(diffuseAlbedos, DoubleVector3.ZERO);
 
-        for (int i = 0; i < this.basisSettings.getBasisCount(); i++)
-        {
-            diffuseAlbedos.add(DoubleVector3.ZERO);
-        }
-
-        specularRed = new SimpleMatrix(
-            this.basisSettings.getBasisResolution() + 1,
-            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
-        specularGreen = new SimpleMatrix(
-            this.basisSettings.getBasisResolution() + 1,
-            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
-        specularBlue = new SimpleMatrix(
-            this.basisSettings.getBasisResolution() + 1,
-            this.basisSettings.getBasisCount(), DMatrixRMaj.class);
-    }
-
-    @Override
-    public List<DoubleVector3> getDiffuseAlbedos()
-    {
-        return Collections.unmodifiableList(diffuseAlbedos);
+        specularRed = new SimpleMatrix(basisResolution + 1, materialCount, DMatrixRMaj.class);
+        specularGreen = new SimpleMatrix(basisResolution + 1, materialCount, DMatrixRMaj.class);
+        specularBlue = new SimpleMatrix(basisResolution + 1, materialCount, DMatrixRMaj.class);
     }
 
     @Override
     public MaterialBasis getMaterialBasis()
     {
-        return new MaterialBasis()
-        {
-            private int count = basisSettings.getBasisCount();
-            private final int resolution = basisSettings.getBasisResolution();
-
-            @Override
-            public DoubleVector3 getDiffuseColor(int b)
-            {
-                return diffuseAlbedos.get(b);
-            }
-
-            @Override
-            public List<DoubleVector3> getDiffuseColors()
-            {
-                return Collections.unmodifiableList(diffuseAlbedos);
-            }
-
-            @Override
-            public double evaluateSpecularRed(int b, int m)
-            {
-                return specularRed.get(m, b);
-            }
-
-            @Override
-            public double evaluateSpecularGreen(int b, int m)
-            {
-                return specularGreen.get(m, b);
-            }
-
-            @Override
-            public double evaluateSpecularBlue(int b, int m)
-            {
-                return specularBlue.get(m, b);
-            }
-
-            @Override
-            public int getMaterialCount()
-            {
-                return count;
-            }
-
-            @Override
-            public int getSpecularResolution()
-            {
-                return resolution;
-            }
-
-            @Override
-            public void deleteMaterial(int b)
-            {
-                specularRed = removeColumn(specularRed, b);
-                specularGreen = removeColumn(specularGreen, b);
-                specularBlue = removeColumn(specularBlue, b);
-                diffuseAlbedos.remove(b);
-                count--;
-            }
-
-            private SimpleMatrix removeColumn(SimpleMatrix m, int b)
-            {
-                SimpleMatrix result = new SimpleMatrix(m.numRows(), m.numCols() - 1, DMatrixRMaj.class);
-
-                // Columns before the one being removed
-                for (int j = 0; j < b; j++)
-                {
-                    for (int i = 0; i < m.numRows(); i++)
-                    {
-                        result.set(i, j, m.get(i, j));
-                    }
-                }
-
-                // Columns after the one being removed
-                for (int j = b; j < result.numCols(); j++)
-                {
-                    for (int i = 0; i < m.numRows(); i++)
-                    {
-                        result.set(i, j, m.get(i, j + 1));
-                    }
-                }
-
-                return result;
-            }
-
-            @Override
-            public void save(File outputDirectory, String filenameOverride)
-            {
-                SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory, filenameOverride);
-            }
-
-            @Override
-            public MaterialBasis copy()
-            {
-                List<double[]> redBasis = IntStream.range(0, count)
-                    .mapToObj(b ->
-                        IntStream.range(0, resolution + 1)
-                            .mapToDouble(m -> evaluateSpecularRed(b, m))
-                            .toArray())
-                    .collect(Collectors.toList());
-
-                List<double[]> greenBasis = IntStream.range(0, count)
-                    .mapToObj(b ->
-                        IntStream.range(0, resolution + 1)
-                            .mapToDouble(m -> evaluateSpecularGreen(b, m))
-                            .toArray())
-                    .collect(Collectors.toList());
-
-                List<double[]> blueBasis = IntStream.range(0, count)
-                    .mapToObj(b ->
-                        IntStream.range(0, resolution + 1)
-                            .mapToDouble(m -> evaluateSpecularBlue(b, m))
-                            .toArray())
-                    .collect(Collectors.toList());
-
-                return new SimpleMaterialBasis(
-                    diffuseAlbedos.toArray(DoubleVector3[]::new), redBasis, greenBasis, blueBasis);
-            }
-        };
+        return new OptimizableMaterialBasis();
     }
 
     public void setDiffuseAlbedo(int basisIndex, DoubleVector3 diffuseAlbedo)
     {
-        diffuseAlbedos.set(basisIndex, diffuseAlbedo);
+        diffuseAlbedos[basisIndex] = diffuseAlbedo;
     }
 
     public SimpleMatrix getSpecularRed()
@@ -202,5 +72,170 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     public SimpleMatrix getSpecularBlue()
     {
         return specularBlue;
+    }
+
+    private final class OptimizableMaterialBasis implements MaterialBasis
+    {
+        @Override
+        public Collection<BasisMaterialInfo> getMaterials()
+        {
+            return getIndexableMaterialList();
+        }
+
+        @Override
+        public List<BasisMaterialInfo> getIndexableMaterialList()
+        {
+            return IntStream.range(0, this.getEnabledMaterialCount())
+                .mapToObj(b ->
+                    new BasisMaterialInfo()
+                    {
+                        @Override
+                        public DoubleVector3 getDiffuseColor()
+                        {
+                            return OptimizableMaterialBasis.this.getDiffuseColor(b);
+                        }
+
+                        @Override
+                        public int getResolution()
+                        {
+                            return OptimizableMaterialBasis.this.getSpecularResolution();
+                        }
+
+                        @Override
+                        public double evaluateSpecularRed(int m)
+                        {
+                            return OptimizableMaterialBasis.this.evaluateSpecularRed(b, m);
+                        }
+
+                        @Override
+                        public double evaluateSpecularGreen(int m)
+                        {
+                            return OptimizableMaterialBasis.this.evaluateSpecularGreen(b, m);
+                        }
+
+                        @Override
+                        public double evaluateSpecularBlue(int m)
+                        {
+                            return OptimizableMaterialBasis.this.evaluateSpecularBlue(b, m);
+                        }
+
+                        @Override
+                        public String getName()
+                        {
+                            return String.format("%02d", b);
+                        }
+
+                        @Override
+                        public String getFriendlyName()
+                        {
+                            return String.format("Material %d", b);
+                        }
+
+                        @Override
+                        public boolean isEnabled()
+                        {
+                            return true;
+                        }
+
+                        @Override
+                        public int getGPUIndex()
+                        {
+                            return b;
+                        }
+                    })
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        public BasisMaterialInfo getMaterial(String materialName)
+        {
+            try
+            {
+                int index = Integer.parseInt(materialName);
+                if (index >= 0 && index < materialCount)
+                {
+                    return getIndexableMaterialList().get(index);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                return null;
+            }
+        }
+
+        @Override
+        public int getMaterialCount()
+        {
+            return materialCount;
+        }
+
+        @Override
+        public int getEnabledMaterialCount()
+        {
+            return materialCount;
+        }
+
+        @Override
+        public int getSpecularResolution()
+        {
+            return basisResolution;
+        }
+
+        DoubleVector3 getDiffuseColor(int b)
+        {
+            return diffuseAlbedos[b];
+        }
+
+        double evaluateSpecularRed(int b, int m)
+        {
+            return specularRed.get(m, b);
+        }
+
+        double evaluateSpecularGreen(int b, int m)
+        {
+            return specularGreen.get(m, b);
+        }
+
+        double evaluateSpecularBlue(int b, int m)
+        {
+            return specularBlue.get(m, b);
+        }
+
+        @Override
+        public void save(File outputDirectory, String filenameOverride)
+        {
+            SpecularFitSerializer.serializeBasisFunctions(basisResolution, this, outputDirectory, filenameOverride);
+        }
+
+        @Override
+        public MutableMaterialBasis copy()
+        {
+            List<double[]> redBasis = IntStream.range(0, materialCount)
+                .mapToObj(b ->
+                    IntStream.range(0, basisResolution + 1)
+                        .mapToDouble(m -> evaluateSpecularRed(b, m))
+                        .toArray())
+                .collect(Collectors.toList());
+
+            List<double[]> greenBasis = IntStream.range(0, materialCount)
+                .mapToObj(b ->
+                    IntStream.range(0, basisResolution + 1)
+                        .mapToDouble(m -> evaluateSpecularGreen(b, m))
+                        .toArray())
+                .collect(Collectors.toList());
+
+            List<double[]> blueBasis = IntStream.range(0, materialCount)
+                .mapToObj(b ->
+                    IntStream.range(0, basisResolution + 1)
+                        .mapToDouble(m -> evaluateSpecularBlue(b, m))
+                        .toArray())
+                .collect(Collectors.toList());
+
+            return new SimpleMaterialBasis(diffuseAlbedos, redBasis, greenBasis, blueBasis);
+        }
     }
 }

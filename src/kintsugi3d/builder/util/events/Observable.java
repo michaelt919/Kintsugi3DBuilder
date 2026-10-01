@@ -9,11 +9,9 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.util;
+package kintsugi3d.builder.util.events;
 
-public interface Observable<ChangeType>
+public interface Observable<ChangeType> extends EventListeners<Observer<ChangeType>>
 {
-    void registerObserver(Observer<ChangeType> observer);
-    void removeObserver(Observer<ChangeType> observer);
-    void notifyObservers(ChangeType change);
+    void notify(ChangeType change);
 }

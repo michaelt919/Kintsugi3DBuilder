@@ -9,11 +9,12 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.util;
+package kintsugi3d.builder.fit.decomposition;
 
-public interface EventListeners<ListenerType>
+import java.util.Collection;
+
+public interface IndexAssignableMaterialBasis extends MaterialBasis
 {
-    void addListener(ListenerType listener);
-
-    void removeListener(ListenerType listener);
+    @Override
+    Collection<? extends IndexAssignableBasisMaterialInfo> getMaterials();
 }

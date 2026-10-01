@@ -11,42 +11,26 @@
 
 package kintsugi3d.builder.core.texture;
 
-import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 public class WeightmapReplacer extends ImageReplacer
 {
-    private final int weightmapIndex;
+    private final BasisMaterialInfo material;
 
-    public WeightmapReplacer(TextureResources<?> resources, int weightmapIndex, File currentImage)
+    public WeightmapReplacer(TextureResources<?> resources, BasisMaterialInfo material, File currentImage)
     {
         super(resources);
-        this.weightmapIndex = weightmapIndex;
+        this.material = material;
         setCurrentImage(currentImage);
-    }
-
-    public int getWeightmapIndex()
-    {
-        return weightmapIndex;
     }
 
     @Override
     public void replace() throws IOException
     {
-        getResources().getBasisWeightResources().replaceWeightMapWithSpecificFile(weightmapIndex, getNewImage());
-    }
-
-    @Override
-    public void refreshCard()
-    {
-        // TODO switch to observable pattern for textures?
-        WeightmapTextureInfo weightmapTextureInfo = new WeightmapTextureInfo(weightmapIndex);
-        Global.state().getTabModels().getTab("Textures", TextureInfo.class).refreshCard(
-            card -> Objects.equals(card.getInternalName(), weightmapTextureInfo.name),
-            weightmapTextureInfo);
+        getResources().replaceWeightMapWithSpecificFile(material, getNewImage());
     }
 }
