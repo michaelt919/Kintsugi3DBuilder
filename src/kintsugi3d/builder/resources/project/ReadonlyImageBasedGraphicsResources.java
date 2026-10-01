@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.resources.project.stream.GraphicsStreamFactory;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;

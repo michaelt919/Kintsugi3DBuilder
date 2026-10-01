@@ -12,13 +12,16 @@
 package kintsugi3d.builder.core.viewset;
 
 import kintsugi3d.builder.core.metrics.ViewRMSE;
+import kintsugi3d.builder.core.viewset.events.LightCalibrationChangedEvent;
+import kintsugi3d.builder.core.viewset.events.LightCalibrationChangedListener;
+import kintsugi3d.builder.core.viewset.events.LuminanceEncodingChangedEvent;
+import kintsugi3d.builder.core.viewset.events.LuminanceEncodingChangedListener;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
-import kintsugi3d.builder.util.MappedChange;
-import kintsugi3d.builder.util.MappedChange.Type;
-import kintsugi3d.builder.util.Observable;
-import kintsugi3d.builder.util.Observer;
-import kintsugi3d.builder.util.SimpleObservable;
+import kintsugi3d.builder.util.events.*;
+import kintsugi3d.builder.util.events.MappedChange.Type;
+import kintsugi3d.builder.util.events.Observable;
+import kintsugi3d.builder.util.events.Observer;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
@@ -47,7 +50,12 @@ public final class ViewSet implements ReadonlyViewSet
 {
     private static final Logger LOG = LoggerFactory.getLogger(ViewSet.class);
 
-    private final Observable<MappedChange<File, View>> observable = new SimpleObservable<>();
+    private final Observable<MappedChange<File, View>> viewsObservable = new SimpleObservable<>();
+
+    private final EventDispatcher<LightCalibrationChangedListener, LightCalibrationChangedEvent> lightCalibrationChanged
+        = new EventDispatcher<>(LightCalibrationChangedListener::onLightCalibrationChanged);
+    private final EventDispatcher<LuminanceEncodingChangedListener, LuminanceEncodingChangedEvent> luminanceEncodingChanged
+        = new EventDispatcher<>(LuminanceEncodingChangedListener::onLuminanceEncodingChanged);
 
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
@@ -585,7 +593,7 @@ public final class ViewSet implements ReadonlyViewSet
             view.isEnabled = isEnabled;
             if (!isEnabled)
             {
-                observable.notifyObservers(new MappedChange<>(Type.MODIFIED, view.imageFile, view));
+                viewsObservable.notify(new MappedChange<>(Type.MODIFIED, view.imageFile, view));
             }
             // Else still enabled so nothing needs to change
         }
@@ -594,7 +602,7 @@ public final class ViewSet implements ReadonlyViewSet
             view.isEnabled = isEnabled;
             if (isEnabled)
             {
-                observable.notifyObservers(new MappedChange<>(Type.MODIFIED, view.imageFile, view));
+                viewsObservable.notify(new MappedChange<>(Type.MODIFIED, view.imageFile, view));
             }
             // Else still disabled so nothing needs to change
         }
@@ -615,7 +623,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (!imageFilesModified.isEmpty())
         {
-            observable.notifyObservers(new MappedChange<>(Type.MODIFIED, imageFilesModified));
+            viewsObservable.notify(new MappedChange<>(Type.MODIFIED, imageFilesModified));
         }
     }
 
@@ -1040,7 +1048,7 @@ public final class ViewSet implements ReadonlyViewSet
             }
         }
 
-        observable.notifyObservers(new MappedChange<>(Type.ADDED, view.imageFile, view));
+        viewsObservable.notify(new MappedChange<>(Type.ADDED, view.imageFile, view));
     }
 
     public void removeViewByImageFilename(File image)
@@ -1073,7 +1081,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (removed != null)
         {
-            observable.notifyObservers(new MappedChange<>(Type.REMOVED, removed.imageFile, removed));
+            viewsObservable.notify(new MappedChange<>(Type.REMOVED, removed.imageFile, removed));
         }
     }
 
@@ -1114,33 +1122,83 @@ public final class ViewSet implements ReadonlyViewSet
 
     public void setLightPosition(int lightIndex, Vector3 lightPosition)
     {
+        LightCalibrationChangedEvent event;
+
         synchronized (lightPositionList)
         {
             this.lightPositionList.set(lightIndex, lightPosition);
+            event = new LightCalibrationChangedEvent(this.lightPositionList, null);
         }
+
+        lightCalibrationChanged.notify(event);
+    }
+
+    public void setAllLightPositions(Vector3 lightPosition)
+    {
+        LightCalibrationChangedEvent event;
+        synchronized (lightPositionList)
+        {
+            for (int i = 0; i < getLightCount(); i++)
+            {
+                this.lightPositionList.set(i, lightPosition);
+            }
+
+            event = new LightCalibrationChangedEvent(this.lightPositionList, null);
+        }
+
+        lightCalibrationChanged.notify(event);
     }
 
     public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
     {
+        LightCalibrationChangedEvent event;
         synchronized (lightIntensityList)
         {
             this.lightIntensityList.set(lightIndex, lightIntensity);
+            event = new LightCalibrationChangedEvent(null, this.lightIntensityList);
         }
+
+        lightCalibrationChanged.notify(event);
+    }
+
+    public void setAllLightIntensities(Vector3 lightIntensity)
+    {
+        LightCalibrationChangedEvent event;
+        synchronized (lightIntensityList)
+        {
+            for (int i = 0; i < getLightCount(); i++)
+            {
+                this.lightIntensityList.set(i, lightIntensity);
+            }
+
+            event = new LightCalibrationChangedEvent(null, this.lightIntensityList);
+        }
+
+        lightCalibrationChanged.notify(event);
     }
 
     void addLight(Vector3 position, Vector3 intensity)
     {
+        List<Vector3> lightIntensityListCopy;
+
         synchronized (lightIntensityList)
         {
             this.lightIntensityList.add(intensity);
+
+            // Copy here just in case for synchronization.
+            lightIntensityListCopy = new ArrayList<>(lightIntensityList);
         }
 
         // Do lightPositionList last since that is what getLightCount is based on.
         // That way it should be less likely that we get an index out of bounds due to concurrency issues.
+        LightCalibrationChangedEvent event;
         synchronized (lightPositionList)
         {
             this.lightPositionList.add(position);
+            event = new LightCalibrationChangedEvent(this.lightPositionList, lightIntensityListCopy);
         }
+
+        lightCalibrationChanged.notify(event);
     }
 
     @Override
@@ -1285,11 +1343,17 @@ public final class ViewSet implements ReadonlyViewSet
             throw new IllegalArgumentException("Arrays must be of equal length.");
         }
 
+        LuminanceEncodingChangedEvent event;
+
         synchronized (luminanceEncodingLock)
         {
             this.linearLuminanceValues = linearLuminanceValues.clone();
             this.encodedLuminanceValues = encodedLuminanceValues.clone();
+
+            event = new LuminanceEncodingChangedEvent(this.linearLuminanceValues, this.encodedLuminanceValues);
         }
+
+        luminanceEncodingChanged.notify(event);
     }
 
     public void clearLuminanceEncoding()
@@ -1299,6 +1363,8 @@ public final class ViewSet implements ReadonlyViewSet
             this.linearLuminanceValues = null;
             this.encodedLuminanceValues = null;
         }
+
+        luminanceEncodingChanged.notify(new LuminanceEncodingChangedEvent(null, null));
     }
 
     @Override
@@ -1453,13 +1519,18 @@ public final class ViewSet implements ReadonlyViewSet
         program.setUniform("edgeProximityCutoff", projectSettings.getFloat("edgeProximityCutoff"));
     }
 
-    public void registerObserver(Observer<MappedChange<File, View>> observer)
+    public EventListeners<Observer<MappedChange<File, View>>> viewsChangedListeners()
     {
-        observable.registerObserver(observer);
+        return viewsObservable;
     }
 
-    public void removeObserver(Observer<MappedChange<File, View>> observer)
+    public EventListeners<LightCalibrationChangedListener> lightCalibrationChangedListeners()
     {
-        observable.removeObserver(observer);
+        return lightCalibrationChanged;
+    }
+
+    public EventListeners<LuminanceEncodingChangedListener> luminanceEncodingChangedListeners()
+    {
+        return luminanceEncodingChanged;
     }
 }

@@ -22,8 +22,8 @@ import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
-import kintsugi3d.builder.util.EventDispatcher;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventDispatcher;
+import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -178,7 +178,7 @@ public class IOModel implements IO
     {
         unload(() ->
         {
-            projectOpened.notifyListeners(new ProjectOpenedEvent(projectName));
+            projectOpened.notify(new ProjectOpenedEvent(projectName));
             new Thread(loader, "Loading Thread").start();
         });
     }
@@ -347,7 +347,7 @@ public class IOModel implements IO
         }
 
         this.loadedProjectFile = projectFile;
-        this.projectSaved.notifyListeners(new ProjectSavedEvent(projectFile.getName()));
+        this.projectSaved.notify(new ProjectSavedEvent(projectFile.getName()));
 
         // Export glTF for Kintsugi 3D Viewer even if not requested
         // TODO: ensure that GLTF texture filenames match default material texture names;
@@ -499,7 +499,7 @@ public class IOModel implements IO
     {
         loadedViewSetFile = null;
         loadedProjectFile = null;
-        projectClosed.notifyListeners(new ProjectClosedEvent());
+        projectClosed.notify(new ProjectClosedEvent());
         this.handler.unload(onUnloadComplete);
     }
 

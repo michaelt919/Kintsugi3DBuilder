@@ -17,8 +17,8 @@ import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
-import kintsugi3d.builder.util.MappedChange;
-import kintsugi3d.builder.util.Observable;
+import kintsugi3d.builder.util.events.MappedChange;
+import kintsugi3d.builder.util.events.Observable;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;

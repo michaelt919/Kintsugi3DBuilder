@@ -15,9 +15,9 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.core.texture.WeightmapTextureInfo;
 import kintsugi3d.builder.fit.decomposition.*;
-import kintsugi3d.builder.util.MappedChange;
-import kintsugi3d.builder.util.MappedChange.Type;
-import kintsugi3d.builder.util.Observable;
+import kintsugi3d.builder.util.events.MappedChange;
+import kintsugi3d.builder.util.events.MappedChange.Type;
+import kintsugi3d.builder.util.events.Observable;
 import kintsugi3d.gl.core.Blittable;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.TwoDimensional;
@@ -64,7 +64,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
             if (basisObservable != null)
             {
-                basisObservable.notifyObservers(new MappedChange<>(Type.REMOVED, materialName, removed));
+                basisObservable.notify(new MappedChange<>(Type.REMOVED, materialName, removed));
             }
         }
     }
@@ -79,7 +79,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
             if (basisObservable != null)
             {
-                basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, disabled));
+                basisObservable.notify(new MappedChange<>(Type.MODIFIED, disabled));
             }
         }
     }
@@ -94,7 +94,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
             if (basisObservable != null)
             {
-                basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, enabled));
+                basisObservable.notify(new MappedChange<>(Type.MODIFIED, enabled));
             }
         }
     }
@@ -109,7 +109,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
             if (basisObservable != null)
             {
-                basisObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, materialName, toggled));
+                basisObservable.notify(new MappedChange<>(Type.MODIFIED, materialName, toggled));
             }
         }
     }
@@ -121,7 +121,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
         if (texturesObservable != null)
         {
-            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, key.name, key));
+            texturesObservable.notify(new MappedChange<>(Type.MODIFIED, key.name, key));
         }
     }
 
@@ -136,7 +136,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             // Don't notify observers until after project is saved so that i.e. thumbnails are refreshed.
             if (texturesObservable != null)
             {
-                texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, key.name, key));
+                texturesObservable.notify(new MappedChange<>(Type.MODIFIED, key.name, key));
             }
         });
     }
@@ -148,7 +148,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
 
         if (texturesObservable != null)
         {
-            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED,
+            texturesObservable.notify(new MappedChange<>(Type.MODIFIED,
                 BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material)));
         }
     }
@@ -164,7 +164,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
             // Don't notify observers until after project is saved so that i.e. thumbnails are refreshed.
             if (texturesObservable != null)
             {
-                texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED,
+                texturesObservable.notify(new MappedChange<>(Type.MODIFIED,
                     BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material)));
             }
         });
@@ -180,9 +180,14 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
         }
 
         // weightmaps
-        for (BasisMaterialInfo material : getBasisResources().getBasis().getMaterials())
+        ReadonlyBasisResources<ContextType> basisResources = getBasisResources();
+
+        if (basisResources != null)
         {
-            getMutableBasisWeightResources().replaceWeightMapWithDefaultFile(material.getName(), parentDirectory);
+            for (BasisMaterialInfo material : basisResources.getBasis().getMaterials())
+            {
+                getMutableBasisWeightResources().replaceWeightMapWithDefaultFile(material.getName(), parentDirectory);
+            }
         }
 
         // notify observers
@@ -195,12 +200,15 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
                 changeMap.put(texture.name, texture);
             }
 
-            for (BasisMaterialInfo material : getBasisResources().getBasis().getMaterials())
+            if (basisResources != null)
             {
-                changeMap.put(BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material));
+                for (BasisMaterialInfo material : basisResources.getBasis().getMaterials())
+                {
+                    changeMap.put(BasisWeightResources.getUnpackedWeightMapName(material.getName()), new WeightmapTextureInfo(material));
+                }
             }
 
-            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, changeMap));
+            texturesObservable.notify(new MappedChange<>(Type.MODIFIED, changeMap));
         }
     }
 
@@ -286,7 +294,7 @@ public abstract class TextureResourcesBase<ContextType extends Context<ContextTy
                 changeMap.put(texture.name, texture);
             }
 
-            texturesObservable.notifyObservers(new MappedChange<>(Type.MODIFIED, changeMap));
+            texturesObservable.notify(new MappedChange<>(Type.MODIFIED, changeMap));
         }
     }
 

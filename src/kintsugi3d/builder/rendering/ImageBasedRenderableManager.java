@@ -42,10 +42,10 @@ import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ReadonlyActiveShaderModel;
 import kintsugi3d.builder.state.shader.ShaderInfo;
-import kintsugi3d.builder.util.EventDispatcher;
-import kintsugi3d.builder.util.EventListeners;
-import kintsugi3d.builder.util.MappedChange;
-import kintsugi3d.builder.util.Observer;
+import kintsugi3d.builder.util.events.EventDispatcher;
+import kintsugi3d.builder.util.events.EventListeners;
+import kintsugi3d.builder.util.events.MappedChange;
+import kintsugi3d.builder.util.events.Observer;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
@@ -269,10 +269,15 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
                 TabsManager tabsManager = new TabsManager(newInstance);
                 tabsManager.rebuildTabs();
 
+                GraphicsResourcesImageSpace<ContextType> resources = newInstance.getResources();
+
                 // Register observer for changes in each tab
-                loadedViewSet.registerObserver(getMappedChangeObserver(tabsManager, TabsManager.PHOTOS, View.class, File::new));
-                newInstance.getResources().registerBasisObserver(getMappedChangeObserver(tabsManager, TabsManager.MATERIALS, BasisMaterialInfo.class));
-                newInstance.getResources().registerTextureObserver(getMappedChangeObserver(tabsManager, TabsManager.TEXTURES, TextureInfo.class));
+                loadedViewSet.viewsChangedListeners().register(
+                    getMappedChangeObserver(tabsManager, TabsManager.PHOTOS, View.class, File::new));
+                resources.basisListeners().register(
+                    getMappedChangeObserver(tabsManager, TabsManager.MATERIALS, BasisMaterialInfo.class));
+                resources.texturesListeners().register(
+                    getMappedChangeObserver(tabsManager, TabsManager.TEXTURES, TextureInfo.class));
                 // Currently the shaders tab is not expected to have changes other than when textures are processed,
                 // which is handled separately via an event listener.
 
@@ -304,19 +309,19 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             }
 
             // Notify listeners that project has loaded
-            projectLoaded.notifyListeners(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
+            projectLoaded.notify(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
 
             GraphicsResourcesImageSpace<ContextType> resources = renderableInstance.getResources();
             if (resources.hasProcessedWeightMaps())
             {
                 // Project has been processed previously; notify listeners
                 IntVector2 weightMapResolution = resources.getProcessedWeightMapResolution();
-                projectProcessed.notifyListeners(new ProjectProcessedEvent(
+                projectProcessed.notify(new ProjectProcessedEvent(
                     weightMapResolution.x, weightMapResolution.y));
             }
 
             // Ensure that the listeners are also notified if the project is processed in the future.
-            resources.weightMapsProcessedListeners().addListener(projectProcessed::notifyListeners);
+            resources.weightMapsProcessedListeners().register(projectProcessed::notify);
 
             // Update once before drawing
             newInstance.update();

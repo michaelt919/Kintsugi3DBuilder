@@ -16,7 +16,7 @@ import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.state.shader.ShaderInfo;
-import kintsugi3d.builder.util.EventListeners;
+import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.util.EncodableColorImage;

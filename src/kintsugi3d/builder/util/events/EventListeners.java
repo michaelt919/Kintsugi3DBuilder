@@ -9,35 +9,10 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.util;
+package kintsugi3d.builder.util.events;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-
-public class SimpleObservable<K, V> implements Observable<MappedChange<K, V>>
+public interface EventListeners<ListenerType>
 {
-    private final Collection<Observer<MappedChange<K, V>>> observers =
-        Collections.synchronizedList(new ArrayList<>(8));
-
-    @Override
-    public void registerObserver(Observer<MappedChange<K, V>> observer)
-    {
-        observers.add(observer);
-    }
-
-    @Override
-    public void removeObserver(Observer<MappedChange<K, V>> observer)
-    {
-        observers.remove(observer);
-    }
-
-    @Override
-    public void notifyObservers(MappedChange<K, V> change)
-    {
-        for (Observer<MappedChange<K, V>> observer : observers)
-        {
-            observer.update(change);
-        }
-    }
+    void register(ListenerType listener);
+    void unregister(ListenerType listener);
 }
