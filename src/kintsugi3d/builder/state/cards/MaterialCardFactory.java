@@ -146,7 +146,7 @@ public class MaterialCardFactory extends ProjectDataCardFactoryBase<BasisMateria
                         "This will delete the material from the project.",
                         // needs to run on graphics thread to replace GPU resources
                         () -> Rendering.runLater(() -> resources.deleteBasisMaterial(material.getName()))))),
-            !material.isEnabled());
+            material.isEnabled());
     }
 
     @Override

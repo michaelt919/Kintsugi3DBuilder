@@ -200,7 +200,7 @@ public class CardTabController
             scrollbarLockedDuringDrag = false;
             scrollbarActivationWidth = -1;
 
-            Platform.runLater(()->scrollpane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED));
+            Platform.runLater(()->scrollpane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED));
         }
     }
 
@@ -231,18 +231,17 @@ public class CardTabController
 
     private void updateSummary()
     {
-        int enabledCardCount = cardsModel.getEnabledCardCount();
-        int disabledCardCount = cardsModel.getDisabledCardCount();
         int totalCardCount = cardsModel.getCardList().size();
+        int disabledCardCount = cardsModel.getDisabledCardCount();
 
         String summary;
         if (disabledCardCount == 0)
         {
-            summary = String.format("%d %s ", totalCardCount, cardsModel.getModelLabel());
+            summary = String.format("%d %s ", totalCardCount, cardsModel.getLabel());
         }
         else
         {
-            summary = String.format("%d %s (%d Disabled)", totalCardCount, cardsModel.getModelLabel(), disabledCardCount);
+            summary = String.format("%d %s (%d Disabled)", totalCardCount, cardsModel.getLabel(), disabledCardCount);
         }
         countLabel.setText(summary);
 
@@ -318,7 +317,7 @@ public class CardTabController
                             cardControllers.get(i).refresh(card);
 
                             // Collapse card if disabled.
-                            if (card.isDisabled())
+                            if (!card.isEnabled())
                             {
                                 cardsModel.collapseCard(card.getCardId());
                             }
@@ -424,7 +423,7 @@ public class CardTabController
             searchList.setPredicate(controller ->
             {
                 // If search text is empty, display all items
-                return controller.titleContainsString(newValue.toLowerCase(Locale.ROOT));
+                return controller.doesTitleContainString(newValue.toLowerCase(Locale.ROOT));
             }));
 
         // Updates the scrollpane after a datacard is added, removed, collapsed, etc.
@@ -517,7 +516,7 @@ public class CardTabController
      */
     public void updateCardCheckBoxes()
     {
-        for (CardController card : cardControllers) //Each card in cardControllers
+        for (CardController card : cardControllers) // Each card in cardControllers
         {
             card.updateCheckBox();
         }

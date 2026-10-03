@@ -66,7 +66,7 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
     @Override
     public ProjectDataCard createCard(ShaderInfo shader)
     {
-        return new ShaderDataCard(shader.getFilename(), shader, AppIcon.PATH, null, Map.of(), List.of(),false);
+        return new ShaderDataCard(shader.getFilename(), shader, AppIcon.PATH, null, Map.of(), List.of(), true);
     }
 
     /**

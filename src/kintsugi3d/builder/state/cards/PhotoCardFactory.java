@@ -77,7 +77,7 @@ public class PhotoCardFactory extends ProjectDataCardFactoryBase<View>
                             () -> getViewSet().removeViewByImageFilename(view.getImageFile())),
                     "Toggle Disabled", () -> getViewSet().toggleViewEnabled(view.getImageFile())
                 )),
-                !view.isEnabled()
+                view.isEnabled()
             );
         }
         catch (RuntimeException|IOException e)

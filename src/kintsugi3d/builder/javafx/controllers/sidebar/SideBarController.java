@@ -16,21 +16,15 @@ import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
 
@@ -56,15 +50,15 @@ public class SideBarController
     @FXML private Insets inseters;
 
     // needed to remove tabs
-    private final Map<String, RadioButton> buttonMap = new HashMap<>(8);
-    private final Map<String, Pane> tabMap = new HashMap<>(8);
+    private final Map<String, RadioButton> buttonMap = new HashMap<>(4);
+    private final Map<Toggle, ObservableCardsModel<?>> inverseButtonMap = new HashMap<>(4);
+    private final Map<String, Pane> tabMap = new HashMap<>(4);
 
     private final ToggleGroup tabToggleGroup = new ToggleGroup();
-    private final List<RadioButton> buttons = new ArrayList<>(8);
+    private final List<RadioButton> buttons = new ArrayList<>(4);
     private final Collection<CardTabController> tabControllers = new ArrayList<>(4);
 
     private ObservableTabsModel tabModels;
-    private String lastSelectedTabLabel;
     private boolean minimized = false;
     private boolean resizingSidebar = false;
 
@@ -88,7 +82,7 @@ public class SideBarController
 
             if (change.wasRemoved())
             {
-                removeTab(change.getValueRemoved().getModelLabel());
+                removeTab(change.getValueRemoved().getLabel());
             }
 
             // Refresh whether tabs are visible any time the tabs model is updated.
@@ -110,16 +104,23 @@ public class SideBarController
             }
         });
 
-        //Listener Detects when a new button has been toggled.
-        tabToggleGroup.selectedToggleProperty().addListener((observable, oldToggle, newToggle) ->
+        // Update which tab is selected on the backend when a tab is selected
+        // It's possible for none to be selected when the panel is collapsed --
+        // but we still want the backend to remember the selected tab.
+        tabToggleGroup.selectedToggleProperty().addListener(
+            (obs, oldValue, newValue) ->
         {
-            Global.state().getTabModels().clearSelected(); //Clears list of filePaths from selection list
-
-            for (CardTabController tab : tabControllers) //Each tab in tabControllers
+            if (newValue != null)
             {
-                tab.updateCardCheckBoxes();
+                tabModels.setActiveTab(inverseButtonMap.get(newValue));
             }
         });
+
+        Toggle selectedToggle = tabToggleGroup.getSelectedToggle();
+        if (selectedToggle != null)
+        {
+            tabModels.setActiveTab(inverseButtonMap.get(selectedToggle));
+        }
 
         resizeWidth(DEFAULT_WIDTH);
     }
@@ -128,6 +129,7 @@ public class SideBarController
     {
         // Remove button and the tab itself from the maps and their actual containers.
         RadioButton button = buttonMap.remove(key);
+        inverseButtonMap.remove(button);
         buttonBox.getChildren().remove(button);
         mainBox.getChildren().remove(tabMap.remove(key));
         buttons.remove(button);
@@ -149,14 +151,15 @@ public class SideBarController
 
     private void addTab(ObservableCardsModel<?> model)
     {
-        RadioButton newButton = createButton(model.getModelLabel());
+        RadioButton newButton = createButton(model.getLabel());
         VBox newTab = createTab(model);
 
         buttonBox.getChildren().add(newButton);
         mainBox.getChildren().add(newTab);
 
-        buttonMap.put(model.getModelLabel(), newButton);
-        tabMap.put(model.getModelLabel(), newTab);
+        buttonMap.put(model.getLabel(), newButton);
+        inverseButtonMap.put(newButton, model);
+        tabMap.put(model.getLabel(), newTab);
 
         newTab.visibleProperty().bind(newButton.selectedProperty());
         newTab.managedProperty().bind(newButton.selectedProperty());
@@ -355,18 +358,10 @@ public class SideBarController
      */
     private void hideAllTabs()
     {
-        if (lastSelectedTabLabel == null)
+        for (Entry<String, RadioButton> entry : buttonMap.entrySet())
         {
-            for (Entry<String, RadioButton> entry : buttonMap.entrySet())
-            {
-                RadioButton button = entry.getValue();
-
-                if (button.isSelected())
-                {
-                    lastSelectedTabLabel = entry.getKey();
-                }
-                button.setSelected(false);
-            }
+            RadioButton button = entry.getValue();
+            button.setSelected(false);
         }
     }
 
@@ -375,11 +370,11 @@ public class SideBarController
      */
     private void restoreTab()
     {
-        if (lastSelectedTabLabel != null)
+        ObservableCardsModel<?> lastSelectedTab = tabModels.getActiveTab();
+        if (lastSelectedTab != null)
         {
-            RadioButton lastTab = buttonMap.get(lastSelectedTabLabel);
+            RadioButton lastTab = buttonMap.get(lastSelectedTab.getLabel());
             lastTab.setSelected(true);
-            lastSelectedTabLabel = null;
         }
     }
 
@@ -390,7 +385,8 @@ public class SideBarController
      */
     private void minimize()
     {
-        if (!buttonBox.getChildren().isEmpty()){
+        if (!buttonBox.getChildren().isEmpty())
+        {
             resizeWidth(MINIMIZED_WIDTH);
 
             buttonBox.setVisible(false);

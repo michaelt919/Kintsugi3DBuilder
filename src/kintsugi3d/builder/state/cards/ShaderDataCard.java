@@ -54,8 +54,8 @@ public class ShaderDataCard extends ProjectDataCard
 
         return Map.of(
             "Send to Main View", viewShader,
-            "Send to Carousel", sendToCarousel,
-            "Send to Split View", sendToSplitView);
+            "Send to Carousel", sendToCarousel/*,
+            "Send to Split View", sendToSplitView*/);
     }
 
     /**
@@ -67,15 +67,15 @@ public class ShaderDataCard extends ProjectDataCard
      * @param fullResImageFilePath
      * @param textFields
      * @param actionGroups
-     * @param isDisabled
+     * @param isEnabled
      */
     public ShaderDataCard(
         String internalName, String title, ShaderInfo shader, String thumbnailPath, String fullResImageFilePath,
-        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isEnabled)
     {
         super(internalName, title, fullResImageFilePath, thumbnailPath, textFields,
             Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()),
-            isDisabled);
+            isEnabled);
         this.shader = shader;
     }
 
@@ -87,14 +87,14 @@ public class ShaderDataCard extends ProjectDataCard
      * @param fullResImageFilePath
      * @param textFields
      * @param actionGroups
-     * @param isDisabled
+     * @param isEnabled
      */
     public ShaderDataCard(
         String internalName, ShaderInfo shader, String thumbnailPath, String fullResImageFilePath,
-        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isEnabled)
     {
         this(internalName, shader.getFriendlyName(), shader, thumbnailPath, fullResImageFilePath, textFields,
-            actionGroups, isDisabled);
+            actionGroups, isEnabled);
     }
 
     public ShaderInfo getShader()

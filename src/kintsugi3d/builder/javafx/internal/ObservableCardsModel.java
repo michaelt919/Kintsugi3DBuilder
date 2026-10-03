@@ -12,7 +12,10 @@
 package kintsugi3d.builder.javafx.internal;
 
 import javafx.application.Platform;
-import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.ObjectExpression;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,15 +23,11 @@ import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -36,15 +35,19 @@ import java.util.function.Predicate;
  */
 public class ObservableCardsModel<T> implements CardsModel<T>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ObservableCardsModel.class);
-
     private final String label;
     private final String path;
 
-    private final UUIDSelectionModel selectedCardsModel;
-    private final UUIDSelectionModel expandedCardsModel;
-    private final ObservableList<ProjectDataCard> cardsList;
-    private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
+    private final UUIDSelectionModel selectedCardsModel = new UUIDSelectionModel();
+    private final UUIDSelectionModel expandedCardsModel = new UUIDSelectionModel();
+    private final Map<UUID, ProjectDataCard> cardMap = FXCollections.observableHashMap();
+    private final ObservableList<ProjectDataCard> cardsList = FXCollections.observableList(new ArrayList<>(8));
+
+    // needs to be here to not get garbage-collected
+    private final ObservableList<ProjectDataCard> unmodifiableCardsList =
+        FXCollections.unmodifiableObservableList(cardsList);
+    private final ObjectBinding<ProjectDataCard> lastSelectedCard = Bindings.createObjectBinding(
+        () -> cardMap.get(selectedCardsModel.getLastSelected()), selectedCardsModel.lastSelectedProperty());
 
     private final ProjectDataCardFactory<T> cardFactory;
     private final ObservableCarouselModel carouselModel;
@@ -56,11 +59,6 @@ public class ObservableCardsModel<T> implements CardsModel<T>
         this.path = path;
         this.cardFactory = cardFactory;
         this.carouselModel = carouselModel;
-
-        cardsList = FXCollections.observableList(new ArrayList<>(8));
-        unmodifiableCardsList = FXCollections.unmodifiableObservableList(cardsList);
-        selectedCardsModel = new UUIDSelectionModel();
-        expandedCardsModel = new UUIDSelectionModel();
 
         cardsList.addListener((ListChangeListener<? super ProjectDataCard>) change ->
         {
@@ -90,14 +88,14 @@ public class ObservableCardsModel<T> implements CardsModel<T>
                                     expandedCardsModel.select(addedItem.getCardId());
                                 }
 
-                                selectedCardsModel.clearSelection(removedItem.getCardId());
-                                expandedCardsModel.clearSelection(removedItem.getCardId());
+                                selectedCardsModel.unselect(removedItem.getCardId());
+                                expandedCardsModel.unselect(removedItem.getCardId());
                             }
                         }
                         else
                         {
-                            selectedCardsModel.clearSelection(removedItem.getCardId());
-                            expandedCardsModel.clearSelection(removedItem.getCardId());
+                            selectedCardsModel.unselect(removedItem.getCardId());
+                            expandedCardsModel.unselect(removedItem.getCardId());
                         }
                     }
                 }
@@ -116,7 +114,7 @@ public class ObservableCardsModel<T> implements CardsModel<T>
         return cardFactory.getDataClass();
     }
 
-    public String getModelLabel()
+    public String getLabel()
     {
         return label;
     }
@@ -136,14 +134,14 @@ public class ObservableCardsModel<T> implements CardsModel<T>
         return expandedCardsModel.isSelected(cardId);
     }
 
-    public BooleanBinding isSelectedProperty(UUID cardId)
+    public BooleanExpression createSelectedBinding(UUID cardId)
     {
-        return selectedCardsModel.isSelectedProperty(cardId);
+        return selectedCardsModel.createSelectedBinding(cardId);
     }
 
-    public BooleanBinding isExpandedProperty(UUID cardId)
+    public BooleanExpression createExpandedBinding(UUID cardId)
     {
-        return expandedCardsModel.isSelectedProperty(cardId);
+        return expandedCardsModel.createSelectedBinding(cardId);
     }
 
     public void expandCard(UUID id)
@@ -153,17 +151,32 @@ public class ObservableCardsModel<T> implements CardsModel<T>
 
     public void collapseCard(UUID cardId)
     {
-        Platform.runLater(() -> expandedCardsModel.clearSelection(cardId));
+        Platform.runLater(() -> expandedCardsModel.unselect(cardId));
     }
 
     public void selectCard(UUID cardId)
     {
-        Platform.runLater(()->selectedCardsModel.select(cardId));
+        Platform.runLater(() -> selectedCardsModel.select(cardId));
     }
 
     public void deselectCard(UUID cardId)
     {
-        Platform.runLater(()->selectedCardsModel.clearSelection(cardId));
+        Platform.runLater(() -> selectedCardsModel.unselect(cardId));
+    }
+
+    public Collection<ProjectDataCard> getSelectedCards()
+    {
+        return selectedCardsModel.getSelected().keySet().stream().map(cardMap::get).collect(Collectors.toList());
+    }
+
+    public ObjectExpression<ProjectDataCard> lastSelectedCardProperty()
+    {
+        return lastSelectedCard;
+    }
+
+    public ProjectDataCard getLastSelectedCard()
+    {
+        return lastSelectedCard.get();
     }
 
     @Override
@@ -175,6 +188,7 @@ public class ObservableCardsModel<T> implements CardsModel<T>
     @Override
     public ObservableList<ProjectDataCard> getCardList()
     {
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
         return unmodifiableCardsList;
     }
 
@@ -183,6 +197,13 @@ public class ObservableCardsModel<T> implements CardsModel<T>
     {
         cardsList.clear();
         cardsList.addAll(cards);
+
+        cardMap.clear();
+        for (ProjectDataCard card : cards)
+        {
+            cardMap.put(card.getCardId(), card);
+        }
+
         selectedCardsModel.clearSelection();
         expandedCardsModel.clearSelection();
     }
@@ -192,7 +213,7 @@ public class ObservableCardsModel<T> implements CardsModel<T>
         int totalEnabled = 0;
         for (ProjectDataCard card : cardsList)
         {
-            if (!card.isDisabled())
+            if (card.isEnabled())
             {
                 ++totalEnabled;
             }
@@ -205,7 +226,7 @@ public class ObservableCardsModel<T> implements CardsModel<T>
         int totalEnabled = 0;
         for (ProjectDataCard card : cardsList)
         {
-            if (card.isDisabled())
+            if (!card.isEnabled())
             {
                 ++totalEnabled;
             }
@@ -220,9 +241,18 @@ public class ObservableCardsModel<T> implements CardsModel<T>
     }
 
     @Override
-    public void deleteCards(Predicate<ProjectDataCard> filter )
+    public void deleteCards(Predicate<ProjectDataCard> filter)
     {
         cardsList.removeIf(filter);
+
+        var mapEntries = cardMap.entrySet().stream()
+            .filter(entry -> filter.test(entry.getValue()))
+            .collect(Collectors.toList());
+
+        for (var entry : mapEntries)
+        {
+            cardMap.remove(entry.getKey(), entry.getValue());
+        }
     }
 
     public CarouselModel getCarousel()

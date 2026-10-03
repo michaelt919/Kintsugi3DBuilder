@@ -25,11 +25,11 @@ public class ProjectDataCard
     private final String thumbnailPath;
     private final Map<String, String> textFields;
     private final Collection<? extends Map<String, Runnable>> actionGroups;
-    private boolean isDisabled;
+    private boolean isEnabled = true;
 
     public ProjectDataCard(
         String internalName, String title, String fullResImageFilePath, String thumbnailPath,
-        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isEnabled)
     {
         this.internalName = internalName;
         this.cardId = UUID.randomUUID();
@@ -38,7 +38,7 @@ public class ProjectDataCard
         this.thumbnailPath = thumbnailPath;
         this.textFields = Collections.unmodifiableMap(textFields);
         this.actionGroups = Collections.unmodifiableCollection(actionGroups);
-        this.isDisabled = isDisabled;
+        this.isEnabled = isEnabled;
     }
 
     public String getInternalName()
@@ -53,7 +53,7 @@ public class ProjectDataCard
 
     public String getTitle()
     {
-        if (isDisabled)
+        if (!isEnabled)
         {
             return String.format("%s - DISABLED", title);
         }
@@ -84,9 +84,9 @@ public class ProjectDataCard
         return actionGroups;
     }
 
-    public boolean isDisabled() { return isDisabled; }
+    public boolean isEnabled() { return isEnabled; }
 
-    public void setIsDisabled(boolean isDisabled) { this.isDisabled = isDisabled; }
+    public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
 
     public String getFullResImageFilePath()
     {

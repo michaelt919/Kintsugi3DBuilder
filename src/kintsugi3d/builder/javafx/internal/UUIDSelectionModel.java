@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,58 +12,77 @@
 package kintsugi3d.builder.javafx.internal;
 
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
+import javafx.collections.ObservableMap;
 
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.UUID;
 
 public class UUIDSelectionModel
 {
-    private final ObservableSet<UUID> selectedCards = FXCollections.observableSet(new LinkedHashSet<>());
-    private final ObjectProperty<UUID> lastSelected;
+    private final ObservableMap<UUID, Boolean> selected =
+        FXCollections.observableMap(new LinkedHashMap<>(16, 0.75f, true));
 
-    public UUIDSelectionModel()
+    private final ObjectProperty<UUID> lastSelected = new SimpleObjectProperty<>();
+
+    // needs to be here to not get garbage-collected
+    private final ObservableMap<UUID, Boolean> unmodifiableSelected = FXCollections.unmodifiableObservableMap(selected);
+
+    public boolean isEmpty()
     {
-        lastSelected = new SimpleObjectProperty<>();
+        return selected.isEmpty();
     }
 
-    public void select(UUID id)
+    public ObservableMap<UUID, Boolean> getSelected()
     {
-        selectedCards.add(id);
-        lastSelected.setValue(id);
-    }
-
-    public void clearSelection(UUID id)
-    {
-        selectedCards.remove(id);
-        lastSelected.setValue(null);
-    }
-
-    public void clearSelection()
-    {
-        selectedCards.clear();
-        lastSelected.setValue(null);
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
+        return unmodifiableSelected;
     }
 
     public boolean isSelected(UUID id)
     {
-        return selectedCards.contains(id);
+        return selected.containsKey(id);
     }
 
-    public BooleanBinding isSelectedProperty(UUID id)
+    public BooleanExpression createSelectedBinding(UUID id)
     {
         return Bindings.createBooleanBinding(
-            () -> selectedCards.contains(id),
-            this.selectedCards
+            () -> selected.containsKey(id),
+            this.selected
         );
     }
 
-    public boolean isEmpty()
+    public UUID getLastSelected()
     {
-        return selectedCards.isEmpty();
+        return lastSelected.get();
+    }
+
+    public ObjectExpression<UUID> lastSelectedProperty()
+    {
+        return lastSelected;
+    }
+
+    public void select(UUID id)
+    {
+        selected.put(id, true);
+        lastSelected.setValue(id);
+    }
+
+    public void unselect(UUID id)
+    {
+        selected.remove(id);
+
+        // Gets the last item in the map -- O(n), unfortunately.
+        lastSelected.setValue(selected.keySet().stream().reduce((a, b) -> b).orElse(null));
+    }
+
+    public void clearSelection()
+    {
+        selected.clear();
+        lastSelected.setValue(null);
     }
 }
