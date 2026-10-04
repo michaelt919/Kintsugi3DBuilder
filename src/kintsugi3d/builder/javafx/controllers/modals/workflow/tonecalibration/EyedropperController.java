@@ -46,14 +46,11 @@ import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.DoubleUnaryOperator;
 
@@ -65,7 +62,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static final double[] LINEAR_LUMINANCE_VALUES = { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
-    @FXML private VBox eydropperImageRoot;
+    @FXML private VBox eyedropperImageRoot;
     @FXML private VBox outerVbox;
 
     @FXML private GridPane curveValuesRoot;
@@ -174,7 +171,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
         autoApply();
 
-        eydropperImageRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
+        eyedropperImageRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
         curveValuesRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
         flatfieldCheckbox.disableProperty().bind(distanceCompensationCheckbox.selectedProperty().not());
 
@@ -520,33 +517,6 @@ public class EyedropperController extends NonDataPageControllerBase
         return calculateAverageColor(selectedColors);
     }
 
-    private static double calculateImgViewCroppedScaleFactor(ImageView imageView)
-    {
-        Rectangle2D viewport = imageView.getViewport();
-        if (viewport.getWidth() > viewport.getHeight())
-        {
-            return viewport.getWidth() / imageView.getFitWidth();
-        }
-        else
-        {
-            return viewport.getHeight() / imageView.getFitHeight();
-        }
-    }
-
-    private static double calculateImgViewScaleFactor(ImageView imgView)
-    {
-        //getWidth() and getHeight() refer to the full resolution image
-        //fitWidth() and fitHeight() refer to the image in the window
-        if (imgView.getImage().getWidth() > imgView.getImage().getHeight())
-        {
-            return imgView.getImage().getWidth() / imgView.getFitWidth();
-        }
-        else
-        {
-            return imgView.getImage().getHeight() / imgView.getFitHeight();
-        }
-    }
-
     private static Color calculateAverageColor(Collection<Color> colors)
     {
         double redSum = 0;
@@ -838,27 +808,10 @@ public class EyedropperController extends NonDataPageControllerBase
         if (file != null)
         {
             RecentProjects.setMostRecentDirectory(file.getParentFile());
+            selectedFile.set(new Image(file.toURI().toString()));
+            imageDetailsController.setImage(file.getPath());
 
-            //convert tiff image if necessary
-            if (file.getAbsolutePath().toLowerCase(Locale.ROOT).matches(".*\\.tiff?"))
-            {
-                try
-                {
-                    imageDetailsController.setImage(file.getPath());
-                    BufferedImage bufferedImage = ImageHelper.read(file).getBufferedImage();
-                }
-                catch (IOException e)
-                {
-                    LOG.error("Could not convert tif image: ", e);
-                }
-            }
-            else
-            {
-                selectedFile.set(new Image(file.toURI().toString()));
-                imageDetailsController.setImage(file.getPath());
-            }
-
-            //update buttons
+            // update buttons
             chooseImageButton.setVisible(false);
             chooseNewImageButton.setVisible(true);
         }

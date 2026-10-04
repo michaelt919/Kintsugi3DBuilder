@@ -94,6 +94,8 @@ public class RightBarController
             }
         });
 
+        imageDetails.maxHeightProperty().bind(mainBox.heightProperty().multiply(0.5));
+
         resizeWidth(DEFAULT_WIDTH);
 
         //Bind the value/scroll position for the overlay and actual scroll pane
@@ -104,14 +106,16 @@ public class RightBarController
         overlayScrollBar.setMax(1.0);
 
         // Compute the thumb size based on visible ratio
-        panelBox.heightProperty().addListener((obs, oldVal, newVal) -> updateScrollBarRange());
-        detailScrollPane.heightProperty().addListener((obs, oldVal, newVal) -> updateScrollBarRange());
+        panelBox.heightProperty().addListener(
+            (obs, oldVal, newVal) -> updateScrollBarRange());
+        detailScrollPane.heightProperty().addListener(
+            (obs, oldVal, newVal) -> updateScrollBarRange());
 
         // Show/hide when content overflows
         overlayScrollBar.visibleProperty().bind(
-            panelBox.heightProperty().greaterThan(detailScrollPane.heightProperty())
-        );
+            panelBox.heightProperty().greaterThan(detailScrollPane.heightProperty()));
     }
+
     private void updateScrollBarRange()
     {
         //Find the height of panel and of the scroll pane
@@ -322,7 +326,7 @@ public class RightBarController
     }
 
     /**
-     * Used to condense code. Resizes mainBox according to parameter width.
+     * Resizes mainBox according to parameter width.
      * @param width
      */
     private void resizeWidth(double width)

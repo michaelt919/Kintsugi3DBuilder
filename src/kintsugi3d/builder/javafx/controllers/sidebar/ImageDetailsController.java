@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
@@ -25,12 +26,18 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.Screen;
+import kintsugi3d.gl.util.ImageHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.Locale;
 
 public class ImageDetailsController
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ImageDetailsController.class);
     @FXML private VBox detailBox;
     @FXML private HBox buttonRow;
     @FXML private ImageView displayImage;
@@ -53,7 +60,6 @@ public class ImageDetailsController
     private double startViewportY;
 
     private static final double MAX_ZOOM_SIZE = 10.0;
-    private static final double SCREEN_PIXELS = 100;
 
     /**
      * Called when controller is created.
@@ -78,17 +84,25 @@ public class ImageDetailsController
 
         // Bind width to detailBox width - 8px padding
         displayImage.fitWidthProperty().bind(detailBox.widthProperty().subtract(8.0));
-        //Height is bound to stack panes height
+        // Height is bound to stack panes height
         displayImage.fitHeightProperty().bind(stackPane.heightProperty());
+
+        stackPane.widthProperty().addListener((obs, oldValue, newValue) ->
+        {
+            if (currentImage != null)
+            {
+                Platform.runLater(() ->
+                    stackPane.setPrefHeight(newValue.doubleValue() * currentImage.getHeight() / currentImage.getWidth()));
+            }
+        });
 
         //Listener detects whenever stack panes width changes
         stackPane.widthProperty().addListener((obs, oldWidth, newWidth) ->
         {
-            //If there is a image to display
+            //If there is an image to display
             if ((currentImage != null) && (displayImage.getViewport() != null))
             {
-                updateContainerAspect(); //Call function to update aspect ratio
-                adjustViewport(); //Call function to update viewport
+                adjustViewport(); // Call function to update viewport
             }
         });
     }
@@ -111,7 +125,24 @@ public class ImageDetailsController
 
             if (imageFile.exists()) //If file exists
             {
-                originalImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
+                // convert tiff image if necessary
+                if (imageFile.getAbsolutePath().toLowerCase(Locale.ROOT).matches(".*\\.tiff?"))
+                {
+                    try
+                    {
+                        BufferedImage bufferedImage = ImageHelper.read(imageFile).getBufferedImage();
+                        originalImage = SwingFXUtils.toFXImage(bufferedImage, null);
+                    }
+                    catch (IOException e)
+                    {
+                        LOG.error("Could not convert tiff image: ", e);
+                    }
+                }
+                else
+                {
+                    originalImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
+                }
+
                 currentImage = originalImage; //Current image gets set to the original image
                 displayImage.setImage(originalImage); //ImageView is set to originalImage
 
@@ -123,8 +154,6 @@ public class ImageDetailsController
 
                 // Default viewport
                 displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-                updateContainerAspect(); //Update aspect ratio
 
                 Platform.runLater(()->
                 {
@@ -198,28 +227,6 @@ public class ImageDetailsController
         button.setToggleGroup(toggleGroup); //Allows only 1 button to be selected
 
         return button;
-    }
-
-    /**
-     * This method is called to update the aspect ratio of my container/stack pane
-     */
-
-    private void updateContainerAspect()
-    {
-        if (currentImage != null) //If we have no image, exit method
-        {
-            //Find the max screen height by multiplying the screen height by .525 and subtracting 100 (SCREEN_PIXELS)
-            double maxScreenHeight = (Screen.getPrimary().getVisualBounds().getHeight() * 0.525) - SCREEN_PIXELS;
-
-            //Gets the minimum value between the original image height and max screen height.
-            double maxAllowedHeight = Math.min(originalImage.getHeight(), maxScreenHeight);
-
-            //Unbind the preferred height of stack pane
-            stackPane.prefHeightProperty().unbind();
-
-            //Set stackPane preferred height to the max allowed height
-            stackPane.setPrefHeight(maxAllowedHeight);
-        }
     }
 
     /**
@@ -384,8 +391,6 @@ public class ImageDetailsController
 
             //Set default viewport
             displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-            updateContainerAspect(); //Update aspect ratio
         }
     }
 
