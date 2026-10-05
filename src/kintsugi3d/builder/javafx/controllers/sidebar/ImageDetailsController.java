@@ -15,6 +15,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
@@ -261,7 +262,7 @@ public class ImageDetailsController
                 double newWidth = calculateViewportWidthFromHeight(currentHeight);
 
                 // Update the x-coordinate for the new width
-                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, newWidth);
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, newWidth, currentWidth * 0.5);
 
                 currentWidth = newWidth;
             }
@@ -302,6 +303,7 @@ public class ImageDetailsController
             double imgOrigHeight = currentImage.getHeight();
 
             // Gets the height of the stack pane
+            double paneWidth = stackPane.getWidth();
             double paneHeight = stackPane.getHeight();
 
             // Determine zoom (1 - normalized pixel size raised to the power of Delta Y)
@@ -318,6 +320,11 @@ public class ImageDetailsController
             double widthFromZoom = Math.min(imgOrigWidth, currentWidth * zoomFactor);
             double widthFromHeight = calculateViewportWidthFromHeight(heightFromZoom);
 
+            // Get the anchor point within the image based on the mouse location
+            Point2D anchorLocal = stackPane.sceneToLocal(event.getSceneX(), event.getSceneY());
+            double anchorX = anchorLocal.getX() * currentWidth / paneWidth;
+            double anchorY = anchorLocal.getY() * currentHeight / paneHeight;
+
             if (widthFromHeight + 0.5 < widthFromZoom)
             {
                 // Width was zoomed significantly more than height.
@@ -327,8 +334,8 @@ public class ImageDetailsController
                 double heightFromWidth = calculateViewportHeightFromWidth(widthFromZoom);
 
                 // Adjust x to stay centered on previous viewport center
-                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromZoom);
-                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromWidth);
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromZoom, anchorX);
+                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromWidth, anchorY);
 
                 currentWidth = widthFromZoom;
                 currentHeight = heightFromWidth;
@@ -339,8 +346,8 @@ public class ImageDetailsController
             else
             {
                 // Adjust y to stay centered on previous viewport center
-                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromHeight);
-                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromZoom);
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromHeight, anchorX);
+                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromZoom, anchorY);
 
                 // Zoom "normally" via height
                 currentWidth = widthFromHeight;
@@ -354,10 +361,11 @@ public class ImageDetailsController
         }
     }
 
-    private static double adjustCoordinate(double currentValue, double maxValue, double oldDimension, double newDimension)
+    private static double adjustCoordinate(
+        double currentValue, double maxValue, double oldDimension, double newDimension, double anchor)
     {
         return Math.max(0, Math.min(maxValue - newDimension, // Clamp coordinates within image boundaries
-            currentValue + oldDimension / 2.0 - newDimension / 2.0));
+            currentValue + anchor - anchor * newDimension / oldDimension));
     }
 
     /**
