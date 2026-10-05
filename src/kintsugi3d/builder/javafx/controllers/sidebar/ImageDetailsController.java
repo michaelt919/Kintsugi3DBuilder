@@ -60,7 +60,7 @@ public class ImageDetailsController
     private double startViewportX;
     private double startViewportY;
 
-    private static final double MAX_ZOOM_SIZE = 10.0;
+    private static final double MIN_ZOOM_VIEWPORT_SIZE = 10.0;
 
     /**
      * Called when controller is created.
@@ -317,8 +317,8 @@ public class ImageDetailsController
             double paneWidth = stackPane.getWidth();
             double paneHeight = stackPane.getHeight();
 
-            // Determine zoom direction
-            double zoomFactor = (event.getDeltaY() > 0) ? 0.9 : 1.1;
+            // Determine zoom factor
+            double zoomFactor = Math.pow((paneHeight - 1.0) / paneHeight, event.getDeltaY());
 
             // Calculate possible width
             double newWidth = currentWidth * zoomFactor;
@@ -328,7 +328,7 @@ public class ImageDetailsController
                 resetViewport();
                 event.consume();
             }
-            else if (newWidth < MAX_ZOOM_SIZE) // Prevent zooming in closer than MAX_ZOOM_SIZE
+            else if (newWidth < MIN_ZOOM_VIEWPORT_SIZE) // Prevent zooming in closer than MIN_ZOOM_VIEWPORT_SIZE
             {
                 event.consume();
             }
