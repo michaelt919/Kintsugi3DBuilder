@@ -16,7 +16,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
@@ -33,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 public class ImageDetailsController
@@ -70,36 +71,35 @@ public class ImageDetailsController
      */
     public void initialize()
     {
-        setImage(null); //Sets default state to not shown.
+        setImage(null); // Sets default state to not shown.
 
-        createButtons(); // Creates all buttons using method. Can add new buttons there as well.
+        Collection<Region> buttons = createButtons(); // Creates all buttons using method. Can add new buttons there as well.
 
-        for (Node button : buttonRow.getChildren()) //For every button in buttonRow
+        for (Region button : buttons) // For every button in buttonRow
         {
-            //Bind buttons to each other so they all take up same size
-            ((Region) button).prefWidthProperty().bind(buttonRow.widthProperty().subtract(
-                buttonRow.getSpacing()*buttonRow.getChildren().size()).divide(
-                buttonRow.getChildren().size()));
+            // Bind buttons to each other so they all take up same size
+            button.prefWidthProperty().bind(buttonRow.widthProperty()
+                .subtract(buttonRow.getSpacing()*(buttonRow.getChildren().size() - 1))
+                .divide(buttonRow.getChildren().size()));
         }
 
         // Bind width to detailBox width - 8px padding
-        displayImage.fitWidthProperty().bind(detailBox.widthProperty().subtract(8.0));
+        // For some reason this only works if we bind it to detailBox, not to stackPane.
+        // (stackPane seems to involve displayImage in its width calculation which creates a cycle)
+        displayImage.fitWidthProperty().bind(detailBox.widthProperty()
+            .subtract(detailBox.getPadding().getLeft() + detailBox.getPadding().getRight()));
+
         // Height is bound to stack panes height
         displayImage.fitHeightProperty().bind(stackPane.heightProperty());
 
         stackPane.widthProperty().addListener((obs, oldValue, newValue) ->
-        {
-            if (currentImage != null)
-            {
-                Platform.runLater(() ->
-                    stackPane.setPrefHeight(newValue.doubleValue() * currentImage.getHeight() / currentImage.getWidth()));
-            }
-        });
+            // Use Platform.runLater since setting prefHeight during its own layout pass seems to cause problems.
+            Platform.runLater(() -> stackPane.setPrefHeight(newValue.doubleValue())));
 
-        //Listener detects whenever stack panes width changes
+        // Listener detects whenever stack panes width changes
         stackPane.widthProperty().addListener((obs, oldWidth, newWidth) ->
         {
-            //If there is an image to display
+            // If there is an image to display
             if ((currentImage != null) && (displayImage.getViewport() != null))
             {
                 adjustViewport(); // Call function to update viewport
@@ -179,7 +179,7 @@ public class ImageDetailsController
      * Creates buttons with events, that are then added to buttonRow.
      * New buttons can be added and automatically given the same properties as current buttons.
      */
-    private void createButtons()
+    private Collection<Region> createButtons()
     {
         toggleGroup = new ToggleGroup(); // Toggle group created so only 1 Radio button can be selected at once
 
@@ -198,6 +198,8 @@ public class ImageDetailsController
         RadioButton reset = createButton("Reset");
         reset.setOnAction(e -> reset());
         buttonRow.getChildren().add(reset);
+
+        return List.of(zoom, pan, marquee, reset);
     }
 
     /**

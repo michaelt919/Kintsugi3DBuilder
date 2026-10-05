@@ -33,9 +33,6 @@
                onMousePressed="#startSelection"
                onMouseDragged="#dragSelection"
                onMouseReleased="#endSelection">
-        <VBox.margin>
-            <Insets left="4" right="4"/>
-        </VBox.margin>
         <ImageView fx:id="displayImage"
                    preserveRatio="true"
                    onScroll="#scrolling"
