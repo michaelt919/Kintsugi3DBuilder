@@ -94,17 +94,22 @@ public class ImageDetailsController
 
         stackPane.widthProperty().addListener((obs, oldValue, newValue) ->
             // Use Platform.runLater since setting prefHeight during its own layout pass seems to cause problems.
-            Platform.runLater(() -> stackPane.setPrefHeight(newValue.doubleValue())));
-
-        // Listener detects whenever stack panes width changes
-        stackPane.widthProperty().addListener((obs, oldWidth, newWidth) ->
-        {
-            // If there is an image to display
-            if ((currentImage != null) && (displayImage.getViewport() != null))
+            Platform.runLater(() ->
             {
-                adjustViewport(); // Call function to update viewport
-            }
-        });
+                stackPane.setPrefHeight(newValue.doubleValue());
+
+                // Aspect ratio of the stackPane could change if it's limited by the window height.
+                adjustViewportWidth();
+            }));
+
+        // Listener detects whenever stack pane's height changes
+        // This handles situations when the window is resized
+        // and the aspect ratio of the stackPane might correspondingly change.
+        stackPane.heightProperty().addListener((obs, oldValue, newValue) ->
+            // Call function to update viewport
+            // Use Platform.runLater to ensure that the state is consistent
+            // (i.e. not in a situation where height was updated but width update still needs to happen)
+            adjustViewportWidth());
     }
 
     /**
@@ -153,7 +158,7 @@ public class ImageDetailsController
                 currentY = 0;
 
                 // Default viewport
-                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+                refreshViewport();
 
                 Platform.runLater(()->
                 {
@@ -232,71 +237,54 @@ public class ImageDetailsController
     }
 
     /**
-     * This method is for adjusting the image when the panel is being resized
+     * This method is for adjusting the image when the panel is being resized.
+     * To avoid zoom drift, we lock the viewport height as unchanging and adjust the width to match current aspect ratio.
+     * (Any alternative that adjusts both width and height would have the undesirable effect that alternating changes
+     * to width and height can over time result in persistent changes to the viewport even if the aspect ratio comes
+     * back to the original value).
      */
-    private void adjustViewport()
+    private void adjustViewportWidth()
     {
-        //If there is no image or the stackpane is negative width or height
-        if ((currentImage != null) && !(stackPane.getWidth() <= 0) && !(stackPane.getHeight() <= 0))
+        // Make sure that there is an image and that the stack pane has positive width and height
+        if (currentImage != null && displayImage.getViewport() != null &&
+            stackPane.getWidth() > 0 && stackPane.getHeight() > 0)
         {
-            //Get the image width and height
+            // Get the image width
             double imgOrigWidth = currentImage.getWidth();
-            double imgOrigHeight = currentImage.getHeight();
 
-            //Check if we are currently zoomed out to the full image.
-            //If so, handles standard letterboxing naturally.
-            if (!(currentWidth >= (imgOrigWidth - 0.5)) || !(currentHeight >= (imgOrigHeight - 0.5)))
+            // Adjustment is only needed if we are zoomed in / cropped.
+            // (otherwise, simple letterboxing works fine without this)
+            if (currentWidth < imgOrigWidth - 0.5 || currentHeight < currentImage.getHeight() - 0.5)
             {
-                //Otherwise, we are zoomed or cropped. Calculate the pane's new aspect ratio.
-                double paneWidth = stackPane.getWidth();
-                double paneHeight = stackPane.getHeight();
-                double paneAspect = paneWidth / paneHeight;
+                // Adjust width to fill horizontal space using the pane's new aspect ratio.
+                // Clamp dimensions so they do not exceed the actual image bounds
+                double newWidth = calculateViewportWidthFromHeight(currentHeight);
 
-                //Preserve the current center
-                double centerX = currentX + (currentWidth / 2.0);
-                double centerY = currentY + (currentHeight / 2.0);
+                // Update the x-coordinate for the new width
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, newWidth);
 
-                //Calculate viewport dimensions to fill the new aspect ratio
-                double newWidth = currentWidth;
-                double newHeight = currentHeight;
-
-                // Pane is wider than current viewport
-                if ((currentWidth / currentHeight) < paneAspect)
-                {
-                    //Expand width to fill horizontal space
-                    newWidth = currentHeight * paneAspect;
-                }
-                else //Pane is taller than current viewport
-                {
-                    //Expand height to fill vertical space
-                    newHeight = currentWidth / paneAspect;
-                }
-
-                //Clamp dimensions so they do not exceed the actual image bounds
-                if (newWidth > imgOrigWidth)
-                {
-                    newWidth = imgOrigWidth;
-                    newHeight = newWidth / paneAspect;
-                }
-
-                if (newHeight > imgOrigHeight)
-                {
-                    newHeight = imgOrigHeight;
-                    newWidth = newHeight * paneAspect;
-                }
-
-                //Assign expanded dimensions
                 currentWidth = newWidth;
-                currentHeight = newHeight;
-
-                //Re-center and clamp coordinates
-                currentX = Math.max(0, Math.min(centerX - (currentWidth / 2.0), imgOrigWidth - currentWidth));
-                currentY = Math.max(0, Math.min(centerY - (currentHeight / 2.0), imgOrigHeight - currentHeight));
-
-                //Apply the viewport update
-                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
             }
         }
+
+        // Apply the viewport update
+        refreshViewport();
+    }
+
+    private double calculateViewportWidthFromHeight(double height)
+    {
+        return Math.min(currentImage.getWidth(), height * (stackPane.getWidth() / stackPane.getHeight()));
+    }
+
+    private double calculateViewportHeightFromWidth(double width)
+    {
+        return Math.min(currentImage.getHeight(), width * (stackPane.getHeight() / stackPane.getWidth()));
+    }
+
+
+    private void refreshViewport()
+    {
+        displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
     }
 
     /**
@@ -304,78 +292,72 @@ public class ImageDetailsController
      * @param event
      */
     @FXML
-    public void scrolling(ScrollEvent event)
+    public void scrollZoom(ScrollEvent event)
     {
         // Will exit this function if we have no image or if canZoom is false
-        if (currentImage != null && canZoom)
+        if (ScrollEvent.SCROLL.equals(event.getEventType()) && event.getDeltaY() != 0.0 && currentImage != null && canZoom)
         {
             // Gets base dimensions for the image and its aspect ratio
             double imgOrigWidth = currentImage.getWidth();
             double imgOrigHeight = currentImage.getHeight();
 
-            // Gets the dimensions of stack pane and its aspect ratio
-            double paneWidth = stackPane.getWidth();
+            // Gets the height of the stack pane
             double paneHeight = stackPane.getHeight();
 
-            // Determine zoom factor
+            // Determine zoom (1 - normalized pixel size raised to the power of Delta Y)
             double zoomFactor = Math.pow((paneHeight - 1.0) / paneHeight, event.getDeltaY());
 
-            // Calculate possible width
-            double newWidth = currentWidth * zoomFactor;
+            // Calculate anticipated new width and height.
+            // Ensure that we're not zooming out beyond the full image size
+            // or zooming in closer than MIN_ZOOM_VIEWPORT_SIZE.
+            // Round to avoid complicated numerical precision issues.
+            double heightFromZoom = Math.max(MIN_ZOOM_VIEWPORT_SIZE,
+                Math.min(imgOrigHeight, currentHeight * zoomFactor));
 
-            if (newWidth > imgOrigWidth) // Prevent zooming out past original size
+            // Compare width from zooming with width derived from height via aspect ratio
+            double widthFromZoom = Math.min(imgOrigWidth, currentWidth * zoomFactor);
+            double widthFromHeight = calculateViewportWidthFromHeight(heightFromZoom);
+
+            if (widthFromHeight + 0.5 < widthFromZoom)
             {
-                resetViewport();
-                event.consume();
-            }
-            else if (newWidth < MIN_ZOOM_VIEWPORT_SIZE) // Prevent zooming in closer than MIN_ZOOM_VIEWPORT_SIZE
-            {
-                event.consume();
+                // Width was zoomed significantly more than height.
+                // This indicates that the vertical axis is not our limiting factor (after zoom has been applied)
+                // and we should have applied zoom to horizontal axis instead.
+                // Therefore, apply zoom to width rather than height.
+                double heightFromWidth = calculateViewportHeightFromWidth(widthFromZoom);
+
+                // Adjust x to stay centered on previous viewport center
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromZoom);
+                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromWidth);
+
+                currentWidth = widthFromZoom;
+                currentHeight = heightFromWidth;
+
+                // Send the changes to the viewport
+                refreshViewport();
             }
             else
             {
-                // This fill threshold width determines how fast gray area disappears, .5 is what is set to
-                // currently if higher it will take less scrolling to eliminate the gray space
-                double fillThresholdWidth = imgOrigWidth * 0.5;
+                // Adjust y to stay centered on previous viewport center
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromHeight);
+                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromZoom);
 
-                // Calculates the progress (0.0 = unzoomed, 1.0 = no gray space)
-                double fillProgress = (imgOrigWidth - newWidth) / (imgOrigWidth - fillThresholdWidth);
-                fillProgress = Math.max(0.0, Math.min(1.0, fillProgress));
+                // Zoom "normally" via height
+                currentWidth = widthFromHeight;
+                currentHeight = heightFromZoom;
 
-                // Transition image aspect to stackPane aspect to assign to target Aspect
-                double imageAspect = imgOrigWidth / imgOrigHeight;
-                double paneAspect = paneWidth / paneHeight;
-                double targetAspect = imageAspect + (paneAspect - imageAspect) * fillProgress;
-
-                // Calculate possible height based on target aspect
-                double newHeight = newWidth / targetAspect;
-
-                // Ensure possible height doesn't exceed original image height
-                if (newHeight > imgOrigHeight)
-                {
-                    newHeight = imgOrigHeight;
-                    newWidth = newHeight * targetAspect;
-                }
-
-                // Adjust X and Y to stay centered on previous viewport center
-                double centerX = currentX + (currentWidth / 2.0);
-                double centerY = currentY + (currentHeight / 2.0);
-
-                double newX = centerX - (newWidth / 2.0);
-                double newY = centerY - (newHeight / 2.0);
-
-                // Clamp coordinates within image boundaries
-                currentX = Math.max(0, Math.min(newX, imgOrigWidth - newWidth));
-                currentY = Math.max(0, Math.min(newY, imgOrigHeight - newHeight));
-                currentWidth = newWidth;
-                currentHeight = newHeight;
-
-                // Apply updated viewport
-                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-                event.consume();
+                // Send the changes to the viewport
+                refreshViewport();
             }
+
+            event.consume();
         }
+    }
+
+    private static double adjustCoordinate(double currentValue, double maxValue, double oldDimension, double newDimension)
+    {
+        return Math.max(0, Math.min(maxValue - newDimension, // Clamp coordinates within image boundaries
+            currentValue + oldDimension / 2.0 - newDimension / 2.0));
     }
 
     /**
@@ -383,16 +365,16 @@ public class ImageDetailsController
      */
     private void resetViewport()
     {
-        if (currentImage != null)//If there is an image
+        if (currentImage != null) // If there is an image
         {
-            //Reset viewport default coordinates
+            // Reset viewport default coordinates
             currentWidth = currentImage.getWidth();
             currentHeight = currentImage.getHeight();
             currentX = 0;
             currentY = 0;
 
-            //Set default viewport
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+            // Set default viewport
+            refreshViewport();
         }
     }
 
@@ -414,7 +396,7 @@ public class ImageDetailsController
             currentHeight = currentImage.getHeight();
             currentX = 0;
             currentY = 0;
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+            refreshViewport();
         }
 
         if (canPan) //If panning is active takes the current x any and assigns it to startViewport x and y
@@ -473,7 +455,7 @@ public class ImageDetailsController
                 currentY = Math.max(0, Math.min(targetY, maxY));
 
                 //Sets new viewport
-                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+                refreshViewport();
             }
             else if (canCrop) // If cropping
             {
@@ -596,7 +578,7 @@ public class ImageDetailsController
                     currentHeight = selHeight;
 
                     //Apply viewport
-                    displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+                    refreshViewport();
                 }
             }
         }
