@@ -108,7 +108,7 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
                 IntVector2 dimensions = ImageHelper.dimensionsOf(textureImage);
                 String res = String.format("%dx%d", dimensions.x, dimensions.y);
 
-                return new ShaderDataCard(texture.name, texture.getVisualizationShader(), thumbnailPath,
+                return new ShaderDataCard(texture.name, texture.getVisualizationShader(), thumbnailPath, textureImage.getPath(),
                     new LinkedHashMap<>()
                     {{
                         put("File Name", textureImage.getName());
@@ -119,7 +119,8 @@ public class TextureCardFactory extends ProjectDataCardFactoryBase<TextureInfo>
                     List.of(Map.of(
                         "Refresh Texture", () -> refreshTexture(texture),
                         "Replace Texture...", () -> replaceTexture(texture)
-                    )));
+                    )),
+                    true);
             }
             else
             {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.RootObjectSceneController">
+<VBox stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.scene.object.RootObjectSceneController">
    <TitledPane animated="false" prefWidth="400.0" text="Poses" VBox.vgrow="ALWAYS">
       <HBox prefHeight="0.0">
          <ListView fx:id="objectPoseListView" HBox.hgrow="ALWAYS" />

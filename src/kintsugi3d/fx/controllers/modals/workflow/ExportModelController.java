@@ -1,0 +1,177 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.fx.controllers.modals.workflow;
+
+import javafx.application.Platform;
+import javafx.beans.binding.BooleanBinding;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
+import kintsugi3d.builder.core.Global;
+import kintsugi3d.builder.io.ExportTexturesRequest;
+import kintsugi3d.builder.io.ExportType;
+import kintsugi3d.builder.rendering.Rendering;
+import kintsugi3d.fx.controllers.modals.ProjectSettingsControllerBase;
+import kintsugi3d.fx.util.SquareResolution;
+import kintsugi3d.fx.util.StaticUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+
+public class ExportModelController extends ProjectSettingsControllerBase
+{
+    private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
+
+    // Initialize all the variables in the FXML file
+    @FXML private Pane root;
+
+    @FXML private ComboBox<ExportType> exportTypeComboBox;
+    @FXML private ComboBox<String> formatComboBox;
+    @FXML private CheckBox generateLowResolutionCheckBox;
+    @FXML private CheckBox openViewerOnceCheckBox;
+    @FXML private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
+
+    private File exportLocationFile;
+    private final FileChooser objFileChooser = new FileChooser();
+
+    @Override
+    public Region getRootNode()
+    {
+        return root;
+    }
+
+    @Override
+    public void initPage()
+    {
+        StaticUtilities.makeSquareResolutionComboBox(minimumTextureResolutionComboBox);
+
+        objFileChooser.setTitle("Save project");
+
+        // Enable min. texture resolution combo box when LODs are enabled.
+        minimumTextureResolutionComboBox.disableProperty()
+            .bind(generateLowResolutionCheckBox.selectedProperty().not());
+
+        // Bind the export type to the request
+        exportTypeComboBox.getItems().setAll(ExportType.values());
+
+        // Set initial value from defaultSettings
+        exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
+        objFileChooser.getExtensionFilters().setAll(getLocalSettingsModel().get("exportType", ExportType.class).getFilter());
+
+        // Friendly display name
+        exportTypeComboBox.setConverter(new StringConverter<>()
+        {
+            @Override
+            public String toString(ExportType type)
+            {
+                return (type != null) ? type.toString() : "";
+            }
+
+            @Override
+            public ExportType fromString(String string)
+            {
+                // Not strictly needed unless the ComboBox is editable
+                return null;
+            }
+        });
+
+        // Update extension filters based on the selected export type.
+        exportTypeComboBox.valueProperty().addListener(
+            (obs, oldValue, newValue) ->
+                objFileChooser.getExtensionFilters().setAll(newValue.getFilter()));
+
+        // Bind settings
+        bindObjectComboBox(exportTypeComboBox, "exportType", ExportType.class);
+        bindTextComboBox(formatComboBox, "textureFormat");
+        bindBooleanSetting(generateLowResolutionCheckBox, "exportLODEnabled");
+        bindNumericComboBox(minimumTextureResolutionComboBox, "minimumLODSize",
+            SquareResolution::new, SquareResolution::getSize);
+        bindBooleanSetting(openViewerOnceCheckBox, "openViewerOnExportComplete");
+
+        BooleanBinding gltfSelected =
+            exportTypeComboBox.getSelectionModel().selectedItemProperty().isEqualTo(ExportType.GLTF);
+
+        generateLowResolutionCheckBox.disableProperty().bind(gltfSelected.not());
+        openViewerOnceCheckBox.disableProperty().bind(gltfSelected.not());
+
+        File loadedProjectFile = Global.io().validateRenderable().getLoadedProjectFile();
+        if (loadedProjectFile != null)
+        {
+            setCurrentDirectoryFile(loadedProjectFile.getParentFile());
+        }
+
+        setCanAdvance(true);
+        setCanConfirm(true);
+    }
+
+    @Override
+    public boolean confirm()
+    {
+        applySettings();
+
+        if (Global.io().getProgressMonitor().isConflictingProcess())
+        {
+            error("Failed to export model", "Another process is already running.");
+            return false;
+        }
+
+        try
+        {
+            exportLocationFile = objFileChooser.showSaveDialog(root.getScene().getWindow());
+            if (exportLocationFile != null)
+            {
+                Rendering.getRequestQueue().addGraphicsRequest(new ExportTexturesRequest(
+                    exportLocationFile,
+                    () ->
+                    {
+                        // Display message when all textures have been saved on graphics thread.
+                        //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                        Platform.runLater(() ->
+                        {
+                            Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
+                                "Export Complete!");
+                            saveInfo.setTitle("Export successful");
+                            saveInfo.setHeaderText(exportLocationFile.getName());
+                            saveInfo.show();
+                        });
+                    }));
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (RuntimeException ex)
+        {
+            LOG.error("Failed to save project", ex);
+            error("Failed to save project", "An unknown error occurred.");
+            return false;
+        }
+    }
+
+    private void setCurrentDirectoryFile(File currentDirectoryFile)
+    {
+        // Sets FileChooser defaults
+        if (currentDirectoryFile != null)
+        {
+            objFileChooser.setInitialDirectory(currentDirectoryFile);
+            objFileChooser.setInitialFileName(currentDirectoryFile.getName());
+        }
+    }
+}

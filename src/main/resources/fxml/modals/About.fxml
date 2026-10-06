@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -14,7 +14,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<VBox prefHeight="400.0" prefWidth="553.0" spacing="16.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.AboutController">
+<VBox prefHeight="400.0" prefWidth="553.0" spacing="16.0" styleClass="content-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.modals.AboutController">
     <Label styleClass="wireframeTitle" text="About Kintsugi 3D Builder" />
     <HBox VBox.vgrow="ALWAYS">
         <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS">

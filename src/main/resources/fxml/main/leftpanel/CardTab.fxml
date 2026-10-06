@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.*?>
 <VBox fx:id="tab" style="-fx-background-color: #383838;" styleClass="left-bar" stylesheets="@../../kintsugiStyling.css"
       xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS" fillWidth="true">
+      fx:controller="kintsugi3d.fx.controllers.sidebar.CardTabController" VBox.vgrow="ALWAYS" fillWidth="true">
     <HBox fx:id = "filePathHBox" maxWidth="1.7976931348623157E308"  alignment="CENTER_LEFT" style = "-fx-padding: 10px">
         <padding>
             <Insets top="20.0" right="0.0" bottom="0.0" left="20.0" />

@@ -15,7 +15,6 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,50 +46,55 @@ public class ShaderDataCard extends ProjectDataCard
             Global.state().getCarouselModel().addToCarousel(shader);
         };
 
+        Runnable sendToSplitView = () ->
+        {
+            //TODO: Add code for sending shader to split view
+            //Global.state().getSplitCanvasModel().setCanvas();
+        };
+
         return Map.of(
             "Send to Main View", viewShader,
-            "Send to Carousel", sendToCarousel);
+            "Send to Carousel", sendToCarousel/*,
+            "Send to Split View", sendToSplitView*/);
     }
 
-    public ShaderDataCard(String internalName, String title, ShaderInfo shader, String imagePath, Map<String, String> textFields,
-                          Collection<? extends Map<String, Runnable>> actionGroups)
+    /**
+     * Overrides the shader's friendly name with a specified title.
+     * @param internalName
+     * @param title
+     * @param shader
+     * @param thumbnailPath
+     * @param fullResImageFilePath
+     * @param textFields
+     * @param actionGroups
+     * @param isEnabled
+     */
+    public ShaderDataCard(
+        String internalName, String title, ShaderInfo shader, String thumbnailPath, String fullResImageFilePath,
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isEnabled)
     {
-        super(internalName, title, imagePath, textFields,
-            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
+        super(internalName, title, fullResImageFilePath, thumbnailPath, textFields,
+            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()),
+            isEnabled);
         this.shader = shader;
     }
 
-    public ShaderDataCard(String internalName, String title, ShaderInfo shader, String imagePath, Map<String, String> textFields,
-                          Collection<? extends Map<String, Runnable>> actionGroups, boolean isDisabled)
+    /**
+     * Uses the shader's friendly name as the title.
+     * @param internalName
+     * @param shader
+     * @param thumbnailPath
+     * @param fullResImageFilePath
+     * @param textFields
+     * @param actionGroups
+     * @param isEnabled
+     */
+    public ShaderDataCard(
+        String internalName, ShaderInfo shader, String thumbnailPath, String fullResImageFilePath,
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isEnabled)
     {
-        super(internalName, title, imagePath, textFields,
-            Stream.concat(Stream.of(getActionMap(shader)), actionGroups.stream()).collect(Collectors.toList()));
-        setIsDisabled(isDisabled);
-        this.shader = shader;
-    }
-
-    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath, Map<String, String> textFields,
-                          Collection<? extends Map<String, Runnable>> actionGroups)
-    {
-        this(internalName, shader.getFriendlyName(), shader, imagePath, textFields, actionGroups);
-    }
-
-    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
-    {
-        super(internalName, shader.getFriendlyName(), imagePath, textFields, List.of(getActionMap(shader), actions));
-        this.shader = shader;
-    }
-
-    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath, Map<String, String> textFields)
-    {
-        super(internalName, shader.getFriendlyName(), imagePath, textFields, getActionMap(shader));
-        this.shader = shader;
-    }
-
-    public ShaderDataCard(String internalName, ShaderInfo shader, String imagePath)
-    {
-        super(internalName, shader.getFriendlyName(), imagePath, Map.of(), getActionMap(shader));
-        this.shader = shader;
+        this(internalName, shader.getFriendlyName(), shader, thumbnailPath, fullResImageFilePath, textFields,
+            actionGroups, isEnabled);
     }
 
     public ShaderInfo getShader()

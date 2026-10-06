@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,7 +11,6 @@
 
 package kintsugi3d.gl.geometry;
 
-import javafx.util.Pair;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.material.ImportedMaterial;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -112,11 +111,11 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
         if ("zip".equalsIgnoreCase(fileExtension)){
             //TODO: set VertexGeometry.geometryFile to unzipped file?
-            return VertexGeometry.createFromZippedPLYFile(geometryFile, "mesh.ply");
+            return createFromZippedPLYFile(geometryFile, "mesh.ply");
         } else if("obj".equalsIgnoreCase(fileExtension)) {
-             return VertexGeometry.createFromOBJFile(geometryFile);
+             return createFromOBJFile(geometryFile);
         }else if("ply".equalsIgnoreCase(fileExtension)){
-            return VertexGeometry.createFromPLYFile(geometryFile);
+            return createFromPLYFile(geometryFile);
         }else{
             return null;
         }
@@ -338,10 +337,12 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     {
         return createFromPLY(file, PLY.load(file.toPath()));
     }
+
     public static VertexGeometry createFromZippedPLYFile(File zipFolder, String targetFileName) throws IOException
     {
         return createFromPLY(zipFolder, PLY.loadFromZip(zipFolder, targetFileName));
     }
+
     public static VertexGeometry createFromZippedPLYStream(InputStream zipStream, File file, String targetFileName) throws IOException
     {
         return createFromPLY(file, PLY.loadFromZip(zipStream, targetFileName));
@@ -359,8 +360,6 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         List<Integer> vertexIndexList = new ArrayList<>(100000);
         List<Integer> normalIndexList = new ArrayList<>(100000);
         List<Integer> texCoordIndexList = new ArrayList<>(100000);
-        Map<NormalTexCoordPair, Vector3> tangentMap = new HashMap<>(100000);
-        Map<NormalTexCoordPair, Vector3> bitangentMap = new HashMap<>(100000);
 
         // Collect all values stored per-vertex
         vertex.convertProperty("x", FLOAT32);
@@ -471,9 +470,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         // Compute smooth normals if applicable
         if (!inst.hasNormals)
         {
-            Pair<List<Vector3>, List<Integer>> norms = computeNormals(vertexList, vertexIndexList);
-            normalList = norms.getKey();
-            normalIndexList = norms.getValue();
+            ComputedNormals norms = computeNormals(vertexList, vertexIndexList);
+            normalList = norms.normals;
+            normalIndexList = norms.indices;
             inst.hasNormals = true;
         }
 
@@ -585,7 +584,19 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         return inst;
     }
 
-    private static Pair<List<Vector3>, List<Integer>> computeNormals(List<Vector3> vertexList, List<Integer> vertexIndexList)
+    private static final class ComputedNormals
+    {
+        final List<Vector3> normals;
+        final List<Integer> indices;
+
+        private ComputedNormals(List<Vector3> normals, List<Integer> indices)
+        {
+            this.normals = normals;
+            this.indices = indices;
+        }
+    }
+
+    private static ComputedNormals computeNormals(List<Vector3> vertexList, List<Integer> vertexIndexList)
     {
         List<Vector3> normals = new ArrayList<>(Collections.nCopies(vertexList.size(), Vector3.ZERO));
         List<Integer> normalIndexList = new ArrayList<>(vertexIndexList.size());
@@ -635,7 +646,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         // Normalize summed facial normals
         normals.replaceAll(Vector3::normalizedSafe);
 
-        return new Pair<>(normals, normalIndexList);
+        return new ComputedNormals(normals, normalIndexList);
     }
 
     private static Map<NormalTexCoordPair, Vector4> computeTangents(

@@ -64,20 +64,20 @@ public class PhotoCardFactory extends ProjectDataCardFactoryBase<View>
             return new ProjectDataCard(
                 view.getImageFile().getPath(), // path is used to uniquely identify views for synchronizing with backend
                 view.getImageFile().getName(),
-                thumbnailPath,
+                fullResFile.getPath(), thumbnailPath,
                 new LinkedHashMap<>()
                 {{
                     put("Resolution", res);
                     put("Size", (fullResFile.length() / (1024 * 1024)) + " MB");
                 }},
-                Map.of(
+                List.of(Map.of(
                     "Remove from Project", () ->
                         Global.state().getProjectModel().confirm("Remove Image", "Remove Image?",
                             "This will remove the image from the project.",
                             () -> getViewSet().removeViewByImageFilename(view.getImageFile())),
                     "Toggle Disabled", () -> getViewSet().toggleViewEnabled(view.getImageFile())
-                ),
-                !view.isEnabled()
+                )),
+                view.isEnabled()
             );
         }
         catch (RuntimeException|IOException e)

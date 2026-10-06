@@ -29,7 +29,7 @@
             <lineEnding>unix</lineEnding>
         </file>
         <file>
-            <source>${project.build.directory}/classes/export-classes.txt</source>
+            <source>${project.build.directory}/classes/render-exports.txt</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
