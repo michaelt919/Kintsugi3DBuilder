@@ -11,36 +11,68 @@
 
 package kintsugi3d.builder.javafx.internal;
 
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ObservableTabsModel implements TabsModel
 {
-    private final ObservableMap<String, ObservableCardsModel> tabs;
+    private final ObservableMap<String, ObservableCardsModel<?>> tabs =
+        FXCollections.observableMap(new LinkedHashMap<>(4));
     private final ObservableCarouselModel carouselModel;
-    ObservableList<String> selectedCards = FXCollections.observableArrayList();
-    List<String> selectedCardNames = new ArrayList<>();
 
+    private final ObjectProperty<ObservableCardsModel<?>> activeTab = new SimpleObjectProperty<>();
+    private final ObjectProperty<ProjectDataCard> lastSelectedCard = new SimpleObjectProperty<>();
+
+    // needs to be here to not get garbage-collected
+    private final ObservableMap<String, ObservableCardsModel<?>> unmodifiableTabs =
+        FXCollections.unmodifiableObservableMap(tabs);
 
     public ObservableTabsModel(ObservableCarouselModel carouselModel)
     {
         this.carouselModel = carouselModel;
 
-        Map<String, ObservableCardsModel> cardsModels = new LinkedHashMap<>(4);
-        this.tabs = FXCollections.observableMap(cardsModels);
+        for (var tab : tabs.values())
+        {
+            registerLastSelectedCardListener(tab);
+        }
+
+        activeTab.addListener((obs, oldValue, newValue) ->
+        {
+            // On changing tab, use the last selected card on that tab if no card is selected.
+            if (lastSelectedCard.get() == null && newValue != null)
+            {
+                lastSelectedCard.set(newValue.getLastSelectedCard());
+            }
+        });
+    }
+
+    private void registerLastSelectedCardListener(ObservableCardsModel<?> tab)
+    {
+        tab.lastSelectedCardProperty().addListener(
+            (obs, oldValue, newValue) ->
+                // If the old value is still selected, this is presumably a selection event.
+                // If the old value is no longer selected, this is presumably a deselection event.
+                // Either way, a new card was selected on the current tab, and should be treated as last selected globally.
+                lastSelectedCard.set(newValue)
+        );
     }
 
     @Override
-    public void addTab(String tabName, ProjectDataCardFactory cardFactory, String path)
+    public <T> void addTab(String tabName, ProjectDataCardFactory<T> cardFactory, String path)
     {
-        ObservableCardsModel newTab = new ObservableCardsModel(tabName, path, cardFactory, carouselModel);
+        ObservableCardsModel<?> newTab = new ObservableCardsModel<>(tabName, path, cardFactory, carouselModel);
         newTab.initialize();
         tabs.put(tabName, newTab);
+        registerLastSelectedCardListener(newTab);
     }
 
     @Override
@@ -50,79 +82,83 @@ public class ObservableTabsModel implements TabsModel
 
         // Also clear carousel as its contents will be invalidated if the tabs are gone.
         carouselModel.clearCarousel();
+
+        // No selection if the tabs are gone.
+        lastSelectedCard.set(null);
     }
 
     @Override
-    public ObservableCardsModel getTab(String label)
+    public ObservableCardsModel<?> getTab(String label)
     {
         return tabs.get(label);
     }
 
     @Override
-    public Map<String, ObservableCardsModel> getTabsMap()
+    public <T> ObservableCardsModel<T> getTab(String label, Class<T> dataClass)
+    {
+        ObservableCardsModel<?> observableCardsModel = tabs.get(label);
+
+        if (Objects.equals(observableCardsModel.getDataClass(), dataClass))
+        {
+            //noinspection unchecked
+            return (ObservableCardsModel<T>) observableCardsModel;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public Map<String, ObservableCardsModel<?>> getTabsMap()
     {
         return Collections.unmodifiableMap(tabs);
     }
 
-    /**
-     * Adds the given fileName to selectedCards if it is not already there.
-     * If it is there it will remove it.
-     * @param fileName
-     */
-    @Override
-    public void addSelected(String filePath, String fileName)
-    {
-        boolean found = false; //Initializes to false
-        if (selectedCards != null)
-        {
-            for (String current : selectedCards) //Every fileName in selectedCards
-            {
-                if (current.equals(filePath)) //If a fileName in selectedCards matches given fileName
-                {
-                    selectedCards.remove(filePath); //Remove fileName from selected cards
-                    selectedCardNames.remove(fileName);
-                    found = true; //Make found true
-                }
-            }
-            if (!found) //If fileName was not found
-            {
-                selectedCards.add(filePath); //Add fileName to selected Cards
-                selectedCardNames.add(fileName);
-            }
-        }
-    }
-
-    /**
-     * Clears all fileNames from selected
-     */
-    @Override
-    public void clearSelected()
-    {
-        selectedCards.clear();
-        selectedCardNames.clear();
-    }
-
-    /**
-     * Returns the observable list of fileNames
-     * @return
-     */
-    public ObservableList<String> getAllCards()
-    {
-        return selectedCards;
-    }
-
-    public String getFileName(String filePath)
-    {
-        return selectedCardNames.get(selectedCards.indexOf(filePath));
-    }
-
-    public Collection<ObservableCardsModel> getAllTabs()
+    public Collection<ObservableCardsModel<?>> getAllTabs()
     {
         return Collections.unmodifiableCollection(tabs.values());
     }
 
-    public ObservableMap<String, ObservableCardsModel> getObservableTabsMap()
+    public ObservableMap<String, ObservableCardsModel<?>> getObservableTabsMap()
     {
-        return tabs;
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
+        return unmodifiableTabs;
+    }
+
+    public ObjectProperty<ObservableCardsModel<?>> activeTabProperty()
+    {
+        return activeTab;
+    }
+
+    public ObservableCardsModel<?> getActiveTab()
+    {
+        return activeTab.get();
+    }
+
+    public void setActiveTab(ObservableCardsModel<?> activeTab)
+    {
+        this.activeTab.set(activeTab);
+    }
+
+    public ObjectExpression<ProjectDataCard> lastSelectedCardProperty()
+    {
+        return lastSelectedCard;
+    }
+
+    public ProjectDataCard getLastSelectedCard()
+    {
+        return lastSelectedCard.get();
+    }
+
+    /**
+     * Returns the observable list of selected cards across all tabs
+     * @return
+     */
+    public Collection<ProjectDataCard> getSelectedCards()
+    {
+        return tabs.values().stream()
+            .flatMap(tab -> tab.getSelectedCards().stream())
+            .collect(Collectors.toList());
     }
 }

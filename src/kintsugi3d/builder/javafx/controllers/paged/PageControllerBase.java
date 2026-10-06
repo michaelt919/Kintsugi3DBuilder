@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -25,7 +25,7 @@ import kintsugi3d.builder.javafx.core.JavaFXState;
 import kintsugi3d.builder.javafx.experience.Modal;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Internal base class that is extended for the public-facing classes
@@ -158,14 +158,14 @@ abstract class PageControllerBase<T, PageType extends Page<?, ?>> implements Pag
                 ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.LEFT);
 
                 // "Fallback" buttons navigate to a different page.
-                List<ButtonType> fallbackButtons = new ArrayList<>(getPage().getFallbackPages().size());
+                Collection<ButtonType> fallbackButtons = new ArrayList<>(getPage().getFallbackPages().size());
                 for (var fallback : getPage().getFallbackPages().entrySet())
                 {
                     String fallbackName = fallback.getKey();
                     fallbackButtons.add(new ButtonType(fallbackName));
                 }
 
-                List<ButtonType> allButtons = new ArrayList<>(fallbackButtons.size() + 2);
+                Collection<ButtonType> allButtons = new ArrayList<>(fallbackButtons.size() + 2);
                 allButtons.add(cancel);
                 allButtons.addAll(fallbackButtons);
 

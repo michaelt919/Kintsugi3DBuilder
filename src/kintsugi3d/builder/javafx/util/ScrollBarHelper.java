@@ -14,10 +14,7 @@ package kintsugi3d.builder.javafx.util;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.TreeView;
-import kintsugi3d.builder.app.logging.LogMessage;
 
 public final class ScrollBarHelper
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,13 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSelection;
-import kintsugi3d.builder.resources.project.GraphicsResources;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -27,58 +28,58 @@ import java.util.Map;
 
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final GraphicsResources<ContextType> resources;
+    private final ShaderProgramFactory<ContextType> programFactory;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(GraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraVisual(ShaderProgramFactory<ContextType> programFactory, SceneViewportModel sceneViewportModel)
     {
-        super(resources.getContext(), sceneViewportModel, "CameraVisual");
-        this.resources = resources;
+        super(programFactory.getContext(), sceneViewportModel, "CameraVisual");
+        this.programFactory = programFactory;
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    protected ProgramObject<ContextType> createProgram() throws IOException
     {
-        return context.getShaderProgramBuilder()
+        return getContext().getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture_imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "colorappearance"), "texture_multi_as_single.frag"))
             .createProgram();
     }
 
     @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers()
     {
-        return Map.of("position", context.createRectangle());
+        return Map.of("position", getContext().createRectangle());
     }
 
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (resources instanceof GraphicsResourcesImageSpace)
+        if (programFactory instanceof GraphicsResourcesImageSpace)
         {
-            GraphicsResourcesImageSpace<ContextType> resourcesImgSpace = (GraphicsResourcesImageSpace<ContextType>)resources;
+            View selectedView = viewSelection.getSelectedView();
+            if (selectedView != null)
+            {
+                this.getContext().getState().disableBackFaceCulling();
 
-            FramebufferSize size = framebuffer.getSize();
+                this.getContext().getState().disableDepthWrite();
+                this.getContext().getState().enableDepthTest();
 
-            this.getContext().getState().disableBackFaceCulling();
+                Matrix4 snapViewInverse = viewSelection.getSelectedMatrix().quickInverse(0.01f);
+                Vector3 frustumDims = viewSelection.getFrustumDimensions();
 
-            this.getContext().getState().disableDepthWrite();
-            this.getContext().getState().enableDepthTest();
+                programFactory.setupShaderProgram(this.getProgram()); // sets viewImages
+                this.getProgram().setUniform("viewIndex", selectedView.getGPUViewIndex());
+                this.getProgram().setUniform("model_view",
+                    cameraViewport.getView().times(snapViewInverse)
+                        .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
+                this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
+                this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
-            Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-            Vector3 frustumDims = viewSelection.getFrustumDimensions();
-
-            this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
-            this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
-            this.getProgram().setUniform("model_view",
-                cameraViewport.getView().times(snapViewInverse)
-                    .times(Matrix4.scaleAndTranslate(frustumDims, new Vector3(0, 0, -frustumDims.z))));
-            this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
-            this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
-
-            this.getContext().getState().enableDepthWrite();
-            this.getContext().getState().enableDepthTest();
+                this.getContext().getState().enableDepthWrite();
+                this.getContext().getState().enableDepthTest();
+            }
         }
     }
 

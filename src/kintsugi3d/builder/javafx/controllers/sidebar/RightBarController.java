@@ -12,18 +12,22 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import kintsugi3d.builder.javafx.internal.ObservableActiveShaderModel;
 import kintsugi3d.builder.javafx.internal.ObservableTabsModel;
-import kintsugi3d.builder.javafx.internal.ObservableUserShaderModel;
+import kintsugi3d.builder.state.cards.ProjectDataCard;
 
-
-import java.util.*;
+import java.util.Objects;
 
 public class RightBarController
 {
@@ -65,33 +69,34 @@ public class RightBarController
         return mainBox;
     }
 
-    public void init(ObservableTabsModel tabsModel, ObservableUserShaderModel shaderModel)
+    public void init(ObservableTabsModel tabsModel, ObservableActiveShaderModel shaderModel)
     {
         //Listener for any changes to selectedCards in tabModels
-        tabsModel.getAllCards().addListener((ListChangeListener<String>) change ->
+        tabsModel.lastSelectedCardProperty().addListener(
+            (obs, oldValue, newValue) ->
         {
-            while (change.next()) //While something has been changed
+            if (newValue == null) //If list is empty
             {
-                if (tabsModel.getAllCards().isEmpty()) //If list is empty
-                {
-                    //Calls setImage() with null (Will not display panel)
-                    imageDetailsController.setImage(null);
-                    textureLayersController.setShown(false);
+                //Calls setImage() with null (Will not display panel)
+                imageDetailsController.setImage(null);
+                textureLayersController.setShown(false);
 
-                    //Image Name will not be displayed
-                    imageName.setText("");
-                    setVisibilityState(textBox, false);
-                    isLoaded = false;
-                }
-                else
-                {
-                    //Sends filePath to imageDetailsController setImage(String fileName)
-                    imageDetailFunctions(tabsModel, tabsModel.getAllCards().get(tabsModel.getAllCards().size()-1));
-                    textureLayersController.setShown(true);
-                    setVisibilityState(textBox, true);
-                }
+                //Image Name will not be displayed
+                imageName.setText("");
+                setVisibilityState(textBox, false);
+                isLoaded = false;
+            }
+            else
+            {
+                //Sends filePath to imageDetailsController setImage(String fileName)
+                openCardDetails(newValue);
+                textureLayersController.setShown(true);
+                setVisibilityState(textBox, true);
             }
         });
+
+        imageDetails.maxHeightProperty().bind(mainBox.heightProperty().multiply(0.5));
+
         resizeWidth(DEFAULT_WIDTH);
 
         //Bind the value/scroll position for the overlay and actual scroll pane
@@ -102,14 +107,16 @@ public class RightBarController
         overlayScrollBar.setMax(1.0);
 
         // Compute the thumb size based on visible ratio
-        panelBox.heightProperty().addListener((obs, oldVal, newVal) -> updateScrollBarRange());
-        detailScrollPane.heightProperty().addListener((obs, oldVal, newVal) -> updateScrollBarRange());
+        panelBox.heightProperty().addListener(
+            (obs, oldVal, newVal) -> updateScrollBarRange());
+        detailScrollPane.heightProperty().addListener(
+            (obs, oldVal, newVal) -> updateScrollBarRange());
 
         // Show/hide when content overflows
         overlayScrollBar.visibleProperty().bind(
-            panelBox.heightProperty().greaterThan(detailScrollPane.heightProperty())
-        );
+            panelBox.heightProperty().greaterThan(detailScrollPane.heightProperty()));
     }
+
     private void updateScrollBarRange()
     {
         //Find the height of panel and of the scroll pane
@@ -128,13 +135,13 @@ public class RightBarController
         }
     }
 
-    private void imageDetailFunctions(ObservableTabsModel tabsModel, String filePath)
+    private void openCardDetails(ProjectDataCard card)
     {
-        imageDetailsController.setImage(filePath);
+        imageDetailsController.setImage(card.getFullResImageFilePath());
 
         //Sets Friendly Name from filePath
         imageNameSpace.setVisible(true);
-        Platform.runLater(()->imageName.setText(tabsModel.getFileName(filePath)));
+        Platform.runLater(() -> imageName.setText(card.getTitle()));
         isLoaded = true;
 
         if (minimized)
@@ -312,14 +319,15 @@ public class RightBarController
         minimized = false;
         Platform.runLater(()->detailsBox.requestLayout());
     }
-    public void setVisibilityState(Node node, boolean active)
+
+    private static void setVisibilityState(Node node, boolean active)
     {
         node.setVisible(active);
         node.setManaged(active);
     }
 
     /**
-     * Used to condense code. Resizes mainBox according to parameter width.
+     * Resizes mainBox according to parameter width.
      * @param width
      */
     private void resizeWidth(double width)

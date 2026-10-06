@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
 .wireframeCaption {
     -fx-font-style: normal;
     -fx-font-size: 12px;
@@ -532,6 +543,7 @@
 .card-background:disabled:hover {
     -fx-background-color: #EEEEEE
 }
+
 .card-background:pressed {
     -fx-background-color:
             #838383,
@@ -539,17 +551,11 @@
             #CECECE;
 }
 
-.card-button {
-    -fx-text-fill: #CECECE;
+.card-button, .tab-button {
     -fx-background-radius: 0;
     -fx-min-width: 184;
     -fx-pref-width: 330;
     -fx-min-height: 32;
-    -fx-background-color:
-            #383838,
-            #383838,
-            #383838;
-
     -fx-background-insets:
             1,
             3,
@@ -557,6 +563,7 @@
     -fx-padding: 8px 16px 8px 16px;
     -fx-alignment: CENTER;
 }
+
 .button:hover{
     -fx-text-fill: #383838;
     -fx-background-color:
@@ -564,15 +571,24 @@
             #CECECE,
             #CECECE;
 }
+
 .button:pressed,
 .button:dark-button:pressed {
-    -fx-background-color: #CECECE;
     -fx-text-fill: #383838;
     -fx-background-color:
             #1A1A1A,
             #ffffff,
             #ffffff;
 }
+
+.card-button {
+    -fx-text-fill: #CECECE;
+    -fx-background-color:
+            #383838,
+            #383838,
+            #383838;
+}
+
 /*This card-button.activated is for future "selected" use. See Card Controller for more*/
 .card-button.activated {
     -fx-background-color:
@@ -588,10 +604,39 @@
             #ffffff;
 }
 
-.card-separator .line {
-    -fx-background-color: #383838;
+.tab-button {
+    -fx-background-color:
+            #CECECE,
+            #CECECE,
+            #CECECE;
+}
+
+.tab-button:hover {
+    -fx-background-color:
+            #EEEEEE,
+            #EEEEEE,
+            #EEEEEE;
+}
+
+.tab-button:pressed {
+    -fx-background-color:
+            #838383,
+            #CECECE,
+            #CECECE;
+}
+
+.card-separator .line,
+.tab-separator .line {
     -fx-pref-height: 1;
     -fx-border-color: null ;
+}
+
+.card-separator .line {
+    -fx-background-color: #383838;
+}
+
+.tab-separator .line {
+    -fx-background-color: #CECECE;
 }
 
 .black-line .line {
@@ -600,7 +645,8 @@
     -fx-border-color: null ;
 }
 
-.stripped-radio-button > .radio {
+.stripped-radio-button > .radio,
+.right-stripped-radio-button > .radio {
   -fx-background-color: transparent;
   -fx-background-insets: 0;
   -fx-background-radius: 0px;
@@ -610,23 +656,10 @@
   -fx-pref-width: 0;
   -fx-max-width: 0;
 }
-.right-stripped-radio-button > .radio {
-    -fx-background-color: transparent;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0px;
-    -fx-padding: 0.0em; /* 4 8 4 8 */
 
-    -fx-min-width: 0;
-    -fx-pref-width: 0;
-    -fx-max-width: 0;
-}
-
-.stripped-radio-button:selected > .radio > .dot {
-  -fx-background-color: transparent;
-}
-
+.stripped-radio-button:selected > .radio > .dot,
 .right-stripped-radio-button:selected > .radio > .dot {
-    -fx-background-color: transparent;
+  -fx-background-color: transparent;
 }
 
 .stripped-radio-button {
@@ -636,6 +669,7 @@
 .stripped-radio-button:selected {
   -fx-background-color: #383838
 }
+
 .right-stripped-radio-button {
     -fx-background-color: #383838
 
@@ -748,11 +782,6 @@
 .corner {
     -fx-background-color: #202020;
 }
-.scroll-bar:vertical .track {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-background-radius: 0px;
-}
 .tree-view {
     -fx-background-color: #383838;
 }
@@ -770,12 +799,12 @@
     -fx-background: transparent;
     -fx-pick-on-bounds: false;
 }
-#selectionBox {
+.selectionBox {
     -fx-padding: 0; /*Check Box padding*/
     -fx-alignment: TOP_LEFT; /*Check Box Alignment*/
     -fx-line-spacing: 0; /*Check Box spacing between elements*/
 }
-#selectionBox .box {
+.selectionBox .box {
     -fx-background-color: transparent; /*Check Box background*/
 
     /*Check Box mark space*/
@@ -786,7 +815,7 @@
     -fx-max-width: 12px;
     -fx-max-height: 12px;
 }
-#selectionBox .mark {
+.selectionBox .mark {
     /*Check mark actual shape*/
     -fx-shape: "M 1 5.5 C 1 4.7, 1.7 4, 2.5 4 C 2.9 4, 3.3 4.2, 3.5 4.5 L 5 6 L 8.5 2.5 C 8.7 2.2, 9.1 2, 9.5 2 C 10.3 2, 11 2.7, 11 3.5 C 11 3.9, 10.8 4.3, 10.5 4.5 L 6 9 C 5.5 9.5, 4.5 9.5, 4 9 L 1.5 6.5 C 1.2 6.2, 1 5.9, 1 5.5 Z";
     -fx-scale-x: .8; /*Check mark width scale*/
@@ -796,14 +825,14 @@
     -fx-effect: null; /*Check mark outline when not selected*/
 
 }
-#selectionBox:selected .mark {
+.selectionBox:selected .mark {
     -fx-background-color: #CECECE; /*Check mark background when selected*/
     -fx-effect: dropshadow(three-pass-box, black, .75, .75, 0, 0); /*Check mark black outline*/
 }
-#carouselScrollPane .scroll-bar:horizontal {
+.carousel-scroll-pane .scroll-bar:horizontal {
     -fx-opacity: 0;
 }
-#carouselScrollPane.hide-hbar .scroll-bar:horizontal {
+.carousel-scroll-pane.hide-hbar .scroll-bar:horizontal {
     -fx-opacity: 1.0;
 }
 .dark-grey-slider .track{

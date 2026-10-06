@@ -98,24 +98,24 @@ public class ReadableFramebufferViewport<ContextType extends Context<ContextType
             }
 
             @Override
-            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            public void readARGB(ByteBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 readableFramebuffer.getTextureReaderForColorAttachment(attachmentIndex)
-                    .readARGB(destination, x + getOffset().x, y + getOffset().y, width, height);
+                    .readARGB(destination, x + getOffset().x, y + getOffset().y, readWidth, readHeight);
             }
 
             @Override
-            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 readableFramebuffer.getTextureReaderForColorAttachment(attachmentIndex)
-                    .readFloatingPointRGBA(destination, x + getOffset().x, y + getOffset().y, width, height);
+                    .readFloatingPointRGBA(destination, x + getOffset().x, y + getOffset().y, readWidth, readHeight);
             }
 
             @Override
-            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int readWidth, int readHeight)
             {
                 readableFramebuffer.getTextureReaderForColorAttachment(attachmentIndex)
-                    .readIntegerRGBA(destination, x + getOffset().x, y + getOffset().y, width, height);
+                    .readIntegerRGBA(destination, x + getOffset().x, y + getOffset().y, readWidth, readHeight);
             }
         };
     }

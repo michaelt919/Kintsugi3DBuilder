@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,8 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.builder.core.texture.TextureResolution;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
@@ -20,34 +19,22 @@ import java.util.List;
 
 public interface SpecularDecomposition
 {
-    List<DoubleVector3> getDiffuseAlbedos();
+    TextureResolution getTextureResolution();
 
     MaterialBasis getMaterialBasis();
     SpecularBasisWeights getWeights();
 
-    TextureResolution getTextureResolution();
-
-    DoubleVector3 getDiffuseAlbedo(int basisIndex);
-
     boolean areWeightsValid(int texelIndex);
-
-    double getWeight(int b, int p);
-
-    SimpleMatrix getWeights(int texelIndex);
-
-    void setWeights(int texelIndex, SimpleMatrix weights);
-
-    List<SimpleMatrix> getWeightsList();
-
+    void setWeightsValidity(int texelIndex, boolean validity);
     void invalidateWeights();
 
+    double getWeight(int b, int p);
+    SimpleMatrix getWeights(int texelIndex);
+    List<SimpleMatrix> getWeightsList();
+    void setWeights(int texelIndex, SimpleMatrix weights);
     void fillHoles();
 
-    void setWeightsValidity(int texelIndex, boolean validity);
-
     void saveBasisFunctions(File outputDirectory);
-
     void saveWeightMaps(File outputDirectory);
-
     void saveDiffuseMap(File outputDirectory);
 }

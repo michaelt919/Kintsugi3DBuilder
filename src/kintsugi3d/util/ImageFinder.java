@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -175,6 +175,12 @@ public final class ImageFinder
         return findImageFile(requestedFile, (String[]) null);
     }
 
+    /**
+     *
+     * @param requestedFile
+     * @param suffixes
+     * @return The file, or null if not found.
+     */
     public File tryFindImageFile(File requestedFile, String... suffixes)
     {
         try
@@ -187,6 +193,11 @@ public final class ImageFinder
         }
     }
 
+    /**
+     *
+     * @param requestedFile
+     * @return The file, or null if not found.
+     */
     public File tryFindImageFile(File requestedFile)
     {
         return tryFindImageFile(requestedFile, (String[]) null);

@@ -12,37 +12,47 @@
 package kintsugi3d.builder.javafx.internal;
 
 import javafx.application.Platform;
-import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.ObjectExpression;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.cards.CardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
 import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-public class ObservableCardsModel implements CardsModel
+/**
+ *
+ * @param <T> The backend type that the associated data cards represent.
+ */
+public class ObservableCardsModel<T> implements CardsModel<T>
 {
     private final String label;
     private final String path;
 
-    private final UUIDSelectionModel selectedCardsModel;
-    private final UUIDSelectionModel expandedCardsModel;
-    private final ObservableList<ProjectDataCard> cardsList;
-    private final ObservableList<ProjectDataCard> unmodifiableCardsList; // needs to be here to not get garbage-collected
+    private final UUIDSelectionModel selectedCardsModel = new UUIDSelectionModel();
+    private final UUIDSelectionModel expandedCardsModel = new UUIDSelectionModel();
+    private final Map<UUID, ProjectDataCard> cardMap = FXCollections.observableHashMap();
+    private final ObservableList<ProjectDataCard> cardsList = FXCollections.observableList(new ArrayList<>(8));
 
-    private final ProjectDataCardFactory cardFactory;
+    // needs to be here to not get garbage-collected
+    private final ObservableList<ProjectDataCard> unmodifiableCardsList =
+        FXCollections.unmodifiableObservableList(cardsList);
+    private final ObjectBinding<ProjectDataCard> lastSelectedCard = Bindings.createObjectBinding(
+        () -> cardMap.get(selectedCardsModel.getLastSelected()), selectedCardsModel.lastSelectedProperty());
+
+    private final ProjectDataCardFactory<T> cardFactory;
     private final ObservableCarouselModel carouselModel;
 
-    public ObservableCardsModel(String label, String path, ProjectDataCardFactory cardFactory,
+    public ObservableCardsModel(String label, String path, ProjectDataCardFactory<T> cardFactory,
                                 ObservableCarouselModel carouselModel)
     {
         this.label = label;
@@ -50,20 +60,44 @@ public class ObservableCardsModel implements CardsModel
         this.cardFactory = cardFactory;
         this.carouselModel = carouselModel;
 
-        cardsList = FXCollections.observableList(new ArrayList<>(8));
-        unmodifiableCardsList = FXCollections.unmodifiableObservableList(cardsList);
-        selectedCardsModel = new UUIDSelectionModel();
-        expandedCardsModel = new UUIDSelectionModel();
-
         cardsList.addListener((ListChangeListener<? super ProjectDataCard>) change ->
         {
-            // Clear selection / expansion for a card when it is removed.
-            if (change.wasRemoved())
+            while (change.next())
             {
-                for (var removedItem : change.getRemoved())
+                // Clear selection / expansion for a card when it is removed (but not replaced).
+                if (change.wasRemoved())
                 {
-                    selectedCardsModel.clearSelection(removedItem.getCardId());
-                    expandedCardsModel.clearSelection(removedItem.getCardId());
+                    for (int i = 0; i < change.getRemovedSize(); i++)
+                    {
+                        ProjectDataCard removedItem = change.getRemoved().get(i);
+
+                        if (change.wasAdded())
+                        {
+                            ProjectDataCard addedItem = change.getAddedSubList().get(i);
+
+                            if (!addedItem.getCardId().equals(removedItem.getCardId()))
+                            {
+                                // Pass on selected / expanded state to the new card if it was replaced.
+                                if (selectedCardsModel.isSelected(removedItem.getCardId()))
+                                {
+                                    selectedCardsModel.select(addedItem.getCardId());
+                                }
+
+                                if (expandedCardsModel.isSelected(removedItem.getCardId()))
+                                {
+                                    expandedCardsModel.select(addedItem.getCardId());
+                                }
+
+                                selectedCardsModel.unselect(removedItem.getCardId());
+                                expandedCardsModel.unselect(removedItem.getCardId());
+                            }
+                        }
+                        else
+                        {
+                            selectedCardsModel.unselect(removedItem.getCardId());
+                            expandedCardsModel.unselect(removedItem.getCardId());
+                        }
+                    }
                 }
             }
         });
@@ -71,16 +105,24 @@ public class ObservableCardsModel implements CardsModel
 
     public void initialize()
     {
-        List<ProjectDataCard> dataCards = cardFactory.createAllCards(this);
+        List<ProjectDataCard> dataCards = cardFactory.createAllCards();
         this.setCardList(dataCards);
     }
 
-    public String getModelLabel()
+    public Class<T> getDataClass()
+    {
+        return cardFactory.getDataClass();
+    }
+
+    public String getLabel()
     {
         return label;
     }
 
-    public String getPath() {return path; }
+    public String getPath()
+    {
+        return path;
+    }
 
     public boolean isSelected(UUID cardId)
     {
@@ -92,14 +134,14 @@ public class ObservableCardsModel implements CardsModel
         return expandedCardsModel.isSelected(cardId);
     }
 
-    public BooleanBinding isSelectedProperty(UUID cardId)
+    public BooleanExpression createSelectedBinding(UUID cardId)
     {
-        return selectedCardsModel.isSelectedProperty(cardId);
+        return selectedCardsModel.createSelectedBinding(cardId);
     }
 
-    public BooleanBinding isExpandedProperty(UUID cardId)
+    public BooleanExpression createExpandedBinding(UUID cardId)
     {
-        return expandedCardsModel.isSelectedProperty(cardId);
+        return expandedCardsModel.createSelectedBinding(cardId);
     }
 
     public void expandCard(UUID id)
@@ -109,22 +151,44 @@ public class ObservableCardsModel implements CardsModel
 
     public void collapseCard(UUID cardId)
     {
-        Platform.runLater(() -> expandedCardsModel.clearSelection(cardId));
+        Platform.runLater(() -> expandedCardsModel.unselect(cardId));
     }
 
     public void selectCard(UUID cardId)
     {
-        Platform.runLater(()->selectedCardsModel.select(cardId));
+        Platform.runLater(() -> selectedCardsModel.select(cardId));
     }
 
     public void deselectCard(UUID cardId)
     {
-        Platform.runLater(()->selectedCardsModel.clearSelection(cardId));
+        Platform.runLater(() -> selectedCardsModel.unselect(cardId));
+    }
+
+    public Collection<ProjectDataCard> getSelectedCards()
+    {
+        return selectedCardsModel.getSelected().keySet().stream().map(cardMap::get).collect(Collectors.toList());
+    }
+
+    public ObjectExpression<ProjectDataCard> lastSelectedCardProperty()
+    {
+        return lastSelectedCard;
+    }
+
+    public ProjectDataCard getLastSelectedCard()
+    {
+        return lastSelectedCard.get();
+    }
+
+    @Override
+    public List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return cardFactory.getGlobalActions();
     }
 
     @Override
     public ObservableList<ProjectDataCard> getCardList()
     {
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
         return unmodifiableCardsList;
     }
 
@@ -133,6 +197,13 @@ public class ObservableCardsModel implements CardsModel
     {
         cardsList.clear();
         cardsList.addAll(cards);
+
+        cardMap.clear();
+        for (ProjectDataCard card : cards)
+        {
+            cardMap.put(card.getCardId(), card);
+        }
+
         selectedCardsModel.clearSelection();
         expandedCardsModel.clearSelection();
     }
@@ -142,7 +213,7 @@ public class ObservableCardsModel implements CardsModel
         int totalEnabled = 0;
         for (ProjectDataCard card : cardsList)
         {
-            if (!card.isDisabled())
+            if (card.isEnabled())
             {
                 ++totalEnabled;
             }
@@ -155,7 +226,7 @@ public class ObservableCardsModel implements CardsModel
         int totalEnabled = 0;
         for (ProjectDataCard card : cardsList)
         {
-            if (card.isDisabled())
+            if (!card.isEnabled())
             {
                 ++totalEnabled;
             }
@@ -164,42 +235,23 @@ public class ObservableCardsModel implements CardsModel
     }
 
     @Override
-    public void refreshCards(Predicate<ProjectDataCard> filter)
+    public void refreshCards(Function<ProjectDataCard, T> refreshedData)
     {
-        // Get a mapping from stale cards needing refresh and their updated version.
-        var replacements = cardFactory.createRefreshedCards(this, filter);
-
-        // Loop over cards to check if refresh is needed.
-        for (int i = 0; i < cardsList.size(); i++)
-        {
-            // Look for the old card in the replacement map.
-            ProjectDataCard replacement = replacements.get(cardsList.get(i));
-            if (replacement != null) // replacement will be null if no refresh is needed.
-            {
-                // Overwrite the reference to the old card with the new one.
-                cardsList.set(i, replacement);
-            }
-        }
+        cardFactory.refreshCards(cardsList, refreshedData);
     }
 
     @Override
-    public void deleteCards(Predicate<ProjectDataCard> filter )
+    public void deleteCards(Predicate<ProjectDataCard> filter)
     {
         cardsList.removeIf(filter);
-    }
 
-    @Override
-    public void confirm(String title, String header, String message, Runnable onConfirm)
-    {
-        // Temp solution -- will eventually create a custom modal.
-        Alert alert = new Alert(AlertType.CONFIRMATION, message);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        var result = alert.showAndWait();
+        var mapEntries = cardMap.entrySet().stream()
+            .filter(entry -> filter.test(entry.getValue()))
+            .collect(Collectors.toList());
 
-        if (result.isPresent() && result.get().equals(ButtonType.OK))
+        for (var entry : mapEntries)
         {
-            onConfirm.run();
+            cardMap.remove(entry.getKey(), entry.getValue());
         }
     }
 

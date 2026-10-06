@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,11 @@
 
 package kintsugi3d.builder.resources;
 
-import kintsugi3d.builder.core.DynamicResourceManager;
-import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.rendering.components.RenderingSubject;
-import kintsugi3d.builder.resources.project.GraphicsResources;
+import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -32,13 +32,14 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
     private static final Logger LOG = LoggerFactory.getLogger(DynamicResourceLoader.class);
     private final ProgressMonitor progressMonitor;
     private final ContextType context;
-    private final GraphicsResources<ContextType> resources;
+    private final ImageBasedGraphicsResources<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
     private final RenderingSubject<ContextType> subject;
 
@@ -50,7 +51,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private final Object loadEnvironmentLock = new Object();
 
     private volatile File desiredShaderFile;
-    private volatile Map<String, Optional<Object>> shaderDefines;
+    private volatile Supplier<Map<String, Optional<Object>>> shaderDefinesFactory;
 
     private volatile File desiredEnvironmentFile;
 
@@ -72,7 +73,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private EncodableColorImage currentEnvironmentMap;
 
-    public DynamicResourceLoader(ProgressMonitor progressMonitor, GraphicsResources<ContextType> resources,
+    public DynamicResourceLoader(ProgressMonitor progressMonitor, ImageBasedGraphicsResources<ContextType> resources,
         RenderingSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
     {
         this.progressMonitor = progressMonitor;
@@ -99,7 +100,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         if (this.desiredShaderFile != null)
         {
             this.subject.useFragmentShader(desiredShaderFile);
-            this.subject.setExtraFragmentShaderDefines(this.shaderDefines);
+            this.subject.setExtraFragmentShaderDefinesFactory(this.shaderDefinesFactory);
             this.subject.reloadShaders();
 
             this.desiredShaderFile = null;
@@ -206,15 +207,17 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
         }
 
+        ViewSet viewSet = this.resources.getViewSet();
+
         if (this.newLuminanceEncodingDataAvailable)
         {
             if (this.newLinearLuminanceValues != null && this.newEncodedLuminanceValues != null)
             {
-                this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
+                viewSet.setLuminanceEncoding(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
             }
             else
             {
-                this.resources.clearLuminanceMap();
+                viewSet.clearLuminanceEncoding();
             }
 
             this.newLuminanceEncodingDataAvailable = false;
@@ -222,7 +225,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLightCalibrationAvailable)
         {
-            this.resources.updateLightCalibration(this.newLightCalibration);
+            viewSet.setAllLightPositions(this.newLightCalibration);
             this.newLightCalibrationAvailable = false;
         }
     }
@@ -234,10 +237,10 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     }
 
     @Override
-    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    public void requestFragmentShader(File shaderFile, Supplier<Map<String, Optional<Object>>> extraDefinesFactory)
     {
         this.desiredShaderFile = shaderFile;
-        this.shaderDefines = extraDefines;
+        this.shaderDefinesFactory = extraDefinesFactory;
     }
 
     @Override

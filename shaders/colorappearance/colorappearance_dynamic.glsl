@@ -29,7 +29,7 @@
 #elif COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_TEXTURE_SPACE_CROP
 #include "texspace_crop.glsl"
 #else
-vec4 getColor(int index)
+vec4 getColorByPhysicalIndex(int viewIndex)
 {
     // Unrecognized mode; use magenta to indicate an error
     return vec4(1, 0, 1, 1);

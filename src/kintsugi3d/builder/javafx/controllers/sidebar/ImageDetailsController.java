@@ -12,10 +12,11 @@
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
 import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
@@ -25,35 +26,57 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.Screen;
+import kintsugi3d.builder.javafx.util.ZoomSafeImageView;
+import kintsugi3d.gl.util.ImageHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 
 public class ImageDetailsController
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ImageDetailsController.class);
     @FXML private VBox detailBox;
     @FXML private HBox buttonRow;
+
+    /**
+     * Important to not directly use get/setImage or get/setViewport on this since we are wrapping it with a SuperZoomImageView.
+     * Basically, we want to wrap this once on initialize and then use superZoomImageView after that.
+     */
     @FXML private ImageView displayImage;
     @FXML private StackPane stackPane;
     @FXML private Rectangle selectionBox;
 
+    /**
+     * This object wraps our ImageView and is how the image and viewport should be passed to it.
+     */
+    private ZoomSafeImageView zoomSafeImageView;
+
+    // Determines which mode we're in
     private boolean canZoom = false;
     private boolean canCrop = false;
     private boolean canPan = false;
-    private Image originalImage;
-    private Image currentImage;
     private ToggleGroup toggleGroup;
+
+    // Current image and its current logical viewport.
+    private Image currentImage;
     private double currentWidth;
     private double currentHeight;
     private double currentX;
     private double currentY;
+
+    // State related to specific modes.
     private double mousePressedX;
     private double mousePressedY;
     private double startViewportX;
     private double startViewportY;
 
-    private static final double MAX_ZOOM_SIZE = 10.0;
-    private static final double SCREEN_PIXELS = 100;
+    private static final double MIN_ZOOM_VIEWPORT_SIZE = 1.0;
 
     /**
      * Called when controller is created.
@@ -64,32 +87,47 @@ public class ImageDetailsController
      */
     public void initialize()
     {
-        setImage(null); //Sets default state to not shown.
+        setImage(null); // Sets default state to not shown.
 
-        createButtons(); // Creates all buttons using method. Can add new buttons there as well.
+        Collection<Region> buttons = createButtons(); // Creates all buttons using method. Can add new buttons there as well.
 
-        for (Node button : buttonRow.getChildren()) //For every button in buttonRow
+        for (Region button : buttons) // For every button in buttonRow
         {
-            //Bind buttons to each other so they all take up same size
-            ((RadioButton) button).prefWidthProperty().bind(buttonRow.widthProperty().subtract(
-                buttonRow.getSpacing()*buttonRow.getChildren().size()).divide(
-                buttonRow.getChildren().size()));
+            // Bind buttons to each other so they all take up same size
+            button.prefWidthProperty().bind(buttonRow.widthProperty()
+                .subtract(buttonRow.getSpacing()*(buttonRow.getChildren().size() - 1))
+                .divide(buttonRow.getChildren().size()));
         }
 
-        // Bind width to detailBox width - 8px padding
-        displayImage.fitWidthProperty().bind(detailBox.widthProperty().subtract(8.0));
-        //Height is bound to stack panes height
-        displayImage.fitHeightProperty().bind(stackPane.heightProperty());
+        zoomSafeImageView = new ZoomSafeImageView(displayImage);
 
-        //Listener detects whenever stack panes width changes
-        stackPane.widthProperty().addListener((obs, oldWidth, newWidth) ->
-        {
-            //If there is a image to display
-            if (currentImage != null && displayImage.getViewport() != null)
+        // Bind width to detailBox width - 8px padding
+        // For some reason this only works if we bind it to detailBox, not to stackPane.
+        // (stackPane seems to involve displayImage in its width calculation which creates a cycle)
+        zoomSafeImageView.fitWidthProperty().bind(detailBox.widthProperty()
+            .subtract(detailBox.getPadding().getLeft() + detailBox.getPadding().getRight()));
+
+        // Height is bound to stack panes height
+        zoomSafeImageView.fitHeightProperty().bind(stackPane.heightProperty());
+
+        stackPane.widthProperty().addListener((obs, oldValue, newValue) ->
+            // Use Platform.runLater since setting prefHeight during its own layout pass seems to cause problems.
+            Platform.runLater(() ->
             {
-               updateContainerAspect(); //Call function to update aspect ratio
-            }
-        });
+                stackPane.setPrefHeight(newValue.doubleValue());
+
+                // Aspect ratio of the stackPane could change if it's limited by the window height.
+                adjustViewportWidth();
+            }));
+
+        // Listener detects whenever stack pane's height changes
+        // This handles situations when the window is resized
+        // and the aspect ratio of the stackPane might correspondingly change.
+        stackPane.heightProperty().addListener((obs, oldValue, newValue) ->
+            // Call function to update viewport
+            // Use Platform.runLater to ensure that the state is consistent
+            // (i.e. not in a situation where height was updated but width update still needs to happen)
+            adjustViewportWidth());
     }
 
     /**
@@ -110,35 +148,50 @@ public class ImageDetailsController
 
             if (imageFile.exists()) //If file exists
             {
-                originalImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
-                currentImage = originalImage; //Current image gets set to the original image
-                displayImage.setImage(originalImage); //ImageView is set to originalImage
+                // convert tiff image if necessary
+                if (imageFile.getAbsolutePath().toLowerCase(Locale.ROOT).matches(".*\\.tiff?"))
+                {
+                    try
+                    {
+                        BufferedImage bufferedImage = ImageHelper.read(imageFile).getBufferedImage();
+                        currentImage = SwingFXUtils.toFXImage(bufferedImage, null);
+                    }
+                    catch (IOException e)
+                    {
+                        LOG.error("Could not convert tiff image: ", e);
+                        currentImage = null;
+                    }
+                }
+                else
+                {
+                    currentImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
+                }
 
-                //Resets viewport
+                zoomSafeImageView.setFullImage(currentImage); // ImageView is set to currentImage
+
+                // Resets viewport
                 currentWidth = currentImage.getWidth();
                 currentHeight = currentImage.getHeight();
                 currentX = 0;
                 currentY = 0;
 
                 // Default viewport
-                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-                updateContainerAspect(); //Update aspect ratio
+                refreshViewport();
 
                 Platform.runLater(()->
                 {
-                    toggleGroup.selectToggle(null); //Removes any button that has been toggled
+                    toggleGroup.selectToggle(null); // Removes any button that has been toggled
                 });
             }
             else
             {
-                //System error message if the image is not found
+                // System error message if the image is not found
                 System.err.println("Error: File not found at " + imageFile.getAbsolutePath());
             }
         }
         else
         {
-            //Hide the image details features
+            // Hide the image details features
             detailBox.setVisible(false);
             buttonRow.setVisible(false);
             stackPane.setVisible(false);
@@ -149,13 +202,13 @@ public class ImageDetailsController
      * Creates buttons with events, that are then added to buttonRow.
      * New buttons can be added and automatically given the same properties as current buttons.
      */
-    private void createButtons()
+    private Collection<Region> createButtons()
     {
         toggleGroup = new ToggleGroup(); // Toggle group created so only 1 Radio button can be selected at once
 
-        RadioButton zoom = createButton("Zoom"); //Zoom button created using createButton() method
-        zoom.setOnAction(e -> zoom()); //Zoom action
-        buttonRow.getChildren().add(zoom); //Zoom added to buttonRow
+        RadioButton zoom = createButton("Zoom"); // Zoom button created using createButton() method
+        zoom.setOnAction(e -> zoom()); // Zoom action
+        buttonRow.getChildren().add(zoom); // Zoom added to buttonRow
 
         RadioButton pan = createButton("Pan");
         pan.setOnAction(e -> pan());
@@ -168,6 +221,8 @@ public class ImageDetailsController
         RadioButton reset = createButton("Reset");
         reset.setOnAction(e -> reset());
         buttonRow.getChildren().add(reset);
+
+        return List.of(zoom, pan, marquee, reset);
     }
 
     /**
@@ -200,41 +255,61 @@ public class ImageDetailsController
     }
 
     /**
-     * This method will return the current aspect ratio that we have for display image
-     * @return
+     * This method is for adjusting the image when the panel is being resized.
+     * To avoid zoom drift, we lock the viewport height as unchanging and adjust the width to match current aspect ratio.
+     * (Any alternative that adjusts both width and height would have the undesirable effect that alternating changes
+     * to width and height can over time result in persistent changes to the viewport even if the aspect ratio comes
+     * back to the original value).
      */
-    private double getActiveAspect()
+    private void adjustViewportWidth()
     {
-        if (displayImage.getViewport() != null) //If we have the image viewport
+        // Make sure that there is an image and that the stack pane has positive width and height
+        if (currentImage != null && zoomSafeImageView.getLogicalViewport() != null &&
+            stackPane.getWidth() > 0 && stackPane.getHeight() > 0)
         {
-            //Returns aspect ratio
-            return displayImage.getViewport().getWidth() / displayImage.getViewport().getHeight();
+            // Get the image width
+            double imgOrigWidth = currentImage.getWidth();
+
+            // Adjustment is only needed if we are zoomed in / cropped.
+            // (otherwise, simple letterboxing works fine without this)
+            if (currentWidth < imgOrigWidth - 0.5 || currentHeight < currentImage.getHeight() - 0.5)
+            {
+                // Adjust width to fill horizontal space using the pane's new aspect ratio.
+                // Clamp dimensions so they do not exceed the actual image bounds
+                double newWidth = calculateViewportWidthFromHeight(currentHeight);
+
+                // Update the x-coordinate for the new width
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, newWidth, currentWidth * 0.5);
+
+                currentWidth = newWidth;
+            }
         }
-        //If we have an image we return current image aspect ratio. If no image is loaded we return 1
-        return (currentImage != null) ? (currentImage.getWidth() / currentImage.getHeight()) : 1.0;
+
+        // Apply the viewport update
+        refreshViewport();
     }
 
-    /**
-     * This method is called to update the aspect ratio of my container/stack pane
-     */
-
-    private void updateContainerAspect()
+    private double calculateViewportWidthFromHeight(double height)
     {
-        if (currentImage == null) return; //If we have no image, exit method
+        return Math.min(currentImage.getWidth(), height * (stackPane.getWidth() / stackPane.getHeight()));
+    }
 
-        double activeAspect = getActiveAspect(); //Get current image aspect
+    private double calculateViewportHeightFromWidth(double width)
+    {
+        return Math.min(currentImage.getHeight(), width * (stackPane.getHeight() / stackPane.getWidth()));
+    }
 
-        //Find the max screen height by multiplying the screen height by .525 and subtracting 100 (SCREEN_PIXELS)
-        double maxScreenHeight = (Screen.getPrimary().getVisualBounds().getHeight() * (.525)) - SCREEN_PIXELS;
-
-        //Gets the minimum value between the original image height and max screen height.
-        double maxAllowedHeight = Math.min(originalImage.getHeight(), maxScreenHeight);
-
-        //Unbind the preferred height of stack pane
-        stackPane.prefHeightProperty().unbind();
-
-        //Set stackPane preferred height to the max allowed height
-        stackPane.setPrefHeight(maxAllowedHeight);
+    private void refreshViewport()
+    {
+        //noinspection VariableNotUsedInsideIf
+        if (currentImage != null)
+        {
+            zoomSafeImageView.setLogicalViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+        }
+        else
+        {
+            zoomSafeImageView.setLogicalViewport(null);
+        }
     }
 
     /**
@@ -242,80 +317,79 @@ public class ImageDetailsController
      * @param event
      */
     @FXML
-    public void scrolling(ScrollEvent event)
+    public void scrollZoom(ScrollEvent event)
     {
-        //Will exit this function if we have no image or if canZoom is false
-        if ((currentImage == null) || !canZoom) return;
-
-        //Gets base dimensions for the image and its aspect ratio
-        double imgOrigWidth = currentImage.getWidth();
-        double imgOrigHeight = currentImage.getHeight();
-        double imageAspect = imgOrigWidth / imgOrigHeight;
-
-        //Gets the dimensions of stack pane and its aspect ratio
-        double paneWidth = stackPane.getWidth();
-        double paneHeight = stackPane.getHeight();
-        double paneAspect = paneWidth / paneHeight;
-
-        //Determine zoom direction
-        double zoomFactor = (event.getDeltaY() > 0) ? 0.9 : 1.1;
-
-        //Calculate possible width
-        double possibleWidth = currentWidth * zoomFactor;
-
-        //Prevent zooming out past original size
-        if (possibleWidth > imgOrigWidth)
+        // Will exit this function if we have no image or if canZoom is false
+        if (ScrollEvent.SCROLL.equals(event.getEventType()) && event.getDeltaY() != 0.0 && currentImage != null && canZoom)
         {
-            resetViewport();
+            // Gets base dimensions for the image and its aspect ratio
+            double imgOrigWidth = currentImage.getWidth();
+            double imgOrigHeight = currentImage.getHeight();
+
+            // Gets the height of the stack pane
+            double paneWidth = stackPane.getWidth();
+            double paneHeight = stackPane.getHeight();
+
+            // Determine zoom (1 - normalized pixel size raised to the power of Delta Y)
+            double zoomFactor = Math.pow((paneHeight - 1.0) / paneHeight, event.getDeltaY());
+
+            // Calculate anticipated new width and height.
+            // Ensure that we're not zooming out beyond the full image size
+            // or zooming in closer than MIN_ZOOM_VIEWPORT_SIZE.
+            // Round to avoid complicated numerical precision issues.
+            double heightFromZoom = Math.max(MIN_ZOOM_VIEWPORT_SIZE,
+                Math.min(imgOrigHeight, currentHeight * zoomFactor));
+
+            // Compare width from zooming with width derived from height via aspect ratio
+            double widthFromZoom = Math.min(imgOrigWidth, currentWidth * zoomFactor);
+            double widthFromHeight = calculateViewportWidthFromHeight(heightFromZoom);
+
+            // Get the anchor point within the image based on the mouse location
+            Point2D anchorLocal = stackPane.sceneToLocal(event.getSceneX(), event.getSceneY());
+            double anchorX = anchorLocal.getX() * currentWidth / paneWidth;
+            double anchorY = anchorLocal.getY() * currentHeight / paneHeight;
+
+            if (widthFromHeight + 0.5 < widthFromZoom)
+            {
+                // Width was zoomed significantly more than height.
+                // This indicates that the vertical axis is not our limiting factor (after zoom has been applied)
+                // and we should have applied zoom to horizontal axis instead.
+                // Therefore, apply zoom to width rather than height.
+                double heightFromWidth = calculateViewportHeightFromWidth(widthFromZoom);
+
+                // Adjust x to stay centered on previous viewport center
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromZoom, anchorX);
+                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromWidth, anchorY);
+
+                currentWidth = widthFromZoom;
+                currentHeight = heightFromWidth;
+
+                // Send the changes to the viewport
+                refreshViewport();
+            }
+            else
+            {
+                // Adjust y to stay centered on previous viewport center
+                currentX = adjustCoordinate(currentX, imgOrigWidth, currentWidth, widthFromHeight, anchorX);
+                currentY = adjustCoordinate(currentY, imgOrigHeight, currentHeight, heightFromZoom, anchorY);
+
+                // Zoom "normally" via height
+                currentWidth = widthFromHeight;
+                currentHeight = heightFromZoom;
+
+                // Send the changes to the viewport
+                refreshViewport();
+            }
+
             event.consume();
-            return;
         }
+    }
 
-        // Prevent zooming in closer than MAX_ZOOM_SIZE
-        if (possibleWidth < MAX_ZOOM_SIZE)
-        {
-            event.consume();
-            return;
-        }
-
-        //This fill threshold width determines how fast gray area disappears, .5 is what is set to
-        //currently if higher it will take less scrolling to eliminate the gray space
-        double fillThresholdWidth = imgOrigWidth * 0.5;
-
-        //Calculates the progress (0.0 = unzoomed, 1.0 = no gray space)
-        double fillProgress = (imgOrigWidth - possibleWidth) / (imgOrigWidth - fillThresholdWidth);
-        fillProgress = Math.max(0.0, Math.min(1.0, fillProgress));
-
-        //Transition image aspect to stackPane aspect to assign to target Aspect
-        double targetAspect = imageAspect + (paneAspect - imageAspect) * fillProgress;
-
-        //Calculate possible height based on target aspect
-        double candidateHeight = possibleWidth / targetAspect;
-
-        //Ensure possible height doesn't exceed original image height
-        if (candidateHeight > imgOrigHeight)
-        {
-            candidateHeight = imgOrigHeight;
-            possibleWidth = candidateHeight * targetAspect;
-        }
-
-        //Adjust X and Y to stay centered on previous viewport center
-        double centerX = currentX + (currentWidth / 2.0);
-        double centerY = currentY + (currentHeight / 2.0);
-
-        double newX = centerX - (possibleWidth / 2.0);
-        double newY = centerY - (candidateHeight / 2.0);
-
-        //Clamp coordinates within image boundaries
-        currentX = Math.max(0, Math.min(newX, imgOrigWidth - possibleWidth));
-        currentY = Math.max(0, Math.min(newY, imgOrigHeight - candidateHeight));
-        currentWidth = possibleWidth;
-        currentHeight = candidateHeight;
-
-        //Apply updated viewport
-        displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-        event.consume();
+    private static double adjustCoordinate(
+        double currentValue, double maxValue, double oldDimension, double newDimension, double anchor)
+    {
+        return Math.max(0, Math.min(maxValue - newDimension, // Clamp coordinates within image boundaries
+            currentValue + anchor - anchor * newDimension / oldDimension));
     }
 
     /**
@@ -323,18 +397,16 @@ public class ImageDetailsController
      */
     private void resetViewport()
     {
-        if (currentImage != null)//If there is an image
+        if (currentImage != null) // If there is an image
         {
-            //Reset viewport default coordinates
+            // Reset viewport default coordinates
             currentWidth = currentImage.getWidth();
             currentHeight = currentImage.getHeight();
             currentX = 0;
             currentY = 0;
 
-            //Set default viewport
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-
-            updateContainerAspect(); //Update aspect ratio
+            // Set default viewport
+            refreshViewport();
         }
     }
 
@@ -350,13 +422,13 @@ public class ImageDetailsController
         mousePressedY = event.getY();
 
         // Initialize viewport if it hasn't been set yet
-        if (displayImage.getViewport() == null)
+        if (zoomSafeImageView.getLogicalViewport() == null)
         {
             currentWidth = currentImage.getWidth();
             currentHeight = currentImage.getHeight();
             currentX = 0;
             currentY = 0;
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
+            refreshViewport();
         }
 
         if (canPan) //If panning is active takes the current x any and assigns it to startViewport x and y
@@ -381,69 +453,70 @@ public class ImageDetailsController
     @FXML
     public void dragSelection(MouseEvent event)
     {
-        if (currentImage == null) return; //Safeguard if image is there
-
-        //Gets current mouse positions
-        double currentMouseX = event.getX();
-        double currentMouseY = event.getY();
-
-        if (canPan) //If panning
+        if (currentImage != null) // Safeguard if image is there
         {
-            //Gets pixel difference amount from pan
-            double deltaX = currentMouseX - mousePressedX;
-            double deltaY = currentMouseY - mousePressedY;
+            //Gets current mouse positions
+            double currentMouseX = event.getX();
+            double currentMouseY = event.getY();
 
-            // Scale coordinates matching actual pixel image amount
-            Bounds bounds = displayImage.getBoundsInParent();
+            Bounds bounds = zoomSafeImageView.getImageViewNode().getBoundsInParent();
 
-            double renderedWidth = bounds.getWidth();
-            double renderedHeight = bounds.getHeight();
+            if (canPan) //If panning
+            {
+                //Gets pixel difference amount from pan
+                double deltaX = currentMouseX - mousePressedX;
+                double deltaY = currentMouseY - mousePressedY;
 
-            double scaleX = currentWidth / renderedWidth;
-            double scaleY = currentHeight / renderedHeight;
+                // Scale coordinates matching actual pixel image amount
+                double renderedWidth = bounds.getWidth();
+                double renderedHeight = bounds.getHeight();
 
-            //Target X and Y will contain the location on actual image after the scale we are trying to reach
-            double targetX = startViewportX - (deltaX * scaleX);
-            double targetY = startViewportY - (deltaY * scaleY);
+                double scaleX = currentWidth / renderedWidth;
+                double scaleY = currentHeight / renderedHeight;
 
-            // Gets the max X and Y we can be at
-            double maxX = currentImage.getWidth() - currentWidth;
-            double maxY = currentImage.getHeight() - currentHeight;
+                //Target X and Y will contain the location on actual image after the scale we are trying to reach
+                double targetX = startViewportX - (deltaX * scaleX);
+                double targetY = startViewportY - (deltaY * scaleY);
 
-            // If is over the max we set it to max
-            currentX = Math.max(0, Math.min(targetX, maxX));
-            currentY = Math.max(0, Math.min(targetY, maxY));
+                // Gets the max X and Y we can be at
+                double maxX = currentImage.getWidth() - currentWidth;
+                double maxY = currentImage.getHeight() - currentHeight;
 
-            //Sets new viewport
-            displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
-        }
-        else if (canCrop) // If cropping
-        {
-            // Gets the max and min X and Y we can be at
-            double imageMinX = displayImage.getBoundsInParent().getMinX();
-            double imageMinY = displayImage.getBoundsInParent().getMinY();
-            double imageMaxX = displayImage.getBoundsInParent().getMaxX()-selectionBox.getStrokeWidth();
-            double imageMaxY = displayImage.getBoundsInParent().getMaxY()-selectionBox.getStrokeWidth();
+                // If is over the max we set it to max
+                currentX = Math.max(0, Math.min(targetX, maxX));
+                currentY = Math.max(0, Math.min(targetY, maxY));
 
-            // Finds the minimum of mousePressed and imageMax, then the max of that or imageMin
-            double clampedStartX = Math.max(imageMinX, Math.min(mousePressedX, imageMaxX));
-            double clampedStartY = Math.max(imageMinY, Math.min(mousePressedY, imageMaxY));
+                //Sets new viewport
+                refreshViewport();
+            }
+            else if (canCrop) // If cropping
+            {
+                // Gets the max and min X and Y we can be at
+                double imageMinX = bounds.getMinX();
+                double imageMinY = bounds.getMinY();
+                double imageMaxX = bounds.getMaxX() - selectionBox.getStrokeWidth();
+                double imageMaxY = bounds.getMaxY() - selectionBox.getStrokeWidth();
 
-            // Finds the minimum of currentMouse and imageMax, then the max of that or imageMin
-            double clampedMouseX = Math.max(imageMinX, Math.min(currentMouseX, imageMaxX));
-            double clampedMouseY = Math.max(imageMinY, Math.min(currentMouseY, imageMaxY));
+                // Finds the minimum of mousePressed and imageMax, then the max of that or imageMin
+                double clampedStartX = Math.max(imageMinX, Math.min(mousePressedX, imageMaxX));
+                double clampedStartY = Math.max(imageMinY, Math.min(mousePressedY, imageMaxY));
 
-            // Creates selection box that is within bounds
-            double boxX = Math.min(clampedStartX, clampedMouseX);
-            double boxY = Math.min(clampedStartY, clampedMouseY);
-            double boxWidth = Math.abs(clampedMouseX - clampedStartX);
-            double boxHeight = Math.abs(clampedMouseY - clampedStartY);
+                // Finds the minimum of currentMouse and imageMax, then the max of that or imageMin
+                double clampedMouseX = Math.max(imageMinX, Math.min(currentMouseX, imageMaxX));
+                double clampedMouseY = Math.max(imageMinY, Math.min(currentMouseY, imageMaxY));
 
-            //Actually sets the selection box
-            selectionBox.setTranslateX(boxX);
-            selectionBox.setTranslateY(boxY);
-            selectionBox.setWidth(boxWidth);
-            selectionBox.setHeight(boxHeight);
+                // Creates selection box that is within bounds
+                double boxX = Math.min(clampedStartX, clampedMouseX);
+                double boxY = Math.min(clampedStartY, clampedMouseY);
+                double boxWidth = Math.abs(clampedMouseX - clampedStartX);
+                double boxHeight = Math.abs(clampedMouseY - clampedStartY);
+
+                //Actually sets the selection box
+                selectionBox.setTranslateX(boxX);
+                selectionBox.setTranslateY(boxY);
+                selectionBox.setWidth(boxWidth);
+                selectionBox.setHeight(boxHeight);
+            }
         }
     }
 
@@ -460,84 +533,85 @@ public class ImageDetailsController
             //box is wide and tall enough
             if (canCrop && selectionBox.isVisible() && (selectionBox.getWidth() > 5.0) && (selectionBox.getHeight() > 5.0))
             {
-                if (currentImage == null) return; //Exits method if there is no image
-
-                //Image bounds within stackPane (accounts for current gray space)
-                Bounds imgBounds = displayImage.getBoundsInParent();
-                double renderedWidth = imgBounds.getWidth();
-                double renderedHeight = imgBounds.getHeight();
-
-                // Current visible viewport dimensions
-                Rectangle2D currentVP = displayImage.getViewport();
-                double vpWidth = (currentVP != null) ? currentVP.getWidth() : currentImage.getWidth();
-                double vpHeight = (currentVP != null) ? currentVP.getHeight() : currentImage.getHeight();
-                double vpMinX = (currentVP != null) ? currentVP.getMinX() : 0;
-                double vpMinY = (currentVP != null) ? currentVP.getMinY() : 0;
-
-                //Translate selection box relative to actual image inside stackPane
-                double relX = selectionBox.getTranslateX() - imgBounds.getMinX();
-                double relY = selectionBox.getTranslateY() - imgBounds.getMinY();
-
-                //Scale screen selection pixels to image viewport coordinates
-                double scaleX = vpWidth / renderedWidth;
-                double scaleY = vpHeight / renderedHeight;
-
-                double selX = vpMinX + (relX * scaleX);
-                double selY = vpMinY + (relY * scaleY);
-                double selWidth = selectionBox.getWidth() * scaleX;
-                double selHeight = selectionBox.getHeight() * scaleY;
-
-                //Get stackPane's aspect ratio to eliminate gray space
-                double paneWidth = stackPane.getWidth();
-                double paneHeight = stackPane.getHeight();
-
-                if ((paneWidth > 0) && (paneHeight > 0)) //If stack pane isn't 0
+                if (currentImage != null) // Exits method if there is no image
                 {
-                    double paneAspect = paneWidth / paneHeight;
-                    double selCenterX = selX + (selWidth / 2.0);
-                    double selCenterY = selY + (selHeight / 2.0);
+                    //Image bounds within stackPane (accounts for current gray space)
+                    Bounds imgBounds = zoomSafeImageView.getImageViewNode().getBoundsInParent();
+                    double renderedWidth = imgBounds.getWidth();
+                    double renderedHeight = imgBounds.getHeight();
 
-                    //Expand marquee box to fit stackPane's aspect ratio
-                    if ((selWidth / selHeight) > paneAspect) // Selection is wider than pane
+                    // Current visible viewport dimensions
+                    Rectangle2D currentVP = zoomSafeImageView.getLogicalViewport();
+                    double vpWidth = (currentVP != null) ? currentVP.getWidth() : currentImage.getWidth();
+                    double vpHeight = (currentVP != null) ? currentVP.getHeight() : currentImage.getHeight();
+                    double vpMinX = (currentVP != null) ? currentVP.getMinX() : 0;
+                    double vpMinY = (currentVP != null) ? currentVP.getMinY() : 0;
+
+                    //Translate selection box relative to actual image inside stackPane
+                    double relX = selectionBox.getTranslateX() - imgBounds.getMinX();
+                    double relY = selectionBox.getTranslateY() - imgBounds.getMinY();
+
+                    //Scale screen selection pixels to image viewport coordinates
+                    double scaleX = vpWidth / renderedWidth;
+                    double scaleY = vpHeight / renderedHeight;
+
+                    double selX = vpMinX + (relX * scaleX);
+                    double selY = vpMinY + (relY * scaleY);
+                    double selWidth = selectionBox.getWidth() * scaleX;
+                    double selHeight = selectionBox.getHeight() * scaleY;
+
+                    //Get stackPane's aspect ratio to eliminate gray space
+                    double paneWidth = stackPane.getWidth();
+                    double paneHeight = stackPane.getHeight();
+
+                    if ((paneWidth > 0) && (paneHeight > 0)) //If stack pane isn't 0
                     {
-                        //Adjust height to match pane aspect
-                        selHeight = selWidth / paneAspect;
+                        double paneAspect = paneWidth / paneHeight;
+                        double selCenterX = selX + (selWidth / 2.0);
+                        double selCenterY = selY + (selHeight / 2.0);
+
+                        //Expand marquee box to fit stackPane's aspect ratio
+                        if ((selWidth / selHeight) > paneAspect) // Selection is wider than pane
+                        {
+                            //Adjust height to match pane aspect
+                            selHeight = selWidth / paneAspect;
+                        }
+                        else //Selection is taller/narrower than pane
+                        {
+                            //Adjust width to match pane aspect
+                            selWidth = selHeight * paneAspect;
+                        }
+
+                        //Recenter crop box around original selection center
+                        selX = selCenterX - (selWidth / 2.0);
+                        selY = selCenterY - (selHeight / 2.0);
                     }
-                    else //Selection is taller/narrower than pane
+
+                    //Clamp coordinates so viewport stays within original image bounds
+                    double imgOrigWidth = currentImage.getWidth();
+                    double imgOrigHeight = currentImage.getHeight();
+
+                    //Ensure width/height don't exceed image dimensions
+                    if (selWidth > imgOrigWidth)
                     {
-                        //Adjust width to match pane aspect
-                        selWidth = selHeight * paneAspect;
+                        selWidth = imgOrigWidth;
+                        selHeight = selWidth / (paneWidth / paneHeight);
+                    }
+                    if (selHeight > imgOrigHeight)
+                    {
+                        selHeight = imgOrigHeight;
+                        selWidth = selHeight * (paneWidth / paneHeight);
                     }
 
-                    //Recenter crop box around original selection center
-                    selX = selCenterX - (selWidth / 2.0);
-                    selY = selCenterY - (selHeight / 2.0);
+                    //New view port dimensions
+                    currentX = Math.max(0, Math.min(selX, imgOrigWidth - selWidth));
+                    currentY = Math.max(0, Math.min(selY, imgOrigHeight - selHeight));
+                    currentWidth = selWidth;
+                    currentHeight = selHeight;
+
+                    //Apply viewport
+                    refreshViewport();
                 }
-
-                //Clamp coordinates so viewport stays within original image bounds
-                double imgOrigWidth = currentImage.getWidth();
-                double imgOrigHeight = currentImage.getHeight();
-
-                //Ensure width/height don't exceed image dimensions
-                if (selWidth > imgOrigWidth)
-                {
-                    selWidth = imgOrigWidth;
-                    selHeight = selWidth / (paneWidth / paneHeight);
-                }
-                if (selHeight > imgOrigHeight)
-                {
-                    selHeight = imgOrigHeight;
-                    selWidth = selHeight * (paneWidth / paneHeight);
-                }
-
-                //New view port dimensions
-                currentX = Math.max(0, Math.min(selX, imgOrigWidth - selWidth));
-                currentY = Math.max(0, Math.min(selY, imgOrigHeight - selHeight));
-                currentWidth = selWidth;
-                currentHeight = selHeight;
-
-                //Apply viewport
-                displayImage.setViewport(new Rectangle2D(currentX, currentY, currentWidth, currentHeight));
             }
         }
         finally
@@ -555,7 +629,7 @@ public class ImageDetailsController
      * Sets selectionBox to invisible.
      */
     @FXML
-    public void zoom()
+    private void zoom()
     {
         canCrop = false;
         canPan = false;
@@ -569,7 +643,7 @@ public class ImageDetailsController
      * Sets selectionBox to invisible.
      */
     @FXML
-    public void pan()
+    private void pan()
     {
         canCrop = false;
         canPan = true;
@@ -582,7 +656,7 @@ public class ImageDetailsController
      * Sets booleans for zoom and pan to false and true for crop.
      */
     @FXML
-    public void marquee()
+    private void marquee()
     {
         canCrop = true;
         canPan = false;
@@ -593,7 +667,7 @@ public class ImageDetailsController
      * Method to handle reset button.
      * Sets booleans for crop, pan, and zoom to false.
      * Resets viewport.
-     * Sets selectionBox to invisible, currentImage to originalImage, and stackPane height to computed size.
+     * Sets selectionBox to invisible and currentImage to originalImage.
      */
     @FXML
     public void reset()
@@ -603,20 +677,15 @@ public class ImageDetailsController
         canZoom = false;
         resetViewport();
         selectionBox.setVisible(false);
-        displayImage.setImage(originalImage);
-        currentImage = originalImage;
-
-        stackPane.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        stackPane.setMaxHeight(Region.USE_COMPUTED_SIZE);
     }
 
     /**
      * Returns the imageView display image
      * @return
      */
-    public ImageView getDisplayImage()
+    public ZoomSafeImageView getDisplayImage()
     {
-        return displayImage;
+        return zoomSafeImageView;
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -46,7 +46,8 @@ public class SystemSettingsController
                 Map.entry("Lighting Settings", "/fxml/modals/systemsettings/LightingSettings.fxml"),
                 Map.entry("Photo Projection Settings", "/fxml/modals/systemsettings/PhotoProjectionSettings.fxml"),
                 Map.entry("System Memory Settings", "/fxml/modals/systemsettings/SystemMemorySettings.fxml"),
-                Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml")
+                Map.entry("Visual Settings", "/fxml/modals/systemsettings/VisualSettings.fxml"),
+                Map.entry("External Application Settings", "/fxml/modals/systemsettings/ExternalApplicationSettings.fxml")
             )
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, LinkedHashMap::new)));
 

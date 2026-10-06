@@ -11,29 +11,31 @@
 
 package kintsugi3d.builder.javafx.controllers.sidebar;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.javafx.core.MainApplication;
 import kintsugi3d.builder.javafx.internal.ObservableCardsModel;
 import kintsugi3d.builder.state.cards.ProjectDataCard;
+import kintsugi3d.builder.util.AppIcon;
 
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.UUID;
 
 public class CardController
@@ -53,62 +55,91 @@ public class CardController
     @FXML private CheckBox selectionBox;
     @FXML private Rectangle hoverRectangle;
 
-    private String filePath;
-    private String fileName;
     private UUID cardId;
-    private ObservableCardsModel cardsModel;
-    private Image preview;
 
-    public void init(ObservableCardsModel cardsModel, ProjectDataCard dataCard)
+    private ObservableCardsModel<?> cardsModel;
+
+    private final ObjectProperty<Image> previewImage = new SimpleObjectProperty<>(AppIcon.getImage());
+    private File currentPreviewImageFile;
+    private File loadedPreviewImageFile;
+
+    public void init(ObservableCardsModel<?> cardsModel, ProjectDataCard dataCard)
     {
         this.cardsModel = cardsModel;
-        this.cardId = dataCard.getCardId();
-        this.setCardVisibility(false);
-        filePath = dataCard.getFilePath();
-        fileName = dataCard.getTitle();
 
-        if (filePath == null) //if file path is null it disables the checkboxes for the icons
+        this.setCardVisibility(false);
+
+        if (dataCard.getFullResImageFilePath() == null) //if file path is null it disables the checkboxes for the icons
         {
             selectionBox.setVisible(false);
             selectionBox.setManaged(false);
         }
 
-        if (dataCard.isDisabled())
+        cardIcon.imageProperty().bind(previewImage);
+        mainImage.imageProperty().bind(previewImage);
+        mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
+
+        // Load the image for each card when it becomes visible.
+        dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->
+        {
+            if (newVal)
+            {
+                loadPreviewImage();
+            }
+        });
+
+        refresh(dataCard);
+    }
+
+    private void loadPreviewImage()
+    {
+        if (currentPreviewImageFile.exists() && !Objects.equals(loadedPreviewImageFile, currentPreviewImageFile))
+        {
+            previewImage.set(new Image(currentPreviewImageFile.toURI().toString()));
+            loadedPreviewImageFile = currentPreviewImageFile;
+        }
+    }
+
+    public void refresh(ProjectDataCard refreshedDataCard)
+    {
+        this.cardId = refreshedDataCard.getCardId();
+
+        if (refreshedDataCard.isEnabled())
+        {
+            dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), false);
+            cardTitle.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), false);
+        }
+        else
         {
             dataCardPane.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
             cardTitle.pseudoClassStateChanged(PseudoClass.getPseudoClass("disabled"), true);
         }
 
-        cardTitle.setText(dataCard.getTitle());
+        cardTitle.setText(refreshedDataCard.getTitle());
 
-        if (dataCard.getActions().stream().allMatch(Map::isEmpty))
+        if (refreshedDataCard.getActions().stream().allMatch(Map::isEmpty))
         {
             // Hide button box if no actions are available.
             buttonBox.setVisible(false);
             buttonBox.setManaged(false);
         }
 
-        BooleanBinding expanded = cardsModel.isExpandedProperty(cardId);
-        BooleanBinding selected = cardsModel.isSelectedProperty(cardId);
+        BooleanExpression expanded = cardsModel.createExpandedBinding(cardId);
+        BooleanExpression selected = cardsModel.createSelectedBinding(cardId);
 
         cardBody.visibleProperty().bind(expanded);
         cardBody.managedProperty().bind(expanded);
-        selected.addListener((observable, oldValue, newValue) ->
-        {
-            if (newValue)
-            {
-                borderBox.setStyle("-fx-border-color: black; -fx-border-width: 2px;");
-                dataCardPane.setStyle("-fx-padding: 2px;");
-            }
-            else
-            {
-                borderBox.setStyle("");
-                dataCardPane.setStyle("-fx-padding: 4px");
-            }
-        });
+
+        // Style when selected
+        borderBox.styleProperty().bind(Bindings.when(selected)
+            .then("-fx-border-color: black; -fx-border-width: 2px;")
+            .otherwise(""));
+        dataCardPane.styleProperty().bind(Bindings.when(selected)
+            .then("-fx-padding: 2px;")
+            .otherwise("-fx-padding: 4px"));
 
         textContent.getChildren().clear();
-        dataCard.getTextContent().forEach((key, value) ->
+        refreshedDataCard.getTextContent().forEach((key, value) ->
         {
             Label label = new Label(String.format("%s:", key));
             label.getStyleClass().add("wireframeBodyStrong");
@@ -129,74 +160,20 @@ public class CardController
             VBox.setMargin(caption, new Insets(0, 0, 8, 4));
         });
 
-        buttonBox.getChildren().clear();
-        dataCard.getActions().forEach(group ->
+        ActionButtonFactory.createActionButtons(refreshedDataCard.getActions(), buttonBox,
+            "card-button", "card-separator");
+
+        currentPreviewImageFile = new File(refreshedDataCard.getThumbnailPath());
+
+        // Invalidate any previously loaded image file in case the refresh was requested to display a file modification on disk.
+        loadedPreviewImageFile = null;
+
+        // If the card was already visible, load its preview image right away; otherwise wait for lazy loading.
+        if (dataCardPane.isVisible())
         {
-            Separator separator = new Separator();
-            separator.setPrefWidth(200.0);
-            separator.getStyleClass().add("card-separator");
-            separator.setPadding(new Insets(16.0, 8.0, 16, 8.0)); // Top, Right, Bottom, Left
-            buttonBox.getChildren().add(separator);
-            group.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry ->
-            {
-                HBox hBox = new HBox();
-                hBox.setAlignment(Pos.TOP_CENTER);
-
-//                // Button Icon
-//                ImageView imageView = new ImageView(MainApplication.getInstance().getIcon());
-//                imageView.setFitHeight(16.0);
-//                imageView.setFitWidth(16.0);
-//                imageView.setPickOnBounds(true);
-//                imageView.setPreserveRatio(true);
-
-                // Button
-                Button button = new Button(entry.getKey());
-                button.setGraphicTextGap(8.0);
-                button.setMnemonicParsing(false);
-                button.getStyleClass().add("card-button");
-                button.getStyleClass().add("wireframeBodyStrong");
-                button.getStylesheets().add("file:./kintsugiStyling.css");
-                button.setOnAction(event -> {
-
-                    /*If uncommented will make it so after a button is clicked
-                      boarder will remain to show it is selected*/
-                    //button.getStyleClass().add("activated");
-                    entry.getValue().run();
-                });
-
-                HBox.setMargin(button, new Insets(0, 0, 8, 0));
-                hBox.setPadding(new Insets(0, 40.0, 0, 40.0));
-                hBox.getChildren().add(button);
-
-                buttonBox.getChildren().add(hBox);
-            });
-        });
-
-        // Load the image for each card when it becomes visible.
-        dataCardPane.visibleProperty().addListener((change, oldVal, newVal) ->
-        {
-            File imageFile = new File(dataCard.getImagePath());
-            if (preview == null)
-            {
-                if (newVal && imageFile.exists())
-                {
-                    preview = new Image(imageFile.toURI().toString());
-                    cardIcon.setImage(preview);
-                    mainImage.setImage(preview);
-                }
-                else
-                {
-                    cardIcon.setImage(MainApplication.getIcon());
-                    mainImage.setImage(MainApplication.getIcon());
-                }
-            }
-            else
-            {
-                cardIcon.setImage(preview);
-                mainImage.setImage(preview);
-            }
-        });
-        mainImage.fitWidthProperty().bind(dataCardPane.widthProperty().divide(2));
+            // Defer loading the new image until next tick so that it doesn't slow down a bulk refresh (like enable/disable all)
+            Platform.runLater(this::loadPreviewImage);
+        }
 
         createBindings(cardIcon, selectionBox); //easy method to bind Checkbox to ImageView
         createBindings(cardIcon, hoverRectangle);//easy method to bind Rectangle to ImageView
@@ -207,7 +184,7 @@ public class CardController
         dataCardPane.setVisible(visibility);
     }
 
-    public boolean titleContainsString(String str)
+    public boolean doesTitleContainString(String str)
     {
         return cardTitle.getText().toLowerCase(Locale.ROOT).contains(str.toLowerCase(Locale.ROOT));
     }
@@ -215,15 +192,6 @@ public class CardController
     @FXML
     public void cardClicked()
     {
-        /*
-        if (cameraCardsModel.isSelected(cardId))
-        {
-            cameraCardsModel.deselectCard(cardId);
-        }
-        else
-        {
-            cameraCardsModel.selectCard(cardId);
-        } */
         if (cardsModel.isExpanded(cardId))
         {
             cardsModel.collapseCard(cardId);
@@ -237,14 +205,7 @@ public class CardController
     @FXML
     public void expansionToggleClicked(MouseEvent e)
     {
-        if (cardsModel.isExpanded(cardId))
-        {
-            cardsModel.collapseCard(cardId);
-        }
-        else
-        {
-            cardsModel.expandCard(cardId);
-        }
+        cardClicked();
         e.consume();
     }
 
@@ -258,9 +219,16 @@ public class CardController
      * This method does addSelected to global tab models.
      */
     @FXML
-    public void sendToDetail()
+    public void select()
     {
-        Global.state().getTabModels().addSelected(filePath, fileName);
+        if (cardsModel.isSelected(cardId))
+        {
+            cardsModel.deselectCard(cardId);
+        }
+        else
+        {
+            cardsModel.selectCard(cardId);
+        }
     }
 
     /**
@@ -270,7 +238,7 @@ public class CardController
      * @param iView
      * @param cBox
      */
-    private void createBindings(ImageView iView, CheckBox cBox)
+    private static void createBindings(ImageView iView, CheckBox cBox)
     {
         //Gets double binding from createImageBinding methods
         DoubleBinding imageWidth = createImageBindingWidth(iView);
@@ -293,10 +261,9 @@ public class CardController
      * @param iView
      * @param rBox
      */
-    private void createBindings(ImageView iView, Rectangle rBox)
+    private static void createBindings(ImageView iView, Rectangle rBox)
     {
         rBox.widthProperty().bind(createImageBindingWidth(iView));
-
         rBox.heightProperty().bind(createImageBindingHeight(iView));
     }
 
@@ -305,7 +272,7 @@ public class CardController
      * @param iView
      * @return
      */
-    private DoubleBinding createImageBindingWidth(ImageView iView)
+    private static DoubleBinding createImageBindingWidth(ImageView iView)
     {
         return Bindings.createDoubleBinding(() -> iView.getLayoutBounds().getWidth(), iView.layoutBoundsProperty());
     }
@@ -315,7 +282,7 @@ public class CardController
      * @param iView
      * @return
      */
-    private DoubleBinding createImageBindingHeight(ImageView iView)
+    private static DoubleBinding createImageBindingHeight(ImageView iView)
     {
         return Bindings.createDoubleBinding(() -> iView.getLayoutBounds().getHeight(), iView.layoutBoundsProperty());
     }

@@ -11,13 +11,14 @@
 
 package kintsugi3d.builder.resources.project.specular;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.core.TextureDetails;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.core.texture.TextureInfo;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
+import kintsugi3d.builder.resources.project.ImportedMaterialResources;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
-import kintsugi3d.gl.material.ImportedMaterialResources;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -52,19 +53,19 @@ public final class ImportedMaterialResourcesWrapper<ContextType extends Context<
     @Override
     public int getWidth()
     {
-        Texture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
+        ReadonlyTexture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
         return diffuseTex == null ? 0 : diffuseTex.getWidth();
     }
 
     @Override
     public int getHeight()
     {
-        Texture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
+        ReadonlyTexture2D<ContextType> diffuseTex = getTexture(StandardTexture.DIFFUSE_COLOR);
         return diffuseTex == null ? 0 : diffuseTex.getHeight();
     }
 
     @Override
-    public Map<TextureDetails, Texture2D<ContextType>> getTextures()
+    public Map<TextureInfo, Texture2D<ContextType>> getTextures()
     {
         return StandardTexture.convertEnumMapToObjectMap(getStandardTextures());
     }
@@ -76,13 +77,13 @@ public final class ImportedMaterialResourcesWrapper<ContextType extends Context<
     }
 
     @Override
-    public BasisResources<ContextType> getBasisResources()
+    public MutableBasisResources<ContextType> getMutableBasisResources()
     {
         return null;
     }
 
     @Override
-    public BasisWeightResources<ContextType> getBasisWeightResources()
+    public BasisWeightResources<ContextType> getMutableBasisWeightResources()
     {
         return null;
     }

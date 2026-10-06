@@ -62,9 +62,9 @@ public class ProjectSettingsManager
 
     public void refresh()
     {
-        if (Global.state().getIOModel().hasLoadedRenderable())
+        if (Global.io().hasLoadedRenderable())
         {
-            this.projectSettingsModel = Global.state().getIOModel().getLoadedViewSet().getProjectSettings();
+            this.projectSettingsModel = Global.io().getLoadedViewSet().getProjectSettings();
         }
         else
         {

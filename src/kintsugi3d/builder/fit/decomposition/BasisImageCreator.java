@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,13 +11,12 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.IOException;
 
-public class BasisImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
+public class BasisImageCreator<ContextType extends Context<ContextType>> implements ManagedResource
 {
     // Program for drawing basis functions as supplemental output
     private final ProgramObject<ContextType> program;
@@ -49,27 +48,26 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void createImages(TextureResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(ReadonlyBasisResources<ContextType> basisResources, File outputDirectory) throws IOException
     {
-        specularFit.getBasisResources().useWithShaderProgram(program);
-        specularFit.getBasisWeightResources().useWithShaderProgram(program);
+        basisResources.useWithShaderProgram(program);
 
-        MaterialBasis basis = specularFit.getBasisResources().getBasis();
+        MaterialBasis basis = basisResources.getBasis();
 
-        // Save basis functions in image format.
-        for (int i = 0; i < basis.getMaterialCount(); i++)
+        // Save basis functions in image format.  Include disabled materials.
+        for (BasisMaterialInfo material : basis.getMaterials())
         {
-            drawable.program().setUniform("basisIndex", i);
-            drawable.program().setUniform("diffuseColor", basis.getDiffuseColor(i).asSinglePrecision());
+            drawable.program().setUniform("basisIndex", material.getGPUIndex());
+            drawable.program().setUniform("diffuseColor", material.getDiffuseColor().asSinglePrecision());
             drawable.draw(framebuffer);
             framebuffer.getTextureReaderForColorAttachment(0)
-                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(i)));
+                .saveToFile("PNG", new File(outputDirectory, getBasisImageFilename(material.getName())));
         }
     }
 
-    public static String getBasisImageFilename(int materialIndex)
+    public static String getBasisImageFilename(String materialName)
     {
-        return String.format("basis_%02d.png", materialIndex);
+        return String.format("basis_%s.png", materialName);
     }
 
     @Override

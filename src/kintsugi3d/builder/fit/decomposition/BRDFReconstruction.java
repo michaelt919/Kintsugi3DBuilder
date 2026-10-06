@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,10 +11,10 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
-import kintsugi3d.builder.resources.project.stream.GraphicsStream;
+import kintsugi3d.builder.fit.settings.ReadonlyBasisOptimizationSettings;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.stream.GraphicsStream;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.MatrixSystem;
 import kintsugi3d.optimization.function.BasisFunctions;
@@ -30,13 +30,13 @@ public class BRDFReconstruction
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
     private final BasisFunctions stepBasis;
     private final int matrixSize;
-    private final BasisOptimizationSettings settings;
+    private final ReadonlyBasisOptimizationSettings settings;
 
-    public BRDFReconstruction(BasisOptimizationSettings settings, BasisFunctions stepBasis)
+    public BRDFReconstruction(ReadonlyBasisOptimizationSettings settings, BasisFunctions stepBasis)
     {
         this.stepBasis = stepBasis;
         this.settings = settings;
-        matrixSize = this.settings.getBasisCount() * (this.settings.getBasisComplexity() + 1);
+        matrixSize = this.settings.getMaterialCount() * (this.settings.getBasisComplexity() + 1);
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution, ProgressMonitor monitor)
@@ -50,7 +50,7 @@ public class BRDFReconstruction
 
         LOG.info("DONE!");
 
-        for (int b = 0; b < settings.getBasisCount(); b++)
+        for (int b = 0; b < settings.getMaterialCount(); b++)
         {
             int bCopy = b;
 
@@ -146,7 +146,7 @@ public class BRDFReconstruction
             })
             .collect(() -> new MatrixSystem(matrixSize, 3, DMatrixRMaj.class), MatrixSystem::addContribution);
 
-        for (int b = 0; b < settings.getBasisCount(); b++)
+        for (int b = 0; b < settings.getMaterialCount(); b++)
         {
             StringBuilder sb = new StringBuilder();
             sb.append("RHS, red for BRDF #").append(b).append(": ");
@@ -155,7 +155,7 @@ public class BRDFReconstruction
             for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
-                sb.append(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
+                sb.append(system.rhs[0].get((m + 1) * settings.getMaterialCount() + b));
             }
             sb.append('\n');
 
@@ -165,7 +165,7 @@ public class BRDFReconstruction
             for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
-                sb.append(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
+                sb.append(system.rhs[1].get((m + 1) * settings.getMaterialCount() + b));
             }
             sb.append('\n');
 
@@ -175,7 +175,7 @@ public class BRDFReconstruction
             for (int m = 0; m < settings.getBasisComplexity(); m++)
             {
                 sb.append(", ");
-                sb.append(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));
+                sb.append(system.rhs[2].get((m + 1) * settings.getMaterialCount() + b));
             }
             LOG.debug(sb.toString());
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -24,7 +24,7 @@ import kintsugi3d.gl.vecmath.*;
  *
  * @param <ContextType> The type of the GL context that the Drawable is associated with.
  */
-public interface Drawable<ContextType extends Context<ContextType>> extends ContextBound<ContextType>, Resource
+public interface Drawable<ContextType extends Context<ContextType>> extends ContextBound<ContextType>, ManagedResource
 {
     /**
      * Gets the shader program that will be used by this drawable object.
@@ -385,7 +385,7 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      * @return true if the vertex attribute was successfully set;
      * false if the vertex attribute was not set because no vertex attribute exists at the specified location in this shader program.
      */
-    boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer);
+    boolean addVertexBuffer(int location, ReadonlyVertexBuffer<ContextType> buffer);
 
     /**
      * Designates a vertex buffer to be used for the vertex attribute with a particular shader name.
@@ -394,8 +394,5 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      * @return if the vertex attribute was successfully set;
      * false if the vertex attribute was not set because no vertex attribute exists at the specified location in this shader program.
      */
-    boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer);
-
-    @Override
-    void close();
+    boolean addVertexBuffer(String name, ReadonlyVertexBuffer<ContextType> buffer);
 }

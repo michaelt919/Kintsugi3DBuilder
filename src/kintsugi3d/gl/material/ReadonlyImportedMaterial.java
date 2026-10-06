@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,7 @@
 
 package kintsugi3d.gl.material;
 
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Vector3;
-
-import java.io.File;
-import java.io.IOException;
 
 public interface ReadonlyImportedMaterial
 {
@@ -80,7 +76,4 @@ public interface ReadonlyImportedMaterial
     ReadonlyMaterialScalarMap getDisplacementMap();
 
     ReadonlyMaterialScalarMap getAmbientOcclusionMap();
-
-    <ContextType extends Context<ContextType>> ImportedMaterialResources<ContextType> createResources(
-        ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException;
 }

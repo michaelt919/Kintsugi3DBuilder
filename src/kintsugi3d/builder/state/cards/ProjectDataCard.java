@@ -11,52 +11,34 @@
 
 package kintsugi3d.builder.state.cards;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ProjectDataCard
 {
     private final String internalName;
-    private String filePath;
+    private final String fullResImageFilePath;
     private final UUID cardId;
     private final String title;
-    private final String imagePath;
+    private final String thumbnailPath;
     private final Map<String, String> textFields;
-    private final List<? extends Map<String, Runnable>> actionGroups;
-    private boolean isDisabled = false; // TODO: consider getting from viewset
+    private final Collection<? extends Map<String, Runnable>> actionGroups;
+    private boolean isEnabled = true;
 
-    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, List<? extends Map<String, Runnable>> actionGroups, String filePath)
+    public ProjectDataCard(
+        String internalName, String title, String fullResImageFilePath, String thumbnailPath,
+        Map<String, String> textFields, Collection<? extends Map<String, Runnable>> actionGroups, boolean isEnabled)
     {
         this.internalName = internalName;
         this.cardId = UUID.randomUUID();
         this.title = title;
-        this.imagePath = imagePath;
+        this.fullResImageFilePath = fullResImageFilePath;
+        this.thumbnailPath = thumbnailPath;
         this.textFields = Collections.unmodifiableMap(textFields);
-        this.actionGroups = Collections.unmodifiableList(actionGroups);
-        this.filePath = filePath;
-    }
-
-    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions, boolean isDisabled, String filePath)
-    {
-        this(internalName, title, imagePath, textFields, List.of(actions), filePath);
-        this.isDisabled = isDisabled;
-        this.filePath = filePath;
-    }
-    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields, Map<String, Runnable> actions)
-    {
-        this(internalName, title, imagePath, textFields, List.of(actions), null);
-    }
-
-    public ProjectDataCard(String internalName, String title, String imagePath, Map<String, String> textFields)
-    {
-        this(internalName, title, imagePath, textFields, List.of(), null);
-    }
-
-    public ProjectDataCard(String internalName, String title, String imagePath)
-    {
-        this(internalName, title, imagePath, Map.of());
+        this.actionGroups = Collections.unmodifiableCollection(actionGroups);
+        this.isEnabled = isEnabled;
     }
 
     public String getInternalName()
@@ -71,16 +53,16 @@ public class ProjectDataCard
 
     public String getTitle()
     {
-        if (isDisabled)
+        if (!isEnabled)
         {
             return String.format("%s - DISABLED", title);
         }
         return title;
     }
 
-    public String getImagePath()
+    public String getThumbnailPath()
     {
-        return imagePath;
+        return thumbnailPath;
     }
 
     public String getValue(String key)
@@ -97,17 +79,17 @@ public class ProjectDataCard
         return textFields;
     }
 
-    public List<? extends Map<String, Runnable>> getActions()
+    public Collection<? extends Map<String, Runnable>> getActions()
     {
         return actionGroups;
     }
 
-    public boolean isDisabled() { return isDisabled; }
+    public boolean isEnabled() { return isEnabled; }
 
-    public void setIsDisabled(boolean isDisabled) { this.isDisabled = isDisabled; }
+    public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
 
-    public String getFilePath()
+    public String getFullResImageFilePath()
     {
-        return filePath;
+        return fullResImageFilePath;
     }
 }

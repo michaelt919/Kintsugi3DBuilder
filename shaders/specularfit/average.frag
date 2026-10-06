@@ -24,7 +24,7 @@ void main()
 
     vec4 sum = vec4(0);
 
-    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
+    for (int k = 0; k < VIEW_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
 

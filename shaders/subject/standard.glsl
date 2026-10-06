@@ -65,7 +65,7 @@ vec3 diffuse(LightingParameters l, Material m)
 #include "subjectMain.glsl"
 
 // Prevents shader link errors when declaration from colorappearance.glsl is not defined
-vec4 getColor(int virtualIndex)
+vec4 getColorByPhysicalIndex(int viewIndex)
 {
     return vec4(0);
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+# Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
 # Copyright (c) 2019 The Regents of the University of Minnesota
 #
 # Licensed under GPLv3
@@ -18,6 +18,6 @@ OUTPUT_DMG=$5
 
 rm -rf "$K3D_STAGING_FOLDER"
 unzip -o "$K3DBUILDER_ZIP_PATH" -d "$BUILD_DIRECTORY" # Builder: unzip with overwriting (-o) just in case rm failed
-cp -a "viewer/Kintsugi 3D Viewer.app" "$K3D_STAGING_FOLDER/Kintsugi 3D Viewer.app" # Viewer: copy as archive (-a)
+cp -a "$BUILD_DIRECTORY/viewer/Kintsugi 3D Viewer.app" "$K3D_STAGING_FOLDER/Kintsugi 3D Viewer.app" # Viewer: copy as archive (-a)
 ./macos-staging-folder.sh "$K3D_STAGING_FOLDER" # Create applications alias and layout window
 hdiutil create -volname "$FRIENDLY_NAME" -srcfolder "$K3D_STAGING_FOLDER" -ov -format UDZO "$OUTPUT_DMG" # create DMG

@@ -19,13 +19,14 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.app.Rendering;
+import javafx.util.StringConverter;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.ExportTexturesRequest;
 import kintsugi3d.builder.io.ExportType;
 import kintsugi3d.builder.javafx.controllers.modals.ProjectSettingsControllerBase;
 import kintsugi3d.builder.javafx.util.SquareResolution;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.rendering.Rendering;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,20 +36,14 @@ public class ExportModelController extends ProjectSettingsControllerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportModelController.class);
 
-    //Initialize all the variables in the FXML file
-    @FXML
-    private Pane root;
+    // Initialize all the variables in the FXML file
+    @FXML private Pane root;
 
-    @FXML
-    private ComboBox<ExportType> exportTypeComboBox;
-    @FXML
-    private ComboBox<String> formatComboBox;
-    @FXML
-    private CheckBox generateLowResolutionCheckBox;
-    @FXML
-    private CheckBox openViewerOnceCheckBox;
-    @FXML
-    private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
+    @FXML private ComboBox<ExportType> exportTypeComboBox;
+    @FXML private ComboBox<String> formatComboBox;
+    @FXML private CheckBox generateLowResolutionCheckBox;
+    @FXML private CheckBox openViewerOnceCheckBox;
+    @FXML private ComboBox<SquareResolution> minimumTextureResolutionComboBox;
 
     private File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
@@ -71,11 +66,28 @@ public class ExportModelController extends ProjectSettingsControllerBase
             .bind(generateLowResolutionCheckBox.selectedProperty().not());
 
         // Bind the export type to the request
-        exportTypeComboBox.getItems().addAll(ExportType.values());
+        exportTypeComboBox.getItems().setAll(ExportType.values());
 
         // Set initial value from defaultSettings
         exportTypeComboBox.setValue(getLocalSettingsModel().get("exportType", ExportType.class));
         objFileChooser.getExtensionFilters().setAll(getLocalSettingsModel().get("exportType", ExportType.class).getFilter());
+
+        // Friendly display name
+        exportTypeComboBox.setConverter(new StringConverter<>()
+        {
+            @Override
+            public String toString(ExportType type)
+            {
+                return (type != null) ? type.toString() : "";
+            }
+
+            @Override
+            public ExportType fromString(String string)
+            {
+                // Not strictly needed unless the ComboBox is editable
+                return null;
+            }
+        });
 
         // Update extension filters based on the selected export type.
         exportTypeComboBox.valueProperty().addListener(
@@ -96,7 +108,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
         generateLowResolutionCheckBox.disableProperty().bind(gltfSelected.not());
         openViewerOnceCheckBox.disableProperty().bind(gltfSelected.not());
 
-        File loadedProjectFile = Global.state().getIOModel().validateRenderable().getLoadedProjectFile();
+        File loadedProjectFile = Global.io().validateRenderable().getLoadedProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());
@@ -111,7 +123,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
     {
         applySettings();
 
-        if (Global.state().getIOModel().getProgressMonitor().isConflictingProcess())
+        if (Global.io().getProgressMonitor().isConflictingProcess())
         {
             error("Failed to export model", "Another process is already running.");
             return false;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,14 +13,11 @@ package kintsugi3d.builder.io;
 
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvToBeanBuilder;
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.Projection;
-import kintsugi3d.builder.core.SimpleProjection;
-import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.core.ViewSet.Builder;
+import kintsugi3d.builder.core.viewset.*;
 import kintsugi3d.gl.vecmath.DoubleMatrix4;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.ImageFinder;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -81,8 +78,10 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
 
         public DistortionProjection getDistortionProjection(File imageRootDirectory) throws IOException
         {
+            File imageFile = ImageFinder.getInstance().findImageFile(new File(imageRootDirectory, name));
+
             // Have to read part of image file to determine aspect ratio
-            try(var in = ImageIO.createImageInputStream(new File(imageRootDirectory, name)))
+            try (var in = ImageIO.createImageInputStream(imageFile))
             {
                 if (ImageIO.getImageReaders(in).hasNext())
                 {
@@ -95,8 +94,8 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
                     float fScaled = f * width / 36.0f; // 36 mm standard for Reality Capture
 
                     return new DistortionProjection(width, height, fScaled, fScaled,
-                            px * width + (float)width / 2, py * height + (float)height / 2,
-                            k1, k2, k3, k4, t1, t2, 0.0f);
+                        px * width + (float) width / 2, py * height + (float) height / 2,
+                        k1, k2, k3, k4, t1, t2, 0.0f);
                 }
                 else
                 {
@@ -107,13 +106,13 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
     }
 
     @Override
-    public ViewSet.Builder readFromStream(InputStream stream, ViewSetDirectories directories) throws IOException
+    public ViewSetBuilder readFromStream(InputStream stream, ViewSetDirectories directories) throws IOException
     {
         List<Camera> cameras = new CsvToBeanBuilder<Camera>(new InputStreamReader(stream, StandardCharsets.UTF_8))
             .withType(Camera.class).build().parse();
 
         // Start building the view set
-        Builder builder = ViewSet.getBuilder(directories.projectRoot, cameras.size());
+        ViewSetBuilder builder = ViewSet.getBuilder(directories.projectRoot, cameras.size());
 
         // Try to figure out what the camera groups were
         Map<Projection, List<String>> cameraMap = new HashMap<>(1);
@@ -156,8 +155,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
             builder.setCurrentCameraPose(cam.getPose())
                 .setCurrentCameraProjectionIndex(cameraMapInverted.get(cam.name))
                 .setCurrentLightIndex(0)
-                .setCurrentImageFile(new File(cam.name))
-                .commitCurrentCameraPose();
+                .commitCurrentView(new File(cam.name));
         }
 
         // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)

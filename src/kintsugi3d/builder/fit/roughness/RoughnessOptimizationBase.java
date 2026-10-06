@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,9 +11,9 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.core.StandardTexture;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.core.texture.StandardTexture;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
+import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
@@ -27,18 +27,21 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
 {
     private static final Logger LOG = LoggerFactory.getLogger(RoughnessOptimizationBase.class);
 
-    protected final ProgramObject<ContextType> specularRoughnessFitProgram;
+    private final ProgramObject<ContextType> specularRoughnessFitProgram;
     protected final VertexBuffer<ContextType> rect;
-    protected final Drawable<ContextType> specularRoughnessFitDrawable;
+    private final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources)
+    protected RoughnessOptimizationBase(ReadonlyBasisResources<ContextType> basisResources)
         throws IOException
     {
         // Fit specular parameters from weighted basis functions
         specularRoughnessFitProgram = basisResources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
-                .define("BASIS_COUNT", basisResources.getBasisCount())
+            // Treat active/enabled material count as the total basis count while optimizing.
+            // Disabled materials shouldn't affect the optimization process.
+                .define("BASIS_COUNT", basisResources.getActiveMaterialCount())
+                .define("ACTIVE_BASIS_COUNT", basisResources.getActiveMaterialCount())
                 .define("BASIS_RESOLUTION", basisResources.getBasisResolution())
                 .createProgram();
 
@@ -55,9 +58,12 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     }
 
     @Override
-    public final void setInputWeights(BasisWeightResources<ContextType> weightResources)
+    public final void setInputWeights(ReadonlyBasisWeightResources<ContextType> weightResources)
     {
-        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
+        if (weightResources != null)
+        {
+            weightResources.useWithShaderProgram(specularRoughnessFitProgram);
+        }
     }
 
     @Override

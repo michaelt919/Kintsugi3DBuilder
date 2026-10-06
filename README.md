@@ -87,18 +87,12 @@ Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHO
 
 ## Build Requirements
 ### Package
-Kintsugi 3D builder can be compiled using the maven build system with no external requirements,
-however in order to use the `package` maven lifecycle to build the app to a executable jar, exe and distributable zip folder,
-a redistributable Java 11 runtime should be located in the `jre` folder at the repository root. The `package` lifecycle will not fail without this,
-but no JRE will be bundled in the distribution zip file.
-For MacOS builds, a MacOS Java (x64) runtime should be located in the `jre-macos-x64` at the repository root 
-(top level within that folder should contain _CodeSignature, Home, info.plist, and MacOS).
-[Note: There is a known issue with OpenJDK 11.0.22+ on MacOS; for the time being, use [11.0.21](https://www.azul.com/core-post-download/?endpoint=zulu&uuid=bde60a67-2538-431c-8004-a576898f1fb3).]
+Kintsugi 3D Builder can be compiled using the maven build system with no external requirements.
+When packaging, an OpenJDK JRE will automatically be downloaded from Adoptium, 
+along with the latest build of Kintsugi 3D Viewer and any other required binaries, 
+all of which will be bundled in the packaged build.
 
 ### Install
-There are additional requirements for building the installer executable using the `install` maven lifecycle:
+On Windows specifically, there are additional requirements for building the installer executable using the `install` maven lifecycle:
 - NSIS must be installed on the system. [Download Nullsoft Scriptable Install System](https://nsis.sourceforge.io/Download)
 - The NSIS install folder must be added to your `PATH` environment variable.
-- A JRE must be located at `jre`. The `install` lifecycle *will fail* without the `jre` folder.
-- The Kintsugi 3D Viewer installer, `Kintsugi3DViewer.exe` must be located at `viewer/Kintsugi3DViewer.exe`. The `install` lifecycle *will fail* without this.  The source code for Kintsugi 3D Viewer can be found within [its own repository](https://github.com/UWStout/Kintsugi3DViewer).
-- The USDZ binaries for the build platform must be located in `bin/`. Releases can be found [here](https://github.com/PoctorDepper/usdz-exporter/releases).

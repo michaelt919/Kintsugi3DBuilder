@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,7 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.modals.viewselect;
 
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 
 /**
@@ -38,25 +38,23 @@ public class OrientationViewSelectController extends ViewSelectController
     public boolean confirm()
     {
         // If a view set was already loaded, apply changes.
-        ViewSet currentViewSet = Global.state().getIOModel().getLoadedViewSet();
+        ViewSet currentViewSet = Global.io().getLoadedViewSet();
         if (currentViewSet != null)
         {
             if (getData().getViewSelection() == null)
             {
-                currentViewSet.setOrientationViewIndex(-1);
+                currentViewSet.setOrientationView(null);
             }
             else
             {
-                currentViewSet.setOrientationView(getData().getViewSelection());
+                currentViewSet.setOrientationViewByName(getData().getViewSelection());
             }
 
             currentViewSet.setOrientationViewRotationDegrees(getData().getViewRotation());
         }
 
         // The input source will handle loading if a view set wasn't already loaded.
-        getData().confirm();
-
-        return true;
+        return getData().confirm();
     }
 
     @Override

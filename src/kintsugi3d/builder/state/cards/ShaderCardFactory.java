@@ -11,17 +11,14 @@
 
 package kintsugi3d.builder.state.cards;
 
-import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.RenderableInstance;
-import kintsugi3d.builder.javafx.core.MainApplication;
-import kintsugi3d.builder.state.scene.UserShader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.builder.state.shader.SimpleShaderInfo;
+import kintsugi3d.builder.util.AppIcon;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 /**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
@@ -29,46 +26,57 @@ the current model of the project. When the model is not processed the shaders
 available to the user will be limited, but when the model is processed all
 shaders will be available for the user to use.
  */
-public class ShaderCardFactory implements ProjectDataCardFactory
+public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ShaderCardFactory.class);
-
-    private final RenderableInstance<?> instance;
-
     /**
      * ShaderCardFactory is the constructor for this class takes a RenderableInstance and
      * assigns it to private variable in class
      * @param instance
      */
-    public ShaderCardFactory(RenderableInstance<?> instance)
+    public ShaderCardFactory(ImageBasedRenderable<?> instance)
     {
-        this.instance = instance;
+        super(instance);
+    }
+
+    @Override
+    public Class<ShaderInfo> getDataClass()
+    {
+        return ShaderInfo.class;
     }
 
     /**
     createCard will use ProjectDataCard to create cards for the shaders, needs both
-    the title of the shader and the file name. Returns ProjectDataCard of the shader
-    (single card).
+    the title of the shader and the file name.
      @param title
      @param fileName
-     @return
+     @return ProjectDataCard of the shader (single card).
     */
-    public static ProjectDataCard createCard(String title, String fileName)
+    private ProjectDataCard createCard(String title, String fileName)
     {
-        //Creates shader with given title and filename
-        UserShader shader = new UserShader(title, fileName);
-
-        return new ShaderDataCard(fileName, shader, MainApplication.ICON_PATH, null);
+        // Creates shader with given title and filename
+        ShaderInfo shader = new SimpleShaderInfo(title, fileName);
+        return createCard(shader);
     }
+
+    /**
+     *
+     * @param shader
+     * @return ProjectDataCard of the shader (single card).
+     */
+    @Override
+    public ProjectDataCard createCard(ShaderInfo shader)
+    {
+        return new ShaderDataCard(shader.getFilename(), shader, AppIcon.PATH, null, Map.of(), List.of(), true);
+    }
+
     /**
     createAllCards will call createCard for all the shaders and will
     return them in a list. This method will also detect if the model
     is processed and if so will limit the shaders shown to the user.
-     @param cardsModel
      @return
      */
     @Override
-    public List<ProjectDataCard> createAllCards(CardsModel cardsModel)
+    public List<ProjectDataCard> createAllCards()
     {
         // shaderDataCards is an arraylist that will hold all shaders user can use
         List<ProjectDataCard> shaderDataCards = new ArrayList<>(9);
@@ -77,7 +85,7 @@ public class ShaderCardFactory implements ProjectDataCardFactory
         shaderDataCards.add(createCard("Textured Lambertian", "rendermodes/texturedLambertian.frag"));
 
         //if model is not processed these shaders are not shown
-       if (Global.state().getProjectModel().isProjectProcessed())
+       if (getInstance().getResources().hasProcessedWeightMaps())
        {
             shaderDataCards.add(createCard("Material (metallicity)", "rendermodes/texturedORMMaterial.frag"));
             shaderDataCards.add(createCard("Material (reflectivity)", "rendermodes/texturedMaterial.frag"));
@@ -87,18 +95,11 @@ public class ShaderCardFactory implements ProjectDataCardFactory
         shaderDataCards.add(createCard("Image-based", "rendermodes/ibrUntextured.frag"));
 
         //if model is not processed these shaders are not shown
-        if (Global.state().getProjectModel().isProjectProcessed())
+        if (getInstance().getResources().hasProcessedWeightMaps())
         {
             shaderDataCards.add(createCard("Image-based with textures", "rendermodes/ibrTextured.frag"));
             shaderDataCards.add(createCard("Weight maps (combined)", "rendermodes/weightmaps/weightmapCombination.frag"));
         }
         return shaderDataCards;
-    }
-
-    @Override
-    public Map<ProjectDataCard, ProjectDataCard> createRefreshedCards(CardsModel cardsModel, Predicate<ProjectDataCard> filter)
-    {
-        LOG.warn("refreshCards not implemented for textures.");
-        return Map.of();
     }
 }

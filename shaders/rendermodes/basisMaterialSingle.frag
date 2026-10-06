@@ -59,7 +59,7 @@ vec3 emissive(Material m) // no overlay for material visualization
 #include <subject/subjectMain.glsl>
 
 // Prevents shader link errors when declaration from colorappearance.glsl is not defined
-vec4 getColor(int virtualIndex)
+vec4 getColorByPhysicalIndex(int viewIndex)
 {
     return vec4(0);
 }

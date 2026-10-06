@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,8 +10,9 @@
  */
 package kintsugi3d.util;
 
+import kintsugi3d.gl.util.RadianceImageLoader;
+import kintsugi3d.gl.util.RadianceImageLoader.Image;
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.util.RadianceImageLoader.Image;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;

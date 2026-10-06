@@ -23,7 +23,6 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -34,24 +33,24 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
-import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.SampledLuminanceEncoding;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.viewset.SampledLuminanceEncoding;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.core.viewset.ViewSet;
+import kintsugi3d.builder.io.IOModel;
+import kintsugi3d.builder.io.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController;
-import kintsugi3d.builder.javafx.core.RecentProjects;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.gl.util.ImageHelper;
+import kintsugi3d.builder.javafx.util.ZoomSafeImageView;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.DoubleUnaryOperator;
 
@@ -61,9 +60,9 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
-    private static final double[] LINEAR_LUMINANCE_VALUES = new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
+    private static final double[] LINEAR_LUMINANCE_VALUES = { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 };
 
-    @FXML private VBox eydropperImageRoot;
+    @FXML private VBox eyedropperImageRoot;
     @FXML private VBox outerVbox;
 
     @FXML private GridPane curveValuesRoot;
@@ -172,7 +171,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
         autoApply();
 
-        eydropperImageRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
+        eyedropperImageRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
         curveValuesRoot.disableProperty().bind(useCurveCheckbox.selectedProperty().not());
         flatfieldCheckbox.disableProperty().bind(distanceCompensationCheckbox.selectedProperty().not());
 
@@ -203,7 +202,7 @@ public class EyedropperController extends NonDataPageControllerBase
             //initialize txtFields with their respective values
             if (hasValidIOModel())
             {
-                IOModel ioModel = Global.state().getIOModel();
+                IOModel ioModel = Global.io();
 
                 // Initialize from loaded view set (projectSettingsManager will handle flatfieldCorrected)
                 ViewSet viewSet = ioModel.getLoadedViewSet();
@@ -252,9 +251,24 @@ public class EyedropperController extends NonDataPageControllerBase
         }
 
         // Set color checker image
-        setImage(getState().getProjectModel().getColorCheckerFile());
+        setImage(getColorCheckerFile());
 
         autoApply();
+    }
+
+    private File getColorCheckerFile()
+    {
+        File colorCheckerFile = getState().getProjectModel().getColorCheckerFile();
+
+        if (colorCheckerFile != null)
+        {
+            return colorCheckerFile;
+        }
+        else
+        {
+            ViewSet viewSet = Global.io().validateRenderable().getLoadedViewSet();
+            return viewSet.getPrimaryView().tryFindFullResImageFile();
+        }
     }
 
     @Override
@@ -271,7 +285,7 @@ public class EyedropperController extends NonDataPageControllerBase
         {
             projectSettingsManager.cancel(); // for flatfield setting
 
-            IOModel ioModel = Global.state().getIOModel();
+            IOModel ioModel = Global.io();
             ioModel.requestLightIntensityCalibration(); // in case "infinite light sources" was toggled
 
             // revert the tone calibration to what it was when the page was opened.
@@ -300,19 +314,9 @@ public class EyedropperController extends NonDataPageControllerBase
         rectangleForTextField.put(textField, rectangle);
     }
 
-    private static Rectangle2D resetViewport(ImageView imageView)
+    private static Rectangle2D getDefaultViewport(ZoomSafeImageView imageView)
     {
-        //reset the viewport to default value (view entire image)
-        Rectangle2D defaultViewport = getDefaultViewport(imageView);
-
-        imageView.setViewport(defaultViewport);
-
-        return defaultViewport;
-    }
-
-    private static Rectangle2D getDefaultViewport(ImageView imageView)
-    {
-        Image image = imageView.getImage();
+        Image image = imageView.getFullImage();
         return new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
     }
 
@@ -353,18 +357,18 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void handleMouseDragged(MouseEvent event)
     {
-        if (isSelecting) //In selection state
+        if (isSelecting) // In selection state
         {
-            //Current mouse locations
+            // Current mouse locations
             double currentMouseX = event.getX();
             double currentMouseY = event.getY();
 
-            ImageView imageView = imageDetailsController.getDisplayImage(); //ImageView in imageDetails
+            Node imageView = imageDetailsController.getDisplayImage().getImageViewNode(); // ImageView in imageDetails
 
             // Takes image view coordinates and translates them to selectionPane coordinates
             Bounds imgBoundsInSelectionPane = selectionPane.sceneToLocal(imageView.localToScene(imageView.getBoundsInLocal()));
 
-            //Max and min locations
+            // Max and min locations
             double imageMinX = imgBoundsInSelectionPane.getMinX();
             double imageMinY = imgBoundsInSelectionPane.getMinY();
             double imageMaxX = imgBoundsInSelectionPane.getMaxX();
@@ -434,9 +438,9 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private Color getAvgColorFromSelection()
     {
-        ImageView imageView = imageDetailsController.getDisplayImage(); //Image details imageview
+        ZoomSafeImageView imageView = imageDetailsController.getDisplayImage(); //Image details imageview
 
-        Image image = imageView.getImage(); //Actual Image
+        Image image = imageView.getFullImage(); //Actual Image
 
         if (image == null) //If there is no image
         {
@@ -445,20 +449,20 @@ public class EyedropperController extends NonDataPageControllerBase
 
         PixelReader pixelReader = image.getPixelReader();
 
-        Rectangle2D viewport = imageView.getViewport();
+        Rectangle2D viewport = imageView.getLogicalViewport();
 
         if (viewport == null)
         {
-            viewport = resetViewport(imageView);
+            viewport = getDefaultViewport(imageView);
         }
 
         // Convert selectionRectangle bounds from selectionPane into ImageView coordinates
         Bounds rectBoundsInPane = selectionRectangle.getBoundsInParent();
-        Bounds rectBoundsInImg = imageView.sceneToLocal(selectionPane.localToScene(rectBoundsInPane));
+        Bounds rectBoundsInImg = imageView.getImageViewNode().sceneToLocal(selectionPane.localToScene(rectBoundsInPane));
 
         // ImageView coordinates to image pixel coordinates
-        double renderedWidth = imageView.getBoundsInLocal().getWidth();
-        double renderedHeight = imageView.getBoundsInLocal().getHeight();
+        double renderedWidth = imageView.getImageViewNode().getBoundsInLocal().getWidth();
+        double renderedHeight = imageView.getImageViewNode().getBoundsInLocal().getHeight();
 
         if (renderedWidth <= 0 || renderedHeight <= 0) //No image / clicked on something else
         {
@@ -501,33 +505,6 @@ public class EyedropperController extends NonDataPageControllerBase
         }
 
         return calculateAverageColor(selectedColors);
-    }
-
-    private static double calculateImgViewCroppedScaleFactor(ImageView imageView)
-    {
-        Rectangle2D viewport = imageView.getViewport();
-        if (viewport.getWidth() > viewport.getHeight())
-        {
-            return viewport.getWidth() / imageView.getFitWidth();
-        }
-        else
-        {
-            return viewport.getHeight() / imageView.getFitHeight();
-        }
-    }
-
-    private static double calculateImgViewScaleFactor(ImageView imgView)
-    {
-        //getWidth() and getHeight() refer to the full resolution image
-        //fitWidth() and fitHeight() refer to the image in the window
-        if (imgView.getImage().getWidth() > imgView.getImage().getHeight())
-        {
-            return imgView.getImage().getWidth() / imgView.getFitWidth();
-        }
-        else
-        {
-            return imgView.getImage().getHeight() / imgView.getFitHeight();
-        }
     }
 
     private static Color calculateAverageColor(Collection<Color> colors)
@@ -666,7 +643,7 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void apply()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         // light intensities depend on whether inverse-square attenuation is enabled
         ioModel.requestLightIntensityCalibration();
@@ -755,7 +732,7 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private static boolean hasValidIOModel()
     {
-        return Global.state().getIOModel().hasLoadedRenderable();
+        return Global.io().hasLoadedRenderable();
     }
 
     @FXML
@@ -782,62 +759,29 @@ public class EyedropperController extends NonDataPageControllerBase
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", VALID_EXTENSIONS));
+        fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", VALID_EXTENSIONS));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        try
+        ViewSet viewSet = Global.io().getLoadedViewSet();
+        if (viewSet == null)
         {
-            fileChooser.setInitialDirectory(Global.state().getIOModel().getLoadedViewSet().getFullResImageFile(0).getParentFile());
-        }
-        catch (NullPointerException e)
-        {
-            Alert alert = new Alert(AlertType.ERROR, "Please load a model before using the color checker.");
+            Alert alert = new Alert(AlertType.ERROR, "Please load a model before performing tone calibration.");
             alert.setGraphic(null);
             alert.show();
-            return;
         }
-
-        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-        File file = fileChooser.showOpenDialog(stage);
-        setImage(file);
-    }
-
-    private void setImage(File file)
-    {
-        if (file != null)
+        else
         {
-            RecentProjects.setMostRecentDirectory(file.getParentFile());
-
-            //convert tiff image if necessary
-            if (file.getAbsolutePath().toLowerCase(Locale.ROOT).matches(".*\\.tiff?"))
+            View view = viewSet.getRepresentativeView();
+            if (view != null)
             {
-                try
-                {
-                    imageDetailsController.setImage(file.getPath());
-                    BufferedImage bufferedImage = ImageHelper.read(file).getBufferedImage();
-                }
-                catch (IOException e)
-                {
-                    LOG.error("Could not convert tif image: ", e);
-                }
-            }
-            else
-            {
-                selectedFile.set(new Image(file.toURI().toString()));
-                imageDetailsController.setImage(file.getPath());
+                fileChooser.setInitialDirectory(view.getFullResImageFile().getParentFile());
             }
 
-            //update buttons
-            chooseImageButton.setVisible(false);
-            chooseNewImageButton.setVisible(true);
+            Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            File file = fileChooser.showOpenDialog(stage);
+            setImage(file);
 
-            //testing the code for saving the file
-            //Note: Code bellow saves the file however it's not audiomatic. The user has to select where to save it and name the file as well.
-            //Stage secondStage = new Stage();
-            //File savefile = fileChooser.showSaveDialog(secondStage);
-            //fileChooser.setInitialFileName("colorPickerImage");
-
-            //This saves the file to the location path listed
+            // This saves the file to the location path listed
             try
             {
                 getState().getProjectModel().setColorCheckerFile(new File(file.getPath()));
@@ -849,9 +793,23 @@ public class EyedropperController extends NonDataPageControllerBase
         }
     }
 
+    private void setImage(File file)
+    {
+        if (file != null)
+        {
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
+            selectedFile.set(new Image(file.toURI().toString()));
+            imageDetailsController.setImage(file.getPath());
+
+            // update buttons
+            chooseImageButton.setVisible(false);
+            chooseNewImageButton.setVisible(true);
+        }
+    }
+
     public void reset()
     {
-        IOModel ioModel = Global.state().getIOModel();
+        IOModel ioModel = Global.io();
 
         // Clear tonemapping and reset text fields to a standard curve
         ioModel.clearTonemapping();

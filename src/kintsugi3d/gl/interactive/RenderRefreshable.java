@@ -16,18 +16,18 @@ import kintsugi3d.gl.core.*;
 import java.util.List;
 
 public final class RenderRefreshable
-    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderableResource<ContextType>>
     implements Refreshable, ContextBound<ContextType>
 {
     private final ContextType context;
     private final RenderableType renderable;
     private final DoubleFramebuffer<ContextType> framebuffer;
-    private final Iterable<Resource> managedResources;
+    private final Iterable<ManagedResource> managedResources;
 
     private boolean initialized = false;
 
     public static
-    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderableResource<ContextType>>
     RenderRefreshable<ContextType, RenderableType> createWithManagedFrambufferObject(
         ContextType context, RenderableType renderable, DoubleFramebufferObject<ContextType> framebuffer)
     {
@@ -35,7 +35,7 @@ public final class RenderRefreshable
     }
 
     public static
-    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>>
+    <ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderableResource<ContextType>>
     RenderRefreshable<ContextType, RenderableType>  createWithDefaultFrambufferObject(
         ContextType context, RenderableType renderable)
     {
@@ -43,7 +43,7 @@ public final class RenderRefreshable
     }
 
     private RenderRefreshable(ContextType context, RenderableType renderable,
-                             DoubleFramebuffer<ContextType> framebuffer, Iterable<Resource> managedResources)
+                             DoubleFramebuffer<ContextType> framebuffer, Iterable<ManagedResource> managedResources)
     {
         this.context = context;
         this.renderable = renderable;
@@ -97,7 +97,7 @@ public final class RenderRefreshable
     {
         context.makeContextCurrent();
 
-        for (Resource r : managedResources)
+        for (ManagedResource r : managedResources)
         {
             r.close();
         }
