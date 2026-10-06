@@ -195,6 +195,7 @@ public final class RenderingBootstrap
             renderableManager.setLightingModel(Global.state().getLightingModel());
             renderableManager.setCameraModel(Global.state().getCameraModel());
             renderableManager.setCameraViewListModel(Global.state().getViewListModel());
+            renderableManager.setObjectModel(Global.state().getObjectModel());
         }
 
         IOModel ioModel = Global.io();
@@ -212,8 +213,8 @@ public final class RenderingBootstrap
         app.addRefreshable(renderableManager.getRenderViews()); // i.e. views in carousel that also need to be in the refresh loop
 
         // Pass reference to instance manager to other components as needed.
-        ioModel.setLoadingHandler(renderableManager);
         Rendering.initialize(context, renderableManager);
+        ioModel.setLoadingHandler(renderableManager);
 
         // Allow frontend to react to IO events
         if (MultithreadState.isInitialized())

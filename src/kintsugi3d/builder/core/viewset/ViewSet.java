@@ -675,14 +675,14 @@ public final class ViewSet implements ReadonlyViewSet
     {
         this.supportingFilesDirectory = supportingFilesDirectory;
 
-        Path root = getAbsoluteRootDirectory().normalize();
-        Path thumbs = new File(supportingFilesDirectory, "thumbnails")
-            .toPath().toAbsolutePath().normalize();
+//        Path root = getAbsoluteRootDirectory().normalize();
+//        Path thumbs = new File(supportingFilesDirectory, "thumbnails")
+//            .toPath().toAbsolutePath().normalize();
 
-        setRelativeThumbnailImagePathName(root.relativize(thumbs).toString());
+        //setRelativeThumbnailImagePathName(root.relativize(thumbs).toString());
 
         // TODO would this work?
-        //this.thumbnailImageDirectory = new File(supportingFilesDirectory, "thumbnails");
+        this.thumbnailImageDirectory = new File(supportingFilesDirectory, "thumbnails");
     }
 
     @Override

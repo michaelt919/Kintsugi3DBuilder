@@ -12,7 +12,7 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.javafx.internal.ObservableViewListModel;
+import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.state.CacheModel;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.SelectableViewListModel;
@@ -30,6 +30,7 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 class TestingState implements Kintsugi3DBuilderState
@@ -37,167 +38,10 @@ class TestingState implements Kintsugi3DBuilderState
     private final TestingProjectModel projectModel = new TestingProjectModel();
     private final GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
     private final ReadonlyViewpointModel cameraModel = new SimpleCameraModel();
-
-    private final ReadonlyLightingEnvironmentModel lightingEnvironmentModel = new ReadonlyLightingEnvironmentModel()
-    {
-        @Override
-        public ReadonlyLightWidgetModel getLightWidgetModel(int index)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int getLightCount()
-        {
-            return 0;
-        }
-
-        @Override
-        public int getMaxLightCount()
-        {
-            return 0;
-        }
-
-        @Override
-        public boolean isLightVisualizationEnabled(int index)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isLightWidgetEnabled(int index)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean areLightWidgetsEthereal()
-        {
-            return false;
-        }
-
-        @Override
-        public float getAmbientLightIntensity()
-        {
-            return 0;
-        }
-
-        @Override
-        public Vector3 getAmbientLightColor()
-        {
-            return Vector3.ZERO;
-        }
-
-        @Override
-        public boolean isEnvironmentMappingEnabled()
-        {
-            return false;
-        }
-
-        @Override
-        public Matrix4 getEnvironmentMapMatrix()
-        {
-            return Matrix4.IDENTITY;
-        }
-
-        @Override
-        public float getEnvironmentMapFilteringBias()
-        {
-            return 0;
-        }
-
-        @Override
-        public ReadonlyLightPrototypeModel getLightPrototype(int i)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Matrix4 getLightMatrix(int i)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Vector3 getLightCenter(int i)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public float getBackgroundIntensity()
-        {
-            return 0;
-        }
-
-        @Override
-        public Vector3 getBackgroundColor()
-        {
-            return Vector3.ZERO;
-        }
-
-        @Override
-        public BackgroundMode getBackgroundMode()
-        {
-            return BackgroundMode.NONE;
-        }
-
-        @Override
-        public Vector3 getGroundPlaneColor()
-        {
-            return Vector3.ZERO;
-        }
-
-        @Override
-        public boolean isGroundPlaneEnabled()
-        {
-            return false;
-        }
-
-        @Override
-        public float getGroundPlaneHeight()
-        {
-            return 0;
-        }
-
-        @Override
-        public float getGroundPlaneSize()
-        {
-            return 0;
-        }
-    };
-
-    private final SelectableViewListModel viewListModel = new ObservableViewListModel();
-    private final TabsModel tabsModel = new TabsModel()
-    {
-        @Override
-        public <T> void addTab(String tabName, ProjectDataCardFactory<T> cardFactory, String path)
-        {
-        }
-
-        @Override
-        public void clearTabs()
-        {
-        }
-
-        @Override
-        public CardsModel<?> getTab(String label)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public <T> CardsModel<T> getTab(String label, Class<T> dataClass)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Map<String, ? extends CardsModel<?>> getTabsMap()
-        {
-            return Map.of();
-        }
-    };
+    private final ReadonlyLightingEnvironmentModel lightingEnvironmentModel = new TestingLightingModel();
+    private final SelectableViewListModel viewListModel = new TestingViewListModel();
+    private final TabsModel tabsModel = new TestingTabsModel();
+    private final ObjectPoseModel objectModel = new TestingObjectModel();
 
     TestingState()
     {
@@ -219,7 +63,7 @@ class TestingState implements Kintsugi3DBuilderState
     @Override
     public ReadonlyObjectPoseModel getObjectModel()
     {
-        throw new UnsupportedOperationException();
+        return  objectModel;
     }
 
     @Override
