@@ -23,7 +23,6 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -46,6 +45,7 @@ import kintsugi3d.builder.javafx.controllers.modals.LiveProjectSettingsManager;
 import kintsugi3d.builder.javafx.controllers.paged.NonDataPageControllerBase;
 import kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.javafx.util.ZoomSafeImageView;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -314,19 +314,9 @@ public class EyedropperController extends NonDataPageControllerBase
         rectangleForTextField.put(textField, rectangle);
     }
 
-    private static Rectangle2D resetViewport(ImageView imageView)
+    private static Rectangle2D getDefaultViewport(ZoomSafeImageView imageView)
     {
-        //reset the viewport to default value (view entire image)
-        Rectangle2D defaultViewport = getDefaultViewport(imageView);
-
-        imageView.setViewport(defaultViewport);
-
-        return defaultViewport;
-    }
-
-    private static Rectangle2D getDefaultViewport(ImageView imageView)
-    {
-        Image image = imageView.getImage();
+        Image image = imageView.getFullImage();
         return new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
     }
 
@@ -367,18 +357,18 @@ public class EyedropperController extends NonDataPageControllerBase
     @FXML
     private void handleMouseDragged(MouseEvent event)
     {
-        if (isSelecting) //In selection state
+        if (isSelecting) // In selection state
         {
-            //Current mouse locations
+            // Current mouse locations
             double currentMouseX = event.getX();
             double currentMouseY = event.getY();
 
-            ImageView imageView = imageDetailsController.getDisplayImage(); //ImageView in imageDetails
+            Node imageView = imageDetailsController.getDisplayImage().getImageViewNode(); // ImageView in imageDetails
 
             // Takes image view coordinates and translates them to selectionPane coordinates
             Bounds imgBoundsInSelectionPane = selectionPane.sceneToLocal(imageView.localToScene(imageView.getBoundsInLocal()));
 
-            //Max and min locations
+            // Max and min locations
             double imageMinX = imgBoundsInSelectionPane.getMinX();
             double imageMinY = imgBoundsInSelectionPane.getMinY();
             double imageMaxX = imgBoundsInSelectionPane.getMaxX();
@@ -448,9 +438,9 @@ public class EyedropperController extends NonDataPageControllerBase
 
     private Color getAvgColorFromSelection()
     {
-        ImageView imageView = imageDetailsController.getDisplayImage(); //Image details imageview
+        ZoomSafeImageView imageView = imageDetailsController.getDisplayImage(); //Image details imageview
 
-        Image image = imageView.getImage(); //Actual Image
+        Image image = imageView.getFullImage(); //Actual Image
 
         if (image == null) //If there is no image
         {
@@ -459,20 +449,20 @@ public class EyedropperController extends NonDataPageControllerBase
 
         PixelReader pixelReader = image.getPixelReader();
 
-        Rectangle2D viewport = imageView.getViewport();
+        Rectangle2D viewport = imageView.getLogicalViewport();
 
         if (viewport == null)
         {
-            viewport = resetViewport(imageView);
+            viewport = getDefaultViewport(imageView);
         }
 
         // Convert selectionRectangle bounds from selectionPane into ImageView coordinates
         Bounds rectBoundsInPane = selectionRectangle.getBoundsInParent();
-        Bounds rectBoundsInImg = imageView.sceneToLocal(selectionPane.localToScene(rectBoundsInPane));
+        Bounds rectBoundsInImg = imageView.getImageViewNode().sceneToLocal(selectionPane.localToScene(rectBoundsInPane));
 
         // ImageView coordinates to image pixel coordinates
-        double renderedWidth = imageView.getBoundsInLocal().getWidth();
-        double renderedHeight = imageView.getBoundsInLocal().getHeight();
+        double renderedWidth = imageView.getImageViewNode().getBoundsInLocal().getWidth();
+        double renderedHeight = imageView.getImageViewNode().getBoundsInLocal().getHeight();
 
         if (renderedWidth <= 0 || renderedHeight <= 0) //No image / clicked on something else
         {
