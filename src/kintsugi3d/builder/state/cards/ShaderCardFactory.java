@@ -18,6 +18,7 @@ import kintsugi3d.builder.util.AppIcon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
 ShaderCardFactory will create cards/boxes in the UI for the shaders that are applicable to
@@ -65,7 +66,7 @@ public class ShaderCardFactory extends ProjectDataCardFactoryBase<ShaderInfo>
     @Override
     public ProjectDataCard createCard(ShaderInfo shader)
     {
-        return new ShaderDataCard(shader.getFilename(), shader, AppIcon.PATH);
+        return new ShaderDataCard(shader.getFilename(), shader, AppIcon.PATH, null, Map.of(), List.of(), true);
     }
 
     /**

@@ -18,11 +18,11 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="mainBox" styleClass="sidebar-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.SideBarController" onMouseMoved="#mouseMoved" onMousePressed="#mousePressed" onMouseDragged="#mouseDragged" onMouseReleased="#mouseReleased">
+<VBox fx:id="mainBox" styleClass="sidebar-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.sidebar.SideBarController" onMouseMoved="#mouseMoved" onMousePressed="#mousePressed" onMouseDragged="#mouseDragged" onMouseReleased="#mouseReleased">
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox fx:id = "workspaceBox" alignment="TOP_RIGHT" prefHeight="23.0" maxHeight="23" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
-            <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
+            <Insets fx:id = "inseters" bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>
         <StackPane alignment="CENTER_LEFT" prefHeight="150.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
             <Label fx:id = "workspaceLabel" text="Workspace" />

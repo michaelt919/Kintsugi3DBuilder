@@ -26,7 +26,7 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>${project.build.directory}/classes/export-classes.txt</source>
+            <source>${project.build.directory}/classes/render-exports.txt</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>

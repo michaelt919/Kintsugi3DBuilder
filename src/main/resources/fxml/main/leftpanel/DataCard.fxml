@@ -1,14 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Rectangle?>
-<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
+<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.sidebar.CardController">
     <VBox id="border_box" fx:id="borderBox">
         <HBox alignment="CENTER_LEFT" stylesheets="@../../kintsugiStyling.css">
-            <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="32.0" preserveRatio="true" />
+            <StackPane alignment="TOP_LEFT">
+                <ImageView id="texture_icon" fx:id="cardIcon" fitHeight="32.0" preserveRatio="true"/>
+                <Rectangle fx:id = "hoverRectangle" opacity=".2" fill="WHITE" visible = "false" mouseTransparent="true"/>
+                <CheckBox fx:id="selectionBox"
+                          styleClass="selectionBox"
+                          alignment="TOP_LEFT"
+                          onAction="#select"
+                          onMouseEntered="#hoverStart"
+                          onMouseExited="#hoverEnd"
+                          style="-fx-background-color: transparent; -fx-padding: 0;">
+                </CheckBox>
+            </StackPane>
             <Label id="texture_title" fx:id="cardTitle" styleClass="wireframeBodyStrong" text="Texture Type" HBox.hgrow="ALWAYS">
                 <HBox.margin>
                     <Insets left="8.0" />

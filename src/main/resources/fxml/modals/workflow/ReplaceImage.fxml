@@ -11,11 +11,11 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
-<VBox spacing="10.0" fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workspace.ReplaceImageController">
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="10.0" fx:id="root" alignment="CENTER" fillWidth="true" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.fx.controllers.modals.workspace.ReplaceImageController">
     <VBox spacing="8.0">
         <HBox alignment="CENTER_LEFT" spacing="16.0">
             <Label styleClass="wireframeTitle"  text="Replace Texture..."/>
