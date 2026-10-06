@@ -11,12 +11,8 @@
 
 package kintsugi3d.builder.util;
 
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import kintsugi3d.gl.interactive.ProgressMonitor;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
-import org.apache.commons.imaging.formats.tiff.TiffImageParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -33,7 +29,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -91,7 +86,7 @@ public final class UnzipHelper
      * @return
      * @throws IOException
      */
-    public static String unzipToString(File zipFile, String targetFileName) throws IOException
+    private static String unzipToString(File zipFile, String targetFileName) throws IOException
     {
         try (ZipFile file = new ZipFile(zipFile))
         {
@@ -129,7 +124,7 @@ public final class UnzipHelper
     private static String fileStreamToString(InputStream stream) throws IOException
     {
         byte[] buffer = new byte[1024];
-        StringBuilder s = new StringBuilder();
+        StringBuilder s = new StringBuilder(1024);
         int read;
         while ((read = stream.read(buffer, 0, 1024)) >= 0)
         {
@@ -138,7 +133,7 @@ public final class UnzipHelper
         return s.toString();
     }
 
-    public static Document convertStringToDocument(String xmlStr)
+    private static Document convertStringToDocument(String xmlStr)
     {
         //Taken from https://www.digitalocean.com/community/tutorials/java-convert-string-to-xml-document-and-xml-document-to-string
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -154,7 +149,7 @@ public final class UnzipHelper
         return null;
     }
 
-    public static String convertDocumentToString(Document doc)
+    private static String convertDocumentToString(Document doc)
     {
         //Taken from https://www.digitalocean.com/community/tutorials/java-convert-string-to-xml-document-and-xml-document-to-string
         TransformerFactory tf = TransformerFactory.newInstance();
@@ -175,7 +170,7 @@ public final class UnzipHelper
 
     public static List<Image> unzipImages(File zipFile)
     {
-        ArrayList<Image> images = new ArrayList<>();
+        ArrayList<Image> images = new ArrayList<>(64);
 
         try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile)))
         {
@@ -185,42 +180,20 @@ public final class UnzipHelper
                 String entryName = entry.getName();
                 if (isValidImageType(entryName))
                 {
-                    Image imageData = readImageData(zipInputStream, entryName);
+                    Image imageData = FXImageHelper.loadFXImage(zipInputStream, entryName);
                     images.add(imageData);
                 }
                 zipInputStream.closeEntry();
             }
 
         }
-        catch (IOException | ImageReadException e)
+        catch (IOException e)
         {
             LOG.error("Error unzipping images:", e);
         }
 
         LOG.info("Total images extracted: {}", images.size());
         return images;
-    }
-
-    private static Image readImageData(InputStream inputStream, String fileName) throws IOException, ImageReadException
-    {
-        //convert unzipped image if it is a .tif or .tiff file
-        if (fileName.toLowerCase().matches(".*\\.tiff?"))
-        {//convert image if it is a .tif or .tiff
-            TiffImageParser tiffImageParser = new TiffImageParser();
-            ByteSourceInputStream byteSourceInputStream = new ByteSourceInputStream(inputStream, fileName);
-            BufferedImage bufferedImage = tiffImageParser.getBufferedImage(byteSourceInputStream, null);
-            return SwingFXUtils.toFXImage(bufferedImage, null);
-        }
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1)
-        {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-        ByteArrayInputStream imageInputStream = new ByteArrayInputStream(outputStream.toByteArray());
-        return new Image(imageInputStream);
     }
 
     private static boolean isValidImageType(String path)
@@ -239,10 +212,10 @@ public final class UnzipHelper
     {
         //  <thumbnail camera_id="0" path="c0.png"/>
 
-        Map<Integer, Image> imagesMap = new HashMap<>();
+        Map<Integer, Image> imagesMap = new HashMap<>(64);
 
         //need this intermediary because Image objects don't store their source path when unzipped this way
-        Map<String, Image> tempMap = new HashMap<>();
+        Map<String, Image> tempMap = new HashMap<>(64);
 
         Document docXml = null;
         try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(imgsDir)))
@@ -262,13 +235,13 @@ public final class UnzipHelper
                 else
                 {
                     //this is an image, add it to the temp map
-                    tempMap.put(entryName, readImageData(zipInputStream, entryName));
+                    tempMap.put(entryName, FXImageHelper.loadFXImage(zipInputStream, entryName));
                 }
                 zipInputStream.closeEntry();
             }
 
         }
-        catch (IOException | ImageReadException e)
+        catch (IOException e)
         {
             LOG.error("Error unzipping images:", e);
         }

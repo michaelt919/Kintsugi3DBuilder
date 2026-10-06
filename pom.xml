@@ -584,6 +584,11 @@
             <artifactId>jgltf-model</artifactId>
             <version>2.0.4</version>
         </dependency>
+        <dependency>
+            <groupId>de.javagl</groupId>
+            <artifactId>jgltf-model-builder</artifactId>
+            <version>2.0.4</version>
+        </dependency>
         <!-- Use a non-vulnerable version of jackson-databind instead of version transitive of jgltf-model -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -594,16 +599,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.21.7</version>
-        </dependency>
-        <dependency>
-            <groupId>de.javagl</groupId>
-            <artifactId>jgltf-obj</artifactId>
-            <version>2.0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>de.javagl</groupId>
-            <artifactId>obj</artifactId>
-            <version>0.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -619,11 +614,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j2-impl</artifactId>
             <version>2.25.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-imaging</artifactId>
-            <version>1.0-alpha3</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

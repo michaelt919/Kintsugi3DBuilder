@@ -12,7 +12,6 @@
 package kintsugi3d.fx.controllers.sidebar;
 
 import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -26,17 +25,14 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
+import kintsugi3d.builder.util.FXImageHelper;
 import kintsugi3d.fx.util.ZoomSafeImageView;
-import kintsugi3d.gl.util.ImageHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 public class ImageDetailsController
 {
@@ -146,27 +142,9 @@ public class ImageDetailsController
 
             File imageFile = new File(filePath); //Creates file from the filePath
 
-            if (imageFile.exists()) //If file exists
+            if (imageFile.exists()) // If file exists
             {
-                // convert tiff image if necessary
-                if (imageFile.getAbsolutePath().toLowerCase(Locale.ROOT).matches(".*\\.tiff?"))
-                {
-                    try
-                    {
-                        BufferedImage bufferedImage = ImageHelper.read(imageFile).getBufferedImage();
-                        currentImage = SwingFXUtils.toFXImage(bufferedImage, null);
-                    }
-                    catch (IOException e)
-                    {
-                        LOG.error("Could not convert tiff image: ", e);
-                        currentImage = null;
-                    }
-                }
-                else
-                {
-                    currentImage = new Image(imageFile.toURI().toString()); //Assigns original image with the file
-                }
-
+                currentImage = FXImageHelper.loadFXImage(imageFile);
                 zoomSafeImageView.setFullImage(currentImage); // ImageView is set to currentImage
 
                 // Resets viewport
