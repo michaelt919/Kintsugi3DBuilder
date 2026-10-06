@@ -1,0 +1,468 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.fx.controllers.sidebar;
+
+import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import kintsugi3d.builder.rendering.Rendering;
+import kintsugi3d.builder.state.CarouselItem;
+import kintsugi3d.builder.state.shader.ShaderInfo;
+import kintsugi3d.fx.core.MainWindowController;
+import kintsugi3d.fx.internal.ObservableCarouselModel;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+/*
+    This is the controller for the carousel it does quite a few things.
+    1. Detects changes to carouselModel list and adds or removes cards based on that
+    2. Allows for the carousel to be resized
+    3. Allows for mouse clicks to pass through to the right of the carousel
+    4. Loads carousel cards after detection
+ */
+public class CarouselController
+{
+    private static final int DEFAULT_HEIGHT = 180;
+    private static final int MINIMIZED_HEIGHT = 23;
+    private static final int SCROLLBAR_BUFFER = 15;
+
+    @FXML private HBox containerHBox;
+    @FXML private ScrollPane carouselScrollPane;
+    @FXML private AnchorPane mainBox;
+    @FXML private Region resizeHandle;
+    @FXML private HBox buttonBox;
+    @FXML private VBox minimizeBar;
+    @FXML private Button miniButton;
+
+    private double dragStartY;
+    private double initialHeight;
+    private boolean minimized = false;
+    private boolean dragging = false;
+    private double minimizedValue;
+
+    private ObservableCarouselModel carouselModel;
+    private MainWindowController mainWindowBox;
+
+    public void init(ObservableCarouselModel carouselModel, MainWindowController mainWindowBox)
+    {
+        this.carouselModel = carouselModel;
+        this.mainWindowBox = mainWindowBox;
+
+        carouselModel.carouselHeightProperty().bind(mainBox.heightProperty());
+
+        // Bind carousel card height to the height of the JavaFX container.
+        // Carousel card width will be auto-calculated from height.
+        carouselModel.carouselCardHeightProperty().bind(containerHBox.heightProperty());
+
+        // Creates a listener to detect if any elements are added or removed from array list
+        carouselModel.getCarouselItems().addListener(
+            (ListChangeListener<CarouselItem>) change ->
+            {
+                miniButton.setVisible(!carouselModel.getCarouselItems().isEmpty() && !minimized);
+
+                // Once change happens, the while loop looks at what next change is
+                while (change.next())
+                {
+                    // Keep track of removed cards that might be reusable if they were moved somewhere else in the list.
+                    Map<CarouselItem, Node> removedCards = new HashMap<>(change.getRemovedSize());
+
+                    // Handle removal first, to avoid complicated indexing math
+                    // and also compile a list of cards that might be reusable.
+                    if (change.wasRemoved())
+                    {
+                        // If an element was removed, we remove the element from the container
+                        for (int i = 0; i < change.getRemovedSize(); i++)
+                        {
+                            removedCards.put(change.getRemoved().get(i), containerHBox.getChildren().get(change.getFrom()));
+                            containerHBox.getChildren().remove(change.getFrom());
+                        }
+
+                        if (carouselModel.getCarouselItems().isEmpty())
+                        {
+                            mainBox.setMouseTransparent(true);
+                        }
+                    }
+
+                    // If an element was added, loadCarouselCard is called with the additional shader
+                    if (change.wasAdded())
+                    {
+                        for (int i = change.getFrom(); i < change.getTo(); i++)
+                        {
+                            CarouselItem addedItem = carouselModel.getCarouselItems().get(i);
+
+                            // Remove from temporary map while retrieving existing card, if it exists
+                            Node existingCard = removedCards.remove(addedItem);
+
+                            if (existingCard != null)
+                            {
+                                // Use existing card if found
+                                containerHBox.getChildren().add(existingCard);
+                            }
+                            else
+                            {
+                                // Dynamically load the FXML for every shader added to the model
+                                CarouselCardController carouselCard = loadCarouselCard(addedItem.getShader());
+
+                                if (carouselCard == null)
+                                {
+                                    // Card load failed; clean up backend.
+                                    ShaderInfo shader = addedItem.getShader();
+                                    Rendering.getRenderableManager().removeRenderView(shader);
+                                }
+                                else
+                                {
+                                    // Force layout so that the ImageView has real dimensions when connecting to the backend.
+                                    mainBox.layout();
+
+                                    // Wait for layout.
+                                    Platform.runLater(() ->
+                                    {
+                                        // Connect the backend to the JavaFX frontend.
+                                        carouselCard.setupCanvas(addedItem.getCanvas());
+                                    });
+                                }
+                            }
+                        }
+                        Platform.runLater(() -> carouselScrollPane.setHvalue(1.0));
+
+                        // If carousel is minimized it will maximize it
+                        if (minimized)
+                        {
+                            maximize();
+                        }
+                        mainBox.setMouseTransparent(false); //Makes Carousel interactable
+                    }
+                }
+                //recalculates carousel width after cards are added or removed
+                Platform.runLater(this::recalculateMaxWidth);
+            });
+
+        //Recalculates carousel width
+        mainBox.widthProperty().addListener((obs, oldVal, newVal) -> recalculateMaxWidth());
+
+        //Checks for change in height/resize for the carousel and call recalculate max width
+        mainBox.heightProperty().addListener((observable, oldHeight, newHeight) -> recalculateMaxWidth());
+
+        //Detects when the carousel space in mainWindow changes
+        Platform.runLater(() ->
+        {
+            Region container = (Region) mainBox.getParent().getParent(); //Main window space
+            //Listener for space change
+            container.widthProperty().addListener((obs, oldVal, newVal) -> recalculateMaxWidth());
+
+            //Listener for viewPort change
+            carouselScrollPane.viewportBoundsProperty().addListener((obs, oldVal, newVal) -> updateScrollbarVisibility());
+
+            if (carouselScrollPane.getContent() != null)
+            {
+                //Listener for scrollBar
+                carouselScrollPane.getContent().boundsInParentProperty().addListener((obs, oldVal, newVal) -> updateScrollbarVisibility());
+            }
+
+            recalculateMaxWidth(); //Recalculates width at end of init method
+        });
+    }
+
+    /**
+     * This method will resize carousel whenever there are changes to its content width or height
+     */
+    private void recalculateMaxWidth()
+    {
+        int count = carouselModel.getCarouselItems().size(); //Number of cards in carousel
+        if (count == 0) //If that number is 0
+        {
+            mainBox.setMaxWidth(0); //set the mainBox width to 0
+            return; //Dont do rest of method
+        }
+
+        //Card width
+        double cardWidth = carouselModel.getCarouselCardWidth();
+        //Spacing between cards
+        double spacing = containerHBox.getSpacing();
+        //Left and Right padding
+        double padding = containerHBox.getPadding().getLeft() + containerHBox.getPadding().getRight();
+
+        double totalCardWidths = cardWidth * count; //Total Card width
+        //Multiplies spacing by the number of cards minus 1, if the card-1 is -1 it will default to 0
+        double totalSpacing = spacing * Math.max(0, count - 1);
+        //Calculated width of carousel (Leave 10 as extra space; when making it more or less ran into issues)
+        double calculatedWidth = totalCardWidths + totalSpacing + padding + 10.0;
+
+        //Set the width of carousel
+        mainBox.setMaxWidth(calculatedWidth);
+        mainBox.setPrefWidth(calculatedWidth);
+
+        updateScrollbarVisibility(); //update scrollbar visibility afterwords
+    }
+
+    /**
+     * This method will update the scrollbars visibility using css lookups
+     */
+    private void updateScrollbarVisibility()
+    {
+        if (dragging) //if its being dragged
+        {
+            //If content of carousel fits inside available space for it
+            if ((mainBox.getParent().getScene().getWidth() - mainWindowBox.getRightTabWidth() - SCROLLBAR_BUFFER) > (carouselScrollPane.getWidth() + mainWindowBox.getLeftTabWidth())){
+                return; //Ends method
+            }
+        }
+        //If the scroll pane or its content is null end method here
+        if ((carouselScrollPane == null) || (carouselScrollPane.getContent() == null)) return;
+
+        // Apply css to keep scrollbar up to date
+        carouselScrollPane.getContent().applyCss();
+
+        //Gets width of carousel content and the viewport width
+        double contentWidth = carouselScrollPane.getContent().getBoundsInParent().getWidth();
+        double viewportWidth = carouselScrollPane.getViewportBounds().getWidth();
+
+        //Checks for non initialized viewport
+        if (viewportWidth <= 0) return;
+
+        // If the content is bigger than viewPort + the scroll bar buffer
+        boolean isScrollable = contentWidth > (viewportWidth + SCROLLBAR_BUFFER);
+
+        if (!isScrollable) //If not scrollable
+        {
+            carouselScrollPane.getStyleClass().remove("hide-hbar"); //Removes css hide-bar
+            AnchorPane.setTopAnchor(resizeHandle, 10.0); //Resets resize handle drag point
+        }
+        else
+        {
+            //If there is no css hide-hbar applied
+            if (!carouselScrollPane.getStyleClass().contains("hide-hbar"))
+            {
+                carouselScrollPane.getStyleClass().add("hide-hbar"); //Adds css hide-hbar
+                AnchorPane.setTopAnchor(resizeHandle, -5.0); //Resize handle shifts to include scrollbar
+            }
+        }
+
+        // Mouse transparent logic (Not sure if it helps)
+        Node hBar = carouselScrollPane.lookup(".scroll-bar:horizontal");
+        if (hBar != null)
+        {
+            // Sets mouse Transparency based on scrollbar
+            hBar.setMouseTransparent(!isScrollable);
+        }
+    }
+
+    /**
+     * Takes in parameter shader and loads a CarouselCard assigned to that shader.
+     * Adds the card to the scrollpane through containerHbox. Handles the listener
+     * to detect when mainBox size changes and changes the cards height accordingly
+     * @param shader
+     */
+    private CarouselCardController loadCarouselCard(ShaderInfo shader)
+    {
+        try
+        {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main/CarouselCard.fxml"));
+            Region card = loader.load();
+
+            card.setUserData(shader);
+
+            CarouselCardController cardController = loader.getController();
+            cardController.init(carouselModel, shader, this);
+
+            HBox.setHgrow(card, Priority.ALWAYS);
+
+            card.prefWidthProperty().bind(carouselModel.carouselCardWidthProperty());
+            card.maxWidthProperty().bind(carouselModel.carouselCardWidthProperty());
+            card.minWidthProperty().bind(carouselModel.carouselCardWidthProperty());
+
+            containerHBox.getChildren().add(card);
+
+            return cardController;
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Gets information needed to calculate offset
+     * @param event
+     */
+    @FXML
+    public void mousePressed(MouseEvent event)
+    {
+        dragStartY = event.getSceneY();
+        initialHeight = mainBox.getHeight();
+    }
+
+    /**
+     * If the mouse is dragged it first gets the new mouse position, then it finds
+     * the upper bound. Next it resizes the tab accordingly: If the box is minimized
+     * it will snap back to minimized state if the drag is not far enough. Otherwise,
+     * if it's dragged to make it bigger, once it is big enough it will call maximize.
+     * If it's maximized and dragged small enough it will go into minimized state.
+     * @param event
+     */
+    @FXML
+    public void mouseDragged(MouseEvent event)
+    {
+        dragging = true;
+
+        if ((resizeHandle.getCursor() == null) || !resizeHandle.getCursor().equals(Cursor.S_RESIZE))
+        {
+            return;
+        }
+
+        double difference = dragStartY - event.getSceneY();
+        double newHeight = initialHeight + difference;
+        double upperBound = mainBox.getParent().getScene().getWindow().getHeight() * 0.50;
+
+        if (!minimized)
+        {
+            if (newHeight < (DEFAULT_HEIGHT/2.0))
+            {
+                minimize();
+            }
+            else if ((newHeight >= DEFAULT_HEIGHT) && (newHeight <= upperBound))
+            {
+                updateHeight(newHeight);
+            }
+            else if (newHeight < DEFAULT_HEIGHT)
+            {
+                updateHeight(DEFAULT_HEIGHT);
+            }
+            else if (newHeight > upperBound)
+            {
+                updateHeight(upperBound);
+            }
+        }
+    }
+
+    /**
+     * Used to clear code up, updates all of mainBox height settings to parameter height
+     * @param height
+     */
+    private void updateHeight(double height)
+    {
+        mainBox.setPrefHeight(height);
+        mainBox.setMinHeight(height);
+        mainBox.setMaxHeight(height);
+    }
+
+    /**
+     * Detects if the release is not past the threshold to call maximize. Will resize bar back to MINIMIZED_HEIGHT
+     * @param event
+     */
+    @FXML
+    public void mouseReleased(MouseEvent event)
+    {
+        if (minimized)
+        {
+            updateHeight(MINIMIZED_HEIGHT);
+        }
+
+        buttonBox.setMinHeight(MINIMIZED_HEIGHT);
+        buttonBox.setMaxHeight(MINIMIZED_HEIGHT);
+
+        dragging = false;
+    }
+
+    /**
+     * Un-hides button and the minimize bar while Hiding the cards. Sets minimized to true and updates
+     * mainBox height to MINIMIZED_HEIGHT.
+     */
+    private void minimize()
+    {
+        minimizedValue = mainBox.getHeight();
+        updateHeight(MINIMIZED_HEIGHT);
+
+        containerHBox.setVisible(false);
+
+        minimizeBar.setVisible(true);
+        minimizeBar.setManaged(true);
+
+        miniButton.setVisible(false);
+
+        resizeHandle.setManaged(false);
+        resizeHandle.setVisible(false);
+
+        minimized = true;
+
+        carouselScrollPane.setHbarPolicy(ScrollBarPolicy.NEVER); //Never have scroll bar when minimized
+    }
+
+    /**
+     * Hides button and the minimize bar while un-hiding the cards. Sets minimized to false.
+     * Also checks for if the scrollbar is needed when maximizing
+     */
+    private void maximize()
+    {
+        if (minimizedValue < DEFAULT_HEIGHT)
+        {
+            updateHeight(DEFAULT_HEIGHT);
+        }
+        else
+        {
+            updateHeight(minimizedValue);
+        }
+
+        resizeHandle.setManaged(true);
+        resizeHandle.setVisible(true);
+
+        containerHBox.setVisible(true);
+        carouselScrollPane.setMouseTransparent(false);
+
+        minimizeBar.setVisible(false);
+        minimizeBar.setManaged(false);
+
+        miniButton.setVisible(true);
+
+        minimized = false;
+
+        carouselScrollPane.setHbarPolicy(ScrollBarPolicy.ALWAYS);
+    }
+
+    /**
+     * When button is pressed toggleTopBar is triggered. For now button is only available when
+     * minimized. It will update cardHeight to DEFAULT_HEIGHT and calls maximize().
+     */
+    public void toggleTopBar()
+    {
+        if (minimized)
+        {
+            maximize();
+        }
+        else
+        {
+            minimize();
+        }
+    }
+
+    /**
+     * Minimize carousel button logic.
+     */
+    public void minimizeCarousel()
+    {
+        minimize();
+    }
+
+    public double getHBarValue(){ return carouselScrollPane.getHvalue();}
+    public void setHBarPosition(double pos){ carouselScrollPane.setHvalue(pos);}
+}

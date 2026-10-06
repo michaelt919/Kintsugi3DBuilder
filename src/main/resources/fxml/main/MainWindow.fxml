@@ -16,7 +16,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="720.0" styleClass="mainwindow-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.core.MainWindowController">
+<AnchorPane prefHeight="720.0" styleClass="mainwindow-root" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.core.MainWindowController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <AnchorPane>
             <MenuBar fx:id="mainMenubar" styleClass="menu-bar" useSystemMenuBar="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -50,7 +50,7 @@
                     </MenuItem>
                     <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem fx:id="fileExportGLTFModel" mnemonicParsing="false" onAction="#openExperience" text="Export Model..." userData="ExportModel" />
-                    <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export" />
+                    <Menu fx:id="renderExportMenu" mnemonicParsing="false" text="Export Render" />
                     <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false" />
                     <SeparatorMenuItem />
                     <Menu fx:id="recentProjectsMenu" mnemonicParsing="false" text="Recent Projects">

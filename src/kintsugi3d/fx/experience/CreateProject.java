@@ -1,0 +1,87 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.fx.experience;
+
+import kintsugi3d.fx.controllers.modals.createnewproject.*;
+import kintsugi3d.fx.controllers.modals.createnewproject.inputsources.ValidatedInputSource;
+import kintsugi3d.fx.controllers.modals.viewselect.OrientationViewSelectController;
+import kintsugi3d.fx.controllers.paged.SimpleDataSourcePage;
+
+import java.io.IOException;
+
+public class CreateProject extends ExperienceBase
+{
+    private static final String METASHAPE_IMPORT = "/fxml/modals/createnewproject/MetashapeImport.fxml";
+    private static final String MANUAL_IMPORT = "/fxml/modals/createnewproject/ManualImport.fxml";
+    private static final String MASKS_IMPORT = "/fxml/modals/createnewproject/MasksImport.fxml";
+    private static final String PRIMARY_VIEW_SELECT = "/fxml/modals/createnewproject/ViewSelect.fxml";
+
+    @Override
+    public String getName()
+    {
+        return "Create Project";
+    }
+
+    @Override
+    protected void open() throws IOException
+    {
+        // selection and Metashape import
+        var metashape = buildPagedModal()
+            .thenSelect("How are you importing your project?")
+            .choice("Metashape", METASHAPE_IMPORT, SimpleDataSourcePage<ValidatedInputSource, MetashapeImportController>::new);
+
+        // Masks import linked from Metashape import
+        var masks = metashape.<MasksImportController>then(MASKS_IMPORT);
+
+        // Reality capture and manual import options also link to masks import
+        var manual =
+            masks.<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
+                .finish()
+            .choice("Reality Capture", MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, RealityCaptureImportController>::new,
+                    RealityCaptureImportController::new)
+                .join(masks.getPage())
+            .choice("Manual", MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, ManualImportController>::new);
+
+        // finish manual import link to masks and wrap up
+        manual.join(masks.getPage())
+            .finish()
+            .setMinContentWidth(800)
+            .setMinContentHeight(512);
+
+        // link back to manual import in case of error
+        metashape.joinFallback("Manual Import", manual.getPage());
+    }
+
+    private void openHotSwap() throws IOException
+    {
+        buildPagedModal()
+            .then(MANUAL_IMPORT, SimpleDataSourcePage<ValidatedInputSource, HotSwapController>::new, HotSwapController::new)
+            .<MasksImportController>then(MASKS_IMPORT)
+            .<OrientationViewSelectController>then(PRIMARY_VIEW_SELECT)
+            .finish();
+    }
+
+    public void tryOpenHotSwap()
+    {
+        if (!getModal().isOpen())
+        {
+            try
+            {
+                openHotSwap();
+            }
+            catch (IOException|RuntimeException e)
+            {
+                handleError(e);
+            }
+        }
+    }
+}
