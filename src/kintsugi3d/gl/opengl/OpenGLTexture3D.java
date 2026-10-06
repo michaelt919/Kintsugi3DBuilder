@@ -650,7 +650,6 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
                 for (int i = 0; i < effectiveDepth; i++)
                 {
                     // If readSource is an OpenGLTexture3D, then it can be used as a framebuffer attachment to simplify the blit implementation.
-                    @SuppressWarnings("unchecked")
                     FramebufferAttachment<OpenGLContext> sourceAttachment =
                         ((OpenGLTexture3D)readSource).getLayerAsFramebufferAttachment(srcZ + i);
 

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core.texture;
 
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 
 import java.io.IOException;
 import java.util.Objects;

@@ -28,18 +28,18 @@ public class SpecularWeightOptimization
 
     private final int weightBlockSize;
 
-    public SpecularWeightOptimization(TextureResolution textureResolution, int basisCount, int weightBlockSize)
+    public SpecularWeightOptimization(TextureResolution textureResolution, int materialCount, int weightBlockSize)
     {
         this.textureResolution = textureResolution;
         this.weightBlockSize = weightBlockSize;
-        base = new NonNegativeWeightOptimization(weightBlockSize, basisCount,
+        base = new NonNegativeWeightOptimization(weightBlockSize, materialCount,
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
     }
 
-    public SpecularWeightOptimization(TextureResolution textureResolution, int basisCount)
+    public SpecularWeightOptimization(TextureResolution textureResolution, int materialCount)
     {
         // Default weight block size (only one weight block)
-        this(textureResolution, basisCount, textureResolution.width * textureResolution.height);
+        this(textureResolution, materialCount, textureResolution.width * textureResolution.height);
     }
 
     public int getWeightBlockSize()

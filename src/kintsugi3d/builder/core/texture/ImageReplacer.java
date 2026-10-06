@@ -38,8 +38,6 @@ public abstract class ImageReplacer
 
     public abstract void replace() throws IOException;
 
-    public abstract void refreshCard();
-
     public final TextureResources<?> getResources()
     {
         return resources;

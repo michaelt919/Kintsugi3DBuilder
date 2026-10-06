@@ -15,7 +15,6 @@ import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ManagedResource;
-import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ImageBasedGraphicsResources<ContextType extends Context<ContextType>> extends ManagedResource, ReadonlyImageBasedGraphicsResources<ContextType>
 {
@@ -25,37 +24,9 @@ public interface ImageBasedGraphicsResources<ContextType extends Context<Context
     @Override
     TextureResources<ContextType> getTextureResources();
 
-    @Override
-    LuminanceMapResources<ContextType> getLuminanceMapResources();
-
-    /**
-     * Refresh the luminance map in the view set and its corresponding textures.
-     * @param linearLuminanceValues
-     * @param encodedLuminanceValues
-     */
-    void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
-
-    /**
-     * Clear the luminance map in the view set and free its corresponding textures.
-     */
-    void clearLuminanceMap();
-
-    /**
-     * Refresh the light calibration in the view set and its corresponding uniform buffer data
-     * @param lightCalibration
-     */
-    void updateLightCalibration(Vector3 lightCalibration);
-
     /**
      * Replace the specular material resources (textures); releasing the old resources if they were present
      * @param textureResources The new resources / textures
      */
     void replaceTextureResources(TextureResources<ContextType> textureResources);
-
-    /**
-     * Initialize any light intensities currently set to zero with the provided light intensity.
-     * Non-zero light intensities (i.e. loaded from a file) will remain unchanged.
-     * @param lightIntensity The default light intensity to apply to lights with an intensity of zero
-     */
-    void initializeLightIntensities(Vector3 lightIntensity);
 }

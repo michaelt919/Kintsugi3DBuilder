@@ -17,7 +17,7 @@ import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.settings.*;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
 import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
 import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
 import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
@@ -31,8 +31,6 @@ import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -40,7 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRequest
+public final class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRequest
 {
     private static final Logger LOG = LoggerFactory.getLogger(SpecularFitRequest.class);
 
@@ -114,7 +112,6 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
         settings.getReconstructionSettings().setReconstructAll(false);
 
         // glTF export settings
-        settings.getExportSettings().setShouldCombineWeights(true);
         settings.getExportSettings().setShouldOpenViewerOnceComplete(projectSettings.getBoolean("openViewerOnProcessingComplete"));
 
         // Image cache settings
@@ -134,7 +131,7 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
         // Basis settings
         int basisResolution = projectSettings.getInt("basisResolution");
         settings.setBasisResolution(basisResolution);
-        settings.setBasisCount(projectSettings.getInt("basisCount"));
+        settings.setMaterialCount(projectSettings.getInt("basisCount"));
 
         // Specular settings
         int specularMinWidthDiscrete = Math.round(projectSettings.getFloat("specularMinWidthFrac") * basisResolution);
@@ -180,17 +177,17 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
             }
 
             // Perform the specular fit
-            GraphicsResourcesImageSpace<ContextType> resources = renderable.getResources();
+            ImageBasedGraphicsResources<ContextType> resources = renderable.getResources();
 
             if (basisOptimizationSettings != null)
             {
                 BasisAndTexturesOptimizationProcess process = new BasisAndTexturesOptimizationProcess(settings, basisOptimizationSettings, outputDirectory);
-                process.optimizeFitWithCache(resources, monitor);
+                resources.replaceTextureResources(process.optimizeFitWithCache(resources, monitor));
             }
             else
             {
                 ReoptimizeTexturesProcess process = new ReoptimizeTexturesProcess(settings, outputDirectory);
-                process.reoptimizeTexturesWithCache(resources, monitor);
+                resources.replaceTextureResources(process.reoptimizeTexturesWithCache(resources, monitor));
             }
 
             // Reload shaders in case preprocessor constants (i.e. number of basis functions) have changed
@@ -218,7 +215,7 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
                 new TabsManager(renderable).refreshAllTabs();
             });
         }
-        catch (IOException | ParserConfigurationException | TransformerException e)
+        catch (IOException e)
         {
             Global.state().getProjectModel().error("Error executing specular fit request", e);
         }
@@ -239,7 +236,8 @@ public class SpecularFitRequest implements ProgressMonitoredImageBasedGraphicsRe
                 // This will result in a program factory that overrides whatever basis count and resolution
                 // would be specified by the original resources.
                 ReadonlyBasisResources<ContextType> basisResources = specularFit.getBasisResources();
-                ReadonlyBasisSettings basisSettings = new SimpleBasisSettings(basisResources.getBasisCount(), basisResources.getBasisResolution());
+                ReadonlyBasisSettings basisSettings = new SimpleBasisSettings(
+                    basisResources.getActiveMaterialCount(), basisResources.getBasisResolution());
 
                 // Reconstruct images both from basis functions and from fitted roughness
                 ShaderProgramFactory<ContextType> programFactory =

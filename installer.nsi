@@ -63,7 +63,7 @@ Section "Kintsugi 3D Builder (required)" SectionApp
     File "Kintsugi3D.ico"
     File "Kintsugi3D-icon.png"
     File "target\classes\kintsugi3d-builder-about.txt"
-    File "target\classes\export-classes.txt"
+    File "target\classes\render-exports.txt"
 
     ; Include shaders (keep old shaders in case of user-authored shaders in this directory)
     SetOutPath "$INSTDIR\shaders"

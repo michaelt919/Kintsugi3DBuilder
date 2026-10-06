@@ -26,8 +26,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public abstract class StandardShaderComponent<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
@@ -42,7 +46,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
     // Set default shader to be the untextured IBR shader
     private File fragmentShaderFile;
-    private Map<String, Optional<Object>> fragmentShaderDefines;
+    private Supplier<Map<String, Optional<Object>>> fragmentShaderDefinesFactory;
 
     protected StandardShaderComponent(ReadonlyImageBasedGraphicsResources<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
                                       SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)
@@ -209,9 +213,9 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             }
         }
 
-        if (fragmentShaderDefines != null)
+        if (fragmentShaderDefinesFactory != null)
         {
-            defineMap.putAll(fragmentShaderDefines);
+            defineMap.putAll(fragmentShaderDefinesFactory.get());
         }
 
         return defineMap;
@@ -329,8 +333,8 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         this.lightCalibrationMode = lightCalibrationMode;
     }
 
-    public void setExtraFragmentShaderDefines(Map<String, Optional<Object>> fragmentShaderDefines)
+    public void setExtraFragmentShaderDefinesFactory(Supplier<Map<String, Optional<Object>>> fragmentShaderDefinesFactory)
     {
-        this.fragmentShaderDefines = Collections.unmodifiableMap(fragmentShaderDefines);
+        this.fragmentShaderDefinesFactory = fragmentShaderDefinesFactory;
     }
 }

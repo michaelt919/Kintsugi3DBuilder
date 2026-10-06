@@ -15,11 +15,14 @@ import kintsugi3d.builder.core.Global;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.SimpleRefreshable;
 
+import java.util.Objects;
+
 public final class Rendering
 {
     private static volatile Context<?> context;
     private static volatile RenderableManager<?> renderableManager;
     private static volatile GraphicsRequestManager<?> requestQueue;
+    private static volatile Thread renderingThread = null;
 
     private static final Object INITIALIZATION_LOCK = new Object();
 
@@ -69,6 +72,8 @@ public final class Rendering
     public static <ContextType extends Context<ContextType>> void initialize(
         ContextType injectedContext, RenderableManager<ContextType> injectedRenderableManager)
     {
+        renderingThread = Thread.currentThread();
+
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)
         {
@@ -106,7 +111,7 @@ public final class Rendering
 
     public static void runLater(Runnable runnable)
     {
-        getRequestQueue().addBackgroundGraphicsRequest(new GraphicsRequest()
+        runLater(new GraphicsRequest()
         {
             @Override
             public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
@@ -114,5 +119,24 @@ public final class Rendering
                 runnable.run();
             }
         });
+    }
+
+    public static void runNowOrLater(Runnable runnable)
+    {
+        if (Objects.equals(Thread.currentThread(), renderingThread))
+        {
+            runnable.run();
+        }
+        else
+        {
+            getRequestQueue().addBackgroundGraphicsRequest(new GraphicsRequest()
+            {
+                @Override
+                public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+                {
+                    runnable.run();
+                }
+            });
+        }
     }
 }

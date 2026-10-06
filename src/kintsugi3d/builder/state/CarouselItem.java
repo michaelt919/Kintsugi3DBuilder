@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.state.scene.ShaderInfo;
+import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.gl.window.FramebufferCanvas;
 
 public class CarouselItem

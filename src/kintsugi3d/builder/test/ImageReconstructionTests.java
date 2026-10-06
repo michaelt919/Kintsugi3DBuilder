@@ -21,14 +21,13 @@ import kintsugi3d.builder.fit.SpecularFitResourcesWrapper;
 import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
 import kintsugi3d.builder.fit.settings.BasisSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitSettings;
-import kintsugi3d.builder.io.LoadOptionsModel;
-import kintsugi3d.builder.io.ViewSetDirectories;
-import kintsugi3d.builder.io.ViewSetLoadOptions;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
+import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
-import kintsugi3d.builder.resources.project.*;
+import kintsugi3d.builder.resources.project.GraphicsResourcesAnalytic;
+import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
+import kintsugi3d.builder.resources.project.ImageBasedGraphicsResources;
+import kintsugi3d.builder.resources.project.ShaderProgramFactory;
 import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
@@ -219,7 +218,7 @@ class ImageReconstructionTests
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
         BasisSettings basisSettings = new BasisOptimizationSettings();
-        basisSettings.setBasisCount(1);
+        basisSettings.setMaterialCount(1);
 
         SpecularFitResourcesWrapper<OpenGLContext> programFactory = new SpecularFitResourcesWrapper<>(true, basisSettings);
 
@@ -871,7 +870,7 @@ class ImageReconstructionTests
         DefaultSettings.applyGlobalDefaults(globalSettings);
 
         BasisSettings basisSettings = new BasisOptimizationSettings();
-        basisSettings.setBasisCount(1);
+        basisSettings.setMaterialCount(1);
 
 
         try (GraphicsResourcesAnalytic<OpenGLContext> resources = new GraphicsResourcesAnalytic<>(context, viewSet, potatoGeometry))
@@ -1014,7 +1013,7 @@ class ImageReconstructionTests
                                   Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
+        LoadOptionsModel imageLoadOptions = new SimpleLoadOptionsModel();
         imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
 
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
@@ -1035,7 +1034,7 @@ class ImageReconstructionTests
 
     private void testFitVSET(File viewSetFile, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName) throws Exception
     {
-        LoadOptionsModel loadOptions = new ObservableLoadOptionsModel();
+        LoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
         loadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
         try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
             .setImageLoadOptions(loadOptions)
@@ -1052,7 +1051,7 @@ class ImageReconstructionTests
         }
     }
 
-    private void testFit(GraphicsResourcesCacheable<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
+    private void testFit(ImageBasedGraphicsResources<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
         throws IOException, UserCancellationException
     {
         // TODO not yet tested

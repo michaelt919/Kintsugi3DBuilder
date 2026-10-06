@@ -117,10 +117,7 @@ public interface ReadonlyTextureResources<ContextType extends Context<ContextTyp
      * @param format          The image format to use.  PNG, JPEG, and TIFF are supported.
      * @param outputDirectory The directory in which to save the textures.
      */
-    default void saveUnpackedWeightMaps(String format, File outputDirectory)
-    {
-        saveUnpackedWeightMaps(format, outputDirectory, "");
-    }
+    void saveUnpackedWeightMaps(String format, File outputDirectory);
 
     /**
      * Saves the basis function to the filesystem as a CSV file.

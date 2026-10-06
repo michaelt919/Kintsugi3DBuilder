@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+ * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,19 +14,14 @@ package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
 import de.javagl.jgltf.impl.v2.TextureInfo;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 public class SpecularWeights
 {
-
     private int stride = 4;
 
-    private final List<TextureInfo> textures = new ArrayList<>();
-
-    public List<TextureInfo> getTextures()
-    {
-        return textures;
-    }
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Used by glTF exporter, via reflection presumably
+    private final Collection<TextureInfo> textures = new ArrayList<>(8);
 
     public void addTexture(TextureInfo texture)
     {
@@ -42,5 +37,4 @@ public class SpecularWeights
     {
         this.stride = stride;
     }
-
 }

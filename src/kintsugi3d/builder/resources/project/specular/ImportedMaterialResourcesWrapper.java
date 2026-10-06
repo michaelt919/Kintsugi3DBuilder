@@ -13,8 +13,8 @@ package kintsugi3d.builder.resources.project.specular;
 
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureInfo;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
 import kintsugi3d.builder.resources.project.ImportedMaterialResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ReadonlyTexture2D;
@@ -77,13 +77,13 @@ public final class ImportedMaterialResourcesWrapper<ContextType extends Context<
     }
 
     @Override
-    public BasisResources<ContextType> getBasisResources()
+    public MutableBasisResources<ContextType> getMutableBasisResources()
     {
         return null;
     }
 
     @Override
-    public BasisWeightResources<ContextType> getBasisWeightResources()
+    public BasisWeightResources<ContextType> getMutableBasisWeightResources()
     {
         return null;
     }
