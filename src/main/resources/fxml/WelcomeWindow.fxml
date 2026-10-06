@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.*?>
 <GridPane hgap="40.0" styleClass="modal-root" stylesheets="@kintsugiStyling.css" vgap="10.0"
           xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="kintsugi3d.builder.javafx.core.WelcomeWindowController">
+          fx:controller="kintsugi3d.fx.core.WelcomeWindowController">
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>

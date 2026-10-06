@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
 <!--
   ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
@@ -17,8 +11,10 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.Insets?>
-<VBox fx:id = "mainBox" styleClass="sidebar-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.RightBarController" onMouseMoved="#mouseMoved" onMouseDragged="#mouseDragged" onMouseReleased="#mouseReleased">
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox fx:id = "mainBox" styleClass="sidebar-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="kintsugi3d.fx.controllers.sidebar.RightBarController" onMouseMoved="#mouseMoved" onMouseDragged="#mouseDragged" onMouseReleased="#mouseReleased">
     <Separator prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox fx:id = "detailsBox" alignment="TOP_LEFT" prefHeight="23.0" maxHeight="23" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>

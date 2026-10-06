@@ -13,8 +13,6 @@ package kintsugi3d.app;
 
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.io.LoadOptionsModel;
-import kintsugi3d.builder.javafx.core.JavaFXState;
-import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.CacheModel;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.SelectableViewListModel;
@@ -25,6 +23,8 @@ import kintsugi3d.builder.state.scene.ManipulableObjectPoseModel;
 import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
+import kintsugi3d.fx.core.JavaFXState;
+import kintsugi3d.fx.multithread.*;
 
 public final class MultithreadState implements Kintsugi3DBuilderState
 {

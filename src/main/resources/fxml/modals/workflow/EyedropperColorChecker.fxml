@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<VBox fx:id="outerVbox" alignment="CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.modals.workflow.tonecalibration.EyedropperController">
+<VBox fx:id="outerVbox" alignment="CENTER" styleClass="content-root" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.modals.workflow.tonecalibration.EyedropperController">
     <HBox alignment="CENTER" prefWidth="774.0" spacing="32.0">
         <VBox fx:id="eyedropperImageRoot" alignment="CENTER" spacing="16.0">
             <Label fx:id="colorLabel" alignment="CENTER" styleClass="wireframeBody" text="No tone selected" />

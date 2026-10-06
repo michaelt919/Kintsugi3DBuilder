@@ -17,7 +17,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.Rectangle?>
-<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CardController">
+<VBox id="data_card" fx:id="dataCardPane" alignment="TOP_CENTER" onMouseClicked="#cardClicked" styleClass="card-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.sidebar.CardController">
     <VBox id="border_box" fx:id="borderBox">
         <HBox alignment="CENTER_LEFT" stylesheets="@../../kintsugiStyling.css">
             <StackPane alignment="TOP_LEFT">

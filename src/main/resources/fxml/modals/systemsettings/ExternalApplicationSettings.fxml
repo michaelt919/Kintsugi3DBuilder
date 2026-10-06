@@ -19,7 +19,7 @@
 <VBox alignment="TOP_CENTER" spacing="16.0" styleClass="content-root" fillWidth="false"
       stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="kintsugi3d.builder.javafx.controllers.modals.systemsettings.ExternalApplicationSettingsController">
+      fx:controller="kintsugi3d.fx.controllers.modals.systemsettings.ExternalApplicationSettingsController">
     <TitledPane styleClass="titled-pane, wireframeBody" text="Blender">
         <Label fx:id="blenderLocationLabel" onMouseClicked="#assignApplication"
                styleClass="cache-settings-root, wireframeBody" text="No Path Set">

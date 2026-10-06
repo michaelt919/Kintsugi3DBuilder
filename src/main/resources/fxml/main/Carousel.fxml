@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
 
 <!--
-  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -16,6 +13,9 @@
   -->
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.*?>
 <AnchorPane fx:id = "mainBox"
             pickOnBounds="false"
             mouseTransparent="true"
@@ -27,7 +27,7 @@
             minHeight="180"
             prefHeight="180"
             maxWidth="0"
-            fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.CarouselController">
+            fx:controller="kintsugi3d.fx.controllers.sidebar.CarouselController">
     <children>
         <ScrollPane scaleY = "-1.0"
                     fitToHeight="true"

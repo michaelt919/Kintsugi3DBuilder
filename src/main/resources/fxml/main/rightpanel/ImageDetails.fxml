@@ -18,7 +18,7 @@
 <VBox fx:id = "detailBox"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="kintsugi3d.builder.javafx.controllers.sidebar.ImageDetailsController"
+      fx:controller="kintsugi3d.fx.controllers.sidebar.ImageDetailsController"
       style = "-fx-background-color: #202020"
       minWidth="0.0"
       VBox.vgrow="ALWAYS"
