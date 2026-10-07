@@ -6,13 +6,45 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Kintsugi3DBuilder" />
+        <module name="app" />
+        <module name="sjmply" />
+        <module name="optimization-common" />
+        <module name="sjm-ply" />
+        <module name="gl" />
+        <module name="doublep" />
+        <module name="renderexport" />
+        <module name="optimization-singlep" />
+        <module name="singlep" />
+        <module name="fx" />
+        <module name="common" />
+        <module name="util" />
+        <module name="builder" />
+        <module name="optimization-doublep" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="common" target="1.5" />
+      <module name="doublep" target="1.5" />
+      <module name="singlep" target="1.5" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="Kintsugi3DBuilder" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="Kintsugi3DBuilder" options="" />
+      <module name="app" options="" />
+      <module name="builder" options="" />
+      <module name="common" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="doublep" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="fx" options="" />
+      <module name="gl" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="optimization-common" options="" />
+      <module name="optimization-doublep" options="" />
+      <module name="optimization-singlep" options="" />
+      <module name="renderexport" options="" />
+      <module name="singlep" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="sjm-ply" options="" />
+      <module name="sjmply" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="util" options="" />
     </option>
   </component>
 </project>

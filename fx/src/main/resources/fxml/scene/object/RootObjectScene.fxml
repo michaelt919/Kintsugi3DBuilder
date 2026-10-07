@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.fx.controllers.scene.object.RootObjectSceneController">
+   <TitledPane animated="false" prefWidth="400.0" text="Poses" VBox.vgrow="ALWAYS">
+      <HBox prefHeight="0.0">
+         <ListView fx:id="objectPoseListView" HBox.hgrow="ALWAYS" />
+         <Separator orientation="VERTICAL" visible="false" />
+         <VBox fx:id="listControls" alignment="CENTER_LEFT" spacing="5.0">
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newPoseButton" text="New">
+               <tooltip>
+                  <Tooltip text="Create a new pose from the current one." />
+               </tooltip>
+            </Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#savePoseButton" text="Save" visible="false" managed="false">
+               <tooltip>
+                  <Tooltip text="Save the selected pose to the library." />
+               </tooltip>
+            </Button>
+            <Button fx:id="renameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renamePoseButton" text="Rename" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" visible="false" managed="false" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" visible="false" managed="false" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockPoseButton" text="Lock/Unlock">
+               <tooltip>
+                  <Tooltip text="Lock the settings for the selected pose so they cannot be changed." />
+               </tooltip>
+            </Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframePoseButton" text="Keyframe" visible="false" managed="false">
+               <tooltip>
+                  <Tooltip text="Add the selected pose as a keyframe (for animation)." />
+               </tooltip>
+            </Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#deletePoseButton" text="Delete">
+               <tooltip>
+                  <Tooltip text="Delete selected pose." />
+               </tooltip>
+            </Button>
+         </VBox>
+      </HBox>
+   </TitledPane>
+   <fx:include fx:id="settings" source="SettingsObjectScene.fxml" />
+</VBox>
