@@ -92,7 +92,7 @@ public class Kintsugi3DViewerExporter extends PBRExporter
         getTextureResources().savePackedWeightMaps(format, outputDirectory, getTextureFilePrefix());
 
         getTextureResources().saveBasisFunctions(outputDirectory,
-            BasisResources.getBasisFunctionsFilename(getTextureFilePrefix()));
+            String.format("%sbasisFunctions.hdr", getTextureFilePrefix()));
     }
 
     @Override
