@@ -205,7 +205,7 @@ public final class SpecularFitRequest implements ProgressMonitoredImageBasedGrap
                     {
                         Kintsugi3DViewerLauncher.launchViewer(new File(outputDirectory, "model.glb"));
                     }
-                    catch (IOException e)
+                    catch (IOException|RuntimeException e)
                     {
                         Global.state().getProjectModel().error("Error launching Kintsugi 3D Viewer", e);
                     }
@@ -215,7 +215,7 @@ public final class SpecularFitRequest implements ProgressMonitoredImageBasedGrap
                 new TabsManager(renderable).refreshAllTabs();
             });
         }
-        catch (IOException e)
+        catch (IOException|RuntimeException e)
         {
             Global.state().getProjectModel().error("Error executing specular fit request", e);
         }
