@@ -372,31 +372,30 @@ public abstract class CacheModelBase implements CacheModel
                 {
                     File directory = deleteMethod.getKey();
 
-                    if (!directory.isDirectory())
+                    if (directory.isDirectory())
                     {
-                        throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+                        // Select only cache directories that are not in the recently opened projects welcome dialogue.
+                        Collection<File> deletableProjects = new HashSet<>(0);
+                        List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+                        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+
+                        if (settingsModel.getBoolean("recentPromptEnabled"))
+                        {
+                            filterByRecentProjectLimit(directory, nonRecentProjects);
+                            deletableProjects.addAll(nonRecentProjects);
+                        }
+
+                        if (settingsModel.getBoolean("fileAgePromptEnabled"))
+                        {
+                            filterByFileAgeLimit(oldProjects);
+                            deletableProjects.addAll(oldProjects);
+                        }
+
+                        // Perform cache deletion on directories still in oldProjects.
+                        File[] deletableProjectsArr = deletableProjects.toArray(File[]::new);
+
+                        deleteMethod.getValue().accept(deletableProjectsArr);
                     }
-                    // Select only cache directories that are not in the recently opened projects welcome dialogue.
-                    Collection<File> deletableProjects = new HashSet<>(0);
-                    List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-                    List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-
-                    if (settingsModel.getBoolean("recentPromptEnabled"))
-                    {
-                        filterByRecentProjectLimit(directory, nonRecentProjects);
-                        deletableProjects.addAll(nonRecentProjects);
-                    }
-
-                    if (settingsModel.getBoolean("fileAgePromptEnabled"))
-                    {
-                        filterByFileAgeLimit(oldProjects);
-                        deletableProjects.addAll(oldProjects);
-                    }
-
-                    // Perform cache deletion on directories still in oldProjects.
-                    File[] deletableProjectsArr = deletableProjects.toArray(File[]::new);
-
-                    deleteMethod.getValue().accept(deletableProjectsArr);
                 }
 
                 // Recalculate the size of the cache after cleaning up files by age or by presence in recent files list.
@@ -769,7 +768,7 @@ public abstract class CacheModelBase implements CacheModel
     protected static int getNumCachedProjects()
     {
         return getCleanableCacheDirectories().stream()
-            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
+            .mapToInt(dir -> dir.exists() ? Objects.requireNonNull(dir.listFiles()).length : 0)
             .max().orElse(0);
     }
 
