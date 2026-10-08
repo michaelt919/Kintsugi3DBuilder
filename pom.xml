@@ -28,7 +28,7 @@
         <module>fx</module>
         <module>gl</module>
         <module>optimization</module>
-        <module>renderexport</module>
+        <module>render-export</module>
         <module>sjm-ply</module>
         <module>util</module>
     </modules>

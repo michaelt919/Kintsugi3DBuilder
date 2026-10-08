@@ -7,13 +7,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="app" />
+        <module name="render-export" />
         <module name="fx" />
         <module name="sjm-ply" />
         <module name="util" />
         <module name="gl" />
         <module name="optimization" />
         <module name="builder" />
-        <module name="renderexport" />
       </profile>
     </annotationProcessing>
   </component>

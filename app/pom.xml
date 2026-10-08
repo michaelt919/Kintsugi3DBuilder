@@ -340,7 +340,7 @@
         </dependency>
         <dependency>
             <groupId>Kintsugi3D</groupId>
-            <artifactId>renderexport</artifactId>
+            <artifactId>render-export</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
