@@ -338,5 +338,10 @@
             <artifactId>gl</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>Kintsugi3D</groupId>
+            <artifactId>renderexport</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

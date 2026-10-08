@@ -29,17 +29,7 @@
         </dependency>
         <dependency>
             <groupId>Kintsugi3D</groupId>
-            <artifactId>optimization-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>Kintsugi3D</groupId>
-            <artifactId>optimization-singlep</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>Kintsugi3D</groupId>
-            <artifactId>optimization-doublep</artifactId>
+            <artifactId>optimization</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

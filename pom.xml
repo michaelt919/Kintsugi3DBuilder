@@ -27,9 +27,7 @@
         <module>builder</module>
         <module>fx</module>
         <module>gl</module>
-        <module>optimization/common</module>
-        <module>optimization/singlep</module>
-        <module>optimization/doublep</module>
+        <module>optimization</module>
         <module>renderexport</module>
         <module>sjm-ply</module>
         <module>util</module>

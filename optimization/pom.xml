@@ -19,23 +19,22 @@
         <groupId>Kintsugi3D</groupId>
         <artifactId>Kintsugi3DBuilder</artifactId>
         <version>1.6.0</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>optimization-singlep</artifactId>
+    <artifactId>optimization</artifactId>
     <dependencies>
         <dependency>
             <groupId>Kintsugi3D</groupId>
-            <artifactId>optimization-common</artifactId>
+            <artifactId>gl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>Kintsugi3D</groupId>
+            <artifactId>util</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ejml</groupId>
-            <artifactId>ejml-fdense</artifactId>
-            <version>0.31</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ejml</groupId>
-            <artifactId>ejml-simple</artifactId>
+            <artifactId>ejml-all</artifactId>
             <version>0.31</version>
         </dependency>
     </dependencies>
