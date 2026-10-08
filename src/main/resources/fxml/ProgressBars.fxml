@@ -19,7 +19,7 @@
    <GridPane.margin>
       <Insets left="24.0" top="48.0" />
    </GridPane.margin>
-   <Label fx:id="overallTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeTitle" text="Loading..." wrapText="true">
+   <Label fx:id="overallTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeTitle" text="Working..." wrapText="true">
       <padding>
          <Insets right="20.0" />
       </padding>

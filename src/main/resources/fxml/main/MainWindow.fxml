@@ -179,7 +179,7 @@
                         <cursor>
                             <Cursor fx:constant="HAND" />
                         </cursor>
-                        <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
+                        <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Working...">
                             <padding>
                                 <Insets bottom="8.0" left="8.0" top="8.0" />
                             </padding>

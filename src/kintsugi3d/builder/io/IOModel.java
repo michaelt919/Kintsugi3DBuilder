@@ -317,7 +317,7 @@ public class IOModel implements IO
         ViewSet viewSet = getLoadedViewSet();
         setViewsetDirectories(projectFile, viewSet);
 
-        this.progressMonitor.setStage(0, "Preparing project...");
+        this.progressMonitor.setStage(0, "Saving project...");
         this.progressMonitor.setFinishingUpText("This shouldn't take long...");
 
         copyMasks();
@@ -359,6 +359,8 @@ public class IOModel implements IO
 
         // Add to recent files
         RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
+
+        this.progressMonitor.setStage(1, "Project saved.");
     }
 
     @Override

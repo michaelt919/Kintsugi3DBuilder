@@ -414,7 +414,7 @@ public class ProgressBarsController
                                 return localTextLabel.getText();
                             }
 
-                            // Display "Loading..." or some end message (ex. "Finished loading images")
+                            // Display "Working..." or some end message (ex. "Finished loading images")
                             // or just remove redundant "Stage 1/1"
                             if (!isProcessing() || stageCountProperty.getValue() <= 1)
                             {
