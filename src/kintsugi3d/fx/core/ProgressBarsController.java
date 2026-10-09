@@ -16,6 +16,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.fx.util.Stopwatch;
@@ -103,7 +105,7 @@ public class ProgressBarsController
         cancelButton.disableProperty().bind(getProcessingProperty().not());
         doneButton.disableProperty().bind(getProcessingProperty());
 
-                Global.io().addProgressMonitor(
+        Global.io().addProgressMonitor(
             new Monitor(cancelRequested, localProgressBar, overallProgressBar, overallTextLabel, localTextLabel, cancelButton));
 
         INSTANCE = this;
@@ -114,7 +116,7 @@ public class ProgressBarsController
         return stage;
     }
 
-    public void resetText()
+    private void resetText()
     {
         localTextLabel.setText(defaultLocalText);
         overallTextLabel.setText(defaultOverallText);
@@ -132,22 +134,12 @@ public class ProgressBarsController
         stage.show();
     }
 
-    private void reset()
-    {
-        Platform.runLater(() ->
-        {
-            resetText();
-            overallProgressBar.setProgress(0.0);
-            localProgressBar.setProgress(0.0);
-        });
-    }
-
-    public void hideStage()
+    private void hideStage()
     {
         Platform.runLater(() -> stage.hide());
     }
 
-    public void startStopwatches()
+    private void startStopwatches()
     {
         overallStopwatch.start();
         localStopwatch.start();
@@ -209,7 +201,7 @@ public class ProgressBarsController
         if (secondsRemaining > 0)
         {
             String timeTxt = nanosecToFormatTime(estimatedRemaining, true);
-            Platform.runLater(() -> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
+            Platform.runLater(() -> localEstimTimeRemainingLabel.setText(String.format("%s Remaining", timeTxt)));
         }
         else
         {
@@ -217,7 +209,7 @@ public class ProgressBarsController
         }
     }
 
-    public void clickStopwatches(double progress, double maximum)
+    private void clickStopwatches(double progress, double maximum)
     {
         Platform.runLater(() ->
         {
@@ -239,7 +231,7 @@ public class ProgressBarsController
     }
 
 
-    public void updateElapsedTime()
+    private void updateElapsedTime()
     {
         long totalElapsedTime = overallStopwatch.getElapsedTime();
         long localElapsedTime = localStopwatch.getElapsedTime();
@@ -269,8 +261,7 @@ public class ProgressBarsController
             String.format("%02d:%02d", hours, minutes);
     }
 
-
-    public void endStopwatches()
+    private void endStopwatches()
     {
         Platform.runLater(() ->
         {
@@ -283,9 +274,9 @@ public class ProgressBarsController
 
             localElapsedTimeLabel.setText(localElapsedTimeLabel.getText().replace("(", "")
                 .replace(")", ""));
-        });
 
-        desaturateProgressBars();
+            desaturateProgressBars();
+        });
     }
 
     private void desaturateProgressBars()
@@ -605,9 +596,9 @@ public class ProgressBarsController
 
             Platform.runLater(() ->
             {
-                ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                ButtonType ok = new ButtonType("OK", ButtonData.OK_DONE);
                 //ButtonType stopProcess = new ButtonType("Start New Process", ButtonBar.ButtonData.YES);
-                Alert alert = new Alert(Alert.AlertType.NONE, "Cannot run multiple tasks at the same time.\n" +
+                Alert alert = new Alert(AlertType.NONE, "Cannot run multiple tasks at the same time.\n" +
                     "Either wait for the current task to complete or cancel it." /*+
                         "Press OK to finish the current process."*/, ok/*, stopProcess*/);
                 alert.setHeaderText("Conflicting Tasks");

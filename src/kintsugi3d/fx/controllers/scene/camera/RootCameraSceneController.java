@@ -202,7 +202,7 @@ public class RootCameraSceneController
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText("Are you sure you want to delete the following camera: "
                 + projectModel.getCameraList().get(selectedIndex).getName() + '?');
-            confirmation.setTitle("Delete Confirmation");
+            confirmation.setTitle("Delete?");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))

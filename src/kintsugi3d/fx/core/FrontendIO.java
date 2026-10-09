@@ -23,7 +23,6 @@ import javafx.stage.Window;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.io.RecentProjects;
-import kintsugi3d.builder.resources.project.MeshImportException;
 import kintsugi3d.fx.experience.CreateProject;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
@@ -37,12 +36,46 @@ public final class FrontendIO
 {
     private static final FrontendIO INSTANCE = new FrontendIO();
 
+    private FileChooser projectFileChooser;
+
     public static FrontendIO getInstance()
     {
         return INSTANCE;
     }
 
-    private FileChooser projectFileChooser;
+    public static void initialize()
+    {
+        // Try to initialize file chooser in advance of when it will be needed.
+        Platform.runLater(getInstance()::getProjectFileChooserSafe);
+
+        // Register progress monitor.
+        Global.io().addProgressMonitor(new DefaultProgressMonitor()
+        {
+            @Override
+            public void cancelComplete(UserCancellationException e)
+            {
+                Platform.runLater(() ->
+                {
+                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled.");
+                    alert.setTitle("Cancelled");
+                    alert.setHeaderText("Cancelled");
+                    alert.show();
+                });
+            }
+
+            @Override
+            public void fail(Throwable e)
+            {
+                ExceptionHandling.error("An error occurred during the operation", e);
+            }
+
+            @Override
+            public void warn(Throwable e)
+            {
+                ExceptionHandling.warn("A potential problem occurred during the operation", e);
+            }
+        });
+    }
 
     private FileChooser getProjectFileChooserSafe()
     {
@@ -58,54 +91,16 @@ public final class FrontendIO
 
     private FrontendIO()
     {
-        // Try to initialize file chooser in advance of when it will be needed.
-        Platform.runLater(this::getProjectFileChooserSafe);
-        Global.io().addProgressMonitor(new DefaultProgressMonitor()
-        {
-            @Override
-            public void cancelComplete(UserCancellationException e)
-            {
-                // We know that the welcome window is going to be shown when the progress modal opens
-                // so wait until that happens so that the welcome window doesn't cover up the alert
-                // (and by extension, the main window as well as a parent of the welcome window)
-                // TODO figure out a less hacky workaround.
-                WelcomeWindowController.getInstance().runOnceWhenShown(() ->
-                {
-                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled.");
-                    alert.setTitle("Cancelled");
-                    alert.setHeaderText("Cancelled");
-                    alert.show();
-                });
-            }
 
-            @Override
-            public void fail(Throwable e)
-            {
-                if (e instanceof MeshImportException)
-                {
-                    ExceptionHandling.error(e.getMessage(), e);
-                }
-                else
-                {
-                    ExceptionHandling.error("An error occurred", e);
-                }
-            }
-
-            @Override
-            public void warn(Throwable e)
-            {
-                ExceptionHandling.error("A potential problem occurred", e);
-            }
-        });
     }
 
-    private static boolean confirmClose(String text)
+    public static boolean confirmClose(String text)
     {
         if (Global.state().getProjectModel().isProjectOpen())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION,
                 "If you click OK, any unsaved changes to the current project will be lost.");
-            confirmation.setTitle("Close Project Confirmation");
+            confirmation.setTitle("Close Project?");
             confirmation.setHeaderText(text);
 
             //TODO: apply dark mode to popups

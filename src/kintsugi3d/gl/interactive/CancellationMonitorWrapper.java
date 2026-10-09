@@ -12,13 +12,21 @@
 package kintsugi3d.gl.interactive;
 
 /**
- * A default progress monitor implementation that does nothing for each method and never requests cancellation.
+ * Allows for cancellation events to be forwarded without otherwise affecting progress presentation.
  */
-public class DefaultProgressMonitor implements ProgressMonitor
+public final class CancellationMonitorWrapper implements ProgressMonitor
 {
+    private final ProgressMonitor monitor;
+
+    public CancellationMonitorWrapper(ProgressMonitor monitor)
+    {
+        this.monitor = monitor;
+    }
+
     @Override
     public void allowUserCancellation() throws UserCancellationException
     {
+        monitor.allowUserCancellation();
     }
 
     @Override

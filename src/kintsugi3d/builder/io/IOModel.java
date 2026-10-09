@@ -28,6 +28,7 @@ import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.ImportedMaterial;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.EncodableColorImage;
@@ -61,6 +62,7 @@ public class IOModel implements IO
 
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
+    private final CancellationMonitor cancellationMonitor = new CancellationMonitor();
 
     // Set defaults just in case the load options model is never set (i.e. testing)
     private ReadonlyLoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
@@ -74,6 +76,11 @@ public class IOModel implements IO
         = new EventDispatcher<>(ProjectSavedListener::onProjectSaved);
     private final EventDispatcher<ProjectClosedListener, ProjectClosedEvent> projectClosed
         = new EventDispatcher<>(ProjectClosedListener::onProjectClosed);
+
+    public IOModel()
+    {
+        progressMonitor.addSubMonitor(cancellationMonitor);
+    }
 
     public ProgressMonitor getProgressMonitor()
     {
@@ -176,7 +183,7 @@ public class IOModel implements IO
 
     private void load(String projectName, Runnable loader)
     {
-        unload(() ->
+        closeProject(() ->
         {
             projectOpened.notify(new ProjectOpenedEvent(projectName));
             new Thread(loader, "Loading Thread").start();
@@ -294,14 +301,22 @@ public class IOModel implements IO
                         this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, vsetFile.getParentFile(), loadOptionsModel);
                     }
                 }
+                catch (UserCancellationException e)
+                {
+                    LOG.info("Project load cancelled", e);
+                    closeProject();
+                    progressMonitor.cancelComplete(e);
+                }
                 catch (Exception e)
                 {
                     LOG.error("Error loading project", e);
                     closeProject();
+                    progressMonitor.fail(e);
                 }
                 catch (Error e)
                 {
                     LOG.error("Error loading project", e);
+                    progressMonitor.fail(e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -489,20 +504,19 @@ public class IOModel implements IO
     @Override
     public void closeProject()
     {
-        unload();
+        this.closeProject(() -> {});
     }
 
-    private void unload()
+    @Override
+    public void closeProject(Runnable onCloseComplete)
     {
-        this.unload(() -> {});
-    }
-
-    private void unload(Runnable onUnloadComplete)
-    {
-        loadedViewSetFile = null;
-        loadedProjectFile = null;
-        projectClosed.notify(new ProjectClosedEvent());
-        this.handler.unload(onUnloadComplete);
+        cancellationMonitor.requestCancellation(() ->
+        {
+            loadedViewSetFile = null;
+            loadedProjectFile = null;
+            projectClosed.notify(new ProjectClosedEvent());
+            this.handler.unload(onCloseComplete);
+        });
     }
 
     @Override

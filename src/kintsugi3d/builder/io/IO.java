@@ -121,6 +121,7 @@ public interface IO
     void applyLightOffsetCalibration();
 
     void closeProject();
+    void closeProject(Runnable onCloseComplete);
 
     boolean hasLoadedRenderable();
     boolean hasValidHandler();

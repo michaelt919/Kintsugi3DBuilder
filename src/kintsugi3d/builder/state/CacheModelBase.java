@@ -97,34 +97,40 @@ public abstract class CacheModelBase implements CacheModel
     @Override
     public void requestClearCache()
     {
-        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
-
-        new Thread(() ->
+        Global.state().getProjectModel().confirmClose(
+            "Deleting the entire cache requires the current project to be closed.  Are you sure you want to close the current project?",
+        () ->
         {
-            try
-            {
-                if (cacheCleanupInProgress.compareAndSet(false, true))
-                {
-                    try
-                    {
-                        for (var entry : deleteMethods.entrySet())
-                        {
-                            clearCache(entry.getKey(), entry.getValue());
-                        }
-                    }
-                    finally
-                    {
-                        cacheCleanupInProgress.set(false);
-                    }
+            // Project should now be closed; safe to delete everything.
+            Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
 
-                    requestCacheSizeRefresh();
-                }
-            }
-            catch (IOException e)
+            new Thread(() ->
             {
-                handleCacheCleanupError(e);
-            }
-        }, "Clear Cache").start();
+                try
+                {
+                    if (cacheCleanupInProgress.compareAndSet(false, true))
+                    {
+                        try
+                        {
+                            for (var entry : deleteMethods.entrySet())
+                            {
+                                clearCache(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        finally
+                        {
+                            cacheCleanupInProgress.set(false);
+                        }
+
+                        requestCacheSizeRefresh();
+                    }
+                }
+                catch (IOException e)
+                {
+                    handleCacheCleanupError(e);
+                }
+            }, "Clear Cache").start();
+        });
     }
 
     private static void clearCache(File directory, Consumer<File[]> deleteMethod) throws IOException
@@ -391,6 +397,10 @@ public abstract class CacheModelBase implements CacheModel
                             deletableProjects.addAll(oldProjects);
                         }
 
+                        // Don't delete the current project.
+                        deletableProjects.removeIf(file ->
+                            Objects.equals(file.getName(), Global.io().getLoadedViewSet().getUUID().toString()));
+
                         // Perform cache deletion on directories still in oldProjects.
                         File[] deletableProjectsArr = deletableProjects.toArray(File[]::new);
 
@@ -491,7 +501,6 @@ public abstract class CacheModelBase implements CacheModel
             {
                 // The project cache directory name should be the same regardless of which cache (i.e. preview or fit) is being cleaned.
                 String projectID = projectCacheDir.getName();
-
                 // i.e. a list that will contain the fit and preview directories for a given project
                 Collection<File> projectDirList = cleanableCacheProjects.computeIfAbsent(
                     // Create the ArrayList if not already in the map.
@@ -555,6 +564,9 @@ public abstract class CacheModelBase implements CacheModel
         Collection<File> cacheDirsToClean = cleanableCacheProjects.entrySet().stream()
             // Skip any projects that were designated for retention.
             .filter(entry -> !retainedProjectIDSet.contains(entry.getKey()))
+            .filter(entry ->
+                // Skip the current project
+                !Objects.equals(Global.io().getLoadedViewSet().getUUID().toString(), entry.getKey()))
             // Flatten to a stream of individual cache directories (for a specific project and a specific cache type)
             .flatMap(entry -> entry.getValue().stream())
             .collect(Collectors.toList());

@@ -246,12 +246,12 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
         }
         catch (UserCancellationException e)
         {
-            LOG.error("User cancelled operation while initializing ProjectRenderingEngine:", e);
+            LOG.info("User cancelled operation while initializing ProjectRenderingEngine:", e);
             this.close();
             if (this.progressMonitor != null)
             {
                 this.progressMonitor.cancelComplete(e);
-        }
+            }
             throw new InitializationException(e);
         }
         catch (RuntimeException|IOException e)

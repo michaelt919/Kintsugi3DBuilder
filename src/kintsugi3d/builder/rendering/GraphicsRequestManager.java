@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.builder.core.Global;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.ProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
@@ -26,6 +25,10 @@ import java.util.Queue;
 public class GraphicsRequestManager<ContextType extends Context<ContextType>> implements GraphicsRequestQueue
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsRequestManager.class);
+
+    public static final String CANCELLED_MESSAGE = "The operation was cancelled.";
+    public static final String ERROR_MESSAGE = "An error occurred during the operation.";
+
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private final Collection<Runnable> requestAddedListeners = new ArrayList<>(1);
@@ -54,9 +57,59 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         this.progressMonitor = progressMonitor;
     }
 
-    private static void handleCancellation()
+    private static void logCancellation(Throwable e)
     {
-        Global.state().getProjectModel().cancelled("The operation was cancelled. Processing has stopped.");
+        LOG.info(CANCELLED_MESSAGE, e);
+    }
+
+    private void handleCancellation(UserCancellationException e)
+    {
+        logCancellation(e);
+
+        if (progressMonitor != null)
+        {
+            progressMonitor.cancelComplete(e);
+        }
+    }
+
+    private static void logException(Throwable e)
+    {
+        if (e.getCause() instanceof UserCancellationException)
+        {
+            logCancellation(e);
+        }
+        else
+        {
+            LOG.error(ERROR_MESSAGE, e);
+        }
+    }
+
+    private void handleException(Throwable e)
+    {
+        logException(e);
+
+        if (progressMonitor != null)
+        {
+            progressMonitor.fail(e);
+        }
+    }
+
+    private void handleExceptionNonBackground(Throwable e)
+    {
+        Throwable cause = e.getCause();
+        if (cause instanceof UserCancellationException)
+        {
+            handleCancellation((UserCancellationException) cause);
+        }
+        else
+        {
+            handleException(e);
+
+            if (progressMonitor != null)
+            {
+                progressMonitor.fail(e);
+            }
+        }
     }
 
     @Override
@@ -96,11 +149,11 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                         }
                         catch (UserCancellationException e)
                         {
-                            LOG.error("Operation was cancelled while executing request", e);
+                            logCancellation(e);
                         }
                         catch (Exception | AssertionError e)
                         {
-                            LOG.error("Error occurred while executing request", e);
+                            logException(e);
                         }
                     }
                 });
@@ -152,21 +205,20 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                         try
                         {
                             request.executeRequest(renderableManager.getMainRenderable(), progressMonitor);
+
+                            if (progressMonitor != null)
+                            {
+                                progressMonitor.complete();
+                            }
                         }
                         catch (UserCancellationException e)
                         {
-                            LOG.error("Operation was cancelled while executing request", e);
-                            handleCancellation();
+                            handleCancellation(e);
                         }
                         catch (Exception | AssertionError e)
                         {
-                            Global.state().getProjectModel().error("Error occured while excecuting request", e);
+                            handleExceptionNonBackground(e);
                         }
-                    }
-
-                    if (progressMonitor != null)
-                    {
-                        progressMonitor.complete();
                     }
                 });
             }
@@ -191,7 +243,6 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         {
             this.requestList.add(() ->
             {
-
                 // Suppress warning about catching and not rethrowing AssertionError.
                 // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
                 // noinspection ErrorNotRethrown
@@ -201,12 +252,11 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 }
                 catch (UserCancellationException e)
                 {
-                    LOG.error("Operation was cancelled while executing request", e);
+                    logCancellation(e);
                 }
                 catch (Exception | AssertionError e)
                 {
-                    LOG.error("Error occurred while executing request", e);
-                    progressMonitor.fail(e);
+                    logException(e);
                 }
             });
         }
@@ -231,6 +281,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                     {
                         return;
                     }
+
                     progressMonitor.start();
                 }
 
@@ -240,21 +291,19 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 try
                 {
                     request.executeRequest(context, progressMonitor);
+
+                    if (progressMonitor != null)
+                    {
+                        progressMonitor.complete();
+                    }
                 }
                 catch (UserCancellationException e)
                 {
-                    LOG.error("Operation was cancelled while executing request", e);
-                    handleCancellation();
+                    handleCancellation(e);
                 }
                 catch (Exception | AssertionError e)
                 {
-                    Global.state().getProjectModel().error(
-                        "An error occurred processing request. Processing has stopped.\nCheck the log for more info.", e);
-                }
-
-                if (progressMonitor != null)
-                {
-                    progressMonitor.complete();
+                    handleExceptionNonBackground(e);
                 }
             });
         }
