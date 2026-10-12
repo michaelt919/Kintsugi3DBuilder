@@ -12,7 +12,8 @@
 package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
 
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
+import kintsugi3d.gl.core.Context;
 
 public final class Kintsugi3DViewerExporterFactory implements MaterialExporterFactory
 {
@@ -28,7 +29,7 @@ public final class Kintsugi3DViewerExporterFactory implements MaterialExporterFa
     }
     
     @Override
-    public Kintsugi3DViewerExporter getExporter(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> resources)
+    public Kintsugi3DViewerExporter getExporter(ReadonlyTextureResources<? extends Context<?>> resources)
     {
         Kintsugi3DViewerExporter exporter = new Kintsugi3DViewerExporter();
         exporter.setTextureResources(resources);

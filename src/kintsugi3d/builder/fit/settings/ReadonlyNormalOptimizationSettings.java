@@ -21,6 +21,14 @@ public interface ReadonlyNormalOptimizationSettings
     boolean isNormalRefinementEnabled();
 
     /**
+     * Gets whether the normal map will be cleared prior to optimization.
+     * If disabled, either the imported normal map or the result of the previous optimization will be used instead.
+     *
+     * @return
+     */
+    boolean isResetNormalMapEnabled();
+
+    /**
      * Gets the minimum allowed damping factor for the Levenberg-Marquardt algorithm for optimizing the normal map.
      * Default is 1.0.
      * Negative values will have the same effect as 0.0.

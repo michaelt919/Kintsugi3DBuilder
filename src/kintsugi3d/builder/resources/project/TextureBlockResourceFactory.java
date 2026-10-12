@@ -28,20 +28,21 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
     private static final Logger LOG = LoggerFactory.getLogger(TextureBlockResourceFactory.class);
     private final ImageCache<ContextType> imageCache;
 
-    private final GraphicsResourcesCommon<ContextType> sharedResources;
+    private final GraphicsResourcesCommon<ContextType> commonResources;
 
     private final GeometryTextures<ContextType> fullGeometryTextures;
 
-    TextureBlockResourceFactory(GraphicsResourcesCommon<ContextType> sharedResources, ImageCache<ContextType> imageCache)
+    TextureBlockResourceFactory(GraphicsResourcesCommon<ContextType> commonResources, ImageCache<ContextType> imageCache)
     {
         this.imageCache = imageCache;
-        this.sharedResources = sharedResources;
+        this.commonResources = commonResources;
 
-        this.fullGeometryTextures = sharedResources.getGeometryResources()
+        this.fullGeometryTextures = commonResources.getGeometryResources()
             .createGeometryFramebuffer(imageCache.getSettings().getTextureWidth(), imageCache.getSettings().getTextureHeight());
     }
 
-    public GraphicsResourcesTextureSpace<ContextType> createBlockResources(int i, int j, ProgressMonitor monitor) throws IOException, UserCancellationException
+    public GraphicsResourcesTextureSpace<ContextType> createBlockResources(int i, int j, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);
@@ -55,7 +56,8 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
 
         try
         {
-            return new GraphicsResourcesTextureSpace<>(sharedResources,
+            return GraphicsResourcesTextureSpace.createWithOwnedCommonResources(
+                commonResources.crop(x, y, width, height),
                 () -> fullGeometryTextures.createViewportCopy(x, y, width, height),
                 imageCache.getBlockDirectory(i, j), loadOptions, width, height, monitor);
         }

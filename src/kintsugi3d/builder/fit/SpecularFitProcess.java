@@ -23,7 +23,7 @@ import kintsugi3d.builder.fit.settings.ReadonlySpecularFitSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.project.*;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
 import kintsugi3d.builder.util.ImageUndistorter;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -287,7 +287,7 @@ public abstract class SpecularFitProcess
                         try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.createNew(
                             // Basis copy technically needed here since the GPU indices for basis functions
                             // could technically be modified while setting up the new instance of the basis resources.
-                            blockResources, resourcesWrapper, basis.copy(), blockResolution,
+                            blockResources, blockResources.getTextureResources(), resourcesWrapper, basis.copy(), blockResolution,
                             settings.getNormalOptimizationSettings(), settings.shouldIncludeConstantTerm()))
                         {
                             if (inputNormalMapFile != null)

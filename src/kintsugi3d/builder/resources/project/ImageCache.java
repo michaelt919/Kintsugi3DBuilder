@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.project;
 
+import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
 import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.io.SimpleLoadOptionsModel;
@@ -45,6 +46,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -432,7 +434,8 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    public GraphicsResourcesTextureSpace<ContextType> createSampledResources(ProgressMonitor monitor) throws IOException, UserCancellationException
+    public GraphicsResourcesTextureSpace<ContextType> createSampledResources(ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);
@@ -441,7 +444,12 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
         try
         {
-            return new GraphicsResourcesTextureSpace<>(resources.getCommonResources(), this::createSampledGeometryTextures,
+            return GraphicsResourcesTextureSpace.createWithOwnedCommonResources(
+                resources.getCommonResources().copyWithTextureTransform(original ->
+                    new SampledTextureResources<>(original,
+                        new TextureResolution(settings.getSampledSize(), settings.getSampledSize()),
+                        this::copySampled)),
+                this::createSampledGeometryTextures,
                 sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(), monitor);
         }
         catch (IOException e)
@@ -493,6 +501,14 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return sampledBuffer;
     }
 
+    private void copySampled(Consumer<ReadonlyNativeVectorBuffer> destination, ColorTextureReader source)
+    {
+        destination.accept(
+            sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
+                .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
+                    source.readFloatingPointRGBA())));
+    }
+
     private GeometryTextures<ContextType> createSampledGeometryTextures()
     {
         try(GeometryFramebuffer<ContextType> geomTexturesFullRes =
@@ -502,26 +518,16 @@ public class ImageCache<ContextType extends Context<ContextType>>
             GeometryTextures<ContextType> sampledGeometryTextures =
                 GeometryFramebuffer.createEmpty(context, settings.getSampledSize(), settings.getSampledSize());
 
+            ReadableFramebuffer<ContextType> framebuffer = geomTexturesFullRes.getFramebuffer();
+
             // Sample position buffer
-            ReadableFramebuffer<ContextType> contextTypeFramebuffer2 = geomTexturesFullRes.getFramebuffer();
-            sampledGeometryTextures.getPositionTexture().load(
-                sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
-                    .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
-                        contextTypeFramebuffer2.getTextureReaderForColorAttachment(0).readFloatingPointRGBA())));
+            copySampled(sampledGeometryTextures.getPositionTexture()::load, framebuffer.getTextureReaderForColorAttachment(0));
 
             // Sample normal buffer
-            ReadableFramebuffer<ContextType> contextTypeFramebuffer1 = geomTexturesFullRes.getFramebuffer();
-            sampledGeometryTextures.getNormalTexture().load(
-                sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
-                    .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
-                        contextTypeFramebuffer1.getTextureReaderForColorAttachment(1).readFloatingPointRGBA())));
+            copySampled(sampledGeometryTextures.getNormalTexture()::load, framebuffer.getTextureReaderForColorAttachment(1));
 
             // Sample tangent buffer
-            ReadableFramebuffer<ContextType> contextTypeFramebuffer = geomTexturesFullRes.getFramebuffer();
-            sampledGeometryTextures.getTangentTexture().load(
-                sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
-                    .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
-                        contextTypeFramebuffer.getTextureReaderForColorAttachment(2).readFloatingPointRGBA())));
+            copySampled(sampledGeometryTextures.getTangentTexture()::load, framebuffer.getTextureReaderForColorAttachment(2));
 
             return sampledGeometryTextures;
         }

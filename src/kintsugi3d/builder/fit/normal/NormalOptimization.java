@@ -14,8 +14,10 @@ package kintsugi3d.builder.fit.normal;
 import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.settings.ReadonlyNormalOptimizationSettings;
+import kintsugi3d.builder.resources.project.ReadonlyGraphicsResources;
 import kintsugi3d.builder.resources.project.ShaderProgramFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -38,7 +40,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private boolean firstSmooth = true;
 
     public NormalOptimization(
-        ShaderProgramFactory<ContextType> programFactory,
+        ReadonlyGraphicsResources<ContextType> resources,
+        ReadonlyTextureResources<ContextType> textures,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
         TextureResolution textureResolution, ReadonlyNormalOptimizationSettings normalOptimizationSettings)
         throws IOException
@@ -46,19 +49,28 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         this.normalOptimizationSettings = normalOptimizationSettings;
 
         estimateNormals = new ShaderBasedOptimization<>(
-            getNormalEstimationProgramBuilder(programFactory),
-            programFactory.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
+            getNormalEstimationProgramBuilder(resources),
+            resources.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
             drawableFactory);
 
-        estimateNormals.getFrontFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+        if (normalOptimizationSettings.isResetNormalMapEnabled())
+        {
+            estimateNormals.getFrontFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+        }
+        else
+        {
+            estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0)
+                .blit(textures.getTexture(StandardTexture.NORMAL_MAP));
+        }
+
         estimateNormals.getBackFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
         smoothNormals = new ShaderBasedOptimization<>(
-            getNormalSmoothProgramBuilder(programFactory),
-            programFactory.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
+            getNormalSmoothProgramBuilder(resources),
+            resources.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);
@@ -121,6 +133,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     public boolean isNormalRefinementEnabled()
     {
         return normalOptimizationSettings.isNormalRefinementEnabled();
+    }
+
+    public boolean isResetNormalMapEnabled()
+    {
+        return normalOptimizationSettings.isResetNormalMapEnabled();
     }
 
     public void execute(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator, double convergenceTolerance)

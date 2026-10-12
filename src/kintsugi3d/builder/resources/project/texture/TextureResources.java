@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.resources.project.specular;
+package kintsugi3d.builder.resources.project.texture;
 
 import kintsugi3d.builder.core.texture.NamedTextureInfo;
 import kintsugi3d.builder.core.texture.StandardTexture;
@@ -278,6 +278,12 @@ public interface TextureResources<ContextType extends Context<ContextType>>
                 boolean linearFiltering)
             {
                 // Do nothing
+            }
+
+            @Override
+            public TextureResources<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
+            {
+                throw new UnsupportedOperationException();
             }
 
             @Override

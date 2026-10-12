@@ -19,8 +19,8 @@ import kintsugi3d.builder.fit.decomposition.MutableBasisResources;
 import kintsugi3d.builder.fit.decomposition.MutableMaterialBasis;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
-import kintsugi3d.builder.resources.project.specular.TextureResourcesBase;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ReadonlyTexture2D;
 import kintsugi3d.gl.core.Texture2D;
@@ -70,7 +70,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
 
         managedTextures = new HashMap<>(original.getTextures().size());
 
-        // Copy all textures not handled elsewhere
+        // Copy all texture names not handled elsewhere
         managedTextures.putAll(original.getTextures().entrySet().stream()
             .filter(entry ->
                 // Skip specular color and roughness maps that are handled by SpecularFitBase:
@@ -82,6 +82,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>>
                     .setLinearFilteringEnabled(true)
                     .createTexture())));
 
+        // Copy actual occlusion map as a bit of a special case since it's not handled by optimization.
         ReadonlyTexture2D<ContextType> occlusionMap = original.getTexture(StandardTexture.OCCLUSION);
         albedoORMOptimization = occlusionMap == null ?
             AlbedoORMOptimization.createWithoutOcclusion(context, textureResolution) :

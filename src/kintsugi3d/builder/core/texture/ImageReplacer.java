@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.core.texture;
 
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 
 import java.io.File;
 import java.io.IOException;

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.resources.project;
 
 import kintsugi3d.builder.core.viewset.ViewSet;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ManagedResource;
 

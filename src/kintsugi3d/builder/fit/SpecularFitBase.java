@@ -19,7 +19,7 @@ import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResourcesBase;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ManagedResource;
 import kintsugi3d.gl.core.Texture2D;

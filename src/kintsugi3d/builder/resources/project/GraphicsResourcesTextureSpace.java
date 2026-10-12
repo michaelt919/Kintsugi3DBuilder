@@ -31,7 +31,8 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.function.Supplier;
 
-public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>> extends ImageBasedGraphicsResourcesBase<ContextType>
+public final class GraphicsResourcesTextureSpace<ContextType extends Context<ContextType>>
+    extends ImageBasedGraphicsResourcesBase<ContextType>
 {
     private static final Logger LOG = LoggerFactory.getLogger(GraphicsResourcesTextureSpace.class);
     /**
@@ -54,7 +55,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
 
     /**
      *
-     * @param sharedResources
+     * @param commonResources
      * @param geometryTextureFactory This instance will take ownership of the textures produced
      * @param textureDirectory
      * @param loadOptions
@@ -63,12 +64,43 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
      * @param progressMonitor
      * @throws IOException
      */
-    GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> sharedResources,
+    static <ContextType extends Context<ContextType>>
+    GraphicsResourcesTextureSpace<ContextType> createWithOwnedCommonResources(
+        GraphicsResourcesCommon<ContextType> commonResources,
         Supplier<GeometryTextures<ContextType>> geometryTextureFactory, File textureDirectory,
-        TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor)
-            throws IOException, UserCancellationException
+        TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws UserCancellationException, IOException
     {
-        super(sharedResources, false);
+        return new GraphicsResourcesTextureSpace<>(commonResources, true, geometryTextureFactory,
+            textureDirectory, loadOptions, texWidth, texHeight, progressMonitor);
+    }
+
+    /**
+     *
+     * @param commonResources
+     * @param geometryTextureFactory This instance will not take ownership of the textures produced
+     * @param textureDirectory
+     * @param loadOptions
+     * @param texWidth
+     * @param texHeight
+     * @param progressMonitor
+     * @throws IOException
+     */
+    static <ContextType extends Context<ContextType>>
+    GraphicsResourcesTextureSpace<ContextType> createWithExistingCommonResources(
+        GraphicsResourcesCommon<ContextType> commonResources,
+        Supplier<GeometryTextures<ContextType>> geometryTextureFactory, File textureDirectory,
+        TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws UserCancellationException, IOException
+    {
+        return new GraphicsResourcesTextureSpace<>(commonResources, false, geometryTextureFactory,
+            textureDirectory, loadOptions, texWidth, texHeight, progressMonitor);
+    }
+
+    private GraphicsResourcesTextureSpace(GraphicsResourcesCommon<ContextType> commonResources, boolean ownerOfCommonResources,
+                                  Supplier<GeometryTextures<ContextType>> geometryTextureFactory, File textureDirectory,
+                                  TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor)
+        throws IOException, UserCancellationException
+    {
+        super(commonResources, ownerOfCommonResources);
 
         this.texWidth = texWidth;
         this.texHeight = texHeight;
@@ -141,7 +173,7 @@ public class GraphicsResourcesTextureSpace<ContextType extends Context<ContextTy
         }
 
         this.geometryTextures = geometryTextureFactory.get();
-        this.rectangle = sharedResources.getContext().createRectangle();
+        this.rectangle = commonResources.getContext().createRectangle();
     }
 
     @Override

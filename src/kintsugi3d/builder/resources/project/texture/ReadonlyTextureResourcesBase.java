@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.resources.project.specular;
+package kintsugi3d.builder.resources.project.texture;
 
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisResources;
@@ -60,6 +60,12 @@ public abstract class ReadonlyTextureResourcesBase<ContextType extends Context<C
         {
             this.getBasisWeightResources().useWithShaderProgram(program);
         }
+    }
+
+    @Override
+    public TextureResources<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
+    {
+        return new CroppedTextureResources<>(this, x, y, cropWidth, cropHeight);
     }
 
     @Override

@@ -20,7 +20,8 @@
             <Label styleClass="wireframeBody" text="Texture resolution:" />
          <ComboBox fx:id="resolutionComboBox" promptText="Select a resolution..." styleClass="wireframeBody" />
         </HBox>
-      <CheckBox fx:id="normalRefinementCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Optimize normal map" />
+        <CheckBox fx:id="normalResetCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Reset normal map" />
+        <CheckBox fx:id="normalRefinementCheckBox" mnemonicParsing="false" selected="true" styleClass="wireframeBody" text="Optimize normal map" />
         <CheckBox fx:id="openViewerOnComplete" mnemonicParsing="false" styleClass="wireframeBody" text="Open Kintsugi 3D Viewer once complete" />
         <StackPane>
             <Button mnemonicParsing="false" onAction="#resetSettingsToDefaults" styleClass="wireframeBody" text="Reset to Defaults" />

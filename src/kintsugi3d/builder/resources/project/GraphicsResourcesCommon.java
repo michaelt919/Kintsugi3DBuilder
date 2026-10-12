@@ -20,8 +20,9 @@ import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
 import kintsugi3d.builder.io.events.ProjectProcessedEvent;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
 import kintsugi3d.builder.rendering.Rendering;
-import kintsugi3d.builder.resources.project.specular.ImportedMaterialResourcesWrapper;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.ImportedMaterialResourcesWrapper;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 import kintsugi3d.builder.util.events.*;
 import kintsugi3d.builder.util.events.Observable;
 import kintsugi3d.builder.util.events.Observer;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 
 final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 {
@@ -92,7 +94,11 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
 
     private final ViewSet viewSet;
 
+    private final VertexGeometry geometry;
+
     private float[] viewWeights;
+
+    private final TextureLoadOptions loadOptions;
 
     private final EventDispatcher<ProjectProcessedListener, ProjectProcessedEvent> projectProcessed
         = new EventDispatcher<>(ProjectProcessedListener::onProjectProcessed);
@@ -104,6 +110,8 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     {
         this.context = context;
         this.viewSet = viewSet;
+        this.geometry = geometry;
+        this.loadOptions = loadOptions;
 
         if (viewSet != null)
         {
@@ -450,6 +458,21 @@ final class GraphicsResourcesCommon<ContextType extends Context<ContextType>>
     public LuminanceMapResources<ContextType> getLuminanceMapResources()
     {
         return luminanceMapResources;
+    }
+
+    public GraphicsResourcesCommon<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
+    {
+        GraphicsResourcesCommon<ContextType> cropped = new GraphicsResourcesCommon<>(context, viewSet, geometry, loadOptions);
+        cropped.textureResources = textureResources.crop(x, y, cropWidth, cropHeight);
+        return cropped;
+    }
+
+    public GraphicsResourcesCommon<ContextType> copyWithTextureTransform(
+        Function<ReadonlyTextureResources<ContextType>, TextureResources<ContextType>> textureTransform)
+    {
+        GraphicsResourcesCommon<ContextType> copy = new GraphicsResourcesCommon<>(context, viewSet, geometry, loadOptions);
+        copy.textureResources = textureTransform.apply(textureResources);
+        return copy;
     }
 
     /**

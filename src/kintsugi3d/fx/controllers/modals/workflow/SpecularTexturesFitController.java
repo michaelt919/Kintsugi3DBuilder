@@ -34,6 +34,7 @@ public class SpecularTexturesFitController extends ProjectSettingsControllerBase
     @FXML private TextField unsuccessfulLMIterationsTextField;
     @FXML private ComboBox<SquareResolution> resolutionComboBox;
     @FXML private TextField convergenceToleranceTextField;
+    @FXML private CheckBox normalResetCheckBox;
     @FXML private CheckBox normalRefinementCheckBox;
     @FXML private TextField minNormalDampingTextField;
     @FXML private TextField normalSmoothingIterationsTextField;
@@ -60,7 +61,11 @@ public class SpecularTexturesFitController extends ProjectSettingsControllerBase
         bindBooleanSetting(smithCheckBox, "smithMaskingShadowingEnabled");
         bindFloatSetting(convergenceToleranceTextField, "convergenceTolerance", 0, 1);
 
-        // if disabled, should discard any existing optimized normal map (or revert to imported normal map)
+        // if enabled, should discard any existing optimized normal map or imported normal map
+        bindBooleanSetting(normalResetCheckBox, "resetNormalMapEnabled");
+
+        // if disabled, either uses the existing optimized normal map or imported normal map (if reset normal map is disabled)
+        // or just disables the effect of the normal map completely (if reset normal map is enabled)
         bindBooleanSetting(normalRefinementCheckBox, "normalOptimizationEnabled");
 
         bindNormalizedSetting(minNormalDampingTextField, "minNormalDamping");

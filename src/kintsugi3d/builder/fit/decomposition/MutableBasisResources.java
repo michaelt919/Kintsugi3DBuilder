@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class MutableBasisResources<ContextType extends Context<ContextType>> extends BasisResourcesBase<ContextType>
 {
@@ -41,7 +42,18 @@ public class MutableBasisResources<ContextType extends Context<ContextType>> ext
             textureResolution.width, textureResolution.height, basis);
 
         refreshGraphicsResources();
+    }
 
+    public MutableBasisResources(ContextType context, MutableMaterialBasis basis,
+                                 Supplier<BasisWeightResources<ContextType>> weightResourcesFactory)
+    {
+        // Load both enabled and disabled materials.  Enabled materials should always precede disabled materials.
+        super(context, basis.getMaterialCount(), basis.getSpecularResolution());
+        this.basis = basis;
+
+        this.weightResources = weightResourcesFactory.get();
+
+        refreshGraphicsResources();
     }
 
     private MutableBasisResources(ContextType context, MutableMaterialBasis basis, File priorSolutionDirectory)

@@ -125,6 +125,7 @@ public final class DefaultSettings
         settingsModel.createNumericSetting("metallicity", 0.0f);
         settingsModel.createBooleanSetting("smithMaskingShadowingEnabled", true);
         settingsModel.createNumericSetting("convergenceTolerance", 0.00001f);
+        settingsModel.createBooleanSetting("resetNormalMapEnabled", true);
         settingsModel.createBooleanSetting("normalOptimizationEnabled", true);
         settingsModel.createNumericSetting("minNormalDamping", 1.0f);
         settingsModel.createNumericSetting("normalSmoothIterations", 0);

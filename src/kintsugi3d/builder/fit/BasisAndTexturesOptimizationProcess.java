@@ -18,7 +18,7 @@ import kintsugi3d.builder.fit.settings.ReadonlySpecularFitSettings;
 import kintsugi3d.builder.resources.project.GraphicsResourcesTextureSpace;
 import kintsugi3d.builder.resources.project.ImageCache;
 import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.ProgressMonitor;
@@ -154,8 +154,8 @@ public class BasisAndTexturesOptimizationProcess extends SpecularFitProcess
         }
 
         SpecularFitOptimizable<ContextType> specularFit = SpecularFitOptimizable.createNew(
-            resources, programFactory, decomposition.getMaterialBasis(), decomposition.getTextureResolution(),
-            getSettings().getNormalOptimizationSettings(), false);
+            resources, resources.getTextureResources(), programFactory, decomposition.getMaterialBasis(),
+            decomposition.getTextureResolution(), getSettings().getNormalOptimizationSettings(), false);
 
         try
         {

@@ -13,6 +13,7 @@ package kintsugi3d.builder.fit.settings;
 
 public class NormalOptimizationSettings implements ReadonlyNormalOptimizationSettings
 {
+    private boolean resetNormalMapEnabled = true;
     private boolean normalRefinementEnabled = true;
     private double minNormalDamping = 1.0;
     private int normalSmoothingIterations = 0;
@@ -33,6 +34,22 @@ public class NormalOptimizationSettings implements ReadonlyNormalOptimizationSet
     public void setNormalRefinementEnabled(boolean normalRefinementEnabled)
     {
         this.normalRefinementEnabled = normalRefinementEnabled;
+    }
+
+    @Override
+    public boolean isResetNormalMapEnabled()
+    {
+        return resetNormalMapEnabled;
+    }
+
+    /**
+     * Sets whether the normal map will be cleared prior to optimization.
+     * If disabled, either the imported normal map or the result of the previous optimization will be used instead.
+     * @param resetNormalMapEnabled
+     */
+    public void setResetNormalMapEnabled(boolean resetNormalMapEnabled)
+    {
+        this.resetNormalMapEnabled = resetNormalMapEnabled;
     }
 
     @Override

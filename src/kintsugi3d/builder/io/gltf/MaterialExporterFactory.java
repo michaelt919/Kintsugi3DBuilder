@@ -11,10 +11,11 @@
 
 package kintsugi3d.builder.io.gltf;
 
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
+import kintsugi3d.gl.core.Context;
 
 @FunctionalInterface
 public interface MaterialExporterFactory
 {
-    MaterialExporter getExporter(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> resources);
+    MaterialExporter getExporter(ReadonlyTextureResources<? extends Context<?>> resources);
 }
