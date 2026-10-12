@@ -33,6 +33,7 @@ import kintsugi3d.fx.controllers.scene.lights.ObservableLightSettings;
 import kintsugi3d.fx.controllers.scene.object.ObservableObjectPoseSettings;
 import kintsugi3d.fx.core.ExceptionHandling;
 import kintsugi3d.fx.core.ExperienceManager;
+import kintsugi3d.fx.core.FrontendIO;
 import kintsugi3d.fx.experience.ReplaceImage;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
@@ -296,6 +297,15 @@ public class ObservableProjectModel extends ProjectModelBase<
         if (result.isPresent() && result.get().equals(ButtonType.OK))
         {
             onConfirm.run();
+        }
+    }
+
+    @Override
+    public void confirmClose(String text, Runnable onClose)
+    {
+        if (FrontendIO.confirmClose(text))
+        {
+            Global.io().closeProject(onClose);
         }
     }
 

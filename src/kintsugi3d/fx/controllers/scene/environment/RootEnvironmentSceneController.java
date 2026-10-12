@@ -217,7 +217,7 @@ public class RootEnvironmentSceneController
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText("Are you sure you want to delete the following environment: " + selectedEnvironment.getName() + '?');
-            confirmation.setTitle("Delete Confirmation");
+            confirmation.setTitle("Delete?");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
