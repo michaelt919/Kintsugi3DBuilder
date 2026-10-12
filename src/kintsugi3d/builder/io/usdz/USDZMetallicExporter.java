@@ -25,11 +25,6 @@ public class USDZMetallicExporter extends USDZExporter
     {
     }
 
-    @StandardTextureExport(StandardTexture.OCCLUSION)
-    public void occlusion(TextureInfo occlusion)
-    {
-    }
-
     @StandardTextureExport(StandardTexture.METALLIC)
     public void metallic(TextureInfo metallic)
     {
@@ -41,8 +36,6 @@ public class USDZMetallicExporter extends USDZExporter
         commandList.add("--use-metallic");
         commandList.add("--albedo");
         commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.ALBEDO.details.name, getTextureFileFormat())).getPath());
-        commandList.add("--occlusion");
-        commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.OCCLUSION.details.name, getTextureFileFormat())).getPath());
         commandList.add("--metallic");
         commandList.add(new File(getTempPath(), getTextureFilename(StandardTexture.METALLIC.details.name, getTextureFileFormat())).getPath());
     }

@@ -58,6 +58,12 @@ public abstract class USDZExporter extends MaterialExporter
     {
     }
 
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @StandardTextureExport(StandardTexture.OCCLUSION)
+    public void occlusion(TextureInfo occlusion)
+    {
+    }
+
     protected abstract void addCommands(List<String> commandList);
 
     @Override
@@ -111,6 +117,8 @@ public abstract class USDZExporter extends MaterialExporter
         command.add(new File(tempPath, getTextureFilename(StandardTexture.NORMAL_MAP.details.name, getTextureFileFormat())).getPath());
         command.add("--roughness");
         command.add(new File(tempPath, getTextureFilename(StandardTexture.ROUGHNESS.details.name, getTextureFileFormat())).getPath());
+        command.add("--occlusion");
+        command.add(new File(tempPath, getTextureFilename(StandardTexture.OCCLUSION.details.name, getTextureFileFormat())).getPath());
         // Add inheritance specified commands
         addCommands(command);
 
