@@ -12,8 +12,8 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.texture.ImageReplacer;
-import kintsugi3d.builder.javafx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.state.project.*;
+import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -121,6 +121,12 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     public void confirm(String title, String header, String message, Runnable onConfirm)
     {
         new Thread(onConfirm).start();
+    }
+
+    @Override
+    public void confirmClose(String text, Runnable onClose)
+    {
+        new Thread(onClose).start();
     }
 
     @Override

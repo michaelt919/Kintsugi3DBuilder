@@ -27,11 +27,7 @@ import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.javafx.controllers.modals.RecentLogMessageAppender;
-import kintsugi3d.builder.javafx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.builder.rendering.ImageBasedRenderableManager;
-import kintsugi3d.builder.rendering.ProgressMonitoredGraphicsRequest;
-import kintsugi3d.builder.rendering.ProgressMonitoredImageBasedGraphicsRequest;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
@@ -40,17 +36,22 @@ import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.builder.util.logging.LogMessage;
 import kintsugi3d.builder.util.logging.LogMessageListener;
+import kintsugi3d.fx.controllers.modals.RecentLogMessageAppender;
+import kintsugi3d.fx.internal.ObservableLoadOptionsModel;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.geometry.VertexGeometry;
-import kintsugi3d.gl.interactive.*;
+import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector3;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -62,7 +63,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class SmokeTest
 {
