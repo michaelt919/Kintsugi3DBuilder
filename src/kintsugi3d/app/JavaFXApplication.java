@@ -141,7 +141,7 @@ public class JavaFXApplication extends Application
             FutureTask<Boolean> confirmationTask = new FutureTask<>(() ->
             {
                 Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "If you click OK, any unsaved changes will be lost.");
-                confirmation.setTitle("Exit Confirmation");
+                confirmation.setTitle("Exit?");
                 confirmation.setHeaderText("Are you sure you want to exit?");
                 return confirmation.showAndWait()
                     .filter(Predicate.isEqual(ButtonType.OK))
@@ -179,6 +179,8 @@ public class JavaFXApplication extends Application
         // Inject dependency for global state.
         MultithreadState multithreadState = MultithreadState.getInstance();
         GlobalBootstrap.initialize(multithreadState, multithreadState.getLoadOptionsModel());
+
+        FrontendIO.initialize();
 
 //        for (String f : Font.getFamilies())
 //        {
