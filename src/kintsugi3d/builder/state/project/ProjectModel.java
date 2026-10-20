@@ -64,5 +64,6 @@ public interface ProjectModel
 
     void cancelled(String message);
     void confirm(String title, String header, String message, Runnable onConfirm);
+    void confirmClose(String text, Runnable onClose);
     void requestUserImageReplacement(ImageReplacer imageReplacer);
 }

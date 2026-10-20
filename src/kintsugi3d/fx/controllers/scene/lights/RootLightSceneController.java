@@ -325,7 +325,7 @@ public class RootLightSceneController implements Initializable
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText(String.format("Are you sure you want to delete the following light group: %s?",
                 lightGroupList.get(selectedRow).getName()));
-            confirmation.setTitle("Delete Confirmation");
+            confirmation.setTitle("Delete?");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
@@ -419,7 +419,7 @@ public class RootLightSceneController implements Initializable
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText(String.format("Are you sure you want to delete light %d from the following group: %s?",
                 lastSelectedIndex + 1, selectedLightGroup.getName()));
-            confirmation.setTitle("Delete Confirmation");
+            confirmation.setTitle("Delete?");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))

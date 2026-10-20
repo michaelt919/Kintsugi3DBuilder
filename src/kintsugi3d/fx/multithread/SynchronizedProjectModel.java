@@ -132,6 +132,12 @@ public class SynchronizedProjectModel implements ProjectModel
     }
 
     @Override
+    public void confirmClose(String text, Runnable onClose)
+    {
+        Platform.runLater(() -> baseModel.confirmClose(text, onClose));
+    }
+
+    @Override
     public void requestUserImageReplacement(ImageReplacer imageReplacer)
     {
         Platform.runLater(() -> baseModel.requestUserImageReplacement(imageReplacer));
