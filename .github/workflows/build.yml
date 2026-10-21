@@ -142,6 +142,10 @@ jobs:
 
           # Verify that the entire install directory was removed.
           if (Test-Path $installDir) {
+            Write-Host "Contents remaining after uninstall:"
+              Get-ChildItem $installDir -Recurse -Force |
+              Select-Object FullName, Length |
+              Format-Table -AutoSize
             throw "Uninstaller did not remove installation directory: $installDir"
           }
 
@@ -228,7 +232,7 @@ jobs:
             fi
 
             if [ "$STATUS" -eq 124 ]; then
-              echo "$LABEL: open smoke test passed."
+              echo "$LABEL: open .app smoke test passed."
             else
               echo "$LABEL: open failed or exited within 30 seconds (code $STATUS)."
               exit 1
