@@ -156,6 +156,16 @@ jobs:
               Get-ChildItem $installDir -Recurse -Force |
               Select-Object FullName, Length |
               Format-Table -AutoSize
+          
+            # Try to remove files through PowerShell for debugging purposes
+            try {
+              Remove-Item $installDir -Recurse -Force -ErrorAction Stop
+              Write-Host "PowerShell successfully removed the installation directory."
+            } catch {
+              Write-Host "PowerShell deletion error: $($_.Exception.Message)"
+              Write-Host $_.Exception.ToString()
+            }
+          
             throw "Uninstaller did not remove installation directory: $installDir"
           }
 
