@@ -132,8 +132,12 @@ jobs:
           if (!$uninstaller) { throw "Uninstaller not found" }
           
           Write-Host $uninstaller
+          
+          # Run a temporary copy so the uninstaller can delete itself.
+          $tempUninstaller = Join-Path $env:TEMP "Kintsugi3DBuilder-uninstall.exe"
+          Copy-Item $uninstaller.FullName $tempUninstaller -Force
 
-          $p = Start-Process $uninstaller.FullName -ArgumentList '/S' -PassThru
+          $p = Start-Process $tempUninstaller -ArgumentList '/S' "_?=$installDir" -PassThru
           if (!$p.WaitForExit(600000)) {
             Stop-Process -Id $p.Id -Force
             throw "Uninstaller timed out"
