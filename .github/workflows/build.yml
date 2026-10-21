@@ -126,6 +126,13 @@ jobs:
           Test-Launch $viewer
           Write-Host "Installed Viewer smoke test passed."
 
+          # Check for any processes still running
+          Get-CimInstance Win32_Process |
+            Where-Object {
+              $_.ExecutablePath -like "$installDir\*"
+            } |
+            Select-Object ProcessId, Name, ExecutablePath, CommandLine
+
           # Test the uninstaller.
           $uninstaller = Get-ChildItem $installDir -Filter 'un*.exe' -Recurse -ErrorAction SilentlyContinue |
             Select-Object -First 1
