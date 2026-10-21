@@ -137,7 +137,7 @@ jobs:
           $tempUninstaller = Join-Path $env:TEMP "Kintsugi3DBuilder-uninstall.exe"
           Copy-Item $uninstaller.FullName $tempUninstaller -Force
 
-          $p = Start-Process $tempUninstaller -ArgumentList '/S' "_?=$installDir" -PassThru
+          $p = Start-Process $tempUninstaller -ArgumentList @('/S', "_?=$installDir") -PassThru
           if (!$p.WaitForExit(600000)) {
             Stop-Process -Id $p.Id -Force
             throw "Uninstaller timed out"
@@ -213,22 +213,33 @@ jobs:
             test -d "$APP" || { echo "$LABEL: app bundle not found"; exit 1; }
             test -x "$EXE" || { echo "$LABEL: executable not found or not executable"; exit 1; }
 
-            # Test 1: Run the executable directly.
-            "$EXE" &
+            # Test 1: Run the executable directly, piping stdout and stderr to a log file.
+            LOG="$(mktemp)"
+            "$EXE" > >(tee "$LOG") 2>&1 &
             PID=$!
             sleep 30
 
             if kill -0 "$PID" 2>/dev/null; then
               kill "$PID"
               wait "$PID" 2>/dev/null || true
-              echo "$LABEL: direct launch smoke test passed."
             else
               if wait "$PID"; then STATUS=0; else STATUS=$?; fi
               echo "$LABEL: direct launch failed or exited within 30 seconds (code $STATUS)."
               exit 1
             fi
+          
+            # Check for errors in stdout / stderr.
+            if grep -q 'ERROR' "$LOG"; then
+              echo "$LABEL: ERROR found in application output."
+              cat "$LOG"
+              rm -f "$LOG"
+              exit 1
+            fi
+            rm -f "$LOG"
+          
+            echo "$LABEL: direct launch smoke test passed."
 
-            # Test 2: Launch as a user would.
+            # Test 2: Launch as a user would (but doesn't check stderr or stdout for errors).
             if "$Gtimeout" --kill-after=5s 30s open -W -n "$APP"; then
               STATUS=0
             else
