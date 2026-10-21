@@ -78,11 +78,11 @@ jobs:
           if (!$installer) { throw "Installer not found" }
 
           function Test-Launch($exe, $arguments = @()) {
-            $p = Start-Process $exe.FullName -ArgumentList $arguments -PassThru
+            $p = Start-Process $exe.FullName -ArgumentList $arguments -PassThru -NoNewWindow
             if (!$p.WaitForExit(30000)) {
               Stop-Process -Id $p.Id -Force
               Write-Host "Process remained running: $($exe.FullName)"
-            } elseif ($p.ExitCode -ne 0) {
+            } else {
               throw "$($exe.FullName) exited with code $($p.ExitCode)"
             }
           }
@@ -94,7 +94,7 @@ jobs:
           Write-Host "Standalone executable smoke test passed."
 
           # Install silently.
-          $p = Start-Process $installer.FullName -ArgumentList '/S' -PassThru
+          $p = Start-Process $installer.FullName -ArgumentList '/S' -PassThru -NoNewWindow
           if (!$p.WaitForExit(600000)) {
             Stop-Process -Id $p.Id -Force
             throw "Installer timed out"
@@ -137,7 +137,7 @@ jobs:
           #$tempUninstaller = Join-Path $env:TEMP "Kintsugi3DBuilder-uninstall.exe"
           #Copy-Item $uninstaller.FullName $tempUninstaller -Force
 
-          $p = Start-Process $uninstaller.FullName -ArgumentList '/S' -PassThru
+          $p = Start-Process $uninstaller.FullName -ArgumentList '/S' -PassThru -NoNewWindow
           if (!$p.WaitForExit(600000)) {
             Stop-Process -Id $p.Id -Force
             throw "Uninstaller timed out"
