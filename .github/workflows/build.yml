@@ -86,6 +86,8 @@ jobs:
               throw "$($exe.FullName) exited with code $($p.ExitCode)"
             }
           }
+          
+          Write-Host $standalone
 
           # Test the standalone executable.
           Test-Launch $standalone
@@ -100,28 +102,36 @@ jobs:
           if ($p.ExitCode -ne 0) { throw "Installer failed: $($p.ExitCode)" }
           Write-Host "Installer smoke test passed."
 
-          $installDir = "$env:ProgramFiles\Kintsugi 3D Builder"
+          $installDir = "$env:ProgramFiles\Kintsugi3DBuilder"
+          
+          Write-Host $installDir
 
           # Test the installed Builder.
-          $builder = Get-ChildItem $installDir -Filter 'Kintsugi3DBuilder.exe' -Recurse |
+          $builder = Get-ChildItem $installDir -Filter 'Kintsugi3DBuilder.exe' -Recurse -ErrorAction SilentlyContinue |
             Select-Object -First 1
           if (!$builder) { throw "Kintsugi3DBuilder.exe not found" }
+          
+          Write-Host $builder
 
           Test-Launch $builder
           Write-Host "Installed Builder smoke test passed."
 
           # Test the installed Viewer.
-          $viewer = Get-ChildItem $installDir -Filter 'Kintsugi3DViewer.exe' -Recurse |
+          $viewer = Get-ChildItem $installDir -Filter 'Kintsugi3DViewer.exe' -Recurse -ErrorAction SilentlyContinue |
             Select-Object -First 1
           if (!$viewer) { throw "Kintsugi3DViewer.exe not found" }
+          
+          Write-Host $viewer
 
           Test-Launch $viewer
           Write-Host "Installed Viewer smoke test passed."
 
           # Test the uninstaller.
-          $uninstaller = Get-ChildItem $installDir -Filter 'un*.exe' -Recurse |
+          $uninstaller = Get-ChildItem $installDir -Filter 'un*.exe' -Recurse -ErrorAction SilentlyContinue |
             Select-Object -First 1
           if (!$uninstaller) { throw "Uninstaller not found" }
+          
+          Write-Host $uninstaller
 
           $p = Start-Process $uninstaller.FullName -ArgumentList '/S' -PassThru
           if (!$p.WaitForExit(600000)) {
@@ -224,21 +234,26 @@ jobs:
               exit 1
             fi
           }
+          STAGING_DIR="$(find "$BUILD_DIR" -maxdepth 1 -type d \
+            -name 'Kintsugi3DBuilder-*' ! -name '*-macos.dmg' -print -quit)"
 
-          # Test 1: Builder from the Maven build directory.
-          BUILDER="$BUILD_DIR/Kintsugi 3D Builder.app"
+          # Test 1: Builder from the staging directory.
+          BUILDER="$STAGING_DIR/Kintsugi 3D Builder.app"
+          echo "$BUILDER"
           smoke_test_app "$BUILDER" \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (build directory)"
 
           # Test 2: Builder extracted from the DMG.
           BUILDER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Builder.app"
+          echo "$BUILDER_EXTRACTED"
           smoke_test_app "$BUILDER_EXTRACTED" \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (DMG)"
 
           # Test 3: Viewer extracted from the DMG.
           VIEWER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Viewer.app"
+          echo "$VIEWER_EXTRACTED"
           smoke_test_app "$VIEWER_EXTRACTED" \
             "$VIEWER_EXTRACTED/Contents/MacOS/Kintsugi 3D Viewer" \
             "Viewer (DMG)"
