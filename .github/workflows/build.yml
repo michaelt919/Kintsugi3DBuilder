@@ -222,7 +222,6 @@ jobs:
             --prefix="$MESA_PREFIX" \
             -Dosmesa=true \
             -Dgallium-drivers=swrast \
-            -Ddri-drivers=[] \
             -Dvulkan-drivers=[] \
             -Dglx=disabled \
             -Degl=disabled \
