@@ -72,21 +72,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
             }
         }));
 
-        if (!glfwInit())
-        {
-            throw new GLFWException("Unable to initialize GLFW.");
-        }
-
-        glfwDefaultWindowHints();
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-        glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE, windowSpec.isResizable() ? GL_TRUE : GL_FALSE);
-        glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
+        initGLFWWithWindowHints(windowSpec);
 
         long handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
         if (handleIfSuccessful == NULL)
@@ -96,6 +82,14 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
             if (glfwError.get() == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
             {
                 LOG.info("Failed to create a native GLFW window; attempting fallback to OSMesa.");
+
+                // Terminate GLFW to change OpenGL's contextAPI.
+                glfwTerminate();
+
+                System.setProperty("org.lwjgl.opengl.contextAPI", "OSMesa");
+
+                // Restart GLFW
+                initGLFWWithWindowHints(windowSpec);
 
                 // Retry with OSMesa
                 // Among other things, this is needed for CI tests to run via GitHub Actions on free test runners
@@ -152,6 +146,25 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         {
             context.getState().enableMultisampling();
         }
+    }
+
+    private static void initGLFWWithWindowHints(WindowSpecification windowSpec)
+    {
+        if (!glfwInit())
+        {
+            throw new GLFWException("Unable to initialize GLFW.");
+        }
+
+        glfwDefaultWindowHints();
+
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, windowSpec.isResizable() ? GL_TRUE : GL_FALSE);
+        glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
     }
 
     public static void closeAllWindows()
