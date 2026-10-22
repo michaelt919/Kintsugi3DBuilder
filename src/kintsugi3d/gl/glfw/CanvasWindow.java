@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -53,8 +54,11 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         String glfwVersionString = glfwGetVersionString();
         LOG.info("GLFW version: {}", glfwVersionString);
 
+        AtomicInteger glfwError = new AtomicInteger();
+
         glfwSetErrorCallback(GLFWErrorCallback.create((error, description) ->
         {
+            glfwError.set(error);
             throw new GLFWException(GLFWErrorCallback.getDescription(description));
         }));
 
@@ -77,10 +81,9 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         long handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
         if (handleIfSuccessful == NULL)
         {
-            int glfwErrorCode = glfwGetError(null);
-            LOG.info("GLFW error code: {}", glfwErrorCode);
+            LOG.info("GLFW error code: {}", glfwError.get());
 
-            if (glfwErrorCode == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
+            if (glfwError.get() == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
             {
                 LOG.info("Failed to create a native GLFW window; attempting fallback to OSMesa.");
 
