@@ -74,7 +74,17 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
 
         initGLFWWithWindowHints(windowSpec);
 
-        long handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
+        long handleIfSuccessful = NULL;
+
+        try
+        {
+            handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
+        }
+        catch (GLFWException e)
+        {
+            LOG.warn("Error creating GLFW window.", e);
+        }
+
         if (handleIfSuccessful == NULL)
         {
             LOG.info("GLFW error code: {}", glfwError.get());
