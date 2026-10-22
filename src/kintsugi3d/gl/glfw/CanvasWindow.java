@@ -59,7 +59,17 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         glfwSetErrorCallback(GLFWErrorCallback.create((error, description) ->
         {
             glfwError.set(error);
-            throw new GLFWException(GLFWErrorCallback.getDescription(description));
+            String descriptionString = GLFWErrorCallback.getDescription(description);
+
+            if (error == GLFW_FORMAT_UNAVAILABLE)
+            {
+                // Suppress errors to avoid failing smoke tests that rely on fallback to OSMesa.
+                LOG.warn("GLFW format unavailable.", new GLFWException(descriptionString));
+            }
+            else
+            {
+                throw new GLFWException(descriptionString);
+            }
         }));
 
         if (!glfwInit())
