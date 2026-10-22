@@ -247,12 +247,16 @@ jobs:
           LLVM_PREFIX="$(brew --prefix llvm)"
           
           OSMESA_LIB="$(find "$MESA_PREFIX" \
-            -name 'libOSMesa*.dylib' -print -quit)"
+           -name 'libOSMesa*.dylib' -type f -print -quit)"
           
           if [[ -z "$OSMESA_LIB" ]]; then
-            echo "Mesa build did not produce libOSMesa.dylib"
+            echo "Mesa build did not produce a regular OSMesa library file"
+            find "$MESA_PREFIX" -name '*OSMesa*' -print
             exit 1
           fi
+        
+          echo "OSMesa library: $OSMESA_LIB"
+          otool -L "$OSMESA_LIB"
           
           # GLFW's macOS loader looks for this specific library name.
           mkdir -p "$MESA_PREFIX/lib"
