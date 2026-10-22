@@ -77,7 +77,10 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         long handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
         if (handleIfSuccessful == NULL)
         {
-            if (glfwGetError(null) == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
+            int glfwErrorCode = glfwGetError(null);
+            LOG.info("GLFW error code: {}", glfwErrorCode);
+
+            if (glfwErrorCode == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
             {
                 LOG.info("Failed to create a native GLFW window; attempting fallback to OSMesa.");
 
