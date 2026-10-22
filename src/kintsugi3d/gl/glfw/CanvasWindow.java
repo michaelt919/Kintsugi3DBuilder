@@ -45,6 +45,14 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
+        LOG.info("LWJGL version: {}.{}.{}{}",
+            Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
+            Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
+            /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
+
+        String glfwVersionString = glfwGetVersionString();
+        LOG.info("GLFW version: {}", glfwVersionString);
+
         glfwSetErrorCallback(GLFWErrorCallback.create((error, description) ->
         {
             throw new GLFWException(GLFWErrorCallback.getDescription(description));
@@ -66,11 +74,26 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         glfwWindowHint(GLFW_RESIZABLE, windowSpec.isResizable() ? GL_TRUE : GL_FALSE);
         glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
 
-        handle = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
-        if ( handle == NULL )
+        long handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
+        if (handleIfSuccessful == NULL)
         {
-            throw new GLFWException("Failed to create the GLFW window");
+            if (glfwGetError(null) == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
+            {
+                LOG.info("Failed to create a native GLFW window; attempting fallback to OSMesa.");
+
+                // Retry with OSMesa
+                // Among other things, this is needed for CI tests to run via GitHub Actions on free test runners
+                glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_OSMESA_CONTEXT_API);
+                handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
+            }
+
+            if (handleIfSuccessful == NULL)
+            {
+                throw new GLFWException("Failed to create the GLFW window");
+            }
         }
+
+        this.handle = handleIfSuccessful;
 
         this.listenerManager = new WindowCallback(this);
 
@@ -103,11 +126,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
 
         GL.createCapabilities(); // Make a valid OpenGL Context
         LOG.info("OpenGL version: {}", glGetString(GL_VERSION));
-        LOG.info("LWJGL version: {}.{}.{}{}",
-                Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
-            Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
-                /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
-        LOG.info("GLFW version: {}", glfwGetVersionString());
+        LOG.info("OpenGL renderer: {}", glGetString(GL_RENDERER));
 
         this.context = createDefaultFramebuffer == null ?
             contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);
