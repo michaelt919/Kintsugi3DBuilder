@@ -192,7 +192,7 @@ jobs:
           brew install llvm pkg-config meson ninja
           python3 -m venv "$RUNNER_TEMP/mesa-venv"
           source "$RUNNER_TEMP/mesa-venv/bin/activate"
-          python -m pip install meson ninja mako packaging
+          python -m pip install meson ninja mako packaging pyyaml
 
       - name: Download Mesa
         if: runner.os == 'macOS'
