@@ -14,30 +14,22 @@ package kintsugi3d.builder.test;
 import kintsugi3d.app.RenderingBootstrap;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.GlobalBootstrap;
-import kintsugi3d.builder.core.metrics.ReadonlyColorAppearanceRMSE;
 import kintsugi3d.builder.core.viewset.ViewSet;
-import kintsugi3d.builder.fit.BasisAndTexturesOptimizationProcess;
 import kintsugi3d.builder.fit.SpecularFitRequest;
-import kintsugi3d.builder.fit.settings.BasisOptimizationSettings;
-import kintsugi3d.builder.fit.settings.SpecularFitSettings;
-import kintsugi3d.builder.io.LoadOptionsModel;
-import kintsugi3d.builder.io.ViewSetDirectories;
-import kintsugi3d.builder.io.ViewSetLoadOptions;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.io.*;
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
-import kintsugi3d.builder.rendering.ImageBasedRenderableManager;
-import kintsugi3d.builder.rendering.Rendering;
-import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
-import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
-import kintsugi3d.builder.state.settings.DefaultSettings;
-import kintsugi3d.builder.state.settings.GeneralSettingsModel;
-import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
-import kintsugi3d.builder.util.logging.LogMessage;
-import kintsugi3d.builder.util.logging.LogMessageListener;
+import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
+import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
 import kintsugi3d.fx.controllers.modals.RecentLogMessageAppender;
 import kintsugi3d.fx.internal.ObservableLoadOptionsModel;
+import kintsugi3d.builder.rendering.Rendering;
+import kintsugi3d.builder.util.logging.LogMessage;
+import kintsugi3d.builder.util.logging.LogMessageListener;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
@@ -55,13 +47,16 @@ import org.slf4j.event.Level;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SmokeTest
@@ -78,6 +73,17 @@ public class SmokeTest
     private AtomicReference<Throwable> observerFailure;
     private TestingState testingState = new TestingState();
     private static AtomicBoolean initialized = new AtomicBoolean(false);
+    private static AtomicBoolean loadFinished = new AtomicBoolean(false);
+    private static AtomicBoolean closedFinished = new AtomicBoolean(false);
+    private static AtomicBoolean exportFinished = new AtomicBoolean(false);
+    private static AtomicInteger processCounter = new AtomicInteger(0);
+    private static AtomicInteger saveCounter = new AtomicInteger(0);
+    private static long timeout = TimeUnit.SECONDS.toNanos(300);
+    private enum ReloadMode  {
+        BOTH,
+        FIRST_ONLY,
+        SECOND_ONLY
+    }
 
     private static class ProgressMonitorImpl implements ProgressMonitor
     {
@@ -221,13 +227,199 @@ public class SmokeTest
     {
         // Check whether the log contained any errors
         Throwable failure = observerFailure.get();
-//        if (failure != null)
-//        {
-//            fail(failure.getMessage());
-//        }
+        if (failure != null)
+        {
+            fail(failure.getMessage());
+        }
         context.close();
     }
 
+    private static void resetGlobalState()
+    {
+        IOModel io = Global.io();
+
+        if (io.getLoadedViewSet() != null)
+        {
+
+            closedFinished.set(false);
+            io.closeProject();
+
+
+            while (!closedFinished.get()) {
+                Thread.onSpinWait();
+            }
+        }
+    }
+
+    private static void initializeRendering(TestingState state)
+    {
+        if (initialized.compareAndSet(false, true))
+        {
+            LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
+            imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
+            // These are set since they otherwise are set in JavaFX related code
+
+            GlobalBootstrap.initialize(state, imageLoadOptions);
+
+            Thread renderThread = new Thread(() -> {
+                try {
+                    RenderingBootstrap.runProgram();
+                }
+                catch (InitializationException e) {
+                    throw new RuntimeException(e);
+                }
+            }, "render-thread");
+
+            renderThread.start();
+
+            while (!Global.io().hasValidHandler()) {
+                Thread.onSpinWait();
+            }
+
+            setupListeners();
+        }
+        else
+        {
+            resetGlobalState();
+        }
+    }
+
+    static void setupListeners() {
+
+        // Project Load listener
+        Global.io().projectLoadedListeners().register(event ->
+        {
+            System.out.println("Project Loaded");
+            loadFinished.set(true);
+        });
+
+        // Project closed listener
+        Global.io().projectClosedListeners().register(event ->
+        {
+            System.out.println("Project Closed");
+            closedFinished.set(true);
+        });
+
+        // Project processed listener
+        Global.io().projectProcessedListeners().register(event ->
+        {
+            System.out.println("Project Processed");
+            processCounter.incrementAndGet();
+        });
+
+        Global.io().projectSavedListeners().register(event ->
+        {
+            System.out.println("Project Saved");
+            saveCounter.incrementAndGet();
+        });
+    }
+
+
+
+    private static void waitFor(AtomicBoolean finished, TestingState testingState, String operation)
+    {
+        int startingErrorCount = testingState.getErrors().size();
+        long start = System.nanoTime();
+        while (!finished.get())
+        {
+            if (testingState.getErrors().size() > startingErrorCount) {
+                throw new ExpectedFailureException("Error occurred during project " + operation);
+            }
+
+            if (System.nanoTime() - start > timeout)
+            {
+                throw new AssertionError(
+                    "Timed out waiting for project" + operation);
+            }
+
+            Thread.onSpinWait();
+        }
+    }
+
+    private static void waitForLoad(TestingState testingState)
+    {
+        waitFor(loadFinished, testingState, "load");
+    }
+
+    private static void waitForClose(TestingState testingState)
+    {
+        waitFor(closedFinished, testingState, "close");
+    }
+
+    private static void waitForExport(TestingState testingState)
+    {
+        waitFor(exportFinished, testingState, "export");
+    }
+
+    private static void waitForProcess(int startingCount, TestingState testingState)
+    {
+        int startingErrorCount = testingState.getErrors().size();
+        long start = System.nanoTime();
+        while (processCounter.get() == startingCount)
+        {
+            if (testingState.getErrors().size() > startingErrorCount) {
+                throw new ExpectedFailureException("Error occurred during project process");
+            }
+
+            if (System.nanoTime() - start > timeout*2)
+            {
+                throw new AssertionError(
+                    "Timed out waiting for project process");
+            }
+
+            Thread.onSpinWait();
+        }
+    }
+
+    private static void waitForSave(int startingCount, TestingState testingState)
+    {
+        int startingErrorCount = testingState.getErrors().size();
+        long start = System.nanoTime();
+        while (saveCounter.get() == startingCount)
+        {
+            if (testingState.getErrors().size() > startingErrorCount) {
+                throw new ExpectedFailureException("Error occurred during project save");
+            }
+
+            if (System.nanoTime() - start > timeout)
+            {
+                throw new AssertionError(
+                    "Timed out waiting for project save");
+            }
+
+            Thread.onSpinWait();
+        }
+    }
+
+
+
+    private static void loadedChecks()
+    {
+        assertNotNull(Global.io().getMainRenderable());
+        assertNotNull(Global.io().getLoadedGeometry());
+        assertNotNull(Global.io().getLoadedViewSetFile());
+        assertNotNull(Global.io().getLoadOptionsModel());
+        assertTrue(Global.io().hasLoadedRenderable());
+    }
+
+    private static void cameraChecks(int expected)
+    {
+        int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
+        assertEquals(expected, numLoadedCameras);
+        int numEnabledCameras = Global.io().getLoadedViewSet().getEnabledViewCount();
+        assertEquals(expected, numEnabledCameras);
+        int numDisabledCameras = Global.io().getLoadedViewSet().getDisabledViewCount();
+        assertEquals(0, numDisabledCameras);
+    }
+
+    private void logChecks()
+    {
+        // Check UI errors and Warnings
+        int numErrors = testingState.getErrors().size();
+        assertEquals(0, numErrors);
+        int numWarnings = testingState.getWarnings().size();
+        assertEquals(0, numWarnings);
+    }
     @Test
     @DisplayName("Rodin fit, from Metashape export")
     void testFit_rodinMetashape() throws Exception
@@ -235,27 +427,21 @@ public class SmokeTest
         LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
 
-        testFitMetashape2(
+        testFitMetashape(
             "Rodin/Mia_001239_Rodin_90cameras.xml",
             "Rodin/Mia_001239_Rodin_64k.obj",
             "Rodin/Processed dark 25",
-            rmse ->
-            {
-                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
-                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
-                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
-            },
             "Rodin_metashape", testingState);
-        int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
-        assertEquals(90, numLoadedCameras);
-        int numEnabledCameras = Global.io().getLoadedViewSet().getEnabledViewCount();
-        assertEquals(90, numEnabledCameras);
-        int numDisabledCameras = Global.io().getLoadedViewSet().getDisabledViewCount();
-        assertEquals(0, numDisabledCameras);
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
+        verifyProject(90);
+    }
+
+    private void verifyProject(int expected)
+    {
+        cameraChecks(expected);
+
+        loadedChecks();
+
+        logChecks();
     }
 
     @Test
@@ -267,49 +453,186 @@ public class SmokeTest
 
         LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
-        testFitPsx2(
+        testFitPsx(
             psxFile,
                    "Rodin/Processed dark 25",
-            rmse ->
-            {
-                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
-                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
-                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
-            },
             "Rodin_psx", testingState);
-        int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
-        assertEquals(90, numLoadedCameras);
-        int numEnabledCameras = Global.io().getLoadedViewSet().getEnabledViewCount();
-        assertEquals(90, numEnabledCameras);
-        int numDisabledCameras = Global.io().getLoadedViewSet().getDisabledViewCount();
-        assertEquals(0, numDisabledCameras);
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
+        verifyProject(90);
     }
 
     @Test
-    @DisplayName("Rodin, Reload Test")
-    void testReload_rodin() throws Exception
+    @DisplayName("Rodin fit, Reload_Both Test")
+    void testFit_rodinReload() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitReload(
+            projectFile,
+            "Rodin_reloaded",
+            "Rodin/Processed dark 25",
+            testingState, ReloadMode.BOTH);
+
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Wrong Directory")
+    void testFit_rodin_wrongDirectory()
+    {
+        assertThrows(
+            NullPointerException.class,
+            () -> testFitMetashape(
+                "Rodin/Mia_001239_Rodin_90cameras.xml",
+                "Rodin/Mia_001239_Rodin_64k.obj",
+                "Rodin/DoesNotExist",
+                "broken",
+                testingState));
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Wrong Camera File")
+    void testFit_rodinMetashape_expectedFailure() throws Exception
+    {
+        assertThrows(
+            ExpectedFailureException.class,
+            () -> testFitMetashape(
+                "Rodin/Rodincameras.xml",
+                "Rodin/Mia_001239_Rodin_64k.obj",
+                "Rodin/Processed dark 25",
+                "broken",
+                testingState));
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Reload_First Test")
+    void testFit_rodinReloadFirst() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitReload(
+            projectFile,
+            "Rodin_reloadedFirst",
+            "Rodin/Processed dark 25",
+            testingState, ReloadMode.FIRST_ONLY);
+
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Reload_Second Test")
+    void testFit_rodinReloadSecond() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitReload(
+            projectFile,
+            "Rodin_reloadedSecond",
+            "Rodin/Processed dark 25",
+            testingState, ReloadMode.SECOND_ONLY);
+
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Export Test")
+    void testFit_rodinExport() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d").toURI());
+        MaterialExporterFactory exporterFactory = Kintsugi3DViewerExporterFactory.getInstance();
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitExport(
+            projectFile,
+            "Rodin_k3dViewerExport",
+            "Rodin/Processed dark 25",
+            testingState, exporterFactory);
+
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Specular Export Test")
+    void testFit_rodinSpecExport() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d").toURI());
+        MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitExport(
+            projectFile,
+            "Rodin_specularExport",
+            "Rodin/Processed dark 25",
+            testingState, exporterFactory);
+
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Metallic Export Test")
+    void testFit_rodinMetallicExport() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d").toURI());
+        MaterialExporterFactory exporterFactory = USDZMetallicExporterFactory.getInstance();
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitExport(
+            projectFile,
+            "Rodin_metallicExport",
+            "Rodin/Processed dark 25",
+            testingState, exporterFactory);
+
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Reload_Both Test")
+    void testFit_rodinReloadfromVset() throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
         File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset").toURI());
 
         LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
-        testFitReload(projectFile, "Rodin_reloaded", testingState);
+        testFitReload(
+            projectFile,
+            "Rodin_reloaded_fromVset",
+            "Rodin/Processed dark 25",
+            testingState, ReloadMode.BOTH);
 
-        int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
-        assertEquals(90, numLoadedCameras);
-        int numEnabledCameras = Global.io().getLoadedViewSet().getEnabledViewCount();
-        assertEquals(90, numEnabledCameras);
-        int numDisabledCameras = Global.io().getLoadedViewSet().getDisabledViewCount();
-        assertEquals(0, numDisabledCameras);
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
+        verifyProject(90);
+    }
+
+    @Test
+    @DisplayName("Rodin fit, Light Calibration Test")
+    void testFit_rodinLightCalibration() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitLightCalibration(
+            projectFile,
+            "Rodin_lightCalibration",
+            "Rodin/Processed dark 25",
+            testingState);
+
+        verifyProject(90);
+
+        assertEquals(Vector3.ZERO, Global.io().getLoadedViewSet().getLightPosition(0));
+        assertEquals(new Vector3(29.082094f), Global.io().getLoadedViewSet().getLightIntensity(0));
     }
 
     @Test
@@ -319,205 +642,233 @@ public class SmokeTest
         LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
 
-        testFitMetashape2(
+        testFitMetashape(
             "KatrinaFuller/Mia_124131_KratinaFuller_168cameras.files.xml",
             "KatrinaFuller/Mia_124131_KratinaFuller_64k.obj",
             "KatrinaFuller/Downscaled25",
-            rmse ->
-            {
-                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
-                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
-                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
-            },
             "KatrinaFuller_metashape", testingState);
-        int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
-        assertEquals(168, numLoadedCameras);
-        int numEnabledCameras = Global.io().getLoadedViewSet().getEnabledViewCount();
-        assertEquals(168, numEnabledCameras);
-        int numDisabledCameras = Global.io().getLoadedViewSet().getDisabledViewCount();
-        assertEquals(0, numDisabledCameras);
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
+
+        verifyProject(168);
     }
 
-        @Test
+
+    @Test
     @DisplayName("Katrina Fuller fit, from Reality Capture export")
     void testFit_katrinafullerRealityCapture() throws Exception
     {
         LogMessageListener logListener = new TestLogListener();
         RecentLogMessageAppender.getInstance().addListener(logListener);
 
-        testFitMetashape2(
+        testFitMetashape(
             "KatrinaFuller/katrinafuller-realitycapture.csv",
             "KatrinaFuller/katrinafuller-realitycapture.obj",
             "KatrinaFuller/Downscaled25",
-            rmse ->
-            {
-                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
-                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
-                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
-            },
             "KatrinaFuller_realitycapture", testingState);
-        int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
-        assertEquals(158, numLoadedCameras);
-        int numEnabledCameras = Global.io().getLoadedViewSet().getEnabledViewCount();
-        assertEquals(158, numEnabledCameras);
-        int numDisabledCameras = Global.io().getLoadedViewSet().getDisabledViewCount();
-        assertEquals(0, numDisabledCameras);
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Reload_Both Test")
+    void testFit_katrinafullerReload() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+
+        testFitReload(
+            projectFile,
+            "KatrinaFuller_reloaded",
+            "KatrinaFuller/Downscaled25",
+            testingState, ReloadMode.BOTH);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Reload_First Test")
+    void testFit_katrinafullerReloadFirst() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+
+        testFitReload(
+            projectFile,
+            "KatrinaFuller_reloadedFirst",
+            "KatrinaFuller/Downscaled25",
+            testingState, ReloadMode.FIRST_ONLY);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Reload_Second Test")
+    void testFit_katrinafullerReloadSecond() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+
+        testFitReload(
+            projectFile,
+            "KatrinaFuller_reloaded",
+            "KatrinaFuller/Downscaled25",
+            testingState, ReloadMode.SECOND_ONLY);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Export Test")
+    void testFit_katrinaFullerExport() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realityCapture.k3d").toURI());
+        MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitExport(
+            projectFile,
+            "KatrinaFuller_k3dViewerExport",
+            "KatrinaFuller/Downscaled25",
+            testingState, exporterFactory);
+
+        verifyProject(158);
+    }
+
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Specular Export Test")
+    void testFit_katrinaFullerSpecExport() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realityCapture.k3d").toURI());
+        MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitExport(
+            projectFile,
+            "KatrinaFuller_specularExport",
+            "KatrinaFuller/Downscaled25",
+            testingState, exporterFactory);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Metallic Export Test")
+    void testFit_katrinaFullerMetallicExport() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realityCapture.k3d").toURI());
+        MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitExport(
+            projectFile,
+            "KatrinaFuller_metallicExport",
+            "KatrinaFuller/Downscaled25",
+            testingState, exporterFactory);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Reload_Vset Test")
+    void testFit_katrinafullerReloadfromVset() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+
+        testFitReload(
+            projectFile,
+            "KatrinaFuller_reloaded_fromVset",
+            "KatrinaFuller/Downscaled25",
+            testingState, ReloadMode.BOTH);
+
+        verifyProject(158);
+    }
+
+    @Test
+    @DisplayName("Katrina Fuller fit, Light Calibration Test")
+    void testFit_katrinaFullerLightCalibration() throws Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File projectFile = new File(classLoader.getResource("test/KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset").toURI());
+
+        LogMessageListener logListener = new TestLogListener();
+        RecentLogMessageAppender.getInstance().addListener(logListener);
+        testFitLightCalibration(
+            projectFile,
+            "KatrinaFuller_lightCalibration",
+            "KatrinaFuller/Downscaled25",
+            testingState);
+
+        verifyProject(158);
+
+        assertEquals(Vector3.ZERO, Global.io().getLoadedViewSet().getLightPosition(0));
+        assertEquals(new Vector3(3242.3916f), Global.io().getLoadedViewSet().getLightIntensity(0));
+    }
+
+
+    private static void specularFit()
+    {
+        Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
+        SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
+        Rendering.getRequestQueue().addGraphicsRequest(request);
+    }
+
+    private void runSpecularFit() throws InterruptedException
+    {
+        // Wait for any in-flight load processing event
+        Thread.sleep(50);
+
+        int countAfterLoad = processCounter.get();
+        specularFit();
+
+        waitForProcess(countAfterLoad, testingState);
+        waitForSave(saveCounter.get(), testingState);
     }
 
     private void testFitMetashape(String cameras, String geometry, String imageDirectory,
-                                  Consumer<ReadonlyColorAppearanceRMSE> validation, String testName, TestingState state) throws Exception
+                                  String testName, TestingState state) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
-        imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        // These are set since they otherwise are set in JavaFX related code
-        GlobalBootstrap.initialize(state, imageLoadOptions);
-        ImageBasedRenderableManager<OpenGLContext> mockIOHandler = new ImageBasedRenderableManager<>(context);
-        mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a better way to do this instead of using a new method for it
-        Global.io().setLoadingHandler(mockIOHandler);
+        initializeRendering(state);
 
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
         viewSetLoadOptions.geometryFile = new File(classLoader.getResource("test/" + geometry).toURI());
         viewSetLoadOptions.mainDirectories.fullResImageDirectory = new File(classLoader.getResource("test/" + imageDirectory).toURI());
         viewSetLoadOptions.mainDirectories.fullResImagesNeedUndistort = true;
 
-        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.getBuilderForContext(context)
-            .setImageLoadOptions(imageLoadOptions)
-            .setProgressMonitor(progressMonitor)
-            .loadLooseFiles(new File(classLoader.getResource("test/" + cameras).toURI()), viewSetLoadOptions)
-            .create())
-        {
-            resources.calibrateLightIntensities();
-            viewSet = resources.getViewSet();
-            testFit(resources, validation, testName);
-        }
-    }
-
-    private void testFitMetashape2(String cameras, String geometry, String imageDirectory,
-                                  Consumer<ReadonlyColorAppearanceRMSE> validation, String testName, TestingState state) throws Exception
-    {
-        ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
-        imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        // These are set since they otherwise are set in JavaFX related code
-        GlobalBootstrap.initialize(state, imageLoadOptions);
-
-        Thread renderThread = new Thread(() -> {
-            try {
-                RenderingBootstrap.runProgram();
-            }
-            catch (InitializationException e) {
-                throw new RuntimeException(e);
-            }
-        }, "render-thread");
-
-        renderThread.start();
-
-        while (!Global.io().hasValidHandler()) {
-            Thread.onSpinWait();
-        }
-
-
-        ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
-        viewSetLoadOptions.geometryFile = new File(classLoader.getResource("test/" + geometry).toURI());
-        viewSetLoadOptions.mainDirectories.fullResImageDirectory = new File(classLoader.getResource("test/" + imageDirectory).toURI());
-        viewSetLoadOptions.mainDirectories.fullResImagesNeedUndistort = true;
-
-        AtomicBoolean finished = new AtomicBoolean(false);
-        Global.io().projectLoadedListeners().register(event ->
-        {
-            System.out.println("Project Loaded");
-            finished.set(true);
-        });
+        loadFinished.set(false);
         File newFile = new File("test-output",String.format("%s.k3d", testName));
 
         Global.io().loadFromLooseFiles(newFile, testName, new File(classLoader.getResource("test/" + cameras).toURI()), viewSetLoadOptions);
 
-        while (!finished.get())
-        {
-            Thread.onSpinWait();
-        }
-        finished.set(false);
-        Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
-        Global.io().projectProcessedListeners().register(event -> {
-            System.out.println("Project Processed");
-            finished.set(true);
-        });
-        SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
-        Rendering.getRequestQueue().addGraphicsRequest(request);
+        waitForLoad(testingState);
 
-        while (!finished.get())
-        {
-            Thread.onSpinWait();
-        }
-
-    }
-
-    private void testFitPsx(File psxFile, String imageDirectory, Consumer<ReadonlyColorAppearanceRMSE> validation,
-                            String testName, TestingState state) throws Exception
-    {
-        ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
-        imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        // These are set since they otherwise are set in JavaFX related code
-        GlobalBootstrap.initialize(state, imageLoadOptions);
-        ImageBasedRenderableManager<OpenGLContext> mockIOHandler = new ImageBasedRenderableManager<>(context);
-        mockIOHandler.setLoadedViewSet(viewSet); // Probably should find a
-        // better way to do this instead of using a new method for it
-        Global.io().setLoadingHandler(mockIOHandler);
-
-        MetashapeDocument doc = new MetashapeDocument(psxFile.getAbsolutePath());
-        MetashapeChunk chunk = doc.getSelectedChunk();
-        MetashapeModel model = chunk.getSelectedModel();
-
-        URL url = classLoader.getResource("test/" + imageDirectory);
-        File imgDir = new File(url.toURI()).getAbsoluteFile();
-        model.getLoadPreferences().setFullResOverride(imgDir);
-
-        try (GraphicsResourcesImageSpace<OpenGLContext> resources = GraphicsResourcesImageSpace.<OpenGLContext>getBuilderForContext(context)
-            .setImageLoadOptions(imageLoadOptions)
-            .setProgressMonitor(progressMonitor)
-            .loadFromMetashapeModel(model)
-            .create())
-        {
-            resources.calibrateLightIntensities();
-            viewSet = resources.getViewSet();
-            testFit(resources, validation, testName);
-        }
+        runSpecularFit();
     }
 
 
-    private void testFitPsx2(File psxFile, String imageDirectory, Consumer<ReadonlyColorAppearanceRMSE> validation,
+
+
+    private void testFitPsx(File psxFile, String imageDirectory,
                             String testName, TestingState state) throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
-        imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        // These are set since they otherwise are set in JavaFX related code
-        GlobalBootstrap.initialize(state, imageLoadOptions);
-
-        Thread renderThread = new Thread(() -> {
-            try {
-                RenderingBootstrap.runProgram();
-            }
-            catch (InitializationException e) {
-                throw new RuntimeException(e);
-            }
-        }, "render-thread");
-
-        renderThread.start();
-
-        while (!Global.io().hasValidHandler()) {
-            Thread.onSpinWait();
-        }
+        initializeRendering(state);
 
         MetashapeDocument doc = new MetashapeDocument(psxFile.getAbsolutePath());
         MetashapeChunk chunk = doc.getSelectedChunk();
@@ -527,107 +878,225 @@ public class SmokeTest
         File imgDir = new File(classLoader.getResource("test/" + imageDirectory).toURI());
         model.getLoadPreferences().setFullResOverride(imgDir);
 
-        AtomicBoolean finished = new AtomicBoolean(false);
-        Global.io().projectLoadedListeners().register(event ->
-        {
-            System.out.println("Project Loaded");
-            finished.set(true);
-        });
+        loadFinished.set(false);
         File newFile = new File("test-output",String.format("%s.k3d", testName));
         Global.io().loadFromMetashapeModel(newFile, model);
+        waitForLoad(testingState);
 
-        while (!finished.get())
-        {
-            Thread.onSpinWait();
-        }
-
-        finished.set(false);
-        Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
-        Global.io().projectProcessedListeners().register(event -> {
-            System.out.println("Project Processed");
-            finished.set(true);
-        });
-        SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
-        Rendering.getRequestQueue().addGraphicsRequest(request);
-
-        while (!finished.get())
-        {
-            Thread.onSpinWait();
-        }
+        runSpecularFit();
     }
 
-    private void testFitReload(File projectFile ,String testName, TestingState state) throws IOException, UserCancellationException
+    private void testFitReload(File projectFile ,String testName, String imageDirectory, TestingState state, ReloadMode mode)
+        throws Exception
     {
         ClassLoader classLoader = getClass().getClassLoader();
-        LoadOptionsModel imageLoadOptions = new ObservableLoadOptionsModel();
-        imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-        // These are set since they otherwise are set in JavaFX related code
+        initializeRendering(state);
 
-        AtomicBoolean loadFinished = new AtomicBoolean(false);
-        AtomicBoolean closedFinished = new AtomicBoolean(false);
-        AtomicBoolean processFinished = new AtomicBoolean(false);
-        Global.io().projectLoadedListeners().register(event ->
-        {
-            System.out.println("Project Loaded");
-            loadFinished.set(true);
-        });
-        Global.io().loadExistingProject(projectFile);
-
-        while (!loadFinished.get()) {
-            Thread.onSpinWait();
-        }
-
-
-        processFinished.set(false);
-        Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
-        Global.io().projectProcessedListeners().register(event -> {
-            System.out.println("Project Processed");
-            processFinished.set(true);
-        });
-        SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
-        Rendering.getRequestQueue().addGraphicsRequest(request);
-
-        while (!processFinished.get())
-        {
-            Thread.onSpinWait();
-        }
-        Global.io().projectClosedListeners().register(event ->
-        {
-            System.out.println("Project Closed");
-            closedFinished.set(true);
-        });
-
-        Global.io().closeProject();
+        // --- FIRST LOAD ---
         loadFinished.set(false);
-
-        while (!closedFinished.get()) {
-            Thread.onSpinWait();
-        }
         Global.io().loadExistingProject(projectFile);
+        waitForLoad(testingState);
 
-        while (!loadFinished.get()) {
-            Thread.onSpinWait();
+        File imgDir =  new File(classLoader.getResource("test/" + imageDirectory).toURI());
+        Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
+
+        // --- FIRST PROCESS ---
+        if (mode == ReloadMode.FIRST_ONLY
+            || mode == ReloadMode.BOTH)
+        {
+            runSpecularFit();
+        }
+
+        // --- CLOSE PROJECT ---
+        closedFinished.set(false);
+        Global.io().closeProject();
+        waitForClose(testingState);
+
+        // --- SECOND LOAD ---
+        loadFinished.set(false);
+        Global.io().loadExistingProject(projectFile);
+        waitForLoad(testingState);
+
+        // --- SECOND PROCESS ---
+        if (mode == ReloadMode.SECOND_ONLY
+            || mode == ReloadMode.BOTH)
+        {
+            runSpecularFit();
         }
     }
 
-
-    private void testFit(ReadonlyImageBasedGraphicsResources<OpenGLContext> resources, Consumer<ReadonlyColorAppearanceRMSE> validation, String testName)
-        throws IOException, UserCancellationException
+    private void testFitExport(File projectFile, String testName, String imageDirectory, TestingState state, MaterialExporterFactory exporterFactory) throws Exception
     {
-        File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
-        outputDirectory.mkdirs();
+        ClassLoader classLoader = getClass().getClassLoader();
+        ExportSettings settings = new ExportSettings();
+        settings.setExporterFactory(exporterFactory);
+        settings.setShouldSaveTextures(true);
+        initializeRendering(state);
 
-        GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
-        DefaultSettings.applyGlobalDefaults(settings);
-        SpecularFitSettings params = new SpecularFitSettings(512, 512);
-        params.getImageCacheSettings().setCacheParentDirectory(new File (outputDirectory, "cache"));
+        // --- LOAD ---
+        loadFinished.set(false);
+        Global.io().loadExistingProject(projectFile);
+        waitForLoad(testingState);
 
-        // Perform the specular fit
-        BasisAndTexturesOptimizationProcess specularFitProcess =
-            new BasisAndTexturesOptimizationProcess(params, new BasisOptimizationSettings(), outputDirectory);
-        specularFitProcess.optimizeFitWithCache(resources, progressMonitor);
+        File imgDir =  new File(classLoader.getResource("test/" + imageDirectory).toURI());
+        Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
 
-        specularFitProcess.reconstructAll(resources,
-            (view, rmse) -> validation.accept(rmse));
+        // --- PROCESS ---
+        runSpecularFit();
+
+        File newFile = new File("test-output/export-output",String.format("%s.k3d",testName));
+        ExportTexturesRequest request = new ExportTexturesRequest(newFile, settings, () ->
+        {
+            System.out.println("Project Exported");
+            exportFinished.set(true);
+        });
+        Rendering.getRequestQueue().addGraphicsRequest(request);
+
+        waitForExport(testingState);
+    }
+
+    private void testFitLightCalibration(File projectFile, String testName, String imageDirectory, TestingState state) throws  Exception
+    {
+        ClassLoader classLoader = getClass().getClassLoader();
+        initializeRendering(state);
+
+        // --- LOAD ---
+        loadFinished.set(false);
+        Global.io().loadExistingProject(projectFile);
+        waitForLoad(testingState);
+
+        File imgDir =  new File(classLoader.getResource("test/" + imageDirectory).toURI());
+        Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
+
+        // Run with default project lights
+        runSpecularFit();
+
+        ViewSet viewSet = Global.io().getLoadedViewSet();
+
+        assertNotNull(viewSet);
+        assertTrue(viewSet.getLightCount() > 0);
+
+        System.out.println(
+            viewSet.getLightCount());
+
+        ArrayList<Vector3> origLightPositions = new ArrayList<>(1);
+        ArrayList<Vector3> origLightIntensities = new ArrayList<>(1);
+
+        // Save original light values
+        for (int i = 0; i < viewSet.getLightCount(); i++)
+        {
+            System.out.printf(
+                "Orig. Light %d position: %s%n",
+                i,
+                viewSet.getLightPosition(i));
+            origLightPositions.add(viewSet.getLightPosition(i));
+
+            System.out.printf(
+                "Orig. Light %d intensity: %s%n",
+                i,
+                viewSet.getLightIntensity(i));
+            origLightIntensities.add(viewSet.getLightIntensity(i));
+        }
+
+        boolean hadCustomEncoding =
+            viewSet.hasCustomLuminanceEncoding();
+
+        double[] origLinear = null;
+        byte[] origEncoded = null;
+
+        if(hadCustomEncoding)
+        {
+            origLinear =
+                viewSet.getLinearLuminanceValues();
+
+            origEncoded =
+                viewSet.getEncodedLuminanceValues();
+
+            double[] modLinear =
+                origLinear.clone();
+
+            for (int i = 0; i < modLinear.length; i++)
+            {
+                modLinear[i] *= 1.05;
+            }
+
+            viewSet.setLuminanceEncoding(modLinear, origEncoded);
+        }
+        else
+        {
+            viewSet.setLuminanceEncoding(
+                new double[]
+                    {
+                        0.0,
+                        0.25,
+                        0.5,
+                        0.75,
+                        1.0
+                    },
+                new byte[]
+                    {
+                        0,
+                        64,
+                        (byte)128,
+                        (byte)192,
+                        (byte)255
+                    });
+        }
+
+        // Modify original light values
+        for(int i = 0; i < viewSet.getLightCount(); i++)
+        {
+            Vector3 modifiedPos =
+                origLightPositions.get(i).times(1.1f);
+            viewSet.setLightPosition(i, modifiedPos);
+
+            Vector3 modifiedInt =
+                origLightIntensities.get(i).times(1.2f);
+            viewSet.setLightIntensity(i, modifiedInt);
+
+            System.out.printf(
+                "Mod. Light %d position: %s%n",
+                i,
+                viewSet.getLightPosition(i));
+
+            System.out.printf(
+                "Mod. Light %d intensity: %s%n",
+                i,
+                viewSet.getLightIntensity(i));
+        }
+
+        runSpecularFit();
+
+        // Restore the original values
+        for (int i = 0; i < viewSet.getLightCount(); i++)
+        {
+            viewSet.setLightPosition(i, origLightPositions.get(i));
+            viewSet.setLightIntensity(i, origLightIntensities.get(i));
+
+            if (hadCustomEncoding)
+            {
+                viewSet.setLuminanceEncoding(
+                    origLinear,
+                    origEncoded);
+            }
+            else {
+                viewSet.clearLuminanceEncoding();
+            }
+        }
+
+        int startingCount = saveCounter.get();
+        Global.io().saveProject();
+
+       Thread.sleep(50);
+
+        waitForSave(startingCount, state);
+    }
+
+    private static class ExpectedFailureException extends RuntimeException
+    {
+        public ExpectedFailureException(String message)
+        {
+            super(message);
+        }
     }
 }

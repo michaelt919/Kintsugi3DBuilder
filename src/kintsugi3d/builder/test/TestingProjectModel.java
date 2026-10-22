@@ -11,8 +11,17 @@
 
 package kintsugi3d.builder.test;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.ImageReplacer;
+import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.state.project.*;
+import kintsugi3d.fx.core.ExceptionHandling;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 
 import java.io.File;
@@ -36,32 +45,64 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
         }
     }
 
+    private static final Logger LOG = LoggerFactory.getLogger(TestingProjectModel.class);
+
     private File colorCheckerFile;
     private final Collection<ErrorMessage> errors = new ArrayList<>(1);
     private final Collection<ErrorMessage> warnings = new ArrayList<>(1);
+    private final List<SerializableCameraSettings> cameraList = new ArrayList<>(0);
+    private final List<SerializableLightGroupSettings<SerializableLightSettings>> lightList = new ArrayList<>(0);
+    private final List<SerializableObjectPoseSettings> objectList = new ArrayList<>(0);
+    private final List<SerializableEnvironmentSettings> environmentList = new ArrayList<>(0);
+
+    public TestingProjectModel()
+    {
+
+        // Register progress monitor.
+        Global.io().addProgressMonitor(new DefaultProgressMonitor()
+        {
+            @Override
+            public void cancelComplete(UserCancellationException e)
+            {
+
+            }
+
+            @Override
+            public void fail(Throwable e)
+            {
+                TestingProjectModel.this.error("An error occurred during the operation", e);
+            }
+
+            @Override
+            public void warn(Throwable e)
+            {
+                TestingProjectModel.this.warn("A potential problem occurred during the operation", e);
+            }
+        });
+    }
 
     @Override
     public List<SerializableCameraSettings> getCameraList()
     {
-        return List.of();
+        return cameraList;
     }
 
     @Override
     public List<SerializableEnvironmentSettings> getEnvironmentList()
     {
-        return List.of();
+        return environmentList;
     }
 
     @Override
     public List<SerializableLightGroupSettings<SerializableLightSettings>> getLightGroupList()
     {
-        return List.of();
+        return lightList;
     }
 
     @Override
     public List<SerializableObjectPoseSettings> getObjectPoseList()
     {
-        return List.of();
+        return objectList;
     }
 
     @Override
@@ -104,12 +145,14 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     public void error(String message, Throwable e)
     {
         errors.add(new ErrorMessage(message, e));
+        LOG.error(message, e);
     }
 
     @Override
     public void warn(String message, Throwable e)
     {
         warnings.add(new ErrorMessage(message, e));
+        LOG.warn(message, e);
     }
 
     @Override

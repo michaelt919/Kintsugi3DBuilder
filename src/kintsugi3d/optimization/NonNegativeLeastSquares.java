@@ -263,7 +263,7 @@ public final class NonNegativeLeastSquares
                 }
                 catch(SingularMatrixException e)
                 {
-                    LOG.error("An error occurred:", e);
+                    LOG.warn("An error occurred:", e);
 
                     // Roll back and finish.
                     p[k] = false;
