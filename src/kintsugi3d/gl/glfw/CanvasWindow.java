@@ -90,6 +90,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
                 // Retry with OSMesa
                 // Among other things, this is needed for CI tests to run via GitHub Actions on free test runners
                 glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_OSMESA_CONTEXT_API);
+                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
                 handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
             }
 
