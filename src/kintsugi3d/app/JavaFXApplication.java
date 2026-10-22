@@ -403,21 +403,33 @@ public class JavaFXApplication extends Application
         });
     }
 
+    /**
+     * No-op if there's no renderable loaded.
+     */
     private static void clearMainViewSafeRegion()
     {
-                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
-        if (instance != null)
+        if (Global.io().hasLoadedRenderable())
         {
-            instance.clearSafeRegionPadding();
+            ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
+            if (instance != null)
+            {
+                instance.clearSafeRegionPadding();
+            }
         }
     }
 
+    /**
+     * No-op if there's no renderable loaded.
+     */
     private static void refreshMainViewSafeRegion(double carouselHeight)
     {
-                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
-        if (instance != null)
+        if (Global.io().hasLoadedRenderable())
         {
-            instance.setSafeRegionPadding(0, 0, 0, (int)Math.round(carouselHeight));
+            ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
+            if (instance != null)
+            {
+                instance.setSafeRegionPadding(0, 0, 0, (int) Math.round(carouselHeight));
+            }
         }
     }
 

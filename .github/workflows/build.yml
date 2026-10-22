@@ -252,8 +252,8 @@ jobs:
             fi
           
             # Check for errors in stdout / stderr.
-            if grep -q 'ERROR' "$LOG"; then
-              echo "$LABEL: ERROR found in application output."
+            if grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
+              echo "$LABEL: ERROR or uncaught exception found in application output."
               cat "$LOG"
               rm -f "$LOG"
               exit 1

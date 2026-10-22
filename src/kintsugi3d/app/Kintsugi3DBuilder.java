@@ -20,10 +20,7 @@ import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -92,7 +89,7 @@ public final class Kintsugi3DBuilder
         if (GRAPHICS_WINDOW_ENABLED)
         {
             try (FileOutputStream standardErr = new FileOutputStream(stderrFileName);
-                PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
+                PrintStream err = new PrintStream(new TeeErrorStream(standardErr), false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
 
@@ -107,7 +104,7 @@ public final class Kintsugi3DBuilder
         else
         {
             try (FileOutputStream standardErr = new FileOutputStream(stderrFileName);
-                 PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
+                 PrintStream err = new PrintStream(new TeeErrorStream(standardErr), false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
 
@@ -132,6 +129,46 @@ public final class Kintsugi3DBuilder
             }
 
             System.exit(0);
+        }
+    }
+
+    private static final class TeeErrorStream extends OutputStream
+    {
+        private final PrintStream original;
+        private final OutputStream redirect;
+
+        private TeeErrorStream(OutputStream redirect)
+        {
+            this.original = System.err;
+            this.redirect = redirect;
+        }
+
+        @Override
+        public void write(int b) throws IOException
+        {
+            original.write(b);
+            redirect.write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException
+        {
+            original.write(b, off, len);
+            redirect.write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException
+        {
+            original.flush();
+            redirect.flush();
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            System.setErr(this.original);
+            redirect.close();
         }
     }
 }
