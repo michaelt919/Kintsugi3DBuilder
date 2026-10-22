@@ -223,6 +223,8 @@ jobs:
             -Dosmesa=true \
             -Dgallium-drivers=swrast \
             -Dvulkan-drivers=[] \
+            -Dplatforms=[] \
+            -Dxlib-lease=disabled \
             -Dglx=disabled \
             -Degl=disabled \
             -Dllvm=enabled
