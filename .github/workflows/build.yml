@@ -295,6 +295,8 @@ jobs:
             >> "$GITHUB_ENV"
           
           otool -L "$OSMESA_LIB"
+          
+          find "$MESA_PREFIX" -name 'libOSMesa*.dylib' -exec ls -l {} \;
 
       - name: Smoke-test macOS distribution
         if: runner.os == 'macOS'
