@@ -15,8 +15,6 @@ jobs:
   build:
     name: Build ${{ matrix.os }} distributions
     runs-on: ${{ matrix.os }}
-    env:
-      MESA_PREFIX: ${{ runner.temp }}/mesa-install
     permissions:
       contents: write
     strategy:
@@ -185,12 +183,21 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install coreutils llvm
 
+      - name: Set Mesa install prefix
+        if: runner.os == 'macOS'
+        id: mesa-prefix
+        shell: bash
+        run: |
+          MESA_PREFIX="$RUNNER_TEMP/mesa-install"
+          echo "path=$MESA_PREFIX" >> "$GITHUB_OUTPUT"
+          echo "MESA_PREFIX=$MESA_PREFIX" >> "$GITHUB_ENV"
+
       - name: Cache compiled OSMesa
         if: runner.os == 'macOS'
         id: osmesa-cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.MESA_PREFIX }}
+          path: ${{ steps.mesa-prefix.outputs.path }}
           key: osmesa-mesa-25.0.7-${{ runner.os }}-${{ runner.arch }}-llvm-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install Mesa build dependencies
