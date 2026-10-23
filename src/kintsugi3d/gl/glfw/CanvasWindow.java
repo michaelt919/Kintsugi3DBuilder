@@ -22,11 +22,13 @@ import org.lwjgl.Version.BuildType;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -47,6 +49,9 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
+        System.setProperty("org.lwjgl.util.Debug", "true");
+        System.setProperty("org.lwjgl.util.DebugLoader", "true");
+
         LOG.info("LWJGL version: {}.{}.{}{}",
             Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
             Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
@@ -105,6 +110,8 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
                 glfwTerminate();
 
                 System.setProperty("org.lwjgl.opengl.contextAPI", "OSMesa");
+
+                System.out.println(Arrays.toString(Configuration.OPENGL_OSMESA_LIBRARY_NAME_DEFAULTS()));
 
                 // Restart GLFW
                 initGLFWWithWindowHints(windowSpec);
