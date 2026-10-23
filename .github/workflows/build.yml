@@ -179,7 +179,7 @@ jobs:
           Write-Host "Uninstaller smoke test passed."
           Write-Host "All Windows smoke tests passed successfully."
 
-      - name: Install MacOS dependencies
+      - name: Install MacOS test environment dependencies
         if: runner.os == 'macOS'
         run: brew install coreutils llvm
 
@@ -192,13 +192,19 @@ jobs:
           echo "path=$MESA_PREFIX" >> "$GITHUB_OUTPUT"
           echo "MESA_PREFIX=$MESA_PREFIX" >> "$GITHUB_ENV"
 
+      - name: Compute OSMesa cache key
+        id: osmesa-key
+        env:
+          WORKFLOW_HASH: ${{ hashFiles('.github/workflows/build.yml') }}
+        run: echo "key=osmesa-mesa-25.0.7-${{ runner.os }}-${{ runner.arch }}-llvm-${WORKFLOW_HASH}" >> "$GITHUB_OUTPUT"
+
       - name: Cache compiled OSMesa
         if: runner.os == 'macOS'
         id: osmesa-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ steps.mesa-prefix.outputs.path }}
-          key: osmesa-mesa-25.0.7-${{ runner.os }}-${{ runner.arch }}-llvm-${{ hashFiles('.github/workflows/build.yml') }}
+          key: ${{ steps.osmesa-key.outputs.key }}
 
       - name: Install Mesa build dependencies
         if: runner.os == 'macOS' && steps.osmesa-cache.outputs.cache-hit != 'true'
@@ -250,6 +256,13 @@ jobs:
           
           echo "Installed OSMesa libraries:"
           find "$MESA_PREFIX" -name 'libOSMesa*.dylib' -print
+
+      - name: Save OSMesa cache
+        if: steps.osmesa-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.mesa-prefix.outputs.path }}
+          key: ${{ steps.osmesa-key.outputs.key }}
 
       - name: Prepare OSMesa for GLFW
         if: runner.os == 'macOS'
