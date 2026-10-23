@@ -97,6 +97,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
                 glfwTerminate();
 
                 System.setProperty("org.lwjgl.opengl.contextAPI", "OSMesa");
+                LOG.info("OSMesa libname: {}", System.getProperty("org.lwjgl.opengl.osmesa.libname"));
 
                 // Restart GLFW
                 initGLFWWithWindowHints(windowSpec);
