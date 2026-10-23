@@ -81,7 +81,7 @@ public final class Kintsugi3DBuilder
         }
 
         Configuration.DEBUG.set(true);
-        Configuration.DEBUG_LOADER.set(true);
+        Configuration.DEBUG_STREAM.set(System.out);
 
         JavaFXApplication.setArgs(args);
 
