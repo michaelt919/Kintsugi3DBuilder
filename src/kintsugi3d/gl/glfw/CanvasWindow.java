@@ -67,7 +67,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
             glfwError.set(error);
             String descriptionString = GLFWErrorCallback.getDescription(description);
 
-            if (error == GLFW_FORMAT_UNAVAILABLE)
+            if (error == GLFW_FORMAT_UNAVAILABLE || error == GLFW_API_UNAVAILABLE)
             {
                 // Suppress errors to avoid failing smoke tests that rely on fallback to OSMesa.
                 LOG.warn("GLFW format unavailable.", new GLFWException(descriptionString));
@@ -100,9 +100,10 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
 
         if (handleIfSuccessful == NULL)
         {
-            LOG.info("GLFW error code: {}", glfwError.get());
+            int glfwErrorCode = glfwError.get();
+            LOG.info("GLFW error code: {}", glfwErrorCode);
 
-            if (glfwError.get() == GLFW_FORMAT_UNAVAILABLE && glfwVersionString.contains("OSMesa"))
+            if ((glfwErrorCode == GLFW_FORMAT_UNAVAILABLE || glfwErrorCode == GLFW_API_UNAVAILABLE) && glfwVersionString.contains("OSMesa"))
             {
                 LOG.info("Failed to create a native GLFW window; attempting fallback to OSMesa.");
 
