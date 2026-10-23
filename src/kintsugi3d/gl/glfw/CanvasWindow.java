@@ -11,6 +11,7 @@
 
 package kintsugi3d.gl.glfw;
 
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.exceptions.GLFWException;
@@ -46,8 +47,6 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
-        System.setProperty("org.lwjgl.util.Debug", "true");
-
         LOG.info("LWJGL version: {}.{}.{}{}",
             Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
             Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
@@ -73,6 +72,13 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
                 throw new GLFWException(descriptionString);
             }
         }));
+
+        if (OperatingSystem.getCurrentOS() == OperatingSystem.UNIX)
+        {
+            // Force X11 on Linux.
+            // Wayland is default as of LWJGL 3.3.4+ but has issues that X11 doesn't have.
+            glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+        }
 
         initGLFWWithWindowHints(windowSpec);
 

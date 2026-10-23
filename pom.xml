@@ -79,8 +79,11 @@
                 </configuration>
                 <dependencies>
                     <dependency>
+                        <!--suppress MavenModelInspection -->
                         <groupId>com.github.edwgiz</groupId>
+                        <!--suppress MavenModelInspection -->
                         <artifactId>maven-shade-plugin.log4j2-cachefile-transformer</artifactId>
+                        <!--suppress MavenModelInspection -->
                         <version>2.6.1</version>
                     </dependency>
                 </dependencies>
@@ -238,7 +241,7 @@
     </build>
     <properties>
         <java.version>11</java.version>
-        <lwjgl.version>3.3.3</lwjgl.version>
+        <lwjgl.version>3.3.6</lwjgl.version>
         <viewer.version>1.7.0</viewer.version>
         <usdz-exporter.version>1.2.2</usdz-exporter.version>
     </properties>
@@ -307,7 +310,9 @@
                     <plugin>
                         <!-- Disk image for MacOS -->
                         <groupId>org.codehaus.mojo</groupId>
+                        <!--suppress MavenModelInspection -->
                         <artifactId>exec-maven-plugin</artifactId>
+                        <!--suppress MavenModelInspection -->
                         <version>3.5.0</version>
                         <executions>
                             <execution>
