@@ -49,7 +49,6 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
-        System.setProperty("org.lwjgl.util.Debug", "true");
         System.setProperty("org.lwjgl.util.DebugLoader", "true");
 
         LOG.info("LWJGL version: {}.{}.{}{}",
@@ -112,7 +111,8 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
 
                 System.setProperty("org.lwjgl.opengl.contextAPI", "OSMesa");
 
-                System.out.println(Arrays.toString(Configuration.OPENGL_OSMESA_LIBRARY_NAME_DEFAULTS()));
+                LOG.info("OpenGL OSMesa library name default: {}", Arrays.toString(Configuration.OPENGL_OSMESA_LIBRARY_NAME_DEFAULTS()));
+                LOG.info("DYLD library path: {}", System.getenv("DYLD_LIBRARY_PATH"));
 
                 // Restart GLFW
                 initGLFWWithWindowHints(windowSpec);
