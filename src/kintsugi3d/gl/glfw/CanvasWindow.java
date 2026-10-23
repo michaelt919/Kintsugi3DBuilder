@@ -23,6 +23,9 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Configuration;
+import org.lwjgl.system.FunctionProvider;
+import org.lwjgl.system.Library;
+import org.lwjgl.system.SharedLibrary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +52,6 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
-        System.setProperty("org.lwjgl.util.DebugLoader", "true");
-
         LOG.info("LWJGL version: {}.{}.{}{}",
             Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
             Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
@@ -109,7 +110,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
                 // Terminate GLFW to change OpenGL's contextAPI.
                 glfwTerminate();
 
-                System.setProperty("org.lwjgl.opengl.contextAPI", "OSMesa");
+                Configuration.OPENGL_CONTEXT_API.set("OSMesa");
 
                 LOG.info("OpenGL OSMesa library name default: {}", Arrays.toString(Configuration.OPENGL_OSMESA_LIBRARY_NAME_DEFAULTS()));
                 LOG.info("DYLD library path: {}", System.getenv("DYLD_LIBRARY_PATH"));
@@ -160,6 +161,44 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
 
         glfwMakeContextCurrent(handle);
         glfwSwapInterval(1);
+
+        LOG.info("OpenGL context API: {}", Configuration.OPENGL_CONTEXT_API.get());
+
+        try
+        {
+            SharedLibrary testLibrary = Library.loadNative(GL.class, "org.lwjgl.opengl", Configuration.OPENGL_OSMESA_LIBRARY_NAME, Configuration.OPENGL_OSMESA_LIBRARY_NAME_DEFAULTS());
+            LOG.info("Testing OSMesa library load result: {}", testLibrary.getName());
+        }
+        catch (Throwable e)
+        {
+            LOG.warn("Testing OSMesa library load failed.", e);
+        }
+
+        LOG.info("Manually invoking GL.create().");
+
+        // Initialize GL prior to calling createCapabilities to print debug info prior to potential crash.
+        try
+        {
+            Class.forName(GL.class.getName());
+        }
+        catch (ClassNotFoundException e)
+        {
+            LOG.error("Class not found.", e);
+        }
+
+        LOG.info("GL.create() returned.");
+
+        FunctionProvider functionProvider = GL.getFunctionProvider();
+        if (functionProvider instanceof SharedLibrary)
+        {
+            LOG.info("Library name: {}", ((SharedLibrary) functionProvider).getName());
+        }
+        else
+        {
+            LOG.info("Library (not SharedLibrary): {}", functionProvider);
+        }
+
+        LOG.info("Invoking GL.createCapabilities().");
 
         GL.createCapabilities(); // Make a valid OpenGL Context
         LOG.info("OpenGL version: {}", glGetString(GL_VERSION));

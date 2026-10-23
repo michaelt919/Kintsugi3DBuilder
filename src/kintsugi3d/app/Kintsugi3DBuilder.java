@@ -80,6 +80,9 @@ public final class Kintsugi3DBuilder
             Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
         }
 
+        Configuration.DEBUG.set(true);
+        Configuration.DEBUG_LOADER.set(true);
+
         JavaFXApplication.setArgs(args);
 
         File stderrFileName = new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(),
