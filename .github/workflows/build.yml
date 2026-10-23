@@ -62,6 +62,33 @@ jobs:
           name: ${{ matrix.os }}.zip
           path: ${{ steps.build-dir.outputs.BUILD_DIR }}/*.zip
 
+      - name: Download Mesa OSMesa for Windows x64
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = "25.0.7"
+          $archive = "$env:RUNNER_TEMP\mesa3d-$version-release-msvc.7z"
+          $extract = "$env:RUNNER_TEMP\mesa-$version"
+          
+          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
+          
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          
+          & "$env:ProgramFiles\7-Zip\7z.exe" x $archive "-o$extract" -y
+          
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to extract Mesa archive"
+          }
+          
+          $osmesa = "$extract\x64\osmesa.dll"
+          
+          if (!(Test-Path $osmesa)) {
+            throw "osmesa.dll not found in Mesa x64 package"
+          }
+          
+          Write-Host "Found OSMesa: $osmesa"
+          Get-Item $osmesa | Select-Object FullName, Length
+
       - name: Smoke test Windows distribution
         if: runner.os == 'Windows'
         shell: pwsh
