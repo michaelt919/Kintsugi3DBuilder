@@ -20,7 +20,6 @@ import javafx.scene.control.Dialog;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-import kintsugi3d.app.JavaFXApplication;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.io.IOModel;
 import kintsugi3d.builder.io.RecentProjects;
@@ -92,12 +91,11 @@ public final class FrontendIO
 
     private FrontendIO()
     {
-
     }
 
     public static boolean confirmClose(String text)
     {
-        if (JavaFXApplication.getState().getProjectModel().isProjectOpen())
+        if (Global.io().isProjectOpen())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION,
                 "If you click OK, any unsaved changes to the current project will be lost.");
@@ -174,7 +172,7 @@ public final class FrontendIO
      */
     public void saveProject(Window parentWindow)
     {
-        saveProject(Global.io().getLoadedProjectFile(), parentWindow);
+        saveProject(Global.io().getProjectFile(), parentWindow);
     }
 
     /**
@@ -229,8 +227,8 @@ public final class FrontendIO
         fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
 
         IOModel ioModel = Global.io();
-        File projectFile = ioModel.getLoadedProjectFile();
-        File vsetFile = ioModel.getLoadedViewSetFile();
+        File projectFile = ioModel.getProjectFile();
+        File vsetFile = ioModel.getViewSetFile();
 
         if (projectFile != null && !Objects.equals(projectFile, vsetFile))
         {

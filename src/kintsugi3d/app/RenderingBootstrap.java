@@ -199,8 +199,6 @@ public final class RenderingBootstrap
 
         IOModel ioModel = Global.io();
 
-        ToolBindingModel toolBindingModel = createToolBinding();
-
         // Replace the temporary sentinel with the actual scene viewport from the instance manager.
         SCENE_VIEWPORT_WRAPPER.setSceneViewport(renderableManager.getSceneViewport());
 

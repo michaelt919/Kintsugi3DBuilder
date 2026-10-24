@@ -173,11 +173,11 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
-     * @param id
+     * @param internalName
      * @param builder
      * @throws UserCancellationException
      */
-    private void loadInstance(File newProjectFile, String id, Builder<ContextType> builder)
+    private void loadInstance(File newProjectFile, String internalName, Builder<ContextType> builder)
         throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
@@ -238,7 +238,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        ImageBasedRenderable<ContextType> newInstance = new ImageBasedRenderingEngine<>(id, context, builder);
+        ImageBasedRenderable<ContextType> newInstance = new ImageBasedRenderingEngine<>(internalName, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -370,7 +370,8 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
     }
 
     @Override
-    public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromVSETFile(
+        String internalName, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
         throws UserCancellationException, MeshImportException, IOException
     {
         if (this.progressMonitor.isConflictingProcess())
@@ -402,7 +403,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
                 throw e;
             }
 
-            loadInstance(null, id, builder);
+            loadInstance(null, internalName, builder);
         }
         catch (UserCancellationException e)
         {
@@ -461,7 +462,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
     }
 
     @Override
-    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
+    public void loadFromLooseFiles(File newProjectFile, String internalName, File xmlFile,
                                    ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
         throws Exception
     {
@@ -491,7 +492,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             }
 
             // Invoke callbacks now that view set is loaded
-            loadInstance(newProjectFile, id, builder);
+            loadInstance(newProjectFile, internalName, builder);
         }
         catch (UserCancellationException e)
         {
@@ -513,7 +514,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ImageBasedRenderingEngine<ContextType> renderView =
-            new ImageBasedRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
+            new ImageBasedRenderingEngine<>(renderableInstance.getInternalName(), context, renderableInstance.getResources());
         renderView.setSafeRegionPadding(safeLeftPadding, safeTopPadding, safeRightPadding, safeBottomPadding);
         initializeSceneModel(renderView.getSceneModel());
 

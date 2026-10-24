@@ -12,12 +12,9 @@
 package kintsugi3d.builder.test;
 
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.viewset.View;
 import kintsugi3d.builder.state.CacheModel;
 import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.SelectableViewListModel;
-import kintsugi3d.builder.state.cards.CardsModel;
-import kintsugi3d.builder.state.cards.ProjectDataCardFactory;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
 import kintsugi3d.builder.state.scene.*;
@@ -26,12 +23,8 @@ import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
 import kintsugi3d.builder.test.TestingProjectModel.ErrorMessage;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 class TestingState implements Kintsugi3DBuilderState
 {

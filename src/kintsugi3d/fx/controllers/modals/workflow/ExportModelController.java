@@ -108,7 +108,7 @@ public class ExportModelController extends ProjectSettingsControllerBase
         generateLowResolutionCheckBox.disableProperty().bind(gltfSelected.not());
         openViewerOnceCheckBox.disableProperty().bind(gltfSelected.not());
 
-        File loadedProjectFile = Global.io().validateRenderable().getLoadedProjectFile();
+        File loadedProjectFile = Global.io().validateRenderable().getProjectFile();
         if (loadedProjectFile != null)
         {
             setCurrentDirectoryFile(loadedProjectFile.getParentFile());

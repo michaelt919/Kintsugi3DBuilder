@@ -67,8 +67,8 @@ public class IOModel implements IO
     // Set defaults just in case the load options model is never set (i.e. testing)
     private ReadonlyLoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
 
-    private File loadedProjectFile;
-    private File loadedViewSetFile;
+    private File projectFile;
+    private File viewSetFile;
 
     private final EventDispatcher<ProjectOpenedListener, ProjectOpenedEvent> projectOpened
         = new EventDispatcher<>(ProjectOpenedListener::onProjectOpened);
@@ -165,15 +165,21 @@ public class IOModel implements IO
     }
 
     @Override
-    public File getLoadedViewSetFile()
+    public File getViewSetFile()
     {
-        return loadedViewSetFile;
+        return viewSetFile;
     }
 
     @Override
-    public File getLoadedProjectFile()
+    public File getProjectFile()
     {
-        return loadedProjectFile;
+        return projectFile;
+    }
+
+    @Override
+    public boolean isProjectOpen()
+    {
+        return projectFile != null;
     }
 
     private void load(Runnable loader)
@@ -191,36 +197,38 @@ public class IOModel implements IO
     }
 
     @Override
-    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
+    public void loadFromLooseFiles(File newProjectFile, String internalName, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
         load(() ->
         {
             try
             {
-                this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+                this.handler.loadFromLooseFiles(newProjectFile, internalName, xmlFile, viewSetLoadOptions, loadOptionsModel);
             }
             catch (Exception e)
             {
                 LOG.error("loadFromLooseFiles failed", e);
                 closeProject();
+                progressMonitor.fail(e);
             }
         });
     }
 
     @Override
-    public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
+    public void hotSwapLooseFiles(String internalName, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
         load(() ->
         {
             try
             {
                 viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-                this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+                this.handler.loadFromLooseFiles(projectFile, internalName, xmlFile, viewSetLoadOptions, loadOptionsModel);
             }
             catch (Exception e)
             {
                 LOG.error("hotSwapLooseFiles failed", e);
                 closeProject();
+                progressMonitor.fail(e);
             }
         });
     }
@@ -238,6 +246,7 @@ public class IOModel implements IO
             {
                 LOG.error("loadFromMetashapeModel failed", e);
                 closeProject();
+                progressMonitor.fail(e);
             }
         });
     }
@@ -286,8 +295,8 @@ public class IOModel implements IO
             {
                 try
                 {
-                    this.loadedProjectFile = projectFile;
-                    this.loadedViewSetFile = vsetFile;
+                    this.projectFile = projectFile;
+                    this.viewSetFile = vsetFile;
 
                     RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
@@ -351,7 +360,7 @@ public class IOModel implements IO
         {
             viewSet.setRootDirectory(projectFile.getParentFile());
             this.handler.saveToVSETFile(projectFile);
-            this.loadedViewSetFile = projectFile;
+            this.viewSetFile = projectFile;
         }
         else
         {
@@ -359,12 +368,12 @@ public class IOModel implements IO
 
             File vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
             this.handler.saveToVSETFile(vsetFile);
-            this.loadedViewSetFile = vsetFile;
+            this.viewSetFile = vsetFile;
 
             saveXMLProject(projectFile, vsetFile);
         }
 
-        this.loadedProjectFile = projectFile;
+        this.projectFile = projectFile;
         this.projectSaved.notify(new ProjectSavedEvent(projectFile.getName()));
 
         // Export glTF for Kintsugi 3D Viewer even if not requested
@@ -445,7 +454,7 @@ public class IOModel implements IO
         File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
-        if (Objects.equals(loadedViewSetFile, projectFile)) // Saved as a VSET
+        if (Objects.equals(viewSetFile, projectFile)) // Saved as a VSET
         {
             viewSet.setRootDirectory(projectFile.getParentFile());
         }
@@ -516,8 +525,8 @@ public class IOModel implements IO
     {
         cancellationMonitor.requestCancellation(() ->
         {
-            loadedViewSetFile = null;
-            loadedProjectFile = null;
+            viewSetFile = null;
+            projectFile = null;
             projectClosed.notify(new ProjectClosedEvent());
             this.handler.unload(onCloseComplete);
         });
@@ -754,7 +763,7 @@ public class IOModel implements IO
             }
             catch (IOException e)
             {
-                LOG.error("Could not copy {} texture from {}.", texName, originalFile);
+                LOG.warn("Could not copy {} texture from {}.", texName, originalFile);
             }
         }
     }
