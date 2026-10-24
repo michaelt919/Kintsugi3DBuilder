@@ -114,9 +114,10 @@ jobs:
           function Test-Launch($exe, $arguments = @()) {
             $p = Start-Process $exe.FullName -ArgumentList $arguments -PassThru -NoNewWindow
             if (!$p.WaitForExit(30000)) {
+              Write-Host "Process remained running: $($exe.FullName)"
               # We need to kill the whole process tree, not just the launch4j executable.
               taskkill /F /T /PID $p.Id 2>&1 | ForEach-Object { Write-Host $_ }
-              Write-Host "Process remained running: $($exe.FullName)"
+              $p.WaitForExit()
             } else {
               throw "$($exe.FullName) exited with code $($p.ExitCode)"
             }
