@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class CacheModelBase implements CacheModel
 {
@@ -787,7 +788,7 @@ public abstract class CacheModelBase implements CacheModel
     protected static boolean checkOldFilesExist()
     {
         Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
-            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
+            .flatMap(dir -> dir.exists() ? Arrays.stream(Objects.requireNonNull(dir.listFiles())) : Stream.of())
             .collect(Collectors.toList());
 
         Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))

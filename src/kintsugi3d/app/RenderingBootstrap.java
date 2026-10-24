@@ -75,7 +75,6 @@ public final class RenderingBootstrap
     public static void runProgram(Stage stage, String... args) throws InitializationException
     {
         System.getenv();
-        System.setProperty("org.lwjgl.util.DEBUG", "true");
 
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();

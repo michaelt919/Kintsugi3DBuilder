@@ -190,7 +190,6 @@ Section "Uninstall"
     ; Remove builder cache
     ${If} $ClearBuilderCache == 1
         RMDir /r "$LOCALAPPDATA\Kintsugi3DBuilder"
-        RMDir /r "$APPDATA\Kintsugi3DBuilder\logs"
     ${EndIf}
 
     ; Remove builder preferences
@@ -248,20 +247,20 @@ Function un.CachePageCreate
     ; Set Page Header Text
     !insertmacro MUI_HEADER_TEXT "Additional Directories" "Choose which additional software directories to remove."
 
-    ${NSD_CreateCheckbox} 10u 10u 100% 12u "Clear Kintsugi3D Builder Preferences"
+    ${NSD_CreateCheckbox} 10u 10u 100% 12u "Clear Kintsugi 3D Builder preferences, logs, and recent files list"
     Pop $Checkbox_ClearBuilderPreferences
     ${NSD_Check} $Checkbox_ClearBuilderPreferences
 
-    ${NSD_CreateCheckbox} 10u 25u 100% 12u "Clear Kintsugi3D Builder Cache"
+    ${NSD_CreateCheckbox} 10u 25u 100% 12u "Clear Kintsugi 3D Builder cache"
     Pop $Checkbox_ClearBuilderCache
     ${NSD_Check} $Checkbox_ClearBuilderCache
 
-    ${NSD_CreateCheckbox} 10u 40u 100% 12u "Clear Kinstugi3D Viewer Preferences"
+    ${NSD_CreateCheckbox} 10u 40u 100% 12u "Clear Kintsugi 3D Viewer preferences, logs, and local files list"
     Pop $Checkbox_ClearViewerPreferences
     ${NSD_Check} $Checkbox_ClearViewerPreferences
     ${NSD_OnClick} $Checkbox_ClearViewerPreferences un.OnViewerPreferences
 
-    ${NSD_CreateCheckbox} 10u 55u 100% 12u "Clear Kinstugi3D Viewer Cache"
+    ${NSD_CreateCheckbox} 10u 55u 100% 12u "Clear Kintsugi 3D Viewer cache"
     Pop $Checkbox_ClearViewerCache
     ${NSD_Check} $Checkbox_ClearViewerCache
 

@@ -19,7 +19,7 @@ import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 
-public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
+public final class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 {
     private LoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
 
