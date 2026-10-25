@@ -29,8 +29,6 @@ import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,16 +40,14 @@ import java.nio.FloatBuffer;
     composition, that way other file exportation types have full control over both the model and materials
     i.e. the USDZ and Blender exporter solutions could benefit from this extensibility
  */
-public class ModelExporter
+public final class ModelExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ModelExporter.class);
-
     private final GltfAssetV2 asset;
 
     private MaterialExporter materialExporter;
     private int modelNodeIndex = 0;
 
-    public ModelExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
+    private ModelExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
     {
         this.asset = glTfAsset;
         this.modelNodeIndex = modelNodeIndex;
@@ -140,10 +136,7 @@ public class ModelExporter
     private void exportTextures(File outputDirectory)
     {
         materialExporter.saveTextures(outputDirectory);
-
-        LODGenerator lodGenerator = LODGenerator.getInstance();
         materialExporter.makeLODs(outputDirectory);
-
         materialExporter.postExport();
     }
 

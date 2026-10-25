@@ -383,7 +383,7 @@ public class SmokeTest
         assertThrows(
             ExpectedFailureException.class,
             () -> testFitLooseFiles(
-                "Rodin/Rodincameras.xml",
+                "Rodin/Rodincameras_bad.xml",
                 "Rodin/Mia_001239_Rodin_64k.obj",
                 "Rodin/Processed dark 25",
                 "rodinMetashape_expectedFailure",
