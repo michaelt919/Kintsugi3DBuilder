@@ -21,6 +21,10 @@
 
     <packaging>jar</packaging>
 
+    <properties>
+        <surefire.argLine></surefire.argLine>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -175,6 +179,7 @@
                     </includes>
                     <!-- Make sure tests have access to bin, shaders, scripts -->
                     <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                    <argLine>${surefire.argLine}</argLine>
                 </configuration>
             </plugin>
         </plugins>
@@ -199,12 +204,15 @@
     </build>
     <profiles>
         <profile>
-            <id>macos-install</id>
+            <id>macos</id>
             <activation>
                 <os>
                     <family>mac</family>
                 </os>
             </activation>
+            <properties>
+                <surefire.argLine>-XstartOnFirstThread</surefire.argLine>
+            </properties>
             <build>
                 <!-- MacOS: Needs a Maven assembly for MacOS and then the disk image script -->
                 <plugins>
@@ -259,7 +267,7 @@
             </build>
         </profile>
         <profile>
-            <id>windows-install</id>
+            <id>windows</id>
             <activation>
                 <os>
                     <family>windows</family>
