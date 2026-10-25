@@ -45,12 +45,6 @@ jobs:
           winget install NSIS.NSIS --silent --accept-source-agreements --accept-package-agreements
           echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os }}.zip
-          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/*.zip
-
       - name: Download OSMesa for Windows x64
         if: runner.os == 'Windows'
         shell: pwsh
@@ -210,6 +204,12 @@ jobs:
           GITHUB_WORKSPACE="${GITHUB_WORKSPACE//\\//}"
           BUILD_DIR="${BUILD_DIR#"$GITHUB_WORKSPACE"/}"
           echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}.zip
+          path: ${{ steps.build-dir.outputs.BUILD_DIR }}/*.zip
 
       - name: Smoke test Windows distribution
         if: runner.os == 'Windows'
