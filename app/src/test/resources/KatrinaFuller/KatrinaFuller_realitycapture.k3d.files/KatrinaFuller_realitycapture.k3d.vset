@@ -7,10 +7,7 @@ U 873b7340-239b-4f7b-80f8-28d4377cb3c2
 m model\katrinafuller-realitycapture.obj
 
 # Full resolution image file path
-I ..\..\target\classes\test\KatrinaFuller\Downscaled25
-
-# Preview resolution image file path
-i C:\Users\jocon\AppData\Local\Kintsugi3DBuilder\preview\873b7340-239b-4f7b-80f8-28d4377cb3c2\_1024x1024
+I ..\..\KatrinaFuller\Downscaled25
 
 # Supporting files (texture fit results) file path
 t 

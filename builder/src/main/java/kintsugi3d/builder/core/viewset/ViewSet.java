@@ -659,9 +659,10 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.getAbsoluteRootDirectory().relativize(effectiveSupportingFilesDirectory.toPath().toAbsolutePath()).toString();
         }
-        catch (RuntimeException e) // If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) // If the root and other directories are located under different drive letters on Windows
         {
-            LOG.warn("Could not relativize supporting files directory", e);
+            LOG.warn("Could not relativize supporting files directory ({}) using root directory {}",
+                effectiveSupportingFilesDirectory, this.getAbsoluteRootDirectory(), e);
             return effectiveSupportingFilesDirectory == null ? null : effectiveSupportingFilesDirectory.toString();
         }
     }
@@ -706,9 +707,10 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return getAbsoluteRootDirectory().relativize(effectiveFullResImageDirectory.toPath().toAbsolutePath()).toString();
         }
-        catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) // If the root and other directories are located under different drive letters on Windows
         {
-            LOG.warn("Could not relativize full resolution image directory", e);
+            LOG.warn("Could not relativize full resolution image directory ({}) using root directory {}",
+                effectiveFullResImageDirectory, this.getAbsoluteRootDirectory(), e);
             return effectiveFullResImageDirectory == null ? null : effectiveFullResImageDirectory.toString();
         }
     }
@@ -758,9 +760,10 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.getAbsoluteRootDirectory().relativize(effectivePreviewImageDirectory.toPath().toAbsolutePath()).toString();
         }
-        catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) // If the root and other directories are located under different drive letters on Windows
         {
-            LOG.warn("Could not relativize preview image directory", e);
+            LOG.warn("Could not relativize preview image directory ({}) using root directory {}",
+                effectivePreviewImageDirectory, this.getAbsoluteRootDirectory(), e);
             return effectivePreviewImageDirectory == null ? null : effectivePreviewImageDirectory.toString();
         }
     }
@@ -1401,9 +1404,10 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.getAbsoluteRootDirectory().relativize(masksDirectoryRef.toPath().toAbsolutePath()).toString();
         }
-        catch (RuntimeException e) //If the root and other directories are located under different drive letters on windows
+        catch (RuntimeException e) // If the root and other directories are located under different drive letters on Windows
         {
-            LOG.warn("Could not relativize full resolution image directory", e);
+            LOG.warn("Could not relativize masks directory ({}) using root directory {}",
+                masksDirectoryRef, this.getAbsoluteRootDirectory(), e);
             return masksDirectoryRef == null ? null : masksDirectoryRef.toString();
         }
     }
@@ -1461,6 +1465,8 @@ public final class ViewSet implements ReadonlyViewSet
         }
         catch (RuntimeException e) // If the root and other directories are located under different drive letters on windows
         {
+            LOG.warn("Could not relativize geometry file ({}) using root directory {}",
+                geometryFileRef, this.getAbsoluteRootDirectory(), e);
             return geometryFileRef == null ? null : geometryFileRef.toString();
         }
     }

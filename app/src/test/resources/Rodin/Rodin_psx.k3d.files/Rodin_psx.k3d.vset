@@ -7,10 +7,7 @@ U 22236766-db18-4e4c-ae49-50a214c87717
 m model\mesh.ply
 
 # Full resolution image file path
-I ..\..\target\classes\test\Rodin\Processed dark 25
-
-# Preview resolution image file path
-i C:\Users\jocon\AppData\Local\Kintsugi3DBuilder\preview\22236766-db18-4e4c-ae49-50a214c87717\_1024x1024
+I ..\..\Rodin\Processed dark 25
 
 # Supporting files (texture fit results) file path
 t 
