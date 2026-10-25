@@ -18,7 +18,7 @@
     <parent>
         <groupId>Kintsugi3D</groupId>
         <artifactId>Kintsugi3DBuilder</artifactId>
-        <version>1.6.0</version>
+        <version>1.7.0</version>
     </parent>
     <artifactId>util</artifactId>
     <dependencies>

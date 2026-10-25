@@ -14,44 +14,35 @@ package kintsugi3d.fx.controllers.modals;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import kintsugi3d.builder.util.LogMessageAppenderBase;
 import kintsugi3d.builder.util.logging.LogMessage;
-import kintsugi3d.builder.util.logging.LogMessageListener;
 import org.apache.logging.log4j.core.*;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
 
 @Plugin(
-        name = "RecentLogMessageAppender",
-        category = Core.CATEGORY_NAME,
-        elementType = Appender.ELEMENT_TYPE
+    name = "RecentLogMessageAppender",
+    category = Core.CATEGORY_NAME,
+    elementType = Appender.ELEMENT_TYPE
 )
-public final class RecentLogMessageAppender extends AbstractAppender
+public final class RecentLogMessageAppender extends LogMessageAppenderBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(RecentLogMessageAppender.class);
-
-    private static final int MAX_MESSAGES = 2000;
-    private static final int MESSAGE_TRUNC_SIZE = 10;
-
-    private static RecentLogMessageAppender INSTANCE;
+    private static RecentLogMessageAppender instance;
 
     private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
-    private final Collection<LogMessageListener> listeners = new ArrayList<>(1);
 
     private RecentLogMessageAppender(String name, Filter filter, Layout<String> layout)
     {
         super(name, filter, layout);
-        INSTANCE = this;
+
+        //noinspection AssignmentToStaticFieldFromInstanceMethod,ThisEscapedInObjectConstruction
+        instance = this;
     }
 
     @PluginFactory
@@ -65,7 +56,8 @@ public final class RecentLogMessageAppender extends AbstractAppender
 
     public static RecentLogMessageAppender getInstance()
     {
-        return INSTANCE;
+        //noinspection StaticVariableUsedBeforeInitialization
+        return instance;
     }
 
     @Override
@@ -119,31 +111,10 @@ public final class RecentLogMessageAppender extends AbstractAppender
         dispatchEvents(message);
     }
 
+    @Override
     public ObservableList<LogMessage> getMessages()
     {
         return messages;
     }
 
-    public void addListener(LogMessageListener listener)
-    {
-        listeners.add(listener);
-    }
-
-    public void removeListener(LogMessageListener listener)
-    {
-        listeners.remove(listener);
-    }
-
-    public static boolean isLevelAvailable(Level level)
-    {
-        return LOG.isEnabledForLevel(level);
-    }
-
-    private void dispatchEvents(LogMessage message)
-    {
-        for (LogMessageListener listener : listeners)
-        {
-            listener.newLogMessage(message);
-        }
-    }
 }

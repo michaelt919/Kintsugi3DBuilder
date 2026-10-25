@@ -11,7 +11,8 @@
 
 package kintsugi3d.builder.util.logging;
 
-public abstract class LogMessageListener
+@FunctionalInterface
+public interface LogMessageListener
 {
-    public abstract void newLogMessage(LogMessage logMessage);
+    void newLogMessage(LogMessage logMessage);
 }

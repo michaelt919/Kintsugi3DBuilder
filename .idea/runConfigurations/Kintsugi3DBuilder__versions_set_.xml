@@ -12,7 +12,7 @@
           <option name="goals">
             <list>
               <option value="versions:set" />
-              <option value="-DnewVersion=1.6.0" />
+              <option value="-DnewVersion=1.7.0" />
               <option value="-DgenerateBackupPoms=false" />
             </list>
           </option>

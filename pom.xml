@@ -62,7 +62,7 @@
                                 https://github.com/PoctorDepper/usdz-exporter/releases/download/v${usdz-exporter.version}/usdz-exporter-v${usdz-exporter.version}-${usdz-exporter.os}
                             </url>
                             <outputDirectory>
-                                ../bin
+                                bin
                             </outputDirectory>
                         </configuration>
                     </execution>
@@ -136,15 +136,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <includes>
-                        <include>**/SmokeTest.class</include>
-                    </includes>
-                </configuration>
             </plugin>
         </plugins>
     </build>

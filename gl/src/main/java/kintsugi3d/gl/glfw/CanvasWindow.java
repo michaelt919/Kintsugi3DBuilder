@@ -11,7 +11,6 @@
 
 package kintsugi3d.gl.glfw;
 
-import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.exceptions.GLFWException;
@@ -77,7 +76,8 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
             }
         }));
 
-        if (OperatingSystem.getCurrentOS() == OperatingSystem.UNIX)
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("nix") || os.contains("nux") || os.contains("aix"))
         {
             // Force X11 on Linux.
             // Wayland is default as of LWJGL 3.3.4+ but has issues that X11 doesn't have.
