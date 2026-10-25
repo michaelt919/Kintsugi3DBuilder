@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -107,6 +108,9 @@ public class SmokeTest
         // Set system properties, etc. that need to be set before anything touches LWJGL
         // (which could happen indirectly i.e. by loading Kintsugi's matrix math classes)
         RenderingBootstrap.preInitialize();
+
+        // Instantiate a dummy toolkit so that graphics commands actually get processed.
+        Toolkit.getDefaultToolkit();
     }
 
     @BeforeEach
