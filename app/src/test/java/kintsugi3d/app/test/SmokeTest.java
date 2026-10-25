@@ -31,8 +31,6 @@ import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.logging.LogMessage;
 import kintsugi3d.builder.util.logging.LogMessageListener;
 import kintsugi3d.gl.interactive.InitializationException;
-import kintsugi3d.gl.opengl.OpenGLContext;
-import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +65,6 @@ public class SmokeTest
     private static final File TEST_OUTPUT_DIR = new File("test-output");
     private static final Logger LOG = LoggerFactory.getLogger(SmokeTest.class);
 
-    private OpenGLContext context;
     private AtomicReference<Throwable> observerFailure;
     private TestingState testingState = new TestingState();
 
@@ -105,10 +102,6 @@ public class SmokeTest
         // Initialize testing objects
         observerFailure = new AtomicReference<>();
 
-        // Create Context
-        context = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder Tests", 1, 1).create().getContext();
-        context.getState().enableDepthTest();
-
         // Create Testing State
         testingState = new TestingState();
     }
@@ -122,7 +115,6 @@ public class SmokeTest
         {
             fail(failure.getMessage());
         }
-        context.close();
     }
 
     private static void resetGlobalState()
