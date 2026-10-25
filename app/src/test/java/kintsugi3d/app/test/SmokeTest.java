@@ -12,6 +12,7 @@
 package kintsugi3d.app.test;
 
 import kintsugi3d.app.RenderingBootstrap;
+import kintsugi3d.app.test.TestingProjectModel.ErrorMessage;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.GlobalBootstrap;
 import kintsugi3d.builder.core.viewset.ViewSet;
@@ -42,11 +43,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,7 +71,7 @@ public class SmokeTest
     private static final AtomicBoolean LOAD_FINISHED = new AtomicBoolean(false);
     private static final AtomicBoolean CLOSED_FINISHED = new AtomicBoolean(false);
     private static final AtomicBoolean EXPORT_FINISHED = new AtomicBoolean(false);
-    private static final AtomicInteger PROCESS_COUNTER = new AtomicInteger(0);
+    private static final AtomicInteger PROCESSED_COUNTER = new AtomicInteger(0);
     private static final AtomicInteger SAVE_COUNTER = new AtomicInteger(0);
     private static final long TIMEOUT = TimeUnit.SECONDS.toNanos(300);
     
@@ -88,7 +91,7 @@ public class SmokeTest
         {
             if (logMessage.getLogLevel() == Level.ERROR)
             {
-                observerFailure.set(new AssertionError("Error found in log message!"));
+                observerFailure.set(new AssertionError("Error found in log message!", logMessage.getThrown()));
             }
         }
     }
@@ -206,7 +209,7 @@ public class SmokeTest
         Global.io().projectProcessedListeners().register(event ->
         {
             LOG.info("Project Processed");
-            PROCESS_COUNTER.incrementAndGet();
+            PROCESSED_COUNTER.incrementAndGet();
         });
 
         Global.io().projectSavedListeners().register(event ->
@@ -216,79 +219,80 @@ public class SmokeTest
         });
     }
 
-    private static void waitFor(AtomicBoolean finished, TestingState testingState, String operation)
+    private void waitFor(BooleanSupplier finished, String operation)
     {
-        int startingErrorCount = testingState.getErrors().size();
+        List<ErrorMessage> errorsLive = this.testingState.getErrors();
+        int startingErrorCount = errorsLive.size();
         long start = System.nanoTime();
-        while (!finished.get())
+        while (!finished.getAsBoolean())
         {
-            if (testingState.getErrors().size() > startingErrorCount) {
-                throw new ExpectedFailureException("Error occurred during project " + operation);
+            int currentErrorCount = errorsLive.size();
+            if (currentErrorCount > startingErrorCount)
+            {
+                ErrorMessage firstError = errorsLive.get(startingErrorCount);
+                throw new ReportedErrorException(
+                    String.format("Error occurred during project %s: %s", operation, firstError.message),
+                    firstError.throwable);
             }
 
             if (System.nanoTime() - start > TIMEOUT)
             {
-                throw new AssertionError(
-                    "Timed out waiting for project" + operation);
+                fail(String.format("Timed out waiting for project %s", operation));
             }
 
             Thread.onSpinWait();
         }
     }
 
-    private static void waitForLoad(TestingState testingState)
+    private void waitFor(AtomicBoolean finished, String operation)
     {
-        waitFor(LOAD_FINISHED, testingState, "load");
+        waitFor(finished::get, operation);
     }
 
-    private static void waitForClose(TestingState testingState)
+    private void waitForLoad()
     {
-        waitFor(CLOSED_FINISHED, testingState, "close");
+        waitFor(LOAD_FINISHED, "load");
     }
 
-    private static void waitForExport(TestingState testingState)
+    private void waitForClose()
     {
-        waitFor(EXPORT_FINISHED, testingState, "export");
+        waitFor(CLOSED_FINISHED, "close");
     }
 
-    private static void waitForProcess(int startingCount, TestingState testingState)
+    private void waitForExport()
     {
-        int startingErrorCount = testingState.getErrors().size();
-        long start = System.nanoTime();
-        while (PROCESS_COUNTER.get() == startingCount)
+        waitFor(EXPORT_FINISHED, "export");
+    }
+
+    private void runSpecularFit()
+    {
+        // Initialize to Integer.MAX_VALUE to prevent early termination
+        // while waiting for the initial counts to be determined.
+        AtomicInteger originalProcessedCount = new AtomicInteger(Integer.MAX_VALUE);
+        AtomicInteger originalSaveCount = new AtomicInteger(Integer.MAX_VALUE);
+
+        // Wait for the graphics thread to finish up the current task before capturing the processed count.
+        // (It is possible for processed to be set on load, which creates a race condition otherwise).
+        Rendering.runLater(() ->
         {
-            if (testingState.getErrors().size() > startingErrorCount) {
-                throw new ExpectedFailureException("Error occurred during project process");
-            }
+            originalProcessedCount.set(PROCESSED_COUNTER.get());
+            originalSaveCount.set(SAVE_COUNTER.get());
 
-            if (System.nanoTime() - start > TIMEOUT *2)
-            {
-                throw new AssertionError(
-                    "Timed out waiting for project process");
-            }
+            Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
+            SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
+            Rendering.getRequestQueue().addGraphicsRequest(request);
+        });
 
-            Thread.onSpinWait();
-        }
+        waitFor(() -> PROCESSED_COUNTER.get() > originalProcessedCount.get()
+                && SAVE_COUNTER.get() > originalSaveCount.get(),
+            "processing");
     }
 
-    private static void waitForSave(int startingCount, TestingState testingState)
+    private void saveProject() throws IOException
     {
-        int startingErrorCount = testingState.getErrors().size();
-        long start = System.nanoTime();
-        while (SAVE_COUNTER.get() == startingCount)
-        {
-            if (testingState.getErrors().size() > startingErrorCount) {
-                throw new ExpectedFailureException("Error occurred during project save");
-            }
-
-            if (System.nanoTime() - start > TIMEOUT)
-            {
-                throw new AssertionError(
-                    "Timed out waiting for project save");
-            }
-
-            Thread.onSpinWait();
-        }
+        int originalSaveCount = SAVE_COUNTER.get();
+        Global.io().saveProject();
+        waitFor(() -> SAVE_COUNTER.get() > originalSaveCount, "save");
     }
 
     private static void assertProjectLoaded()
@@ -312,7 +316,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, from Metashape export")
-    void testFit_rodinMetashape() throws URISyntaxException, InterruptedException
+    void testFit_rodinMetashape() throws URISyntaxException
     {
         testFitLooseFiles(
             "Rodin/Mia_001239_Rodin_90cameras.xml",
@@ -330,7 +334,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, from Psx import")
-    void testFit_rodinPsx() throws URISyntaxException, InterruptedException
+    void testFit_rodinPsx() throws URISyntaxException
     {
         File psxFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Mia_001239_Rodin_301.psx")).toURI());
@@ -344,7 +348,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Reload_Both Test")
-    void testFit_rodinReload() throws URISyntaxException, InterruptedException
+    void testFit_rodinReload() throws URISyntaxException
     {
         File projectFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
@@ -376,7 +380,7 @@ public class SmokeTest
     void testFit_rodinMetashape_expectedFailure()
     {
         assertThrows(
-            ExpectedFailureException.class,
+            ReportedErrorException.class,
             () -> testFitLooseFiles(
                 "Rodin/Rodincameras_bad.xml",
                 "Rodin/Mia_001239_Rodin_64k.obj",
@@ -387,7 +391,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Reload_First Test")
-    void testFit_rodinReloadFirst() throws URISyntaxException, InterruptedException
+    void testFit_rodinReloadFirst() throws URISyntaxException
     {
         File projectFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
@@ -402,7 +406,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Reload_Second Test")
-    void testFit_rodinReloadSecond() throws URISyntaxException, InterruptedException
+    void testFit_rodinReloadSecond() throws URISyntaxException
     {
         File projectFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
@@ -417,7 +421,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Export Test")
-    void testFit_rodinExport() throws URISyntaxException, InterruptedException
+    void testFit_rodinExport() throws URISyntaxException
     {
         File projectFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
@@ -433,7 +437,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Specular Export Test")
-    void testFit_rodinSpecExport() throws URISyntaxException, InterruptedException
+    void testFit_rodinSpecExport() throws URISyntaxException
     {
         File projectFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
@@ -449,7 +453,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Metallic Export Test")
-    void testFit_rodinMetallicExport() throws URISyntaxException, InterruptedException
+    void testFit_rodinMetallicExport() throws URISyntaxException
     {
         File projectFile = new File(
             Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
@@ -465,7 +469,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Reload_Both Test")
-    void testFit_rodinReloadfromVset() throws URISyntaxException, InterruptedException
+    void testFit_rodinReloadfromVset() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset")).toURI());
@@ -480,7 +484,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Rodin fit, Light Calibration Test")
-    void testFit_rodinLightCalibration() throws URISyntaxException, InterruptedException, IOException
+    void testFit_rodinLightCalibration() throws URISyntaxException, IOException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset")).toURI());
@@ -498,7 +502,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, from Metashape export")
-    void testFit_katrinaFullerMetashape() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerMetashape() throws URISyntaxException
     {
         testFitLooseFiles(
             "KatrinaFuller/Mia_124131_KratinaFuller_168cameras.files.xml",
@@ -512,7 +516,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, from Reality Capture export")
-    void testFit_katrinaFullerRealityCapture() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerRealityCapture() throws URISyntaxException
     {
         testFitLooseFiles(
             "KatrinaFuller/katrinafuller-realitycapture.csv",
@@ -525,7 +529,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Reload_Both Test")
-    void testFit_katrinaFullerReload() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerReload() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
@@ -540,7 +544,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Reload_First Test")
-    void testFit_katrinaFullerReloadFirst() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerReloadFirst() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
@@ -555,7 +559,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Reload_Second Test")
-    void testFit_katrinaFullerReloadSecond() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerReloadSecond() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
@@ -570,7 +574,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Export Test")
-    void testFit_katrinaFullerExport() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerExport() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
@@ -587,7 +591,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Specular Export Test")
-    void testFit_katrinaFullerSpecExport() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerSpecExport() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
@@ -603,7 +607,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Metallic Export Test")
-    void testFit_katrinaFullerMetallicExport() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerMetallicExport() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
@@ -619,7 +623,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Reload_Vset Test")
-    void testFit_katrinaFullerReloadfromVset() throws URISyntaxException, InterruptedException
+    void testFit_katrinaFullerReloadfromVset() throws URISyntaxException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset")).toURI());
@@ -634,7 +638,7 @@ public class SmokeTest
 
     @Test
     @DisplayName("Katrina Fuller fit, Light Calibration Test")
-    void testFit_katrinaFullerLightCalibration() throws URISyntaxException, InterruptedException, IOException
+    void testFit_katrinaFullerLightCalibration() throws URISyntaxException, IOException
     {
         File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
             "KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset")).toURI());
@@ -650,28 +654,8 @@ public class SmokeTest
         assertEquals(new Vector3(3242.3916f), Global.io().getLoadedViewSet().getLightIntensity(0));
     }
 
-
-    private static void specularFit()
-    {
-        Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
-        SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
-        Rendering.getRequestQueue().addGraphicsRequest(request);
-    }
-
-    private void runSpecularFit() throws InterruptedException
-    {
-        // Wait for any in-flight load processing event
-        Thread.sleep(5000);
-
-        int countAfterLoad = PROCESS_COUNTER.get();
-        specularFit();
-
-        waitForProcess(countAfterLoad, testingState);
-        waitForSave(SAVE_COUNTER.get(), testingState);
-    }
-
     private void testFitLooseFiles(String cameras, String geometry, String imageDirectory, String testName)
-        throws URISyntaxException, InterruptedException
+        throws URISyntaxException
     {
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
         viewSetLoadOptions.geometryFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(geometry)).toURI());
@@ -684,13 +668,13 @@ public class SmokeTest
 
         Global.io().loadFromLooseFiles(newFile, testName,
             new File(Objects.requireNonNull(CLASS_LOADER.getResource(cameras)).toURI()), viewSetLoadOptions);
-        waitForLoad(testingState);
+        waitForLoad();
 
         runSpecularFit();
     }
     
     private void testFitPsx(File psxFile, String imageDirectory, String testName)
-        throws URISyntaxException, InterruptedException
+        throws URISyntaxException
     {
         MetashapeDocument doc = new MetashapeDocument(psxFile.getAbsolutePath());
         MetashapeChunk chunk = doc.getSelectedChunk();
@@ -703,18 +687,18 @@ public class SmokeTest
         LOAD_FINISHED.set(false);
         File newFile = new File(TEST_OUTPUT_DIR,String.format("%s.k3d", testName));
         Global.io().loadFromMetashapeModel(newFile, model);
-        waitForLoad(testingState);
+        waitForLoad();
 
         runSpecularFit();
     }
 
     private void testFitReload(File projectFile, String imageDirectory, ReloadMode mode)
-        throws URISyntaxException, InterruptedException
+        throws URISyntaxException
     {
         // --- FIRST LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
-        waitForLoad(testingState);
+        waitForLoad();
 
         File imgDir = new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
@@ -728,12 +712,12 @@ public class SmokeTest
         // --- CLOSE PROJECT ---
         CLOSED_FINISHED.set(false);
         Global.io().closeProject();
-        waitForClose(testingState);
+        waitForClose();
 
         // --- SECOND LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
-        waitForLoad(testingState);
+        waitForLoad();
 
         // --- SECOND PROCESS ---
         if (mode == ReloadMode.SECOND_ONLY || mode == ReloadMode.BOTH)
@@ -744,7 +728,7 @@ public class SmokeTest
 
     private void testFitExport(
         File projectFile, String testName, String imageDirectory, MaterialExporterFactory exporterFactory)
-        throws URISyntaxException, InterruptedException
+        throws URISyntaxException
     {
         ExportSettings settings = new ExportSettings();
         settings.setExporterFactory(exporterFactory);
@@ -753,7 +737,7 @@ public class SmokeTest
         // --- LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
-        waitForLoad(testingState);
+        waitForLoad();
 
         File imgDir =  new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
@@ -768,16 +752,16 @@ public class SmokeTest
             EXPORT_FINISHED.set(true);
         }));
 
-        waitForExport(testingState);
+        waitForExport();
     }
 
     private void testFitLightCalibration(File projectFile, String imageDirectory)
-        throws URISyntaxException, InterruptedException, IOException
+        throws URISyntaxException, IOException
     {
         // --- LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
-        waitForLoad(testingState);
+        waitForLoad();
 
         File imgDir =  new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
@@ -897,21 +881,16 @@ public class SmokeTest
             }
         }
 
-        int startingCount = SAVE_COUNTER.get();
-        Global.io().saveProject();
-
-        Thread.sleep(5000);
-
-        waitForSave(startingCount, testingState);
+        saveProject();
     }
 
-    private static final class ExpectedFailureException extends RuntimeException
+    private static final class ReportedErrorException extends RuntimeException
     {
         private static final long serialVersionUID = 3966816332863385595L;
 
-        private ExpectedFailureException(String message)
+        private ReportedErrorException(String message, Throwable cause)
         {
-            super(message);
+            super(message, cause);
         }
     }
 }

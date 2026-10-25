@@ -16,13 +16,11 @@ import kintsugi3d.builder.core.texture.ImageReplacer;
 import kintsugi3d.builder.state.project.*;
 import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
-import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,8 +42,8 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     private static final Logger LOG = LoggerFactory.getLogger(TestingProjectModel.class);
 
     private File colorCheckerFile;
-    private final Collection<ErrorMessage> errors = new ArrayList<>(1);
-    private final Collection<ErrorMessage> warnings = new ArrayList<>(1);
+    private final List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>(1));
+    private final List<ErrorMessage> warnings = Collections.synchronizedList(new ArrayList<>(1));
     private final List<SerializableCameraSettings> cameraList = new ArrayList<>(0);
     private final List<SerializableLightGroupSettings<SerializableLightSettings>> lightList = new ArrayList<>(0);
     private final List<SerializableObjectPoseSettings> objectList = new ArrayList<>(0);
@@ -53,16 +51,9 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
 
     public TestingProjectModel()
     {
-
         // Register progress monitor.
         Global.io().addProgressMonitor(new DefaultProgressMonitor()
         {
-            @Override
-            public void cancelComplete(UserCancellationException e)
-            {
-
-            }
-
             @Override
             public void fail(Throwable e)
             {
@@ -173,13 +164,13 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     {
     }
 
-    public Collection<ErrorMessage> getErrors()
+    public List<ErrorMessage> getErrors()
     {
-        return Collections.unmodifiableCollection(errors);
+        return Collections.unmodifiableList(errors);
     }
 
-    public Collection<ErrorMessage> getWarnings()
+    public List<ErrorMessage> getWarnings()
     {
-        return Collections.unmodifiableCollection(warnings);
+        return Collections.unmodifiableList(warnings);
     }
 }

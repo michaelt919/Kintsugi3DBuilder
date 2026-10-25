@@ -18,13 +18,16 @@ import kintsugi3d.builder.state.CarouselModel;
 import kintsugi3d.builder.state.SelectableViewListModel;
 import kintsugi3d.builder.state.cards.TabsModel;
 import kintsugi3d.builder.state.project.ProjectModel;
-import kintsugi3d.builder.state.scene.*;
+import kintsugi3d.builder.state.scene.ReadonlyLightingEnvironmentModel;
+import kintsugi3d.builder.state.scene.ReadonlyObjectPoseModel;
+import kintsugi3d.builder.state.scene.ReadonlyViewpointModel;
+import kintsugi3d.builder.state.scene.SimpleCameraModel;
 import kintsugi3d.builder.state.settings.DefaultSettings;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.settings.SimpleGeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
 
-import java.util.Collection;
+import java.util.List;
 
 class TestingState implements Kintsugi3DBuilderState
 {
@@ -34,7 +37,7 @@ class TestingState implements Kintsugi3DBuilderState
     private final ReadonlyLightingEnvironmentModel lightingEnvironmentModel = new TestingLightingModel();
     private final SelectableViewListModel viewListModel = new TestingViewListModel();
     private final TabsModel tabsModel = new TestingTabsModel();
-    private final ObjectPoseModel objectModel = new TestingObjectModel();
+    private final ReadonlyObjectPoseModel objectModel = new TestingObjectModel();
 
     TestingState()
     {
@@ -101,12 +104,12 @@ class TestingState implements Kintsugi3DBuilderState
         return projectModel;
     }
 
-    public Collection<ErrorMessage> getErrors()
+    public List<ErrorMessage> getErrors()
     {
         return projectModel.getErrors();
     }
 
-    public Collection<ErrorMessage> getWarnings()
+    public List<ErrorMessage> getWarnings()
     {
         return projectModel.getWarnings();
     }
