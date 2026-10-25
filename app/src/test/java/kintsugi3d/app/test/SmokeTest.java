@@ -156,7 +156,8 @@ public class SmokeTest
             {
                 try
                 {
-                    RenderingBootstrap.runProgram();
+                    // Create rendering context with neither a JavaFX stage nor a standalone OpenGL window.
+                    RenderingBootstrap.runProgram(null, false);
                 }
                 catch (InitializationException e)
                 {

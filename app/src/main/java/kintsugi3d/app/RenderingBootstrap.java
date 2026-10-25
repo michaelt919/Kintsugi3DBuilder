@@ -69,10 +69,15 @@ public final class RenderingBootstrap
 
     public static void runProgram(String... args) throws InitializationException
     {
-        runProgram(null, args);
+        runProgram(null, true, args);
     }
 
     public static void runProgram(Stage stage, String... args) throws InitializationException
+    {
+        runProgram(stage, false, args);
+    }
+
+    public static void runProgram(Stage stage, boolean standaloneWindow, String... args) throws InitializationException
     {
         System.getenv();
 
@@ -80,7 +85,7 @@ public final class RenderingBootstrap
         printSupportedImageFormats();
         try
         {
-            if (stage == null)
+            if (standaloneWindow)
             {
                 CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder", 800, 800)
                     .setResizable(true)
@@ -103,7 +108,12 @@ public final class RenderingBootstrap
                     .create();
 
                 FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
-                JavaFXApplication.setCanvas(canvas);
+
+                if (stage != null)
+                {
+                    JavaFXApplication.setCanvas(canvas);
+                }
+
                 runProgram(stage, canvas, args);
             }
         }
