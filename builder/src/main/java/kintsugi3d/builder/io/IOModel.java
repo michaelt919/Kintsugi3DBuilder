@@ -451,20 +451,23 @@ public class IOModel implements IO
 
     private void setViewsetDirectories(File projectFile, ViewSet viewSet)
     {
-        File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
-        filesDirectory.mkdirs();
-
-        if (Objects.equals(viewSetFile, projectFile)) // Saved as a VSET
+        if (projectFile != null)
         {
-            viewSet.setRootDirectory(projectFile.getParentFile());
-        }
-        else // Saved as a Kintsugi 3D project
-        {
-            viewSet.setRootDirectory(filesDirectory);
-        }
+            File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
+            filesDirectory.mkdirs();
 
-        // Requires root directory to be previously assigned
-        viewSet.setSupportingFilesDirectory(filesDirectory);
+            if (Objects.equals(viewSetFile, projectFile)) // Saved as a VSET
+            {
+                viewSet.setRootDirectory(projectFile.getParentFile());
+            }
+            else // Saved as a Kintsugi 3D project
+            {
+                viewSet.setRootDirectory(filesDirectory);
+            }
+
+            // Requires root directory to be previously assigned
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+        }
     }
 
     @Override
@@ -763,7 +766,7 @@ public class IOModel implements IO
             }
             catch (IOException e)
             {
-                LOG.warn("Could not copy {} texture from {}.", texName, originalFile);
+                LOG.warn("Could not copy {} texture from {}.", texName, originalFile, e);
             }
         }
     }
