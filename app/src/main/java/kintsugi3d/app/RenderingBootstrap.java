@@ -24,6 +24,7 @@ import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
 import kintsugi3d.builder.tools.*;
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.DoubleFramebufferObject;
@@ -38,6 +39,7 @@ import kintsugi3d.gl.window.*;
 import kintsugi3d.util.CanvasListener;
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
+import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +67,44 @@ public final class RenderingBootstrap
     static SceneViewport getSceneViewport()
     {
         return SCENE_VIEWPORT_WRAPPER;
+    }
+
+    public static void preInitialize()
+    {
+        // Allow render thread to modify user interface thread
+        //noinspection AccessOfSystemProperties
+        System.setProperty("glass.disableThreadChecks", "true");
+        // TODO see com.sun.glass.ui.Application.java line 434
+
+        if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
+        {
+            // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
+            Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
+        }
+
+        Configuration.DEBUG.set(true);
+        Configuration.DEBUG_STREAM.set(System.out);
+    }
+
+    public static void startRenderThread(Stage stage, String... args)
+    {
+        startRenderThread(stage, false, args);
+    }
+
+    public static void startRenderThread(Stage stage, boolean standaloneWindow, String... args)
+    {
+        LOG.info("Starting Render Thread");
+        new Thread(() ->
+        {
+            try
+            {
+                runProgram(stage, standaloneWindow, args);
+            }
+            catch (InitializationException e)
+            {
+                LOG.error("Error initializing render window:", e);
+            }
+        }, "OpenGL Rendering Thread").start();
     }
 
     public static void runProgram(String... args) throws InitializationException

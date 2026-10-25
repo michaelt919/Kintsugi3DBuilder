@@ -14,7 +14,6 @@ package kintsugi3d.app.test;
 import kintsugi3d.app.RenderingBootstrap;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.GlobalBootstrap;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -26,16 +25,15 @@ import kintsugi3d.builder.io.metashape.MetashapeDocument;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
 import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
+import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.util.ApplicationFolders;
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.builder.util.logging.LogMessage;
 import kintsugi3d.builder.util.logging.LogMessageListener;
-import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.vecmath.Vector3;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -44,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,14 +55,11 @@ public class SmokeTest
     static
     {
         // Dynamically set the log directory based on the OS before instantiating a logger
-        if (System.getProperty("Kintsugi3D.logDir") == null)
-        {
-            System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getLogFileDirectory().toAbsolutePath().toString());
-        }
+        ApplicationFolders.makeLogDirectorySystemProperty();
     }
 
-    private static final File TEST_OUTPUT_DIR = new File("test-output");
     private static final Logger LOG = LoggerFactory.getLogger(SmokeTest.class);
+    private static final File TEST_OUTPUT_DIR = new File("test-output");
 
     private AtomicReference<Throwable> observerFailure;
     private TestingState testingState = new TestingState();
@@ -75,6 +71,8 @@ public class SmokeTest
     private static final AtomicInteger PROCESS_COUNTER = new AtomicInteger(0);
     private static final AtomicInteger SAVE_COUNTER = new AtomicInteger(0);
     private static final long TIMEOUT = TimeUnit.SECONDS.toNanos(300);
+    
+    private static final ClassLoader CLASS_LOADER = SmokeTest.class.getClassLoader();
 
     private enum ReloadMode
     {
@@ -88,12 +86,24 @@ public class SmokeTest
         @Override
         public void newLogMessage(LogMessage logMessage)
         {
-//            assertNotSame(Level.ERROR, logMessage.getLogLevel());
             if (logMessage.getLogLevel() == Level.ERROR)
             {
                 observerFailure.set(new AssertionError("Error found in log message!"));
             }
         }
+    }
+
+    @BeforeAll
+    static void initialize()
+    {
+        // Same startup logging as Kintsugi3DBuilder.java
+        LOG.debug("Logger initialized");
+        GlobalUserPreferencesManager.getInstance().logStartupExceptions();
+        ApplicationFolders.logApplicationDirectories();
+
+        // Set system properties, etc. that need to be set before anything touches LWJGL
+        // (which could happen indirectly i.e. by loading Kintsugi's matrix math classes)
+        RenderingBootstrap.preInitialize();
     }
 
     @BeforeEach
@@ -102,13 +112,25 @@ public class SmokeTest
         // Initialize testing objects
         observerFailure = new AtomicReference<>();
 
-        // Create Testing State
+        // Create testing State
         testingState = new TestingState();
+
+        // Attach log listener
+        LogMessageListener logListener = new TestLogListener();
+        TestingLogMessageAppender.getInstance().addListener(logListener);
+
+        initializeRendering();
     }
 
     @AfterEach
     void tearDown()
     {
+        // Check for user-facing (UI) errors and warnings
+        int numErrors = testingState.getErrors().size();
+        assertEquals(0, numErrors);
+        int numWarnings = testingState.getWarnings().size();
+        assertEquals(0, numWarnings);
+
         // Check whether the log contained any errors
         Throwable failure = observerFailure.get();
         if (failure != null)
@@ -134,30 +156,22 @@ public class SmokeTest
         }
     }
 
-    private static void initializeRendering(Kintsugi3DBuilderState state)
+    private void initializeRendering()
     {
         if (INITIALIZED.compareAndSet(false, true))
         {
+            if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
+            {
+                // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
+                Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
+            }
+
             LoadOptionsModel imageLoadOptions = new SimpleLoadOptionsModel();
             imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
             // These are set since they otherwise are set in JavaFX related code
 
-            GlobalBootstrap.initialize(state, imageLoadOptions);
-
-            Thread renderThread = new Thread(() ->
-            {
-                try
-                {
-                    // Create rendering context with neither a JavaFX stage nor a standalone OpenGL window.
-                    RenderingBootstrap.runProgram(null, false);
-                }
-                catch (InitializationException e)
-                {
-                    LOG.error("Error initializing rendering thread in smoke tests.", e);
-                }
-            }, "render-thread");
-
-            renderThread.start();
+            GlobalBootstrap.initialize(testingState, imageLoadOptions);
+            RenderingBootstrap.startRenderThread(null, false);
 
             while (!Global.io().hasValidHandler())
             {
@@ -201,8 +215,6 @@ public class SmokeTest
             SAVE_COUNTER.incrementAndGet();
         });
     }
-
-
 
     private static void waitFor(AtomicBoolean finished, TestingState testingState, String operation)
     {
@@ -279,7 +291,7 @@ public class SmokeTest
         }
     }
 
-    private static void loadedChecks()
+    private static void assertProjectLoaded()
     {
         assertNotNull(Global.io().getMainRenderable());
         assertNotNull(Global.io().getLoadedGeometry());
@@ -288,7 +300,7 @@ public class SmokeTest
         assertTrue(Global.io().hasLoadedRenderable());
     }
 
-    private static void cameraChecks(int expected)
+    private static void assertCameras(int expected)
     {
         int numLoadedCameras = Global.io().getLoadedViewSet().getViewCount();
         assertEquals(expected, numLoadedCameras);
@@ -298,50 +310,35 @@ public class SmokeTest
         assertEquals(0, numDisabledCameras);
     }
 
-    private void logChecks()
-    {
-        // Check UI errors and Warnings
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
-    }
-
     @Test
     @DisplayName("Rodin fit, from Metashape export")
     void testFit_rodinMetashape() throws URISyntaxException, InterruptedException
     {
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
-
         testFitLooseFiles(
             "Rodin/Mia_001239_Rodin_90cameras.xml",
             "Rodin/Mia_001239_Rodin_64k.obj",
             "Rodin/Processed dark 25",
-            "rodinMetashape", testingState);
+            "rodinMetashape");
         verifyProject(90);
     }
 
-    private void verifyProject(int expected)
+    private static void verifyProject(int expected)
     {
-        cameraChecks(expected);
-        loadedChecks();
-        logChecks();
+        assertProjectLoaded();
+        assertCameras(expected);
     }
 
     @Test
     @DisplayName("Rodin fit, from Psx import")
     void testFit_rodinPsx() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File psxFile = new File(classLoader.getResource("Rodin/Mia_001239_Rodin_301.psx").toURI());
+        File psxFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Mia_001239_Rodin_301.psx")).toURI());
 
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitPsx(
             psxFile,
             "Rodin/Processed dark 25",
-            "rodinPsx", testingState);
+            "rodinPsx");
         verifyProject(90);
     }
 
@@ -349,15 +346,13 @@ public class SmokeTest
     @DisplayName("Rodin fit, Reload_Both Test")
     void testFit_rodinReload() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d").toURI());
+        File projectFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
 
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitReload(
             projectFile,
             "Rodin/Processed dark 25",
-            testingState, ReloadMode.BOTH);
+            ReloadMode.BOTH);
 
         verifyProject(90);
     }
@@ -372,8 +367,8 @@ public class SmokeTest
                 "Rodin/Mia_001239_Rodin_90cameras.xml",
                 "Rodin/Mia_001239_Rodin_64k.obj",
                 "Rodin/DoesNotExist",
-                "rodin_wrongDirectory",
-                testingState));
+                "rodin_wrongDirectory"
+            ));
     }
 
     @Test
@@ -386,23 +381,21 @@ public class SmokeTest
                 "Rodin/Rodincameras_bad.xml",
                 "Rodin/Mia_001239_Rodin_64k.obj",
                 "Rodin/Processed dark 25",
-                "rodinMetashape_expectedFailure",
-                testingState));
+                "rodinMetashape_expectedFailure"
+            ));
     }
 
     @Test
     @DisplayName("Rodin fit, Reload_First Test")
     void testFit_rodinReloadFirst() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d").toURI());
+        File projectFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
 
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitReload(
             projectFile,
             "Rodin/Processed dark 25",
-            testingState, ReloadMode.FIRST_ONLY);
+            ReloadMode.FIRST_ONLY);
 
         verifyProject(90);
     }
@@ -411,15 +404,13 @@ public class SmokeTest
     @DisplayName("Rodin fit, Reload_Second Test")
     void testFit_rodinReloadSecond() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d").toURI());
+        File projectFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
 
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitReload(
             projectFile,
             "Rodin/Processed dark 25",
-            testingState, ReloadMode.SECOND_ONLY);
+            ReloadMode.SECOND_ONLY);
 
         verifyProject(90);
     }
@@ -428,16 +419,14 @@ public class SmokeTest
     @DisplayName("Rodin fit, Export Test")
     void testFit_rodinExport() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d").toURI());
+        File projectFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
         MaterialExporterFactory exporterFactory = Kintsugi3DViewerExporterFactory.getInstance();
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitExport(
             projectFile,
             "rodinExport",
             "Rodin/Processed dark 25",
-            testingState, exporterFactory);
+            exporterFactory);
 
         verifyProject(90);
     }
@@ -446,16 +435,14 @@ public class SmokeTest
     @DisplayName("Rodin fit, Specular Export Test")
     void testFit_rodinSpecExport() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d").toURI());
+        File projectFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
         MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitExport(
             projectFile,
             "rodinSpecExport",
             "Rodin/Processed dark 25",
-            testingState, exporterFactory);
+            exporterFactory);
 
         verifyProject(90);
     }
@@ -464,16 +451,14 @@ public class SmokeTest
     @DisplayName("Rodin fit, Metallic Export Test")
     void testFit_rodinMetallicExport() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d").toURI());
+        File projectFile = new File(
+            Objects.requireNonNull(CLASS_LOADER.getResource("Rodin/Rodin_psx.k3d")).toURI());
         MaterialExporterFactory exporterFactory = USDZMetallicExporterFactory.getInstance();
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitExport(
             projectFile,
             "rodinMetallicExport",
             "Rodin/Processed dark 25",
-            testingState, exporterFactory);
+            exporterFactory);
 
         verifyProject(90);
     }
@@ -482,16 +467,13 @@ public class SmokeTest
     @DisplayName("Rodin fit, Reload_Both Test")
     void testFit_rodinReloadfromVset() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset").toURI());
-
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset")).toURI());
 
         testFitReload(
             projectFile,
             "Rodin/Processed dark 25",
-            testingState, ReloadMode.BOTH);
+            ReloadMode.BOTH);
 
         verifyProject(90);
     }
@@ -500,15 +482,13 @@ public class SmokeTest
     @DisplayName("Rodin fit, Light Calibration Test")
     void testFit_rodinLightCalibration() throws URISyntaxException, InterruptedException, IOException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset").toURI());
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "Rodin/Rodin_psx.k3d.files/Rodin_psx.k3d.vset")).toURI());
 
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitLightCalibration(
             projectFile,
-            "Rodin/Processed dark 25",
-            testingState);
+            "Rodin/Processed dark 25"
+        );
 
         verifyProject(90);
 
@@ -520,14 +500,11 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, from Metashape export")
     void testFit_katrinaFullerMetashape() throws URISyntaxException, InterruptedException
     {
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
-
         testFitLooseFiles(
             "KatrinaFuller/Mia_124131_KratinaFuller_168cameras.files.xml",
             "KatrinaFuller/Mia_124131_KratinaFuller_64k.obj",
             "KatrinaFuller/Downscaled25",
-            "katrinaFullerMetashape", testingState);
+            "katrinaFullerMetashape");
 
         verifyProject(168);
     }
@@ -537,14 +514,11 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, from Reality Capture export")
     void testFit_katrinaFullerRealityCapture() throws URISyntaxException, InterruptedException
     {
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
-
         testFitLooseFiles(
             "KatrinaFuller/katrinafuller-realitycapture.csv",
             "KatrinaFuller/katrinafuller-realitycapture.obj",
             "KatrinaFuller/Downscaled25",
-            "katrinaFullerRealityCapture", testingState);
+            "katrinaFullerRealityCapture");
 
         verifyProject(158);
     }
@@ -553,16 +527,13 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Reload_Both Test")
     void testFit_katrinaFullerReload() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
-
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
 
         testFitReload(
             projectFile,
             "KatrinaFuller/Downscaled25",
-            testingState, ReloadMode.BOTH);
+            ReloadMode.BOTH);
 
         verifyProject(158);
     }
@@ -571,16 +542,13 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Reload_First Test")
     void testFit_katrinaFullerReloadFirst() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
-
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
 
         testFitReload(
             projectFile,
             "KatrinaFuller/Downscaled25",
-            testingState, ReloadMode.FIRST_ONLY);
+            ReloadMode.FIRST_ONLY);
 
         verifyProject(158);
     }
@@ -589,16 +557,13 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Reload_Second Test")
     void testFit_katrinaFullerReloadSecond() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
-
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
 
         testFitReload(
             projectFile,
             "KatrinaFuller/Downscaled25",
-            testingState, ReloadMode.SECOND_ONLY);
+            ReloadMode.SECOND_ONLY);
 
         verifyProject(158);
     }
@@ -607,16 +572,14 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Export Test")
     void testFit_katrinaFullerExport() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
         MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitExport(
             projectFile,
             "katrinaFullerExport",
             "KatrinaFuller/Downscaled25",
-            testingState, exporterFactory);
+            exporterFactory);
 
         verifyProject(158);
     }
@@ -626,16 +589,14 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Specular Export Test")
     void testFit_katrinaFullerSpecExport() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
         MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitExport(
             projectFile,
             "katrinaFullerSpecExport",
             "KatrinaFuller/Downscaled25",
-            testingState, exporterFactory);
+            exporterFactory);
 
         verifyProject(158);
     }
@@ -644,16 +605,14 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Metallic Export Test")
     void testFit_katrinaFullerMetallicExport() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d").toURI());
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d")).toURI());
         MaterialExporterFactory exporterFactory = USDZSpecularExporterFactory.getInstance();
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitExport(
             projectFile,
             "katrinaFullerMetallicExport",
             "KatrinaFuller/Downscaled25",
-            testingState, exporterFactory);
+            exporterFactory);
 
         verifyProject(158);
     }
@@ -662,16 +621,13 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Reload_Vset Test")
     void testFit_katrinaFullerReloadfromVset() throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset").toURI());
-
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset")).toURI());
 
         testFitReload(
             projectFile,
             "KatrinaFuller/Downscaled25",
-            testingState, ReloadMode.BOTH);
+            ReloadMode.BOTH);
 
         verifyProject(158);
     }
@@ -680,15 +636,13 @@ public class SmokeTest
     @DisplayName("Katrina Fuller fit, Light Calibration Test")
     void testFit_katrinaFullerLightCalibration() throws URISyntaxException, InterruptedException, IOException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File projectFile = new File(classLoader.getResource("KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset").toURI());
+        File projectFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(
+            "KatrinaFuller/KatrinaFuller_realitycapture.k3d.files/KatrinaFuller_realitycapture.k3d.vset")).toURI());
 
-        LogMessageListener logListener = new TestLogListener();
-        TestingLogMessageAppender.getInstance().addListener(logListener);
         testFitLightCalibration(
             projectFile,
-            "KatrinaFuller/Downscaled25",
-            testingState);
+            "KatrinaFuller/Downscaled25"
+        );
 
         verifyProject(158);
 
@@ -707,7 +661,7 @@ public class SmokeTest
     private void runSpecularFit() throws InterruptedException
     {
         // Wait for any in-flight load processing event
-        Thread.sleep(50);
+        Thread.sleep(5000);
 
         int countAfterLoad = PROCESS_COUNTER.get();
         specularFit();
@@ -716,40 +670,34 @@ public class SmokeTest
         waitForSave(SAVE_COUNTER.get(), testingState);
     }
 
-    private void testFitLooseFiles(
-        String cameras, String geometry, String imageDirectory, String testName, Kintsugi3DBuilderState state)
+    private void testFitLooseFiles(String cameras, String geometry, String imageDirectory, String testName)
         throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        initializeRendering(state);
-
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
-        viewSetLoadOptions.geometryFile = new File(classLoader.getResource(geometry).toURI());
-        viewSetLoadOptions.mainDirectories.fullResImageDirectory = new File(classLoader.getResource(imageDirectory).toURI());
+        viewSetLoadOptions.geometryFile = new File(Objects.requireNonNull(CLASS_LOADER.getResource(geometry)).toURI());
+        viewSetLoadOptions.mainDirectories.fullResImageDirectory =
+            new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         viewSetLoadOptions.mainDirectories.fullResImagesNeedUndistort = true;
 
         LOAD_FINISHED.set(false);
         File newFile = new File(TEST_OUTPUT_DIR,String.format("%s.k3d", testName));
 
-        Global.io().loadFromLooseFiles(newFile, testName, new File(classLoader.getResource(cameras).toURI()), viewSetLoadOptions);
+        Global.io().loadFromLooseFiles(newFile, testName,
+            new File(Objects.requireNonNull(CLASS_LOADER.getResource(cameras)).toURI()), viewSetLoadOptions);
         waitForLoad(testingState);
 
         runSpecularFit();
     }
     
-    private void testFitPsx(
-        File psxFile, String imageDirectory, String testName, Kintsugi3DBuilderState state)
+    private void testFitPsx(File psxFile, String imageDirectory, String testName)
         throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        initializeRendering(state);
-
         MetashapeDocument doc = new MetashapeDocument(psxFile.getAbsolutePath());
         MetashapeChunk chunk = doc.getSelectedChunk();
         MetashapeModel model = chunk.getSelectedModel();
 
         // setting the image directory
-        File imgDir = new File(classLoader.getResource(imageDirectory).toURI());
+        File imgDir = new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         model.getLoadPreferences().setFullResOverride(imgDir);
 
         LOAD_FINISHED.set(false);
@@ -760,18 +708,15 @@ public class SmokeTest
         runSpecularFit();
     }
 
-    private void testFitReload(File projectFile, String imageDirectory, Kintsugi3DBuilderState state, ReloadMode mode)
+    private void testFitReload(File projectFile, String imageDirectory, ReloadMode mode)
         throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        initializeRendering(state);
-
         // --- FIRST LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
         waitForLoad(testingState);
 
-        File imgDir = new File(classLoader.getResource(imageDirectory).toURI());
+        File imgDir = new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
 
         // --- FIRST PROCESS ---
@@ -798,21 +743,19 @@ public class SmokeTest
     }
 
     private void testFitExport(
-        File projectFile, String testName, String imageDirectory, Kintsugi3DBuilderState state, MaterialExporterFactory exporterFactory)
+        File projectFile, String testName, String imageDirectory, MaterialExporterFactory exporterFactory)
         throws URISyntaxException, InterruptedException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
         ExportSettings settings = new ExportSettings();
         settings.setExporterFactory(exporterFactory);
         settings.setShouldSaveTextures(true);
-        initializeRendering(state);
 
         // --- LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
         waitForLoad(testingState);
 
-        File imgDir =  new File(classLoader.getResource(imageDirectory).toURI());
+        File imgDir =  new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
 
         // --- PROCESS ---
@@ -828,18 +771,15 @@ public class SmokeTest
         waitForExport(testingState);
     }
 
-    private void testFitLightCalibration(File projectFile, String imageDirectory, TestingState state)
+    private void testFitLightCalibration(File projectFile, String imageDirectory)
         throws URISyntaxException, InterruptedException, IOException
     {
-        ClassLoader classLoader = getClass().getClassLoader();
-        initializeRendering(state);
-
         // --- LOAD ---
         LOAD_FINISHED.set(false);
         Global.io().loadExistingProject(projectFile);
         waitForLoad(testingState);
 
-        File imgDir =  new File(classLoader.getResource(imageDirectory).toURI());
+        File imgDir =  new File(Objects.requireNonNull(CLASS_LOADER.getResource(imageDirectory)).toURI());
         Global.io().getLoadedViewSet().setFullResImageDirectory(imgDir);
 
         // Run with default project lights
@@ -960,9 +900,9 @@ public class SmokeTest
         int startingCount = SAVE_COUNTER.get();
         Global.io().saveProject();
 
-       Thread.sleep(50);
+        Thread.sleep(5000);
 
-        waitForSave(startingCount, state);
+        waitForSave(startingCount, testingState);
     }
 
     private static final class ExpectedFailureException extends RuntimeException

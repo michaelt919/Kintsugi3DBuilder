@@ -15,6 +15,8 @@ import kintsugi3d.builder.io.LoadOptionsModel;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,6 +24,8 @@ import java.util.List;
 
 public final class GlobalUserPreferencesManager
 {
+    private static final Logger LOG = LoggerFactory.getLogger(GlobalUserPreferencesManager.class);
+
     private static final GlobalUserPreferencesManager INSTANCE = new GlobalUserPreferencesManager();
     private final UserPreferencesSerializer serializer = new JacksonUserPreferencesSerializer();
 
@@ -33,6 +37,21 @@ public final class GlobalUserPreferencesManager
     public static GlobalUserPreferencesManager getInstance()
     {
         return INSTANCE;
+    }
+
+    public void logStartupExceptions()
+    {
+        // Log any exceptions that may have occurred while loading the log file directory from preferences
+        List<Exception> startupExceptions = getSerializerStartupExceptions();
+        for (Exception e : startupExceptions)
+        {
+            LOG.error("A user preferences exception occurred during pre-logger application startup", e);
+        }
+
+        if (!startupExceptions.isEmpty())
+        {
+            LOG.warn("Exceptions occurred while attempting to read the user preferences file, and the default preferences were likely restored.");
+        }
     }
 
     public UserPreferencesModel getPreferences()

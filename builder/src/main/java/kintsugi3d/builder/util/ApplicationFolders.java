@@ -12,6 +12,8 @@
 package kintsugi3d.builder.util;
 
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -20,6 +22,8 @@ import java.nio.file.Paths;
 @SuppressWarnings({"AccessOfSystemProperties", "CallToSystemGetenv"})
 public final class ApplicationFolders
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationFolders.class);
+
     private static final OperatingSystem OS = OperatingSystem.getCurrentOS();
     public static final String APP_FOLDER_NAME = "Kintsugi3DBuilder";
 
@@ -186,5 +190,25 @@ public final class ApplicationFolders
         {
             return getUserAppDirectory().resolve("logs");
         }
+    }
+
+    public static void makeLogDirectorySystemProperty()
+    {
+        if (System.getProperty("Kintsugi3D.logDir") == null)
+        {
+            System.setProperty("Kintsugi3D.logDir", getLogFileDirectory().toAbsolutePath().toString());
+        }
+    }
+
+    public static void logApplicationDirectories()
+    {
+        // Log all directories that will be used for session
+        LOG.info("Application log file directory: {}", getLogFileDirectory());
+        LOG.info("Application data directory: {}", getUserAppDirectory());
+        LOG.info("Application cache directory: {}", getUserCacheDirectory());
+        LOG.info("Application system data directory: {}", getSystemAppDirectory());
+        LOG.info("Application installation directory: {}", getInstallationDirectory());
+        LOG.info("Preview images root directory: {}", getPreviewImagesRootDirectory());
+        LOG.info("Fit cache root directory: {}", getFitCacheRootDirectory());
     }
 }

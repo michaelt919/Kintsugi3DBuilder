@@ -14,9 +14,7 @@ package kintsugi3d.app;
 import javafx.application.Application;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.util.ApplicationFolders;
-import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.interactive.InitializationException;
-import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +22,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Locale;
 
 public final class Kintsugi3DBuilder
@@ -41,47 +38,17 @@ public final class Kintsugi3DBuilder
         Locale.setDefault(Locale.ROOT);
 
         // Dynamically set the log directory based on the OS before instantiating a logger
-        if (System.getProperty("Kintsugi3D.logDir") == null)
-        {
-            System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getLogFileDirectory().toAbsolutePath().toString());
-        }
+        ApplicationFolders.makeLogDirectorySystemProperty();
 
         Logger log = LoggerFactory.getLogger(Kintsugi3DBuilder.class);
         log.debug("Logger initialized");
 
-        // Log any exceptions that may have occurred while loading the log file directory from preferences
-        List<Exception> startupExceptions = GlobalUserPreferencesManager.getInstance().getSerializerStartupExceptions();
-        for (Exception e : startupExceptions)
-        {
-            log.error("A user preferences exception occurred during pre-logger application startup", e);
-        }
+        GlobalUserPreferencesManager.getInstance().logStartupExceptions();
+        ApplicationFolders.logApplicationDirectories();
 
-        if (!startupExceptions.isEmpty())
-        {
-            log.warn("Exceptions occurred while attempting to read the user preferences file, and the default preferences were likely restored.");
-        }
-
-        // Log all directories that will be used for session
-        log.info("Application log file directory: {}", ApplicationFolders.getLogFileDirectory());
-        log.info("Application data directory: {}", ApplicationFolders.getUserAppDirectory());
-        log.info("Application cache directory: {}", ApplicationFolders.getUserCacheDirectory());
-        log.info("Application system data directory: {}", ApplicationFolders.getSystemAppDirectory());
-        log.info("Application installation directory: {}", ApplicationFolders.getInstallationDirectory());
-        log.info("Preview images root directory: {}", ApplicationFolders.getPreviewImagesRootDirectory());
-        log.info("Fit cache root directory: {}", ApplicationFolders.getFitCacheRootDirectory());
-
-        //allow render thread to modify user interface thread
-        System.setProperty("glass.disableThreadChecks", "true");
-        //TODO see com.sun.glass.ui.Application.java line 434
-
-        if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
-        {
-            // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
-            Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
-        }
-
-        Configuration.DEBUG.set(true);
-        Configuration.DEBUG_STREAM.set(System.out);
+        // Set system properties, etc. that need to be set before anything touches LWJGL
+        // (which JavaFX does indirectly by loading Kintsugi's matrix math classes)
+        RenderingBootstrap.preInitialize();
 
         JavaFXApplication.setArgs(args);
 
@@ -111,21 +78,7 @@ public final class Kintsugi3DBuilder
             {
                 System.setErr(err);
 
-                JavaFXApplication.addStartListener(stage ->
-                {
-                    log.info("Starting Render Window");
-                    new Thread(() ->
-                    {
-                        try
-                        {
-                            RenderingBootstrap.runProgram(stage, args);
-                        }
-                        catch (InitializationException e)
-                        {
-                            log.error("Error initializing render window:", e);
-                        }
-                    }, "OpenGL Rendering Thread").start();
-                });
+                JavaFXApplication.addStartListener(stage -> RenderingBootstrap.startRenderThread(stage, args));
 
                 log.info("Starting JavaFX UI");
                 JavaFXApplication.launchWrapper("");
