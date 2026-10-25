@@ -11,6 +11,7 @@
 
 package kintsugi3d.gl.glfw;
 
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.core.DoubleFramebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.exceptions.GLFWException;
@@ -21,11 +22,16 @@ import org.lwjgl.Version.BuildType;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.system.Configuration;
+import org.lwjgl.system.FunctionProvider;
+import org.lwjgl.system.SharedLibrary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -45,32 +51,85 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
+        LOG.info("LWJGL version: {}.{}.{}{}",
+            Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
+            Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
+            /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
+
+        String glfwVersionString = glfwGetVersionString();
+        LOG.info("GLFW version: {}", glfwVersionString);
+
+        AtomicInteger glfwError = new AtomicInteger();
+
         glfwSetErrorCallback(GLFWErrorCallback.create((error, description) ->
         {
-            throw new GLFWException(GLFWErrorCallback.getDescription(description));
+            glfwError.set(error);
+            String descriptionString = GLFWErrorCallback.getDescription(description);
+
+            if (error == GLFW_FORMAT_UNAVAILABLE || error == GLFW_API_UNAVAILABLE)
+            {
+                // Suppress errors to avoid failing smoke tests that rely on fallback to OSMesa.
+                LOG.warn("GLFW format unavailable.", new GLFWException(descriptionString));
+            }
+            else
+            {
+                throw new GLFWException(descriptionString);
+            }
         }));
 
-        if (!glfwInit())
+        if (OperatingSystem.getCurrentOS() == OperatingSystem.UNIX)
         {
-            throw new GLFWException("Unable to initialize GLFW.");
+            // Force X11 on Linux.
+            // Wayland is default as of LWJGL 3.3.4+ but has issues that X11 doesn't have.
+            glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
         }
 
-        glfwDefaultWindowHints();
+        initGLFWWithWindowHints(windowSpec);
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        long handleIfSuccessful = NULL;
 
-        glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE, windowSpec.isResizable() ? GL_TRUE : GL_FALSE);
-        glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
-
-        handle = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
-        if ( handle == NULL )
+        try
         {
-            throw new GLFWException("Failed to create the GLFW window");
+            handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
         }
+        catch (GLFWException e)
+        {
+            LOG.warn("Error creating GLFW window.", e);
+        }
+
+        if (handleIfSuccessful == NULL)
+        {
+            int glfwErrorCode = glfwError.get();
+            LOG.info("GLFW error code: {}", glfwErrorCode);
+
+            if ((glfwErrorCode == GLFW_FORMAT_UNAVAILABLE || glfwErrorCode == GLFW_API_UNAVAILABLE) && glfwVersionString.contains("OSMesa"))
+            {
+                LOG.info("Failed to create a native GLFW window; attempting fallback to OSMesa.");
+
+                // Terminate GLFW to change OpenGL's contextAPI.
+                glfwTerminate();
+
+                Configuration.OPENGL_CONTEXT_API.set("OSMesa");
+
+                LOG.info("OpenGL OSMesa library name defaults: {}", Arrays.toString(Configuration.OPENGL_OSMESA_LIBRARY_NAME_DEFAULTS()));
+
+                // Restart GLFW
+                initGLFWWithWindowHints(windowSpec);
+
+                // Retry with OSMesa
+                // Among other things, this is needed for CI tests to run via GitHub Actions on free test runners
+                glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_OSMESA_CONTEXT_API);
+                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
+                handleIfSuccessful = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
+            }
+
+            if (handleIfSuccessful == NULL)
+            {
+                throw new GLFWException("Failed to create the GLFW window");
+            }
+        }
+
+        this.handle = handleIfSuccessful;
 
         this.listenerManager = new WindowCallback(this);
 
@@ -101,13 +160,17 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         glfwMakeContextCurrent(handle);
         glfwSwapInterval(1);
 
+        LOG.info("OpenGL context API override: {}", Configuration.OPENGL_CONTEXT_API.get());
+
+        FunctionProvider functionProvider = GL.getFunctionProvider();
+        if (functionProvider instanceof SharedLibrary)
+        {
+            LOG.info("OpenGL library name: {}", ((SharedLibrary) functionProvider).getName());
+        }
+
         GL.createCapabilities(); // Make a valid OpenGL Context
         LOG.info("OpenGL version: {}", glGetString(GL_VERSION));
-        LOG.info("LWJGL version: {}.{}.{}{}",
-                Version.VERSION_MAJOR, Version.VERSION_MINOR, Version.VERSION_REVISION,
-            Version.BUILD_TYPE == BuildType.ALPHA ? "a" : ((Version.BUILD_TYPE == BuildType.BETA) ? "b" : "")
-                /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
-        LOG.info("GLFW version: {}", glfwGetVersionString());
+        LOG.info("OpenGL renderer: {}", glGetString(GL_RENDERER));
 
         this.context = createDefaultFramebuffer == null ?
             contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);
@@ -116,6 +179,25 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         {
             context.getState().enableMultisampling();
         }
+    }
+
+    private static void initGLFWWithWindowHints(WindowSpecification windowSpec)
+    {
+        if (!glfwInit())
+        {
+            throw new GLFWException("Unable to initialize GLFW.");
+        }
+
+        glfwDefaultWindowHints();
+
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, windowSpec.isResizable() ? GL_TRUE : GL_FALSE);
+        glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
     }
 
     public static void closeAllWindows()

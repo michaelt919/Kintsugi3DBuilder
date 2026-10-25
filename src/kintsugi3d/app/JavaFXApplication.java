@@ -69,8 +69,7 @@ public class JavaFXApplication extends Application
     // Keep a reference to the main window to inject the canvas when the rendering thread has loaded
     private static MainWindowController mainWindowController;
 
-    // TODO make this package protected again
-    public static JavaFXState getState()
+    static JavaFXState getState()
     {
         if (state != null)
         {
@@ -410,21 +409,33 @@ public class JavaFXApplication extends Application
         });
     }
 
+    /**
+     * No-op if there's no renderable loaded.
+     */
     private static void clearMainViewSafeRegion()
     {
-                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
-        if (instance != null)
+        if (Global.io().hasLoadedRenderable())
         {
-            instance.clearSafeRegionPadding();
+            ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
+            if (instance != null)
+            {
+                instance.clearSafeRegionPadding();
+            }
         }
     }
 
+    /**
+     * No-op if there's no renderable loaded.
+     */
     private static void refreshMainViewSafeRegion(double carouselHeight)
     {
-                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
-        if (instance != null)
+        if (Global.io().hasLoadedRenderable())
         {
-            instance.setSafeRegionPadding(0, 0, 0, (int)Math.round(carouselHeight));
+            ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
+            if (instance != null)
+            {
+                instance.setSafeRegionPadding(0, 0, 0, (int) Math.round(carouselHeight));
+            }
         }
     }
 

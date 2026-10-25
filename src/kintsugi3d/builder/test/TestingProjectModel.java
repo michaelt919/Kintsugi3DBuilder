@@ -11,18 +11,14 @@
 
 package kintsugi3d.builder.test;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.builder.core.texture.ImageReplacer;
-import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.builder.state.project.*;
-import kintsugi3d.fx.core.ExceptionHandling;
+import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 import kintsugi3d.gl.interactive.DefaultProgressMonitor;
 import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.fx.controllers.scene.environment.ObservableEnvironmentSettings;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -25,8 +25,7 @@ public final class GlobalBootstrap
     {
     }
 
-    public static void initialize(
-        Kintsugi3DBuilderState injectedState, ReadonlyLoadOptionsModel loadOptionsModel)
+    public static void initialize(Kintsugi3DBuilderState injectedState, ReadonlyLoadOptionsModel loadOptionsModel)
     {
         //noinspection SynchronizationOnStaticField
         synchronized (INITIALIZATION_LOCK)

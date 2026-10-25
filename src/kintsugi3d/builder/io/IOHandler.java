@@ -44,22 +44,22 @@ public interface IOHandler
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
-     * @param id
+     * @param internalName
      * @param vsetFile
      * @param supportingFilesDirectory
      * @param loadOptions
      */
-    void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
+    void loadFromVSETFile(String internalName, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
         throws Exception;
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
-     * @param id
+     * @param internalName
      * @param xmlFile
      * @param viewSetLoadOptions
      * @param imageLoadOptions
      */
-    void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
+    void loadFromLooseFiles(File newProjectFile, String internalName, File xmlFile,
                             ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
         throws Exception;
 

@@ -75,7 +75,6 @@ public final class RenderingBootstrap
     public static void runProgram(Stage stage, String... args) throws InitializationException
     {
         System.getenv();
-        System.setProperty("org.lwjgl.util.DEBUG", "true");
 
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();
@@ -199,8 +198,6 @@ public final class RenderingBootstrap
         }
 
         IOModel ioModel = Global.io();
-
-        ToolBindingModel toolBindingModel = createToolBinding();
 
         // Replace the temporary sentinel with the actual scene viewport from the instance manager.
         SCENE_VIEWPORT_WRAPPER.setSceneViewport(renderableManager.getSceneViewport());
