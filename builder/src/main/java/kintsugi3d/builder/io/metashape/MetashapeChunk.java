@@ -371,7 +371,7 @@ public final class MetashapeChunk
                 File foundImageFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
                 if (foundImageFile != null)
                 {
-                    path = rootDirectory.toPath().relativize(foundImageFile.toPath()).toString();
+                    path = rootDirectory.toPath().toAbsolutePath().relativize(foundImageFile.toPath().toAbsolutePath()).toString();
                 }
             }
 

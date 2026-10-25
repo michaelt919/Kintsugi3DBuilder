@@ -75,7 +75,6 @@ public final class RenderingBootstrap
     public static void runProgram(Stage stage, String... args) throws InitializationException
     {
         System.getenv();
-        System.setProperty("org.lwjgl.util.DEBUG", "true");
 
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();
@@ -158,24 +157,47 @@ public final class RenderingBootstrap
     {
         OpenGLContext context = canvas.getContext();
         context.getState().enableDepthTest();
-
-        ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
-        ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
-        ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
-        ActiveShaderModel activeShaderModel = MultithreadState.getInstance().getUserShaderModel();
-        GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
-        SelectableViewListModel viewListModel = Global.state().getViewListModel();
-        IOModel ioModel = Global.io();
-
-        ToolBindingModel toolBindingModel = createToolBinding();
-
         ImageBasedRenderableManager<OpenGLContext> renderableManager = new ImageBasedRenderableManager<>(context);
-        renderableManager.setObjectModel(objectModel);
-        renderableManager.setCameraModel(cameraModel);
-        renderableManager.setLightingModel(lightingModel);
-        renderableManager.setUserShaderModel(activeShaderModel);
-        renderableManager.setCameraViewListModel(viewListModel);
-        renderableManager.setSettingsModel(settingsModel);
+
+        if (MultithreadState.isInitialized())
+        {
+            ManipulableLightingEnvironmentModel lightingModel = MultithreadState.getInstance().getLightingModel();
+            ManipulableViewpointModel cameraModel = MultithreadState.getInstance().getCameraModel();
+            ManipulableObjectPoseModel objectModel = MultithreadState.getInstance().getObjectModel();
+            ActiveShaderModel activeShaderModel = MultithreadState.getInstance().getUserShaderModel();
+            GeneralSettingsModel settingsModel = Global.state().getSettingsModel();
+            SelectableViewListModel viewListModel =
+                Global.state().getViewListModel();
+
+            renderableManager.setObjectModel(objectModel);
+            renderableManager.setCameraModel(cameraModel);
+            renderableManager.setLightingModel(lightingModel);
+            renderableManager.setUserShaderModel(activeShaderModel);
+            renderableManager.setCameraViewListModel(viewListModel);
+            renderableManager.setSettingsModel(settingsModel);
+            ToolBindingModel toolBindingModel = createToolBinding();
+
+            CanvasListener canvasListener = ToolBox.Builder.create()
+            .setCameraModel(cameraModel)
+            .setLightingModel(lightingModel)
+            .setObjectModel(objectModel)
+            .setSettingsModel(settingsModel)
+            .setToolBindingModel(toolBindingModel)
+            .setSceneViewport(renderableManager.getSceneViewport())
+            .build();
+
+            canvasListener.addToCanvas(canvas);
+        }
+        else
+        {
+            renderableManager.setSettingsModel(Global.state().getSettingsModel());
+            renderableManager.setLightingModel(Global.state().getLightingModel());
+            renderableManager.setCameraModel(Global.state().getCameraModel());
+            renderableManager.setCameraViewListModel(Global.state().getViewListModel());
+            renderableManager.setObjectModel(Global.state().getObjectModel());
+        }
+
+        IOModel ioModel = Global.io();
 
         // Replace the temporary sentinel with the actual scene viewport from the instance manager.
         SCENE_VIEWPORT_WRAPPER.setSceneViewport(renderableManager.getSceneViewport());
@@ -188,22 +210,14 @@ public final class RenderingBootstrap
         app.addRefreshable(renderableManager.getRenderViews()); // i.e. views in carousel that also need to be in the refresh loop
 
         // Pass reference to instance manager to other components as needed.
-        ioModel.setLoadingHandler(renderableManager);
         Rendering.initialize(context, renderableManager);
+        ioModel.setLoadingHandler(renderableManager);
 
         // Allow frontend to react to IO events
-        JavaFXApplication.getState().getProjectModel().registerIOListeners();
-
-        CanvasListener canvasListener = ToolBox.Builder.create()
-            .setCameraModel(cameraModel)
-            .setLightingModel(lightingModel)
-            .setObjectModel(objectModel)
-            .setSettingsModel(settingsModel)
-            .setToolBindingModel(toolBindingModel)
-            .setSceneViewport(renderableManager.getSceneViewport())
-            .build();
-
-        canvasListener.addToCanvas(canvas);
+        if (MultithreadState.isInitialized())
+        {
+            JavaFXApplication.getState().getProjectModel().registerIOListeners();
+        }
 
         canvas.addKeyPressListener((win, key, modifierKeys) ->
         {
@@ -235,7 +249,7 @@ public final class RenderingBootstrap
         Object waitForRenderingWork = new Object();
 
         // Keep the graphics thread paused while the window is minimized.
-        if (stage != null)
+        if (MultithreadState.isInitialized() && stage != null)
         {
             app.addPollable(new EventPollable()
             {
@@ -280,7 +294,7 @@ public final class RenderingBootstrap
             });
         }
 
-        if (stage != null)
+        if (MultithreadState.isInitialized() && stage != null)
         {
             // Wake the graphics thread up when the window is un-minimized.
             stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->

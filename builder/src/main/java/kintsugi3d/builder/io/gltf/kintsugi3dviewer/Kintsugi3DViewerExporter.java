@@ -79,6 +79,8 @@ public class Kintsugi3DViewerExporter extends PBRExporter
 
                 extras.setSpecularWeights(weights);
             }
+
+            extras.setBasisFunctionsUri(getBasisFunctionsUri());
         }
     }
 
@@ -92,7 +94,12 @@ public class Kintsugi3DViewerExporter extends PBRExporter
         getTextureResources().savePackedWeightMaps(format, outputDirectory, getTextureFilePrefix());
 
         getTextureResources().saveBasisFunctions(outputDirectory,
-            BasisResources.getBasisFunctionsFilename(getTextureFilePrefix()));
+            getBasisFunctionsUri());
+    }
+
+    private String getBasisFunctionsUri()
+    {
+        return BasisResources.getBasisFunctionsFilename(getTextureFilePrefix());
     }
 
     @Override

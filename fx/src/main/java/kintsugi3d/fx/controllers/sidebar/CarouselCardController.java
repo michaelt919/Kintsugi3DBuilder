@@ -51,6 +51,11 @@ public class CarouselCardController
     private CarouselController carousel;
     private ShaderInfo shader;
 
+    private static boolean isProjectProcessed()
+    {
+        return Global.io().hasLoadedRenderable() && Global.io().getMainRenderable().getResources().hasProcessedWeightMaps();
+    }
+
     /**
      * If the checkbox is selected it will apply the shader that is assigned to the card.
      * If the checkbox is already selected when the user selects it again it will
@@ -65,7 +70,7 @@ public class CarouselCardController
         }
         else
         {
-            if (Global.state().getProjectModel().isProjectProcessed())
+            if (isProjectProcessed())
             {
                 Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_PROCESSED);
             }
@@ -97,6 +102,7 @@ public class CarouselCardController
         Global.state().getUserShaderModel().registerHandler(this::updateCheckboxState);
         updateCheckboxState(Global.state().getUserShaderModel().getActiveShader());
     }
+
     public void initialize()
     {
         buttonBox.translateYProperty().bind(carouselCard.heightProperty().divide(2.0).subtract(buttonBox.heightProperty().divide(2.0)));
@@ -141,7 +147,7 @@ public class CarouselCardController
              */
             if (shader.equals(Global.state().getUserShaderModel().getActiveShader()))
             {
-                if(Global.state().getProjectModel().isProjectProcessed())
+                if(isProjectProcessed())
                 {
                     Global.state().getUserShaderModel().setActiveShader(DEFAULT_SHADER_PROCESSED);
                 }

@@ -42,7 +42,16 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         ObjectReader reader = mapper.readerFor(UserPreferencesModel.class);
-        return reader.readValue(getPreferencesFile());
+
+        File preferencesFile = getPreferencesFile();
+        if (preferencesFile.exists())
+        {
+            return reader.readValue(preferencesFile);
+        }
+        else
+        {
+            return UserPreferencesModel.createDefault();
+        }
     }
 
     @Override
@@ -51,7 +60,8 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
         try
         {
             return readUserPreferences();
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
             startupExceptions.add(e);
             return UserPreferencesModel.createDefault();

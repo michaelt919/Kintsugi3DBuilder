@@ -202,7 +202,7 @@ public final class ViewSetBuilder
     public ViewSetBuilder setGeometryFileName(String geometryFileName)
     {
         result.setGeometryFile(
-            geometryFileName == null ? null : result.getRootDirectory().toPath().resolve(geometryFileName).toFile());
+            geometryFileName == null ? null : result.getRootDirectory().toPath().toAbsolutePath().resolve(geometryFileName).toFile());
         return this;
     }
 
@@ -235,7 +235,7 @@ public final class ViewSetBuilder
      */
     public ViewSetBuilder setRelativeSupportingFilesPathName(String relativePath)
     {
-        result.setSupportingFilesDirectory(result.getRootDirectory().toPath().resolve(relativePath).toFile());
+        result.setSupportingFilesDirectory(result.getRootDirectory().toPath().toAbsolutePath().resolve(relativePath).toFile());
         return this;
     }
 

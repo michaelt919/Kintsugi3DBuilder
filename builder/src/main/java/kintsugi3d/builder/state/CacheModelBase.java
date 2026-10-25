@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class CacheModelBase implements CacheModel
 {
@@ -97,34 +98,40 @@ public abstract class CacheModelBase implements CacheModel
     @Override
     public void requestClearCache()
     {
-        Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
-
-        new Thread(() ->
+        Global.state().getProjectModel().confirmClose(
+            "Deleting the entire cache requires the current project to be closed.  Are you sure you want to close the current project?",
+        () ->
         {
-            try
-            {
-                if (cacheCleanupInProgress.compareAndSet(false, true))
-                {
-                    try
-                    {
-                        for (var entry : deleteMethods.entrySet())
-                        {
-                            clearCache(entry.getKey(), entry.getValue());
-                        }
-                    }
-                    finally
-                    {
-                        cacheCleanupInProgress.set(false);
-                    }
+            // Project should now be closed; safe to delete everything.
+            Map<File, Consumer<File[]>> deleteMethods = getDeleteMethods();
 
-                    requestCacheSizeRefresh();
-                }
-            }
-            catch (IOException e)
+            new Thread(() ->
             {
-                handleCacheCleanupError(e);
-            }
-        }, "Clear Cache").start();
+                try
+                {
+                    if (cacheCleanupInProgress.compareAndSet(false, true))
+                    {
+                        try
+                        {
+                            for (var entry : deleteMethods.entrySet())
+                            {
+                                clearCache(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        finally
+                        {
+                            cacheCleanupInProgress.set(false);
+                        }
+
+                        requestCacheSizeRefresh();
+                    }
+                }
+                catch (IOException e)
+                {
+                    handleCacheCleanupError(e);
+                }
+            }, "Clear Cache").start();
+        });
     }
 
     private static void clearCache(File directory, Consumer<File[]> deleteMethod) throws IOException
@@ -372,31 +379,34 @@ public abstract class CacheModelBase implements CacheModel
                 {
                     File directory = deleteMethod.getKey();
 
-                    if (!directory.isDirectory())
+                    if (directory.isDirectory())
                     {
-                        throw new NotDirectoryException(String.format("Invalid directory: %s", directory));
+                        // Select only cache directories that are not in the recently opened projects welcome dialogue.
+                        Collection<File> deletableProjects = new HashSet<>(0);
+                        List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+                        List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
+
+                        if (settingsModel.getBoolean("recentPromptEnabled"))
+                        {
+                            filterByRecentProjectLimit(directory, nonRecentProjects);
+                            deletableProjects.addAll(nonRecentProjects);
+                        }
+
+                        if (settingsModel.getBoolean("fileAgePromptEnabled"))
+                        {
+                            filterByFileAgeLimit(oldProjects);
+                            deletableProjects.addAll(oldProjects);
+                        }
+
+                        // Don't delete the current project.
+                        deletableProjects.removeIf(file ->
+                            Objects.equals(file.getName(), Global.io().getLoadedViewSet().getUUID().toString()));
+
+                        // Perform cache deletion on directories still in oldProjects.
+                        File[] deletableProjectsArr = deletableProjects.toArray(File[]::new);
+
+                        deleteMethod.getValue().accept(deletableProjectsArr);
                     }
-                    // Select only cache directories that are not in the recently opened projects welcome dialogue.
-                    Collection<File> deletableProjects = new HashSet<>(0);
-                    List<File> nonRecentProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-                    List<File> oldProjects = new ArrayList<>(Arrays.asList(Objects.requireNonNull(directory.listFiles())));
-
-                    if (settingsModel.getBoolean("recentPromptEnabled"))
-                    {
-                        filterByRecentProjectLimit(directory, nonRecentProjects);
-                        deletableProjects.addAll(nonRecentProjects);
-                    }
-
-                    if (settingsModel.getBoolean("fileAgePromptEnabled"))
-                    {
-                        filterByFileAgeLimit(oldProjects);
-                        deletableProjects.addAll(oldProjects);
-                    }
-
-                    // Perform cache deletion on directories still in oldProjects.
-                    File[] deletableProjectsArr = deletableProjects.toArray(File[]::new);
-
-                    deleteMethod.getValue().accept(deletableProjectsArr);
                 }
 
                 // Recalculate the size of the cache after cleaning up files by age or by presence in recent files list.
@@ -492,7 +502,6 @@ public abstract class CacheModelBase implements CacheModel
             {
                 // The project cache directory name should be the same regardless of which cache (i.e. preview or fit) is being cleaned.
                 String projectID = projectCacheDir.getName();
-
                 // i.e. a list that will contain the fit and preview directories for a given project
                 Collection<File> projectDirList = cleanableCacheProjects.computeIfAbsent(
                     // Create the ArrayList if not already in the map.
@@ -556,6 +565,9 @@ public abstract class CacheModelBase implements CacheModel
         Collection<File> cacheDirsToClean = cleanableCacheProjects.entrySet().stream()
             // Skip any projects that were designated for retention.
             .filter(entry -> !retainedProjectIDSet.contains(entry.getKey()))
+            .filter(entry ->
+                // Skip the current project
+                !Objects.equals(Global.io().getLoadedViewSet().getUUID().toString(), entry.getKey()))
             // Flatten to a stream of individual cache directories (for a specific project and a specific cache type)
             .flatMap(entry -> entry.getValue().stream())
             .collect(Collectors.toList());
@@ -769,14 +781,14 @@ public abstract class CacheModelBase implements CacheModel
     protected static int getNumCachedProjects()
     {
         return getCleanableCacheDirectories().stream()
-            .mapToInt(dir -> Objects.requireNonNull(dir.listFiles()).length)
+            .mapToInt(dir -> dir.exists() ? Objects.requireNonNull(dir.listFiles()).length : 0)
             .max().orElse(0);
     }
 
     protected static boolean checkOldFilesExist()
     {
         Collection<File> cacheFiles = getCleanableCacheDirectories().stream()
-            .flatMap(dir -> Arrays.stream(Objects.requireNonNull(dir.listFiles())))
+            .flatMap(dir -> dir.exists() ? Arrays.stream(Objects.requireNonNull(dir.listFiles())) : Stream.of())
             .collect(Collectors.toList());
 
         Instant limit = LocalDateTime.now().minusDays(Global.state().getSettingsModel().getInt("fileAgeLimit"))

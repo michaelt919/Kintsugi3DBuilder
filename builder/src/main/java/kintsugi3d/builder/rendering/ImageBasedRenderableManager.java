@@ -106,31 +106,19 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         this.context = context;
     }
 
-    private void handleMeshImportException(MeshImportException e)
+    private static void logMeshImportException(MeshImportException e)
     {
         LOG.error("An error occurred loading model: ", e);
-        if (progressMonitor != null)
-        {
-            progressMonitor.fail(e);
-        }
     }
 
-    private void handleGenericError(Exception e)
+    private static void logGenericException(Exception e)
     {
         LOG.error("An error occurred loading project: ", e);
-        if (progressMonitor != null)
-        {
-            progressMonitor.fail(e);
-        }
     }
 
-    private void handleUserCancellation(UserCancellationException e)
+    private static void logUserCancellation(UserCancellationException e)
     {
         LOG.info("Loading project was cancelled by user: ", e);
-        if (progressMonitor != null)
-        {
-            progressMonitor.cancelComplete(e);
-        }
     }
 
     @Override
@@ -185,11 +173,11 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
 
     /**
      * Must NOT be called on the rendering thread or deadlock will result while generating preview images.
-     * @param id
+     * @param internalName
      * @param builder
      * @throws UserCancellationException
      */
-    private void loadInstance(File newProjectFile, String id, Builder<ContextType> builder)
+    private void loadInstance(File newProjectFile, String internalName, Builder<ContextType> builder)
         throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
@@ -250,7 +238,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         }
 
         // Create the instance (will be initialized on the graphics thread)
-        ImageBasedRenderable<ContextType> newInstance = new ImageBasedRenderingEngine<>(id, context, builder);
+        ImageBasedRenderable<ContextType> newInstance = new ImageBasedRenderingEngine<>(internalName, context, builder);
         newInstance.setOwningApp(this.getOwningApp());
 
         initializeSceneModel(newInstance.getSceneModel());
@@ -289,50 +277,57 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
 
                 // Use the new instance as the active instance if initialization was successful
                 renderableInstance = newInstance;
+
+                synchronized (instanceLoadCallbacks)
+                {
+                    // Invoke callbacks
+                    for (Consumer<ImageBasedRenderable<?>> callback : instanceLoadCallbacks)
+                    {
+                        callback.accept(renderableInstance);
+                    }
+
+                    // Clear the list of callbacks for the next load.
+                    instanceLoadCallbacks.clear();
+                }
+
+                // Notify listeners that project has loaded
+                projectLoaded.notify(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
+
+                if (resources.hasProcessedWeightMaps())
+                {
+                    // Project has been processed previously; notify listeners
+                    IntVector2 weightMapResolution = resources.getProcessedWeightMapResolution();
+                    projectProcessed.notify(new ProjectProcessedEvent(
+                        weightMapResolution.x, weightMapResolution.y));
+                }
+
+                // Ensure that the listeners are also notified if the project is processed in the future.
+                resources.weightMapsProcessedListeners().register(projectProcessed::notify);
+
+                // Update once before drawing
+                newInstance.update();
+
+                // Force GPU resources to be fully loaded / flushed by rendering once to a small throwaway FBO.
+                try(FramebufferObject<ContextType> tempFBO = context.buildFramebufferObject(256, 256)
+                    .addColorAttachment()
+                    .addDepthAttachment()
+                    .createFramebufferObject())
+                {
+                    newInstance.draw(tempFBO);
+                }
             }
             catch (InitializationException e)
             {
-                LOG.error("Error occurred initializing new instance:", e);
-                newInstance.close();
-            }
-
-            synchronized (instanceLoadCallbacks)
-            {
-                // Invoke callbacks
-                for (Consumer<ImageBasedRenderable<?>> callback : instanceLoadCallbacks)
+                if (e.getCause() instanceof UserCancellationException)
                 {
-                    callback.accept(renderableInstance);
+                    LOG.info("Cancellation occurred while initializing new instance.", e);
+                }
+                else
+                {
+                    LOG.error("Error occurred while initializing new instance.", e);
                 }
 
-                // Clear the list of callbacks for the next load.
-                instanceLoadCallbacks.clear();
-            }
-
-            // Notify listeners that project has loaded
-            projectLoaded.notify(new ProjectLoadedEvent(getLoadedGeometry().getBoundingBoxSize()));
-
-            GraphicsResourcesImageSpace<ContextType> resources = renderableInstance.getResources();
-            if (resources.hasProcessedWeightMaps())
-            {
-                // Project has been processed previously; notify listeners
-                IntVector2 weightMapResolution = resources.getProcessedWeightMapResolution();
-                projectProcessed.notify(new ProjectProcessedEvent(
-                    weightMapResolution.x, weightMapResolution.y));
-            }
-
-            // Ensure that the listeners are also notified if the project is processed in the future.
-            resources.weightMapsProcessedListeners().register(projectProcessed::notify);
-
-            // Update once before drawing
-            newInstance.update();
-
-            // Force GPU resources to be fully loaded / flushed by rendering once to a small throwaway FBO.
-            try(FramebufferObject<ContextType> tempFBO = context.buildFramebufferObject(256, 256)
-                .addColorAttachment()
-                .addDepthAttachment()
-                .createFramebufferObject())
-            {
-                newInstance.draw(tempFBO);
+                newInstance.close();
             }
         });
     }
@@ -375,7 +370,8 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
     }
 
     @Override
-    public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromVSETFile(
+        String internalName, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
         throws UserCancellationException, MeshImportException, IOException
     {
         if (this.progressMonitor.isConflictingProcess())
@@ -398,20 +394,20 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             }
             catch (MeshImportException e)
             {
-                handleMeshImportException(e);
+                logMeshImportException(e);
                 throw e;
             }
             catch (IOException|RuntimeException e)
             {
-                handleGenericError(e);
+                logGenericException(e);
                 throw e;
             }
 
-            loadInstance(null, id, builder);
+            loadInstance(null, internalName, builder);
         }
         catch (UserCancellationException e)
         {
-            handleUserCancellation(e);
+            logUserCancellation(e);
             throw e;
         }
     }
@@ -447,12 +443,12 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             }
             catch (MeshImportException e)
             {
-                handleMeshImportException(e);
+                logMeshImportException(e);
                 throw e;
             }
             catch (IOException | RuntimeException | XMLStreamException | MissingImagesException e)
             {
-                handleGenericError(e);
+                logGenericException(e);
                 throw e;
             }
 
@@ -460,13 +456,13 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         }
         catch (UserCancellationException e)
         {
-            handleUserCancellation(e);
+            logUserCancellation(e);
             throw e;
         }
     }
 
     @Override
-    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile,
+    public void loadFromLooseFiles(File newProjectFile, String internalName, File xmlFile,
                                    ViewSetLoadOptions viewSetLoadOptions, ReadonlyLoadOptionsModel imageLoadOptions)
         throws Exception
     {
@@ -489,18 +485,18 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
             }
             catch (Exception e)
             {
-                handleGenericError(e);
+                logGenericException(e);
 
                 //noinspection ProhibitedExceptionThrown
                 throw e; // Re-throw so that calling method can rollback any state changes to account for failure
             }
 
             // Invoke callbacks now that view set is loaded
-            loadInstance(newProjectFile, id, builder);
+            loadInstance(newProjectFile, internalName, builder);
         }
         catch (UserCancellationException e)
         {
-            handleUserCancellation(e);
+            logUserCancellation(e);
             throw e; // Re-throw so that calling method can rollback any state changes to account for cancellation
         }
     }
@@ -518,7 +514,7 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         // Create a new rendering engine instance that references the same resources as the main rendering engine.
         // This can run on any thread, but initialization needs to run on the graphics thread.
         ImageBasedRenderingEngine<ContextType> renderView =
-            new ImageBasedRenderingEngine<>(renderableInstance.getID(), context, renderableInstance.getResources());
+            new ImageBasedRenderingEngine<>(renderableInstance.getInternalName(), context, renderableInstance.getResources());
         renderView.setSafeRegionPadding(safeLeftPadding, safeTopPadding, safeRightPadding, safeBottomPadding);
         initializeSceneModel(renderView.getSceneModel());
 
@@ -810,5 +806,13 @@ public class ImageBasedRenderableManager<ContextType extends Context<ContextType
         {
             renderableInstance.close();
         }
+    }
+
+    /**
+     * Work around for use in testing only
+     */
+    public void setLoadedViewSet(ViewSet viewSet)
+    {
+        this.loadedViewSet = viewSet;
     }
 }

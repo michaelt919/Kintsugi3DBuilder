@@ -39,16 +39,18 @@ public interface IO
     EventListeners<ProjectProcessedListener> projectProcessedListeners();
     EventListeners<ProjectClosedListener> projectClosedListeners();
 
-    File getLoadedViewSetFile();
-    File getLoadedProjectFile();
+    boolean isProjectOpen();
+    File getViewSetFile();
+    File getProjectFile();
     ViewSet getLoadedViewSet();
     ReadonlyVertexGeometry getLoadedGeometry();
 
     ImageBasedRenderable<?> getMainRenderable();
     ImageBasedRenderable<?> getRenderableForShader(ShaderInfo shader);
 
-    void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
-    void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
+
+    void loadFromLooseFiles(File newProjectFile, String internalName, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
+    void hotSwapLooseFiles(String internalName, File xmlFile, ViewSetLoadOptions viewSetLoadOptions);
     void loadFromMetashapeModel(File newProjectFile, MetashapeModel model);
     void loadExistingProject(File projectFile);
     File getViewSetFileForProject(File projectFile) throws IOException;
@@ -94,7 +96,7 @@ public interface IO
      */
     default void saveProject(Runnable finishedCallback) throws IOException
     {
-        saveProject(getLoadedProjectFile(), finishedCallback);
+        saveProject(getProjectFile(), finishedCallback);
     }
 
     /**
@@ -107,7 +109,7 @@ public interface IO
      */
     default void saveProject() throws IOException
     {
-        saveProject(getLoadedProjectFile(), null);
+        saveProject(getProjectFile(), null);
     }
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
@@ -121,6 +123,7 @@ public interface IO
     void applyLightOffsetCalibration();
 
     void closeProject();
+    void closeProject(Runnable onCloseComplete);
 
     boolean hasLoadedRenderable();
     boolean hasValidHandler();

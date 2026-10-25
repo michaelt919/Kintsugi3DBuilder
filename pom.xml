@@ -17,7 +17,7 @@
 
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>1.6.0</version>
+    <version>1.7.0</version>
 
     <!-- This POM coordinates the project; it does not produce a JAR. -->
     <packaging>pom</packaging>
@@ -32,7 +32,6 @@
         <module>sjm-ply</module>
         <module>util</module>
     </modules>
-
     <build>
         <plugins>
             <plugin>
@@ -91,11 +90,67 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Delete test-output on initialize and clean, and also remove bin/ on clean. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>clean-extra-files</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>bin/</include>
+                                        <include>test-output/</include>
+                                    </includes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>delete-test-output-on-initialize</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>test-output/</include>
+                                    </includes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/SmokeTest.class</include>
+                    </includes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <properties>
         <java.version>11</java.version>
-        <viewer.version>1.5.2</viewer.version>
+        <viewer.version>1.7.0</viewer.version>
         <usdz-exporter.version>1.2.2</usdz-exporter.version>
     </properties>
     <profiles>

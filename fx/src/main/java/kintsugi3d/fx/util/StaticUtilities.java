@@ -20,8 +20,8 @@ import kintsugi3d.builder.core.Global;
 
 import java.util.Objects;
 
-/*
-I general utilities class.
+/**
+ * A general utilities class.
  */
 public final class StaticUtilities
 {
@@ -198,7 +198,7 @@ public final class StaticUtilities
 
     public static boolean confirmCancel()
     {
-        if (Global.state().getProjectModel().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
+        if (Global.io().isProjectOpen()) // Might have closed the project in which case confirmation is irrelevant
         {
             Alert alert = new Alert(AlertType.CONFIRMATION, "Settings will be reverted to their previous values.");
             alert.setHeaderText("Discard changes?");

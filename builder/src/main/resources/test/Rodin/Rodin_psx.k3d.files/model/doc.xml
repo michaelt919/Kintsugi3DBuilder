@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model version="1.6.0">
+  <mesh path="mesh.ply">
+    <faceCount>64000</faceCount>
+    <vertexCount>31996</vertexCount>
+    <hasVertexColors>false</hasVertexColors>
+    <hasVertexConfidence>false</hasVertexConfidence>
+    <hasAssignedCameras>false</hasAssignedCameras>
+    <hasUV>true</hasUV>
+  </mesh>
+  <textures next_id="4">
+    <texture id="0" type="diffuse" active="true">
+      <page path="texture0.tif" id="0"/>
+      <meta>
+        <property name="BuildTexture/blending_mode" value="3"/>
+        <property name="BuildTexture/duration" value="71.031"/>
+        <property name="BuildTexture/fill_holes" value="false"/>
+        <property name="BuildTexture/ghosting_filter" value="true"/>
+        <property name="BuildTexture/max_workgroup_size" value="100"/>
+        <property name="BuildTexture/ram_used" value="5029105664"/>
+        <property name="BuildTexture/source_model" value="4294967295"/>
+        <property name="BuildTexture/texture_size" value="4096"/>
+        <property name="BuildTexture/texture_type" value="0"/>
+        <property name="BuildTexture/transfer_texture" value="false"/>
+        <property name="BuildTexture/vram_used" value="1997842120"/>
+        <property name="BuildTexture/workitem_size_cameras" value="20"/>
+      </meta>
+    </texture>
+    <texture id="1" type="normals" active="true">
+      <page path="texture1.tif" id="0"/>
+      <meta>
+        <property name="BuildTexture/blending_mode" value="3"/>
+        <property name="BuildTexture/duration" value="2.635"/>
+        <property name="BuildTexture/fill_holes" value="false"/>
+        <property name="BuildTexture/ghosting_filter" value="true"/>
+        <property name="BuildTexture/max_workgroup_size" value="100"/>
+        <property name="BuildTexture/ram_used" value="743444480"/>
+        <property name="BuildTexture/source_model" value="3"/>
+        <property name="BuildTexture/texture_size" value="4096"/>
+        <property name="BuildTexture/texture_type" value="1"/>
+        <property name="BuildTexture/transfer_texture" value="false"/>
+        <property name="BuildTexture/workitem_size_cameras" value="20"/>
+      </meta>
+    </texture>
+    <texture id="2" type="occlusion" active="true">
+      <page path="texture2.tif" id="0"/>
+      <meta>
+        <property name="BuildTexture/blending_mode" value="3"/>
+        <property name="BuildTexture/duration" value="0.806"/>
+        <property name="BuildTexture/fill_holes" value="false"/>
+        <property name="BuildTexture/ghosting_filter" value="true"/>
+        <property name="BuildTexture/max_workgroup_size" value="100"/>
+        <property name="BuildTexture/ram_used" value="45641728"/>
+        <property name="BuildTexture/source_model" value="4"/>
+        <property name="BuildTexture/texture_size" value="4096"/>
+        <property name="BuildTexture/texture_type" value="2"/>
+        <property name="BuildTexture/transfer_texture" value="false"/>
+        <property name="BuildTexture/workitem_size_cameras" value="20"/>
+      </meta>
+    </texture>
+    <texture id="3" type="displacement" active="true">
+      <page path="texture3.tif" id="0"/>
+      <meta>
+        <property name="BuildTexture/blending_mode" value="3"/>
+        <property name="BuildTexture/duration" value="2.703"/>
+        <property name="BuildTexture/fill_holes" value="false"/>
+        <property name="BuildTexture/ghosting_filter" value="true"/>
+        <property name="BuildTexture/max_workgroup_size" value="100"/>
+        <property name="BuildTexture/ram_used" value="795500544"/>
+        <property name="BuildTexture/source_model" value="3"/>
+        <property name="BuildTexture/texture_size" value="4096"/>
+        <property name="BuildTexture/texture_type" value="5"/>
+        <property name="BuildTexture/transfer_texture" value="false"/>
+        <property name="BuildTexture/workitem_size_cameras" value="20"/>
+      </meta>
+    </texture>
+  </textures>
+  <params>
+    <dataType>uint8</dataType>
+    <bands>
+      <band label="Red"/>
+      <band label="Green"/>
+      <band label="Blue"/>
+    </bands>
+    <color>#ff8080b0</color>
+  </params>
+  <meta>
+    <property name="BuildUV/camera" value="4294967295"/>
+    <property name="BuildUV/duration" value="13.534"/>
+    <property name="BuildUV/mapping_mode" value="1"/>
+    <property name="BuildUV/page_count" value="1"/>
+    <property name="BuildUV/pixel_size" value="7.207123985720591e-05"/>
+    <property name="BuildUV/ram_used" value="38174720"/>
+    <property name="BuildUV/texture_size" value="4096"/>
+    <property name="Info/LastSavedDateTime" value="2025:05:12 19:07:41"/>
+    <property name="Info/LastSavedSoftwareVersion" value="2.2.0.19890"/>
+  </meta>
+</model>

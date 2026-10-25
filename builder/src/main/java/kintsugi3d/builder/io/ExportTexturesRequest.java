@@ -86,11 +86,11 @@ public class ExportTexturesRequest implements ProgressMonitoredImageBasedGraphic
             {
                 Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
             }
-            catch (IOException e)
+            catch (IOException|RuntimeException e)
             {
-                LOG.error("Error launching Kintsugi 3D Viewer", e);
+                Global.state().getProjectModel().error("Error launching Kintsugi 3D Viewer", e);
             }
-            callback.run();
         }
+        callback.run();
     }
 }

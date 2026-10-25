@@ -121,7 +121,7 @@ public interface ImageBasedRenderable<ContextType extends Context<ContextType>>
      * Gets the ID of the project instance.
      * @return
      */
-    String getID();
+    String getInternalName();
 
     /**
      * Gets the resources used by this project instance.

@@ -64,6 +64,8 @@ public class JavaFXApplication extends Application
 
     private static String[] arguments;
 
+    private static boolean initialized = false;
+
     // Keep a reference to the main window to inject the canvas when the rendering thread has loaded
     private static MainWindowController mainWindowController;
 
@@ -83,6 +85,11 @@ public class JavaFXApplication extends Application
     public static void setArgs(String[] args)
     {
         arguments = args;
+    }
+
+    public static boolean isInitialized()
+    {
+        return initialized;
     }
 
     private static class StageSynchronization implements SynchronizedWindow
@@ -133,7 +140,7 @@ public class JavaFXApplication extends Application
             FutureTask<Boolean> confirmationTask = new FutureTask<>(() ->
             {
                 Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "If you click OK, any unsaved changes will be lost.");
-                confirmation.setTitle("Exit Confirmation");
+                confirmation.setTitle("Exit?");
                 confirmation.setHeaderText("Are you sure you want to exit?");
                 return confirmation.showAndWait()
                     .filter(Predicate.isEqual(ButtonType.OK))
@@ -167,11 +174,12 @@ public class JavaFXApplication extends Application
     {
         //noinspection AssignmentToStaticFieldFromInstanceMethod
         state = JavaFXState.create();
-
+        initialized = true;
         // Inject dependency for global state.
         MultithreadState multithreadState = MultithreadState.getInstance();
-        GlobalBootstrap.initialize(multithreadState,
-            multithreadState.getLoadOptionsModel(), multithreadState.getProjectModel());
+        GlobalBootstrap.initialize(multithreadState, multithreadState.getLoadOptionsModel());
+
+        FrontendIO.initialize();
 
 //        for (String f : Font.getFamilies())
 //        {
@@ -401,21 +409,33 @@ public class JavaFXApplication extends Application
         });
     }
 
+    /**
+     * No-op if there's no renderable loaded.
+     */
     private static void clearMainViewSafeRegion()
     {
-                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
-        if (instance != null)
+        if (Global.io().hasLoadedRenderable())
         {
-            instance.clearSafeRegionPadding();
+            ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
+            if (instance != null)
+            {
+                instance.clearSafeRegionPadding();
+            }
         }
     }
 
+    /**
+     * No-op if there's no renderable loaded.
+     */
     private static void refreshMainViewSafeRegion(double carouselHeight)
     {
-                ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
-        if (instance != null)
+        if (Global.io().hasLoadedRenderable())
         {
-            instance.setSafeRegionPadding(0, 0, 0, (int)Math.round(carouselHeight));
+            ImageBasedRenderable<?> instance = Global.io().getMainRenderable();
+            if (instance != null)
+            {
+                instance.setSafeRegionPadding(0, 0, 0, (int) Math.round(carouselHeight));
+            }
         }
     }
 

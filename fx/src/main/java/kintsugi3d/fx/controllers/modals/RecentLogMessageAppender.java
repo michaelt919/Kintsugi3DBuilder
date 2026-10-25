@@ -89,19 +89,30 @@ public final class RecentLogMessageAppender extends AbstractAppender
             if (messages.size() >= MAX_MESSAGES)
             {
                 // Removing from the ObservableList needs to happen on the JavaFX thread.
-                Platform.runLater(() ->
+                try
                 {
-                    synchronized (messages)
+                    Platform.runLater(() ->
                     {
-                        // Make sure there is still something to remove.
-                        // (If multiple messages came in between JavaFX frames they may have all triggered this
-                        // but there might not be that many messages to remove.)
-                        if (messages.size() >= MAX_MESSAGES)
+                        synchronized (messages)
                         {
-                            messages.remove(0, MESSAGE_TRUNC_SIZE);
+                            // Make sure there is still something to remove.
+                            // (If multiple messages came in between JavaFX frames they may have all triggered this
+                            // but there might not be that many messages to remove.)
+                            if (messages.size() >= MAX_MESSAGES)
+                            {
+                                messages.remove(0, MESSAGE_TRUNC_SIZE);
+                            }
                         }
+                    });
+                }
+                // TODO: Duktape fix to get around hardcoded JavaFX
+                catch (IllegalStateException e)
+                {
+                    if (messages.size() >= MAX_MESSAGES)
+                    {
+                        messages.remove(0, MESSAGE_TRUNC_SIZE);
                     }
-                });
+                }
             }
         }
 

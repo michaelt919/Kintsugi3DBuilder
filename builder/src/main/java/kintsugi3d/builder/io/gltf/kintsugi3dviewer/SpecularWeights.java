@@ -15,13 +15,20 @@ import de.javagl.jgltf.impl.v2.TextureInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 public class SpecularWeights
 {
     private int stride = 4;
 
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Used by glTF exporter, via reflection presumably
+    // Used by glTF exporter, via reflection presumably
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final Collection<TextureInfo> textures = new ArrayList<>(8);
+
+    public Collection<TextureInfo> getTextures()
+    {
+        return Collections.unmodifiableCollection(textures);
+    }
 
     public void addTexture(TextureInfo texture)
     {

@@ -70,7 +70,7 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
 
     private VertexBuffer<ContextType> rectangleVertices;
 
-    private final String id;
+    private final String internalName;
 
     private final SceneModel sceneModel;
 
@@ -100,9 +100,9 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
 
     private boolean loaded = false;
 
-    ImageBasedRenderingEngine(String id, ContextType context, Builder<ContextType> resourceBuilder)
+    ImageBasedRenderingEngine(String internalName, ContextType context, Builder<ContextType> resourceBuilder)
     {
-        this.id = id;
+        this.internalName = internalName;
         this.context = context;
         this.resourceBuilder = resourceBuilder;
         this.managedResources = true;
@@ -110,9 +110,9 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
         this.sceneViewportModel = createSceneViewportModel(this.sceneModel);
     }
 
-    ImageBasedRenderingEngine(String id, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
+    ImageBasedRenderingEngine(String internalName, ContextType context, GraphicsResourcesImageSpace<ContextType> resources)
     {
-        this.id = id;
+        this.internalName = internalName;
         this.context = context;
         this.resources = resources;
         this.resourceBuilder = null;
@@ -129,9 +129,9 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public String getID()
+    public String getInternalName()
     {
-        return id;
+        return internalName;
     }
 
     public EventListeners<ProjectLoadedListener> projectLoadedListeners()
@@ -246,12 +246,12 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
         }
         catch (UserCancellationException e)
         {
-            LOG.error("User cancelled operation while initializing ProjectRenderingEngine:", e);
+            LOG.info("User cancelled operation while initializing ProjectRenderingEngine:", e);
             this.close();
             if (this.progressMonitor != null)
             {
                 this.progressMonitor.cancelComplete(e);
-        }
+            }
             throw new InitializationException(e);
         }
         catch (RuntimeException|IOException e)
@@ -574,9 +574,9 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
     @Override
     public String toString()
     {
-        return this.id.length() > 32
-                ? String.format("...%s", this.id.substring(this.id.length() - 31))
-                : this.id;
+        return this.internalName.length() > 32
+                ? String.format("...%s", this.internalName.substring(this.internalName.length() - 31))
+                : this.internalName;
     }
 
     @Override
@@ -644,6 +644,7 @@ public class ImageBasedRenderingEngine<ContextType extends Context<ContextType>>
                 ModelExporter exporter = ModelExporter.fromVertexGeometry(getGeometry(), transform);
                 settings.applyToExporter(exporter, textureResources, filename);
 
+                outputDirectory.mkdirs();
                 File modelFile = new File(outputDirectory, filename);
 
                 if (settings.shouldSaveTextures())

@@ -42,15 +42,22 @@ public final class ExceptionHandling
 
     private static void showAlert(String message, Throwable e)
     {
-        Platform.runLater(() ->
+        try
         {
+            Platform.runLater(() ->
+            {
             ButtonType ok = new ButtonType("OK", ButtonData.CANCEL_CLOSE);
             ButtonType showLog = new ButtonType("Show Log", ButtonData.YES);
-            Alert alert = new Alert(AlertType.NONE,
-                String.format("%s:\n%s\nSee the log for more info.", message, e.getMessage()), ok, showLog);
-            ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
+                Alert alert = new Alert(AlertType.NONE,
+                    String.format("%s:\n%s\nSee the log for more info.", message, e.getMessage()), ok, showLog);
+                ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(
                 event -> ExperienceManager.getInstance().getExperience(ExperienceManager.LOG).tryOpen());
-            alert.show();
-        });
+                alert.show();
+            });
+        }
+        catch (IllegalStateException ex)
+        {
+            System.err.println("Error: " + ex.getMessage());
+        }
     }
 }

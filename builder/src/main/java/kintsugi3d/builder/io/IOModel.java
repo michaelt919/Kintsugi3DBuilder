@@ -28,6 +28,7 @@ import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
 import kintsugi3d.gl.material.ImportedMaterial;
 import kintsugi3d.gl.util.ImageHelper;
 import kintsugi3d.util.EncodableColorImage;
@@ -61,12 +62,13 @@ public class IOModel implements IO
 
     private IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
+    private final CancellationMonitor cancellationMonitor = new CancellationMonitor();
 
     // Set defaults just in case the load options model is never set (i.e. testing)
     private ReadonlyLoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
 
-    private File loadedProjectFile;
-    private File loadedViewSetFile;
+    private File projectFile;
+    private File viewSetFile;
 
     private final EventDispatcher<ProjectOpenedListener, ProjectOpenedEvent> projectOpened
         = new EventDispatcher<>(ProjectOpenedListener::onProjectOpened);
@@ -74,6 +76,11 @@ public class IOModel implements IO
         = new EventDispatcher<>(ProjectSavedListener::onProjectSaved);
     private final EventDispatcher<ProjectClosedListener, ProjectClosedEvent> projectClosed
         = new EventDispatcher<>(ProjectClosedListener::onProjectClosed);
+
+    public IOModel()
+    {
+        progressMonitor.addSubMonitor(cancellationMonitor);
+    }
 
     public ProgressMonitor getProgressMonitor()
     {
@@ -158,15 +165,21 @@ public class IOModel implements IO
     }
 
     @Override
-    public File getLoadedViewSetFile()
+    public File getViewSetFile()
     {
-        return loadedViewSetFile;
+        return viewSetFile;
     }
 
     @Override
-    public File getLoadedProjectFile()
+    public File getProjectFile()
     {
-        return loadedProjectFile;
+        return projectFile;
+    }
+
+    @Override
+    public boolean isProjectOpen()
+    {
+        return projectFile != null;
     }
 
     private void load(Runnable loader)
@@ -176,7 +189,7 @@ public class IOModel implements IO
 
     private void load(String projectName, Runnable loader)
     {
-        unload(() ->
+        closeProject(() ->
         {
             projectOpened.notify(new ProjectOpenedEvent(projectName));
             new Thread(loader, "Loading Thread").start();
@@ -184,34 +197,38 @@ public class IOModel implements IO
     }
 
     @Override
-    public void loadFromLooseFiles(File newProjectFile, String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
+    public void loadFromLooseFiles(File newProjectFile, String internalName, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
         load(() ->
         {
             try
             {
-                this.handler.loadFromLooseFiles(newProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+                this.handler.loadFromLooseFiles(newProjectFile, internalName, xmlFile, viewSetLoadOptions, loadOptionsModel);
             }
             catch (Exception e)
             {
+                LOG.error("loadFromLooseFiles failed", e);
                 closeProject();
+                progressMonitor.fail(e);
             }
         });
     }
 
     @Override
-    public void hotSwapLooseFiles(String id, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
+    public void hotSwapLooseFiles(String internalName, File xmlFile, ViewSetLoadOptions viewSetLoadOptions)
     {
         load(() ->
         {
             try
             {
                 viewSetLoadOptions.uuid = getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null;
-                this.handler.loadFromLooseFiles(loadedProjectFile, id, xmlFile, viewSetLoadOptions, loadOptionsModel);
+                this.handler.loadFromLooseFiles(projectFile, internalName, xmlFile, viewSetLoadOptions, loadOptionsModel);
             }
             catch (Exception e)
             {
+                LOG.error("hotSwapLooseFiles failed", e);
                 closeProject();
+                progressMonitor.fail(e);
             }
         });
     }
@@ -227,7 +244,9 @@ public class IOModel implements IO
             }
             catch (Exception e)
             {
+                LOG.error("loadFromMetashapeModel failed", e);
                 closeProject();
+                progressMonitor.fail(e);
             }
         });
     }
@@ -276,8 +295,8 @@ public class IOModel implements IO
             {
                 try
                 {
-                    this.loadedProjectFile = projectFile;
-                    this.loadedViewSetFile = vsetFile;
+                    this.projectFile = projectFile;
+                    this.viewSetFile = vsetFile;
 
                     RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
@@ -294,14 +313,22 @@ public class IOModel implements IO
                         this.handler.loadFromVSETFile(vsetFile.getPath(), vsetFile, vsetFile.getParentFile(), loadOptionsModel);
                     }
                 }
+                catch (UserCancellationException e)
+                {
+                    LOG.info("Project load cancelled", e);
+                    closeProject();
+                    progressMonitor.cancelComplete(e);
+                }
                 catch (Exception e)
                 {
                     LOG.error("Error loading project", e);
                     closeProject();
+                    progressMonitor.fail(e);
                 }
                 catch (Error e)
                 {
                     LOG.error("Error loading project", e);
+                    progressMonitor.fail(e);
                     //noinspection ProhibitedExceptionThrown
                     throw e;
                 }
@@ -317,7 +344,7 @@ public class IOModel implements IO
         ViewSet viewSet = getLoadedViewSet();
         setViewsetDirectories(projectFile, viewSet);
 
-        this.progressMonitor.setStage(0, "Preparing project...");
+        this.progressMonitor.setStage(0, "Saving project...");
         this.progressMonitor.setFinishingUpText("This shouldn't take long...");
 
         copyMasks();
@@ -333,7 +360,7 @@ public class IOModel implements IO
         {
             viewSet.setRootDirectory(projectFile.getParentFile());
             this.handler.saveToVSETFile(projectFile);
-            this.loadedViewSetFile = projectFile;
+            this.viewSetFile = projectFile;
         }
         else
         {
@@ -341,12 +368,12 @@ public class IOModel implements IO
 
             File vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
             this.handler.saveToVSETFile(vsetFile);
-            this.loadedViewSetFile = vsetFile;
+            this.viewSetFile = vsetFile;
 
             saveXMLProject(projectFile, vsetFile);
         }
 
-        this.loadedProjectFile = projectFile;
+        this.projectFile = projectFile;
         this.projectSaved.notify(new ProjectSavedEvent(projectFile.getName()));
 
         // Export glTF for Kintsugi 3D Viewer even if not requested
@@ -359,6 +386,8 @@ public class IOModel implements IO
 
         // Add to recent files
         RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
+
+        this.progressMonitor.setStage(1, "Project saved.");
     }
 
     @Override
@@ -401,7 +430,8 @@ public class IOModel implements IO
             Element rootElement = document.getDocumentElement();
 
             Element vsetElement = document.createElement("ViewSet");
-            vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
+            vsetElement.setAttribute("src", projectFile.getAbsoluteFile().getParentFile().toPath().toAbsolutePath()
+                .relativize(vsetFile.toPath().toAbsolutePath()).toString());
             rootElement.appendChild(vsetElement);
 
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -424,7 +454,7 @@ public class IOModel implements IO
         File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
-        if (Objects.equals(loadedViewSetFile, projectFile)) // Saved as a VSET
+        if (Objects.equals(viewSetFile, projectFile)) // Saved as a VSET
         {
             viewSet.setRootDirectory(projectFile.getParentFile());
         }
@@ -487,20 +517,19 @@ public class IOModel implements IO
     @Override
     public void closeProject()
     {
-        unload();
+        this.closeProject(() -> {});
     }
 
-    private void unload()
+    @Override
+    public void closeProject(Runnable onCloseComplete)
     {
-        this.unload(() -> {});
-    }
-
-    private void unload(Runnable onUnloadComplete)
-    {
-        loadedViewSetFile = null;
-        loadedProjectFile = null;
-        projectClosed.notify(new ProjectClosedEvent());
-        this.handler.unload(onUnloadComplete);
+        cancellationMonitor.requestCancellation(() ->
+        {
+            viewSetFile = null;
+            projectFile = null;
+            projectClosed.notify(new ProjectClosedEvent());
+            this.handler.unload(onCloseComplete);
+        });
     }
 
     @Override
@@ -734,7 +763,7 @@ public class IOModel implements IO
             }
             catch (IOException e)
             {
-                LOG.error("Could not copy {} texture from {}.", texName, originalFile);
+                LOG.warn("Could not copy {} texture from {}.", texName, originalFile);
             }
         }
     }
