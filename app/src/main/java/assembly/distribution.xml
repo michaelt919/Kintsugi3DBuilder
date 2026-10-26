@@ -18,7 +18,11 @@
     </formats>
     <files>
         <file>
-            <source>Kintsugi3D-icon.png</source>
+            <source>${project.basedir}/Kintsugi3D.ico</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>${maven.multiModuleProjectDirectory}/Kintsugi3D-icon.png</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>
@@ -36,7 +40,7 @@
     </files>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/shaders</directory>
+            <directory>${maven.multiModuleProjectDirectory}/shaders</directory>
             <outputDirectory>shaders</outputDirectory>
         </fileSet>
         <fileSet>
@@ -44,14 +48,14 @@
             <outputDirectory>jre</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/bin</directory>
+            <directory>${maven.multiModuleProjectDirectory}/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <includes>
                 <include>**/*windows.exe</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/scripts</directory>
+            <directory>${maven.multiModuleProjectDirectory}/scripts</directory>
             <outputDirectory>scripts</outputDirectory>
         </fileSet>
     </fileSets>

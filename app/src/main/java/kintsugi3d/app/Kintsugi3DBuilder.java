@@ -66,9 +66,12 @@ public final class Kintsugi3DBuilder
 
         JavaFXApplication.setArgs(args);
 
-        File stderrFileName = new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(),
+        File logDirectory = ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile();
+        File stderrFileName = new File(logDirectory,
             String.format("Kintsugi3DBuilder-%s-standard-error.log",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss").format(LocalDateTime.now())));
+
+        logDirectory.mkdirs();
 
         if (GRAPHICS_WINDOW_ENABLED)
         {

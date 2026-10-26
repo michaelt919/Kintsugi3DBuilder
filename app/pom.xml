@@ -91,7 +91,7 @@
                                 https://api.adoptium.net/v3/binary/latest/${java.version}/ga/${jre.os}/${jre.arch}/jre/hotspot/normal/eclipse
                             </url>
                             <outputDirectory>
-                                ../target
+                                ${project.build.directory}
                             </outputDirectory>
                             <outputFileName>jre.tar.gz</outputFileName>
                         </configuration>
@@ -108,7 +108,7 @@
                                 https://github.com/UWStout/Kintsugi3DViewer/releases/download/v${viewer.version}/Kintsugi3DViewer-${viewer.os}.zip
                             </url>
                             <outputDirectory>
-                                ../target
+                                ${project.build.directory}
                             </outputDirectory>
                             <outputFileName>Kintsugi3DViewer.zip</outputFileName>
                         </configuration>
@@ -249,7 +249,7 @@
                                         <argument>${project.build.directory}</argument>
                                         <argument>${project.build.directory}/${project.artifactId}-${project.version}-distribution-macos.zip</argument>
                                         <argument>${project.build.directory}/${project.artifactId}-${project.version}</argument>
-                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-macos.dmg</argument>
+                                        <argument>${project.build.directory}/${release-basename}-${project.version}-macos.dmg</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -309,9 +309,9 @@
                                 <goals><goal>launch4j</goal></goals>
                                 <configuration>
                                     <headerType>gui</headerType>
-                                    <outfile>${project.build.directory}/Kintsugi3DBuilder.exe</outfile>
+                                    <outfile>${project.build.directory}/${release-basename}.exe</outfile>
                                     <jar>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</jar>
-                                    <icon>../Kintsugi3D.ico</icon>
+                                    <icon>${project.basedir}/Kintsugi3D.ico</icon>
                                     <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
                                     <chdir>.</chdir>
                                     <stayAlive>true</stayAlive>
@@ -343,6 +343,30 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- Unzip the distribution.zip for bundling into the NSIS installer -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>unpack-distribution</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <unzip
+                                                src="${project.build.directory}/${project.artifactId}-${project.version}-distribution.zip"
+                                                dest="${project.build.directory}/distribution">
+                                            <cutdirsmapper dirs="1"/>
+                                        </unzip>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.digitalmediaserver</groupId>
                         <artifactId>nsis-maven-plugin</artifactId>
@@ -355,8 +379,8 @@
                                 <id>build-windows-installer</id>
                                 <phase>install</phase>
                                 <configuration>
-                                    <scriptFile>installer.nsi</scriptFile>
-                                    <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
+                                    <scriptFile>${project.basedir}/installer.nsi</scriptFile>
+                                    <outputFile>${release-basename}-${project.version}-setup.exe</outputFile>
                                 </configuration>
                                 <goals>
                                     <goal>generate-headerfile</goal>

@@ -143,6 +143,7 @@
         <java.version>11</java.version>
         <viewer.version>1.7.0</viewer.version>
         <usdz-exporter.version>1.2.2</usdz-exporter.version>
+        <release-basename>Kintsugi3DBuilder</release-basename>
     </properties>
     <profiles>
         <profile>
