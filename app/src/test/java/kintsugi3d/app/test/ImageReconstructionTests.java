@@ -968,7 +968,7 @@ class ImageReconstructionTests
 
             GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
             DefaultSettings.applyGlobalDefaults(settings);
-            SpecularFitSettings specularFitSettings = new SpecularFitSettings(512, 512);
+            SpecularFitSettings specularFitSettings = new SpecularFitSettings(512, 512, 256, 256);
             BasisOptimizationSettings basisOptimizationSettings = new BasisOptimizationSettings();
 
             // Perform the specular fit
@@ -1060,7 +1060,7 @@ class ImageReconstructionTests
 
         GeneralSettingsModel settings = new SimpleGeneralSettingsModel();
         DefaultSettings.applyGlobalDefaults(settings);
-        SpecularFitSettings specularFitSettings = new SpecularFitSettings(512, 512);
+        SpecularFitSettings specularFitSettings = new SpecularFitSettings(512, 512, 256, 256);
         specularFitSettings.getImageCacheSettings().setCacheParentDirectory(new File (outputDirectory, "cache"));
         BasisOptimizationSettings basisOptimizationSettings = new BasisOptimizationSettings();
 

@@ -21,10 +21,6 @@
 
     <packaging>jar</packaging>
 
-    <properties>
-        <surefire.argLine></surefire.argLine>
-    </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -169,6 +165,18 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Configure which test classes should run. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.6</version>
+                <configuration>
+                    <includes>
+                        <include>**/SmokeTest.class</include>
+                    </includes>
+                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                </configuration>
+            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -191,41 +199,12 @@
     </build>
     <profiles>
         <profile>
-            <!-- Surefire can't be used to run JUnit tests on MacOS,
-            since MacOS requires OpenGL to be on the first thread. -->
-            <id>non-macos</id>
-            <activation>
-                <os>
-                    <family>!mac</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.5.6</version>
-                        <configuration>
-                            <includes>
-                                <include>**/SmokeTest.class</include>
-                            </includes>
-                            <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
-                            <argLine>${surefire.argLine}</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
             <id>macos</id>
             <activation>
                 <os>
                     <family>mac</family>
                 </os>
             </activation>
-            <properties>
-                <surefire.argLine>-XstartOnFirstThread</surefire.argLine>
-            </properties>
             <build>
                 <!-- MacOS: Needs a Maven assembly for MacOS and then the disk image script -->
                 <plugins>
@@ -293,6 +272,17 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- Surefire can't be used to run JUnit tests on MacOS,
+                        since MacOS requires OpenGL to be on the first thread.
+                        Need to explicitly skip tests on MacOS otherwise they run by default. -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.5.6</version>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

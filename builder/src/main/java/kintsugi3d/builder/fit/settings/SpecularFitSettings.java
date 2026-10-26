@@ -38,15 +38,15 @@ public class SpecularFitSettings implements ReadonlySpecularFitSettings
      * @param width The width, in pixels, of the textures to be generated.
      * @param height The height, in pixels, of the textures to be generated.
      */
-    public SpecularFitSettings(int width, int height)
+    public SpecularFitSettings(int width, int height, int sampledSize, int subdivSize)
     {
         this.textureResolution = new TextureResolution(width, height);
 
         imageCacheSettings.setTextureWidth(textureResolution.width);
         imageCacheSettings.setTextureHeight(textureResolution.height);
         imageCacheSettings.setTextureSubdiv( // TODO expose this in the interface
-            (int)Math.ceil(Math.max(textureResolution.width, textureResolution.height) / 256.0));
-        imageCacheSettings.setSampledSize(256); // TODO expose this in the interface
+            (int)Math.ceil((double)Math.max(textureResolution.width, textureResolution.height) / (double)subdivSize));
+        imageCacheSettings.setSampledSize(sampledSize); // TODO expose this in the interface
     }
 
     @Override

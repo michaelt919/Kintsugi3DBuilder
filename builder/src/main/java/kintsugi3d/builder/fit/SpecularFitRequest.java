@@ -71,7 +71,7 @@ public final class SpecularFitRequest implements ProgressMonitoredImageBasedGrap
      */
     public static SpecularFitRequest create(String... args)
     {
-        SpecularFitSettings params = new SpecularFitSettings(2048, 2048);
+        SpecularFitSettings params = new SpecularFitSettings(2048, 2048, 256, 256);
         File outputDirectory = new File(args[2]);
         return new SpecularFitRequest(params, new BasisOptimizationSettings(), outputDirectory);
     }
@@ -94,7 +94,9 @@ public final class SpecularFitRequest implements ProgressMonitoredImageBasedGrap
 
         // Start with texture size
         int textureSize = projectSettings.getInt("textureSize");
-        SpecularFitSettings settings = new SpecularFitSettings(textureSize, textureSize);
+        int sampledSize = projectSettings.getInt("textureSampledSize");
+        int subdivSize = projectSettings.getInt("textureSubdivSize");
+        SpecularFitSettings settings = new SpecularFitSettings(textureSize, textureSize, sampledSize, subdivSize);
 
         // General optimization settings
         settings.setConvergenceTolerance(projectSettings.getFloat("convergenceTolerance"));

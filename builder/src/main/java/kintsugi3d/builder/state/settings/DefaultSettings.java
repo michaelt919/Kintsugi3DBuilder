@@ -116,6 +116,8 @@ public final class DefaultSettings
 
         // Specular fit settings
         settingsModel.createNumericSetting("textureSize", 2048);
+        settingsModel.createNumericSetting("textureSampledSize", 256);
+        settingsModel.createNumericSetting("textureSubdivSize", 256);
         settingsModel.createNumericSetting("basisCount", 8);
         settingsModel.createNumericSetting("specularMinWidthFrac", 0.2f);
         settingsModel.createNumericSetting("specularMaxWidthFrac", 1.0f);

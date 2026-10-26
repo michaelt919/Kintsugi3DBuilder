@@ -31,6 +31,7 @@ import kintsugi3d.builder.io.usdz.USDZMetallicExporterFactory;
 import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.rendering.Rendering;
+import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.util.ApplicationFolders;
 import kintsugi3d.builder.util.logging.LogMessage;
 import kintsugi3d.builder.util.logging.LogMessageListener;
@@ -66,13 +67,16 @@ public class SmokeTest
     private static final Logger LOG = LoggerFactory.getLogger(SmokeTest.class);
     private static final File TEST_OUTPUT_DIR = new File("test-output");
 
+    private static final int TEXTURE_RESOLUTION = 256;
+    private static final int TEXTURE_SAMPLED_SIZE = 128;
+    private static final int TEXTURE_SUBDIV_SIZE = 128;
+
     // Can be disabled i.e. for MacOS testing where rendering has to be on first thread.
     private static boolean renderThreadRequired = true;
 
-    private static final AtomicReference<Throwable> LOG_ERROR = new AtomicReference<>();;
+    private static final AtomicReference<Throwable> LOG_ERROR = new AtomicReference<>();
     private static final TestingState TESTING_STATE = new TestingState();
 
-    private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
     private static final AtomicBoolean LOAD_FINISHED = new AtomicBoolean(false);
     private static final AtomicBoolean EXPORT_FINISHED = new AtomicBoolean(false);
     private static final AtomicInteger PROCESSED_COUNTER = new AtomicInteger(0);
@@ -93,7 +97,8 @@ public class SmokeTest
         @Override
         public void newLogMessage(LogMessage logMessage)
         {
-            if (logMessage.getLogLevel() == Level.ERROR)
+            // Only record errors, and only note the first error in a run.
+            if (logMessage.getLogLevel() == Level.ERROR && LOG_ERROR.get() == null)
             {
                 LOG_ERROR.set(new AssertionError("Error found in log message!", logMessage.getThrown()));
             }
@@ -158,6 +163,7 @@ public class SmokeTest
     {
         // Clear errors and warnings for next test.
         TESTING_STATE.clearErrorsAndWarnings();
+        LOG_ERROR.set(null);
 
         // Make sure there is no project open.
         if (Global.io().getLoadedViewSet() != null)
@@ -199,9 +205,9 @@ public class SmokeTest
         });
     }
 
-    private void waitFor(BooleanSupplier finished, String operation)
+    private static void waitFor(BooleanSupplier finished, String operation)
     {
-        List<ErrorMessage> errorsLive = this.TESTING_STATE.getErrors();
+        List<ErrorMessage> errorsLive = TESTING_STATE.getErrors();
         int startingErrorCount = errorsLive.size();
         long start = System.nanoTime();
         while (!finished.getAsBoolean())
@@ -224,12 +230,12 @@ public class SmokeTest
         }
     }
 
-    private void waitFor(AtomicBoolean finished, String operation)
+    private static void waitFor(AtomicBoolean finished, String operation)
     {
         waitFor(finished::get, operation);
     }
 
-    private void waitForLoad()
+    private static void waitForLoad()
     {
         waitFor(LOAD_FINISHED, "load");
 
@@ -238,7 +244,7 @@ public class SmokeTest
         waitForNextFrame();
     }
 
-    private void waitForExport()
+    private static void waitForExport()
     {
         waitFor(EXPORT_FINISHED, "export");
     }
@@ -265,7 +271,7 @@ public class SmokeTest
         }
     }
 
-    private void runSpecularFit()
+    private static void runSpecularFit()
     {
         // Initialize to Integer.MAX_VALUE to prevent early termination
         // while waiting for the initial counts to be determined.
@@ -279,7 +285,10 @@ public class SmokeTest
             originalProcessedCount.set(PROCESSED_COUNTER.get());
             originalSaveCount.set(SAVE_COUNTER.get());
 
-            Global.io().getLoadedViewSet().getProjectSettings().set("textureSize", 512);
+            GeneralSettingsModel projectSettings = Global.io().getLoadedViewSet().getProjectSettings();
+            projectSettings.set("textureSize", TEXTURE_RESOLUTION);
+            projectSettings.set("textureSampledSize", TEXTURE_SAMPLED_SIZE);
+            projectSettings.set("textureSampledSize", TEXTURE_SUBDIV_SIZE);
             SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
             Rendering.getRequestQueue().addGraphicsRequest(request);
         });
@@ -287,9 +296,12 @@ public class SmokeTest
         waitFor(() -> PROCESSED_COUNTER.get() > originalProcessedCount.get()
                 && SAVE_COUNTER.get() > originalSaveCount.get(),
             "processing");
+
+        // Make sure the process has completely finished before proceeding.
+        waitForNextFrame();
     }
 
-    private void saveProject() throws IOException
+    private static void saveProject() throws IOException
     {
         int originalSaveCount = SAVE_COUNTER.get();
         Global.io().saveProject();
@@ -315,7 +327,7 @@ public class SmokeTest
         assertEquals(0, numDisabledCameras);
     }
 
-    private void assertNoErrors()
+    private static void assertNoErrors()
     {
         // Check for user-facing (UI) errors and warnings
         int numErrors = TESTING_STATE.getErrors().size();
@@ -327,11 +339,13 @@ public class SmokeTest
         Throwable failure = LOG_ERROR.get();
         if (failure != null)
         {
+            // Reset the error
+            LOG_ERROR.set(null);
             fail(failure.getMessage(), failure);
         }
     }
 
-    private void verifyProject(int expected)
+    private static void verifyProject(int expected)
     {
         assertProjectLoaded();
         assertCameras(expected);
@@ -672,7 +686,7 @@ public class SmokeTest
         verifyProject(158);
     }
 
-    private void testFitLooseFiles(String cameras, String geometry, String imageDirectory, String testName)
+    private static void testFitLooseFiles(String cameras, String geometry, String imageDirectory, String testName)
         throws URISyntaxException
     {
         ViewSetLoadOptions viewSetLoadOptions = new ViewSetLoadOptions();
@@ -691,7 +705,7 @@ public class SmokeTest
         runSpecularFit();
     }
     
-    private void testFitPsx(File psxFile, String imageDirectory, String testName)
+    private static void testFitPsx(File psxFile, String imageDirectory, String testName)
         throws URISyntaxException
     {
         MetashapeDocument doc = new MetashapeDocument(psxFile.getAbsolutePath());
@@ -710,7 +724,7 @@ public class SmokeTest
         runSpecularFit();
     }
 
-    private void testFitReload(File projectFile, String imageDirectory, ReloadMode mode)
+    private static void testFitReload(File projectFile, String imageDirectory, ReloadMode mode)
         throws URISyntaxException
     {
         // --- FIRST LOAD ---
@@ -742,7 +756,7 @@ public class SmokeTest
         }
     }
 
-    private void testFitExport(
+    private static void testFitExport(
         File projectFile, String testName, String imageDirectory, MaterialExporterFactory exporterFactory)
         throws URISyntaxException
     {
@@ -772,7 +786,7 @@ public class SmokeTest
         waitForExport();
     }
 
-    private void testFitLightCalibration(File projectFile, String imageDirectory)
+    private static void testFitLightCalibration(File projectFile, String imageDirectory)
         throws URISyntaxException, IOException
     {
         // --- LOAD ---
