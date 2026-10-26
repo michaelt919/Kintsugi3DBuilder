@@ -61,7 +61,7 @@ public class IOModel implements IO
 {
     private static final Logger LOG = LoggerFactory.getLogger(IOModel.class);
 
-    private IOHandler handler;
+    private volatile IOHandler handler;
     private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
     private final CancellationMonitor cancellationMonitor = new CancellationMonitor();
 
