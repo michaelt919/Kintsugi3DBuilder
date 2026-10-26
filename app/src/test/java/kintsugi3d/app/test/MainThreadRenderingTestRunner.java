@@ -17,15 +17,19 @@ import kintsugi3d.gl.interactive.InitializationException;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
-public final class MacOSTestRunner
+public final class MainThreadRenderingTestRunner
 {
-    private MacOSTestRunner()
+    private static final Logger LOG = LoggerFactory.getLogger(MainThreadRenderingTestRunner.class);
+
+    private MainThreadRenderingTestRunner()
     {
     }
 
@@ -39,23 +43,44 @@ public final class MacOSTestRunner
         // Start thread to run JUnit tests
         new Thread(() ->
         {
-            var request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(selectClass(SmokeTest.class))
-                .build();
-
-            try (var session = LauncherFactory.openSession())
+            //noinspection OverlyBroadCatchBlock
+            try
             {
-                var launcher = session.getLauncher();
-                launcher.registerTestExecutionListeners(listener);
-                launcher.execute(request);
-            }
+                LOG.debug("Started JUnit Test Thread.");
 
-            Rendering.requestTerminate();
+                var request = LauncherDiscoveryRequestBuilder.request()
+                    .selectors(selectClass(SmokeTest.class))
+                    .build();
+
+                LOG.debug("Trying to open JUnit launcher session.");
+
+                try (var session = LauncherFactory.openSession())
+                {
+                    LOG.debug("JUnit launcher session opened.");
+
+                    var launcher = session.getLauncher();
+                    launcher.registerTestExecutionListeners(listener);
+
+                    LOG.debug("Trying to start JUnit tests.");
+
+                    launcher.execute(request);
+
+                    LOG.debug("JUnit tests complete.");
+                }
+
+                Rendering.requestTerminate();
+            }
+            catch (RuntimeException e)
+            {
+                LOG.error("Error running JUnit tests.", e);
+            }
         },
         "JUnit Test Thread").start();
 
         // Start rendering on the main thread.
         RenderingBootstrap.runProgram(null, false);
+
+        LOG.debug("Rendering loop terminated.");
 
         var summary = listener.getSummary();
         summary.printTo(new PrintWriter(System.out, true, StandardCharsets.UTF_8));
