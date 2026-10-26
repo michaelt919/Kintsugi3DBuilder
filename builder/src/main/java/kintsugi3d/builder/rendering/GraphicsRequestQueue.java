@@ -24,4 +24,6 @@ public interface GraphicsRequestQueue
     void addBackgroundGraphicsRequest(GraphicsRequest request);
 
     void addGraphicsRequest(ProgressMonitoredGraphicsRequest request);
+
+    void clear();
 }

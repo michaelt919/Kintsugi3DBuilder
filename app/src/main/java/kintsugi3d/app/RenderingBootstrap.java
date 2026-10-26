@@ -24,7 +24,6 @@ import kintsugi3d.builder.state.scene.ManipulableViewpointModel;
 import kintsugi3d.builder.state.settings.GeneralSettingsModel;
 import kintsugi3d.builder.state.shader.ActiveShaderModel;
 import kintsugi3d.builder.tools.*;
-import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.builders.framebuffer.DoubleFramebufferFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.DoubleFramebufferObject;
@@ -39,7 +38,6 @@ import kintsugi3d.gl.window.*;
 import kintsugi3d.util.CanvasListener;
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
-import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,30 +58,20 @@ public final class RenderingBootstrap
     // Allows us to pass the scene viewport to JavaFX before it is ready, using a temporary sentinel.
     private static final SceneViewportSafeWrapper SCENE_VIEWPORT_WRAPPER = new SceneViewportSafeWrapper();
 
+    private static boolean started = false;
+
     private RenderingBootstrap()
     {
+    }
+
+    public static boolean isStarted()
+    {
+        return started;
     }
 
     static SceneViewport getSceneViewport()
     {
         return SCENE_VIEWPORT_WRAPPER;
-    }
-
-    public static void preInitialize()
-    {
-        // Allow render thread to modify user interface thread
-        //noinspection AccessOfSystemProperties
-        System.setProperty("glass.disableThreadChecks", "true");
-        // TODO see com.sun.glass.ui.Application.java line 434
-
-        if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
-        {
-            // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
-            Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
-        }
-
-        Configuration.DEBUG.set(true);
-        Configuration.DEBUG_STREAM.set(System.out);
     }
 
     public static void startRenderThread(Stage stage, String... args)
@@ -105,6 +93,8 @@ public final class RenderingBootstrap
                 LOG.error("Error initializing render window:", e);
             }
         }, "OpenGL Rendering Thread").start();
+
+        started = true;
     }
 
     public static void runProgram(String... args) throws InitializationException
@@ -119,6 +109,8 @@ public final class RenderingBootstrap
 
     public static void runProgram(Stage stage, boolean standaloneWindow, String... args) throws InitializationException
     {
+        started = true;
+
         System.getenv();
 
         // Check for and print supported image formats (some are not as easy as you would think)

@@ -169,19 +169,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.6</version>
-                <configuration>
-                    <includes>
-                        <include>**/SmokeTest.class</include>
-                    </includes>
-                    <!-- Make sure tests have access to bin, shaders, scripts -->
-                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
-                    <argLine>${surefire.argLine}</argLine>
-                </configuration>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -203,6 +190,32 @@
         </resources>
     </build>
     <profiles>
+        <profile>
+            <!-- Surefire can't be used to run JUnit tests on MacOS,
+            since MacOS requires OpenGL to be on the first thread. -->
+            <id>non-macos</id>
+            <activation>
+                <os>
+                    <family>!mac</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.5.6</version>
+                        <configuration>
+                            <includes>
+                                <include>**/SmokeTest.class</include>
+                            </includes>
+                            <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                            <argLine>${surefire.argLine}</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>macos</id>
             <activation>
@@ -258,6 +271,24 @@
                                         <argument>${project.build.directory}/${project.artifactId}-${project.version}-distribution-macos.zip</argument>
                                         <argument>${project.build.directory}/${project.artifactId}-${project.version}</argument>
                                         <argument>${project.build.directory}/${project.artifactId}-${project.version}-macos.dmg</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- Workaround to run tests on MacOS -->
+                                <id>run-tests-macos</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/java</executable>
+                                    <classpathScope>test</classpathScope>
+                                    <arguments>
+                                        <argument>-XstartOnFirstThread</argument>
+                                        <argument>-classpath</argument>
+                                        <classpath/>
+                                        <argument>kintsugi3d.app.test.MacOSTestRunner</argument>
                                     </arguments>
                                 </configuration>
                             </execution>

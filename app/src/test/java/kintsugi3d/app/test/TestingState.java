@@ -59,7 +59,7 @@ class TestingState implements Kintsugi3DBuilderState
     @Override
     public ReadonlyObjectPoseModel getObjectModel()
     {
-        return  objectModel;
+        return objectModel;
     }
 
     @Override
@@ -112,5 +112,10 @@ class TestingState implements Kintsugi3DBuilderState
     public List<ErrorMessage> getWarnings()
     {
         return projectModel.getWarnings();
+    }
+
+    public void clearErrorsAndWarnings()
+    {
+        projectModel.clearErrorsAndWarnings();
     }
 }

@@ -19,6 +19,7 @@ import kintsugi3d.builder.io.events.*;
 import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.builder.io.metashape.MetashapeTextures;
 import kintsugi3d.builder.rendering.ImageBasedRenderable;
+import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.resources.project.specular.TextureResources;
 import kintsugi3d.builder.state.shader.ShaderInfo;
 import kintsugi3d.builder.util.ApplicationFolders;
@@ -526,11 +527,17 @@ public class IOModel implements IO
     @Override
     public void closeProject(Runnable onCloseComplete)
     {
+        Rendering.clearQueue();
         cancellationMonitor.requestCancellation(() ->
         {
-            viewSetFile = null;
-            projectFile = null;
-            projectClosed.notify(new ProjectClosedEvent());
+            // Don't bother notifying if there wasn't something open to begin with.
+            if (viewSetFile != null || projectFile != null)
+            {
+                viewSetFile = null;
+                projectFile = null;
+                projectClosed.notify(new ProjectClosedEvent());
+            }
+
             this.handler.unload(onCloseComplete);
         });
     }

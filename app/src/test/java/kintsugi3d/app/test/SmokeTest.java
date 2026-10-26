@@ -18,7 +18,10 @@ import kintsugi3d.builder.core.GlobalBootstrap;
 import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitRequest;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.io.*;
+import kintsugi3d.builder.io.ExportTexturesRequest;
+import kintsugi3d.builder.io.LoadOptionsModel;
+import kintsugi3d.builder.io.SimpleLoadOptionsModel;
+import kintsugi3d.builder.io.ViewSetLoadOptions;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.kintsugi3dviewer.Kintsugi3DViewerExporterFactory;
 import kintsugi3d.builder.io.metashape.MetashapeChunk;
@@ -29,7 +32,6 @@ import kintsugi3d.builder.io.usdz.USDZSpecularExporterFactory;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.rendering.Rendering;
 import kintsugi3d.builder.util.ApplicationFolders;
-import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.builder.util.logging.LogMessage;
 import kintsugi3d.builder.util.logging.LogMessageListener;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -39,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -65,12 +66,14 @@ public class SmokeTest
     private static final Logger LOG = LoggerFactory.getLogger(SmokeTest.class);
     private static final File TEST_OUTPUT_DIR = new File("test-output");
 
-    private AtomicReference<Throwable> observerFailure;
-    private TestingState testingState = new TestingState();
+    // Can be disabled i.e. for MacOS testing where rendering has to be on first thread.
+    private static boolean renderThreadRequired = true;
+
+    private static final AtomicReference<Throwable> LOG_ERROR = new AtomicReference<>();;
+    private static final TestingState TESTING_STATE = new TestingState();
 
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
     private static final AtomicBoolean LOAD_FINISHED = new AtomicBoolean(false);
-    private static final AtomicBoolean CLOSED_FINISHED = new AtomicBoolean(false);
     private static final AtomicBoolean EXPORT_FINISHED = new AtomicBoolean(false);
     private static final AtomicInteger PROCESSED_COUNTER = new AtomicInteger(0);
     private static final AtomicInteger SAVE_COUNTER = new AtomicInteger(0);
@@ -85,20 +88,49 @@ public class SmokeTest
         SECOND_ONLY
     }
 
-    private class TestLogListener implements LogMessageListener
+    private static class TestLogListener implements LogMessageListener
     {
         @Override
         public void newLogMessage(LogMessage logMessage)
         {
             if (logMessage.getLogLevel() == Level.ERROR)
             {
-                observerFailure.set(new AssertionError("Error found in log message!", logMessage.getThrown()));
+                LOG_ERROR.set(new AssertionError("Error found in log message!", logMessage.getThrown()));
             }
         }
     }
 
+    public static boolean isRenderThreadRequired()
+    {
+        return renderThreadRequired;
+    }
+
+    public static void setRenderThreadRequired(boolean renderThreadRequired)
+    {
+        SmokeTest.renderThreadRequired = renderThreadRequired;
+    }
+
+
     @BeforeAll
     static void initialize()
+    {
+        // If the rendering thread is already started (i.e. MacOS requires it to be first thead),
+        // then we don't want to start another one.
+        if (renderThreadRequired)
+        {
+            preRenderThreadInitialize();
+            RenderingBootstrap.startRenderThread(null, false);
+        }
+
+        while (!Global.io().hasValidHandler())
+        {
+            Thread.onSpinWait();
+        }
+
+        setupListeners();
+    }
+
+    public static void preRenderThreadInitialize()
     {
         // Same startup logging as Kintsugi3DBuilder.java
         LOG.debug("Logger initialized");
@@ -107,90 +139,38 @@ public class SmokeTest
 
         // Set system properties, etc. that need to be set before anything touches LWJGL
         // (which could happen indirectly i.e. by loading Kintsugi's matrix math classes)
-        RenderingBootstrap.preInitialize();
-
-        // Instantiate a dummy toolkit so that graphics commands actually get processed.
-        Toolkit.getDefaultToolkit();
-    }
-
-    @BeforeEach
-    void setup()
-    {
-        // Initialize testing objects
-        observerFailure = new AtomicReference<>();
-
-        // Create testing State
-        testingState = new TestingState();
+        Configuration.DEBUG.set(true);
+        Configuration.DEBUG_STREAM.set(System.out);
 
         // Attach log listener
         LogMessageListener logListener = new TestLogListener();
         TestingLogMessageAppender.getInstance().addListener(logListener);
 
-        initializeRendering();
+        LoadOptionsModel imageLoadOptions = new SimpleLoadOptionsModel();
+        imageLoadOptions.setColorImagesRequested(false); // Don't generate/load preview images; not needed for this test
+        // These are set since they otherwise are set in JavaFX related code
+
+        GlobalBootstrap.initialize(TESTING_STATE, imageLoadOptions);
+    }
+
+    @BeforeEach
+    void setup()
+    {
+        // Clear errors and warnings for next test.
+        TESTING_STATE.clearErrorsAndWarnings();
+
+        // Make sure there is no project open.
+        if (Global.io().getLoadedViewSet() != null)
+        {
+            closeAndWait();
+        }
     }
 
     @AfterEach
     void tearDown()
     {
-        // Check for user-facing (UI) errors and warnings
-        int numErrors = testingState.getErrors().size();
-        assertEquals(0, numErrors);
-        int numWarnings = testingState.getWarnings().size();
-        assertEquals(0, numWarnings);
-
-        // Check whether the log contained any errors
-        Throwable failure = observerFailure.get();
-        if (failure != null)
-        {
-            fail(failure.getMessage());
-        }
-    }
-
-    private static void resetGlobalState()
-    {
-        IOModel io = Global.io();
-
-        if (io.getLoadedViewSet() != null)
-        {
-
-            CLOSED_FINISHED.set(false);
-            io.closeProject();
-
-
-            while (!CLOSED_FINISHED.get()) {
-                Thread.onSpinWait();
-            }
-        }
-    }
-
-    private void initializeRendering()
-    {
-        if (INITIALIZED.compareAndSet(false, true))
-        {
-            if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
-            {
-                // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
-                Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
-            }
-
-            LoadOptionsModel imageLoadOptions = new SimpleLoadOptionsModel();
-            imageLoadOptions.setColorImagesRequested(false); // don't generate/load preview images; not needed for this test
-            // These are set since they otherwise are set in JavaFX related code
-
-            GlobalBootstrap.initialize(testingState, imageLoadOptions);
-            RenderingBootstrap.startRenderThread(null, false);
-
-            while (!Global.io().hasValidHandler())
-            {
-                Thread.onSpinWait();
-            }
-
-            setupListeners();
-        }
-        else
-        {
-            resetGlobalState();
-        }
+        // Make sure the project is closed at the end of each test.
+        closeAndWait();
     }
 
     private static void setupListeners()
@@ -203,11 +183,7 @@ public class SmokeTest
         });
 
         // Project closed listener
-        Global.io().projectClosedListeners().register(event ->
-        {
-            LOG.info("Project Closed");
-            CLOSED_FINISHED.set(true);
-        });
+        Global.io().projectClosedListeners().register(event -> LOG.info("Project Closed"));
 
         // Project processed listener
         Global.io().projectProcessedListeners().register(event ->
@@ -225,7 +201,7 @@ public class SmokeTest
 
     private void waitFor(BooleanSupplier finished, String operation)
     {
-        List<ErrorMessage> errorsLive = this.testingState.getErrors();
+        List<ErrorMessage> errorsLive = this.TESTING_STATE.getErrors();
         int startingErrorCount = errorsLive.size();
         long start = System.nanoTime();
         while (!finished.getAsBoolean())
@@ -256,16 +232,37 @@ public class SmokeTest
     private void waitForLoad()
     {
         waitFor(LOAD_FINISHED, "load");
-    }
 
-    private void waitForClose()
-    {
-        waitFor(CLOSED_FINISHED, "close");
+        // The "load finished" signal is fired while it's still finishing up some stuff on the GPU
+        // so we don't want to push forward until after the frame has finished.
+        waitForNextFrame();
     }
 
     private void waitForExport()
     {
         waitFor(EXPORT_FINISHED, "export");
+    }
+
+    private static void waitForNextFrame()
+    {
+        AtomicBoolean waiting = new AtomicBoolean(true);
+        Rendering.runLater(() -> waiting.set(false));
+
+        while (waiting.get())
+        {
+            Thread.onSpinWait();
+        }
+    }
+
+    private static void closeAndWait()
+    {
+        AtomicBoolean open = new AtomicBoolean(true);
+        Global.io().closeProject(() -> open.set(false));
+
+        while (open.get())
+        {
+            Thread.onSpinWait();
+        }
     }
 
     private void runSpecularFit()
@@ -318,6 +315,29 @@ public class SmokeTest
         assertEquals(0, numDisabledCameras);
     }
 
+    private void assertNoErrors()
+    {
+        // Check for user-facing (UI) errors and warnings
+        int numErrors = TESTING_STATE.getErrors().size();
+        assertEquals(0, numErrors);
+        int numWarnings = TESTING_STATE.getWarnings().size();
+        assertEquals(0, numWarnings);
+
+        // Check whether the log contained any errors
+        Throwable failure = LOG_ERROR.get();
+        if (failure != null)
+        {
+            fail(failure.getMessage(), failure);
+        }
+    }
+
+    private void verifyProject(int expected)
+    {
+        assertProjectLoaded();
+        assertCameras(expected);
+        assertNoErrors();
+    }
+
     @Test
     @DisplayName("Rodin fit, from Metashape export")
     void testFit_rodinMetashape() throws URISyntaxException
@@ -328,12 +348,6 @@ public class SmokeTest
             "Rodin/Processed dark 25",
             "rodinMetashape");
         verifyProject(90);
-    }
-
-    private static void verifyProject(int expected)
-    {
-        assertProjectLoaded();
-        assertCameras(expected);
     }
 
     @Test
@@ -498,10 +512,10 @@ public class SmokeTest
             "Rodin/Processed dark 25"
         );
 
-        verifyProject(90);
-
         assertEquals(Vector3.ZERO, Global.io().getLoadedViewSet().getLightPosition(0));
         assertEquals(new Vector3(29.082094f), Global.io().getLoadedViewSet().getLightIntensity(0));
+
+        verifyProject(90);
     }
 
     @Test
@@ -652,10 +666,10 @@ public class SmokeTest
             "KatrinaFuller/Downscaled25"
         );
 
-        verifyProject(158);
-
         assertEquals(Vector3.ZERO, Global.io().getLoadedViewSet().getLightPosition(0));
         assertEquals(new Vector3(3242.3916f), Global.io().getLoadedViewSet().getLightIntensity(0));
+
+        verifyProject(158);
     }
 
     private void testFitLooseFiles(String cameras, String geometry, String imageDirectory, String testName)
@@ -714,9 +728,7 @@ public class SmokeTest
         }
 
         // --- CLOSE PROJECT ---
-        CLOSED_FINISHED.set(false);
-        Global.io().closeProject();
-        waitForClose();
+        closeAndWait();
 
         // --- SECOND LOAD ---
         LOAD_FINISHED.set(false);
@@ -749,6 +761,7 @@ public class SmokeTest
         // --- PROCESS ---
         runSpecularFit();
 
+        EXPORT_FINISHED.set(false);
         File newFile = new File("test-output/export-output",String.format("%s.k3d",testName));
         Rendering.getRequestQueue().addGraphicsRequest(new ExportTexturesRequest(newFile, settings, () ->
         {

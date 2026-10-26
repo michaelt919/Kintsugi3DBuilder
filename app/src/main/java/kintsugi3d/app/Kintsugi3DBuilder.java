@@ -14,7 +14,9 @@ package kintsugi3d.app;
 import javafx.application.Application;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.util.ApplicationFolders;
+import kintsugi3d.builder.util.OperatingSystem;
 import kintsugi3d.gl.interactive.InitializationException;
+import org.lwjgl.system.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +50,19 @@ public final class Kintsugi3DBuilder
 
         // Set system properties, etc. that need to be set before anything touches LWJGL
         // (which JavaFX does indirectly by loading Kintsugi's matrix math classes)
-        RenderingBootstrap.preInitialize();
+        // Allow render thread to modify user interface thread
+        //noinspection AccessOfSystemProperties
+        System.setProperty("glass.disableThreadChecks", "true");
+        // TODO see com.sun.glass.ui.Application.java line 434
+
+        if (OperatingSystem.getCurrentOS() == OperatingSystem.MACOS)
+        {
+            // Mac OS requires glfw_async to inject GLFW calls into the "first thread".
+            Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
+        }
+
+        Configuration.DEBUG.set(true);
+        Configuration.DEBUG_STREAM.set(System.out);
 
         JavaFXApplication.setArgs(args);
 

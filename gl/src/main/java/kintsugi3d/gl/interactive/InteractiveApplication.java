@@ -61,6 +61,7 @@ public class InteractiveApplication
         {
             refreshable.initialize();
         }
+
         Date startTimestamp = new Date();
         Date timestampA = startTimestamp;
         LOG.info("Main loop started.");

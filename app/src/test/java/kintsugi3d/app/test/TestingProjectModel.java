@@ -173,4 +173,10 @@ public class TestingProjectModel extends ProjectModelBase<SerializableCameraSett
     {
         return Collections.unmodifiableList(warnings);
     }
+
+    public void clearErrorsAndWarnings()
+    {
+        errors.clear();
+        warnings.clear();
+    }
 }

@@ -13,6 +13,7 @@ package kintsugi3d.builder.rendering;
 
 import kintsugi3d.builder.core.Global;
 import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.EventPollable;
 import kintsugi3d.gl.interactive.SimpleRefreshable;
 
 import java.util.Objects;
@@ -23,6 +24,7 @@ public final class Rendering
     private static volatile RenderableManager<?> renderableManager;
     private static volatile GraphicsRequestManager<?> requestQueue;
     private static volatile Thread renderingThread = null;
+    private static boolean terminateRequested = false;
 
     private static final Object INITIALIZATION_LOCK = new Object();
 
@@ -82,11 +84,25 @@ public final class Rendering
                 // Start the request queue as soon as we have a graphics context.
                 GraphicsRequestManager<ContextType> newRequestQueue = new GraphicsRequestManager<>(injectedContext);
                 newRequestQueue.setRenderableManager(injectedRenderableManager);
-                                newRequestQueue.setProgressMonitor(Global.io().getProgressMonitor());
+                newRequestQueue.setProgressMonitor(Global.io().getProgressMonitor());
 
                 if (injectedRenderableManager.getOwningApp() != null)
                 {
                     injectedRenderableManager.getOwningApp().addRefreshable((SimpleRefreshable) newRequestQueue::executeQueue);
+
+                    injectedRenderableManager.getOwningApp().addPollable(new EventPollable()
+                    {
+                        @Override
+                        public void pollEvents()
+                        {
+                        }
+
+                        @Override
+                        public boolean shouldTerminate()
+                        {
+                            return terminateRequested;
+                        }
+                    });
 
                     context = injectedContext;
                     renderableManager = injectedRenderableManager;
@@ -138,5 +154,15 @@ public final class Rendering
                 }
             });
         }
+    }
+
+    public static void clearQueue()
+    {
+        getRequestQueue().clear();
+    }
+
+    public static void requestTerminate()
+    {
+        terminateRequested = true;
     }
 }

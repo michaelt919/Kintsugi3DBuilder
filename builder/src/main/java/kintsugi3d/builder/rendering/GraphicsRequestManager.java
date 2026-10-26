@@ -315,6 +315,12 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         }
     }
 
+    @Override
+    public void clear()
+    {
+        requestList.clear();
+    }
+
     public void executeQueue()
     {
         context.makeContextCurrent();

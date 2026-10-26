@@ -91,6 +91,18 @@ public final class RecentProjects
         // Drop down to the max number of recent projects.
         existingFileNames = existingFileNames.subList(0, Math.min(existingFileNames.size(), MAX_RECENT_PROJECTS));
 
+        refreshRecentProjectsFile(existingFileNames);
+    }
+
+    private static void refreshRecentProjectsFile(Iterable<String> existingFileNames)
+    {
+        // Make sure that parent directory exists.
+        boolean failed = !RECENT_PROJECTS_FILE.getParentFile().mkdirs();
+        if (failed && !RECENT_PROJECTS_FILE.getParentFile().exists())
+        {
+            LOG.warn("Failed to create app data directory for recent files list.");
+        }
+
         // Write the updated content back to the file
         try (PrintWriter writer = new PrintWriter(new FileWriter(RECENT_PROJECTS_FILE, StandardCharsets.UTF_8)))
         {
@@ -101,10 +113,10 @@ public final class RecentProjects
         }
         catch (IOException e)
         {
-            LOG.error("Failed to update recent files list", e);
+            LOG.error("Failed to update recent files list.", e);
         }
 
-        //update list of recent projects in program
+        // Update list of recent projects in program
         fireListeners();
     }
 
@@ -117,34 +129,13 @@ public final class RecentProjects
             .collect(Collectors.toList());
 
         // Write the updated content back to the file
-        try (PrintWriter writer = new PrintWriter(new FileWriter(RECENT_PROJECTS_FILE, StandardCharsets.UTF_8)))
-        {
-            for (String name : newRecentItems)
-            {
-                writer.println(name);
-            }
-        }
-        catch (IOException e)
-        {
-            LOG.error("Failed to update recent files list while removing invalid references.", e);
-        }
-
-        fireListeners();
+        refreshRecentProjectsFile(newRecentItems);
     }
 
     public static void removeAllReferences()
     {
-        //wipe recent projects list
-        try (FileWriter fileWriter = new FileWriter(RECENT_PROJECTS_FILE.getAbsolutePath(), StandardCharsets.UTF_8, false))
-        {
-            fileWriter.write("");
-        }
-        catch (IOException e)
-        {
-            LOG.error("Could not write to recent files list", e);
-        }
-
-        fireListeners();
+        // Wipe recent projects list
+        refreshRecentProjectsFile(List.of());
     }
 
     public static String getMostRecentProjectPath()
