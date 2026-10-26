@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SmokeTest [rendering on main thread]" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="kintsugi3d.app.test.MainThreadRenderingTestRunner" />
+    <module name="app" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="kintsugi3d.app.test.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="generate-resources" />
+    </method>
+  </configuration>
+</component>

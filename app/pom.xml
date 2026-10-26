@@ -267,7 +267,7 @@
                                         <argument>-XstartOnFirstThread</argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
-                                        <argument>kintsugi3d.app.test.MacOSTestRunner</argument>
+                                        <argument>kintsugi3d.app.test.MainThreadRenderingTestRunner</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
