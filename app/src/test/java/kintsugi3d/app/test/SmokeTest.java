@@ -119,6 +119,8 @@ public class SmokeTest
     @BeforeAll
     static void initialize()
     {
+        LOG.debug("JUnit tests started.");
+
         // If the rendering thread is already started (i.e. MacOS requires it to be first thead),
         // then we don't want to start another one.
         if (renderThreadRequired)
@@ -127,12 +129,18 @@ public class SmokeTest
             RenderingBootstrap.startRenderThread(null, false);
         }
 
+        LOG.debug("Waiting for rendering thread.");
+
         while (!Global.io().hasValidHandler())
         {
             Thread.onSpinWait();
         }
 
+        LOG.debug("Rendering thread is ready.");
+
         setupListeners();
+
+        LOG.debug("Listeners registered.");
     }
 
     public static void preRenderThreadInitialize()
