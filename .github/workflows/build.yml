@@ -200,7 +200,7 @@ jobs:
         id: build-dir
         shell: bash
         run: |
-          BUILD_DIR=$(mvn help:evaluate -Dexpression=project.build.directory -q -DforceStdout)
+          BUILD_DIR=$(mvn help:evaluate -f app/pom.xml -Dexpression=project.build.directory -q -DforceStdout)
           BUILD_DIR="${BUILD_DIR//\\//}"
           GITHUB_WORKSPACE="${GITHUB_WORKSPACE//\\//}"
           BUILD_DIR="${BUILD_DIR#"$GITHUB_WORKSPACE"/}"
@@ -224,6 +224,9 @@ jobs:
             Select-Object -First 1
           $standalone = Get-ChildItem $buildDir -Filter 'Kintsugi3DBuilder.exe' |
             Select-Object -First 1
+          
+          Write-Host $standalone
+          Write-Host $installer
 
           if (!$standalone) { throw "Standalone executable not found" }
           if (!$installer) { throw "Installer not found" }
