@@ -17,6 +17,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,13 +83,26 @@ public final class MainThreadRenderingTestRunner
 
         LOG.debug("Rendering loop terminated.");
 
-        var summary = listener.getSummary();
-        summary.printTo(new PrintWriter(System.out, true, StandardCharsets.UTF_8));
-        summary.printFailuresTo(new PrintWriter(System.out, true, StandardCharsets.UTF_8));
-
-        if (summary.getTotalFailureCount() > 0)
+        TestExecutionSummary summary = listener.getSummary();
+        if (summary != null)
         {
-            System.exit(1);
+            summary.printTo(new PrintWriter(System.out, true, StandardCharsets.UTF_8));
+            summary.printFailuresTo(new PrintWriter(System.out, true, StandardCharsets.UTF_8));
+
+            if (summary.getTotalFailureCount() > 0)
+            {
+                throw new TestFailureException(summary.getTotalFailureCount() + " tests failed.");
+            }
+        }
+    }
+
+    public static final class TestFailureException extends RuntimeException
+    {
+        private static final long serialVersionUID = 5747671254750913743L;
+
+        public TestFailureException(String message)
+        {
+            super(message);
         }
     }
 }

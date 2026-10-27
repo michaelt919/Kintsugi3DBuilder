@@ -266,6 +266,7 @@
                                     <classpathScope>test</classpathScope>
                                     <arguments>
                                         <argument>-XstartOnFirstThread</argument>
+                                        <argument>-Djava.awt.headless=true</argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
                                         <argument>kintsugi3d.app.test.MainThreadRenderingTestRunner</argument>
@@ -300,8 +301,11 @@
                 <!-- Windows: Needs Launch4J, a Maven assembly for Windows, and NSIS installer -->
                 <plugins>
                     <plugin>
+                        <!--suppress MavenModelInspection -->
                         <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <!--suppress MavenModelInspection -->
                         <artifactId>launch4j-maven-plugin</artifactId>
+                        <!--suppress MavenModelInspection -->
                         <version>2.1.2</version>
                         <executions>
                             <execution>
@@ -369,8 +373,11 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <!--suppress MavenModelInspection -->
                         <groupId>org.digitalmediaserver</groupId>
+                        <!--suppress MavenModelInspection -->
                         <artifactId>nsis-maven-plugin</artifactId>
+                        <!--suppress MavenModelInspection -->
                         <version>1.0.3</version>
                         <configuration>
                             <injectHeaderFile>true</injectHeaderFile>

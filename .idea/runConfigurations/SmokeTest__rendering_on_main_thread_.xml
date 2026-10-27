@@ -2,6 +2,7 @@
   <configuration default="false" name="SmokeTest [rendering on main thread]" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="kintsugi3d.app.test.MainThreadRenderingTestRunner" />
     <module name="app" />
+    <option name="VM_PARAMETERS" value="-XstartOnFirstThread -Djava.awt.headless=true" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="kintsugi3d.app.test.*" />
