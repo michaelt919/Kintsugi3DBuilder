@@ -169,6 +169,8 @@ public class SmokeTest
     @BeforeEach
     void setup()
     {
+        LOG.debug("Entering test setup.");
+
         // Clear errors and warnings for next test.
         TESTING_STATE.clearErrorsAndWarnings();
         LOG_ERROR.set(null);
@@ -178,6 +180,8 @@ public class SmokeTest
         {
             closeAndWait();
         }
+
+        LOG.debug("Finished test setup.");
     }
 
     @AfterEach
@@ -270,13 +274,19 @@ public class SmokeTest
 
     private static void closeAndWait()
     {
+        LOG.debug("Closing project...");
+
         AtomicBoolean open = new AtomicBoolean(true);
         Global.io().closeProject(() -> open.set(false));
+
+        LOG.debug("Waiting for project to close...");
 
         while (open.get())
         {
             Thread.onSpinWait();
         }
+
+        LOG.debug("Project is now closed.");
     }
 
     private static void runSpecularFit()
@@ -301,12 +311,18 @@ public class SmokeTest
             Rendering.getRequestQueue().addGraphicsRequest(request);
         });
 
+        LOG.debug("Waiting for processing to complete...");
+
         waitFor(() -> PROCESSED_COUNTER.get() > originalProcessedCount.get()
                 && SAVE_COUNTER.get() > originalSaveCount.get(),
             "processing");
 
+        LOG.debug("Waiting for next frame...");
+
         // Make sure the process has completely finished before proceeding.
         waitForNextFrame();
+
+        LOG.debug("Done waiting.");
     }
 
     private static void saveProject() throws IOException
@@ -551,6 +567,8 @@ public class SmokeTest
             "katrinaFullerMetashape");
 
         verifyProject(168);
+
+        LOG.debug("Test passed all assertions.");
     }
 
 
