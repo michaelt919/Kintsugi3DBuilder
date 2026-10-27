@@ -200,9 +200,14 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
     }
 
-    public static void closeAllWindows()
+    public void closeAllWindows()
     {
+        LOG.debug("Destroying window...");
+        glfwDestroyWindow(this.handle);
+
+        LOG.debug("Terminating GLFW...");
         glfwTerminate();
+        LOG.debug("GLFW terminated.");
     }
 
     long getHandle()

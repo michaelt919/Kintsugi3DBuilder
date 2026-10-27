@@ -230,10 +230,20 @@ jobs:
 
           if (!$standalone) { throw "Standalone executable not found" }
           if (!$installer) { throw "Installer not found" }
+          
+          $rodinProject = Join-Path $env:GITHUB_WORKSPACE "app\src\test\resources\Rodin\Rodin_psx.k3d"
+          $katrinaFullerProject = Join-Path $env:GITHUB_WORKSPACE "app\src\test\resources\KatrinaFuller\KatrinaFuller_realitycapture.k3d"
 
-          function Test-Launch($exe, $arguments = @()) {
+          if (!(Test-Path -LiteralPath $rodinProject -PathType Leaf)) {
+            throw "Rodin test project not found: $rodinProject"
+          }
+          if (!(Test-Path -LiteralPath $katrinaFullerProject -PathType Leaf)) {
+            throw "Katrina Fuller test project not found: $katrinaFullerProject"
+          }
+          
+          function Test-Launch($exe, $timer, $arguments = @()) {
             $p = Start-Process $exe.FullName -ArgumentList $arguments -PassThru -NoNewWindow
-            if (!$p.WaitForExit(30000)) {
+            if (!$p.WaitForExit($timer)) {
               Write-Host "Process remained running: $($exe.FullName)"
               # We need to kill the whole process tree, not just the launch4j executable.
               taskkill /F /T /PID $p.Id 2>&1 | ForEach-Object { Write-Host $_ }
@@ -246,8 +256,14 @@ jobs:
           Write-Host $standalone
 
           # Test the standalone executable.
-          Test-Launch $standalone
-          Write-Host "Standalone executable smoke test passed."
+          Test-Launch $standalone 30000
+          Write-Host "Standalone executable (no project) smoke test passed."
+
+          Test-Launch $standalone 300000 "`"$rodinProject`""
+          Write-Host "Standalone executable (Rodin) smoke test passed."
+
+          Test-Launch $standalone 300000 "`"$katrinaFullerProject`""
+          Write-Host "Standalone executable (Katrina Fuller) smoke test passed."
 
           # Install silently.
           $p = Start-Process $installer.FullName -ArgumentList '/S' -PassThru -NoNewWindow
@@ -269,8 +285,14 @@ jobs:
           
           Write-Host $builder
 
-          Test-Launch $builder
+          Test-Launch $builder 30000
           Write-Host "Installed Builder smoke test passed."
+
+          Test-Launch $builder 300000 "`"$rodinProject`""
+          Write-Host "Installed Builder (Rodin) smoke test passed."
+
+          Test-Launch $builder 300000 "`"$katrinaFullerProject`""
+          Write-Host "Installed Builder (Katrina Fuller) smoke test passed."
 
           # Test the installed Viewer.
           $viewer = Get-ChildItem $installDir -Filter 'Kintsugi3DViewer.exe' -Recurse -ErrorAction SilentlyContinue |
@@ -279,7 +301,7 @@ jobs:
           
           Write-Host $viewer
 
-          Test-Launch $viewer
+          Test-Launch $viewer 30000
           Write-Host "Installed Viewer smoke test passed."
 
           # Check for any processes still running
@@ -378,28 +400,40 @@ jobs:
 
           hdiutil detach "$MOUNT"
           echo "Both applications extracted from DMG successfully."
+          
+          rodinProject="$GITHUB_WORKSPACE/app/src/test/resources/Rodin/Rodin_psx.k3d"
+          katrinaFullerProject="$GITHUB_WORKSPACE/app/src/test/resources/KatrinaFuller/KatrinaFuller_realitycapture.k3d"
 
+          test -f "$rodinProject" || { echo "Rodin test project not found"; exit 1; }
+          test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found"; exit 1; }
+          
           # Test an app's executable directly, then launch it using open.
           smoke_test_app() {
             APP="$1"
             EXE="$2"
             LABEL="$3"
+            TIMER="$4"
+            PROJECT="${5:-}"
 
             test -d "$APP" || { echo "$LABEL: app bundle not found"; exit 1; }
             test -x "$EXE" || { echo "$LABEL: executable not found or not executable"; exit 1; }
 
             # Test 1: Run the executable directly, piping stdout and stderr to a log file.
             LOG="$(mktemp)"
-            "$EXE" > >(tee "$LOG") 2>&1 &
+            if [ -n "$PROJECT" ]; then
+              "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
+            else
+              "$EXE" > >(tee "$LOG") 2>&1 &
+            fi
             PID=$!
-            sleep 30
+            sleep $TIMER
 
             if kill -0 "$PID" 2>/dev/null; then
-              kill "$PID"
+              kill "$PID" 2>/dev/null || true
               wait "$PID" 2>/dev/null || true
             else
               if wait "$PID"; then STATUS=0; else STATUS=$?; fi
-              echo "$LABEL: direct launch failed or exited within 30 seconds (code $STATUS)."
+              echo "$LABEL: direct launch failed or exited within ${TIMER} seconds (code $STATUS)."
               exit 1
             fi
           
@@ -415,19 +449,28 @@ jobs:
             echo "$LABEL: direct launch smoke test passed."
 
             # Test 2: Launch as a user would (but doesn't check stderr or stdout for errors).
-            if "$Gtimeout" --kill-after=5s 30s open -W -n "$APP"; then
-              STATUS=0
+            if [ -n "$PROJECT" ]; then
+              if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP" --args "$PROJECT"; then
+                STATUS=0
+              else
+                STATUS=$?
+              fi
             else
-              STATUS=$?
+              if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP"; then
+                STATUS=0
+              else
+                STATUS=$?
+              fi
             fi
 
             if [ "$STATUS" -eq 124 ]; then
               echo "$LABEL: open .app smoke test passed."
             else
-              echo "$LABEL: open failed or exited within 30 seconds (code $STATUS)."
+              echo "$LABEL: open failed or exited within ${TIMER} seconds (code $STATUS)."
               exit 1
             fi
           }
+          
           STAGING_DIR="$(find "$BUILD_DIR" -maxdepth 1 -type d \
             -name 'Kintsugi3DBuilder-*' ! -name '*-macos.dmg' -print -quit)"
 
@@ -436,21 +479,37 @@ jobs:
           echo "$BUILDER"
           smoke_test_app "$BUILDER" \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
-            "Builder (build directory)"
+            "Builder (build directory)" 30
+          smoke_test_app "$BUILDER" \
+            "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
+            "Builder (build directory)" \
+            300 "$rodinProject"
+          smoke_test_app "$BUILDER" \
+            "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
+            "Builder (build directory)" \
+            300 "$katrinaFullerProject"
 
           # Test 2: Builder extracted from the DMG.
           BUILDER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Builder.app"
           echo "$BUILDER_EXTRACTED"
           smoke_test_app "$BUILDER_EXTRACTED" \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
-            "Builder (DMG)"
+            "Builder (DMG)" 30
+          smoke_test_app "$BUILDER_EXTRACTED" \
+            "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
+            "Builder (DMG)" \
+            300 "$rodinProject"
+          smoke_test_app "$BUILDER_EXTRACTED" \
+            "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
+            "Builder (DMG)" \
+            300 "$katrinaFullerProject"
 
           # Test 3: Viewer extracted from the DMG.
           VIEWER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Viewer.app"
           echo "$VIEWER_EXTRACTED"
           smoke_test_app "$VIEWER_EXTRACTED" \
             "$VIEWER_EXTRACTED/Contents/MacOS/Kintsugi 3D Viewer" \
-            "Viewer (DMG)"
+            "Viewer (DMG)" 30
 
           echo "All macOS smoke tests passed successfully."
 

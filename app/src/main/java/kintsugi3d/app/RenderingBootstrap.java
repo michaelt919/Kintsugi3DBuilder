@@ -115,11 +115,14 @@ public final class RenderingBootstrap
 
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();
+
+        CanvasWindow<OpenGLContext> window = null;
+
         try
         {
             if (standaloneWindow)
             {
-                CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder", 800, 800)
+                window = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder", 800, 800)
                     .setResizable(true)
                     .setMultisamples(4)
                     .create();
@@ -134,7 +137,7 @@ public final class RenderingBootstrap
                 };
 
                 // Need to still specify a native window to create the context, even though we won't use it.
-                CanvasWindow<OpenGLContext> nativeWindow = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
+                window = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
                     .setDefaultFramebufferCreator(
                         c -> framebufferCapture.fbo = DoubleFramebufferFactory.create(c, 800, 800))
                     .create();
@@ -151,8 +154,11 @@ public final class RenderingBootstrap
         }
         finally
         {
-            // The event loop has terminated so cleanup the windows and exit with a successful return code.
-            CanvasWindow.closeAllWindows();
+            if (window != null)
+            {
+                // The event loop has terminated so cleanup the windows and exit with a successful return code.
+                window.closeAllWindows();
+            }
         }
     }
 
