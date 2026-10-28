@@ -14,12 +14,12 @@ For the time being, Kintsugi 3D is not signed or notarized and must be manually 
 
 ## Support
 
-Kintsugi 3D Builder is beta software and may contain bugs or other issues.  We welcome feedback on your experience with the software so that we can continue improving it.  Comments or bug reports should be directed to Michael Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu)) or posted on the CHI forums (linked above).
+Kintsugi 3D Builder is beta software and may contain bugs or other issues.  We welcome feedback on your experience with the software so that we can continue improving it.  Comments or bug reports should be directed to Kaelie Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu)) or posted on the CHI forums (linked above).
 
 ## Overview
 Developed by a team at UW-Stout Polytechnic with support from the Minneapolis Institute of Art (Mia) and Cultural Heritage Imaging (CHI) under a grant from the National Endowment for the Humanities (NEH), Kintsugi 3D is a novel software platform for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination. What sets Kintsugi 3D apart from other workflows that produce specularity maps is that all the textures produced are empirically-based: they are derived directly from photographic data using classical optimization methods, and the reconstruction error from this optimization process can be recorded as metadata for the object as documentation of the fidelity of the digitized form.
 
-Kintsugi 3D is an evolution of its predecessor, IBRelight: a tool developed as part of Michael Tetzlaff’s (Kintsugi 3D project lead) doctoral thesis that originally had a use case of being a tool for cultural heritage professionals to generate images and videos from photogrammetric models by reprojecting the original photographs onto the 3D model.  What was unique about IBRelight was its use of a flash-on-camera photography technique that made it possible to change the lighting in software based on which flash images were selected for blending.  However, IBRelight had substantial hardware requirements which were a barrier preventing it from being used for general-purpose dissemination of digitized heritage objects.  By implementing a texture processing technique originally described by Nam et al. and refined by Tetzlaff, IBRelight has evolved into Kintsugi 3D Builder, with a user experience redesigned to specifically target the application of building textures and materials for use in lightweight 3D viewer applications.
+Kintsugi 3D is an evolution of its predecessor, IBRelight: a tool developed as part of Kaelie Tetzlaff’s (Kintsugi 3D project lead) doctoral thesis that originally had a use case of being a tool for cultural heritage professionals to generate images and videos from photogrammetric models by reprojecting the original photographs onto the 3D model.  What was unique about IBRelight was its use of a flash-on-camera photography technique that made it possible to change the lighting in software based on which flash images were selected for blending.  However, IBRelight had substantial hardware requirements which were a barrier preventing it from being used for general-purpose dissemination of digitized heritage objects.  By implementing a texture processing technique originally described by Nam et al. and refined by Tetzlaff, IBRelight has evolved into Kintsugi 3D Builder, with a user experience redesigned to specifically target the application of building textures and materials for use in lightweight 3D viewer applications.
 
 The Kintsugi 3D platform features its own [Viewer application](https://github.com/UWStout/Kintsugi3DViewer) for public access to finished digitizations in the highest possible quality, using a custom shader designed specifically for materials derived from photographs. The goal of this viewer is to support the rest of the Kintsugi 3D platform with a lightweight app for public access to this robust reproduction quality, while striving for feature parity with comparable viewers such as Sketchfab or Smithsonian Voyager. Kintsugi 3D also supports exporting in standard texture formats to support existing efforts using established viewers like Sketchfab or Voyager. The simplicity and open access of the Kintsugi 3D platform makes this available even to institutions without the infrastructure or support to otherwise develop such hands-on physical or digital interactive experiences.
 
@@ -28,23 +28,23 @@ Kintsugi 3D still relies on photogrammetry software such as Agisoft Metashape or
 In contrast, Kintsugi 3D, like its predecessor IBRelight, uses a photographic technique that leverages a flash mounted on the camera. There are two primary modes of capture: against a black background in a studio environment, or in-gallery. These two options reduce unintentional bounce light and offer accessibility and flexibility in terms of how the photos are taken, while providing essential reflectivity data for Kintsugi 3D to reconstruct specular maps, which most other photogrammetry workflows cannot replicate.
 
 ## References
-Lou Brown, Charles Walbridge, and Michael Tetzlaff, “Kintsugi 3D: An Empirically-Based Photogrammetry Production Pipeline,” *IS&T Archiving Conference*, 2024, pp. 76-80.<br>
+Lou Brown, Charles Walbridge, and Kaelie Tetzlaff, “Kintsugi 3D: An Empirically-Based Photogrammetry Production Pipeline,” *IS&T Archiving Conference*, 2024, pp. 76-80.<br>
 [PDF](https://michaelt919.github.io/Kintsugi3DBuilder/Archiving2024.pdf)
 
-Michael Tetzlaff, “High-Fidelity Specular SVBRDF Acquisition from Flash Photographs,” *IEEE Transactions on Visualization and Computer Graphics (TVCG)*, vol. 30, no. 4, 2024, pp. 1885-1896.<br>
+Kaelie Tetzlaff, “High-Fidelity Specular SVBRDF Acquisition from Flash Photographs,” *IEEE Transactions on Visualization and Computer Graphics (TVCG)*, vol. 30, no. 4, 2024, pp. 1885-1896.<br>
 [https://ieeexplore.ieee.org/document/10012127](https://ieeexplore.ieee.org/document/10012127)<br>
 [PDF](https://michaelt919.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevision.pdf)
 [Appendix](https://michaelt919.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevisionAppendix.pdf)<br>
 1077-2626 © 2023 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.<br>
 See [https://www.ieee.org/publications/rights/index.html](https://www.ieee.org/publications/rights/index.html) for more information.
 
-Tyler Garcia, Zhangchi Lyu, and Michael Tetzlaff, “An Online Model Viewer for Cultural Heritage in Unity 3D,” *IS&T Archiving Conference*, 2022, pp. 50-55.<br>
+Tyler Garcia, Zhangchi Lyu, and Kaelie Tetzlaff, “An Online Model Viewer for Cultural Heritage in Unity 3D,” *IS&T Archiving Conference*, 2022, pp. 50-55.<br>
 [PDF](https://michaelt919.github.io/Kintsugi3DBuilder/Archiving2022_FullPaper.pdf)
 
 Giljoo Nam, Joo Ho Lee, Diego Gutierrez, and Min H. Kim, “Practical SVBRDF Acquisition of 3D Objects with Unstructured Flash Photography,” *ACM Transactions on Graphics*, vol. 37, no. 6, 2018, pp. 267:1-267:12.<br>
 [https://dl.acm.org/doi/10.1145/3272127.3275017](https://dl.acm.org/doi/10.1145/3272127.3275017)
 
-Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Renderer for Cultural Heritage,” *IS&T Archiving Conference*, 2018, pp. 93-98.<br>
+Kaelie Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Renderer for Cultural Heritage,” *IS&T Archiving Conference*, 2018, pp. 93-98.<br>
 [PDF](https://michaelt919.github.io/Kintsugi3DBuilder/archiving2018.pdf)
 
 
@@ -56,9 +56,11 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 [User Experience of Visualizing Empirically-Based Textures in Kintsugi 3D Builder (May 2025)](https://michaelt919.github.io/Kintsugi3DBuilder/EmpiricallyBasedTexturesPosterK3D_FergusonSP25.pdf)
 
 ## Contributors
-- Michael Tetzlaff (University of Minnesota / UW-Stout Polytechnic) - primary developer
-- Alex Kautz (University of Rochester) - contributor
+- Kaelie Tetzlaff (University of Minnesota / UW-Stout Polytechnic) - lead developer and researcher
+- Darcy Magda Hannen (UW-Stout Polytechnic) - UX designer and researcher
+- Chloe Ferguson  (UW-Stout Polytechnic) - UX designer and researcher
 - Seth Berrier (UW-Stout Polytechnic) - contributor
+- Alex Kautz (University of Rochester) - contributor
 - Michael Ludwig (University of Minnesota) - contributor
 - Sam Steinkamp (University of Minnesota) - contributor
 - Tyler Betanski (UW-Stout Polytechnic) - contributor
@@ -77,11 +79,13 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Joe Luther (UW-Stout Polytechnic) - contributor
 - Jakob Schmucki (UW-Stout Polytechnic) - contributor
 - Nathan Sunday (UW-Stout Polytechnic) - contributor
-- Darcy Hannen (UW-Stout Polytechnic) - UX designer
+- Joseph O'Connor (UW-Stout Polytechnic) - contributor
 - Isabel Smith (UW-Stout Polytechnic) - UX designer
 - Elliot Duffy (UW-Stout Polytechnic) - UX designer
 - Augusto Freitas (UW-Stout Polytechnic) - UX designer
-- Chloe Ferguson  (UW-Stout Polytechnic) - UX designer
+- Mia Hazen (UW-Stout Polytechnic) - user research
+- Luke Jowett (UW-Stout Polytechnic) - user research
+- Madison Smith (UW-Stout Polytechnic) - user research
 - Gary Meyer (University of Minnesota) - designer and advisor
 
 Kintsugi 3D was developed with support from a grant from the National Endowment for the Humanities (NEH PR-290101-23).
@@ -92,7 +96,7 @@ Special thanks to Carla Schroer and Mark Mudge from Cultural Heritage Imaging an
 
 ## Copyright and License
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Seth Kendrick, Joe Luther, Jakob Schmucki, Nathan Sunday 2026\
+Copyright (c) Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Seth Kendrick, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor 2026\
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html)
