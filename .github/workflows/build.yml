@@ -242,7 +242,7 @@ jobs:
           }
           
           function Test-Launch($exe, $timer, $arguments = @()) {
-            $p = Start-Process $exe.FullName -ArgumentList $arguments -PassThru -NoNewWindow
+            $p = Start-Process $exe.FullName -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput "$LOG.out" -RedirectStandardError "$LOG.err"
             if (!$p.WaitForExit($timer)) {
               Write-Host "Process remained running: $($exe.FullName)"
               # We need to kill the whole process tree, not just the launch4j executable.
@@ -251,6 +251,17 @@ jobs:
             } else {
               throw "$($exe.FullName) exited with code $($p.ExitCode)"
             }
+          
+            # Check for errors in stdout / stderr.
+            $output = Get-Content "$LOG.out", "$LOG.err" -Raw -ErrorAction SilentlyContinue
+            if ($output -match 'ERROR|Exception in thread "') {
+              Write-Host "$($exe.FullName): ERROR or uncaught exception found in application output."
+              Get-Content "$LOG.out", "$LOG.err" -ErrorAction SilentlyContinue
+              Remove-Item "$LOG.out", "$LOG.err" -Force -ErrorAction SilentlyContinue
+              throw "Application errors detected in $($exe.FullName)"
+            }
+          
+            Remove-Item "$LOG.out", "$LOG.err" -Force -ErrorAction SilentlyContinue
           }
           
           Write-Host $standalone
