@@ -434,6 +434,7 @@ public final class RenderingBootstrap
         // Load project if requested
         if (args.length >= 1)
         {
+             LOG.debug("Args: {}", Arrays.toString(args));
              Global.io().loadExistingProject(new File(args[0])); // Should initialize requestQueue
         }
 
