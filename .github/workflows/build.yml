@@ -321,11 +321,14 @@ jobs:
           
           # Install silently in PowerShell.
           powershell.exe -NoProfile -Command '
-            $p = Start-Process -FilePath "'"$(cygpath -w "$INSTALLER")"'" -ArgumentList "/S" -PassThru -NoNewWindow
+            $Installer = "'"$(cygpath -w "$INSTALLER")"'"
+            Write-Host $Installer
+            $p = Start-Process -FilePath $Installer -ArgumentList "/S" -PassThru -NoNewWindow
             if (!$p.WaitForExit(600000)) {
               Stop-Process -Id $p.Id -Force
               throw "Installer timed out"
             }
+            $p.Refresh()
             if ($p.ExitCode -ne 0) { throw "Installer failed: $($p.ExitCode)" }
             Write-Host "Installer smoke test passed."
           '
@@ -369,11 +372,14 @@ jobs:
           
           # Run the uninstaller in PowerShell
           powershell.exe -NoProfile -Command '
-            $p = Start-Process -FilePath "'"$(cygpath -w "$UNINSTALLER")"'" -ArgumentList "/S" -PassThru -NoNewWindow
+            $Uninstaller = "'"$(cygpath -w "$UNINSTALLER")"'"
+            Write-Host $Uninstaller
+            $p = Start-Process -FilePath $Uninstaller -ArgumentList "/S" -PassThru -NoNewWindow
             if (!$p.WaitForExit(600000)) {
               Stop-Process -Id $p.Id -Force
               throw "Uninstaller timed out"
             }
+            $p.Refresh()
             if ($p.ExitCode -ne 0) { throw "Uninstaller failed: $($p.ExitCode)" }
             Write-Host "Uninstaller smoke test passed."
           '
