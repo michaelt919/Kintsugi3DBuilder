@@ -17,10 +17,7 @@ import kintsugi3d.gl.interactive.UserCancellationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 public class GraphicsRequestManager<ContextType extends Context<ContextType>> implements GraphicsRequestQueue
 {
@@ -74,9 +71,10 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
 
     private static void logException(Throwable e)
     {
-        if (e.getCause() instanceof UserCancellationException)
+        Throwable cause = e.getCause();
+        if (cause instanceof UserCancellationException)
         {
-            logCancellation(e);
+            logCancellation(cause);
         }
         else
         {
@@ -86,16 +84,6 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
 
     private void handleException(Throwable e)
     {
-        logException(e);
-
-        if (progressMonitor != null)
-        {
-            progressMonitor.fail(e);
-        }
-    }
-
-    private void handleExceptionNonBackground(Throwable e)
-    {
         Throwable cause = e.getCause();
         if (cause instanceof UserCancellationException)
         {
@@ -103,7 +91,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
         }
         else
         {
-            handleException(e);
+            logException(e);
 
             if (progressMonitor != null)
             {
@@ -217,7 +205,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                         }
                         catch (Exception | AssertionError e)
                         {
-                            handleExceptionNonBackground(e);
+                            handleException(e);
                         }
                     }
                 });
@@ -303,7 +291,7 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
                 }
                 catch (Exception | AssertionError e)
                 {
-                    handleExceptionNonBackground(e);
+                    handleException(e);
                 }
             });
         }
@@ -318,23 +306,38 @@ public class GraphicsRequestManager<ContextType extends Context<ContextType>> im
     @Override
     public void clear()
     {
-        requestList.clear();
+        synchronized (requestList)
+        {
+            requestList.clear();
+        }
     }
 
     public void executeQueue()
     {
         context.makeContextCurrent();
 
-        synchronized (requestList)
+        while (!requestList.isEmpty())
         {
-            while (!requestList.isEmpty())
-            {
-                if (requestList.peek() != null)
-                {
-                    requestList.peek().run(); // Peek first to ensure that isEmpty() returns false when called from other threads.
-                }
+            Runnable nextRequest;
 
-                requestList.poll();       // Once the task is done, remove the request from the queue.
+            synchronized (requestList)
+            {
+                nextRequest = requestList.peek();
+            }
+
+            if (nextRequest != null)
+            {
+                nextRequest.run(); // Peek first to ensure that isEmpty() returns false when called from other threads.
+            }
+
+            synchronized (requestList)
+            {
+                // Need to double-check request identity because the request itself may have cleared the queue
+                // and possibly even enqueued another request.
+                if (Objects.equals(requestList.peek(), nextRequest))
+                {
+                    requestList.poll(); // Once the task is done, remove the request from the queue.
+                }
             }
         }
     }

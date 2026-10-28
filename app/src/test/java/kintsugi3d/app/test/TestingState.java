@@ -38,6 +38,7 @@ class TestingState implements Kintsugi3DBuilderState
     private final SelectableViewListModel viewListModel = new TestingViewListModel();
     private final TabsModel tabsModel = new TestingTabsModel();
     private final ReadonlyObjectPoseModel objectModel = new TestingObjectModel();
+    private final CacheModel cacheModel = new TestingCacheModel();
 
     TestingState()
     {
@@ -95,7 +96,7 @@ class TestingState implements Kintsugi3DBuilderState
     @Override
     public CacheModel getCacheModel()
     {
-        throw new UnsupportedOperationException();
+        return cacheModel;
     }
 
     @Override

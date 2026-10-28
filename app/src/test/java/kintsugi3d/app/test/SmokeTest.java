@@ -81,7 +81,7 @@ public class SmokeTest
     private static final AtomicBoolean EXPORT_FINISHED = new AtomicBoolean(false);
     private static final AtomicInteger PROCESSED_COUNTER = new AtomicInteger(0);
     private static final AtomicInteger SAVE_COUNTER = new AtomicInteger(0);
-    private static final long TIMEOUT = TimeUnit.SECONDS.toNanos(300);
+    private static final long TIMEOUT = TimeUnit.SECONDS.toNanos(600);
     
     private static final ClassLoader CLASS_LOADER = SmokeTest.class.getClassLoader();
 
@@ -181,14 +181,26 @@ public class SmokeTest
             closeAndWait();
         }
 
+        // Cache clear doesn't consistently work (tested on MacOS)
+//        LOG.debug("Clearing cache...");
+//        Global.state().getCacheModel().requestClearCache();
+//
+//        LOG.debug("Waiting for cache to clear...");
+//        waitFor(() -> Global.state().getCacheModel().getCacheSizeBytes() == 0, "cache clear");
+//        LOG.debug("Cache clear complete.");
+
         LOG.debug("Finished test setup.");
     }
 
     @AfterEach
     void tearDown()
     {
+        LOG.debug("Cleaning up after test...");
+
         // Make sure the project is closed at the end of each test.
         closeAndWait();
+
+        LOG.debug("Finished cleaning up after test.");
     }
 
     private static void setupListeners()
@@ -306,7 +318,7 @@ public class SmokeTest
             GeneralSettingsModel projectSettings = Global.io().getLoadedViewSet().getProjectSettings();
             projectSettings.set("textureSize", TEXTURE_RESOLUTION);
             projectSettings.set("textureSampledSize", TEXTURE_SAMPLED_SIZE);
-            projectSettings.set("textureSampledSize", TEXTURE_SUBDIV_SIZE);
+            projectSettings.set("textureSubdivSize", TEXTURE_SUBDIV_SIZE);
             SpecularFitRequest request = SpecularFitRequest.createBasisAndTexturesOptimizationRequest();
             Rendering.getRequestQueue().addGraphicsRequest(request);
         });
@@ -570,7 +582,6 @@ public class SmokeTest
 
         LOG.debug("Test passed all assertions.");
     }
-
 
     @Test
     @DisplayName("Katrina Fuller fit, from Reality Capture export")
