@@ -266,12 +266,14 @@ jobs:
             LOG="$(mktemp)"
           
             if [ -n "$PROJECT" ]; then
+              echo "Project specified."
               echo "exe:"
               echo "$EXE"
               echo "project:"
               echo "$PROJECT"
               "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
             else
+              echo "No project specified."
               echo "$EXE"
               "$EXE" > >(tee "$LOG") 2>&1 &
             fi
