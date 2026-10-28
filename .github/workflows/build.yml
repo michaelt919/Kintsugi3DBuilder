@@ -258,6 +258,8 @@ jobs:
         
           # Launch an executable, display stdout/stderr live, and check for errors.
           test_launch() {
+            echo "Running test_launch"
+          
             EXE="$1"
             LABEL="$2"
             TIMER="$3"
@@ -319,7 +321,7 @@ jobs:
           
           # Install silently in PowerShell.
           powershell.exe -NoProfile -Command '
-            $p = Start-Process -FilePath "'"$(cygpath -w "$EXE")"'" -ArgumentList "/S" -PassThru -NoNewWindow
+            $p = Start-Process -FilePath "'"$(cygpath -w "$INSTALLER")"'" -ArgumentList "/S" -PassThru -NoNewWindow
             if (!$p.WaitForExit(600000)) {
               Stop-Process -Id $p.Id -Force
               throw "Installer timed out"
