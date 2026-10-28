@@ -63,7 +63,7 @@ jobs:
           
           ARCHIVE_WIN="$(cygpath -w "$ARCHIVE")"
           EXTRACT_WIN="$(cygpath -w "$EXTRACT")"
-          SEVEN_ZIP="$(cygpath -u "$(cmd.exe /c 'echo %ProgramFiles%' | tr -d '\r')")/7-Zip/7z.exe"
+          SEVEN_ZIP="$(cygpath -u "$PROGRAMFILES")/7-Zip/7z.exe"
           
           "$SEVEN_ZIP" x "$ARCHIVE_WIN" "-o$EXTRACT_WIN" -y
           
@@ -343,7 +343,7 @@ jobs:
           run_installer "$INSTALLER" "Installer smoke test" 600 /S
           
           # Find the installed executables.
-          PROGRAM_FILES="$(cygpath -u "$(cmd.exe /c 'echo %ProgramFiles%' | tr -d '\r')")"
+          PROGRAM_FILES="$(cygpath -u "$PROGRAMFILES")"
           installDir="$PROGRAM_FILES/Kintsugi3DBuilder"
           echo "$installDir"
           
