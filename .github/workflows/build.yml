@@ -303,44 +303,20 @@ jobs:
           
             echo "$LABEL smoke test passed."
           }
-          
-          # Run a Windows installer/uninstaller with a timeout and check its exit code.
-          run_installer() {
-            EXE="$1"
-            LABEL="$2"
-            TIMER="$3"
-            shift 3
-          
-            "$EXE" "$@" &
-            PID=$!
-            WINPID="$(cat "/proc/$PID/winpid")"
-            START=$SECONDS
-          
-            while kill -0 "$PID" 2>/dev/null && (( SECONDS - START < TIMER )); do
-              sleep 2
-            done
-          
-            if kill -0 "$PID" 2>/dev/null; then
-              echo "$LABEL timed out."
-              MSYS_NO_PATHCONV=1 taskkill /F /T /PID "$WINPID" || true
-              wait "$PID" 2>/dev/null || true
-              exit 1
-            fi
-          
-            if wait "$PID"; then
-              echo "$LABEL passed."
-            else
-              STATUS=$?
-              echo "$LABEL failed with exit code $STATUS."
-              exit 1
-            fi
-          }
         
           # Test the standalone executable. Its runtime files are intentionally absent.
           test_launch "$STANDALONE" "Standalone executable (no project)" 30
           
-          # Install silently.
-          run_installer "$INSTALLER" "Installer smoke test" 600 /S
+          # Install silently in PowerShell.
+          powershell.exe -NoProfile -Command '
+            $p = Start-Process -FilePath "'"$(cygpath -w "$EXE")"'" -ArgumentList "/S" -PassThru -NoNewWindow
+            if (!$p.WaitForExit(600000)) {
+              Stop-Process -Id $p.Id -Force
+              throw "Installer timed out"
+            }
+            if ($p.ExitCode -ne 0) { throw "Installer failed: $($p.ExitCode)" }
+            Write-Host "Installer smoke test passed."
+          '
           
           # Find the installed executables.
           PROGRAM_FILES="$(cygpath -u "$PROGRAMFILES")"
@@ -379,7 +355,16 @@ jobs:
           test -n "$UNINSTALLER" || { echo "Uninstaller not found"; exit 1; }
           echo "$UNINSTALLER"
           
-          run_installer "$UNINSTALLER" "Uninstaller smoke test" 600 /S
+          # Run the uninstaller in PowerShell
+          powershell.exe -NoProfile -Command '
+            $p = Start-Process -FilePath "'"$(cygpath -w "$UNINSTALLER")"'" -ArgumentList "/S" -PassThru -NoNewWindow
+            if (!$p.WaitForExit(600000)) {
+              Stop-Process -Id $p.Id -Force
+              throw "Uninstaller timed out"
+            }
+            if ($p.ExitCode -ne 0) { throw "Uninstaller failed: $($p.ExitCode)" }
+            Write-Host "Uninstaller smoke test passed."
+          '
           
           # Wait up to 10 minutes for the installation directory to disappear.
           START=$SECONDS
