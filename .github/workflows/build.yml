@@ -266,8 +266,10 @@ jobs:
             LOG="$(mktemp)"
           
             if [ -n "$PROJECT" ]; then
+              echo "$EXE" "$PROJECT"
               "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
             else
+              echo "$EXE"
               "$EXE" > >(tee "$LOG") 2>&1 &
             fi
           
