@@ -263,18 +263,11 @@ jobs:
           
             Remove-Item "$LOG.out", "$LOG.err" -Force -ErrorAction SilentlyContinue
           }
-          
-          Write-Host $standalone
 
-          # Test the standalone executable.
+          # Test the standalone executable -- shaders, scripts, bin directories will be missing 
+          # but the executable should start without errors so long as we don't try to load a project.
           Test-Launch $standalone 30000
           Write-Host "Standalone executable (no project) smoke test passed."
-
-          Test-Launch $standalone 300000 "`"$rodinProject`""
-          Write-Host "Standalone executable (Rodin) smoke test passed."
-
-          Test-Launch $standalone 300000 "`"$katrinaFullerProject`""
-          Write-Host "Standalone executable (Katrina Fuller) smoke test passed."
 
           # Install silently.
           $p = Start-Process $installer.FullName -ArgumentList '/S' -PassThru -NoNewWindow
