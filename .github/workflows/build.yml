@@ -258,8 +258,6 @@ jobs:
         
           # Launch an executable, display stdout/stderr live, and check for errors.
           test_launch() {
-            echo "Running test_launch"
-          
             EXE="$1"
             LABEL="$2"
             TIMER="$3"
@@ -268,15 +266,8 @@ jobs:
             LOG="$(mktemp)"
           
             if [ -n "$PROJECT" ]; then
-              echo "Project specified."
-              echo "exe:"
-              echo "$EXE"
-              echo "project:"
-              echo "$PROJECT"
               "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
             else
-              echo "No project specified."
-              echo "$EXE"
               "$EXE" > >(tee "$LOG") 2>&1 &
             fi
           
