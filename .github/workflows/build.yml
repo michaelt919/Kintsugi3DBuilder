@@ -250,8 +250,8 @@ jobs:
           rodinProject="$GITHUB_WORKSPACE/app/src/test/resources/Rodin/Rodin_psx.k3d"
           katrinaFullerProject="$GITHUB_WORKSPACE/app/src/test/resources/KatrinaFuller/KatrinaFuller_realitycapture.k3d"
         
-          echo $rodinProject
-          echo $katrinaFullerProject
+          echo "$rodinProject"
+          echo "$katrinaFullerProject"
         
           test -f "$rodinProject" || { echo "Rodin test project not found: $rodinProject"; exit 1; }
           test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found: $katrinaFullerProject"; exit 1; }
@@ -261,7 +261,8 @@ jobs:
             EXE="$1"
             LABEL="$2"
             TIMER="$3"
-            PROJECT="${4:-}"
+            CHECK_ERRORS="${4:-false}"
+            PROJECT="${5:-}"
           
             LOG="$(mktemp)"
           
@@ -293,7 +294,7 @@ jobs:
             # Allow tee to finish writing buffered output.
             sleep 1
           
-            if grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
+            if [ "$CHECK_ERRORS" = true ] && grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
               echo "$LABEL: ERROR or uncaught exception found in application output."
               cat "$LOG"
               rm -f "$LOG"
@@ -308,7 +309,7 @@ jobs:
           }
         
           # Test the standalone executable. Its runtime files are intentionally absent.
-          test_launch "$STANDALONE" "Standalone executable (no project)" 30
+          test_launch "$STANDALONE" "Standalone executable (no project)" 30 true
           
           # Install silently in PowerShell.
           powershell.exe -NoProfile -Command '
@@ -339,9 +340,9 @@ jobs:
           echo "$BUILDER"
           
           # Test the installed Builder.
-          test_launch "$BUILDER" "Installed Builder" 30
-          test_launch "$BUILDER" "Installed Builder (Rodin)" 300 "$rodinProject"
-          test_launch "$BUILDER" "Installed Builder (Katrina Fuller)" 300 "$katrinaFullerProject"
+          test_launch "$BUILDER" "Installed Builder" 30 true
+          test_launch "$BUILDER" "Installed Builder (Rodin)" 300 true "$rodinProject"
+          test_launch "$BUILDER" "Installed Builder (Katrina Fuller)" 300 true "$katrinaFullerProject"
           
           # Test the installed Viewer.
           VIEWER="$(find "$installDir" -type f \
@@ -349,6 +350,8 @@ jobs:
           test -n "$VIEWER" || { echo "Kintsugi3DViewer.exe not found"; exit 1; }
           echo "$VIEWER"
           
+          # Intentionally omit checking for errors since Godot has a tendency to spam errors 
+          # especially when there's no GPU like on GitHub actions.
           test_launch "$VIEWER" "Installed Viewer" 30
           
           # Check for any processes still running from the installation directory.
@@ -455,8 +458,8 @@ jobs:
           rodinProject="$GITHUB_WORKSPACE/app/src/test/resources/Rodin/Rodin_psx.k3d"
           katrinaFullerProject="$GITHUB_WORKSPACE/app/src/test/resources/KatrinaFuller/KatrinaFuller_realitycapture.k3d"
 
-          echo $rodinProject
-          echo $katrinaFullerProject
+          echo "$rodinProject"
+          echo "$katrinaFullerProject"
           
           test -f "$rodinProject" || { echo "Rodin test project not found"; exit 1; }
           test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found"; exit 1; }
@@ -467,7 +470,8 @@ jobs:
             EXE="$2"
             LABEL="$3"
             TIMER="$4"
-            PROJECT="${5:-}"
+            CHECK_ERRORS="${5:-false}"
+            PROJECT="${6:-}"
 
             test -d "$APP" || { echo "$LABEL: app bundle not found"; exit 1; }
             test -x "$EXE" || { echo "$LABEL: executable not found or not executable"; exit 1; }
@@ -491,8 +495,11 @@ jobs:
               exit 1
             fi
           
+            # Allow tee to finish writing buffered output.
+            sleep 1
+          
             # Check for errors in stdout / stderr.
-            if grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
+            if [ "$CHECK_ERRORS" = true ] && grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
               echo "$LABEL: ERROR or uncaught exception found in application output."
               cat "$LOG"
               rm -f "$LOG"
@@ -533,32 +540,34 @@ jobs:
           echo "$BUILDER"
           smoke_test_app "$BUILDER" \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
-            "Builder (build directory)" 30
+            "Builder (build directory)" 30 true
           smoke_test_app "$BUILDER" \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (build directory)" \
-            300 "$rodinProject"
+            300 true "$rodinProject"
           smoke_test_app "$BUILDER" \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (build directory)" \
-            300 "$katrinaFullerProject"
+            300 true "$katrinaFullerProject"
 
           # Test 2: Builder extracted from the DMG.
           BUILDER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Builder.app"
           echo "$BUILDER_EXTRACTED"
           smoke_test_app "$BUILDER_EXTRACTED" \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
-            "Builder (DMG)" 30
+            "Builder (DMG)" 30 true
           smoke_test_app "$BUILDER_EXTRACTED" \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (DMG)" \
-            300 "$rodinProject"
+            300 true "$rodinProject"
           smoke_test_app "$BUILDER_EXTRACTED" \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (DMG)" \
-            300 "$katrinaFullerProject"
+            300 true "$katrinaFullerProject"
 
-          # Test 3: Viewer extracted from the DMG.
+          # Test 3: Viewer extracted from the DMG
+          # Intentionally omit checking for errors since Godot has a tendency to spam errors 
+          # especially when there's no GPU like on GitHub actions.
           VIEWER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Viewer.app"
           echo "$VIEWER_EXTRACTED"
           smoke_test_app "$VIEWER_EXTRACTED" \
