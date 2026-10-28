@@ -250,6 +250,9 @@ jobs:
           rodinProject="$GITHUB_WORKSPACE/app/src/test/resources/Rodin/Rodin_psx.k3d"
           katrinaFullerProject="$GITHUB_WORKSPACE/app/src/test/resources/KatrinaFuller/KatrinaFuller_realitycapture.k3d"
         
+          echo $rodinProject
+          echo $katrinaFullerProject
+        
           test -f "$rodinProject" || { echo "Rodin test project not found: $rodinProject"; exit 1; }
           test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found: $katrinaFullerProject"; exit 1; }
         
@@ -438,6 +441,9 @@ jobs:
           rodinProject="$GITHUB_WORKSPACE/app/src/test/resources/Rodin/Rodin_psx.k3d"
           katrinaFullerProject="$GITHUB_WORKSPACE/app/src/test/resources/KatrinaFuller/KatrinaFuller_realitycapture.k3d"
 
+          echo $rodinProject
+          echo $katrinaFullerProject
+          
           test -f "$rodinProject" || { echo "Rodin test project not found"; exit 1; }
           test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found"; exit 1; }
           
