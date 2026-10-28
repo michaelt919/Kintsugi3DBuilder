@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,7 +16,6 @@ package kintsugi3d.gl.nativebuffer;
  * The internal format and precision of each vector is determined by the implementation.
  * Every vector in the list has the same number of dimensions, which is the number of elements associated with a single vector.
  * Typically, concrete instances of this interface are created using a NativeVectorBufferFactory.
- * @author Michael Tetzlaff
  *
  */
 public interface NativeVectorBuffer extends ReadonlyNativeVectorBuffer

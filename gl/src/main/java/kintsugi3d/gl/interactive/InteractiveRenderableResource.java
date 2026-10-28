@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,7 +17,6 @@ import kintsugi3d.gl.core.Context;
  * An interface used with the InteractiveGraphics object to coordinate the initialization,
  * updating, drawing and deleting of an OpenGL-like renderable view.
  * 
- * @author Michael Tetzlaff
  * @see InteractiveGraphics
  */
 public interface InteractiveRenderableResource<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>

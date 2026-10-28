@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,7 +28,6 @@ import java.util.Map;
  * (2) it serves as an access point for modifying global GL options like depth testing, multisampling, and back-face culling,
  * (3) it provides synchronization functions like flush(), finish(), and swapBuffers(),
  * (4) it acts as a factory for creating GL objects such as buffers, textures, and shaders.
- * @author Michael Tetzlaff
  *
  * @param <ContextType> For concrete types, this type parameter should match the implementing class itself.
  * Abstract implementations should be parameterized so that subclasses can fulfill this constraint.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,14 +16,12 @@ package kintsugi3d.gl.core;
  * Implementations should attempt to match this format as much as possible; 
  * if the format specified is not available, the smallest format with at least as much precision in each color component should be used instead, if such a format exists.
  * If no format exists with as much precision as requested, the closest format with the maximum possible precision should be used.
- * @author Michael Tetzlaff
  *
  */
 public final class ColorFormat
 {
     /**
      * Enumerates the possible internal data types
-     * @author Michael Tetzlaff
      *
      */
     public enum DataType

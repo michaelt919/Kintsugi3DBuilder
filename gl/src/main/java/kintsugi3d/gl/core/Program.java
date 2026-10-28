@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,7 +20,6 @@ import java.util.Optional;
  * An interface for a program that can be used for rendering.
  * A program's behavior can be modified dynamically by changing "uniform" variables which remain constant with respect to a single draw call.
  * These variables can be scalars, vectors, uniform buffer objects (which consist of multiple scalars or vectors stored in a single buffer), or texture objects.
- * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the GL context that the program is associated with.
  */

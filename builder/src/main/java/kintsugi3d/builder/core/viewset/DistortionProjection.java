@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,7 +20,6 @@ import java.util.Objects;
  * Creates a perspective projection that also maintains camera distortion parameters (for Brown's distortion model).
  * These parameters are maintained for reference only; they do not actually affect the projection matrix.
  * The projection matrix is computed using nothing but the sensor width and height and the parameter fy.
- * @author Michael Tetzlaff
  *
  */
 public class DistortionProjection implements Projection

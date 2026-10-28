@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -16,7 +16,6 @@ package kintsugi3d.gl.core;
  * The actual compression algorithm used can be freely chosen by the GL, 
  * but it should ensure that all the requested components are available within the specified bits-per-pixel (bpp) limits.
  * Note: BPP values are an asymptotic measure and may vary slightly, particularly with smaller textures. 
- * @author Michael Tetzlaff
  *
  */
 public enum CompressionFormat 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,7 +20,6 @@ import kintsugi3d.gl.vecmath.*;
  * since there is no guarantee that different programs will expect the same set of vertex attributes.
  * Unlike many other GL entities, a Drawable will be automatically deleted when the entity is garbage collected by the JRE,
  * but can be closed manually or using try-with-resources to be deleted sooner to free up VRAM
- * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the GL context that the Drawable is associated with.
  */

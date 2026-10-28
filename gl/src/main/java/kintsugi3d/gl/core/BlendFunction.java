@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,14 +14,12 @@ package kintsugi3d.gl.core;
 /**
  * Represents a function to be used for blending.
  * The function must be a linear combination of a source color and a destination color, weighted using one of several predefined weighting function.
- * @author Michael Tetzlaff
  *
  */
 public class BlendFunction
 {
     /**
      * An enumeration of the possible ways that either a source or a destination color can contribute to the final color.
-     * @author Michael Tetzlaff
      *
      */
     public enum Weight

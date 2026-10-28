@@ -63,7 +63,7 @@ jobs:
           
           ARCHIVE_WIN="$(cygpath -w "$ARCHIVE")"
           EXTRACT_WIN="$(cygpath -w "$EXTRACT")"
-          SEVEN_ZIP="$ProgramFiles/7-Zip/7z.exe"
+          SEVEN_ZIP="$(cygpath -u "$(cmd.exe /c 'echo %ProgramFiles%' | tr -d '\r')")/7-Zip/7z.exe"
           
           "$SEVEN_ZIP" x "$ARCHIVE_WIN" "-o$EXTRACT_WIN" -y
           
@@ -216,7 +216,7 @@ jobs:
           fi
           
           BUILD_DIR="${BUILD_DIR#"$GITHUB_WORKSPACE"/}"
-          echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_OUTPUT
+          echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -267,14 +267,16 @@ jobs:
             else
               "$EXE" > >(tee "$LOG") 2>&1 &
             fi
+          
             PID=$!
+            WINPID="$(cat "/proc/$PID/winpid")"
           
             sleep "$TIMER"
           
             if kill -0 "$PID" 2>/dev/null; then
               echo "$LABEL: Process remained running after ${TIMER} seconds."
               # Kill the whole process tree, including the Java child of Launch4j.
-              MSYS_NO_PATHCONV=1 taskkill /F /T /PID "$PID" || true
+              MSYS_NO_PATHCONV=1 taskkill /F /T /PID "$WINPID" || true
               wait "$PID" 2>/dev/null || true
             else
               if wait "$PID"; then STATUS=0; else STATUS=$?; fi
@@ -311,6 +313,7 @@ jobs:
           
             "$EXE" "$@" &
             PID=$!
+            WINPID="$(cat "/proc/$PID/winpid")"
             START=$SECONDS
           
             while kill -0 "$PID" 2>/dev/null && (( SECONDS - START < TIMER )); do
@@ -319,7 +322,7 @@ jobs:
           
             if kill -0 "$PID" 2>/dev/null; then
               echo "$LABEL timed out."
-              MSYS_NO_PATHCONV=1 taskkill /F /T /PID "$PID" || true
+              MSYS_NO_PATHCONV=1 taskkill /F /T /PID "$WINPID" || true
               wait "$PID" 2>/dev/null || true
               exit 1
             fi
@@ -340,7 +343,8 @@ jobs:
           run_installer "$INSTALLER" "Installer smoke test" 600 /S
           
           # Find the installed executables.
-          installDir="$(cygpath -u "$ProgramFiles")/Kintsugi3DBuilder"
+          PROGRAM_FILES="$(cygpath -u "$(cmd.exe /c 'echo %ProgramFiles%' | tr -d '\r')")"
+          installDir="$PROGRAM_FILES/Kintsugi3DBuilder"
           echo "$installDir"
           
           BUILDER="$(find "$installDir" -type f \
@@ -387,16 +391,13 @@ jobs:
             echo "Contents remaining after uninstall:"
             find "$installDir" -mindepth 1 -print
         
-          # Keep the failure diagnostic from the original script.
-          powershell.exe -NoProfile -Command '
-            try {
-              Remove-Item -LiteralPath "'"$(cygpath -w "$installDir")"'" -Recurse -Force -ErrorAction Stop
-              Write-Host "PowerShell successfully removed the installation directory."
-            } catch {
-              Write-Host "PowerShell deletion error: $($_.Exception.Message)"
-              Write-Host $_.Exception.ToString()
-            }
-          '
+            # Try to delete the files directly to get more debugging details about why the uninstaller failed.
+            if rm -rf "$installDir"; then
+              echo "Successfully removed installation directory."
+            else
+              echo "Failed to remove installation directory: $installDir"
+            exit 1
+            fi
         
             echo "Uninstaller did not remove installation directory: $installDir"
             exit 1
