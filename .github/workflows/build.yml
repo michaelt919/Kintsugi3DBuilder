@@ -379,11 +379,15 @@ jobs:
             $Uninstaller = "'"$(cygpath -w "$UNINSTALLER")"'"
             Write-Host $Uninstaller
             $p = Start-Process -FilePath $Uninstaller -ArgumentList "/S" -PassThru -NoNewWindow
+          
+            # Might be needed to prevent an empty error code with -NoNewWindow?
+            $null = $p.Handle
+          
             if (!$p.WaitForExit(600000)) {
               Stop-Process -Id $p.Id -Force
               throw "Uninstaller timed out"
             }
-            $p.Refresh()
+          
             if ($p.ExitCode -ne 0) { throw "Uninstaller failed: $($p.ExitCode)" }
             Write-Host "Uninstaller smoke test passed."
           '
