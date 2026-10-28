@@ -472,7 +472,7 @@ jobs:
           }
           
           STAGING_DIR="$(find "$BUILD_DIR" -maxdepth 1 -type d \
-            -name 'Kintsugi3DBuilder-*' ! -name '*-macos.dmg' -print -quit)"
+            -name 'app-*' ! -name '*-macos.dmg' -print -quit)"
 
           # Test 1: Builder from the staging directory.
           BUILDER="$STAGING_DIR/Kintsugi 3D Builder.app"
