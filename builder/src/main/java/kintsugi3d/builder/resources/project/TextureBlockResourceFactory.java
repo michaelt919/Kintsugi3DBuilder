@@ -1,0 +1,91 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.resources.project;
+
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ManagedResource;
+import kintsugi3d.gl.geometry.GeometryTextures;
+import kintsugi3d.gl.interactive.DefaultProgressMonitor;
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.material.TextureLoadOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+
+public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements ManagedResource
+{
+    private static final Logger LOG = LoggerFactory.getLogger(TextureBlockResourceFactory.class);
+    private final ImageCache<ContextType> imageCache;
+
+    private final GraphicsResourcesCommon<ContextType> commonResources;
+
+    private final GeometryTextures<ContextType> fullGeometryTextures;
+
+    TextureBlockResourceFactory(GraphicsResourcesCommon<ContextType> commonResources, ImageCache<ContextType> imageCache)
+    {
+        this.imageCache = imageCache;
+        this.commonResources = commonResources;
+
+        this.fullGeometryTextures = commonResources.getGeometryResources()
+            .createGeometryFramebuffer(imageCache.getSettings().getTextureWidth(), imageCache.getSettings().getTextureHeight());
+    }
+
+    public GraphicsResourcesTextureSpace<ContextType> createBlockResources(int i, int j, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
+    {
+        TextureLoadOptions loadOptions = new TextureLoadOptions();
+        loadOptions.setLinearFilteringRequested(false);
+        loadOptions.setMipmapsRequested(false);
+        loadOptions.setCompressionRequested(false);
+
+        int x = imageCache.getSettings().getBlockStartX(i);
+        int y = imageCache.getSettings().getBlockStartY(j);
+        int width = imageCache.getSettings().getBlockStartX(i + 1) - x;
+        int height = imageCache.getSettings().getBlockStartY(j + 1) - y;
+
+        try
+        {
+            return GraphicsResourcesTextureSpace.createWithOwnedCommonResources(
+                commonResources.crop(x, y, width, height),
+                () -> fullGeometryTextures.createViewportCopy(x, y, width, height),
+                imageCache.getBlockDirectory(i, j), loadOptions, width, height, monitor);
+        }
+        catch (IOException e)
+        {
+            LOG.warn("Incomplete cache; will try to rebuild.");
+
+            // Try to reinitialize in case the cache was only partially complete.
+            imageCache.initialize(new DefaultProgressMonitor()
+            {
+                @Override
+                public void allowUserCancellation() throws UserCancellationException
+                {
+                    monitor.allowUserCancellation();
+                }
+            });
+
+            // If initialize() completed without exceptions, then createSampledResources() should work now.
+            return createBlockResources(i, j, monitor);
+        }
+    }
+
+    @Override
+    public void close()
+    {
+        if (this.fullGeometryTextures != null)
+        {
+            fullGeometryTextures.close();
+        }
+    }
+}

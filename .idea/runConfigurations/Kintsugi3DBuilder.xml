@@ -3,7 +3,7 @@
     <option name="ALTERNATIVE_JRE_PATH" value="temurin-11" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="kintsugi3d.app.Kintsugi3DBuilder" />
-    <module name="Kintsugi3DBuilder" />
+    <module name="app" />
     <method v="2">
       <option name="Make" enabled="true" />
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="generate-resources" />

@@ -1,0 +1,188 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.resources.project.stream;
+
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Drawable;
+import kintsugi3d.gl.core.ReadableFramebuffer;
+import kintsugi3d.gl.stream.GraphicsStream;
+import kintsugi3d.gl.stream.GraphicsStreamBase;
+import kintsugi3d.gl.util.ColorList;
+import kintsugi3d.gl.util.ColorNativeBufferList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+public class ParallelViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
+{
+    private static final Logger LOG = LoggerFactory.getLogger(ParallelViewRenderStream.class);
+    private final Collection<View> views;
+    private final Drawable<ContextType> drawable;
+    private final ReadableFramebuffer<ContextType> framebuffer;
+    private final int attachmentCount;
+    private final int maxRunningThreads;
+
+    private static final int DEFAULT_MAX_RUNNING_THREADS = 5;
+
+    private final Object threadsRunningLock = new Object();
+    private int threadsRunning = 0;
+
+    private final Deque<ColorNativeBufferList[]> unusedColorBuffers;
+
+    ParallelViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount,
+        int maxRunningThreads)
+    {
+        this.views = Collections.unmodifiableCollection(views);
+        this.drawable = drawable;
+        this.framebuffer = framebuffer;
+        this.attachmentCount = attachmentCount;
+        this.maxRunningThreads = maxRunningThreads;
+        unusedColorBuffers = IntStream.range(0, maxRunningThreads)
+            .mapToObj(i -> IntStream.range(0, attachmentCount)
+                .mapToObj(j -> new ColorNativeBufferList(framebuffer.getSizeForRead().width * framebuffer.getSizeForRead().height))
+                .toArray(ColorNativeBufferList[]::new))
+            .collect(Collectors.toCollection(ArrayDeque::new));
+    }
+
+    ParallelViewRenderStream(Collection<View> views, Drawable<ContextType> drawable, ReadableFramebuffer<ContextType> framebuffer, int attachmentCount)
+    {
+        this(views, drawable, framebuffer, attachmentCount, DEFAULT_MAX_RUNNING_THREADS);
+    }
+
+    @Override
+    public GraphicsStream<ColorList[]> sequential()
+    {
+        return new SequentialViewRenderStream<>(views, drawable, framebuffer, attachmentCount);
+    }
+
+    @Override
+    public GraphicsStream<ColorList[]> parallel()
+    {
+        return this;
+    }
+
+    @Override
+    public GraphicsStream<ColorList[]> parallel(int maxRunningThreads)
+    {
+        if (maxRunningThreads == this.maxRunningThreads)
+        {
+            return this;
+        }
+        else
+        {
+            return new ParallelViewRenderStream<>(views, drawable, framebuffer, attachmentCount, maxRunningThreads);
+        }
+    }
+
+    @Override
+    public int getCount()
+    {
+        return views.size();
+    }
+
+    @Override
+    public void forEach(Consumer<? super ColorList[]> action)
+    {
+        for (View view : views)
+        {
+            ColorNativeBufferList[] colorBuffers;
+
+            synchronized (threadsRunningLock)
+            {
+                // Make sure that we don't have too many threads running.
+                // Wait until a thread finishes if we're at the max.
+                while (threadsRunning >= maxRunningThreads)
+                {
+                    try
+                    {
+                        threadsRunningLock.wait(30000); // Double check every 30 seconds if notifyAll() was not called
+                    }
+                    catch (InterruptedException e)
+                    {
+                        LOG.error("Error: Operation interrupted:", e);
+                    }
+                }
+
+                // Grab a color buffer while we still have the lock.
+                colorBuffers = unusedColorBuffers.pop();
+            }
+
+            for (int i = 0; i < attachmentCount; i++)
+            {
+                // Clear framebuffer
+                framebuffer.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+            }
+
+            // Run shader program to fill framebuffer with per-pixel information.
+            drawable.program().setUniform("viewIndex", view.getGPUViewIndex());
+            drawable.draw(framebuffer);
+
+
+            // Copy framebuffer from GPU to main memory.
+            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.getTextureReaderForColorAttachment(i).readFloatingPointRGBA(colorBuffers[i].buffer));
+
+            synchronized (threadsRunningLock)
+            {
+                threadsRunning++;
+            }
+
+            Thread actionThread = new Thread(() ->
+            {
+                try
+                {
+                    action.accept(colorBuffers);
+                }
+                catch (RuntimeException e)
+                {
+                    LOG.error("An error occurred while processing a stream of rendering data: ", e);
+                }
+                finally
+                {
+                    synchronized (threadsRunningLock)
+                    {
+                        // Return the buffer to the unused pool while we have the lock.
+                        unusedColorBuffers.push(colorBuffers);
+
+                        threadsRunning--;
+                        threadsRunningLock.notifyAll();
+                    }
+                }
+            });
+
+            actionThread.start();
+        }
+
+        // Wait for all the threads to finish.
+        synchronized (threadsRunningLock)
+        {
+            while (threadsRunning > 0)
+            {
+                try
+                {
+                    threadsRunningLock.wait(30000); // Double check every 30 seconds if notifyAll() was not called
+                }
+                catch (InterruptedException e)
+                {
+                    LOG.error("Error: Operation interrupted:", e);
+                }
+            }
+        }
+    }
+}

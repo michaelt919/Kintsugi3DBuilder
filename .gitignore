@@ -87,7 +87,8 @@ http-client.private.env.json
 
 # Not part of JetBrains standard .gitignore but seem to be necessary with current project configuration.
 target/*
-/dependency-reduced-pom.xml
+**/target/*
+**/dependency-reduced-pom.xml
 
 # Project-specific
 *.log

@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SmokeTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="app" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="kintsugi3d.app.test.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="PACKAGE_NAME" value="kintsugi3d.app.test" />
+    <option name="MAIN_CLASS_NAME" value="kintsugi3d.app.test.SmokeTest" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="generate-resources" />
+    </method>
+  </configuration>
+</component>

@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2019 - 2026 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -8,34 +8,32 @@
   ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>1.6.0</version>
-    <packaging>jar</packaging>
+    <version>1.7.0</version>
+
+    <!-- This POM coordinates the project; it does not produce a JAR. -->
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>app</module>
+        <module>builder</module>
+        <module>fx</module>
+        <module>gl</module>
+        <module>optimization</module>
+        <module>render-export</module>
+        <module>sjm-ply</module>
+        <module>util</module>
+    </modules>
     <build>
-        <sourceDirectory>src</sourceDirectory>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.12</version>
-                <executions>
-                    <execution>
-                        <id>timestamp-property</id>
-                        <goals>
-                            <goal>timestamp-property</goal>
-                        </goals>
-                        <phase>validate</phase>
-                        <configuration>
-                            <name>current.year</name>
-                            <pattern>yyyy</pattern>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -43,100 +41,22 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
-                    <compilerArgs>
-                        <arg>--add-exports</arg>
-                        <arg>java.desktop/sun.java2d.cmm=ALL-UNNAMED</arg>
-                    </compilerArgs>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>log4j-plugin-processor</id>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <phase>process-classes</phase>
-                        <configuration>
-                            <proc>only</proc>
-                            <annotationProcessors>
-                                <annotationProcessor>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
-                            </annotationProcessors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>kintsugi3d.app.Kintsugi3DBuilder</mainClass>
-                        </transformer>
-                        <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer" />
-                    </transformers>
-                    <shadedArtifactAttached>true</shadedArtifactAttached>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.github.edwgiz</groupId>
-                        <artifactId>maven-shade-plugin.log4j2-cachefile-transformer</artifactId>
-                        <version>2.6.1</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>com.googlecode.maven-download-plugin</groupId>
                 <artifactId>download-maven-plugin</artifactId>
                 <version>1.13.0</version>
+                <!-- GitHub Actions can time out on downloads if we don't set a generous readTimeOut. -->
+                <configuration>
+                    <readTimeOut>60000</readTimeOut>
+                </configuration>
                 <executions>
-                    <!-- Download JRE -->
-                    <execution>
-                        <id>download-jre</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://api.adoptium.net/v3/binary/latest/${java.version}/ga/${jre.os}/${jre.arch}/jre/hotspot/normal/eclipse
-                            </url>
-                            <outputDirectory>
-                                ${project.build.directory}
-                            </outputDirectory>
-                            <outputFileName>jre.tar.gz</outputFileName>
-                        </configuration>
-                    </execution>
-                    <!-- Download latest published build of Kinsugi 3D Viewer -->
-                    <execution>
-                        <id>download-viewer</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>
-                                https://github.com/UWStout/Kintsugi3DViewer/releases/download/v${viewer.version}/Kintsugi3DViewer-${viewer.os}.zip
-                            </url>
-                            <outputDirectory>
-                                ${project.build.directory}
-                            </outputDirectory>
-                            <outputFileName>Kintsugi3DViewer.zip</outputFileName>
-                        </configuration>
-                    </execution>
                     <!-- Download latest published build of USDZ exporter -->
                     <!-- Put this one in bin rather than in target so that it's also accessible when running in IDE. -->
                     <execution>
                         <id>download-usdz-exporter</id>
+                        <inherited>false</inherited>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>wget</goal>
@@ -146,7 +66,7 @@
                                 https://github.com/PoctorDepper/usdz-exporter/releases/download/v${usdz-exporter.version}/usdz-exporter-v${usdz-exporter.version}-${usdz-exporter.os}
                             </url>
                             <outputDirectory>
-                                ${project.basedir}/bin
+                                bin
                             </outputDirectory>
                         </configuration>
                     </execution>
@@ -160,6 +80,7 @@
                     <!-- Change permissions for USDZ exporter.  Should be no-op on Windows -->
                     <execution>
                         <id>chmod-usdz-exporter</id>
+                        <inherited>false</inherited>
                         <phase>generate-resources</phase>
                         <configuration>
                             <target>
@@ -171,80 +92,68 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    <!-- Unzip JRE - explicitly invoking tar so that we can use strip-components  -->
+                </executions>
+            </plugin>
+            <!-- Delete test-output on initialize and clean, and also remove bin/ on clean. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
                     <execution>
-                        <id>unpack-jre</id>
-                        <phase>prepare-package</phase>
+                        <id>clean-extra-files</id>
+                        <phase>clean</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>clean</goal>
                         </goals>
                         <configuration>
-                            <target>
-                                <delete dir="${project.build.directory}/jre"/>
-                                <mkdir dir="${project.build.directory}/jre"/>
-                                <exec executable="tar" failonerror="true">
-                                    <arg value="-xzf"/>
-                                    <arg value="${project.build.directory}/jre.tar.gz"/>
-                                    <arg value="--strip-components=1"/>
-                                    <arg value="-C"/>
-                                    <arg value="${project.build.directory}/jre"/>
-                                </exec>
-                                <delete file="${project.build.directory}/jre.tar.gz"/>
-                            </target>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>bin/</include>
+                                        <include>test-output/</include>
+                                    </includes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
                         </configuration>
                     </execution>
-                    <!-- Unzip Kintsugi 3D Viewer -->
                     <execution>
-                        <id>unpack-viewer</id>
-                        <phase>prepare-package</phase>
+                        <id>delete-test-output-on-initialize</id>
+                        <phase>initialize</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>clean</goal>
                         </goals>
                         <configuration>
-                            <target>
-                                <unzip
-                                        src="${project.build.directory}/Kintsugi3DViewer.zip"
-                                        dest="${project.build.directory}/viewer"
-                                />
-                                <chmod
-                                        file="${project.build.directory}/viewer/Kintsugi 3D Viewer.app/Contents/MacOS/Kintsugi 3D Viewer"
-                                        perm="755"
-                                />
-                                <delete file="${project.build.directory}/Kintsugi3DViewer.zip"/>
-                            </target>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>test-output/</include>
+                                    </includes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>**/kintsugi3d-builder-about.txt</include>
-                    <include>**/Info.plist</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/kintsugi3d-builder-about.txt</exclude>
-                    <exclude>**/Info.plist</exclude>
-                </excludes>
-            </resource>
-        </resources>
     </build>
     <properties>
         <java.version>11</java.version>
-        <lwjgl.version>3.3.3</lwjgl.version>
-        <viewer.version>1.5.2</viewer.version>
+        <viewer.version>1.7.0</viewer.version>
         <usdz-exporter.version>1.2.2</usdz-exporter.version>
+        <release-basename>Kintsugi3DBuilder</release-basename>
+        <!-- Define skipTests explicitly so that it can be used by test runners other than Surefire. -->
+        <skipTests>false</skipTests>
     </properties>
     <profiles>
         <profile>
-            <id>lwjgl-natives-macos-x86_64</id>
+            <id>macos-x86_64</id>
             <activation>
                 <os>
                     <family>mac</family>
@@ -252,7 +161,6 @@
                 </os>
             </activation>
             <properties>
-                <lwjgl.natives>natives-macos</lwjgl.natives>
                 <jre.os>mac</jre.os>
                 <jre.arch>x64</jre.arch>
                 <viewer.os>macos</viewer.os>
@@ -260,7 +168,7 @@
             </properties>
         </profile>
         <profile>
-            <id>lwjgl-natives-macos-arm64</id>
+            <id>macos-arm64</id>
             <activation>
                 <os>
                     <family>mac</family>
@@ -268,70 +176,11 @@
                 </os>
             </activation>
             <properties>
-                <lwjgl.natives>natives-macos-arm64</lwjgl.natives>
                 <jre.os>mac</jre.os>
                 <jre.arch>aarch64</jre.arch>
                 <viewer.os>macos</viewer.os>
                 <usdz-exporter.os>macos</usdz-exporter.os>
             </properties>
-        </profile>
-        <profile>
-            <id>macos-install</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <build>
-                <!-- MacOS: Needs a Maven assembly for MacOS and then the disk image script -->
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.3.0</version>
-                        <executions>
-                            <execution>
-                                <id>build-dist-macos</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <descriptors>
-                                        <descriptor>src/assembly/distribution-macos.xml</descriptor>
-                                    </descriptors>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <!-- Disk image for MacOS -->
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.5.0</version>
-                        <executions>
-                            <execution>
-                                <id>create-dmg</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>bash</executable>
-                                    <arguments>
-                                        <argument>${project.basedir}/macos-disk-image.sh</argument>
-                                        <argument>Kintsugi 3D Builder ${project.version}</argument>
-                                        <argument>${project.build.directory}</argument>
-                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-distribution-macos.zip</argument>
-                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}</argument>
-                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-macos.dmg</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>windows-amd64</id>
@@ -342,86 +191,14 @@
                 </os>
             </activation>
             <properties>
-                <lwjgl.natives>natives-windows</lwjgl.natives>
                 <jre.os>windows</jre.os>
                 <jre.arch>x64</jre.arch>
                 <viewer.os>windows</viewer.os>
                 <usdz-exporter.os>windows.exe</usdz-exporter.os>
             </properties>
-            <build>
-                <!-- Windows: Needs Launch4J, a Maven assembly for Windows, and NSIS installer -->
-                <plugins>
-                    <plugin>
-                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                        <artifactId>launch4j-maven-plugin</artifactId>
-                        <version>2.1.2</version>
-                        <executions>
-                            <execution>
-                                <id>l4j-clui</id>
-                                <phase>package</phase>
-                                <goals><goal>launch4j</goal></goals>
-                                <configuration>
-                                    <headerType>gui</headerType>
-                                    <outfile>${project.build.directory}/Kintsugi3DBuilder.exe</outfile>
-                                    <jar>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</jar>
-                                    <icon>Kintsugi3D.ico</icon>
-                                    <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
-                                    <chdir>.</chdir>
-                                    <jre>
-                                        <path>jre;%JAVA_HOME%;%PATH%</path>
-                                        <minVersion>11.0.0</minVersion>
-                                        <maxVersion>11.99.99</maxVersion>
-                                    </jre>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.3.0</version>
-                        <executions>
-                            <execution>
-                                <id>build-dist-zip</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <descriptors>
-                                        <descriptor>src/assembly/distribution.xml</descriptor>
-                                    </descriptors>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.digitalmediaserver</groupId>
-                        <artifactId>nsis-maven-plugin</artifactId>
-                        <version>1.0.3</version>
-                        <configuration>
-                            <injectHeaderFile>true</injectHeaderFile>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>build-windows-installer</id>
-                                <phase>install</phase>
-                                <configuration>
-                                    <scriptFile>installer.nsi</scriptFile>
-                                    <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
-                                </configuration>
-                                <goals>
-                                    <goal>generate-headerfile</goal>
-                                    <goal>make</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
-            <id>lwjgl-natives-linux-amd64</id>
+            <id>linux-amd64</id>
             <activation>
                 <os>
                     <family>linux</family>
@@ -429,7 +206,6 @@
                 </os>
             </activation>
             <properties>
-                <lwjgl.natives>natives-linux</lwjgl.natives>
                 <jre.os>linux</jre.os>
                 <jre.arch>x64</jre.arch>
                 <viewer.os>linux</viewer.os> <!-- Note: Probably won't exist unless we start posting Linux builds -->
@@ -437,174 +213,7 @@
             </properties>
         </profile>
     </profiles>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.lwjgl</groupId>
-                <artifactId>lwjgl-bom</artifactId>
-                <version>${lwjgl.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
-
-<!-- Something like this might work if we want to try to build for both PC and Mac on the same platform? -->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-base</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-controls</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-fxml</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-graphics</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-swing</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-base</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>win</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-controls</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>win</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-fxml</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>win</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-graphics</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>win</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-swing</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>win</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-base</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>mac</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-controls</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>mac</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-fxml</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>mac</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-graphics</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>mac</classifier>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.openjfx</groupId>-->
-<!--            <artifactId>javafx-swing</artifactId>-->
-<!--            <version>17.0.2</version>-->
-<!--            <classifier>mac</classifier>-->
-<!--        </dependency>-->
-
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>17.0.19</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
-            <version>17.0.19</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ejml</groupId>
-            <artifactId>ejml-all</artifactId>
-            <version>0.31</version>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-glfw</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-opengl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-glfw</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-opengl</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>de.javagl</groupId>
-            <artifactId>jgltf-model</artifactId>
-            <version>2.0.4</version>
-        </dependency>
-        <!-- Use a non-vulnerable version of jackson-databind instead of version transitive of jgltf-model -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.21.7</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.21.7</version>
-        </dependency>
-        <dependency>
-            <groupId>de.javagl</groupId>
-            <artifactId>jgltf-obj</artifactId>
-            <version>2.0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>de.javagl</groupId>
-            <artifactId>obj</artifactId>
-            <version>0.4.0</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -621,31 +230,16 @@
             <version>2.25.5</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-imaging</artifactId>
-            <version>1.0-alpha3</version>
-        </dependency>
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.13.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>5.12.0</version>
-        </dependency>
-        <!-- Updated dependencies for OpenCSV -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.20.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.15.0</version>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.13.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
