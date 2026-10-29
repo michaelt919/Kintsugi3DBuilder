@@ -30,7 +30,7 @@ import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.DynamicResourceManager;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace;
 import kintsugi3d.builder.resources.project.GraphicsResourcesImageSpace.Builder;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
 import kintsugi3d.builder.util.events.EventDispatcher;
 import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;

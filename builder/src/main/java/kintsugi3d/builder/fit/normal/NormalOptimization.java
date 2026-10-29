@@ -15,7 +15,7 @@ import kintsugi3d.builder.core.texture.StandardTexture;
 import kintsugi3d.builder.core.texture.TextureResolution;
 import kintsugi3d.builder.fit.settings.ReadonlyNormalOptimizationSettings;
 import kintsugi3d.builder.resources.project.ShaderProgramFactory;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
