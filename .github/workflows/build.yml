@@ -476,62 +476,71 @@ jobs:
             CHECK_ERRORS="${5:-false}"
             PROJECT="${6:-}"
 
-            test -d "$APP" || { echo "$LABEL: app bundle not found"; exit 1; }
-            test -x "$EXE" || { echo "$LABEL: executable not found or not executable"; exit 1; }
-
-            # Test 1: Run the executable directly, piping stdout and stderr to a log file.
-            LOG="$(mktemp)"
-            if [ -n "$PROJECT" ]; then
-              "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
-            else
-              "$EXE" > >(tee "$LOG") 2>&1 &
+            if [ "$EXE" != "-" ]; then
+              test -x "$EXE" || { echo "$LABEL: executable not found or not executable"; exit 1; }
             fi
-            PID=$!
-            sleep $TIMER
-
-            if kill -0 "$PID" 2>/dev/null; then
-              kill "$PID" 2>/dev/null || true
-              wait "$PID" 2>/dev/null || true
-            else
-              if wait "$PID"; then STATUS=0; else STATUS=$?; fi
-              echo "$LABEL: direct launch failed or exited within ${TIMER} seconds (code $STATUS)."
-              exit 1
+  
+            if [ "$APP" != "-" ]; then
+              test -d "$APP" || { echo "$LABEL: app bundle not found"; exit 1; }
             fi
-          
-            # Allow tee to finish writing buffered output.
-            sleep 1
-          
-            # Check for errors in stdout / stderr.
-            if [ "$CHECK_ERRORS" = true ] && grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
-              echo "$LABEL: ERROR or uncaught exception found in application output."
-              cat "$LOG"
+
+            if [ "$EXE" != "-" ]; then
+              # Test 1: Run the executable directly, piping stdout and stderr to a log file.
+              LOG="$(mktemp)"
+              if [ -n "$PROJECT" ]; then
+                "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
+              else
+                "$EXE" > >(tee "$LOG") 2>&1 &
+              fi
+              PID=$!
+              sleep $TIMER
+  
+              if kill -0 "$PID" 2>/dev/null; then
+                kill "$PID" 2>/dev/null || true
+                wait "$PID" 2>/dev/null || true
+              else
+                if wait "$PID"; then STATUS=0; else STATUS=$?; fi
+                echo "$LABEL: direct launch failed or exited within ${TIMER} seconds (code $STATUS)."
+                exit 1
+              fi
+            
+              # Allow tee to finish writing buffered output.
+              sleep 1
+            
+              # Check for errors in stdout / stderr.
+              if [ "$CHECK_ERRORS" = true ] && grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
+                echo "$LABEL: ERROR or uncaught exception found in application output."
+                cat "$LOG"
+                rm -f "$LOG"
+                exit 1
+              fi
               rm -f "$LOG"
-              exit 1
+            
+              echo "$LABEL: direct launch smoke test passed."
             fi
-            rm -f "$LOG"
-          
-            echo "$LABEL: direct launch smoke test passed."
 
             # Test 2: Launch as a user would (but doesn't check stderr or stdout for errors).
-            if [ -n "$PROJECT" ]; then
-              if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP" --args "$PROJECT"; then
-                STATUS=0
+            if [ "$APP" != "-" ]; then
+              if [ -n "$PROJECT" ]; then
+                if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP" --args "$PROJECT"; then
+                  STATUS=0
+                else
+                  STATUS=$?
+                fi
               else
-                STATUS=$?
+                if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP"; then
+                  STATUS=0
+                else
+                  STATUS=$?
+                fi
               fi
-            else
-              if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP"; then
-                STATUS=0
+  
+              if [ "$STATUS" -eq 124 ]; then
+                echo "$LABEL: open .app smoke test passed."
               else
-                STATUS=$?
+                echo "$LABEL: open failed or exited within ${TIMER} seconds (code $STATUS)."
+                exit 1
               fi
-            fi
-
-            if [ "$STATUS" -eq 124 ]; then
-              echo "$LABEL: open .app smoke test passed."
-            else
-              echo "$LABEL: open failed or exited within ${TIMER} seconds (code $STATUS)."
-              exit 1
             fi
           }
           
@@ -539,31 +548,33 @@ jobs:
             -name 'app-*' ! -name '*-macos.dmg' -print -quit)"
 
           # Test 1: Builder from the staging directory.
+          # Skip testing the .app for longer tests since we can't check the error log for the .app anyways.
           BUILDER="$STAGING_DIR/Kintsugi 3D Builder.app"
           echo "$BUILDER"
           smoke_test_app "$BUILDER" \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (build directory)" 30 true
-          smoke_test_app "$BUILDER" \
+          smoke_test_app - \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (build directory)" \
             300 true "$rodinProject"
-          smoke_test_app "$BUILDER" \
+          smoke_test_app - \
             "$BUILDER/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (build directory)" \
             300 true "$katrinaFullerProject"
 
           # Test 2: Builder extracted from the DMG.
+          # Skip testing the .app for longer tests since we can't check the error log for the .app anyways.
           BUILDER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Builder.app"
           echo "$BUILDER_EXTRACTED"
           smoke_test_app "$BUILDER_EXTRACTED" \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (DMG)" 30 true
-          smoke_test_app "$BUILDER_EXTRACTED" \
+          smoke_test_app - \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (DMG)" \
             300 true "$rodinProject"
-          smoke_test_app "$BUILDER_EXTRACTED" \
+          smoke_test_app - \
             "$BUILDER_EXTRACTED/Contents/MacOS/Kintsugi3DBuilder.sh" \
             "Builder (DMG)" \
             300 true "$katrinaFullerProject"
