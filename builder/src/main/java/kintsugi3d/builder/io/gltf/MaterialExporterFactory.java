@@ -11,7 +11,7 @@
 
 package kintsugi3d.builder.io.gltf;
 
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
 
 @FunctionalInterface
 public interface MaterialExporterFactory

@@ -12,7 +12,7 @@
 package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
 
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
 
 public final class Kintsugi3DViewerExporterFactory implements MaterialExporterFactory
 {
